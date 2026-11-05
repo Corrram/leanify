@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{proofread}
-\newtheorem{lemma}{Lemma}
+\newtheorem{lemma}{Lemma}[section]
 \newtheorem{theorem}[lemma]{Theorem}
 \newtheorem{corollary}[lemma]{Corollary}
 \title{A number and its reciprocal}
@@ -9,13 +9,40 @@
 \begin{document}
 \maketitle
 
-A positive number and its reciprocal never sum to less than two.
-This note is the demonstration article of Proofread.
-Every sentence of its results and proofs is compiled to Lean, and every claim is verified.
+\begin{abstract}
+We show that a positive real number and its reciprocal never sum to less than two, and that the sum is smallest at the number one.
+The proof rests on a single identity, which writes the excess of the sum over two as a square divided by the number.
+The note also demonstrates Proofread: every definition, every statement and every step of every proof below is compiled from this text to Lean and checked by the Lean kernel.
+\end{abstract}
 
-\section{The bound}
+\section{Introduction}\label{sec:intro}
 
+How short can the perimeter of a rectangle of area one be?
+If one side of such a rectangle is long, the other is short, and the question is which proportions balance the two.
+Half the perimeter is the length of one side plus its reciprocal, so the question asks how small a positive number and its reciprocal can be together.
+The answer is the square: the sum is never below two, and it equals two when both sides have length one.
+
+This is the simplest case of the inequality between the arithmetic and the geometric mean, which goes back at least to Cauchy~\cite{cauchy1821} and to which a large literature is devoted~\cite{bullen2003,hardy1952}.
+For two numbers the inequality has a proof of one line, and we give it in a form that leaves nothing implicit.
+Theorem~\ref{thm:bound} states the bound, and Corollary~\ref{cor:min} identifies the number at which the sum is least.
+Both follow from Lemma~\ref{lem:identity}, which expresses the excess of the sum over two as a square divided by a positive number.
+
+The note is written as an ordinary article, and it is also read by Proofread.
+Every definition and every sentence of a lemma, theorem, corollary or proof has one fixed formal reading, which is compiled to Lean, and every step of a proof is checked against the earlier steps and the results it cites.
+The other sentences, like this one, motivate, explain and give context.
+They are prose, which Lean does not check, and no result depends on them.
+The web reader of the note marks every sentence with what Lean checked for it, and the margin of the typeset note marks every result.
+
+Section~\ref{sec:identity} introduces the function that measures the sum and proves the identity.
+Section~\ref{sec:bound} deduces the bound and the minimum, and Section~\ref{sec:means} places them among the classical inequalities between means.
+
+\section{An identity}\label{sec:identity}
+
+We study the sum of a positive number and its reciprocal as a function of the number.
 Define $f:(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
+The domain matters: the reciprocal is not defined at zero, and negative numbers behave differently, as Section~\ref{sec:means} explains.
+
+To compare the sum with two, we bring their difference to a common denominator, where a perfect square appears in the numerator.
 
 \begin{lemma}\label{lem:identity}
 For every $x\in(0,\infty)$, $f(x)-2=\frac{(x-1)^2}{x}$.
@@ -25,6 +52,13 @@ For every $x\in(0,\infty)$, $f(x)-2=\frac{(x-1)^2}{x}$.
 Let $x\in(0,\infty)$.
 Then $f(x)-2=x+\frac1x-2=\frac{x^2-2x+1}{x}=\frac{(x-1)^2}{x}$.
 \end{proof}
+
+The identity turns the bound into a question about the sign of a quotient.
+
+\section{The bound and its minimum}\label{sec:bound}
+
+A square is never negative, and dividing it by a positive number keeps it so.
+Together with Lemma~\ref{lem:identity}, this proves the bound.
 
 \begin{theorem}\label{thm:bound}
 For every $x\in(0,\infty)$, $f(x)>2$.
@@ -36,6 +70,9 @@ Then $\frac{(x-1)^2}{x}\ge0$.
 By Lemma~\ref{lem:identity}, $f(x)-2=\frac{(x-1)^2}{x}\ge0$.
 \end{proof}
 
+The bound cannot be improved, because the number one attains it.
+Its reciprocal is itself, so the sum there is exactly two, and the theorem shows that no other number does better.
+
 \begin{corollary}\label{cor:min}
 For every $x\in(0,\infty)$, $f(1)\le f(x)$.
 \end{corollary}
@@ -44,6 +81,27 @@ For every $x\in(0,\infty)$, $f(1)\le f(x)$.
 By Theorem~\ref{thm:bound}, $f(1)=2\le f(x)$ for every $x\in(0,\infty)$.
 \end{proof}
 
-The bound is the inequality between the arithmetic and the geometric mean of a positive number and its reciprocal.
+In the language of the introduction, among all rectangles of area one the square has the least perimeter.
+
+\section{Arithmetic and geometric means}\label{sec:means}
+
+For two positive numbers, the arithmetic mean is at least the geometric mean~\cite{hardy1952}.
+A number and its reciprocal have geometric mean one, so for them this inequality is Theorem~\ref{thm:bound}.
+Conversely, applying the theorem to the square root of the ratio of two positive numbers gives the inequality between their arithmetic and geometric mean.
+For more than two numbers the proofs take more work.
+Cauchy's proof proceeds by a forward and backward induction on the number of terms, and Hurwitz~\cite{hurwitz1891} extended the idea of Lemma~\ref{lem:identity} to any number of terms, with a sum of squares in place of a single square.
+These and many other proofs are collected in~\cite{bullen2003,steele2004}.
+
+The positivity of the number cannot be dropped.
+For a negative number both terms are negative, and the sum is at most minus two.
+The definition of the function therefore states its domain, and Lean checks that the reciprocal is only ever taken of a positive number.
+
+\begin{thebibliography}{9}
+\bibitem{bullen2003} P.~S. Bullen, \emph{Handbook of Means and Their Inequalities}, Kluwer Academic Publishers, Dordrecht, 2003.
+\bibitem{cauchy1821} A.-L. Cauchy, \emph{Cours d'analyse de l'\'Ecole royale polytechnique}, Paris, 1821.
+\bibitem{hardy1952} G.~H. Hardy, J.~E. Littlewood and G.~P\'olya, \emph{Inequalities}, 2nd edition, Cambridge University Press, 1952.
+\bibitem{hurwitz1891} A. Hurwitz, Ueber den Vergleich des arithmetischen und des geometrischen Mittels, \emph{Journal f\"ur die reine und angewandte Mathematik} 108 (1891), 266--268.
+\bibitem{steele2004} J.~M. Steele, \emph{The Cauchy--Schwarz Master Class}, Cambridge University Press, 2004.
+\end{thebibliography}
 
 \end{document}

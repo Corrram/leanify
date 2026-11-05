@@ -14,7 +14,9 @@ justifies it.
     ---
 
     *A number and its reciprocal*, the note of the [tutorial](getting-started.md):
-    every one of its 7 claims is derived in the text from what it cites.
+    a short article with an introduction, remarks between the results and
+    references. Every one of its 7 claims is derived in the text from what it
+    cites, and the explanations around them are prose.
 
     [:octicons-arrow-right-24: Open the reader](demo/note/index.html)
 
@@ -38,7 +40,7 @@ justifies it.
 
 </div>
 
-![The reader of the draft: Theorem 2 is selected, its reading is shown with the three premises it rests on and the refutation](images/demo-reader-refuted.png){ .pr-shot }
+![The reader of the draft: Theorem 3.1 is selected, its reading is shown with the three premises it rests on and the refutation](images/demo-reader-refuted.png){ .pr-shot }
 
 ## The markers
 

@@ -75,9 +75,24 @@
     const b = e.target.closest('.lm-dot[data-sentence]');
     mark('lm-hover', b ? b.dataset.sentence : null);
   });
-  document.querySelectorAll('[data-filter]').forEach(box => box.addEventListener('change', () => {
-    document.body.classList.toggle('lm-hide-' + box.dataset.filter, !box.checked);
-  }));
+  const boxes = [...document.querySelectorAll('[data-filter]')];
+  const all = document.querySelector('[data-filter-all]');
+  const apply = box => document.body.classList.toggle('lm-hide-' + box.dataset.filter, !box.checked);
+  // "All" is checked when every status is shown, and mixed when only some are
+  const sync = () => {
+    if (!all) return;
+    const shown = boxes.filter(box => box.checked).length;
+    all.checked = shown === boxes.length;
+    all.indeterminate = shown > 0 && shown < boxes.length;
+  };
+  boxes.forEach(box => box.addEventListener('change', () => { apply(box); sync(); }));
+  if (all) all.addEventListener('change', () => {
+    boxes.forEach(box => { box.checked = all.checked; apply(box); });
+    sync();
+  });
+  // the browser may restore the boxes of a page revisited with Back
+  boxes.forEach(apply);
+  sync();
   const m = location.hash.match(/^#sentence-(\d+)$/);
   // select after images and fonts have settled, so the sentence stays in view
   if (m) window.addEventListener('load', () => select(String(Number(m[1]) - 1), true));

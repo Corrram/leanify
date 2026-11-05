@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sourcePin, mathRegions, markSentences, sentenceStatus, validateReport, renderCompiledArticle, inspectorData} from '../reader/reader.mjs';
+import {sourcePin, mathRegions, markSentences, sentenceStatus, validateReport, renderCompiledArticle, renderCompiledReader, inspectorData} from '../reader/reader.mjs';
 
 const source = String.raw`\title{A compiled note}
 \author{A mathematician}
@@ -104,4 +104,11 @@ test('a refuted claim is marked false, and claims resting on it are not verified
   const v = report();
   v.claims[1].status = 'refuted';
   assert.throws(() => validateReport(v, source), /unverified premise|disagrees/);
+});
+
+test('the legend has a box per status and one for all of them', () => {
+  const html = renderCompiledReader({title: 'Note', source, report: report(), assets: {styles: [], script: 'reader.js'}});
+  const legend = html.match(/<fieldset class="lm-legend">.*?<\/fieldset>/s)[0];
+  assert.equal((legend.match(/data-filter="/g) ?? []).length, 8);
+  assert.match(legend, /<legend>Show markers<\/legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All<\/label>/);
 });

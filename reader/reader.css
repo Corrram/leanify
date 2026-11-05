@@ -23,6 +23,7 @@ body.lm-compiled { background: var(--lm-bg); color: var(--lm-fg); margin: 0; }
 .lm-legend { border: 0; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; }
 .lm-legend legend { font-size: .75rem; color: var(--lm-muted); padding: 0; margin-bottom: 4px; }
 .lm-filter { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lm-filter-all { font-weight: 600; padding-right: 14px; border-right: 1px solid var(--lm-line); }
 .lm-dot { display: inline-block; width: .62em; height: .62em; border-radius: 50%; border: 0; padding: 0; margin: 0 .3em 0 .1em; vertical-align: .08em; cursor: pointer; background: var(--lm-prose); }
 button.lm-dot { scroll-margin-top: 150px; }
 button.lm-dot:focus-visible { outline: 2px solid var(--lm-companion); outline-offset: 2px; }

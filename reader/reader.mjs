@@ -225,7 +225,9 @@ export function renderCompiledReader({title, source, bibliography, report, confi
   const proved = [...new Map(report.claims.filter(cl => cl.role === 'statement' && cl.premises.length)
     .map(cl => [report.sentences[cl.sentence].env, cl.sentence])).values()]
     .map(k => `<button type="button" class="lm-jump" data-sentence="${k}"><span class="lm-dot lm-${sentenceStatus(report, report.sentences[k])}" aria-hidden="true"></span>${escape(report.sentences[k].environment)} · line ${report.sentences[k].line}</button>`);
-  const legend = ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].map(st =>
+  // one box per status, after a box that shows or hides them all
+  const legend = '<label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All</label>' +
+    ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].map(st =>
     `<label class="lm-filter"><input type="checkbox" data-filter="${st}" checked><span class="lm-dot lm-${st}" aria-hidden="true"></span>${escape(statusText[st])}</label>`).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escape(title)} · Proofread</title>
