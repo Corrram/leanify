@@ -2,7 +2,7 @@
 
 These pages are the web reader of four example articles, built from the
 reports their certificates wrote. Each is a short paper in the usual style,
-with an abstract, an introduction and references, and each renders from its
+with an introduction and references, and each renders from its
 LaTeX source with a marker at the start of every sentence. Select a marker to
 see what Lean checked for that sentence: its formal reading, its Lean
 statement, its definedness condition, the premises it rests on and the

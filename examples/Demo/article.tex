@@ -9,32 +9,12 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
-We show that a positive real number and its reciprocal never sum to less than two, and that the sum is smallest at the number one.
-The proof rests on a single identity, which writes the excess of the sum over two as a square divided by the number.
-The note also demonstrates Proofread: every definition, every statement and every step of every proof below is compiled from this text to Lean and checked by the Lean kernel.
-\end{abstract}
-
 \section{Introduction}\label{sec:intro}
 
 How short can the perimeter of a rectangle of area one be?
-If one side of such a rectangle is long, the other is short, and the question is which proportions balance the two.
 Half the perimeter is the length of one side plus its reciprocal, so the question asks how small a positive number and its reciprocal can be together.
 The answer is the square: the sum is never below two, and it equals two when both sides have length one.
-
 This is the simplest case of the inequality between the arithmetic and the geometric mean, which goes back at least to Cauchy~\cite{cauchy1821} and to which a large literature is devoted~\cite{bullen2003,hardy1952}.
-For two numbers the inequality has a proof of one line, and we give it in a form that leaves nothing implicit.
-Theorem~\ref{thm:bound} states the bound, and Corollary~\ref{cor:min} identifies the number at which the sum is least.
-Both follow from Lemma~\ref{lem:identity}, which expresses the excess of the sum over two as a square divided by a positive number.
-
-The note is written as an ordinary article, and it is also read by Proofread.
-Every definition and every sentence of a lemma, theorem, corollary or proof has one fixed formal reading, which is compiled to Lean, and every step of a proof is checked against the earlier steps and the results it cites.
-The other sentences, like this one, motivate, explain and give context.
-They are prose, which Lean does not check, and no result depends on them.
-The web reader of the note marks every sentence with what Lean checked for it, and the margin of the typeset note marks every result.
-
-Section~\ref{sec:identity} introduces the function that measures the sum and proves the identity.
-Section~\ref{sec:bound} deduces the bound and the minimum, and Section~\ref{sec:means} places them among the classical inequalities between means.
 
 \section{An identity}\label{sec:identity}
 

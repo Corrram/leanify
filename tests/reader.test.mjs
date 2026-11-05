@@ -106,9 +106,10 @@ test('a refuted claim is marked false, and claims resting on it are not verified
   assert.throws(() => validateReport(v, source), /unverified premise|disagrees/);
 });
 
-test('the legend has a box per status and one for all of them', () => {
+test('the legend has a box per status that occurs, with its count, under one for all of them', () => {
   const html = renderCompiledReader({title: 'Note', source, report: report(), assets: {styles: [], script: 'reader.js'}});
   const legend = html.match(/<fieldset class="lm-legend">.*?<\/fieldset>/s)[0];
-  assert.equal((legend.match(/data-filter="/g) ?? []).length, 8);
-  assert.match(legend, /<legend>Show markers<\/legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All<\/label>/);
+  assert.match(legend, /^<fieldset class="lm-legend"><legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All markers <span class="lm-count">4<\/span><\/label><\/legend>/);
+  assert.deepEqual([...legend.matchAll(/data-filter="(\w+)".*?lm-count">(\d+)</g)].map(m => [m[1], Number(m[2])]),
+    [['text', 2], ['definition', 1], ['prose', 1]]);
 });

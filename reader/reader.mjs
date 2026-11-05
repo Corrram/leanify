@@ -225,10 +225,17 @@ export function renderCompiledReader({title, source, bibliography, report, confi
   const proved = [...new Map(report.claims.filter(cl => cl.role === 'statement' && cl.premises.length)
     .map(cl => [report.sentences[cl.sentence].env, cl.sentence])).values()]
     .map(k => `<button type="button" class="lm-jump" data-sentence="${k}"><span class="lm-dot lm-${sentenceStatus(report, report.sentences[k])}" aria-hidden="true"></span>${escape(report.sentences[k].environment)} · line ${report.sentences[k].line}</button>`);
-  // one box per status, after a box that shows or hides them all
-  const legend = '<label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All</label>' +
-    ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].map(st =>
-    `<label class="lm-filter"><input type="checkbox" data-filter="${st}" checked><span class="lm-dot lm-${st}" aria-hidden="true"></span>${escape(statusText[st])}</label>`).join('');
+  // one box per status that occurs, with the number of its markers, under a box
+  // that shows or hides them all (a status without markers would filter nothing)
+  const counts = new Map();
+  for (const s of report.sentences) if (marked(report, s)) {
+    const st = sentenceStatus(report, s);
+    counts.set(st, (counts.get(st) ?? 0) + 1);
+  }
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  const legend = `<legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All markers <span class="lm-count">${total}</span></label></legend>` +
+    ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].filter(st => counts.has(st)).map(st =>
+    `<label class="lm-filter"><input type="checkbox" data-filter="${st}" checked><span class="lm-dot lm-${st}" aria-hidden="true"></span>${escape(statusText[st])} <span class="lm-count">${counts.get(st)}</span></label>`).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escape(title)} · Proofread</title>
 ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+xml">` : ''}${assets.styles.map(href => `<link rel="stylesheet" href="${escape(href)}">`).join('')}
@@ -241,7 +248,7 @@ ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+
 <p>${intro}</p>
 <p>${n(c.sentences, 'sentence')}. ${c.compiled} compiled into ${n(c.claims, 'claim')} and ${n(c.definitions, 'definition')}. Of the claims, <strong>${c.text} ${c.text === 1 ? 'is' : 'are'} derived from the results they cite</strong>, ${c.companion} ${c.companion === 1 ? 'is' : 'are'} checked by the companion Lean development, ${c.refuted ? `<strong>${c.refuted} ${c.refuted === 1 ? 'is' : 'are'} false as stated</strong>, ` : ''}and ${c.unverified} ${c.unverified === 1 ? 'is' : 'are'} unverified. ${n(c.failed, 'sentence')} failed to compile, and ${n(c.proseMath, 'sentence')} in results and proofs ${c.proseMath === 1 ? 'is' : 'are'} prose the grammar does not read yet.</p>
 ${proved.length ? `<p class="lm-proved">Results whose proof is compiled sentence by sentence: ${proved.join(' · ')}</p>` : ''}
-<fieldset class="lm-legend"><legend>Show markers</legend>${legend}</fieldset></section>
+<fieldset class="lm-legend">${legend}</fieldset></section>
 ${body}</main>
 <aside class="lm-inspector" aria-label="Sentence inspector" aria-live="polite"><div class="lm-inspector-empty"><p>Select a marker <span class="lm-dot lm-text" aria-hidden="true"></span> at the start of a sentence to see what Lean checked for it.</p></div></aside></div>
 <script id="lm-data" type="application/json">${data}</script></body></html>`;
