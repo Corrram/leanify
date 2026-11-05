@@ -165,8 +165,10 @@ The 40 prose sentences of the text are the explanations: the abstract, the
 introduction, the remarks between the results, the last section and the
 references. The check
 counts them and says nothing else about them, because they assert nothing that
-Lean is asked to check. Only a sentence inside a result without a reading is a
-warning, since it leaves part of the statement unchecked.
+Lean is asked to check. A sentence of the running text that does have a
+reading, such as a definition, is compiled like any other. Only a sentence
+inside a result without a reading is a warning, since it leaves part of the
+statement unchecked.
 
 * **Line 70** uses `g`, which nothing defines. It is a typo for `f`.
 * **Line 77** is the whole statement of the corollary, and the grammar has no
@@ -360,7 +362,7 @@ Every claim of the note is now derived in the text: each sentence of every proof
 follows from what it cites, and each result from its proof.
 [`examples/Demo/Proofs.lean`](../examples/Demo/Proofs.lean) has all the proofs.
 
-![The certified note: every result is marked derived](images/demo-pdf.png)
+![The certified note: every result is marked derived, with the explanations between the results](images/demo-pdf.png)
 
 ## 8. Read and share the result
 
@@ -413,7 +415,7 @@ verified or is refuted.
 | `sentence not compiled (undefined symbol: …)` | Define the symbol earlier, or fix the typo. |
 | `… sentence without a mathematical reading` | Rephrase with a construction from [Writing for Proofread](writing.md). In a proof, prose is fine: it asserts nothing. |
 | `the article changed after …` or a stale pin | `lake exe proofread prepare article.tex --lean Compiled.lean`, then build. |
-| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. |
+| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |
 | `linarith failed`, or any proof that will not close | Check the reading (`--claims`). If the claim is false, prove `refuteK`. |
 
