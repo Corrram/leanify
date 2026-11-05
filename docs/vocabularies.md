@@ -1,7 +1,7 @@
 # Vocabularies and models
 
-An article defines its own symbols. What it does not define, such as "copula"
-or "probability measure on $[0,1]^2$", comes from a *vocabulary*: a reviewed
+An article defines its own symbols. What it does not define, such as
+"probability measure on $[0,1]^2$" or "Lebesgue measure", comes from a *vocabulary*: a reviewed
 list of fixed phrases, each with a closed term of the core language. A
 vocabulary's *model* gives its base types and constants their Lean meaning.
 Both are written once, reviewed once and shared by every article that uses
@@ -50,10 +50,11 @@ def vocab : Vocab where
 
 This is `Proofread.UnitSquare.vocab`. With it, the sentence
 
-> let $\CC$ denote the class of bivariate copulas, that is, distribution
-> functions on $[0,1]^2$ with uniform marginals.
+> let $\mathcal{D}$ denote the class of standard distribution functions, that is,
+> distribution functions on $[0,1]^2$ with uniform marginals.
 
-defines `\CC` as the predicate `fun F => DistFn F ∧ UnifMarg F`.
+defines `\mathcal{D}` as the predicate `fun F => DistFn F ∧ UnifMarg F`. The
+full list of its phrases is in `Proofread/Library/UnitSquare.lean`.
 
 Vocabularies combine with `++` (`Vocab.core ++ UnitSquare.vocab`): the base
 types and constants of the second are renumbered after those of the first.
@@ -109,7 +110,7 @@ def main (args : List String) : IO UInt32 := do
 ## Adding to the core
 
 A phrase belongs in the core vocabulary when it is standard across subjects and
-has one established mathlib meaning. Subject vocabularies (copulas, measures on
-the unit square, …) live in `Proofread/Library/` or in the project that uses
+has one established mathlib meaning. Subject vocabularies (measures on the unit
+square, …) live in `Proofread/Library/` or in the project that uses
 them. A new primitive in `Prim` needs its denotation, its definedness condition
 and its readable Lean form (`Proofread/Readable.lean`), and should be rare.

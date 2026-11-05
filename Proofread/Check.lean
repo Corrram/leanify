@@ -71,8 +71,26 @@ def resultKind : EnvKind → String
   | .proof => "proofs"
   | .text => "text"
 
+/-- Environments that discuss rather than state: a sentence of a remark, an example
+or a conjecture without a reading is not a gap in a statement. -/
+def wDiscussion : List Codes := [w!"remark", w!"example", w!"conjecture"]
+
+/-- For every undefined symbol, the sentences (in order) that fail because of it. -/
+def undefinedUses (d : Doc) : List (String × List Nat) := Id.run do
+  let mut acc : List (String × List Nat) := []
+  for s in [0:d.sentences.length] do
+    if let some (.failed e) := d.outcomes[s]? then
+      if e.code == E.undefined then
+        let m := errMessage e
+        acc := if acc.any (·.1 == m) then acc.map (fun (k, ss) => if k == m then (k, ss ++ [s]) else (k, ss))
+          else acc ++ [(m, [s])]
+  return acc
+
 /-- Diagnostics for a compiled document: sentences that did not compile, and
-sentences of results without a reading. `prose` also lists the sentences of proofs
+sentences of results without a reading. An undefined symbol is reported once, at
+its first use, with the later sentences that fail for the same symbol (they follow
+from the first). Sentences of remarks, examples and conjectures without a reading
+are not reported. `prose` also lists the sentences of proofs (and of remarks)
 without a reading; `claims` prints the reading of every claim. -/
 def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
     (prose claims : Bool) : List String × Coverage := Id.run do
@@ -80,21 +98,35 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
   let mut cov : Coverage := {}
   let cs := V.constNames.map Codes.toString
   let gs := d.globNames
+  let undef := undefinedUses d
   for s in [0:d.sentences.length] do
     let (ctx, a, _) := d.sentences[s]!
     let (l, c) := lineCol lines a
     let o := d.outcomes[s]?.getD .prose
     cov := cov.add (resultKind ctx.kind) o
     match o with
-    | .failed e => out := out ++ [s!"{rel}:{l}:{c}: warning: sentence not compiled ({errMessage e}); it asserts nothing checked"]
+    | .failed e =>
+      let m := errMessage e
+      let uses := if e.code == E.undefined then ((undef.find? (·.1 == m)).map (·.2)).getD [] else []
+      match uses with
+      | first :: later =>
+        if first == s then
+          let ls := later.map fun t => toString (lineCol lines (d.sentences[t]!).2.1).1
+          let more := match later.length with
+            | 0 => ""
+            | 1 => s!"; the same in 1 later sentence (line {String.intercalate ", " ls})"
+            | n => s!"; the same in {n} later sentences (lines {String.intercalate ", " ls})"
+          out := out ++ [s!"{rel}:{l}:{c}: warning: sentence not compiled ({m}); it asserts nothing checked{more}"]
+      | [] => out := out ++ [s!"{rel}:{l}:{c}: warning: sentence not compiled ({m}); it asserts nothing checked"]
     | .prose =>
       -- a sentence of a statement without a reading leaves the statement partly
-      -- unchecked: always a warning; prose in proofs only with `--prose`
-      let inResult := match ctx.kind with | .result _ => true | _ => false
+      -- unchecked: always a warning; prose in proofs and remarks only with `--prose`
+      let inResult := match ctx.kind with | .result n => !wDiscussion.contains n | _ => false
       if inResult || (prose && ctx.kind != .text) then
         let (_, a, b) := d.sentences[s]!
         let text := Codes.toString ((joinLines lines).drop a |>.take (min 90 (b - a)))
         let text := text.replace "\n" " "
+        let text := if b - a > 90 then text ++ "…" else text
         let severity := if inResult then "warning" else "info"
         out := out ++ [s!"{rel}:{l}:{c}: {severity}: {kindString ctx.kind} sentence without a mathematical reading: {text}"]
     | .compiled ds ks =>

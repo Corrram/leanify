@@ -141,11 +141,12 @@ def chunksUntil (stop : List Codes) : List Chunk → List Chunk → Option (List
     | .m _ => chunksUntil stop cs (c :: acc)
     | _ => none
 
-/-- Citations: `Lemma~\ref{l}`, `Theorem~\ref{l}`, `\eqref{l}`. -/
+/-- Citations: `Lemma~\ref{l}`, `Theorem~\ref{l}`, `Claim~\ref{l}`, `\eqref{l}`, `\cref{l}`. -/
 def cite : List Chunk → Option (Codes × List Chunk)
   | .r .eqref l :: cs => some (l, cs)
   | .w v :: .r .ref l :: cs =>
-    if [w!"lemma", w!"theorem", w!"corollary", w!"proposition", w!"equation", w!"section"].contains v then
+    if [w!"lemma", w!"theorem", w!"corollary", w!"proposition", w!"equation", w!"section", w!"claim",
+        w!"fact", w!"observation", w!"definition", w!"remark"].contains v then
       some (l, cs) else none
   | _ => none
 
@@ -1106,12 +1107,23 @@ where
         some (.notionSubject np)
       else none
 
-/-- `$x\in A$`, or `$C$ be a|an NP`: the variable of a `let`. -/
+/-- A condition on variables, `$c>0$`, `$0<x\le1$`: a chain of order relations (not a
+definition, an equation or a membership). -/
+def isCondition : MT → Bool
+  | .chain _ rs => !rs.isEmpty && rs.all fun (r, _) => r == .lt || r == .le || r == .gt || r == .ge || r == .ne
+  | _ => false
+
+/-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   (do
     let (ts, r) ← mathChunk cs
     let (vs, d) ← binderMath ts
     some (.every vs d, r)) <|>
+  -- `$c>0$`: a condition, assumed like a binder
+  (do
+    let (ts, r) ← mathChunk cs
+    let m ← Math.parseFormula ts
+    if isCondition m then some (.ifCond m, r) else none) <|>
   (do
     let (ts, r) ← mathChunk cs
     let v ← match ts with | [.id v] => some v | _ => none
@@ -1152,6 +1164,11 @@ def sentence (cs : List Chunk) : Option Sent :=
       let (ts, r1) ← mathChunk r
       let (vs, d) ← binderMath ts
       if isEnd r1 then some (.assume (.every vs d)) else none) <|>
+    -- `Let $c>0$.`: a condition, assumed for the rest of the result or proof
+    (do
+      let (ts, r1) ← mathChunk r
+      let m ← Math.parseFormula ts
+      if isEnd r1 && isCondition m then some (.assume (.ifCond m)) else none) <|>
     -- `Let $C$ be a|an NP[, and let …]`, `Let $a,b\in A$, and let $X\coloneqq e$, ….`
     (do
       let (b1, r1) ← letBinder r

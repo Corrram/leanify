@@ -102,7 +102,7 @@ count.
   unverified claim is not verified). Read by the web reader and by
   `scripts/proofread_diagnostics.py`.
 * `article.proofread.tex`: the status of every labelled result, read by
-  `\usepackage[status]{proofread}` to mark results in the margin of the PDF.
+  `\usepackage[status]{leanproof}` to mark results in the margin of the PDF.
   Without the `status` option the PDF is unchanged.
 
 ## Reading

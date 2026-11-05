@@ -31,9 +31,9 @@ srcDir = "examples"
 globs = ["Means.+"]
 
 [[lean_lib]]
-# A short copula paper: notions defined in the running text (LTD, RTI, PQD).
+# A test of notions defined in the running text, with the unit-square vocabulary.
 name = "TailDependence"
-srcDir = "examples"
+srcDir = "tests"
 globs = ["TailDependence.+"]
 
 [[lean_lib]]

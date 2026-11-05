@@ -13,4 +13,4 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_article Means "article.tex" "fnv1a64:6fd2ac2450336377"
+#proofread_article Means "article.tex" "fnv1a64:423b831fe50d44df"

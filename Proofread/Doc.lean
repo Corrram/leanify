@@ -756,6 +756,11 @@ def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat
       | .sub (.id k) (.id p) => if p == b.name then pure (k, true) else fail E.unsupported
       -- `f(x)\coloneqq e`: a function of the binder's variable
       | .app (.id k) [.id p] => if p == b.name then pure (k, false) else fail E.unsupported
+      -- `r_-(b)\coloneqq e`, `\eta_\pm(x)\coloneqq e`: a decorated name
+      | .app h [.id p] =>
+        match p == b.name, Elab.symKey h with
+        | true, some k => pure (k, false)
+        | _, _ => fail E.unsupported
       | _ => fail E.unsupported
     let sc : Scope := [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
@@ -855,6 +860,28 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
       | _ => fail E.unsupported
   addLabels labels cs true
   pure (ds, cs)
+
+/-- `For $u,v\in A$, set $f(u,v)\coloneqq e$, …`: functions of all the binder's
+variables, in their order. Under `u,v\in[0,1]`, `M(u,v)\coloneqq\min\{u,v\}` is a
+function on the unit square, like a copula. -/
+def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) :
+    M (List Nat × List Nat) := do
+  let mut ds : List Nat := []
+  for m in defs do
+    match m with
+    | .chain (.app h args) [(.defeq, rhs)] =>
+      let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+      if names != bs.map (·.name) then fail E.unsupported
+      let some key := Elab.symKey h | fail E.unsupported
+      let sc : Scope := (bs.map fun b => (b.name, b.ty)).reverse
+      let (v, vty) ← term F sc none rhs
+      let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+      let ty := bs.foldr (fun b t => Ty.fn b.ty t) vty
+      let i ← addGlob ⟨key, ty, bs.map (·.pred), false⟩ value
+      ds := ds ++ [i]
+    | _ => fail E.unsupported
+  addLabels labels [] true
+  pure (ds, [])
 
 /-- `define continuous functions $f,g:A\to\R$ by $f(a)=c$, …, and DISPLAY` with
 `f'(x) = …` in the display: `f(x) = c + ∫_a^x f'(t)\,dt` for `x ∈ A` (defined when the
@@ -1490,8 +1517,10 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .constDefs b defs labels => do
     match b with
     | some bd => do
-      let [bi] ← binderInfos bd | fail E.unsupported
-      constDefs c (some bi) defs labels
+      match ← binderInfos bd with
+      | [bi] => constDefs c (some bi) defs labels
+      | bis@(_ :: _ :: _) => multiDefs bis defs labels
+      | [] => fail E.unsupported
     | none => constDefs c none defs labels
   | .defReads b _ sg disp labels => do
     let [bi] ← binderInfos b | fail E.unsupported

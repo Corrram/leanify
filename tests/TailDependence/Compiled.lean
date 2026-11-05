@@ -7,11 +7,11 @@ import Proofread.Library.UnitSquare
 by the kernel from the contents of `article.tex`. The last string pins those contents:
 after editing the article, run
 
-    lake exe proofread prepare examples/TailDependence/article.tex --lean examples/TailDependence/Compiled.lean
+    lake exe proofread prepare tests/TailDependence/article.tex --lean tests/TailDependence/Compiled.lean
 
 and then `lake build`. -/
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_article TailDependence "article.tex" "fnv1a64:5b3614412bb69d39" with Proofread.UnitSquare.withCore
+#proofread_article TailDependence "article.tex" "fnv1a64:fce0b008de505e81" with Proofread.UnitSquare.withCore

@@ -1,0 +1,404 @@
+%% leanproof.sty -- a LaTeX article checked by Proofread.
+%%
+%% (The CTAN package `proofread`, for proofreading annotations, is unrelated.)
+%%
+%% Proofread reads the article source itself: its sentences, formulas and the
+%% macros of its preamble. This package does not change what the article says,
+%% and Proofread reads no markup from it. It
+%%   * loads the packages for the notation the grammar reads (\coloneqq from
+%%     mathtools, \mathbb and \le from amssymb);
+%%   * runs Proofread while the article compiles, when it can: if the compiler
+%%     may run programs (shell escape) and the article lies in a Lean project
+%%     (a lakefile in its folder or up to three folders above), every compile
+%%     runs the quick check, and its findings appear as warnings at their lines
+%%     of the article, where editors list them. With `certify`, it also updates
+%%     the pin and builds the certificate, so that the margin marks are current;
+%%     the first time, it writes the Lean files of the article. Without shell
+%%     escape, as on arXiv, nothing runs;
+%%   * with the option `status`, marks every labelled result in the margin with
+%%     its verification status, read from \jobname.proofread.tex, which
+%%     #proofread_certify writes next to the article. Without the option the
+%%     typeset article is unchanged (use it for journal submission);
+%%   * records the Lean module that certifies the article (\proofreadmodule).
+%%
+%% Usage, in the preamble:
+%%   \usepackage[status]{leanproof}               % marks from the last build
+%%   \usepackage[certify, vocab=unitsquare]{leanproof}  % build on every compile
+%% Options: status, certify (implies status), check=false (no quick check),
+%% vocab=core|unitsquare (the vocabulary of the article), lean=FILE (its
+%% compiled Lean file, default Compiled.lean next to the article).
+%% Compile with shell escape (pdflatex -shell-escape, or the editor's setting)
+%% and with `lake` on the PATH. Proofread's output is in \jobname.proofread.log.
+%% Optionally, \proofreadreport prints a one-line summary where it appears.
+\NeedsTeXFormat{LaTeX2e}[2022/06/01]
+\ProvidesPackage{leanproof}[2026/11/05 v0.3 Proofread checks and status marks]
+\RequirePackage{mathtools}
+\RequirePackage{amssymb}
+
+\ExplSyntaxOn
+\bool_new:N \l__leanproof_status_bool
+\bool_new:N \l__leanproof_check_bool
+\bool_new:N \l__leanproof_certify_bool
+\str_new:N \l__leanproof_vocab_str
+\str_new:N \l__leanproof_lean_str
+\keys_define:nn { leanproof }
+  {
+    status  .bool_set:N = \l__leanproof_status_bool ,
+    check   .bool_set:N = \l__leanproof_check_bool ,
+    check   .initial:n  = true ,
+    certify .code:n     =
+      {
+        \bool_set_true:N \l__leanproof_certify_bool
+        \bool_set_true:N \l__leanproof_status_bool
+      } ,
+    certify .value_forbidden:n = true ,
+    vocab   .str_set:N  = \l__leanproof_vocab_str ,
+    lean    .str_set:N  = \l__leanproof_lean_str ,
+    lean    .initial:n  = Compiled.lean ,
+  }
+\ProcessKeyOptions [ leanproof ]
+\ExplSyntaxOff
+
+% The Lean module whose #proofread_certify checks this article.
+\newcommand*\proofreadmodule[1]{\gdef\proofread@module{#1}}
+\newcommand*\proofread@module{}
+
+% Entries of the status file.
+\newcommand*\proofreadstatus[2]{\expandafter\gdef\csname proofread@st@#1\endcsname{#2}}
+\newcommand*\proofreadsummary[6]{%
+  \gdef\proofread@summary{#2 of #1 claims verified (#3 derived in the text from
+    their citations); #5 of #6 sentences compiled; #4
+    \ifnum#4=1 definition\else definitions\fi\ well defined}}
+\newcommand*\proofread@summary{no status file (build the Lean module first)}
+\newcommand*\proofreadreport{\textsf{Proofread:} \proofread@summary.}
+
+% The margin marks.
+\newcommand*\proofread@markof[1]{%
+  \ifcsname proofread@mk@#1\endcsname\csname proofread@mk@#1\endcsname\fi}
+\newcommand*\proofread@mk@text{$\checkmark$\,derived}
+\newcommand*\proofread@mk@verified{$\checkmark$\,checked}
+\newcommand*\proofread@mk@partial{$\circ$\,partly checked}
+\newcommand*\proofread@mk@compiled{$\circ$\,compiled}
+\newcommand*\proofread@mk@refuted{$\times$\,false}
+\newcommand*\proofread@mark[1]{%
+  \ifcsname proofread@st@#1\endcsname
+    \edef\proofread@st{\csname proofread@st@#1\endcsname}%
+    \ifx\proofread@st\proofread@none\else
+      \ifmmode\else\leavevmode\marginpar{\raggedright\footnotesize\sffamily
+        \proofread@markof{\proofread@st}}\fi
+    \fi
+  \fi}
+\def\proofread@none{none}
+
+% Running Proofread during the compile.
+\ExplSyntaxOn
+\str_new:N \l__leanproof_root_str
+\str_new:N \l__leanproof_job_str
+\str_new:N \l__leanproof_line_str
+\str_new:N \l__leanproof_first_str
+\str_new:N \l__leanproof_ns_str
+\str_new:N \l__leanproof_module_str
+\seq_new:N \l__leanproof_match_seq
+\bool_new:N \l__leanproof_report_bool
+\bool_new:N \l__leanproof_built_bool
+\bool_new:N \l__leanproof_initialized_bool
+\ior_new:N \g__leanproof_ior
+\str_set:Nx \l__leanproof_job_str { \c_sys_jobname_str }
+\str_remove_all:Nn \l__leanproof_job_str { " }
+\str_const:Nx \c__leanproof_article_str { \l__leanproof_job_str .tex }
+\str_const:Nx \c__leanproof_log_str { \l__leanproof_job_str .proofread.log }
+\str_const:Nx \c__leanproof_status_str { \l__leanproof_job_str .proofread.tex }
+\str_new:N \l__leanproof_redirect_str
+\str_set:Nn \l__leanproof_redirect_str { > }
+\seq_new:N \l__leanproof_lib_seq
+\int_new:N \l__leanproof_seen_int
+\int_new:N \l__leanproof_lineno_int
+\prg_generate_conditional_variant:Nnn \regex_extract_once:NnN { NV } { T , TF }
+\prg_generate_conditional_variant:Nnn \regex_match:Nn { NV } { T }
+\cs_generate_variant:Nn \msg_warning:nnnn { nnee }
+\cs_generate_variant:Nn \msg_warning:nnn { nne }
+\cs_generate_variant:Nn \msg_warning:nnnnnn { nneeee }
+\cs_new_protected:Npn \__leanproof_summary:n #1 { \typeout { Proofread: ~ #1 } }
+\cs_generate_variant:Nn \__leanproof_summary:n { e }
+\cs_generate_variant:Nn \iow_term:n { e }
+
+% A finding at line #1 of the article. \PackageWarningNoLine keeps `on input line
+% N' on one line of the log, where editors look for it (l3msg would wrap it).
+\cs_new_protected:Npn \__leanproof_finding:nn #1#2
+  { \PackageWarningNoLine { leanproof } { #2 ~ on ~ input ~ line ~ #1 } }
+\cs_generate_variant:Nn \__leanproof_finding:nn { ee }
+\msg_new:nnn { leanproof } { lean } { #1 }
+\msg_new:nnn { leanproof } { no-shell }
+  {
+    Proofread ~ did ~ not ~ run, ~ because ~ shell ~ escape ~ is ~ off. ~
+    Compile ~ with ~ pdflatex ~ -shell-escape ~ (or ~ turn ~ shell ~ escape ~
+    on ~ in ~ the ~ editor) ~ to ~ check ~ the ~ article ~ as ~ it ~ compiles, ~
+    or ~ load ~ the ~ package ~ with ~ check=false ~ to ~ silence ~ this
+  }
+\msg_new:nnn { leanproof } { no-report }
+  {
+    Proofread ~ gave ~ no ~ report ~ on ~ the ~ article. ~ Is ~ lake ~ on ~
+    the ~ PATH? ~ Its ~ output ~ (in ~ \c__leanproof_log_str) ~ begins: ~ #1
+  }
+\msg_new:nnn { leanproof } { initialized }
+  {
+    Proofread ~ wrote ~ the ~ Lean ~ files ~ of ~ the ~ article. ~ Add ~ the ~
+    library ~ to ~ lakefile.toml ~ (once), ~ then ~ compile ~ again:
+    \\ #1 \\ #2 \\ #3 \\ #4
+  }
+\msg_new:nnn { leanproof } { build-failed }
+  { The ~ certificate ~ did ~ not ~ build ~ (see ~ \c__leanproof_log_str) }
+\msg_new:nnn { leanproof } { stale }
+  {
+    \c__leanproof_article_str \ changed ~ after ~ its ~ certificate ~ was ~
+    built: ~ the ~ margin ~ marks ~ may ~ be ~ out ~ of ~ date. ~ Rebuild, ~ or ~
+    load ~ the ~ package ~ with ~ certify
+  }
+
+% The Lean project: the nearest folder, up to three above, with a lakefile.
+\cs_new_protected:Npn \__leanproof_find_root:
+  {
+    \str_clear:N \l__leanproof_root_str
+    \clist_map_inline:nn { . , .. , ../.. , ../../.. }
+      {
+        \file_if_exist:nTF { ##1 / lakefile.toml }
+          { \str_set:Nn \l__leanproof_root_str {##1} \clist_map_break: }
+          {
+            \file_if_exist:nT { ##1 / lakefile.lean }
+              { \str_set:Nn \l__leanproof_root_str {##1} \clist_map_break: }
+          }
+      }
+  }
+
+% `lake -d ROOT ARGS`, its output and errors into the log: the first command
+% of the compile starts the log, the others add to it.
+\cs_new_protected:Npn \__leanproof_lake:n #1
+  {
+    \sys_shell_now:e
+      {
+        lake ~ -d ~ " \l__leanproof_root_str " ~ #1 ~ \l__leanproof_redirect_str ~
+        " \c__leanproof_log_str " ~ 2>&1
+      }
+    \str_set:Nn \l__leanproof_redirect_str { >> }
+  }
+\cs_new:Npn \__leanproof_vocab:
+  { \str_if_empty:NF \l__leanproof_vocab_str { ~ --vocab ~ \l__leanproof_vocab_str } }
+
+% Read the lines that the last command added to the log: findings of the check
+% as warnings at their lines, Lean errors and refutations as warnings, and the
+% summaries on the terminal.
+\regex_const:Nn \c__leanproof_finding_regex
+  { \A .*? \.tex : (\d+) : \d+ : \s* (?: error | warning ) : \s* (.*) \Z }
+\regex_const:Nn \c__leanproof_counts_regex { \A .*? \.tex : \s+ (\d+ \s definitions .*) \Z }
+\regex_const:Nn \c__leanproof_all_regex { \A \s* all : \s* (.*) \Z }
+\regex_const:Nn \c__leanproof_lean_error_regex { \A error : \s* (.* \.lean : \d+ : \d+ : .*) \Z }
+\regex_const:Nn \c__leanproof_certified_regex
+  { \A info : \s* .*? \.lean : \d+ : \d+ : \s* (\d+ \s claims : .*?) (?: \. \s* Axioms .* )? \Z }
+\regex_const:Nn \c__leanproof_false_regex
+  { \A info : \s* .*? \.lean : \d+ : \d+ : \s* (claim \s \d+ \s is \s false .*) \Z }
+\regex_const:Nn \c__leanproof_built_regex { \A Build \s completed \s successfully }
+\regex_const:Nn \c__leanproof_lib_regex
+  { \A (?: \[\[ lean_lib \]\] | name \s = .* | srcDir \s = .* | globs \s = .* ) \Z }
+
+\cs_new_protected:Npn \__leanproof_read_log:
+  {
+    \bool_set_false:N \l__leanproof_report_bool
+    \str_clear:N \l__leanproof_first_str
+    \int_zero:N \l__leanproof_lineno_int
+    \ior_open:NnT \g__leanproof_ior { \c__leanproof_log_str }
+      {
+        \ior_str_map_inline:Nn \g__leanproof_ior
+          {
+            \int_incr:N \l__leanproof_lineno_int
+            \int_compare:nNnT { \l__leanproof_lineno_int } > { \l__leanproof_seen_int }
+              {
+                \str_set:Nn \l__leanproof_line_str {##1}
+                \regex_replace_all:nnN { \r } { } \l__leanproof_line_str
+                \str_if_empty:NF \l__leanproof_line_str
+                  { \__leanproof_read_line: }
+              }
+          }
+        \ior_close:N \g__leanproof_ior
+      }
+    \int_set_eq:NN \l__leanproof_seen_int \l__leanproof_lineno_int
+  }
+\cs_new_protected:Npn \__leanproof_read_line:
+  {
+    \str_if_empty:NT \l__leanproof_first_str
+      { \str_set_eq:NN \l__leanproof_first_str \l__leanproof_line_str }
+    \regex_extract_once:NVNTF \c__leanproof_finding_regex \l__leanproof_line_str
+      \l__leanproof_match_seq
+      {
+        \__leanproof_finding:ee
+          { \seq_item:Nn \l__leanproof_match_seq { 2 } }
+          { \seq_item:Nn \l__leanproof_match_seq { 3 } }
+      }
+      {
+        \regex_extract_once:NVNT \c__leanproof_counts_regex \l__leanproof_line_str
+          \l__leanproof_match_seq
+          {
+            \bool_set_true:N \l__leanproof_report_bool
+            \__leanproof_summary:e { \seq_item:Nn \l__leanproof_match_seq { 2 } }
+          }
+        \regex_extract_once:NVNT \c__leanproof_all_regex \l__leanproof_line_str
+          \l__leanproof_match_seq
+          {
+            \__leanproof_summary:e
+              { sentences: ~ \seq_item:Nn \l__leanproof_match_seq { 2 } }
+          }
+        \regex_extract_once:NVNT \c__leanproof_lean_error_regex \l__leanproof_line_str
+          \l__leanproof_match_seq
+          { \msg_warning:nne { leanproof } { lean } { \seq_item:Nn \l__leanproof_match_seq { 2 } } }
+        \regex_extract_once:NVNT \c__leanproof_false_regex \l__leanproof_line_str
+          \l__leanproof_match_seq
+          { \msg_warning:nne { leanproof } { lean } { \seq_item:Nn \l__leanproof_match_seq { 2 } } }
+        \regex_extract_once:NVNT \c__leanproof_certified_regex \l__leanproof_line_str
+          \l__leanproof_match_seq
+          {
+            \bool_set_true:N \l__leanproof_report_bool
+            \__leanproof_summary:e { \seq_item:Nn \l__leanproof_match_seq { 2 } }
+          }
+        \regex_match:NVT \c__leanproof_built_regex \l__leanproof_line_str
+          { \bool_set_true:N \l__leanproof_built_bool }
+        \regex_match:NVT \c__leanproof_lib_regex \l__leanproof_line_str
+          { \seq_put_right:NV \l__leanproof_lib_seq \l__leanproof_line_str }
+      }
+  }
+
+% The quick check: about a second (the first run also builds the checker).
+\cs_new_protected:Npn \__leanproof_check:
+  {
+    \__leanproof_summary:e { checking ~ \c__leanproof_article_str }
+    \__leanproof_lake:n
+      { exe ~ proofread ~ check ~ " \c__leanproof_article_str " \__leanproof_vocab: }
+    \__leanproof_read_log:
+    \bool_if:NF \l__leanproof_report_bool
+      { \msg_warning:nne { leanproof } { no-report } { \l__leanproof_first_str } }
+  }
+
+% The namespace of the article: \proofreadmodule, or the one its Lean file
+% compiles (`#proofread_article NS "article.tex" ...`).
+\regex_const:Nn \c__leanproof_ns_regex { \A \s* \#proofread_article \s+ (\S+) \s }
+\cs_new_protected:Npn \__leanproof_module:
+  {
+    \str_set:Nx \l__leanproof_module_str { \proofread@module }
+    \str_if_empty:NT \l__leanproof_module_str
+      {
+        \str_clear:N \l__leanproof_ns_str
+        \ior_open:NnT \g__leanproof_ior { \l__leanproof_lean_str }
+          {
+            \ior_str_map_inline:Nn \g__leanproof_ior
+              {
+                \regex_extract_once:NnNT \c__leanproof_ns_regex {##1} \l__leanproof_match_seq
+                  {
+                    \str_set:Nx \l__leanproof_ns_str { \seq_item:Nn \l__leanproof_match_seq { 2 } }
+                    \ior_map_break:
+                  }
+              }
+            \ior_close:N \g__leanproof_ior
+          }
+        \str_if_empty:NF \l__leanproof_ns_str
+          { \str_set:Nx \l__leanproof_module_str { \l__leanproof_ns_str .Certified } }
+      }
+  }
+
+% Certify: write the Lean files the first time, then update the pin and build.
+\cs_new_protected:Npn \__leanproof_certify:
+  {
+    \file_if_exist:nTF { \l__leanproof_lean_str }
+      {
+        \__leanproof_module:
+        \__leanproof_summary:e
+          {
+            building ~ the ~ certificate ~
+            (lake ~ build ~ \l__leanproof_module_str)
+          }
+        \__leanproof_lake:n
+          {
+            exe ~ proofread ~ prepare ~ " \c__leanproof_article_str " ~
+            --lean ~ " \l__leanproof_lean_str "
+          }
+        \__leanproof_lake:n { build ~ \l__leanproof_module_str }
+        \bool_set_false:N \l__leanproof_built_bool
+        \__leanproof_read_log:
+        \bool_if:NF \l__leanproof_built_bool
+          { \msg_warning:nn { leanproof } { build-failed } }
+      }
+      {
+        \__leanproof_lake:n
+          { exe ~ proofread ~ init ~ " \c__leanproof_article_str " \__leanproof_vocab: }
+        \seq_clear:N \l__leanproof_lib_seq
+        \__leanproof_read_log:
+        \msg_warning:nneeee { leanproof } { initialized }
+          { \seq_item:Nn \l__leanproof_lib_seq { 1 } }
+          { \seq_item:Nn \l__leanproof_lib_seq { 2 } }
+          { \seq_item:Nn \l__leanproof_lib_seq { 3 } }
+          { \seq_item:Nn \l__leanproof_lib_seq { 4 } }
+        \bool_set_true:N \l__leanproof_initialized_bool
+      }
+  }
+
+\cs_new_protected:Npn \__leanproof_run:
+  {
+    \__leanproof_find_root:
+    \str_if_empty:NF \l__leanproof_root_str
+      {
+        \bool_lazy_or:nnT { \l__leanproof_check_bool } { \l__leanproof_certify_bool }
+          {
+            \sys_if_shell_unrestricted:TF
+              {
+                \bool_if:NT \l__leanproof_check_bool { \__leanproof_check: }
+                \bool_if:NT \l__leanproof_certify_bool { \__leanproof_certify: }
+              }
+              { \msg_warning:nn { leanproof } { no-shell } }
+          }
+      }
+  }
+
+% The marks of a status file older than the article may be out of date.
+\cs_new_protected:Npn \__leanproof_if_stale:
+  {
+    \bool_if:NF \l__leanproof_built_bool
+      {
+        \file_if_exist:nT { \c__leanproof_status_str }
+          {
+            \file_compare_timestamp:nNnT
+              { \c__leanproof_article_str } > { \c__leanproof_status_str }
+              { \msg_warning:nn { leanproof } { stale } }
+          }
+      }
+  }
+
+\AtBeginDocument
+  {
+    \__leanproof_run:
+    \bool_if:NT \l__leanproof_status_bool
+      {
+        \file_if_exist:nTF { \c__leanproof_status_str }
+          {
+            \file_input:n { \c__leanproof_status_str }
+            \__leanproof_if_stale:
+          }
+          {
+            \bool_if:NF \l__leanproof_initialized_bool
+              {
+                \PackageWarningNoLine { leanproof }
+                  { No ~ status ~ file ~ \c__leanproof_status_str }
+              }
+          }
+      }
+  }
+\ExplSyntaxOff
+
+% wrap \label after every package has set it up (hyperref redefines it)
+\ExplSyntaxOn
+\AddToHook { begindocument/end }
+  {
+    \bool_if:NT \l__leanproof_status_bool
+      {
+        \cs_set_eq:NN \proofread@label \label
+        \renewcommand* \label [1] { \proofread@label {#1} \proofread@mark {#1} }
+      }
+  }
+\ExplSyntaxOff
+\endinput

@@ -8,3 +8,4 @@ node_modules/
 article-reader/
 /_site/
 /docs/demo/
+*.proofread.log

@@ -238,7 +238,7 @@ The kernel checks `{ns}.certificate`: every verified claim of `{file}` holds and
 every definition is well defined. `{ns}.verifiedK : meaningfulK ∧ claimK` is then
 claim `K`, as stated in the text. The command also writes
 `{reportJson}` (for the reader and the diagnostics) and `{reportTex}` (for the
-margin marks of `proofread.sty`). -/
+margin marks of `leanproof.sty`). -/
 
 #proofread_certify {ns} \"{file}\" using {ns}.Proofs
 "

@@ -14,28 +14,20 @@ the final certificate. There is no second, hand-written formal version that
 could drift away from the paper.
 
 ```latex
-For a copula $C$, the population version of Blest's rank correlation is
-\begin{equation}
-  \label{eq:nu-def}
-  \nu(C)\coloneqq24\int_0^1\!\int_0^1(1-u)\,C(u,v)\de u\de v-2,
-\end{equation}
+Define $f:(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
 ```
 
-becomes the Lean definition
-
-```lean
-def nu : (I → I → ℝ) → ℝ := fun x => 24 * ∫ y, ∫ z, (1 - ↑z) * x z y - 2
-```
-
-and the first sentence of Corollary 3.2,
+becomes the Lean definition `f := fun x => x + 1 / x`, with the obligation that
+it is well defined, `∀ (x : ℝ), 0 < x → ¬x = 0`, and the theorem
 
 ```latex
-Every $C\in\CC$ satisfies $|\nu(C)-\rho(C)|\le\frac14$.
+\begin{theorem}\label{thm:bound}
+For every $x\in(0,\infty)$, $f(x)\ge2$.
+\end{theorem}
 ```
 
-becomes `claim14 : ∀ x : I → I → ℝ, copulas x → |nu x - rho x| ≤ 1 / 4`,
-derived in Lean from exactly the sentences of its proof and the results they
-cite.
+becomes `claim2 : ∀ (x : ℝ), 0 < x → 2 ≤ f x`, derived in Lean from exactly the
+sentences of its proof and the lemma they cite.
 
 ## Exemplars
 
@@ -84,14 +76,17 @@ rev = "main"
 | `Certified.lean` | `#proofread_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
 
 A proof that still uses `sorry` leaves its claim unverified, so an article can
-be certified while its proofs are written. Claims about copulas and the unit
-square need `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)).
+be certified while its proofs are written. Articles about probability on the
+unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)).
 
 The same source gives the two readable outputs:
 
-* the PDF, with `\usepackage{proofread}`, unchanged, or with
-  `\usepackage[status]{proofread}` marking every result in the margin with its
-  verification status (read from `article.proofread.tex`);
+* the PDF, with `\usepackage{leanproof}`, unchanged, or with
+  `\usepackage[status]{leanproof}` marking every result in the margin with its
+  verification status (read from `article.proofread.tex`). Compiled with shell
+  escape, the package also checks the article on every compile, with the
+  findings as LaTeX warnings at their lines, and with `certify` it builds the
+  certificate first;
 * the web reader, `node reader/build.mjs article.tex`, which renders the
   article from its source with the status of every sentence and, for each
   claim, its formal reading, Lean statement, premises and justification.
@@ -103,10 +98,7 @@ The examples are short papers in the usual style, each certified by CI:
   with its theorem refuted;
 * [`examples/Means`](examples/Means), the harmonic, geometric and arithmetic
   mean of two numbers, with symbols defined inside a theorem, in a
-  `where`-clause and in apposition;
-* [`examples/TailDependence`](examples/TailDependence), tail monotone copulas
-  are positively quadrant dependent, with the notions (LTD, RTI, PQD) defined
-  in the running text (`--vocab unitsquare`).
+  `where`-clause and in apposition.
 
 ## Documentation
 
@@ -132,9 +124,9 @@ The examples are short papers in the usual style, each certified by CI:
 | `Proofread/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
 | `Proofread/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#proofread_article`, `#proofread_semantics`, `#proofread_certify` |
 | `Proofread/Check.lean`, `ProofreadCli.lean` | The command line `lake exe proofread`: `check` (the native checker), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache) |
-| `examples/`, `tests/Refuted` | The example articles of the documentation, certified in CI |
+| `examples/`, `tests/` | The example articles of the documentation, and the test articles (a refuted theorem, notions in the running text), certified in CI |
 | `reader/` | The web reader: the article rendered from its source with the status of every sentence |
-| `tex/proofread.sty` | Optional margin marks in the PDF (`\usepackage[status]{proofread}`) |
+| `tex/leanproof.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |
 | `docs/`, `mkdocs.yml` | The documentation site, https://corrram.github.io/proofread/ |
 | `scripts/proofread_diagnostics.py` | Findings from the certificate report, for editors and CI |
 

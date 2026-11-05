@@ -30,7 +30,7 @@ When `lake build` accepts the certificate of an article,
 It does not check sentences the grammar does not read. Those are prose and are
 reported: a sentence of a theorem without a reading is a warning, because that
 part of the statement is not checked. Words the article does not define (a
-*copula*, the *Lebesgue measure*) mean what the vocabulary says
+*probability measure*, the *Lebesgue measure*) mean what the vocabulary says
 ([Vocabularies and models](vocabularies.md)). The readings themselves are
 fixed by the grammar, so read them once to make sure they say what you mean.
 
@@ -67,12 +67,12 @@ The first `lake exe proofread` builds the checker (a few minutes, once).
 ## 2. Write the article
 
 Put the article in a folder named after it, here `Note/article.tex`. The folder
-name becomes the Lean namespace. Load the usual packages and `proofread.sty`
+name becomes the Lean namespace. Load the usual packages and `leanproof.sty`
 (copy it from `.lake/packages/proofread/tex/` next to the article):
 
 ```latex
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{proofread}
+\usepackage{leanproof}
 ```
 
 Write as you always do, in the style of [Writing for Proofread](writing.md):
@@ -284,7 +284,17 @@ while its proofs are being written.
 
 ## 6. Prove the claims
 
-Replace each `sorry` by a proof. A proof step follows from what it rests on:
+Replace each `sorry` by a proof. Most proof steps are routine, and
+`scripts/proofread_prove.py` proves those with standard tactics, and the rest with
+a model if you give it one
+([`proofread_prove.py`](reference.md#proofread_provepy)):
+
+```sh
+python .lake/packages/proofread/scripts/proofread_prove.py Note/article.tex
+```
+
+An obligation it cannot prove, such as the false theorem's below, keeps its
+`sorry`. Here is how the proofs look by hand. A proof step follows from what it rests on:
 
 ```lean
 theorem proof4 : obligation4 := by
@@ -344,7 +354,7 @@ Note/article.tex:77:1: warning: statement (claim 5) compiled but not verified: i
 Note/article.tex:81:1: warning: proof step (claim 6) compiled but not verified: it rests on claim 2, which is refuted
 ```
 
-![The PDF with \usepackage[status]{proofread}: Lemma 2.1 is derived, Theorem 3.1 is marked false, Corollary 3.2 is compiled but not verified](images/demo-pdf-refuted.png)
+![The PDF with \usepackage[status]{leanproof}: Lemma 2.1 is derived, Theorem 3.1 is marked false, Corollary 3.2 is compiled but not verified](images/demo-pdf-refuted.png)
 
 The [live demo](demo.md) has the web reader of this draft and of the finished
 note.
@@ -366,10 +376,15 @@ follows from what it cites, and each result from its proof.
 
 ## 8. Read and share the result
 
-* **The PDF.** `\usepackage[status]{proofread}` puts the status of every
+* **The PDF.** `\usepackage[status]{leanproof}` puts the status of every
   labelled result in the margin (from `article.proofread.tex`):
   derived, checked, partly checked, compiled, or false. Without the option the
-  typeset article is unchanged, which is what you submit.
+  typeset article is unchanged, which is what you submit. Compiled with shell
+  escape (`pdflatex -shell-escape`), the package also runs the quick check
+  every time, and its findings appear as LaTeX warnings at their lines.
+  `\usepackage[certify]{leanproof}` runs steps 4 and 5 as well: it writes the
+  Lean files the first time, then updates the pin and builds the certificate
+  before it reads the marks ([`leanproof.sty`](reference.md#the-pdf-leanproofsty)).
 * **The web reader.** It renders the article from its source with a marker at
   every sentence, and shows for each one its formal reading, Lean statement,
   premises and justification:

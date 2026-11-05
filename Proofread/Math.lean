@@ -107,6 +107,10 @@ def simplify : Nat → List PTok → Option (List MTok)
             else if n == w!"mathrm" || n == w!"operatorname" then (MTok.id word :: ·) <$> simplify f rest'
             else (MTok.id ([92] ++ n ++ [123] ++ word ++ [125]) :: ·) <$> simplify f rest'
           | _ => none
+        -- `\mathbb R`: a single letter without braces
+        | ⟨.mvar c, _, _⟩ :: rest =>
+          if n == w!"mathrm" || n == w!"operatorname" then (MTok.id [c] :: ·) <$> simplify f rest
+          else (MTok.id ([92] ++ n ++ [123, c, 125]) :: ·) <$> simplify f rest
         | _ => none
       else if n == w!"tfrac" || n == w!"dfrac" then (MTok.cmd w!"frac" :: ·) <$> simplify f ts
       -- a decorated symbol `\overline{\rho}` is a name of its own
@@ -120,6 +124,8 @@ def simplify : Nat → List PTok → Option (List MTok)
           match name with
           | some nm => (MTok.id ([92] ++ n ++ [123] ++ nm ++ [125]) :: ·) <$> simplify f rest
           | none => (MTok.cmd n :: ·) <$> simplify f ts
+        -- `\bar x`: a single letter without braces
+        | ⟨.mvar c, _, _⟩ :: rest => (MTok.id ([92] ++ n ++ [123, c, 125]) :: ·) <$> simplify f rest
         | _ => (MTok.cmd n :: ·) <$> simplify f ts
       else (MTok.cmd n :: ·) <$> simplify f ts
     | _ => none

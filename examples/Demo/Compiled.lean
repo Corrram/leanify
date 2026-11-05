@@ -13,4 +13,4 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_article Demo "article.tex" "fnv1a64:f4b9869631925b4e"
+#proofread_article Demo "article.tex" "fnv1a64:0691494d16226cc6"

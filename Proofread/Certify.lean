@@ -20,7 +20,7 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
   derives `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` from it;
 * writes `<article>.proofread.json`, the per-sentence status for readers and
   editors, and `<article>.proofread.tex`, the status of every labelled result for
-  the margin marks of `proofread.sty`. -/
+  the margin marks of `leanproof.sty`. -/
 namespace Proofread
 open Lean Elab Command Meta
 

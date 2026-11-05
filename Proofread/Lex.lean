@@ -85,16 +85,133 @@ def wDisplayEnvs : List Codes :=
 def wListEnvs : List Codes := [w!"enumerate", w!"itemize", w!"description"]
 def wDropText : List Codes :=
   [w!"emph", w!"textit", w!"textbf", w!"textup", w!"noindent", w!"centering", w!"medskip",
-   w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null"]
+   w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null",
+   w!"leavevmode"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits"]
+/-- References that print the kind of what they refer to (`\cref{l}` is `Lemma 2.1`). -/
+def wSelfRefs : List Codes := [w!"cref", w!"Cref", w!"autoref", w!"Autoref"]
 /-- Commands whose braced arguments are layout or metadata, skipped with the command kept. -/
 def wSkipArgs : List Codes :=
   [w!"section", w!"subsection", w!"subsubsection", w!"section*", w!"caption", w!"includegraphics",
    w!"bibliographystyle", w!"bibliography", w!"vspace", w!"hspace", w!"thanks", w!"title",
    w!"author", w!"date", w!"address", w!"email", w!"keywords", w!"maketitle", w!"Needspace",
    w!"texorpdfstring"]
+
+/-! ### Theorem environments
+
+Articles declare their own result environments: `\newtheorem{thm}{Theorem}`,
+`\newtheorem{lem}[thm]{Lemma}`, `\newtheorem*{claim*}{Claim}`. The lexer reads
+`\begin{thm}` as `\begin{theorem}`: the printed name decides the kind. A claim, a
+fact or an observation is read as a lemma, a statement proved where it stands; a
+question, a problem or a hypothesis as a conjecture, a statement not asserted; a
+notation as a definition; a note, a heuristic or a principle as a remark. The
+common abbreviations (`thm`, `lem`, `prop`, `cor`, `defn`, `rem`, …) are read the
+same way when the preamble does not declare them, since they usually come from a
+style file. The aliases are kept with the macros, under the environment name
+prefixed by `{` (no command name starts with a brace). -/
+
+/-- The words of a printed theorem name, and the kind of result they name. -/
+def kindWords : List (Codes × Codes) :=
+  [(w!"theorem", w!"theorem"), (w!"theorems", w!"theorem"),
+   (w!"lemma", w!"lemma"), (w!"lemmas", w!"lemma"), (w!"sublemma", w!"lemma"), (w!"claim", w!"lemma"),
+   (w!"fact", w!"lemma"), (w!"observation", w!"lemma"),
+   (w!"proposition", w!"proposition"), (w!"corollary", w!"corollary"),
+   (w!"definition", w!"definition"), (w!"definitions", w!"definition"), (w!"notation", w!"definition"),
+   (w!"remark", w!"remark"), (w!"remarks", w!"remark"), (w!"note", w!"remark"),
+   (w!"heuristic", w!"remark"), (w!"principle", w!"remark"),
+   (w!"example", w!"example"), (w!"examples", w!"example"),
+   (w!"conjecture", w!"conjecture"), (w!"question", w!"conjecture"), (w!"problem", w!"conjecture"),
+   (w!"hypothesis", w!"conjecture")]
+
+/-- Abbreviated environment names, read when the preamble does not declare them. -/
+def kindAbbrevs : List (Codes × Codes) :=
+  [(w!"thm", w!"theorem"), (w!"theo", w!"theorem"), (w!"lem", w!"lemma"), (w!"lemm", w!"lemma"),
+   (w!"lmm", w!"lemma"), (w!"prop", w!"proposition"), (w!"cor", w!"corollary"),
+   (w!"coro", w!"corollary"), (w!"corr", w!"corollary"), (w!"defn", w!"definition"),
+   (w!"defi", w!"definition"), (w!"dfn", w!"definition"), (w!"defin", w!"definition"),
+   (w!"rem", w!"remark"), (w!"rmk", w!"remark"), (w!"ex", w!"example"), (w!"exa", w!"example"),
+   (w!"exm", w!"example"), (w!"conj", w!"conjecture"), (w!"obs", w!"lemma")] ++ kindWords
+
+def lower (c : Nat) : Nat := if 65 ≤ c && c ≤ 90 then c + 32 else c
+
+/-- The letter runs of a printed name that are not command names, in lower case. -/
+def nameWords : Codes → Bool → List Codes → Codes → List Codes
+  | [], _, acc, cur => (if cur.isEmpty then acc else cur.reverse :: acc).reverse
+  | c :: cs, cmd, acc, cur =>
+    if isLetter c then
+      if cmd then nameWords cs true acc cur else nameWords cs false acc (lower c :: cur)
+    else
+      let acc := if cur.isEmpty then acc else cur.reverse :: acc
+      nameWords cs (c == 92) acc []
+
+/-- The kind of result a printed theorem name names, if any. -/
+def kindOf (printed : Codes) : Option Codes :=
+  (nameWords printed false [] []).findSome? (fun w => kindWords.lookup w)
+
+/-- The environment an article's environment name stands for: its declared alias,
+an abbreviation, or the name itself (a starred result environment is the result). -/
+def envAlias (macros : Macros) (env : Codes) : Codes :=
+  let base := if env.getLast? == some 42 then env.dropLast else env
+  match macros.lookup (123 :: env) with
+  | some k => k
+  | none =>
+    match macros.lookup (123 :: base) with
+    | some k => k
+    | none =>
+      if kindWords.any (·.2 == base) then base
+      else match kindAbbrevs.lookup base with
+        | some k => if macros.any (·.1 == 123 :: base) then env else k
+        | none => env
+
+/-- One undelimited macro argument: a braced group, a control sequence or a
+character, after spaces; with the number of code points read. -/
+def readArg (cs : Codes) : Codes × Codes × Nat :=
+  let (r, sp) := spaces cs
+  match r with
+  | 123 :: r' =>
+    match group 100000 0 r' [] with
+    | some (a, r'', n) => (a, r'', sp + 1 + n)
+    | none => ([], r, sp)
+  | 92 :: r' =>
+    let (m, r'') := takeWhile isLetter r'
+    if m.isEmpty then (92 :: r'.take 1, r'.drop 1, sp + 2) else (92 :: m, r'', sp + 1 + m.length)
+  | c :: r' => ([c], r', sp + 1)
+  | [] => ([], [], sp)
+
+/-- The arguments of a macro of arity `k`, the first optional with default `d`. -/
+def readArgs : Nat → Option Codes → Codes → List Codes × Codes × Nat
+  | 0, _, cs => ([], cs, 0)
+  | k + 1, some d, cs =>
+    let (r, sp) := spaces cs
+    let (a, r', m) := match r with
+      | 91 :: r1 => let (a, b) := takeWhile (· != 93) r1; (a, b.drop 1, sp + a.length + 2)
+      | _ => (d, cs, 0)
+    let (as, r'', m') := readArgs k none r'
+    (a :: as, r'', m + m')
+  | k + 1, none, cs =>
+    let (a, r, m) := readArg cs
+    let (as, r', m') := readArgs k none r
+    (a :: as, r', m + m')
+
+/-- The body of a macro with `#1`…`#9` replaced by its arguments (and `##` by `#`). -/
+def substArgs (as : List Codes) : Codes → Codes
+  | [] => []
+  | 35 :: 35 :: r => 35 :: substArgs as r
+  | 35 :: d :: r => if 49 ≤ d && d ≤ 57 then as.getD (d - 49) [] ++ substArgs as r else 35 :: substArgs as (d :: r)
+  | c :: r => c :: substArgs as r
+
+/-- A macro's expansion at a use: the body with its arguments, the rest of the
+input and the number of code points the arguments took. -/
+def expand (macros : Macros) (name body rest : Codes) : Codes × Codes × Nat :=
+  match body with
+  | 35 :: d :: b =>
+    if 49 ≤ d && d ≤ 57 then
+      let (as, r, k) := readArgs (d - 48) (macros.lookup (name ++ [35])) rest
+      (substArgs as b, r, k)
+    else (body, rest, 0)
+  | _ => (body, rest, 0)
 
 /-- Lexer state: the remaining input, its offset and the mode stack (`true` entries
 are math modes opened by `$`, `false` by other delimiters). -/
@@ -152,17 +269,19 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             | _ => (name0, rest0)
           let n := name.length + 1
           match macros.lookup name with
-          | some body =>
+          | some body0 =>
+            let (body, rest, k) := expand macros name body0 rest
             match lexAux macros f body pos st [] with
             | some (ts, st') => if st' == st then
-                lexAux macros f rest (pos + n) st (ts.reverse ++ out) else none
+                lexAux macros f rest (pos + n + k) st (ts.reverse ++ out) else none
             | none => none
           | none =>
           if name == w!"begin" || name == w!"end" then
             match rest with
             | 123 :: r =>
-              let (env, r') := takeWhile (· != 125) r
-              let len := n + env.length + 2
+              let (env0, r') := takeWhile (· != 125) r
+              let len := n + env0.length + 2
+              let env := envAlias macros env0
               let isDisplay := wDisplayEnvs.contains env
               if name == w!"begin" then
                 -- the options of a list environment are layout
@@ -173,13 +292,14 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
                 lexAux macros f (r'.drop 1) (pos + len) st' (⟨.finish env, pos, math⟩ :: out)
             | _ => none
           else if name == w!"label" || name == w!"ref" || name == w!"eqref" || name == w!"cite"
-              || name == w!"citep" || name == w!"citet" then
+              || name == w!"citep" || name == w!"citet" || wSelfRefs.contains name then
             let (r1, n1) := optArg rest
             match r1 with
             | 123 :: r =>
               let (arg, r') := takeWhile (· != 125) r
+              -- `\cref{l}` prints its own noun (`Lemma 2.1`): it cites like `\eqref{l}`
               let kind := if name == w!"label" then RefKind.label else if name == w!"ref" then .ref
-                else if name == w!"eqref" then .eqref else .cite
+                else if name == w!"eqref" || wSelfRefs.contains name then .eqref else .cite
               emit (.ref kind arg) (r'.drop 1) (n + n1 + arg.length + 2) st
             | _ => none
           else if wSkipArgs.contains name then
@@ -214,25 +334,145 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
       emit (.word w) rest w.length st
     else emit (.punct c) cs 1 st
 
-/-- Parameterless `\newcommand{\name}{body}` definitions of a preamble. -/
+/-! ### Macros
+
+The preamble's macros are expanded where they are used: `\newcommand`,
+`\renewcommand` and `\providecommand` (starred or not, with or without braces
+around the name), with up to nine arguments and an optional first argument,
+`\def` with undelimited arguments, `\DeclareMathOperator` (an operator name) and
+`\let`. A macro with arguments is kept with its body prefixed by `#n` (a
+parameterless body never starts with `#`), and the default of an optional first
+argument under the name followed by `#`. -/
+
+/-- A control sequence name after optional spaces: `\name`, `{\name}`, or a
+control symbol. -/
+def csName (cs : Codes) : Option (Codes × Codes) :=
+  match (spaces cs).1 with
+  | 123 :: r =>
+    match (spaces r).1 with
+    | 92 :: r =>
+      let (m, r') := takeWhile isLetter r
+      let (m, r') := if m.isEmpty then (r.take 1, r.drop 1) else (m, r')
+      match (spaces r').1 with
+      | 125 :: r'' => some (m, r'')
+      | _ => none
+    | _ => none
+  | 92 :: r =>
+    let (m, r') := takeWhile isLetter r
+    if m.isEmpty then some (r.take 1, r.drop 1) else some (m, r')
+  | _ => none
+
+/-- The arity marker of a macro body, `#n`. -/
+def arityMark (n : Nat) : Codes := if n == 0 then [] else [35, 48 + n]
+
+/-- `[n]` and `[default]` of a `\newcommand`, then the braced body: the body with
+its arity marker, the default of an optional first argument, and the rest. -/
+def macroDef (r : Codes) : Option (Codes × Option Codes × Codes) :=
+  let r := (spaces r).1
+  let (n, r) := match r with
+    | 91 :: d :: 93 :: r => if isDigit d then (d - 48, r) else (0, 91 :: d :: 93 :: r)
+    | r => (0, r)
+  let r := (spaces r).1
+  let (dflt, r) := match n, r with
+    | _ + 1, 91 :: r => let (a, b) := takeWhile (· != 93) r; (some a, b.drop 1)
+    | _, r => (none, r)
+  match (spaces r).1 with
+  | 123 :: body =>
+    match group 100000 0 body [] with
+    | some (b, r', _) => some (arityMark n ++ b, dflt, r')
+    | none => none
+  | _ => none
+
+/-- The parameters of a `\def`: `#1#2…` up to the body; `none` for delimited parameters. -/
+def defParams : Codes → Nat → Option (Nat × Codes)
+  | 123 :: r, n => some (n, 123 :: r)
+  | 35 :: d :: r, n => if d == 49 + n then defParams r (n + 1) else none
+  | _, _ => none
+
+/-- Add a definition; a later definition of the same name replaces the earlier one. -/
+def define (m b : Codes) (acc : Macros) : Macros := (m, b) :: acc.filter (·.1 != m)
+
+/-- The macros and theorem environments of a preamble. -/
 def macrosAux : Nat → Codes → Macros → Option Macros
   | 0, _, _ => none
   | _ + 1, [], acc => some acc.reverse
   | f + 1, c :: cs, acc =>
     if c == 92 then
       let (name, rest) := takeWhile isLetter cs
-      if name == w!"newcommand" then
-        match rest with
-        | 123 :: 92 :: r =>
-          let (m, r') := takeWhile isLetter r
-          let (m, r') := if m.isEmpty then (r.take 1, r.drop 1) else (m, r')
-          match r' with
-          | 125 :: 123 :: body =>
+      if name == w!"newtheorem" then
+        -- `\newtheorem{env}[counter]{Printed}[within]`, `\newtheorem*{env}{Printed}`
+        let r := (spaces (match rest with | 42 :: r => r | r => r)).1
+        match r with
+        | 123 :: r =>
+          let (env, r1) := takeWhile (· != 125) r
+          let (r2, _) := optArg (spaces (r1.drop 1)).1
+          match (spaces r2).1 with
+          | 123 :: r3 =>
+            match group 100000 0 r3 [] with
+            | some (printed, r4, _) =>
+              match kindOf printed with
+              | some k => macrosAux f r4 ((123 :: env, k) :: acc)
+              | none => macrosAux f r4 acc
+            | none => macrosAux f r3 acc
+          | r2 => macrosAux f r2 acc
+        | r => macrosAux f r acc
+      else if name == w!"declaretheorem" then
+        -- `\declaretheorem[name=Printed, …]{env}`, `\declaretheorem{theorem}`
+        let (opts, r) := match rest with
+          | 91 :: r => let (a, b) := takeWhile (· != 93) r; (a, b.drop 1)
+          | r => ([], r)
+        match (spaces r).1 with
+        | 123 :: r =>
+          let (env, r1) := takeWhile (· != 125) r
+          match kindOf opts <|> kindOf env with
+          | some k => macrosAux f (r1.drop 1) ((123 :: env, k) :: acc)
+          | none => macrosAux f (r1.drop 1) acc
+        | r => macrosAux f r acc
+      else if name == w!"newcommand" || name == w!"renewcommand" || name == w!"providecommand" then
+        let r := match rest with | 42 :: r => r | r => r
+        match csName r with
+        | some (m, r') =>
+          match macroDef r' with
+          | some (b, dflt, r'') =>
+            if name == w!"providecommand" && acc.any (·.1 == m) then macrosAux f r'' acc
+            else
+              let acc := (define m b acc).filter (·.1 != m ++ [35])
+              let acc := match dflt with | some d => (m ++ [35], d) :: acc | none => acc
+              macrosAux f r'' acc
+          | none => macrosAux f r' acc
+        | none => macrosAux f rest acc
+      else if name == w!"def" then
+        match csName rest with
+        | some (m, r') =>
+          match defParams r' 0 with
+          | some (n, 123 :: body) =>
             match group 100000 0 body [] with
-            | some (b, r'', _) => macrosAux f r'' ((m, b) :: acc)
-            | none => none
+            | some (b, r'', _) => macrosAux f r'' (define m (arityMark n ++ b) acc)
+            | none => macrosAux f r' acc
           | _ => macrosAux f r' acc
-        | _ => macrosAux f rest acc
+        | none => macrosAux f rest acc
+      else if name == w!"DeclareMathOperator" then
+        let r := match rest with | 42 :: r => r | r => r
+        match csName r with
+        | some (m, r') =>
+          match (spaces r').1 with
+          | 123 :: body =>
+            match group 100000 0 body [] with
+            | some (b, r'', _) => macrosAux f r'' (define m (w!"\\operatorname{" ++ b ++ [125]) acc)
+            | none => macrosAux f r' acc
+          | _ => macrosAux f r' acc
+        | none => macrosAux f rest acc
+      else if name == w!"let" then
+        match csName rest with
+        | some (m, r') =>
+          let r' := match (spaces r').1 with | 61 :: r => r | r => r
+          match csName r' with
+          | some (t, r'') =>
+            -- `\let\a\b` makes `\a` the current meaning of `\b`
+            let b := match acc.lookup t with | some b => b | none => 92 :: t
+            if t.all isLetter || t.length == 1 then macrosAux f r'' (define m b acc) else macrosAux f r'' acc
+          | none => macrosAux f r' acc
+        | none => macrosAux f rest acc
       else macrosAux f rest acc
     else macrosAux f cs acc
 

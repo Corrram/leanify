@@ -19,13 +19,18 @@ Compiles the article natively, in about a second, and prints findings in the
 | Finding | Severity |
 | --- | --- |
 | a sentence that did not compile (an undefined symbol, a type mismatch, an unsupported construction, …) | warning |
-| a sentence of a theorem, lemma, proposition or corollary without a reading | warning |
+| a sentence of a theorem, lemma, proposition, corollary or definition without a reading | warning |
 | with `--claims`: every definition and the formal reading of every claim | info |
-| with `--prose`: every sentence of a proof without a reading | info |
+| with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading | info |
+
+An undefined symbol is reported once, at the first sentence that uses it, with the
+lines of the later sentences that fail for the same symbol: they follow from the
+first, and defining the symbol fixes them all. Remarks, examples and conjectures
+discuss rather than state, so their prose is not a gap in a statement.
 
 The last lines count the compiled, failed and prose sentences of the text, the
 results and the proofs. The exit status is 1 if a sentence failed to compile.
-`--vocab unitsquare` adds the vocabulary of copulas and probability on the unit
+`--vocab unitsquare` adds the vocabulary of probability on the unit
 square ([Vocabularies and models](vocabularies.md)).
 
 ### `proofread init`
@@ -112,7 +117,7 @@ unverified claim why it is not verified). The status of a claim is `text`
 the text), `unverified` or `refuted`. `sourceHash` pins the article.
 
 `article.proofread.tex` holds the status of every labelled result and a
-summary, for `proofread.sty`.
+summary, for `leanproof.sty`.
 
 ### `proofread_diagnostics.py`
 
@@ -127,20 +132,81 @@ status is 1 if the article changed after it was certified, if a claim is
 refuted, with `--verified` if a compiled claim is not verified, and with
 `--strict` on any warning. `--pin` updates the pin in the Lean file instead.
 
-## The PDF: `proofread.sty`
+### `proofread_prove.py`
+
+```sh
+python .lake/packages/proofread/scripts/proofread_prove.py ARTICLE.tex [--proofs Proofs.lean] \
+    [--hook CMD] [--jobs 4] [--rounds 1] [--timeout 900] [--dry-run]
+```
+
+Fills in the stubs of `Proofs.lean` that still end in `sorry`. It needs the
+report, so build the certificate once first (`lake build NS.Certified`).
+
+* **Tactics, no model.** For every open claim it tries a fixed portfolio: it
+  introduces the premises and the claim's variables and hypotheses, applies each
+  premise to them, splits conjunctions, and closes the goal with `assumption`,
+  `linarith`, `positivity`, `ring`, `field_simp; ring`, `norm_num` (unfolding the
+  article's definitions), or each conjunct in turn; then, for what is left,
+  `nlinarith`, `aesop`, `grind` and `tauto`. All candidates go into one Lean
+  file under `.lake/proofread-prove/`, which Lean elaborates once, and the first
+  candidate of each claim that elaborates without an error replaces its `sorry`.
+* **A hook, optional.** `--hook CMD` gives every claim still open to `CMD`, one
+  at a time and `--jobs` in parallel, as JSON on its standard input: the claim, its
+  formal reading, its Lean statement and definedness condition, its premises
+  (available as `cJ`), the sentence and the sentences of the proof around it, the
+  article's definitions, the stub, and the errors of the last attempt. `CMD`
+  prints the tactic block of a proof (the lines after `:= by`; the stub's first
+  two lines are added if missing). Each block is checked the same way, and
+  `--rounds 2` gives `CMD` the errors of a failed block for a second try. A
+  model behind `CMD` proves single steps with their premises in context, not
+  whole theorems.
+
+Nothing is written that Lean has not accepted, and `lake build` checks every
+proof again, with the citation audit. Proofs are cached by the statement they
+prove (`.lake/proofread-prove/cache.json`), so after an edit only what changed is
+proved again. The exit status is 1 if a claim is still open.
+
+## The PDF: `leanproof.sty`
 
 ```latex
-\usepackage{proofread}           % loads mathtools and amssymb, changes nothing
-\usepackage[status]{proofread}   % marks every labelled result in the margin
+\usepackage{leanproof}           % loads mathtools and amssymb; checks the article as it compiles
+\usepackage[status]{leanproof}   % and marks every labelled result in the margin
+\usepackage[certify]{leanproof}  % and builds the certificate first, so the marks are current
 \proofreadmodule{Note.Certified} % optional: the module that certifies the article
 \proofreadreport                 % optional: a one-line summary, where it appears
 ```
 
-With `status`, the margin of every labelled result shows *derived* (every
-sentence compiled and derived in the text), *checked* (every sentence compiled
-and verified), *partly checked*, *compiled* (not yet verified) or *false* (a
-claim is refuted). The marks are read from `\jobname.proofread.tex`. Without
-the option the typeset article is unchanged, which is what you submit.
+| Option | Effect |
+| --- | --- |
+| `status` | The margin of every labelled result shows *derived* (every sentence compiled and derived in the text), *checked* (every sentence compiled and verified), *partly checked*, *compiled* (not yet verified) or *false* (a claim is refuted), read from `\jobname.proofread.tex`. If the article is newer than that file, a warning says the marks may be out of date. |
+| `check=false` | No quick check during the compile. |
+| `certify` | Before the marks are read, `prepare` updates the pin and `lake build` builds the certificate. The first time, when the article has no Lean files yet, `init` writes them, and a warning gives the `[[lean_lib]]` entry to add to `lakefile.toml`. Implies `status`. |
+| `vocab=unitsquare` | The vocabulary of the article, for `check` and `init`. |
+| `lean=FILE` | The compiled Lean file of the article, by default `Compiled.lean` next to it. The module to build is `\proofreadmodule`, or else `NS.Certified` for the namespace `NS` that this file compiles. |
+
+**Checking as you compile.** When the compiler may run programs (shell escape:
+`pdflatex -shell-escape`, `latexmk -shell-escape`, or the setting of the
+editor) and the article lies in a Lean project (a `lakefile.toml` or
+`lakefile.lean` in its folder or up to three folders above), every compile runs
+`lake exe proofread check` on the article. Its findings become LaTeX warnings
+at their lines of the article,
+
+```
+Package leanproof Warning: sentence not compiled (undefined symbol: g); it
+(leanproof)                asserts nothing checked on input line 70.
+```
+
+so editors that read the LaTeX log list them with the other warnings, and the
+summary goes to the terminal. With `certify`, the errors of the Lean build and
+the refuted claims are warnings too. The full output of Proofread is in
+`\jobname.proofread.log`. `lake` must be on the `PATH` of the compiler; the
+first check also builds the checker, which takes a few minutes once.
+
+Without shell escape nothing runs, and in a Lean project a warning says so.
+Outside a Lean project, as on arXiv or a journal's server, the package runs
+nothing and says nothing. Without `status` the typeset article is unchanged,
+which is what you submit. `leanproof.sty` is not on CTAN, so upload it with the
+article, or leave it out: Proofread reads the article without it.
 
 ## The web reader
 

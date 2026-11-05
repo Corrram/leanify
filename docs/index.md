@@ -85,7 +85,7 @@ the diagnostics and the margin of the PDF mark it false.
 
     ---
 
-    The same `.tex` file typesets as before. `\usepackage[status]{proofread}`
+    The same `.tex` file typesets as before. `\usepackage[status]{leanproof}`
     adds the status of every result in the margin.
 
 -   :material-web:{ .lg .middle } **A reader for your readers**
