@@ -106,30 +106,32 @@ def conjPreds (ty : Ty) : List Tm → Option Tm
   | [p] => some p
   | ps => some (.lam ty .tt (Elab.conjAll (ps.map fun p => Tm.app p (.loc 0))))
 
-/-- An endpoint of an interval domain: a numeral, or a closed term (`g_*`). -/
-def closedBound (m : MT) : M Tm := do
+/-- An endpoint of an interval domain: a numeral, or a term in the scope `sc` of
+the binders before it (`g_*`, or `x` in `e\in[0,x]`). -/
+def closedBound (m : MT) (sc : Scope := []) : M Tm := do
   match constTm m with
   | some t => pure t
   | none => match Elab.constMT m with
     | some t => pure t
     | none => do
-      let (t, ty) ← Elab.term 100000 [] none m
+      let (t, ty) ← Elab.term 100000 sc none m
       coerce t ty .real
 
-/-- The type and predicate of a domain formula (`[0,1]`, `[-1,1]`, `\CC`). -/
-def domainOf (calculus : Bool) (d : MT) : M (Ty × Option Tm) := do
+/-- The type and predicate of a domain formula (`[0,1]`, `[-1,1]`, `\CC`). The ends
+of an interval may use the binders `sc` before it; the predicate is a term in `sc`. -/
+def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm) := do
   if isZeroOne d && !calculus then pure (.unit, none)
   else match d with
     | .interval lo hi => do
-      let l ← closedBound lo
-      let h ← closedBound hi
-      pure (.real, some (intervalPred l h))
+      let l ← closedBound lo sc
+      let h ← closedBound hi sc
+      pure (.real, some (intervalPred (shift 1 0 l) (shift 1 0 h)))
     | .ival lo hi lopen ropen => do
       let l ← if Elab.isInfty false lo then (if lopen then pure none else fail E.unsupported)
-        else some <$> closedBound lo
+        else some <$> closedBound lo sc
       let h ← if Elab.isInfty true hi then (if ropen then pure none else fail E.unsupported)
-        else some <$> closedBound hi
-      pure (.real, some (.lam .real .tt (Elab.rayTm l h lopen ropen (.loc 0))))
+        else some <$> closedBound hi sc
+      pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) lopen ropen (.loc 0))))
     | .tuple [lo, hi] => do
       let l ← Elab.constEnd false true lo
       let h ← Elab.constEnd true true hi
@@ -287,16 +289,41 @@ def binderInfos : Bind → M (List BindInfo)
       let sc : Scope := free.reverse.map (·, Ty.real)
       let (p, pty) ← Elab.term 100000 sc none φ
       if pty != .prop then fail E.type
-      pure (free.map fun v => (⟨v, .real, if v == last then some (.lam .real .tt p) else none⟩ : BindInfo))
+      -- the predicate is applied to the last variable where all of them are bound,
+      -- so `φ` is shifted past its own (unused) argument
+      pure (free.map fun v => (⟨v, .real, if v == last then some (.lam .real .tt (shift 1 0 p)) else none⟩ : BindInfo))
   | .many bs => do
-    let mut out := []
+    let mut out : List BindInfo := []
     for b in bs do
       match b with
-      | .every vs d => do
-        let (ty, p) ← domainOf false d
-        out := out ++ vs.map fun v => ⟨v, ty, p⟩
+      | .every vs d => out := out ++ (← everyAfter out vs d)
       | _ => fail E.unsupported
     pure out
+where
+  /-- `Let $x\in(0,1]$ and $e\in[0,x]$`: a domain may use the variables bound
+  before it; its predicate is applied where they and the variable are bound. -/
+  everyAfter (before : List BindInfo) (vs : List Codes) (d : MT) : M (List BindInfo) := do
+    let (ty, p) ← domainOf false d (before.map fun b => (b.name, b.ty)).reverse
+    let (bis, _) := vs.foldl (fun (acc, j) v =>
+      (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
+    pure bis
+
+/-- The binders among `bs` whose variables are `used`, in their order. A used binder
+whose domain uses the binders before it (`e\in[0,x]`) keeps them all. -/
+def usedBinders (bs : List BindInfo) (used : List Codes) : List BindInfo :=
+  let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
+  let lastDep := ((bs.zipIdx.filter fun (b, _) => used.contains b.name && dependent b).map (·.2)).getLast?
+  (bs.zipIdx.filter fun (b, i) => used.contains b.name || lastDep.any (i ≤ ·)).map (·.1)
+
+/-- The variables of a list of binders, each domain in the scope of the variables
+before it (`For $x\in(0,1]$ and $e\in[0,x]$`). -/
+def bindersInfos (binds : List Bind) : M (List BindInfo) := do
+  let mut out : List BindInfo := []
+  for b in binds do
+    match b with
+    | .every vs d => out := out ++ (← binderInfos.everyAfter out vs d)
+    | b => out := out ++ (← binderInfos b)
+  pure out
 
 def scopeOf (bs : List BindInfo) : Scope := (bs.map fun b => (b.name, b.ty)).reverse
 
@@ -1073,10 +1100,10 @@ def monoTm (sc : Scope) (m : MT) (mono : Mono) : M Tm := do
 def notionBody (sc : Scope) (cond : NotionCond) : M Tm := do
   match cond with
   | .formula f binds =>
-    let bs := (← binds.mapM binderInfos).flatten
+    let bs := (← bindersInfos binds)
     pure (wrap bs (← prop (scopeOf bs ++ sc) none f))
   | .mono binds m mono =>
-    let bs := (← binds.mapM binderInfos).flatten
+    let bs := (← bindersInfos binds)
     pure (wrap bs (← monoTm (scopeOf bs ++ sc) m mono))
 
 /-- `We call a copula $C$ NAME (ABBR) if COND.`: the notion `λ C, COND`, named by
@@ -1403,8 +1430,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         | [] => []
       else acc.map fun cl => { cl with clause := Clause.ifThen φ cl.clause }
     | _ => acc) cls
-  let bss ← binds.mapM binderInfos
-  let bs := bss.flatten
+  let bs ← bindersInfos binds
   -- `On I,`: the sentence's single free variable ranges over I
   let onVar ← match binds.find? (fun b => match b with | .on _ => true | _ => false) with
     | some (.on d) => do
@@ -1430,7 +1456,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
           | .scoped _ vs _ _ | .every vs _ _ => vs | _ => [])
       let free := (cls.flatMap (fun cl => clauseFree st (known ++ clBound) cl)).eraseDups
       let free := free.filter fun n => !(st.globs.any fun g => g.key == n && !g.family)
-      pure (st.envBinders.filter fun b => free.contains b.name)
+      pure (usedBinders st.envBinders free)
     else pure []
   if inResult && !bs.isEmpty then
     modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun b => !(bs.any (·.name == b.name)) }
@@ -1464,7 +1490,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         -- the binder of the map's variable (of the clause, or of the sentence) restricts
         -- the map's domain
         let some (v, _) := (← get).lastMaps[k]? | fail E.referent
-        let cbs := (← cl.binds.mapM binderInfos).flatten
+        let cbs := (← bindersInfos cl.binds)
         let some b := (cbs ++ allBs).find? (·.name == v) | fail E.referent v
         let outer := (if cbs.isEmpty then allBs else inherited).filter (·.name != v)
         let p ← rangesTm (scopeOf outer) k b target
@@ -1472,7 +1498,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         let ids ← go g rest last
         pure (id :: ids)
       | k => do
-        let cbs := (← cl.binds.mapM binderInfos).flatten
+        let cbs := (← bindersInfos cl.binds)
         -- a clause with its own binder is not in the scope of the sentence's opening
         -- binders; inherited binders bind the variables the clause uses
         let own := match k with | .scoped _ vs _ _ | .every vs _ _ => vs | _ => []
@@ -1480,7 +1506,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         let stNow ← get
         let own := own ++ (if usesIneq k then ((stNow.lastIneq.map (·.1.map (·.name))).getD []) else [])
         let free := clauseFree stNow ((scopeOf (bs ++ cbs)).map (·.1) ++ own) cl
-        let inh := inherited.filter fun b => free.contains b.name
+        let inh := usedBinders inherited free
         let outer := if cbs.isEmpty then inh ++ bs ++ onVar.toList else inh
         -- definitions inside the clause (`the mean $G\coloneqq\sqrt{ab}$`) and after it
         -- (`…, where $d\coloneqq …$`), in the scope of its binders
@@ -1564,7 +1590,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     modify fun st => { st with notionSubject := some s }
     pure ([], [])
   | .assumeAll binds defs => do
-    let bs := (← binds.mapM binderInfos).flatten
+    let bs := (← bindersInfos binds)
     match c.ctx.kind with
     | .text =>
       modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }

@@ -520,6 +520,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
               if a == sty then applyAll hd hty hdoms [(s, sty)] else pure (hd, hty)
             | _, _ => pure (hd, hty)
         | none =>
+        let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
+        if sign then fail E.undefined ((symKey m).getD key)
         let (h, g) ← liftO (← lookupGlob key) E.undefined key
         if !g.family then fail E.unsupported key
         let a ← term f sc none i
@@ -715,6 +717,9 @@ where
         | some (h, gl) =>
           if gl.family then fail E.unsupported key else withImplicit sc h gl
         | none =>
+        -- `\eta_-` is a symbol of its own: a sign is not an index
+        let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
+        if sign then fail E.undefined ((symKey hd).getD key)
         let (h, gl) ← liftO (← lookupGlob key) E.undefined key
         let a ← term g sc none i
         let (t, ty) ← applyAll (.glob h) gl.ty gl.doms [a]

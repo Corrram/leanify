@@ -96,6 +96,10 @@ quantities and classes defined earlier in the article.
 | value and derivative | `define continuous functions $\varphi_w,\psi_w:[0,1]\to\R$ by $\varphi_w(1-w)=0$, $\psi_w(0)=0$, and DISPLAY` with `\varphi_w'(x)=\begin{cases}…\end{cases}` in the display, or `Let $\varphi_b,\psi_b:[0,1]\to\R$ be continuous, normalized by $\varphi_b(1-b)=0$ and $\psi_b(0)=0$, with derivatives DISPLAY` (read as `φ(x) = φ(a) + ∫_a^x φ'`; the derivative may be given on open pieces) |
 | a set of pairs | `For $w\in[\frac12,1)$, the support of $\gamma_{T_w}$ is \[S_w\coloneqq\{(x,1-x):0\le x\le1-w\}\cup\{(x,x+w-1):1-w\le x\le1\}.\]` (unions `\cup`, products `[a,b]\times\{c\}`) |
 | the variable of a result or a proof | `Let $w\in[\frac12,1)$.` (in a proof, `Let $x\in(0,\infty)$. Then $\frac{(x-1)^2}{x}\ge0$.` binds `x` in the later steps of the proof); a condition binds its variables as well: `Let $c>0$.`, `Let $c>0$ and $z\in(0,1)$.` |
+| a bound as the domain | `For every $c>0$, …`, `For $c\ge1$, set …`, `For $0<t\le1$, …` (`c>0` is `c\in(0,\infty)`, `0<t\le1` is `t\in(0,1]`) |
+| a domain that uses an earlier variable | `Let $x\in(0,1]$ and $e\in[0,x]$.` (the claims that use `e` are also about `x`) |
+| upper and lower signs | `For $c\in(0,\infty)$, set $x_\pm(c)\coloneqq c\pm1$.` defines `x_+` and `x_-`; a claim with `\pm` or `\mp` is the two claims, one for each sign |
+| the variable after the definition | `Write $g(t)\coloneqq\min\{\max\{t,0\},1\}$ for $t\in\mathbb{R}$.`, `Define the weight \[a(x,z)\coloneqq x(x+2z),\qquad (x,z)\in[0,1]^2.\]` |
 | law of a construction | `For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma_T$ denote the law of $(X,T(X))$ for $X$ uniformly distributed on $[0,1]$.` |
 
 ## Definitions in the running text
@@ -172,6 +176,12 @@ compiles, the result it proves gets those sentences and citations as its
 premises, and the result is *derived in the text*. Sentences that only
 organize the argument ("Nonnegativity away from that set is proved rectangle by
 rectangle.") are prose and assert nothing.
+
+A section whose title announces a proof, `\subsection{Proof of
+Theorem~\ref{thm:main}}`, is a proof of that result up to the next sectioning
+command. The heading of a case, `\item \emph{$x\ge0$.}`, is prose: it is the
+case's assumption, not a claim. The steps under it are read without that
+assumption, so a step that holds only in its case is not derived.
 
 ## Checking while writing
 

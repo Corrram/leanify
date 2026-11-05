@@ -105,7 +105,7 @@ def display (cs : List Chunk) : Option (MT × List Codes × List Chunk) :=
   | _ => none
 
 /-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`). -/
-def binderMath (ts : List MTok) : Option (List Codes × MT) := do
+def binderIn (ts : List MTok) : Option (List Codes × MT) := do
   let i ← ts.findIdx? (· == .cmd w!"in")
   let pre := ts.take i
   let (pre, square) := match pre with
@@ -122,6 +122,30 @@ def binderMath (ts : List MTok) : Option (List Codes × MT) := do
       | _ => none
     else some dom
   if names.isEmpty then none else some (names, dom)
+
+/-- A binder written as a bound on one real variable: `c>0` is `c\in(0,\infty)`,
+`x\ge a` is `x\in[a,\infty)`, `x<b` is `x\in(-\infty,b)`, and `a<x\le b` is
+`x\in(a,b]`. -/
+def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
+  let inf : MT := .id w!"\\infty"
+  match ← Math.parseFormula ts with
+  | .chain (.id x) [(r, b)] =>
+    match r with
+    | .gt => some ([x], .ival b inf true true)
+    | .ge => some ([x], .ival b inf false true)
+    | .lt => some ([x], .ival (.neg inf) b true true)
+    | .le => some ([x], .ival (.neg inf) b true false)
+    | _ => none
+  | .chain a [(r1, .id x), (r2, b)] =>
+    if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then
+      if r1 == .le && r2 == .le then some ([x], .interval a b)
+      else some ([x], .ival a b (r1 == .lt) (r2 == .lt))
+    else none
+  | _ => none
+
+/-- A binder: `x\in A`, or a bound on one real variable (`c>0`). -/
+def binderMath (ts : List MTok) : Option (List Codes × MT) :=
+  binderIn ts <|> boundBinder ts
 
 /-- Words until (not including) a stop word; fails if a non-word chunk occurs. -/
 def wordsUntil (stop : List Codes) : Nat → List Chunk → List Codes → Option (List Codes × List Chunk)
@@ -1011,9 +1035,40 @@ def defList : Nat → List Chunk → List MT → List Codes → Option (List MT 
       | none => some (acc, ls, r)
     | none => some (acc, ls, r)
 
+/-- A range `x\in A` or `(x,z)\in A^2` as a binder. -/
+def rangeBind : MT → Option Bind
+  | .chain (.id x) [(.mem, d)] => some (.every [x] d)
+  | .chain (.tuple xs) [(.mem, .sup d (.num k))] => do
+    let vs ← xs.mapM fun x => match x with | .id v => some v | _ => none
+    if vs.length == k && k ≥ 2 then some (.every vs d) else none
+  | _ => none
+
+/-- The definitions of `Set DEFS.`, `Define the NAME DISPLAY.`, and `Write DEFS for
+$t\in A$.` (the binder after the definitions, as in `For $t\in A$, write DEFS.`). -/
 def constDefsOf (b : Option Bind) (cs : List Chunk) : Option Sent := do
+  -- `the weight`: the name of what the display defines
+  let cs := match cs with
+    | .w t :: rest =>
+      let ws := rest.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+      if t == w!"the" && ws.length ≤ 6 && (match rest.drop ws.length with | .d .. :: _ | .m _ :: _ => true | _ => false)
+      then rest.drop ws.length else cs
+    | _ => cs
   let (items, ls, r) ← defList 6 cs [] []
-  if isEnd (trailer r) && !items.isEmpty && items.all isDefeq then some (.constDefs b items ls) else none
+  -- `b(x)\coloneqq x+1,\qquad x\in[0,1]`: the range of the variables, after the definitions
+  let (items, b) := match b, items.reverse with
+    | none, last :: defs@(_ :: _) =>
+      match rangeBind last with
+      | some bd => (defs.reverse, some bd)
+      | none => (items, b)
+    | _, _ => (items, b)
+  if items.isEmpty || !items.all isDefeq then none else
+  if isEnd (trailer r) then some (.constDefs b items ls) else
+  match b, kw [w!"for"] r with
+  | none, some r1 => do
+    let (ts, r2) ← mathChunk ((kw [w!"every"] r1).getD r1)
+    let (vs, d) ← binderMath ts
+    if isEnd r2 then some (.constDefs (some (.every vs d)) items ls) else none
+  | _, _ => none
 
 /-- `class of [all]`, `set of [all]`. -/
 def classOf (cs : List Chunk) : Option (List Chunk) := do
@@ -1231,7 +1286,7 @@ def sentence (cs : List Chunk) : Option Sent :=
       if isEnd r7 then some (.defBy s pieces ls (some (φ, vs, dom))) else none) <|>
     constDefsOf none r
   | none =>
-  match kw [w!"set"] cs <|> kw [w!"put"] cs with
+  match kw [w!"set"] cs <|> kw [w!"put"] cs <|> kw [w!"write"] cs with
   | some r => constDefsOf none r
   | none =>
   -- fix $B$ [and define|set|put DEFS].
@@ -1339,7 +1394,7 @@ where
           letBe b [] r2
         | none =>
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
-        match kw [w!"set"] r1 with
+        match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 with
         | some r2 => (do
           let (m, r3) ← formula r2
           let r4 ← kw [w!"and", w!"let"] r3

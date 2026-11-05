@@ -209,6 +209,8 @@ def run : Nat → Mode → List MTok → R
     | .sym 45 :: rest => do
       let (x, rest') ← run f (.product bar) rest
       some (.neg x, rest')
+    -- a unary plus, as in the upper sign of `\pm1`
+    | .sym 43 :: rest => run f (.product bar) rest
     | _ => do
       let (x, rest) ← run f (.atom bar) ts
       run f (.postfix bar x) rest
@@ -506,11 +508,21 @@ def joinRows : List MT → Option (List MT)
       | y => some (.chain y more :: rs')
     | _ => some (x :: rs)
 
-/-- Parse the content of a display or inline formula. -/
+/-- `\pm` and `\mp` read as `+` and `-` (`upper`), or as `-` and `+`. -/
+def pmAs (upper : Bool) : List MTok → List MTok :=
+  List.map fun t =>
+    if t == .cmd w!"pm" then .sym (if upper then 43 else 45)
+    else if t == .cmd w!"mp" then .sym (if upper then 45 else 43)
+    else t
+
+/-- Parse the content of a display or inline formula. A formula with `\pm` or `\mp` stands for two formulas,
+the upper and the lower signs: `x_\pm(c)\coloneqq c\pm1` defines `x_+` and `x_-`. -/
 def parseDisplay (ts : List MTok) : Option MT := do
   let ts := stripEnv ts
   let parts := splitTop (ts.length + 1) [] ts 0 []
   let parts := parts.filter (!·.isEmpty)
+  let parts := if ts.any (fun t => t == .cmd w!"pm" || t == .cmd w!"mp") then
+      parts.map (pmAs true) ++ parts.map (pmAs false) else parts
   -- `φ, \text{equivalently} ψ`
   match parts with
   | [p, [.text w], q] =>

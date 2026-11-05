@@ -213,6 +213,38 @@ def expand (macros : Macros) (name body rest : Codes) : Codes × Codes × Nat :=
     else (body, rest, 0)
   | _ => (body, rest, 0)
 
+/-- Sectioning commands. -/
+def wSections : List Codes :=
+  [w!"section", w!"section*", w!"subsection", w!"subsubsection", w!"paragraph"]
+
+/-- The label of the result a section title such as `Proof of Theorem~\ref{l}`
+or `The proof of \cref{l}` announces the proof of. -/
+def proofOfTitle (title : Codes) : Option Codes :=
+  let ws := nameWords title false [] []
+  let opens := ws.take 2 == [w!"proof", w!"of"] || ws.take 2 == [w!"proofs", w!"of"] ||
+    ws.take 3 == [w!"the", w!"proof", w!"of"]
+  let rec findRef : Nat → Codes → Option Codes
+    | 0, _ => none
+    | _, [] => none
+    | f + 1, c :: cs =>
+      if c == 92 then
+        let (m, r) := takeWhile isLetter cs
+        if (m == w!"ref" || wSelfRefs.contains m) && r.head? == some 123 then
+          some (takeWhile (· != 125) (r.drop 1)).1
+        else findRef f r
+      else findRef f cs
+  if opens then findRef title.length title else none
+
+/-- Directly after `\item` (or `\item[…]`): the emitted tokens, latest first. -/
+def afterItem (out : List PTok) : Bool :=
+  match out with
+  | ⟨.cmd i, _, _⟩ :: _ => i == w!"item"
+  | ⟨.punct 93, _, _⟩ :: rest =>
+    match rest.dropWhile (fun p => p.tok != .cmd w!"item" && p.tok != .par) with
+    | ⟨.cmd i, _, _⟩ :: _ => i == w!"item" && (rest.takeWhile (·.tok != .cmd w!"item")).length ≤ 8
+    | _ => false
+  | _ => false
+
 /-- Lexer state: the remaining input, its offset and the mode stack (`true` entries
 are math modes opened by `$`, `false` by other delimiters). -/
 def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok →
@@ -314,10 +346,26 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
                   | some (_, r3, n3) => skip g r3 (k + n1 + 1 + n3)
                   | none => none
                 | _ => some (r1, k + n1)
-            match skip 4 rest 0 with
-            | some (r, k) => emit (.cmd name) r (n + k) st
-            | none => none
-          else if !math && wDropText.contains name then lexAux macros f rest (pos + n) st out
+            -- `\subsection{Proof of Theorem~\ref{l}}`: a proof of the result `l`
+            let proofOf : Option Codes :=
+              if wSections.contains name then
+                match (optArg rest).1 with
+                | 123 :: r => match group 100000 0 r [] with
+                  | some (title, _, _) => proofOfTitle title
+                  | none => none
+                | _ => none
+              else none
+            match skip 4 rest 0, proofOf with
+            | some (r, k), some l =>
+              lexAux macros f r (pos + n + k) st
+                (⟨.ref .ref l, pos, math⟩ :: ⟨.begin w!"@proofsec", pos, math⟩ :: ⟨.cmd name, pos, math⟩ :: out)
+            | some (r, k), none => emit (.cmd name) r (n + k) st
+            | none, _ => none
+          else if !math && wDropText.contains name then
+            -- `\item \emph{$A\ge z$ and $B\le1+z$.}`: the heading of a case, not a claim
+            if afterItem out && (name == w!"emph" || name == w!"textit" || name == w!"textbf") then
+              emit (.cmd w!"@heading") rest n st
+            else lexAux macros f rest (pos + n) st out
           else if math && wDropMath.contains name then lexAux macros f rest (pos + n) st out
           else emit (.cmd name) rest n st
     else if c == 123 then

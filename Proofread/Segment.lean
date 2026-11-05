@@ -80,6 +80,12 @@ structure St where
   skipDepth : Nat := 0
   deriving Inhabited, Lean.ToExpr
 
+/-- The label of a proof that is a section (`\subsection{Proof of Theorem~\ref{l}}`):
+it ends at the next sectioning command. -/
+def secProofLabel : Codes := w!"@section"
+
+def St.secProof (s : St) : Bool := s.ctx.kind == .proof && s.ctx.label == secProofLabel
+
 def flush (s : St) : St :=
   match s.cur with
   | [] => s
@@ -122,6 +128,14 @@ def go : Nat → List PTok → St → St
         let n := s.envCount + 1
         let c : Context := ⟨.result e, n, lab, [], s.sec⟩
         go f rest { s with ctx := c, envCount := n, lastResult := lab }
+      else if e == w!"@proofsec" then
+        let s := flush s
+        let (target, rest) := match ts with
+          | ⟨.ref .ref l, _, _⟩ :: r => (l, r)
+          | r => (s.lastResult, r)
+        let n := s.envCount + 1
+        let c : Context := ⟨.proof, n, secProofLabel, target, s.sec⟩
+        go f rest { s with ctx := c, envCount := n }
       else if e == w!"proof" then
         let s := flush s
         let (title, rest) := skipTitle ts
@@ -153,6 +167,9 @@ def go : Nat → List PTok → St → St
       if n == w!"section" || n == w!"section*" then
         let c : Context := ⟨.text, 0, [], [], s.sec + 1⟩
         go f ts { flush s with sec := s.sec + 1, ctx := c }
+      else if s.secProof && (n == w!"subsection" || n == w!"subsubsection" || n == w!"paragraph" || n == w!"appendix") then
+        let c : Context := ⟨.text, 0, [], [], s.sec⟩
+        go f ts { flush s with ctx := c }
       else if n == w!"subsection" || n == w!"subsubsection" || n == w!"item" || n == w!"appendix" then
         go f ts (flush s)
       else go f ts { s with cur := t :: s.cur }

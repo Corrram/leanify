@@ -20,7 +20,7 @@ jobs:
       - name: Quick check of the example articles
         run: |
           lake exe proofread check examples/Means/article.tex --claims --prose
-          lake exe proofread check examples/TailDependence/article.tex --vocab unitsquare --claims --prose
+                    lake exe proofread check tests/TailDependence/article.tex --vocab unitsquare --claims --prose
       - name: The draft of the getting-started guide gives the findings the guide shows
         run: |
           lake exe proofread check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
@@ -34,8 +34,8 @@ jobs:
           python-version: "3.12"
       - name: Every claim of the examples is verified
         run: |
-          for a in Demo Means TailDependence; do
-            python scripts/proofread_diagnostics.py examples/$a/article.proofread.json --strict --verified
+          for a in examples/Demo examples/Means tests/TailDependence; do
+            python scripts/proofread_diagnostics.py $a/article.proofread.json --strict --verified
           done
       - name: The refuted theorem is reported false, and the claims resting on it unverified
         run: |

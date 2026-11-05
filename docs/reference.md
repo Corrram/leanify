@@ -20,12 +20,18 @@ Compiles the article natively, in about a second, and prints findings in the
 | --- | --- |
 | a sentence that did not compile (an undefined symbol, a type mismatch, an unsupported construction, …) | warning |
 | a sentence of a theorem, lemma, proposition, corollary or definition without a reading | warning |
+| a definition without a reading whose symbols later sentences use | warning |
 | with `--claims`: every definition and the formal reading of every claim | info |
-| with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading | info |
+| with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
 
-An undefined symbol is reported once, at the first sentence that uses it, with the
-lines of the later sentences that fail for the same symbol: they follow from the
-first, and defining the symbol fixes them all. Remarks, examples and conjectures
+An undefined symbol is reported once. If the sentence that defines it was not
+read, the finding is at that sentence: `… are $\beta(C)\coloneqq…$,
+$\xi(C)\coloneqq…$` fails on `\partial`, and `\beta and \xi stay undefined in 5
+later sentences (lines …)`. The defining sentence is the one with the symbol
+before `\coloneqq`, a `Let` that binds it, or, in a proof, the statement it
+proves. Otherwise the finding is at the first sentence that uses the symbol, with
+the lines of the later sentences that fail for it: they follow from the first,
+and defining the symbol fixes them all. Remarks, examples and conjectures
 discuss rather than state, so their prose is not a gap in a statement.
 
 The last lines count the compiled, failed and prose sentences of the text, the
