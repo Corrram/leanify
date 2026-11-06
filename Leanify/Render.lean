@@ -51,6 +51,10 @@ def Prim.tex : Prim → String
   | .pi => "\\pi"
   | .isInt => "\\mathbb{Z}" | .isNat => "\\mathbb{N}"
   | .floor => "\\operatorname{floor}" | .ceil => "\\operatorname{ceil}"
+  | .finSum => "\\sum" | .finProd => "\\prod" | .series => "\\sum"
+  | .seriesConv => "\\operatorname{converges}" | .limAt | .limTop => "\\lim"
+  | .limAtConv | .limTopConv => "\\operatorname{exists}"
+  | .factorial => "\\operatorname{factorial}" | .binom => "\\binom" | .zpow => "\\operatorname{pow}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -77,6 +81,34 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .loc i => ls.getD i s!"v_{i}"
   | .prim p => p.tex
   | .const i => cs.getD i s!"c_{i}"
+  | .app (.app (.app (.prim .finSum) a) b) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .series) a) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .seriesConv) a) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ converges}"
+  | .app (.app (.app (.prim .limAt) a) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.app (.prim .limAtConv) a) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  | .app (.app (.prim .limTop) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .limTopConv) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  | .app (.prim .factorial) x => wrap 9 x ++ "!"
+  | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+  | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+  | .app (.app (.prim .zpow) x) y => "{" ++ wrap 9 x ++ "}^{" ++ y.tex cs gs ls ++ "}"
   | .app (.prim .isInt) x => x.tex cs gs ls ++ "\\in \\mathbb{Z}"
   | .app (.prim .isNat) x => x.tex cs gs ls ++ "\\in \\mathbb{N}"
   | .app (.prim .floor) x => "\\lfloor " ++ x.tex cs gs ls ++ "\\rfloor"

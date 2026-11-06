@@ -372,6 +372,11 @@ def builtinFn (n : Codes) : Option (Tm × Ty × List (Option Tm)) :=
     -- the sign: 1, -1 or 0
     some (.lam .real .tt (.cases (.lt (.num 0) (.loc 0)) (.num 1)
       (.cases (.lt (.loc 0) (.num 0)) (.neg (.num 1)) (.num 0))), Ty.real ⟶ .real, [none])
+  else if n == w!"@factorial" then
+    some (.prim .factorial, Ty.real ⟶ .real, [some (.lam .real .tt (.app (.prim .isNat) (.loc 0)))])
+  else if n == w!"@binom" then
+    some (.prim .binom, Ty.real ⟶ .real ⟶ .real,
+      [some (.lam .real .tt (.app (.prim .isNat) (.loc 0))), some (.lam .real .tt (.app (.prim .isNat) (.loc 0)))])
   else if n == w!"@floor" then some (.prim .floor, Ty.real ⟶ .real, [none])
   else if n == w!"@ceil" then some (.prim .ceil, Ty.real ⟶ .real, [none])
   else if n == w!"\\tan" then
@@ -390,6 +395,21 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
   else if n == w!"\\mathbb{R}_{>0}" then some (.lam .real .tt (.lt (.num 0) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{\\ge0}" then some (.lam .real .tt (.le (.num 0) (.loc 0)), .fn .real .prop)
   else none
+
+/-- Names of indices (`n`, `k`, …): integers, in exponents and limits. -/
+def indexNames : List Codes := [w!"n", w!"m", w!"k", w!"j", w!"i", w!"N", w!"M", w!"K"]
+
+/-- The exponent mentions an index. -/
+def indexExp (e : MT) : Bool := (mtIds 32 e).any indexNames.contains
+
+/-- `a^p`: an integer power when the exponent is built from indices (`(-1)^{k+1}`,
+`2^n`), defined for every base (but `0` to a negative power); otherwise a real
+power of a nonnegative base. -/
+def powTm (a p : Tm) (integer : Bool) : M (Tm × Ty) :=
+  if integer then
+    pure (.guard (.and (.app (.prim .isInt) p) (.or (.not (.eq a (.num 0))) (.le (.num 0) p)))
+      (.app (.app (.prim .zpow) a) p), .real)
+  else pure (.guard (.le (.num 0) a) (.app (.app (.prim .rpow) a) p), .real)
 
 /-- `⊤`, possibly as the membership in all real numbers. -/
 def isTrue : Tm → Bool
@@ -799,8 +819,43 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         match terms with
         | t0 :: ts => pure (ts.foldl (fun acc x => if isSum then .add acc x else .mul acc x) t0, .real)
         | [] => fail E.unsupported
-      -- a sum up to a variable needs natural numbers, which formulas do not have
-      | _, _ => fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
+      -- `\sum_{k=a}^{b} e` over the integers between `a` and `b` (integers themselves), and
+      -- `\sum_{k=a}^{\infty} e`, the limit of the partial sums (when it exists)
+      | _, _ => do
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        let l ← asReal (← term f sc none lo)
+        let isInt (t : Tm) : Tm := .app (.prim .isInt) t
+        let sc' : Scope := (v, Ty.real) :: sc
+        let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+        if isInfty true hi then do
+          if !isSum then fail E.unsupported w!"\\prod"
+          let lam := Tm.lam .real (.and (isInt (.loc 0)) (.le (shift 1 0 l) (.loc 0))) b
+          let conv := Tm.app (.app (.prim .seriesConv) l) lam
+          pure (.guard (.and (isInt l) conv) (.app (.app (.prim .series) l) lam), .real)
+        else do
+          let h ← asReal (← term f sc none hi)
+          let lam := Tm.lam .real (.and (isInt (.loc 0))
+            (.and (.le (shift 1 0 l) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))) b
+          let p : Prim := if isSum then .finSum else .finProd
+          pure (.guard (.and (isInt l) (isInt h)) (.app (.app (.app (.prim p) l) h) lam), .real)
+    -- `\lim_{x\to a} e`, `\lim_{x\to\infty} e`, and `\lim_{n\to\infty} a_n` for a sequence
+    -- (an index `n`, `m`, `k`, `j`, `i` runs through the natural numbers): the limit within
+    -- the points where the expression is defined, when it exists
+    | .limit v target body => do
+      if (lookupLocal sc v).isSome then fail E.shadow v
+      let sc' : Scope := (v, Ty.real) :: sc
+      let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+      let seq := indexNames.contains v
+      let dom := if seq && isInfty true target then
+          Tm.and (.app (.prim .isNat) (.loc 0)) (Tm.defined b) else Tm.defined b
+      let D := Tm.lam .real .tt dom
+      let F := Tm.lam .real dom b
+      if isInfty true target then
+        pure (.guard (.app (.app (.prim .limTopConv) D) F) (.app (.app (.prim .limTop) D) F), .real)
+      else do
+        let a ← asReal (← term f sc none target)
+        pure (.guard (.app (.app (.app (.prim .limAtConv) a) D) F)
+          (.app (.app (.app (.prim .limAt) a) D) F), .real)
     | .bound isSup st => do
       -- the `s` with `y ≤ s` for every element `y`, and `s ≤ u` for every such bound `u`
       -- (for `\inf`, the reverse); defined exactly when the bound exists
@@ -866,7 +921,10 @@ where
           let (h, g) ← liftO (← lookupGlob (w!"^" ++ d)) E.undefined (w!"^" ++ d)
           let x ← term f sc pf b
           applyAll (.glob h) g.ty g.doms [x]
-        else fail E.unsupported d
+        else do
+          let a ← asReal (← term f sc pf b)
+          let p ← asReal (← term f sc pf e)
+          powTm a p (indexExp e)
       | .num n => do
         let a ← asReal (← term f sc pf b)
         pure (.powNat a n, .real)
@@ -877,7 +935,7 @@ where
       | _ => do
         let a ← asReal (← term f sc pf b)
         let p ← asReal (← term f sc pf e)
-        pure (.guard (.le (.num 0) a) (.app (.app (.prim .rpow) a) p), .real)
+        powTm a p (indexExp e)
   head : Nat → Scope → MT → M (Tm × Ty × List (Option Tm))
     | 0, _, _ => fail E.unsupported
     | g + 1, sc, hd =>

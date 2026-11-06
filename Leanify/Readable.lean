@@ -77,6 +77,17 @@ def primConst : Prim → Option Name
   | .isNat => some ``Prelude.isNat
   | .floor => some ``Prelude.floor
   | .ceil => some ``Prelude.ceil
+  | .finSum => some ``Prelude.finSum
+  | .finProd => some ``Prelude.finProd
+  | .series => some ``Prelude.series
+  | .seriesConv => some ``Prelude.seriesConv
+  | .limAt => some ``Prelude.limAt
+  | .limAtConv => some ``Prelude.limAtConv
+  | .limTop => some ``Prelude.limTop
+  | .limTopConv => some ``Prelude.limTopConv
+  | .factorial => some ``Prelude.factorial
+  | .binom => some ``Prelude.binom
+  | .zpow => some ``Prelude.zpow
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

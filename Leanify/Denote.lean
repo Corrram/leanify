@@ -3,6 +3,11 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Algebra.Order.Archimedean.Real.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.Int.Interval
+import Mathlib.Data.Nat.Factorial.Basic
+import Mathlib.Data.Nat.Choose.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Convex.Function
@@ -67,6 +72,38 @@ def isNat (x : ℝ) : Prop := ∃ k : ℕ, (k : ℝ) = x
 noncomputable def floor (x : ℝ) : ℝ := ((Int.floor x : ℤ) : ℝ)
 /-- The smallest integer at least `x`. -/
 noncomputable def ceil (x : ℝ) : ℝ := ((Int.ceil x : ℤ) : ℝ)
+/-- `∑_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`. -/
+noncomputable def finSum (a b : ℝ) (f : ℝ → ℝ) : ℝ := Finset.sum (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
+/-- `∏_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`. -/
+noncomputable def finProd (a b : ℝ) (f : ℝ → ℝ) : ℝ := Finset.prod (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
+/-- The partial sums `∑_{n<N} f(a+n)` of the series `∑_{k=a}^∞ f(k)`. -/
+noncomputable def partialSum (a : ℝ) (f : ℝ → ℝ) (N : ℕ) : ℝ :=
+  Finset.sum (Finset.range N) (fun n : ℕ => f (((Int.ceil a : ℤ) : ℝ) + (n : ℝ)))
+/-- The series converges: its partial sums have a limit. -/
+def seriesConv (a : ℝ) (f : ℝ → ℝ) : Prop :=
+  ∃ L : ℝ, Filter.Tendsto (partialSum a f) Filter.atTop (nhds L)
+/-- The sum of the series: the limit of its partial sums. -/
+noncomputable def series (a : ℝ) (f : ℝ → ℝ) : ℝ := Filter.limUnder Filter.atTop (partialSum a f)
+/-- `f(x)` has a limit as `x → a` within `D \ {a}`, and `a` is a limit point of `D`. -/
+def limAtConv (a : ℝ) (D : ℝ → Prop) (f : ℝ → ℝ) : Prop :=
+  (nhdsWithin a ({x | D x} \ {a})).NeBot ∧
+    ∃ L : ℝ, Filter.Tendsto f (nhdsWithin a ({x | D x} \ {a})) (nhds L)
+/-- The limit of `f(x)` as `x → a` within `D \ {a}`. -/
+noncomputable def limAt (a : ℝ) (D : ℝ → Prop) (f : ℝ → ℝ) : ℝ :=
+  Filter.limUnder (nhdsWithin a ({x | D x} \ {a})) f
+/-- `f(x)` has a limit as `x → ∞` within `D`, and `D` is unbounded above. -/
+def limTopConv (D : ℝ → Prop) (f : ℝ → ℝ) : Prop :=
+  (Filter.atTop ⊓ Filter.principal {x | D x}).NeBot ∧
+    ∃ L : ℝ, Filter.Tendsto f (Filter.atTop ⊓ Filter.principal {x | D x}) (nhds L)
+/-- The limit of `f(x)` as `x → ∞` within `D`. -/
+noncomputable def limTop (D : ℝ → Prop) (f : ℝ → ℝ) : ℝ :=
+  Filter.limUnder (Filter.atTop ⊓ Filter.principal {x | D x}) f
+/-- `x^k` for an integer `k`. -/
+noncomputable def zpow (x k : ℝ) : ℝ := x ^ (Int.floor k)
+/-- `n!` for a natural number `n` (as a real number). -/
+noncomputable def factorial (x : ℝ) : ℝ := ((Nat.factorial (Nat.floor x) : ℕ) : ℝ)
+/-- `\binom{n}{k}` for natural numbers `n`, `k` (as a real number). -/
+noncomputable def binom (x y : ℝ) : ℝ := ((Nat.choose (Nat.floor x) (Nat.floor y) : ℕ) : ℝ)
 def intervalIntegrable (f : ℝ → ℝ) (a b : ℝ) : Prop := IntervalIntegrable f volume a b
 def compact2 (S : ℝ → ℝ → Prop) : Prop := IsCompact {p : ℝ × ℝ | S p.1 p.2}
 def convex2 (S : ℝ → ℝ → Prop) : Prop := Convex ℝ {p : ℝ × ℝ | S p.1 p.2}
@@ -192,6 +229,17 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .isNat => Prelude.isNat
   | .floor => Prelude.floor
   | .ceil => Prelude.ceil
+  | .finSum => Prelude.finSum
+  | .finProd => Prelude.finProd
+  | .series => Prelude.series
+  | .seriesConv => Prelude.seriesConv
+  | .limAt => Prelude.limAt
+  | .limAtConv => Prelude.limAtConv
+  | .limTop => Prelude.limTop
+  | .limTopConv => Prelude.limTopConv
+  | .factorial => Prelude.factorial
+  | .binom => Prelude.binom
+  | .zpow => Prelude.zpow
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

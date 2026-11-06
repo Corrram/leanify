@@ -33,7 +33,15 @@ tests/Notation/article.tex:86:1: info: claim 29: \forall x\in \mathbb{R},\ \lflo
 tests/Notation/article.tex:86:1: info: claim 30: \forall x\in \mathbb{R},\ x\le \lceil x\rceil
 tests/Notation/article.tex:87:1: info: claim 31: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \frac{1}{x}\le 1
 tests/Notation/article.tex:88:1: info: claim 32: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow x\in \mathbb{Z}
-tests/Notation/article.tex: 2 definitions, 33 claims
+tests/Notation/article.tex:92:1: info: claim 33: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow \sum_{y=1}^{x}y=\frac{x\,(x+1)}{2}
+tests/Notation/article.tex:93:1: info: claim 34: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \prod_{y=1}^{x}y=x!
+tests/Notation/article.tex:97:1: info: claim 35: \sum_{x=0}^{\infty}\frac{1}{{2}^{x}}=2
+tests/Notation/article.tex:97:1: info: claim 36: \sum_{x=1}^{\infty}\frac{{(-1)}^{x+1}}{x}=\log(2)
+tests/Notation/article.tex:101:1: info: claim 37: \lim_{x\to\infty}\frac{1}{x}=0
+tests/Notation/article.tex:101:1: info: claim 38: \lim_{x\to 0}\frac{\sin(x)}{x}=1
+tests/Notation/article.tex:101:1: info: claim 39: \lim_{x\to\infty}\exp(-x)=0
+tests/Notation/article.tex:105:1: info: claim 40: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{N}\land y\le x\Rightarrow \binom{x}{y}=\frac{x!}{y!\,(x-y)!})
+tests/Notation/article.tex: 2 definitions, 41 claims
   text: 2 compiled, 0 failed, 1 prose (of 3)
-  results: 24 compiled, 0 failed, 0 prose (of 24)
-  all: 26 compiled, 0 failed, 1 prose (of 27)
+  results: 29 compiled, 0 failed, 0 prose (of 29)
+  all: 31 compiled, 0 failed, 1 prose (of 32)

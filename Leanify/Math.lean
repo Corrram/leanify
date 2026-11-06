@@ -59,6 +59,8 @@ inductive MT where
   | quant (isAll : Bool) (vars : List Codes) (dom body : MT)
   /-- A finite set of numbers `\{a,b\}`. -/
   | finset (xs : List MT)
+  /-- `\lim_{v\to target} body`. -/
+  | limit (v : Codes) (target body : MT)
   deriving Repr, Inhabited, Lean.ToExpr
 
 /-- Math tokens after removing typesetting. -/
@@ -124,6 +126,7 @@ def substId (v : Codes) (k : MT) : Nat → MT → MT
     | .liff x y => .liff (go x) (go y)
     | .quant b vs dom body => .quant b vs (go dom) (if vs.contains v then body else go body)
     | .finset xs => .finset (xs.map go)
+    | .limit w t body => .limit w (go t) (if w == v then body else go body)
 
 end MT
 
@@ -251,7 +254,8 @@ def startsFactor : MTok → Bool
   | .id _ | .digit _ | .lb | .setl => true
   | .sym 40 => true
   | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"sup" ||
-      n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"widehat"
+      n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"lim" || n == w!"binom" ||
+      n == w!"tbinom" || n == w!"dbinom" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
         n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
@@ -260,6 +264,8 @@ def startsFactor : MTok → Bool
 
 /-- Heads that may be applied to a parenthesized argument list. -/
 def appHead : MT → Bool
+  -- `n!` and `\binom{n}{k}` are values, not functions (`k!\,(n-k)!` is a product)
+  | .app (.id (64 :: _)) _ => false
   | .id _ | .sub _ _ | .hat _ | .app _ _ => true
   -- `f'(x)`, `R_b^-(z)`
   | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43]
@@ -320,6 +326,8 @@ def run : Nat → Mode → List MTok → R
     match ts with
     -- `f'`: the derivative, written as the superscript `'`
     | .sym 39 :: rest => run f (.postfix bar (.sup x (.id [39]))) rest
+    -- `n!`
+    | .sym 33 :: rest => run f (.postfix bar (.app (.id w!"@factorial") [x])) rest
     | .sym 94 :: rest => do
       let (e, rest') ← run f .group rest
       run f (.postfix bar (.sup x e)) rest'
@@ -464,6 +472,20 @@ def run : Nat → Mode → List MTok → R
           -- `\sup A` for a named set
           let (a, r1) ← run f (.atom false) rest
           some (.bound isSup a, r1)
+      else if n == w!"lim" then
+        match rest with
+        | .sym 95 :: .lb :: .id v :: .cmd t :: r => do
+          -- `\lim_{n\to\infty} a_n`, `\lim_{x\to0} f(x)`
+          if t != w!"to" then none else
+          let (target, r1) ← run f (.additive false) r
+          let r2 ← expect .rb r1
+          let (body, r3) ← run f (.product false) r2
+          some (.limit v target body, r3)
+        | _ => none
+      else if n == w!"binom" || n == w!"tbinom" || n == w!"dbinom" then do
+        let (a, r1) ← run f .group rest
+        let (b, r2) ← run f .group r1
+        some (.app (.id w!"@binom") [a, b], r2)
       else if n == w!"lfloor" || n == w!"lceil" then do
         -- `\lfloor x\rfloor`, `\lceil x\rceil`
         let (x, r1) ← run f (.additive false) rest

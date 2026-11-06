@@ -110,6 +110,22 @@ inductive Prim where
   | isInt | isNat
   /-- `\lfloor x\rfloor` and `\lceil x\rceil`, as real numbers. -/
   | floor | ceil
+  /-- `finSum a b f`: `∑_{k=a}^{b} f(k)` over the integers between `a` and `b` (`finProd`: the product). -/
+  | finSum | finProd
+  /-- `series a f`: `∑_{k=a}^{∞} f(k)`, the limit of the partial sums; `seriesConv a f`:
+  the partial sums converge. -/
+  | series | seriesConv
+  /-- `limAt a D f`: `\lim_{x\to a} f(x)` for `x ∈ D`, `x ≠ a`; `limAtConv a D f`: it exists
+  and `a` is a limit point of `D`. -/
+  | limAt | limAtConv
+  /-- `limTop D f`: `\lim_{x\to\infty} f(x)` for `x ∈ D`; `limTopConv D f`: it exists and `D`
+  is unbounded above. A sequence `\lim_{n\to\infty} a_n` is the limit within the natural
+  numbers. -/
+  | limTop | limTopConv
+  /-- `n!` and `\binom{n}{k}` for natural numbers. -/
+  | factorial | binom
+  /-- `zpow x k`: `x^k` for an integer `k`. -/
+  | zpow
   deriving DecidableEq, Repr, Lean.ToExpr
 
 def Prim.ty : Prim → Ty
@@ -131,6 +147,15 @@ def Prim.ty : Prim → Ty
   | .pi => .real
   | .isInt | .isNat => .real ⟶ .prop
   | .floor | .ceil => .real ⟶ .real
+  | .finSum | .finProd => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
+  | .series => .real ⟶ Ty.rfun ⟶ .real
+  | .seriesConv => .real ⟶ Ty.rfun ⟶ .prop
+  | .limAt => .real ⟶ (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .real
+  | .limAtConv => .real ⟶ (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .prop
+  | .limTop => (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .real
+  | .limTopConv => (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .prop
+  | .factorial => .real ⟶ .real
+  | .binom | .zpow => .real ⟶ .real ⟶ .real
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

@@ -30,7 +30,13 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 | `(f\circ g)(x)` | `f(g(x))`, with `g(x)` in the domain of `f` |
 | `A\subseteq B`, `A\supseteq B` | every real number in `A` is in `B` (and the reverse), for intervals, sets `\{x\in A : …\}` and sets the article defines |
 | `\sup_{x\in A} e`, `\sup\{e : x\in A\}`, `\sup S` (and `\inf`) | the least upper (greatest lower) bound: defined only when it exists, so a claim about an unbounded or empty set is not meaningful |
-| `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | the finite sum (product) of the terms, for numeral bounds; a sum up to a variable is not read (formulas have no natural numbers) |
+| `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | with numeral bounds: the terms written out |
+| `\sum_{j=a}^{b} e`, `\prod_{j=a}^{b} e` | over the integers from `a` to `b`, which must be integers (`b<a`: the empty sum `0`, product `1`) |
+| `\sum_{k=a}^{\infty} e` | the limit of the partial sums, defined only when it exists (so conditionally convergent series such as `\sum_{k=1}^{\infty}\frac{(-1)^{k+1}}{k}` are read) |
+| `\lim_{x\to a} e`, `\lim_{x\to\infty} e` | the limit within the points where `e` is defined (`x\ne a`), defined only when it exists and the points accumulate at `a` |
+| `\lim_{n\to\infty} a_n` | for an index `n`, `m`, `k`, `j`, `i` (or `N`, `M`, `K`): the limit of the sequence through the natural numbers |
+| `(-1)^k`, `2^{n+1}` | an exponent built from indices is an integer power, for any base |
+| `n!`, `\binom{n}{k}` | for natural numbers `n`, `k` |
 | `\exp(x)`, `\exp x`, `e^{x}` | the exponential function (`e` unless the article names something `e`) |
 | `\log x`, `\ln x` | the natural logarithm, applied only to positive numbers (the claim asks that the argument be positive) |
 | `\sin x`, `\cos x`, `\tan x`, `\sin^2 x` | the trigonometric functions (`\tan` only where `\cos` is not zero); `\sin^2 x` is the square of `\sin x` |
