@@ -136,6 +136,16 @@ def isReals : MT → Bool
   | .id n => n == w!"\\mathbb{R}"
   | _ => false
 
+def isNats : MT → Bool
+  | .id n => n == w!"\\mathbb{N}"
+  | _ => false
+
+/-- `\mathbb{N}_0`: the natural numbers with `0`. -/
+def natsSub : List MTok → Option (Codes × List MTok)
+  | .digit 0 :: rest => some (w!"\\mathbb{N}_0", rest)
+  | .lb :: .digit 0 :: .rb :: rest => some (w!"\\mathbb{N}_0", rest)
+  | _ => none
+
 /-- The subscript of a ray of real numbers: `\mathbb{R}_+`, `_{>0}`, `_{\ge0}`. -/
 def realsSub : List MTok → Option (Codes × List MTok)
   | .sym 43 :: rest => some (w!"\\mathbb{R}_{\\ge0}", rest)
@@ -244,7 +254,7 @@ def startsFactor : MTok → Bool
       n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
-        n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n &&
+        n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
         n != w!"approx" && n != w!"ldots")
   | _ => false
 
@@ -315,7 +325,7 @@ def run : Nat → Mode → List MTok → R
       run f (.postfix bar (.sup x e)) rest'
     | .sym 95 :: rest =>
       -- `\mathbb{R}_+`, `\mathbb{R}_{>0}`, `\mathbb{R}_{\ge0}`
-      match (if isReals x then realsSub rest else none) with
+      match (if isReals x then realsSub rest else if isNats x then natsSub rest else none) with
       | some (name, rest') => run f (.postfix bar (.id name)) rest'
       | none => do
       let (i, rest') ← run f .group rest
@@ -454,6 +464,11 @@ def run : Nat → Mode → List MTok → R
           -- `\sup A` for a named set
           let (a, r1) ← run f (.atom false) rest
           some (.bound isSup a, r1)
+      else if n == w!"lfloor" || n == w!"lceil" then do
+        -- `\lfloor x\rfloor`, `\lceil x\rceil`
+        let (x, r1) ← run f (.additive false) rest
+        let r2 ← expect (.cmd (if n == w!"lfloor" then w!"rfloor" else w!"rceil")) r1
+        some (.app (.id (if n == w!"lfloor" then w!"@floor" else w!"@ceil")) [x], r2)
       else if n == w!"min" || n == w!"max" then
         match rest with
         | .sym 40 :: r => do
@@ -489,7 +504,8 @@ def run : Nat → Mode → List MTok → R
           integralBody f lo hi r3
         | _ => none
       else if (relOf (.cmd n)).isSome || n == w!"mapsto" || n == w!"to" || n == w!"qquad" || n == w!"quad" ||
-          n == w!"approx" || n == w!"ldots" || wConnectives.contains n then none
+          n == w!"approx" || n == w!"ldots" || wConnectives.contains n || n == w!"rfloor" ||
+          n == w!"rceil" then none
       else some (.id ([92] ++ n), rest)
     | .begin e :: rest =>
       if e == w!"cases" then run f (.casesRows []) rest else none

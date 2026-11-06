@@ -59,6 +59,14 @@ def integrable (f : I → ℝ) : Prop := Integrable f
 def hasDerivWithin (f : ℝ → ℝ) (S : ℝ → Prop) (x d : ℝ) : Prop :=
   HasDerivWithinAt f d {y | S y} x
 noncomputable def intervalIntegral (a b : ℝ) (f : ℝ → ℝ) : ℝ := ∫ t in a..b, f t
+/-- `x` is an integer. -/
+def isInt (x : ℝ) : Prop := ∃ k : ℤ, (k : ℝ) = x
+/-- `x` is a natural number `0, 1, 2, …`. -/
+def isNat (x : ℝ) : Prop := ∃ k : ℕ, (k : ℝ) = x
+/-- The largest integer at most `x`. -/
+noncomputable def floor (x : ℝ) : ℝ := ((Int.floor x : ℤ) : ℝ)
+/-- The smallest integer at least `x`. -/
+noncomputable def ceil (x : ℝ) : ℝ := ((Int.ceil x : ℤ) : ℝ)
 def intervalIntegrable (f : ℝ → ℝ) (a b : ℝ) : Prop := IntervalIntegrable f volume a b
 def compact2 (S : ℝ → ℝ → Prop) : Prop := IsCompact {p : ℝ × ℝ | S p.1 p.2}
 def convex2 (S : ℝ → ℝ → Prop) : Prop := Convex ℝ {p : ℝ × ℝ | S p.1 p.2}
@@ -180,6 +188,10 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .classProp k => k.denote
   | .realFn k => k.denote
   | .pi => Real.pi
+  | .isInt => Prelude.isInt
+  | .isNat => Prelude.isNat
+  | .floor => Prelude.floor
+  | .ceil => Prelude.ceil
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

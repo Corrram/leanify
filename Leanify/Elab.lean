@@ -372,6 +372,8 @@ def builtinFn (n : Codes) : Option (Tm × Ty × List (Option Tm)) :=
     -- the sign: 1, -1 or 0
     some (.lam .real .tt (.cases (.lt (.num 0) (.loc 0)) (.num 1)
       (.cases (.lt (.loc 0) (.num 0)) (.neg (.num 1)) (.num 0))), Ty.real ⟶ .real, [none])
+  else if n == w!"@floor" then some (.prim .floor, Ty.real ⟶ .real, [none])
+  else if n == w!"@ceil" then some (.prim .ceil, Ty.real ⟶ .real, [none])
   else if n == w!"\\tan" then
     fn .tan (some (.lam .real .tt (.not (.eq (.app (.prim (.realFn .cos)) (.loc 0)) (.num 0)))))
   else none
@@ -381,9 +383,19 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
   if n == w!"\\pi" then some (.prim .pi, .real)
   else if n == w!"\\emptyset" || n == w!"\\varnothing" then some (.lam .real .tt (.not .tt), .fn .real .prop)
   else if n == w!"\\mathbb{R}" then some (.lam .real .tt .tt, .fn .real .prop)
+  else if n == w!"\\mathbb{Z}" then some (.lam .real .tt (.app (.prim .isInt) (.loc 0)), .fn .real .prop)
+  -- the natural numbers include 0, as in mathlib (`\mathbb{N}_0` says so explicitly)
+  else if n == w!"\\mathbb{N}" || n == w!"\\mathbb{N}_0" then
+    some (.lam .real .tt (.app (.prim .isNat) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{>0}" then some (.lam .real .tt (.lt (.num 0) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{\\ge0}" then some (.lam .real .tt (.le (.num 0) (.loc 0)), .fn .real .prop)
   else none
+
+/-- `⊤`, possibly as the membership in all real numbers. -/
+def isTrue : Tm → Bool
+  | .tt => true
+  | .app (.lam _ _ .tt) _ => true
+  | _ => false
 
 /-- Pointwise inclusion `a ⊆ b` of two predicates of the same (curried) type. -/
 def setSub (ty : Ty) (a b : Tm) : Tm :=
@@ -858,6 +870,10 @@ where
       | .num n => do
         let a ← asReal (← term f sc pf b)
         pure (.powNat a n, .real)
+      -- `x^{-2}` is `1/x^2`: defined for `x ≠ 0`, whatever its sign
+      | .neg (.num n) => do
+        let a ← asReal (← term f sc pf b)
+        pure (.div (.num 1) (if n == 1 then a else .powNat a n), .real)
       | _ => do
         let a ← asReal (← term f sc pf b)
         let p ← asReal (← term f sc pf e)
@@ -917,9 +933,16 @@ where
     | g + 1, sc, pf, op, x, y => do
       let a ← term g sc pf x
       let b ← term g sc pf y
+      -- a number beside a set of numbers is the set of that number (`\mathbb{R}\setminus\{0\}`)
+      let single (p q : Tm × Ty) : Tm × Ty :=
+        if p.2 == .real && q.2 == .fn .real .prop && op != w!"\\times" then
+          (.lam .real .tt (.eq (.loc 0) (shift 1 0 p.1)), .fn .real .prop) else p
+      let (a, b) := (single a b, single b a)
       -- `A\cup B`, `A\cap B`, `A\setminus B`
       let comb (p q : Tm) : Tm :=
-        if op == w!"\\cup" then .or p q else if op == w!"\\cap" then .and p q else .and p (.not q)
+        if op == w!"\\cup" then .or p q
+        else if op == w!"\\cap" then (if isTrue p then q else .and p q)
+        else (if isTrue p then .not q else .and p (.not q))
       if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\setminus" then
         if a.2 != b.2 then fail E.type
         match a.2 with
@@ -1014,7 +1037,7 @@ where
   innermost bound variable (`loc 0`). -/
   elemDom : Nat → MT → M (Ty × Option Tm)
     | 0, _ => fail E.unsupported
-    | _ + 1, d =>
+    | g + 1, d =>
       if isZeroOne d then pure (.unit, none)
       else match d with
         | .interval (.neg (.num a)) (.num b) => pure (.real, some (interval (.neg (.num a)) (.num b) (.loc 0)))
@@ -1032,7 +1055,10 @@ where
           else match builtinConst n with
             | some (.lam .real .tt p, .fn .real .prop) => pure (.real, some p)
             | _ => fail E.unsupported
-        | _ => fail E.unsupported
+        | _ => do
+          -- any other closed set of real numbers (`\mathbb{R}\setminus\{0\}`)
+          let (p, t) ← term g [] none d
+          if t == .fn .real .prop then pure (.real, some (.app (shift 1 0 p) (.loc 0))) else fail E.unsupported
 
 /-- Elaborate a lambda `pat ↦ body` with the given argument types and result type. -/
 def lam (f : Nat) (sc : Scope) (pat : MT) (args : List Ty) (res : Option Ty) (body : MT) :

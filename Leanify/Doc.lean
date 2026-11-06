@@ -146,7 +146,10 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       match g.ty with
       | .fn a .prop => pure (a, some (.glob i))
       | _ => fail E.type n
-    | _ => fail E.unsupported
+    | _ => do
+      -- any other set of real numbers: `\mathbb{R}\setminus\{0\}`, `\{x\in A : …\}`
+      let (p, t) ← Elab.term 100000 sc none d
+      if t == .fn .real .prop then pure (.real, some p) else fail E.unsupported
 
 /-- A variable chunk: its name, and the domain of a membership `$x\in A$`. -/
 def varChunk (ts : List MTok) : M (Codes × Option (Ty × Option Tm)) := do
@@ -320,6 +323,17 @@ def binderInfos : Bind → M (List BindInfo)
     for b in bs do
       match b with
       | .every vs d => out := out ++ (← everyAfter out vs d)
+      -- `For every $x\in A$ with $φ$`: a condition on the variables bound before it,
+      -- part of the domain of the last one
+      | .ifCond φ => do
+        let some last := out.getLast? | fail E.unsupported
+        let sc : Scope := (out.map fun b => (b.name, b.ty)).reverse
+        let (p, pty) ← Elab.term 100000 sc none φ
+        if pty != .prop then fail E.type
+        let pred := match last.pred with
+          | some q => Tm.lam last.ty .tt (.and (.app (shift 1 0 q) (.loc 0)) (shift 1 0 p))
+          | none => Tm.lam last.ty .tt (shift 1 0 p)
+        out := out.dropLast ++ [{ last with pred := some pred }]
       | _ => fail E.unsupported
     pure out
 where

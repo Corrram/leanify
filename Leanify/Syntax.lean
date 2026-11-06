@@ -106,6 +106,10 @@ inductive Prim where
   | realFn (k : RealFn)
   /-- The number `π`. -/
   | pi
+  /-- Integers and natural numbers (`0,1,2,…`) among the real numbers. -/
+  | isInt | isNat
+  /-- `\lfloor x\rfloor` and `\lceil x\rceil`, as real numbers. -/
+  | floor | ceil
   deriving DecidableEq, Repr, Lean.ToExpr
 
 def Prim.ty : Prim → Ty
@@ -125,6 +129,8 @@ def Prim.ty : Prim → Ty
   | .classProp _ => (Ty.sq ⟶ .prop) ⟶ .prop
   | .realFn _ => .real ⟶ .real
   | .pi => .real
+  | .isInt | .isNat => .real ⟶ .prop
+  | .floor | .ceil => .real ⟶ .real
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

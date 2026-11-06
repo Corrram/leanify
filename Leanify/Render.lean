@@ -49,6 +49,8 @@ def Prim.tex : Prim → String
   | .realFn k => match k with
     | .exp => "\\exp" | .log => "\\log" | .sin => "\\sin" | .cos => "\\cos" | .tan => "\\tan"
   | .pi => "\\pi"
+  | .isInt => "\\mathbb{Z}" | .isNat => "\\mathbb{N}"
+  | .floor => "\\operatorname{floor}" | .ceil => "\\operatorname{ceil}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -75,6 +77,10 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .loc i => ls.getD i s!"v_{i}"
   | .prim p => p.tex
   | .const i => cs.getD i s!"c_{i}"
+  | .app (.prim .isInt) x => x.tex cs gs ls ++ "\\in \\mathbb{Z}"
+  | .app (.prim .isNat) x => x.tex cs gs ls ++ "\\in \\mathbb{N}"
+  | .app (.prim .floor) x => "\\lfloor " ++ x.tex cs gs ls ++ "\\rfloor"
+  | .app (.prim .ceil) x => "\\lceil " ++ x.tex cs gs ls ++ "\\rceil"
   | .app (.app (.prim .rpow) x) y => "{" ++ wrap 9 x ++ "}^{" ++ y.tex cs gs ls ++ "}"
   | .app (.app (.prim .min) x) y => "\\min\\{" ++ x.tex cs gs ls ++ "," ++ y.tex cs gs ls ++ "\\}"
   | .app (.app (.prim .max) x) y => "\\max\\{" ++ x.tex cs gs ls ++ "," ++ y.tex cs gs ls ++ "\\}"

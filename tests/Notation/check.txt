@@ -27,7 +27,13 @@ tests/Notation/article.tex:77:1: info: claim 23: \forall x\in \mathbb{R},\ \begi
 tests/Notation/article.tex:77:82: info: claim 24: {8}^{\frac{1}{3}}=2
 tests/Notation/article.tex:77:82: info: claim 25: 2\,3=6
 tests/Notation/article.tex:77:82: info: claim 26: \int_0^1 x\,dx=\frac{1}{2}
-tests/Notation/article.tex: 2 definitions, 27 claims
+tests/Notation/article.tex:81:1: info: claim 27: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \frac{1}{x}\,x=1
+tests/Notation/article.tex:82:1: info: claim 28: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow 0<\frac{1}{{x}^{2}}
+tests/Notation/article.tex:86:1: info: claim 29: \forall x\in \mathbb{R},\ \lfloor x\rfloor\le x\land x<\lfloor x\rfloor+1
+tests/Notation/article.tex:86:1: info: claim 30: \forall x\in \mathbb{R},\ x\le \lceil x\rceil
+tests/Notation/article.tex:87:1: info: claim 31: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \frac{1}{x}\le 1
+tests/Notation/article.tex:88:1: info: claim 32: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow x\in \mathbb{Z}
+tests/Notation/article.tex: 2 definitions, 33 claims
   text: 2 compiled, 0 failed, 1 prose (of 3)
-  results: 19 compiled, 0 failed, 0 prose (of 19)
-  all: 21 compiled, 0 failed, 1 prose (of 22)
+  results: 24 compiled, 0 failed, 0 prose (of 24)
+  all: 26 compiled, 0 failed, 1 prose (of 27)

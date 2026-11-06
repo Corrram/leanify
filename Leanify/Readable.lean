@@ -73,6 +73,10 @@ def primConst : Prim → Option Name
     | .exp => ``Real.exp | .log => ``Real.log | .sin => ``Real.sin | .cos => ``Real.cos
     | .tan => ``Real.tan
   | .pi => some ``Real.pi
+  | .isInt => some ``Prelude.isInt
+  | .isNat => some ``Prelude.isNat
+  | .floor => some ``Prelude.floor
+  | .ceil => some ``Prelude.ceil
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

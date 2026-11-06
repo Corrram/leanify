@@ -264,6 +264,20 @@ def moreAnd : Nat → List Chunk → List Bind → List Bind × List Chunk
     | some (b, r) => moreAnd f r (b :: acc)
     | none => (acc.reverse, cs)
 
+/-- `with $φ$ [and $ψ$]` or `such that $φ$` after a binder: conditions on its variables. -/
+def withConds (cs : List Chunk) : Option (MT × List Chunk) := do
+  let r ← kw [w!"with"] cs <|> kw [w!"such", w!"that"] cs
+  let (m, r1) ← formula r
+  match (do let r2 ← kw [w!"and"] r1; formula r2) with
+  | some (m2, r3) => some (.conj [m, m2], r3)
+  | none => some (m, r1)
+
+/-- A binder followed by optional conditions. -/
+def withBind (b : Bind) (cs : List Chunk) : Bind × List Chunk :=
+  match withConds cs with
+  | some (c, r) => (.many [b, .ifCond c], r)
+  | none => (b, cs)
+
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
 def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
@@ -272,7 +286,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
     (do
       let (ts, r') ← mathChunk r
       let (vs, dom) ← binderMath ts
-      some (.every vs dom, r')) <|>
+      some (withBind (.every vs dom) r')) <|>
     -- `For every LTD copula $C$,`: as `For an LTD copula $C$,`
     (do
       let np := r.takeWhile (fun c => match c with | .p 44 => false | _ => true)
@@ -290,7 +304,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
         let (ts, r') ← mathChunk r
         let (vs, dom) ← binderMath ts
         match moreAnd 4 r' [] with
-        | ([], _) => some (.every vs dom, r')
+        | ([], _) => some (withBind (.every vs dom) r')
         | (bs, r'') => some (.many (.every vs dom :: bs), r'')
       | none =>
         match kw [w!"on"] cs with
