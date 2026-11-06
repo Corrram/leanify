@@ -1,5 +1,5 @@
 examples/Demo/draft.tex:70:1: warning: g is not defined: sentence not checked
-examples/Demo/draft.tex:77:1: warning: Corollary cor:min not read
+examples/Demo/draft.tex:77:1: warning: Corollary cor:min is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 examples/Demo/draft.tex: 1 definitions, 5 claims
   text: 1 compiled, 0 failed, 40 prose (of 41)
   results: 2 compiled, 0 failed, 1 prose (of 3)

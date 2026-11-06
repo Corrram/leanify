@@ -259,6 +259,23 @@ def unknownNotation (d : Doc) (toks : List PTok) : List String :=
     | .cmd n => if p.math && !known (Codes.toString n) then some ("\\" ++ Codes.toString n) else none
     | _ => none).eraseDups
 
+/-- The noun phrase after `be a`/`is an` in a sentence (`Let $X$ be a Markov jump
+process with …` gives `Markov jump process`): the likely reason a sentence that
+introduces an object has no reading, when the phrase is not a notion of the
+article or its vocabulary. -/
+def nounPhrase (t : List Char) : Option String := Id.run do
+  let s := String.ofList t
+  for pre in [" be a ", " be an ", " is a ", " is an "] do
+    match s.splitOn pre with
+    | _ :: after :: _ =>
+      let ws := (after.toList.takeWhile fun c => c.isAlpha || c == ' ' || c == '-')
+      let words := (String.ofList ws).splitOn " " |>.filter (· != "")
+      let stop := ["with", "and", "such", "that", "on", "of", "in", "for", "which", "where", "if"]
+      let words := (words.takeWhile fun w => !stop.contains w).take 5
+      if !words.isEmpty then return some (String.intercalate " " words)
+    | _ => pure ()
+  return none
+
 /-- `a, b and c`, with at most `k` items and `…` for the rest. -/
 def fewOf (k : Nat) (xs : List String) : String :=
   let shown := xs.take k
@@ -350,15 +367,28 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
         let env := (List.range d.sentences.length).filter fun t => (d.sentences[t]!).1.env == ctx.env
         let unread := env.filter isProse
         if unread.head? == some s then
+          let first := env.headD s
+          -- a result without a label is named by the beginning of its statement
           let name := capitalize (kindString ctx.kind) ++
-            (if ctx.label.isEmpty then "" else s!" {Codes.toString ctx.label}")
+            (if !ctx.label.isEmpty then s!" {Codes.toString ctx.label}" else
+              let (_, a0, b0) := d.sentences[first]!
+              let t := (Codes.toString ((all.drop a0).take (min 32 (b0 - a0)))).replace "\n" " "
+              s!" \"{t}{if b0 - a0 > 32 then "…" else ""}\"")
           let read := env.filter fun t => match d.outcomes[t]? with
             | some (.compiled _ _) => true | _ => false
-          let what := if read.isEmpty then
-              (if env.length == 1 then "not read" else s!"not read (none of its {env.length} sentences)")
-            else s!"partly read ({unread.length} of {env.length} sentences not read, {linesText (unread.map lineOf)})"
+          let what := if !read.isEmpty then
+              s!"is only partly checked: Leanify cannot read {unread.length} of its {env.length} sentences ({linesText (unread.map lineOf)})"
+            else if env.length == 1 then "is not checked: Leanify cannot read its statement"
+            else s!"is not checked: Leanify cannot read any of its {env.length} sentences"
+          let phrases := (unread.filterMap fun t => nounPhrase texts[t]!).eraseDups
+          let phraseHint := match phrases with
+            | [] => ""
+            | ps => s!"; unknown noun {fewOf 2 (ps.map fun p => s!"\"{p}\"")}"
+          let hint := unknownIn unread ++ phraseHint
+          let hint := if hint.isEmpty then
+              "; docs/writing.md lists the forms it reads" else hint
           let mores := String.join (unread.map consequences)
-          out := out ++ [s!"{rel}:{l}:{c}: warning: {name} {what}{unknownIn unread}{mores}"]
+          out := out ++ [s!"{rel}:{l}:{c}: warning: {name} {what}{hint}{mores}"]
       else if !more.isEmpty then
         out := out ++ [s!"{rel}:{l}:{c}: warning: definition not read{unknownIn [s]}{more}"]
       else if prose && defining then

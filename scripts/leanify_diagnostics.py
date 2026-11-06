@@ -67,13 +67,14 @@ def findings(report, prose=False):
             unread = [t for t in env if t["outcome"] == "prose"]
             if unread[0] is not s:
                 continue
-            name = s["environment"].capitalize() + (f" {s['label']}" if s["label"] else "")
+            name = s["environment"].capitalize() + (f" {s['label']}" if s["label"] else f" at line {env[0]['line']}")
             if all(t["outcome"] != "compiled" for t in env):
-                what = "not read" if len(env) == 1 else f"not read (none of its {len(env)} sentences)"
+                what = ("is not checked: Leanify cannot read its statement" if len(env) == 1
+                        else f"is not checked: Leanify cannot read any of its {len(env)} sentences")
             else:
                 lines = sorted({t["line"] for t in unread})
-                what = (f"partly read ({len(unread)} of {len(env)} sentences not read, "
-                        f"line{'s' if len(lines) > 1 else ''} {', '.join(map(str, lines))})")
+                what = (f"is only partly checked: Leanify cannot read {len(unread)} of its {len(env)} sentences "
+                        f"(line{'s' if len(lines) > 1 else ''} {', '.join(map(str, lines))})")
             yield (*where, "warning", f"{name} {what}")
         elif s["outcome"] == "prose" and prose and s["environment"] == "proof":
             yield (*where, "info", "proof sentence not read")

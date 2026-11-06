@@ -153,7 +153,7 @@ the way the kernel will:
 
 ```
 Note/article.tex:70:1: warning: g is not defined: sentence not checked
-Note/article.tex:77:1: warning: Corollary cor:min not read
+Note/article.tex:77:1: warning: Corollary cor:min is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 Note/article.tex: 1 definitions, 5 claims
   text: 1 compiled, 0 failed, 40 prose (of 41)
   results: 2 compiled, 0 failed, 1 prose (of 3)
@@ -429,7 +429,8 @@ verified or is refuted.
 | --- | --- |
 | `… is not defined: sentence not checked` | Define the symbol earlier, or fix the typo. |
 | `unknown notation …` | The grammar does not read this command, and the article does not define it. Write the statement without it, or define it. |
-| `Theorem … not read`, `Lemma … partly read` | Rephrase the sentences with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
+| `unknown noun "…"` | The statement introduces an object by a noun phrase that is not a notion of the article or of its vocabulary. Define the notion first ([Writing for Leanify](writing.md)), or use a vocabulary that has it. |
+| `Theorem … is not checked`, `Lemma … is only partly checked` | Rephrase the sentences with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
 | `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build. |
 | `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |

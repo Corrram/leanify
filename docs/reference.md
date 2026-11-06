@@ -19,7 +19,7 @@ Compiles the article natively, in about a second, and prints findings in the
 | Finding | Severity |
 | --- | --- |
 | a sentence that did not compile: `G is not defined`, `unknown notation \sum`, a type mismatch, an unsupported construction, … | warning |
-| a theorem, lemma, proposition, corollary or definition with sentences without a reading: `Lemma l:bound not read`, or `partly read (2 of 5 sentences not read, lines …)`, once per result, with the notation in them that neither the grammar nor the article defines | warning |
+| a theorem, lemma, proposition, corollary or definition with sentences without a reading: `Lemma l:bound is not checked: Leanify cannot read any of its 3 sentences`, or `is only partly checked: Leanify cannot read 2 of its 5 sentences (lines …)`, once per result (named by its label, or by the beginning of its statement), with the likely reason: the notation in it that neither the grammar nor the article defines, or the noun phrase it introduces an object by (`unknown noun "Markov jump process"`) | warning |
 | a definition without a reading whose symbols later sentences use | warning |
 | with `--claims`: every definition and the formal reading of every claim | info |
 | with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
