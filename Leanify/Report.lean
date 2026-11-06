@@ -167,6 +167,6 @@ def logUncompiled (rel : String) (d : Doc) : CommandElabM Unit := do
     if let some (.failed e) := d.outcomes[s]? then
       let (_, a, _) := d.sentences[s]!
       let (l, c) := lineCol lines a
-      logInfo m!"{rel}:{l}:{c}: sentence not compiled ({errMessage e}); it asserts nothing checked"
+      logInfo m!"{rel}:{l}:{c}: {failedMessage e}: sentence not checked"
 
 end Leanify

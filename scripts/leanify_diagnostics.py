@@ -4,7 +4,7 @@
 `#leanify_certify` writes `<article>.leanify.json` next to the article. This script
 prints one line per finding in the format editors understand:
 
-    article.tex:694:1: warning: sentence not compiled (undefined symbol: \\Delta); it asserts nothing checked
+    article.tex:694:1: warning: \\Delta is not defined: sentence not checked
     article.tex:458:1: warning: statement (claim 12) compiled but not verified: add J.proof12
 
 Use it in CI or as a VS Code task (see `editors/vscode/tasks.json`). Exit status
@@ -40,17 +40,43 @@ def update_pin(lean_file, pin):
     return new != text
 
 
+GREEK = set("""alpha beta gamma delta epsilon varepsilon zeta eta theta vartheta iota kappa lambda
+mu nu xi pi varpi rho varrho sigma varsigma tau upsilon phi varphi chi psi omega Gamma Delta Theta
+Lambda Xi Pi Sigma Upsilon Phi Psi Omega ell""".split())
+
+
+def failed_message(message):
+    """What stopped a sentence, as `leanify check` says it."""
+    m = re.match(r"undefined symbol: (.+)\Z", message)
+    if not m:
+        return message
+    sym = m.group(1)
+    name = re.match(r"\\([A-Za-z]+)", sym)
+    return f"unknown notation {sym}" if name and name.group(1) not in GREEK else f"{sym} is not defined"
+
+
 def findings(report, prose=False):
     sentences = report["sentences"]
+    stated = lambda s: s["environment"] not in ("text", "proof", "remark", "example", "conjecture")
     for s in sentences:
         where = (s["line"], s["column"])
         if s["outcome"] == "failed":
-            yield (*where, "warning", f"sentence not compiled ({s['message']}); it asserts nothing checked")
-        elif s["outcome"] == "prose" and s["environment"] not in ("text", "proof"):
-            yield (*where, "warning", f"sentence of a {s['environment']} not read by the grammar; "
-                   "this part of the statement is not checked")
+            yield (*where, "warning", f"{failed_message(s['message'])}: sentence not checked")
+        elif s["outcome"] == "prose" and stated(s):
+            env = [t for t in sentences if t["env"] == s["env"]]
+            unread = [t for t in env if t["outcome"] == "prose"]
+            if unread[0] is not s:
+                continue
+            name = s["environment"].capitalize() + (f" {s['label']}" if s["label"] else "")
+            if all(t["outcome"] != "compiled" for t in env):
+                what = "not read" if len(env) == 1 else f"not read (none of its {len(env)} sentences)"
+            else:
+                lines = sorted({t["line"] for t in unread})
+                what = (f"partly read ({len(unread)} of {len(env)} sentences not read, "
+                        f"line{'s' if len(lines) > 1 else ''} {', '.join(map(str, lines))})")
+            yield (*where, "warning", f"{name} {what}")
         elif s["outcome"] == "prose" and prose and s["environment"] == "proof":
-            yield (*where, "info", "proof sentence not read by the grammar; it makes no checked claim")
+            yield (*where, "info", "proof sentence not read")
     for c in report["claims"]:
         s = sentences[c["sentence"]]
         where = (s["line"], s["column"])

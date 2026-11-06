@@ -86,10 +86,23 @@ def wListEnvs : List Codes := [w!"enumerate", w!"itemize", w!"description"]
 def wDropText : List Codes :=
   [w!"emph", w!"textit", w!"textbf", w!"textup", w!"noindent", w!"centering", w!"medskip",
    w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null",
-   w!"leavevmode"]
+   w!"leavevmode", w!"sloppy", w!"fussy", w!"indent", w!"hfill", w!"vfill", w!"allowbreak",
+   w!"linebreak", w!"nolinebreak", w!"pagebreak", w!"nopagebreak", w!"goodbreak", w!"newpage",
+   w!"clearpage"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits"]
+/-- Commands of formulas that are another spelling of a symbol the grammar reads:
+`\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`. -/
+def mathAlias (n : Codes) : Option Tok :=
+  if n == w!"colon" then some (.msym 58)
+  else if n == w!"leqslant" || n == w!"leqq" then some (.cmd w!"le")
+  else if n == w!"geqslant" || n == w!"geqq" then some (.cmd w!"ge")
+  else if n == w!"lvert" || n == w!"rvert" || n == w!"vert" then some (.msym 124)
+  else if n == w!"lbrace" then some (.csym 123)
+  else if n == w!"rbrace" then some (.csym 125)
+  else none
+
 /-- References that print the kind of what they refer to (`\cref{l}` is `Lemma 2.1`). -/
 def wSelfRefs : List Codes := [w!"cref", w!"Cref", w!"autoref", w!"Autoref"]
 /-- Commands whose braced arguments are layout or metadata, skipped with the command kept. -/
@@ -268,9 +281,14 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
         else lexAux macros f rest (pos + 1 + n) st out
       else lexAux macros f cs (pos + 1) st out
     else if c == 36 then
-      match st with
-      | true :: st' => lexAux macros f cs (pos + 1) st' (⟨.mclose, pos, true⟩ :: out)
-      | _ => lexAux macros f cs (pos + 1) (true :: st) (⟨.mopen, pos, true⟩ :: out)
+      match st, cs with
+      | true :: st', _ => lexAux macros f cs (pos + 1) st' (⟨.mclose, pos, true⟩ :: out)
+      -- `$$…$$` is a display, like `\[…\]`
+      | [], 36 :: ds =>
+        lexAux macros f ds (pos + 2) [false] (⟨.begin w!"displaymath", pos, false⟩ :: out)
+      | false :: st', 36 :: ds =>
+        lexAux macros f ds (pos + 2) st' (⟨.finish w!"displaymath", pos, true⟩ :: out)
+      | _, _ => lexAux macros f cs (pos + 1) (true :: st) (⟨.mopen, pos, true⟩ :: out)
     else if c == 92 then
       match cs with
       | [] => none
@@ -367,6 +385,10 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               emit (.cmd w!"@heading") rest n st
             else lexAux macros f rest (pos + n) st out
           else if math && wDropMath.contains name then lexAux macros f rest (pos + n) st out
+          else if math then
+            match mathAlias name with
+            | some t => emit t rest n st
+            | none => emit (.cmd name) rest n st
           else emit (.cmd name) rest n st
     else if c == 123 then
       if math then emit .lbrace cs 1 st else lexAux macros f cs (pos + 1) st out

@@ -49,6 +49,22 @@ def endsAfter : List PTok → Bool
     | .par | .begin _ | .finish _ | .cmd _ | .mopen => true
     | _ => false
 
+/-- Abbreviations whose period does not end a sentence (`cf.`, `resp.`, `Thm.`). -/
+def wAbbrevs : List Codes :=
+  [w!"cf", w!"resp", w!"vs", w!"viz", w!"approx", w!"al", w!"Thm", w!"Lem", w!"Prop", w!"Cor",
+   w!"Def", w!"Rem", w!"Ex", w!"Eq", w!"Eqs", w!"Fig", w!"Sec", w!"Ch", w!"Ref", w!"Refs", w!"No"]
+
+/-- Is the period after these tokens (latest first) that of an abbreviation? The
+second period of `i.e.` and `e.g.` is one too. -/
+def abbrevBefore : List PTok → Bool
+  | ⟨.word w, _, false⟩ :: rest =>
+    wAbbrevs.contains w ||
+      (match w, rest with
+        | [101], ⟨.punct 46, _, false⟩ :: ⟨.word [105], _, false⟩ :: _ => true
+        | [103], ⟨.punct 46, _, false⟩ :: ⟨.word [101], _, false⟩ :: _ => true
+        | _, _ => false)
+  | _ => false
+
 /-- Index of the token closing the current display environment `e`. -/
 def displayEnd (e : Codes) : List PTok → Nat → Option Nat
   | [], _ => none
@@ -174,7 +190,7 @@ def go : Nat → List PTok → St → St
         go f ts (flush s)
       else go f ts { s with cur := t :: s.cur }
     | .punct 46 =>
-      if !t.math && endsAfter ts then go f ts (flush { s with cur := t :: s.cur })
+      if !t.math && endsAfter ts && !abbrevBefore s.cur then go f ts (flush { s with cur := t :: s.cur })
       else go f ts { s with cur := t :: s.cur }
     | _ => go f ts { s with cur := t :: s.cur }
 

@@ -33,6 +33,37 @@ def errMessage (e : Err) : String :=
     else s!"error {e.code}"
   if d.isEmpty then what else s!"{what}: {d}"
 
+/-- Greek letters: names of variables, not notation. -/
+def greekNames : List String :=
+  ["alpha", "beta", "gamma", "delta", "epsilon", "varepsilon", "zeta", "eta", "theta", "vartheta",
+   "iota", "kappa", "lambda", "mu", "nu", "xi", "pi", "varpi", "rho", "varrho", "sigma", "varsigma",
+   "tau", "upsilon", "phi", "varphi", "chi", "psi", "omega", "Gamma", "Delta", "Theta", "Lambda",
+   "Xi", "Pi", "Sigma", "Upsilon", "Phi", "Psi", "Omega", "ell"]
+
+/-- Commands of formulas that the grammar reads itself (relations, operations,
+fonts, accents, spacing). Any other command is a symbol: defined in the article
+or by its vocabulary, or else unknown. -/
+def structuralCmds : List String :=
+  ["le", "leq", "ge", "geq", "in", "coloneqq", "neq", "ne", "frac", "tfrac", "dfrac", "sqrt",
+   "min", "max", "int", "hat", "widehat", "cdot", "to", "mapsto", "longmapsto", "times", "top",
+   "perp", "cup", "cap", "approx", "ldots", "quad", "qquad", "pm", "mp", "infty",
+   "text", "mathcal", "mathbb", "mathbf", "mathrm", "operatorname", "mathit", "overline", "bar",
+   "tilde", "underline", "check"]
+
+/-- A symbol written as a command that is not a variable name (a Greek letter):
+notation the article or its vocabulary must define. -/
+def isNotation (d : String) : Bool :=
+  match d.toList with
+  | '\\' :: r => !greekNames.contains (String.ofList (r.takeWhile Char.isAlpha))
+  | _ => false
+
+/-- What stopped a sentence, in a few words. -/
+def failedMessage (e : Err) : String :=
+  let d := Codes.toString e.detail
+  if e.code == E.undefined && !d.isEmpty then
+    if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
+  else errMessage e
+
 /-- Line and column (both from 1) of a code point offset. -/
 def lineCol (lines : List (List Nat)) (off : Nat) : Nat × Nat := Id.run do
   let mut o := off
@@ -206,11 +237,51 @@ def andList : List String → String
   | [a, b] => s!"{a} and {b}"
   | a :: rest => s!"{a}, {andList rest}"
 
-/-- Diagnostics for a compiled document: sentences that did not compile, and
-sentences of results without a reading. An undefined symbol is reported once: at
-the sentence that defines it if that sentence was not read, otherwise at its first
-use, with the later sentences that fail for the same symbol (they follow from the
-first). A sentence with `\coloneqq` that has no reading is reported wherever it is.
+/-- The tokens of the sentences of an article, as the compiler segments them. -/
+def sentenceToks (src : Source) : Array (List PTok) := Id.run do
+  let some k := src.findIdx? isBeginDocument | return #[]
+  let some ms := macrosOf (joinLines (src.take k)) | return #[]
+  let bs := blocksOf (src.drop (k + 1)) (linesOffset (src.take (k + 1))) none []
+  match lexSeg ms bs [] {} with
+  | some (ss, _, st) => return ((ss ++ segFinish st).map (·.toks)).toArray
+  | none => return #[]
+
+/-- The notation of a sentence that neither the grammar nor the article defines:
+commands of its formulas other than Greek letters, the commands the grammar reads,
+and the symbols the article defines. -/
+def unknownNotation (d : Doc) (toks : List PTok) : List String :=
+  let keys := d.globs.map fun g => Codes.toString g.key
+  let known (n : String) : Bool :=
+    greekNames.contains n || structuralCmds.contains n || keys.any fun k =>
+      let c := "\\" ++ n
+      k == c || (k.startsWith c && !((k.toList.drop c.length).head?.any Char.isAlpha))
+  (toks.filterMap fun p => match p.tok with
+    | .cmd n => if p.math && !known (Codes.toString n) then some ("\\" ++ Codes.toString n) else none
+    | _ => none).eraseDups
+
+/-- `a, b and c`, with at most `k` items and `…` for the rest. -/
+def fewOf (k : Nat) (xs : List String) : String :=
+  let shown := xs.take k
+  let s := String.intercalate ", " shown
+  if xs.length > k then s ++ ", …" else s
+
+/-- `line 3` or `lines 3, 7`. -/
+def linesText (ls : List Nat) : String :=
+  let ls := ls.eraseDups
+  s!"line{if ls.length == 1 then "" else "s"} {String.intercalate ", " (ls.map toString)}"
+
+def capitalize (s : String) : String :=
+  match s.toList with
+  | c :: r => String.ofList (c.toUpper :: r)
+  | [] => s
+
+/-- Diagnostics for a compiled document. A result (theorem, lemma, …) whose
+sentences have no reading is reported once, at its first such sentence, with the
+notation in them that nothing defines. A sentence that failed is reported with
+what stopped it. An undefined symbol is reported once: at the sentence that
+defines it if that sentence was not read, otherwise at its first use, with the
+later sentences that fail for the same symbol (they follow from the first). A
+sentence with `\coloneqq` that has no reading is reported wherever it is.
 Sentences of remarks, examples and conjectures without a reading are not
 reported. `prose` also lists the sentences of proofs (and of remarks) without a
 reading, and the proof sentences whose construction is not supported; `claims`
@@ -224,23 +295,31 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
   let all := joinLines lines
   let texts : Array (List Char) := (d.sentences.map fun (_, a, b) =>
     (Codes.toString ((all.drop a).take (b - a))).toList).toArray
+  let toks := sentenceToks lines
   let roots := rootsOf d texts
   let undef := undefinedUses d (roots.map (·.1))
+  let lineOf (s : Nat) : Nat := (lineCol lines (d.sentences[s]!).2.1).1
   let excerpt (s : Nat) : String :=
     let (_, a, b) := d.sentences[s]!
     let text := Codes.toString (all.drop a |>.take (min 90 (b - a)))
     let text := text.replace "\n" " "
     if b - a > 90 then text ++ "…" else text
+  let unknownIn (ss : List Nat) : String :=
+    match (ss.flatMap fun s => unknownNotation d (toks[s]?.getD [])).eraseDups with
+    | [] => ""
+    | ns => s!"; unknown notation {fewOf 4 ns}"
   -- the symbols a sentence that was not read leaves undefined, and where
   let consequences (s : Nat) : String :=
     let deps := (roots.filter (·.2 == s)).map (·.1)
     if deps.isEmpty then "" else
       let syms := (deps.filterMap fun t => match (d.outcomes[t]? : Option Outcome) with
         | some (Outcome.failed e) => some (Codes.toString e.detail) | _ => none).eraseDups
-      let ls := (deps.map fun t => toString (lineCol lines (d.sentences[t]!).2.1).1).eraseDups
-      let verb := if syms.length == 1 then "stays" else "stay"
-      let n := deps.length
-      s!"; {andList syms} {verb} undefined in {n} later sentence{if n == 1 then "" else "s"} (line{if ls.length == 1 then "" else "s"} {String.intercalate ", " ls})"
+      s!"; {andList syms} then undefined at {linesText (deps.map lineOf)}"
+  -- a sentence of a statement without a reading leaves the statement partly
+  -- unchecked: always reported, once per statement
+  let stated (ctx : Context) : Bool := match ctx.kind with
+    | .result n => !wDiscussion.contains n | _ => false
+  let isProse (s : Nat) : Bool := d.outcomes[s]?.getD .prose == .prose
   for s in [0:d.sentences.length] do
     let (ctx, a, _) := d.sentences[s]!
     let (l, c) := lineCol lines a
@@ -249,39 +328,43 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
     match o with
     | .failed e =>
       if roots.any (·.1 == s) then pure () else
-      let m := errMessage e
+      let m := failedMessage e
       let more := consequences s
       -- in a proof, a construction the grammar does not support is like prose
       if ctx.kind == .proof && e.code == E.unsupported && more.isEmpty then
         if prose then
           out := out ++ [s!"{rel}:{l}:{c}: info: proof sentence not read ({m}): {excerpt s}"]
       else
-      let uses := if e.code == E.undefined then ((undef.find? (·.1 == m)).map (·.2)).getD [] else []
+      let uses := if e.code == E.undefined then ((undef.find? (·.1 == errMessage e)).map (·.2)).getD [] else []
       match uses with
       | first :: later =>
         if first == s then
-          let ls := later.map fun t => toString (lineCol lines (d.sentences[t]!).2.1).1
-          let same := match later.length with
-            | 0 => ""
-            | 1 => s!"; the same in 1 later sentence (line {String.intercalate ", " ls})"
-            | n => s!"; the same in {n} later sentences (lines {String.intercalate ", " ls})"
-          out := out ++ [s!"{rel}:{l}:{c}: warning: sentence not compiled ({m}); it asserts nothing checked{same}{more}"]
-      | [] => out := out ++ [s!"{rel}:{l}:{c}: warning: sentence not compiled ({m}); it asserts nothing checked{more}"]
+          let same := if later.isEmpty then "" else s!"; the same at {linesText (later.map lineOf)}"
+          out := out ++ [s!"{rel}:{l}:{c}: warning: {m}: sentence not checked{same}{more}"]
+      | [] => out := out ++ [s!"{rel}:{l}:{c}: warning: {m}: sentence not checked{more}"]
     | .prose =>
-      -- a sentence of a statement without a reading leaves the statement partly
-      -- unchecked: always a warning; prose in proofs and remarks only with `--prose`
-      let inResult := match ctx.kind with | .result n => !wDiscussion.contains n | _ => false
       -- a definition of the running text defines symbols of the article
       let defining := ctx.kind == .text && (String.ofList texts[s]!).contains "\\coloneqq"
       let more := consequences s
-      if inResult then
-        out := out ++ [s!"{rel}:{l}:{c}: warning: {kindString ctx.kind} sentence without a mathematical reading: {excerpt s}{more}"]
+      if stated ctx then
+        let env := (List.range d.sentences.length).filter fun t => (d.sentences[t]!).1.env == ctx.env
+        let unread := env.filter isProse
+        if unread.head? == some s then
+          let name := capitalize (kindString ctx.kind) ++
+            (if ctx.label.isEmpty then "" else s!" {Codes.toString ctx.label}")
+          let read := env.filter fun t => match d.outcomes[t]? with
+            | some (.compiled _ _) => true | _ => false
+          let what := if read.isEmpty then
+              (if env.length == 1 then "not read" else s!"not read (none of its {env.length} sentences)")
+            else s!"partly read ({unread.length} of {env.length} sentences not read, {linesText (unread.map lineOf)})"
+          let mores := String.join (unread.map consequences)
+          out := out ++ [s!"{rel}:{l}:{c}: warning: {name} {what}{unknownIn unread}{mores}"]
       else if !more.isEmpty then
-        out := out ++ [s!"{rel}:{l}:{c}: warning: definition without a reading: {excerpt s}{more}"]
+        out := out ++ [s!"{rel}:{l}:{c}: warning: definition not read{unknownIn [s]}{more}"]
       else if prose && defining then
-        out := out ++ [s!"{rel}:{l}:{c}: info: definition without a reading: {excerpt s}"]
+        out := out ++ [s!"{rel}:{l}:{c}: info: definition not read{unknownIn [s]}: {excerpt s}"]
       else if prose && ctx.kind != .text then
-        out := out ++ [s!"{rel}:{l}:{c}: info: {kindString ctx.kind} sentence without a mathematical reading: {excerpt s}"]
+        out := out ++ [s!"{rel}:{l}:{c}: info: {kindString ctx.kind} sentence not read: {excerpt s}"]
     | .compiled ds ks =>
       if claims then
         for i in ds do

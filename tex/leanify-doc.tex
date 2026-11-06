@@ -118,8 +118,8 @@ folder or up to three folders above), every compile runs
 \texttt{lake exe leanify check} on the article. Its findings become LaTeX
 warnings at their lines of the article,
 \begin{lstlisting}
-Package leanify Warning: sentence not compiled (undefined symbol: g); it
-(leanify)                asserts nothing checked on input line 70.
+Package leanify Warning: g is not defined: sentence not checked on input line
+(leanify)                70.
 \end{lstlisting}
 so editors that read the LaTeX log list them with the other warnings. With
 \opt{certify}, the errors of the Lean build and the refuted claims are warnings

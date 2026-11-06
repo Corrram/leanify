@@ -18,16 +18,16 @@ Compiles the article natively, in about a second, and prints findings in the
 
 | Finding | Severity |
 | --- | --- |
-| a sentence that did not compile (an undefined symbol, a type mismatch, an unsupported construction, …) | warning |
-| a sentence of a theorem, lemma, proposition, corollary or definition without a reading | warning |
+| a sentence that did not compile: `G is not defined`, `unknown notation \sum`, a type mismatch, an unsupported construction, … | warning |
+| a theorem, lemma, proposition, corollary or definition with sentences without a reading: `Lemma l:bound not read`, or `partly read (2 of 5 sentences not read, lines …)`, once per result, with the notation in them that neither the grammar nor the article defines | warning |
 | a definition without a reading whose symbols later sentences use | warning |
 | with `--claims`: every definition and the formal reading of every claim | info |
 | with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
 
 An undefined symbol is reported once. If the sentence that defines it was not
 read, the finding is at that sentence: `… are $\beta(C)\coloneqq…$,
-$\xi(C)\coloneqq…$` fails on `\partial`, and `\beta and \xi stay undefined in 5
-later sentences (lines …)`. The defining sentence is the one with the symbol
+$\xi(C)\coloneqq…$` fails on `\partial`, and `\beta and \xi then undefined at
+lines …`. The defining sentence is the one with the symbol
 before `\coloneqq`, a `Let` that binds it, or, in a proof, the statement it
 proves. Otherwise the finding is at the first sentence that uses the symbol, with
 the lines of the later sentences that fail for it: they follow from the first,
@@ -198,8 +198,8 @@ editor) and the article lies in a Lean project (a `lakefile.toml` or
 at their lines of the article,
 
 ```
-Package leanify Warning: sentence not compiled (undefined symbol: g); it
-(leanify)                asserts nothing checked on input line 70.
+Package leanify Warning: g is not defined: sentence not checked on input line
+(leanify)                70.
 ```
 
 so editors that read the LaTeX log list them with the other warnings, and the
