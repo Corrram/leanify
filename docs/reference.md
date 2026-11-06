@@ -26,7 +26,7 @@ Compiles the article natively, in about a second, and prints findings in the
 
 An undefined symbol is reported once. If the sentence that defines it was not
 read, the finding is at that sentence: `… are $\beta(C)\coloneqq…$,
-$\xi(C)\coloneqq…$` fails on `\partial`, and `\beta and \xi then undefined at
+$\xi(C)\coloneqq…$` fails on `\partial`, and `\beta and \xi are then undefined at
 lines …`. The defining sentence is the one with the symbol
 before `\coloneqq`, a `Let` that binds it, or, in a proof, the statement it
 proves. Otherwise the finding is at the first sentence that uses the symbol, with
