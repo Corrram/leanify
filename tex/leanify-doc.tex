@@ -1,0 +1,170 @@
+% leanify-doc.tex -- documentation of the LaTeX package leanify.
+% Copyright (C) 2026 Marcus Rockel. Apache License, Version 2.0.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=30mm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,tabularx,array}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,allcolors=blue!50!black]{hyperref}
+\lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,
+  frame=single,framerule=0.3pt,rulecolor=\color{black!30},
+  xleftmargin=4pt,xrightmargin=4pt,upquote=true}
+\newcommand*\pkg[1]{\textsf{#1}}
+\newcommand*\opt[1]{\texttt{#1}}
+\newcommand*\cs[1]{\texttt{\textbackslash#1}}
+
+\title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
+\author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
+\date{Version 0.3, 2026-11-06}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Leanify compiles an ordinary mathematical article, written in LaTeX, to the
+Lean proof assistant. Every definition and claim of the article becomes a Lean
+statement checked by the kernel, and the proofs are checked sentence by sentence
+against the results they cite. There is no second, hand-written formal version
+that could drift away from the paper: one source is typeset as the article you
+submit and compiled by Lean. This document describes the LaTeX package
+\pkg{leanify}, the typesetting side of Leanify. The Lean side, the grammar of
+the articles it reads and a tutorial are documented at
+\url{https://corrram.github.io/leanify/}.
+\end{abstract}
+
+\section{What the package does}
+
+Leanify reads the article source itself: its sentences, formulas and the macros
+of its preamble. The package does not change what the article says, and Leanify
+reads no markup from it. The package
+\begin{itemize}
+\item loads the packages for the notation the Leanify grammar reads:
+  \cs{coloneqq} from \pkg{mathtools}, \cs{mathbb} and \cs{le} from \pkg{amssymb};
+\item checks the article while it compiles, when it can (Section~\ref{sec:check});
+\item with the option \opt{status}, marks every labelled result in the margin with
+  its verification status (Section~\ref{sec:status});
+\item records the Lean module that certifies the article (\cs{leanifymodule}).
+\end{itemize}
+Without options and without shell escape the typeset article is unchanged, so
+an article that loads \pkg{leanify} compiles anywhere, for instance on arXiv or
+a journal's server.
+
+For example, Leanify compiles the sentence
+\begin{lstlisting}
+Define $f:(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
+\end{lstlisting}
+to the Lean definition \texttt{f := fun x => x + 1 / x}, with the obligation
+that it is well defined, and the theorem
+\begin{lstlisting}
+\begin{theorem}\label{thm:bound}
+For every $x\in(0,\infty)$, $f(x)\ge2$.
+\end{theorem}
+\end{lstlisting}
+to the Lean statement $\forall\,(x:\mathbb{R}),\ 0<x\to 2\le f\,x$, derived in Lean from
+exactly the sentences of its proof and the results they cite.
+
+\section{Usage}
+
+\begin{lstlisting}
+\usepackage{leanify}            % check as you compile
+\usepackage[status]{leanify}    % and mark results in the margin
+\usepackage[certify]{leanify}   % and build the certificate first
+\leanifymodule{Note.Certified}  % optional: the certifying module
+\leanifyreport                  % optional: a one-line summary
+\end{lstlisting}
+
+\noindent The options are:
+
+\medskip
+\noindent\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+\normalfont Option & Effect \\
+\midrule
+status & Marks every labelled result in the margin with its verification status,
+  read from \texttt{\cs{jobname}.leanify.tex}. \\
+check=false & No quick check during the compile. \\
+certify & Before the marks are read, updates the pin of the article and builds
+  its certificate with \texttt{lake build}. The first time, when the article has
+  no Lean files yet, writes them, and a warning gives the \texttt{[[lean\_lib]]}
+  entry to add to \texttt{lakefile.toml}. Implies \opt{status}. \\
+vocab=NAME & The vocabulary of the article: \texttt{core} (the default) or
+  \texttt{unitsquare} (probability on the unit square). \\
+lean=FILE & The compiled Lean file of the article, by default
+  \texttt{Compiled.lean} next to it. \\
+\bottomrule
+\end{tabularx}
+
+\medskip
+\noindent The commands are:
+\begin{description}
+\item[\cs{leanifymodule}\texttt{\{}\textit{module}\texttt{\}}] The Lean module whose
+  \texttt{\#leanify\_certify} certifies the article. By default it is
+  \texttt{NS.Certified}, for the namespace \texttt{NS} that the compiled Lean file
+  compiles.
+\item[\cs{leanifyreport}] Prints a one-line summary of the last build where it
+  appears, for instance: \emph{12 of 12 claims verified (3 derived in the text from
+  their citations); 85 of 90 sentences compiled; 7 definitions well defined}.
+\end{description}
+
+\section{Checking as you compile}\label{sec:check}
+
+When the compiler may run programs (shell escape: \texttt{pdflatex -shell-escape},
+\texttt{latexmk -shell-escape}, or the setting of the editor) and the article
+lies in a Lean project (a \texttt{lakefile.toml} or \texttt{lakefile.lean} in its
+folder or up to three folders above), every compile runs
+\texttt{lake exe leanify check} on the article. Its findings become LaTeX
+warnings at their lines of the article,
+\begin{lstlisting}
+Package leanify Warning: sentence not compiled (undefined symbol: g); it
+(leanify)                asserts nothing checked on input line 70.
+\end{lstlisting}
+so editors that read the LaTeX log list them with the other warnings. With
+\opt{certify}, the errors of the Lean build and the refuted claims are warnings
+too. The full output of Leanify is in \texttt{\cs{jobname}.leanify.log}.
+\texttt{lake} must be on the \texttt{PATH} of the compiler; the first check
+also builds the checker, which takes a few minutes once.
+
+Without shell escape nothing runs, and in a Lean project a warning says so.
+Outside a Lean project the package runs nothing and says nothing.
+
+\section{Verification status in the margin}\label{sec:status}
+
+With \opt{status}, every labelled result whose status is known gets one of these
+marks in the margin:
+
+\medskip
+\noindent\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+Mark & Meaning \\
+\midrule
+$\checkmark$\,\textsf{checked} & Every sentence compiled, and the claim is verified in Lean. \\
+$\checkmark$\,\textsf{derived} & Every sentence compiled, and the proof in the text
+  derives the claim from its citations. \\
+$\circ$\,\textsf{partly checked} & The result is verified in part. \\
+$\circ$\,\textsf{compiled} & The statement compiled, but is not verified yet. \\
+$\times$\,\textsf{false} & The claim is refuted in Lean. \\
+\bottomrule
+\end{tabularx}
+
+\medskip
+The marks are read from \texttt{\cs{jobname}.leanify.tex}, which the Lean command
+\texttt{\#leanify\_certify} writes next to the article. If the article is newer
+than that file, a warning says that the marks may be out of date. Leave
+\opt{status} out for the version you submit.
+
+\section{Requirements}
+
+The package needs LaTeX 2022-06-01 or newer, \pkg{mathtools} and \pkg{amssymb}.
+Checking and the status marks need the Lean toolchain and the Leanify Lean
+package in the article's Lake project; typesetting does not. Installation and
+a step-by-step tutorial are at \url{https://corrram.github.io/leanify/}.
+
+\section{Licence}
+
+Copyright \copyright\ 2026 Marcus Rockel. The package is released under the
+Apache License, Version 2.0.
+
+\end{document}

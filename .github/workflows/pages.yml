@@ -1,5 +1,5 @@
 name: Documentation site
-# Builds https://corrram.github.io/proofread/: the pages in docs/ (mkdocs.yml)
+# Builds https://corrram.github.io/leanify/: the pages in docs/ (mkdocs.yml)
 # and the web readers of the example articles, from the reports in the
 # repository (the Lean workflow keeps them current). Publishes from main.
 on:

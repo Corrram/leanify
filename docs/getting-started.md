@@ -1,6 +1,6 @@
-# Getting started: check an article with Proofread
+# Getting started: check an article with Leanify
 
-Proofread reads a mathematical article in LaTeX, compiles every sentence it can
+Leanify reads a mathematical article in LaTeX, compiles every sentence it can
 read to Lean, and asks Lean to check what the article says. The article stays an
 ordinary `.tex` file that you typeset and submit as before.
 
@@ -51,36 +51,36 @@ leanprover/lean4:v4.34.0
 name = "mynote"
 
 [[require]]
-name = "proofread"
-git = "https://github.com/Corrram/proofread.git"
+name = "leanify"
+git = "https://github.com/Corrram/leanify.git"
 rev = "main"   # or a commit, for a reproducible build
 ```
 
-Then fetch Proofread and mathlib, with mathlib's compiled files:
+Then fetch Leanify and mathlib, with mathlib's compiled files:
 
 ```sh
 lake update
 ```
 
-The first `lake exe proofread` builds the checker (a few minutes, once).
+The first `lake exe leanify` builds the checker (a few minutes, once).
 
 ## 2. Write the article
 
 Put the article in a folder named after it, here `Note/article.tex`. The folder
-name becomes the Lean namespace. Load the usual packages and `leanproof.sty`
-(copy it from `.lake/packages/proofread/tex/` next to the article):
+name becomes the Lean namespace. Load the usual packages and `leanify.sty`
+(copy it from `.lake/packages/leanify/tex/` next to the article):
 
 ```latex
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{leanproof}
+\usepackage{leanify}
 ```
 
-Write as you always do, in the style of [Writing for Proofread](writing.md):
+Write as you always do, in the style of [Writing for Leanify](writing.md):
 define every symbol before you use it, with `\coloneqq`, give every quantifier,
 and cite what a proof step uses. The note opens with an introduction, explains
 each step between the results, and closes with a section on the classical
 inequalities between means and a list of references. Those passages are prose,
-and Proofread leaves them as they are. Here are the two sections with the
+and Leanify leaves them as they are. Here are the two sections with the
 mathematics, between the first line of the introduction and the heading of the
 last section (copy `examples/Demo/draft.tex` to `Note/article.tex` to follow
 along):
@@ -145,7 +145,7 @@ In the language of the introduction, among all rectangles of area one the square
 ## 3. Check while you write
 
 ```sh
-lake exe proofread check Note/article.tex
+lake exe leanify check Note/article.tex
 ```
 
 The check runs in about a second and certifies nothing. It reads the article
@@ -180,7 +180,7 @@ With both fixed, `--claims` prints the reading of every claim. These readings
 are what Lean will prove, so read them:
 
 ```
-lake exe proofread check Note/article.tex --claims
+lake exe leanify check Note/article.tex --claims
 Note/article.tex:42:1: info: defines f (f)
 Note/article.tex:48:1: info: claim 0: \forall x\in \mathbb{R},\ 0<x\Rightarrow f(x)-2=\frac{{(x-1)}^{2}}{x}
 Note/article.tex:53:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\Rightarrow f(x)-2=x+\frac{1}{x}-2\land x+\frac{1}{x}-2=\frac{{x}^{2}-2\,x+1}{x}\land \frac{{x}^{2}-2\,x+1}{x}=\frac{{(x-1)}^{2}}{x}
@@ -198,7 +198,7 @@ lists the proof sentences the grammar does not read, and
 ## 4. Generate the Lean files
 
 ```sh
-lake exe proofread init Note/article.tex
+lake exe leanify init Note/article.tex
 ```
 
 ```
@@ -225,7 +225,7 @@ The four files never need to be rewritten by hand except `Proofs.lean`:
 | `Compiled.lean` | The kernel compiles `article.tex`, pinned by the hash of its contents. |
 | `Article.lean` | Every definition and claim as ordinary Lean: `f`, `claimK`, `meaningfulK` (every term of claim `K` is defined) and `obligationK` (its premises imply it). |
 | `Proofs.lean` | Your proofs. `init` writes a stub for each. |
-| `Certified.lean` | The certificate. It also writes `article.proofread.json` and `article.proofread.tex`. |
+| `Certified.lean` | The certificate. It also writes `article.leanify.json` and `article.leanify.tex`. |
 
 Each stub states the claim, where it comes from and what it rests on:
 
@@ -268,7 +268,7 @@ Define $f:(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
 After every edit of the article, update its pin and build again:
 
 ```sh
-lake exe proofread prepare Note/article.tex --lean Note/Compiled.lean
+lake exe leanify prepare Note/article.tex --lean Note/Compiled.lean
 lake build Note.Certified
 ```
 
@@ -285,12 +285,12 @@ while its proofs are being written.
 ## 6. Prove the claims
 
 Replace each `sorry` by a proof. Most proof steps are routine, and
-`scripts/proofread_prove.py` proves those with standard tactics, and the rest with
+`scripts/leanify_prove.py` proves those with standard tactics, and the rest with
 a model if you give it one
-([`proofread_prove.py`](reference.md#proofread_provepy)):
+([`leanify_prove.py`](reference.md#leanify_provepy)):
 
 ```sh
-python .lake/packages/proofread/scripts/proofread_prove.py Note/article.tex
+python .lake/packages/leanify/scripts/leanify_prove.py Note/article.tex
 ```
 
 An obligation it cannot prove, such as the false theorem's below, keeps its
@@ -302,7 +302,7 @@ theorem proof4 : obligation4 := by
   exact ⟨by unfold meaningful4; definedness [], fun x hx => ⟨c0 x hx, c3 x hx⟩⟩
 ```
 
-`#proofread_certify` audits every claim the text derives: its proof may use its
+`#leanify_certify` audits every claim the text derives: its proof may use its
 premises, mathlib and the article, but no other result of yours. A proof step
 that needs a lemma the sentence does not cite is rejected, so cite it in the
 text.
@@ -348,13 +348,13 @@ verified either, even though their own proofs are correct. The diagnostics, the
 PDF and the web reader all show it:
 
 ```
-python .lake/packages/proofread/scripts/proofread_diagnostics.py Note/article.proofread.json
+python .lake/packages/leanify/scripts/leanify_diagnostics.py Note/article.leanify.json
 Note/article.tex:64:1: error: statement (claim 2) is false as stated: refuted by Note.Proofs.refute2
 Note/article.tex:77:1: warning: statement (claim 5) compiled but not verified: it rests on claim 2, which is refuted
 Note/article.tex:81:1: warning: proof step (claim 6) compiled but not verified: it rests on claim 2, which is refuted
 ```
 
-![The PDF with \usepackage[status]{leanproof}: Lemma 2.1 is derived, Theorem 3.1 is marked false, Corollary 3.2 is compiled but not verified](images/demo-pdf-refuted.png)
+![The PDF with \usepackage[status]{leanify}: Lemma 2.1 is derived, Theorem 3.1 is marked false, Corollary 3.2 is compiled but not verified](images/demo-pdf-refuted.png)
 
 The [live demo](demo.md) has the web reader of this draft and of the finished
 note.
@@ -376,35 +376,35 @@ follows from what it cites, and each result from its proof.
 
 ## 8. Read and share the result
 
-* **The PDF.** `\usepackage[status]{leanproof}` puts the status of every
-  labelled result in the margin (from `article.proofread.tex`):
+* **The PDF.** `\usepackage[status]{leanify}` puts the status of every
+  labelled result in the margin (from `article.leanify.tex`):
   derived, checked, partly checked, compiled, or false. Without the option the
   typeset article is unchanged, which is what you submit. Compiled with shell
   escape (`pdflatex -shell-escape`), the package also runs the quick check
   every time, and its findings appear as LaTeX warnings at their lines.
-  `\usepackage[certify]{leanproof}` runs steps 4 and 5 as well: it writes the
+  `\usepackage[certify]{leanify}` runs steps 4 and 5 as well: it writes the
   Lean files the first time, then updates the pin and builds the certificate
-  before it reads the marks ([`leanproof.sty`](reference.md#the-pdf-leanproofsty)).
+  before it reads the marks ([`leanify.sty`](reference.md#the-pdf-leanifysty)).
 * **The web reader.** It renders the article from its source with a marker at
   every sentence, and shows for each one its formal reading, Lean statement,
   premises and justification:
 
   ```sh
-  npm ci --prefix .lake/packages/proofread
-  node .lake/packages/proofread/reader/build.mjs Note/article.tex
+  npm ci --prefix .lake/packages/leanify
+  node .lake/packages/leanify/reader/build.mjs Note/article.tex
   ```
 
   This writes `Note/article-reader/index.html`.
 
   ![The web reader of the refuted draft: the theorem is marked false, with its reading and the refutation](images/demo-reader-refuted.png)
 
-* **The diagnostics.** `proofread_diagnostics.py … --verified` exits with an
+* **The diagnostics.** `leanify_diagnostics.py … --verified` exits with an
   error unless every compiled claim is verified, so it can gate CI.
 
 ## 9. Check in CI
 
 ```yaml
-name: Proofread
+name: Leanify
 on: [push, pull_request]
 jobs:
   certify:
@@ -416,7 +416,7 @@ jobs:
           build: 'false'
           use-mathlib-cache: 'true'
       - run: lake build Note.Certified
-      - run: python .lake/packages/proofread/scripts/proofread_diagnostics.py Note/article.proofread.json --verified
+      - run: python .lake/packages/leanify/scripts/leanify_diagnostics.py Note/article.leanify.json --verified
 ```
 
 The build fails if the article changed without `prepare`, if a definition is
@@ -428,8 +428,8 @@ verified or is refuted.
 | You see | Do this |
 | --- | --- |
 | `sentence not compiled (undefined symbol: …)` | Define the symbol earlier, or fix the typo. |
-| `… sentence without a mathematical reading` | Rephrase with a construction from [Writing for Proofread](writing.md). In a proof, prose is fine: it asserts nothing. |
-| `the article changed after …` or a stale pin | `lake exe proofread prepare article.tex --lean Compiled.lean`, then build. |
+| `… sentence without a mathematical reading` | Rephrase with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
+| `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build. |
 | `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |
 | `linarith failed`, or any proof that will not close | Check the reading (`--claims`). If the claim is false, prove `refuteK`. |

@@ -6,7 +6,7 @@ hide:
 
 <div class="pr-hero" markdown>
 
-# Proofread
+# Leanify
 
 <p class="pr-lead">One LaTeX source, read twice: typeset as the paper you submit, and compiled by
 Lean into kernel-checked statements and proofs.</p>
@@ -16,7 +16,7 @@ Lean into kernel-checked statements and proofs.</p>
 
 </div>
 
-Proofread compiles an ordinary mathematical article, written in good
+Leanify compiles an ordinary mathematical article, written in good
 mathematical English, to Lean. Every symbol must be defined in the article
 before it is used, every sentence has one fixed reading, and a proof step may
 use only the results it cites. The Lean kernel checks the compilation, every
@@ -69,7 +69,7 @@ the diagnostics and the margin of the PDF mark it false.
 
     ---
 
-    `lake exe proofread check` reads the article in about a second: undefined
+    `lake exe leanify check` reads the article in about a second: undefined
     symbols, statements without a reading, and the formal reading of every
     claim.
 
@@ -85,7 +85,7 @@ the diagnostics and the margin of the PDF mark it false.
 
     ---
 
-    The same `.tex` file typesets as before. `\usepackage[status]{leanproof}`
+    The same `.tex` file typesets as before. `\usepackage[status]{leanify}`
     adds the status of every result in the margin.
 
 -   :material-web:{ .lg .middle } **A reader for your readers**
@@ -101,8 +101,8 @@ the diagnostics and the margin of the PDF mark it false.
 ## In three commands
 
 ```sh
-lake exe proofread check Note/article.tex --claims   # what Proofread reads, in a second
-lake exe proofread init Note/article.tex             # the Lean files, with a stub proof per claim
+lake exe leanify check Note/article.tex --claims   # what Leanify reads, in a second
+lake exe leanify init Note/article.tex             # the Lean files, with a stub proof per claim
 lake build Note.Certified                            # the kernel checks the article and your proofs
 ```
 

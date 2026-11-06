@@ -49,6 +49,6 @@ of the items below as well.
    no other NOUN", "with equality if and only if …", "occur only at
    $\alpha=\frac{5}{32}$".
 
-Each construction gets one documented reading in `Proofread/Grammar.lean` and
-`Proofread/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
+Each construction gets one documented reading in `Leanify/Grammar.lean` and
+`Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
 that compiles and is certified.

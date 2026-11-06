@@ -1,6 +1,6 @@
 # From the `.tex` file to the certificate
 
-Proofread compiles an ordinary LaTeX article and verifies it in Lean. Readers
+Leanify compiles an ordinary LaTeX article and verifies it in Lean. Readers
 and Lean work from one text: the definitions, statements and proof sentences
 that people read are the ones the kernel checks. There is no second,
 hand-written formal version that could drift away from the paper.
@@ -9,10 +9,10 @@ hand-written formal version that could drift away from the paper.
 
 | Stage | Command | What the kernel checks |
 | --- | --- | --- |
-| compile | `#proofread_article Foo "article.tex" "fnv1a64:…" with V` | `Foo.compiled : compileArticle V Foo.source = some Foo.doc`, by `Eq.refl` on literals, stage by stage (preamble, lexing and segmentation per block, sentences in chunks, assembly). No `native_decide`. |
-| state | `#proofread_semantics Foo "article.tex" with M` | Every definition as a Lean constant (`Foo.nu`, `Foo.D`, …), every claim as a proposition (`Foo.claimK`) with its definedness condition (`Foo.meaningfulK`), each tied to the compiled document by an `rfl` theorem (`Foo.env`, `Foo.holdsK`, `Foo.welldefI`). It also states the proof obligations `Foo.obligationK`. |
+| compile | `#leanify_article Foo "article.tex" "fnv1a64:…" with V` | `Foo.compiled : compileArticle V Foo.source = some Foo.doc`, by `Eq.refl` on literals, stage by stage (preamble, lexing and segmentation per block, sentences in chunks, assembly). No `native_decide`. |
+| state | `#leanify_semantics Foo "article.tex" with M` | Every definition as a Lean constant (`Foo.nu`, `Foo.D`, …), every claim as a proposition (`Foo.claimK`) with its definedness condition (`Foo.meaningfulK`), each tied to the compiled document by an `rfl` theorem (`Foo.env`, `Foo.holdsK`, `Foo.welldefI`). It also states the proof obligations `Foo.obligationK`. |
 | justify | your Lean proofs `J.proofK : Foo.obligationK`, `J.definedI : Foo.wellDefinedI` | Ordinary Lean proofs. |
-| certify | `#proofread_certify Foo "article.tex" using J` | `Foo.certificate`: every justified claim holds, premises are verified and acyclic, every definition is well defined, and claims derived in the text pass the citation audit. Exports `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` and writes the reports. |
+| certify | `#leanify_certify Foo "article.tex" using J` | `Foo.certificate`: every justified claim holds, premises are verified and acyclic, every definition is well defined, and claims derived in the text pass the citation audit. Exports `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` and writes the reports. |
 
 `compileArticle` is an ordinary, total Lean function. The kernel evaluates it on
 the file's contents, so the readable statements depend on nothing but the text
@@ -20,7 +20,7 @@ the file's contents, so the readable statements depend on nothing but the text
 
 The pin `"fnv1a64:…"` is the hash of the article. Lake does not track the
 `.tex` file, so an edited article must change the Lean file to be recompiled.
-`lake exe proofread prepare article.tex --lean Compiled.lean` updates the pin.
+`lake exe leanify prepare article.tex --lean Compiled.lean` updates the pin.
 
 ## Incremental compilation
 
@@ -29,21 +29,21 @@ The kernel's work is split so that an edit is checked where it happened:
 * **Blocks.** The body is cut at blank lines outside math and environments.
   Each block is lexed and segmented on its own, with positions relative to the
   block, and the kernel checks each block's stage separately.
-* **Lexing cache.** `proofread prepare article.tex --lean Compiled.lean
+* **Lexing cache.** `leanify prepare article.tex --lean Compiled.lean
   --cache LexCache --module Foo.LexCache` writes one Lean module per section,
   named after its content, with the lexing certificate of each block
-  (`#proofread_lex_cache`). `#proofread_article` reuses a certificate whose key
+  (`#leanify_lex_cache`). `#leanify_article` reuses a certificate whose key
   (macros, mode and text) matches, and the kernel only compares literals. Lake
   rebuilds a cache module only when its text changes, so an edit relexes only
   its own section.
-* **Sentences** are compiled in chunks (`set_option proofread.chunk 8`), each
+* **Sentences** are compiled in chunks (`set_option leanify.chunk 8`), each
   a separate kernel check, and composed by explicit proof terms.
 
 For the Blest article (90 blocks in 5 sections, 351 sentences, 37 definitions
 and 48 claims) the kernel-checked compilation takes about 70 s with the lexing
 cache and peaks at 2.6 GB, and stating its semantics another 30 s. After an
 edit, the cache modules of the unchanged sections are reused.
-`set_option proofread.timing "file"` records the time of every stage.
+`set_option leanify.timing "file"` records the time of every stage.
 
 ## Definedness
 
@@ -73,9 +73,9 @@ for a proof sentence the earlier sentences of the proof. Two tactics help:
 * `definedness [facts]` proves definedness conditions.
 
 A claim is *derived in the text* when it is a proof sentence, or a statement
-closed by a compiled proof. For such a claim, `#proofread_certify` audits the
+closed by a compiled proof. For such a claim, `#leanify_certify` audits the
 justification. Every constant it uses must come from Lean or mathlib, from
-Proofread, from the compiled article, or from helper declarations in the
+Leanify, from the compiled article, or from helper declarations in the
 justification modules, which are audited recursively. A proof sentence
 therefore cannot be justified by a result it does not cite. Claims without a
 compiled proof (cited theorems, displayed formulas) may use any Lean proof:
@@ -87,22 +87,22 @@ Not every claim needs a justification. A claim without one, or whose proof
 still uses `sorry`, is *unverified*, and so is every claim that rests on an
 unverified one: the certificate covers the others. A claim that is false as
 stated is *refuted* by `J.refuteK : Foo.meaningfulK ∧ ¬ Foo.claimK` (it is
-meaningful, and it does not hold). `#proofread_certify` then declares
+meaningful, and it does not hold). `#leanify_certify` then declares
 `Foo.refutedK`, and the reports, the reader and the PDF mark the claim false.
 A proof of a refuted claim can only rest on false premises, so it does not
 count.
 
 ## Reports
 
-`#proofread_certify` writes, next to the article:
+`#leanify_certify` writes, next to the article:
 
-* `article.proofread.json`: every sentence (position, environment, outcome),
+* `article.leanify.json`: every sentence (position, environment, outcome),
   definition and claim (formal reading, Lean statement, premises, status
   `text`, `companion`, `unverified` or `refuted`, justification, and why an
   unverified claim is not verified). Read by the web reader and by
-  `scripts/proofread_diagnostics.py`.
-* `article.proofread.tex`: the status of every labelled result, read by
-  `\usepackage[status]{leanproof}` to mark results in the margin of the PDF.
+  `scripts/leanify_diagnostics.py`.
+* `article.leanify.tex`: the status of every labelled result, read by
+  `\usepackage[status]{leanify}` to mark results in the margin of the PDF.
   Without the `status` option the PDF is unchanged.
 
 ## Reading
@@ -126,7 +126,7 @@ definedness condition, its premises and its justification.
 The kernel checks the compilation of the file, the identity of the readable
 definitions and claims with the compiled semantics, every justification and the
 certificate. Outside the proof are: the fixed readings of the grammar's
-constructions (documented in `Proofread/Grammar.lean` and `Proofread/Doc.lean`),
+constructions (documented in `Leanify/Grammar.lean` and `Leanify/Doc.lean`),
 the vocabulary and its model (a short, reviewable list), the native evaluation
 that proposes stage results (the kernel re-checks them), and the presentation
 (the PDF, KaTeX typesetting of formal readings and the HTML reader).

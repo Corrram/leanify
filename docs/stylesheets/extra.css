@@ -1,4 +1,4 @@
-/* Proofread: the colours of the reader's statuses. */
+/* Leanify: the colours of the reader's statuses. */
 :root, [data-md-color-scheme="default"] {
   --md-primary-fg-color: #1d4f34;
   --md-primary-fg-color--light: #2f7a52;

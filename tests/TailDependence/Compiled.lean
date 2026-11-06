@@ -1,5 +1,5 @@
-import Proofread.Meta
-import Proofread.Library.UnitSquare
+import Leanify.Meta
+import Leanify.Library.UnitSquare
 
 /-! # `article.tex`, compiled by the kernel
 
@@ -7,11 +7,11 @@ import Proofread.Library.UnitSquare
 by the kernel from the contents of `article.tex`. The last string pins those contents:
 after editing the article, run
 
-    lake exe proofread prepare tests/TailDependence/article.tex --lean tests/TailDependence/Compiled.lean
+    lake exe leanify prepare tests/TailDependence/article.tex --lean tests/TailDependence/Compiled.lean
 
 and then `lake build`. -/
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_article TailDependence "article.tex" "fnv1a64:fce0b008de505e81" with Proofread.UnitSquare.withCore
+#leanify_article TailDependence "article.tex" "fnv1a64:a371a18c59570205" with Leanify.UnitSquare.withCore

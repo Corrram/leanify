@@ -1,4 +1,4 @@
-import Proofread.Meta
+import Leanify.Meta
 
 /-! # `article.tex`, compiled by the kernel
 
@@ -6,11 +6,11 @@ import Proofread.Meta
 by the kernel from the contents of `article.tex`. The last string pins those contents:
 after editing the article, run
 
-    lake exe proofread prepare tests/Refuted/article.tex --lean tests/Refuted/Compiled.lean
+    lake exe leanify prepare tests/Refuted/article.tex --lean tests/Refuted/Compiled.lean
 
 and then `lake build`. -/
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_article Refuted "article.tex" "fnv1a64:524f9ed19bae030d"
+#leanify_article Refuted "article.tex" "fnv1a64:c2779501372b9319"

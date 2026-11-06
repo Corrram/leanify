@@ -3,8 +3,8 @@
 //
 //   node reader/build.mjs path/to/article.tex [--bbl article.bbl] [--title "…"] [--out dir] [--home URL]
 //
-// reads `article.tex` and the report `article.proofread.json` that
-// `#proofread_certify` wrote next to it, and writes `dir/index.html` (default
+// reads `article.tex` and the report `article.leanify.json` that
+// `#leanify_certify` wrote next to it, and writes `dir/index.html` (default
 // `article-reader/` next to the article) with its stylesheets, script and KaTeX
 // fonts. The page renders the article from its source, with the status of every
 // sentence; nothing in it is written by hand. `--home` adds a link back to a
@@ -26,9 +26,9 @@ if (!texPath) {
   process.exit(2);
 }
 const source = fs.readFileSync(texPath, 'utf8');
-const reportPath = texPath.replace(/\.tex$/, '.proofread.json');
+const reportPath = texPath.replace(/\.tex$/, '.leanify.json');
 if (!fs.existsSync(reportPath)) {
-  console.error(`${reportPath} not found: build the module with #proofread_certify first`);
+  console.error(`${reportPath} not found: build the module with #leanify_certify first`);
   process.exit(1);
 }
 const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));

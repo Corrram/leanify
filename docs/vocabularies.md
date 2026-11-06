@@ -9,12 +9,12 @@ them.
 
 ## The core language
 
-`Proofread/Syntax.lean` defines the terms (`Tm`) and types (`Ty`) that
+`Leanify/Syntax.lean` defines the terms (`Tm`) and types (`Ty`) that
 sentences compile to: real numbers, `[0,1]`, propositions, functions, base
 types `Ty.base k` supplied by a vocabulary, and a small set of primitives
 (`Prim`) with mathlib meanings: real powers, `min`, `max`, Lebesgue measure on
 `[0,1]`, Borel measurability, measurable sets, integrability on `[0,1]` and
-derivatives within a set. `Proofread/Denote.lean` gives every term its Lean
+derivatives within a set. `Leanify/Denote.lean` gives every term its Lean
 denotation, relative to a model. Definite descriptions ("the unique $b$ with
 …") denote `Classical.epsilon`, and are well defined when the description has
 exactly one solution.
@@ -48,13 +48,13 @@ def vocab : Vocab where
     { phrase := phrase!"with uniform marginals", prenominal := false, ty := Ty.meas2, pred := .const 3 }]
 ```
 
-This is `Proofread.UnitSquare.vocab`. With it, the sentence
+This is `Leanify.UnitSquare.vocab`. With it, the sentence
 
 > let $\mathcal{D}$ denote the class of standard distribution functions, that is,
 > distribution functions on $[0,1]^2$ with uniform marginals.
 
 defines `\mathcal{D}` as the predicate `fun F => DistFn F ∧ UnifMarg F`. The
-full list of its phrases is in `Proofread/Library/UnitSquare.lean`.
+full list of its phrases is in `Leanify/Library/UnitSquare.lean`.
 
 Vocabularies combine with `++` (`Vocab.core ++ UnitSquare.vocab`): the base
 types and constants of the second are renumbered after those of the first.
@@ -68,7 +68,7 @@ structure Model where
   consts : List (Val base)         -- each constant: its type and its value
 ```
 
-The model of the unit-square vocabulary (`Proofread/Library/UnitSquareModel.lean`)
+The model of the unit-square vocabulary (`Leanify/Library/UnitSquareModel.lean`)
 says what the four constants mean in mathlib terms:
 
 ```lean
@@ -88,22 +88,22 @@ article adds is defined in the article and checked.
 
 ```lean
 -- Compiled.lean
-#proofread_article Foo "article.tex" "fnv1a64:…" with MyVocab.vocab
+#leanify_article Foo "article.tex" "fnv1a64:…" with MyVocab.vocab
 -- Article.lean
-#proofread_semantics Foo "article.tex" with MyVocab.model
+#leanify_semantics Foo "article.tex" with MyVocab.model
 ```
 
 The native checker knows the vocabularies it was built with
-(`lake exe proofread check article.tex --vocab unitsquare`). A project with its
+(`lake exe leanify check article.tex --vocab unitsquare`). A project with its
 own vocabulary adds a small executable:
 
 ```lean
-import Proofread.Check
+import Leanify.Check
 import MyProject.Vocab
 
 def main (args : List String) : IO UInt32 := do
   let [path] := args | IO.eprintln "usage: check ARTICLE.tex"; pure 2
-  let failed ← Proofread.checkArticle (Proofread.Vocab.core ++ MyProject.vocab) path false true
+  let failed ← Leanify.checkArticle (Leanify.Vocab.core ++ MyProject.vocab) path false true
   pure (if failed == 0 then 0 else 1)
 ```
 
@@ -111,6 +111,6 @@ def main (args : List String) : IO UInt32 := do
 
 A phrase belongs in the core vocabulary when it is standard across subjects and
 has one established mathlib meaning. Subject vocabularies (measures on the unit
-square, …) live in `Proofread/Library/` or in the project that uses
+square, …) live in `Leanify/Library/` or in the project that uses
 them. A new primitive in `Prim` needs its denotation, its definedness condition
-and its readable Lean form (`Proofread/Readable.lean`), and should be rare.
+and its readable Lean form (`Leanify/Readable.lean`), and should be rare.
