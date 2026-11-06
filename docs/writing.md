@@ -1,6 +1,6 @@
-# Writing for Proofread
+# Writing for Leanify
 
-Proofread reads an article the way a careful referee does: every symbol has to
+Leanify reads an article the way a careful referee does: every symbol has to
 be defined before it is used, every sentence has one meaning, and a proof step
 may use only what it cites. The conventions below are ordinary good style for
 mathematical writing. Following them is what lets the same `.tex` file be
@@ -12,7 +12,7 @@ and in the diagnostics, but it asserts nothing checked. Inside results and
 proofs, prose is reported, so uncompiled mathematics stays visible.
 
 The examples come from the example articles of this documentation and from
-research articles compiled with Proofread. Where an example needs a word of the
+research articles compiled with Leanify. Where an example needs a word of the
 article's vocabulary, it is written NOUN (plural NOUNS): a noun of the
 vocabulary, such as *probability measure on $[0,1]^2$*, or of a class the
 article defines. Symbols such as $\alpha$, $\beta$ or $\mathcal{X}$ stand for
@@ -117,7 +117,7 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 
 A paper defines most of its notation in passing: a notion in the middle of a
 paragraph, a symbol in the statement of the theorem that uses it, an
-abbreviation after a `where`. Proofread reads these where they stand.
+abbreviation after a `where`. Leanify reads these where they stand.
 
 | Form | Example |
 | --- | --- |
@@ -180,7 +180,7 @@ citations.
 
 A claim `$X$ is ADJ, ADJ [on $A$] and ADJ` (also `The function|map|set|number
 $X$ is …`) uses the standard notions below, with their mathlib meaning
-(`Proofread.Prelude` in `Proofread/Denote.lean`). A function has them on the
+(`Leanify.Prelude` in `Leanify/Denote.lean`). A function has them on the
 domain its definition states, or on `A`, which must lie in that domain.
 
 | Of | Adjectives | Meaning |
@@ -203,8 +203,8 @@ semi-continuous`). `Continuous` for a quantity of NOUNS needs its topology:
 *continuous with respect to uniform convergence*.
 
 The readings are fixed and documented next to each construction in
-`Proofread/Grammar.lean` (parsing) and `Proofread/Doc.lean` (meaning). Run
-`lake exe proofread check article.tex --claims` to see the formal reading of
+`Leanify/Grammar.lean` (parsing) and `Leanify/Doc.lean` (meaning). Run
+`lake exe leanify check article.tex --claims` to see the formal reading of
 every claim while you write.
 
 ## Proofs
@@ -225,9 +225,9 @@ assumption, so a step that holds only in its case is not derived.
 ## Checking while writing
 
 ```sh
-lake exe proofread check article.tex            # undefined symbols, failed sentences, unread statements
-lake exe proofread check article.tex --claims   # and the reading of every claim
-lake exe proofread check article.tex --prose    # and the prose inside proofs
+lake exe leanify check article.tex            # undefined symbols, failed sentences, unread statements
+lake exe leanify check article.tex --claims   # and the reading of every claim
+lake exe leanify check article.tex --prose    # and the prose inside proofs
 ```
 
 Add `--vocab unitsquare` for articles about probability on the unit square
@@ -237,7 +237,7 @@ statement would not be checked.
 
 The check takes about a second and certifies nothing. `lake build` of the
 certifying module checks everything in the kernel. `editors/vscode/tasks.json`
-shows both as problems in the `.tex` file. With `\usepackage{leanproof}`, an
+shows both as problems in the `.tex` file. With `\usepackage{leanify}`, an
 article compiled with shell escape is checked on every compile, and the
 findings are LaTeX warnings at their lines
-([`leanproof.sty`](reference.md#the-pdf-leanproofsty)).
+([`leanify.sty`](reference.md#the-pdf-leanifysty)).

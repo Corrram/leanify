@@ -8,7 +8,7 @@ import os
 import posixpath
 import re
 
-REPO = "https://github.com/Corrram/proofread"
+REPO = "https://github.com/Corrram/leanify"
 BRANCH = "main"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINK = re.compile(r"(\]\()(\.\./[^)\s#]+)(#[^)\s]*)?(\))")

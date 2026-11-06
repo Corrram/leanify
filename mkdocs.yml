@@ -1,15 +1,15 @@
-# The documentation site, https://corrram.github.io/proofread/
+# The documentation site, https://corrram.github.io/leanify/
 #
 #   npm ci && npm run demos              # the web readers of the example articles, into docs/demo/
 #   pip install -r requirements-docs.txt
 #   mkdocs serve                         # or: mkdocs build --strict (into _site/)
 #
 # .github/workflows/pages.yml builds and publishes it from main.
-site_name: Proofread
+site_name: Leanify
 site_description: Mathematical articles in LaTeX, compiled and checked by Lean
-site_url: https://corrram.github.io/proofread/
-repo_url: https://github.com/Corrram/proofread
-repo_name: Corrram/proofread
+site_url: https://corrram.github.io/leanify/
+repo_url: https://github.com/Corrram/leanify
+repo_name: Corrram/leanify
 edit_uri: edit/main/docs/
 copyright: Apache-2.0 · Marcus Rockel
 docs_dir: docs
@@ -20,7 +20,7 @@ nav:
   - Tutorial: getting-started.md
   - Live demo: demo.md
   - Guide:
-      - Writing for Proofread: writing.md
+      - Writing for Leanify: writing.md
       - Vocabularies and models: vocabularies.md
   - Reference:
       - Commands and files: reference.md

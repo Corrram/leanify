@@ -63,9 +63,9 @@ filters the markers.
 
 | Page | Folder | Files |
 | --- | --- | --- |
-| The certified note | [`examples/Demo`](../examples/Demo) | [article](../examples/Demo/article.tex) · [proofs](../examples/Demo/Proofs.lean) · [report](../examples/Demo/article.proofread.json) · [draft](../examples/Demo/draft.tex) |
-| The draft with a false theorem | [`tests/Refuted`](../tests/Refuted) | [article](../tests/Refuted/article.tex) · [proofs](../tests/Refuted/Proofs.lean) · [report](../tests/Refuted/article.proofread.json) |
-| Three means | [`examples/Means`](../examples/Means) | [article](../examples/Means/article.tex) · [proofs](../examples/Means/Proofs.lean) · [report](../examples/Means/article.proofread.json) |
+| The certified note | [`examples/Demo`](../examples/Demo) | [article](../examples/Demo/article.tex) · [proofs](../examples/Demo/Proofs.lean) · [report](../examples/Demo/article.leanify.json) · [draft](../examples/Demo/draft.tex) |
+| The draft with a false theorem | [`tests/Refuted`](../tests/Refuted) | [article](../tests/Refuted/article.tex) · [proofs](../tests/Refuted/Proofs.lean) · [report](../tests/Refuted/article.leanify.json) |
+| Three means | [`examples/Means`](../examples/Means) | [article](../examples/Means/article.tex) · [proofs](../examples/Means/Proofs.lean) · [report](../examples/Means/article.leanify.json) |
 
 CI certifies all three on every push, so the reports cannot go stale. To build
 the reader of your own article, see

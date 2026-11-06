@@ -8,7 +8,7 @@ import Means.Article
 * `proofK : obligationK`: claim `K` holds. `intro_premises` introduces
   `cJ : claimJ` for each premise `J` (in a proof, the earlier steps and the cited
   results). A claim the text derives (a proof step, or a result with a compiled
-  proof) may use only its premises, Mathlib and the article: `#proofread_certify`
+  proof) may use only its premises, Mathlib and the article: `#leanify_certify`
   audits this.
 * `refuteK : meaningfulK ∧ ¬ claimK` instead records that claim `K` is false as
   stated; readers and the PDF margin then mark it.

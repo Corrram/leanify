@@ -1,11 +1,11 @@
-# Proofread
+# Leanify
 
-**[Documentation, tutorial and live demo](https://corrram.github.io/proofread/)**
+**[Documentation, tutorial and live demo](https://corrram.github.io/leanify/)**
 
 One LaTeX source, read twice: typeset as the paper you submit, and compiled by
 Lean into kernel-checked statements and proofs.
 
-Proofread compiles an ordinary mathematical article, written in good
+Leanify compiles an ordinary mathematical article, written in good
 mathematical English, to Lean. Every symbol must be defined in the article
 before it is used, every sentence has one fixed reading, and a proof step may
 use only the results it cites. The kernel checks the compilation of the file,
@@ -52,28 +52,28 @@ and its README the coverage: which sentences compiled, and which are still prose
 draft with four mistakes to a certificate, step by step:
 
 ```sh
-lake exe proofread check Note/article.tex --claims   # undefined symbols, unread statements, the reading of every claim
-lake exe proofread init Note/article.tex             # the Lean files, with a stub proof of every claim
+lake exe leanify check Note/article.tex --claims   # undefined symbols, unread statements, the reading of every claim
+lake exe leanify init Note/article.tex             # the Lean files, with a stub proof of every claim
 lake build Note.Certified                            # the kernel checks the article and your proofs
 ```
 
-The project needs Proofread in its `lakefile.toml`:
+The project needs Leanify in its `lakefile.toml`:
 
 ```toml
 [[require]]
-name = "proofread"
-git = "https://github.com/Corrram/proofread.git"
+name = "leanify"
+git = "https://github.com/Corrram/leanify.git"
 rev = "main"
 ```
 
-`proofread init` writes four files next to the article:
+`leanify init` writes four files next to the article:
 
 | File | Contents |
 | --- | --- |
-| `Compiled.lean` | `#proofread_article Note "article.tex" "fnv1a64:…"`: the kernel compiles the article, pinned by its hash (`proofread prepare` updates the pin after an edit) |
-| `Article.lean` | `#proofread_semantics`: every definition and claim as readable Lean (`claimK`, `meaningfulK`, `obligationK`) |
+| `Compiled.lean` | `#leanify_article Note "article.tex" "fnv1a64:…"`: the kernel compiles the article, pinned by its hash (`leanify prepare` updates the pin after an edit) |
+| `Article.lean` | `#leanify_semantics`: every definition and claim as readable Lean (`claimK`, `meaningfulK`, `obligationK`) |
 | `Proofs.lean` | your proofs `proofK : obligationK` and `definedI : wellDefinedI`, or `refuteK : meaningfulK ∧ ¬ claimK` for a claim that is false as stated |
-| `Certified.lean` | `#proofread_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
+| `Certified.lean` | `#leanify_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
 
 A proof that still uses `sorry` leaves its claim unverified, so an article can
 be certified while its proofs are written. Articles about probability on the
@@ -81,9 +81,9 @@ unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularie
 
 The same source gives the two readable outputs:
 
-* the PDF, with `\usepackage{leanproof}`, unchanged, or with
-  `\usepackage[status]{leanproof}` marking every result in the margin with its
-  verification status (read from `article.proofread.tex`). Compiled with shell
+* the PDF, with `\usepackage{leanify}`, unchanged, or with
+  `\usepackage[status]{leanify}` marking every result in the margin with its
+  verification status (read from `article.leanify.tex`). Compiled with shell
   escape, the package also checks the article on every compile, with the
   findings as LaTeX warnings at their lines, and with `certify` it builds the
   certificate first;
@@ -104,7 +104,7 @@ The examples are short papers in the usual style, each certified by CI:
 
 * [Getting started](docs/getting-started.md): set up a project, check an
   article while writing, prove its claims, read the certificate.
-* [Writing for Proofread](docs/writing.md): the house style and the
+* [Writing for Leanify](docs/writing.md): the house style and the
   constructions of the grammar, with examples.
 * [From the `.tex` file to the certificate](docs/pipeline.md): the stages,
   incremental compilation, definedness, the citation audit, the reports and
@@ -118,17 +118,17 @@ The examples are short papers in the usual style, each certified by CI:
 
 | Path | Contents |
 | --- | --- |
-| `Proofread/Lex.lean`, `Segment.lean`, `Math.lean` | Lexing (macros, blocks), sentence segmentation, formulas |
-| `Proofread/Grammar.lean`, `Elab.lean`, `Doc.lean` | Sentence constructions and their readings, compilation of an article (`compileArticle`) |
-| `Proofread/Syntax.lean`, `Denote.lean` | The core language and its Lean denotation |
-| `Proofread/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
-| `Proofread/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#proofread_article`, `#proofread_semantics`, `#proofread_certify` |
-| `Proofread/Check.lean`, `ProofreadCli.lean` | The command line `lake exe proofread`: `check` (the native checker), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache) |
+| `Leanify/Lex.lean`, `Segment.lean`, `Math.lean` | Lexing (macros, blocks), sentence segmentation, formulas |
+| `Leanify/Grammar.lean`, `Elab.lean`, `Doc.lean` | Sentence constructions and their readings, compilation of an article (`compileArticle`) |
+| `Leanify/Syntax.lean`, `Denote.lean` | The core language and its Lean denotation |
+| `Leanify/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
+| `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#leanify_article`, `#leanify_semantics`, `#leanify_certify` |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache) |
 | `examples/`, `tests/` | The example articles of the documentation, and the test articles (a refuted theorem, notions in the running text), certified in CI |
 | `reader/` | The web reader: the article rendered from its source with the status of every sentence |
-| `tex/leanproof.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |
-| `docs/`, `mkdocs.yml` | The documentation site, https://corrram.github.io/proofread/ |
-| `scripts/proofread_diagnostics.py` | Findings from the certificate report, for editors and CI |
+| `tex/leanify.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |
+| `docs/`, `mkdocs.yml` | The documentation site, https://corrram.github.io/leanify/ |
+| `scripts/leanify_diagnostics.py` | Findings from the certificate report, for editors and CI |
 
 ## Build
 

@@ -1,6 +1,6 @@
 import TailDependence.Compiled
-import Proofread.Readable
-import Proofread.Library.UnitSquareModel
+import Leanify.Readable
+import Leanify.Library.UnitSquareModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 
@@ -12,4 +12,4 @@ compiled document by a kernel-checked `rfl` theorem. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_semantics TailDependence "article.tex" with Proofread.UnitSquare.model
+#leanify_semantics TailDependence "article.tex" with Leanify.UnitSquare.model

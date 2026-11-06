@@ -3,7 +3,7 @@ import {parseArticle, renderArticle} from './article.mjs';
 
 /* The single-text reader: the article is rendered from the very source the
    Lean kernel compiled, and every sentence carries the status that
-   `#proofread_certify` recorded for it in `<article>.proofread.json`. Nothing in the
+   `#leanify_certify` recorded for it in `<article>.leanify.json`. Nothing in the
    reading column is written by hand; the inspector only shows data from the
    report (formal readings, Lean statements, premises). */
 
@@ -23,7 +23,7 @@ export const statusText = {
   prose: 'Prose, not compiled',
 };
 
-/** FNV-1a (64 bit) of the UTF-8 bytes with CRLF normalized, as `Proofread.sourcePin`. */
+/** FNV-1a (64 bit) of the UTF-8 bytes with CRLF normalized, as `Leanify.sourcePin`. */
 export function sourcePin(source) {
   let h = 0xcbf29ce484222325n;
   for (const b of new TextEncoder().encode(source.replace(/\r\n/g, '\n'))) h = ((h ^ BigInt(b)) * 0x100000001b3n) & 0xffffffffffffffffn;
@@ -32,9 +32,9 @@ export function sourcePin(source) {
 
 export function validateReport(report, source) {
   if (!report || !Array.isArray(report.sentences) || !Array.isArray(report.claims) || !Array.isArray(report.definitions))
-    throw new Error('Invalid Proofread report');
+    throw new Error('Invalid Leanify report');
   if (report.sourceHash !== sourcePin(source))
-    throw new Error('The article changed after its report was written: update the pin of #proofread_article and rebuild');
+    throw new Error('The article changed after its report was written: update the pin of #leanify_article and rebuild');
   if (!Array.isArray(report.axioms) || report.axioms.some(a => !standardAxioms.has(a)))
     throw new Error('The certificate uses a nonstandard axiom');
   const length = [...source.replace(/\r\n/g, '\n')].length;
@@ -237,11 +237,11 @@ export function renderCompiledReader({title, source, bibliography, report, confi
     ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].filter(st => counts.has(st)).map(st =>
     `<label class="lm-filter"><input type="checkbox" data-filter="${st}" checked><span class="lm-dot lm-${st}" aria-hidden="true"></span>${escape(statusText[st])} <span class="lm-count">${counts.get(st)}</span></label>`).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escape(title)} · Proofread</title>
+<title>${escape(title)} · Leanify</title>
 ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+xml">` : ''}${assets.styles.map(href => `<link rel="stylesheet" href="${escape(href)}">`).join('')}
 <script defer src="${escape(assets.script)}"></script></head>
 <body class="lm-compiled"><a class="lm-skip" href="#lm-article">Skip to article</a>
-<header class="lm-bar"><span class="lm-brand">Proofread</span><span class="lm-title">${escape(title)}</span>
+<header class="lm-bar"><span class="lm-brand">Leanify</span><span class="lm-title">${escape(title)}</span>
 <nav class="lm-links">${links.map(l => `<a href="${escape(l.href)}">${escape(l.label)}</a>`).join('')}</nav></header>
 <div class="lm-layout"><main id="lm-article" tabindex="-1">
 <section class="lm-summary" id="lm-summary"><p class="lm-kicker">Single source · compiled by the Lean kernel</p>

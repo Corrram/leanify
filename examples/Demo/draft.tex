@@ -1,18 +1,18 @@
 \documentclass{article}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{leanproof}
+\usepackage{leanify}
 \newtheorem{lemma}{Lemma}[section]
 \newtheorem{theorem}[lemma]{Theorem}
 \newtheorem{corollary}[lemma]{Corollary}
 \title{A number and its reciprocal}
-\author{Proofread demo}
+\author{Leanify demo}
 \begin{document}
 \maketitle
 
 \begin{abstract}
 We show that a positive real number and its reciprocal never sum to less than two, and that the sum is smallest at the number one.
 The proof rests on a single identity, which writes the excess of the sum over two as a square divided by the number.
-The note also demonstrates Proofread: every definition, every statement and every step of every proof below is compiled from this text to Lean and checked by the Lean kernel.
+The note also demonstrates Leanify: every definition, every statement and every step of every proof below is compiled from this text to Lean and checked by the Lean kernel.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -27,7 +27,7 @@ For two numbers the inequality has a proof of one line, and we give it in a form
 Theorem~\ref{thm:bound} states the bound, and Corollary~\ref{cor:min} identifies the number at which the sum is least.
 Both follow from Lemma~\ref{lem:identity}, which expresses the excess of the sum over two as a square divided by a positive number.
 
-The note is written as an ordinary article, and it is also read by Proofread.
+The note is written as an ordinary article, and it is also read by Leanify.
 Every definition and every sentence of a lemma, theorem, corollary or proof has one fixed formal reading, which is compiled to Lean, and every step of a proof is checked against the earlier steps and the results it cites.
 The other sentences, like this one, motivate, explain and give context.
 They are prose, which Lean does not check, and no result depends on them.

@@ -1,4 +1,4 @@
-name: Proofread
+name: Leanify
 on:
   push:
   pull_request:
@@ -16,18 +16,18 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build proofread Demo Means TailDependence Refuted
+        run: lake build leanify Demo Means TailDependence Refuted
       - name: Quick check of the example articles
         run: |
-          lake exe proofread check examples/Means/article.tex --claims --prose
-                    lake exe proofread check tests/TailDependence/article.tex --vocab unitsquare --claims --prose
+          lake exe leanify check examples/Means/article.tex --claims --prose
+                    lake exe leanify check tests/TailDependence/article.tex --vocab unitsquare --claims --prose
       - name: The draft of the getting-started guide gives the findings the guide shows
         run: |
-          lake exe proofread check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
+          lake exe leanify check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
           diff examples/Demo/draft.check.txt "$RUNNER_TEMP/draft.check.txt"
       - name: Notions defined in the running text are read as documented
         run: |
-          lake exe proofread check tests/Notions/article.tex --vocab unitsquare --claims > "$RUNNER_TEMP/notions.check.txt"
+          lake exe leanify check tests/Notions/article.tex --vocab unitsquare --claims > "$RUNNER_TEMP/notions.check.txt"
           diff tests/Notions/check.txt "$RUNNER_TEMP/notions.check.txt"
       - uses: actions/setup-python@v6
         with:
@@ -35,11 +35,11 @@ jobs:
       - name: Every claim of the examples is verified
         run: |
           for a in examples/Demo examples/Means tests/TailDependence; do
-            python scripts/proofread_diagnostics.py $a/article.proofread.json --strict --verified
+            python scripts/leanify_diagnostics.py $a/article.leanify.json --strict --verified
           done
       - name: The refuted theorem is reported false, and the claims resting on it unverified
         run: |
-          if python scripts/proofread_diagnostics.py tests/Refuted/article.proofread.json > "$RUNNER_TEMP/refuted.txt"; then exit 1; fi
+          if python scripts/leanify_diagnostics.py tests/Refuted/article.leanify.json > "$RUNNER_TEMP/refuted.txt"; then exit 1; fi
           grep -q "error: statement (claim 2) is false as stated" "$RUNNER_TEMP/refuted.txt"
           grep -q "(claim 5) compiled but not verified: it rests on claim 2, which is refuted" "$RUNNER_TEMP/refuted.txt"
       - uses: actions/setup-node@v6

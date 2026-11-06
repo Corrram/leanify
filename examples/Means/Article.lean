@@ -1,5 +1,5 @@
 import Means.Compiled
-import Proofread.Readable
+import Leanify.Readable
 
 /-! # The definitions and claims of `article.tex` as Lean
 
@@ -11,4 +11,4 @@ compiled document by a kernel-checked `rfl` theorem. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#proofread_semantics Means "article.tex"
+#leanify_semantics Means "article.tex"
