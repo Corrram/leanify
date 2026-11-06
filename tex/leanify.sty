@@ -183,6 +183,79 @@
       }
     \str_set:Nn \l__leanify_redirect_str { >> }
   }
+% The checker itself, without lake. Before it runs an executable, lake checks
+% that every module of the project is built, mathlib's included, which takes
+% seconds on every compile. The executable is used directly when it is current:
+% in a project that requires Leanify, the package's executable if it is newer
+% than the project's lake-manifest.json (an update of Leanify changes the
+% manifest, and lake then rebuilds it); in the Leanify repository, its own
+% executable if it is newer than the compiler's sources. Otherwise lake runs it.
+\str_new:N \l__leanify_exe_str
+\str_new:N \l__leanify_ext_str
+\str_new:N \l__leanify_cand_str
+\bool_new:N \l__leanify_current_bool
+\cs_new_protected:Npn \__leanify_find_exe:
+  {
+    \str_clear:N \l__leanify_exe_str
+    \sys_if_platform_windows:TF
+      { \str_set:Nn \l__leanify_ext_str { .exe } }
+      { \str_clear:N \l__leanify_ext_str }
+    % a project that requires Leanify
+    \str_set:Nx \l__leanify_cand_str
+      { \l__leanify_root_str /.lake/packages/leanify/.lake/build/bin/leanify \l__leanify_ext_str }
+    \file_if_exist:nT { \l__leanify_cand_str }
+      {
+        \file_compare_timestamp:nNnF { \l__leanify_root_str /lake-manifest.json } > { \l__leanify_cand_str }
+          { \str_set_eq:NN \l__leanify_exe_str \l__leanify_cand_str }
+      }
+    % the Leanify repository
+    \str_if_empty:NT \l__leanify_exe_str
+      {
+        \str_set:Nx \l__leanify_cand_str
+          { \l__leanify_root_str /.lake/build/bin/leanify \l__leanify_ext_str }
+        \file_if_exist:nT { \l__leanify_cand_str }
+          {
+            \bool_set_true:N \l__leanify_current_bool
+            \clist_map_inline:nn
+              {
+                LeanifyCli, Leanify/Lex, Leanify/Segment, Leanify/Math, Leanify/Grammar,
+                Leanify/Elab, Leanify/Doc, Leanify/Check, Leanify/Render, Leanify/Vocab,
+                Leanify/Syntax, Leanify/Library/UnitSquare
+              }
+              {
+                \file_if_exist:nT { \l__leanify_root_str / ##1 .lean }
+                  {
+                    \file_compare_timestamp:nNnT
+                      { \l__leanify_root_str / ##1 .lean } > { \l__leanify_cand_str }
+                      { \bool_set_false:N \l__leanify_current_bool \clist_map_break: }
+                  }
+              }
+            \bool_if:NT \l__leanify_current_bool
+              { \str_set_eq:NN \l__leanify_exe_str \l__leanify_cand_str }
+          }
+      }
+    \sys_if_platform_windows:T
+      {
+        \str_if_empty:NF \l__leanify_exe_str
+          { \exp_args:NNnV \str_replace_all:Nnn \l__leanify_exe_str { / } \c_backslash_str }
+      }
+  }
+
+% `leanify ARGS`: the executable directly when it is current, else through lake.
+\cs_new_protected:Npn \__leanify_leanify:n #1
+  {
+    \str_if_empty:NTF \l__leanify_exe_str
+      { \__leanify_lake:n { exe ~ leanify ~ #1 } }
+      {
+        \sys_shell_now:e
+          {
+            " \l__leanify_exe_str " ~ #1 ~ \l__leanify_redirect_str ~
+            " \c__leanify_log_str " ~ 2>&1
+          }
+        \str_set:Nn \l__leanify_redirect_str { >> }
+      }
+  }
+
 \cs_new:Npn \__leanify_vocab:
   { \str_if_empty:NF \l__leanify_vocab_str { ~ --vocab ~ \l__leanify_vocab_str } }
 
@@ -271,8 +344,8 @@
 \cs_new_protected:Npn \__leanify_check:
   {
     \__leanify_summary:e { checking ~ \c__leanify_article_str }
-    \__leanify_lake:n
-      { exe ~ leanify ~ check ~ " \c__leanify_article_str " \__leanify_vocab: }
+    \__leanify_leanify:n
+      { check ~ " \c__leanify_article_str " \__leanify_vocab: }
     \__leanify_read_log:
     \bool_if:NF \l__leanify_report_bool
       { \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str } }
@@ -315,10 +388,20 @@
             building ~ the ~ certificate ~
             (lake ~ build ~ \l__leanify_module_str)
           }
-        \__leanify_lake:n
+        % with the lexing cache of the article (`NS.LexCache`), when the module is
+        % the article's own `NS.Certified`
+        \str_set_eq:NN \l__leanify_cand_str \l__leanify_module_str
+        \regex_replace_once:nnNTF { \.Certified \Z } { } \l__leanify_cand_str
           {
-            exe ~ leanify ~ prepare ~ " \c__leanify_article_str " ~
-            --lean ~ " \l__leanify_lean_str "
+            \__leanify_leanify:n
+              {
+                prepare ~ " \c__leanify_article_str " ~ --lean ~ " \l__leanify_lean_str " ~
+                --cache ~ LexCache ~ --module ~ \l__leanify_cand_str .LexCache
+              }
+          }
+          {
+            \__leanify_leanify:n
+              { prepare ~ " \c__leanify_article_str " ~ --lean ~ " \l__leanify_lean_str " }
           }
         \__leanify_lake:n { build ~ \l__leanify_module_str }
         \bool_set_false:N \l__leanify_built_bool
@@ -327,8 +410,8 @@
           { \msg_warning:nn { leanify } { build-failed } }
       }
       {
-        \__leanify_lake:n
-          { exe ~ leanify ~ init ~ " \c__leanify_article_str " \__leanify_vocab: }
+        \__leanify_leanify:n
+          { init ~ " \c__leanify_article_str " \__leanify_vocab: }
         \seq_clear:N \l__leanify_lib_seq
         \__leanify_read_log:
         \msg_warning:nneeee { leanify } { initialized }
@@ -349,8 +432,37 @@
           {
             \sys_if_shell_unrestricted:TF
               {
-                \bool_if:NT \l__leanify_check_bool { \__leanify_check: }
-                \bool_if:NT \l__leanify_certify_bool { \__leanify_certify: }
+                \__leanify_find_exe:
+                % an article unchanged since the last run (the later passes of
+                % latexmk, a recompile for the bibliography): its findings are
+                % read from the log again, and nothing runs
+                \bool_set_false:N \l__leanify_current_bool
+                \file_if_exist:nT { \c__leanify_log_str }
+                  {
+                    \file_compare_timestamp:nNnF
+                      { \c__leanify_article_str } > { \c__leanify_log_str }
+                      { \bool_set_true:N \l__leanify_current_bool }
+                  }
+                \bool_if:NT \l__leanify_certify_bool
+                  {
+                    \file_if_exist:nTF { \c__leanify_status_str }
+                      {
+                        \file_compare_timestamp:nNnT
+                          { \c__leanify_article_str } > { \c__leanify_status_str }
+                          { \bool_set_false:N \l__leanify_current_bool }
+                      }
+                      { \bool_set_false:N \l__leanify_current_bool }
+                  }
+                \bool_if:NTF \l__leanify_current_bool
+                  {
+                    \__leanify_summary:e { \c__leanify_article_str \c_space_tl unchanged: ~ the ~ last ~ findings }
+                    \bool_if:NT \l__leanify_certify_bool { \bool_set_true:N \l__leanify_built_bool }
+                    \__leanify_read_log:
+                  }
+                  {
+                    \bool_if:NT \l__leanify_check_bool { \__leanify_check: }
+                    \bool_if:NT \l__leanify_certify_bool { \__leanify_certify: }
+                  }
               }
               { \msg_warning:nn { leanify } { no-shell } }
           }

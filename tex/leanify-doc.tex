@@ -125,7 +125,10 @@ so editors that read the LaTeX log list them with the other warnings. With
 \opt{certify}, the errors of the Lean build and the refuted claims are warnings
 too. The full output of Leanify is in \texttt{\cs{jobname}.leanify.log}.
 \texttt{lake} must be on the \texttt{PATH} of the compiler; the first check
-also builds the checker, which takes a few minutes once.
+also builds the checker, which takes a few minutes once. Later compiles run the
+checker directly, without \texttt{lake}, and take a fraction of a second; if the
+article has not changed since the last run (the later passes of
+\texttt{latexmk}), nothing runs and the findings are read from the log again.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project the package runs nothing and says nothing.

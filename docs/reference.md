@@ -208,6 +208,19 @@ the refuted claims are warnings too. The full output of Leanify is in
 `\jobname.leanify.log`. `lake` must be on the `PATH` of the compiler; the
 first check also builds the checker, which takes a few minutes once.
 
+**Speed.** After the first build the check runs the checker directly, not through
+`lake exe` (which first checks that every module of the project, mathlib's
+included, is built): a compile then costs the check itself, a fraction of a
+second. The executable is used when it is current (newer than the project's
+`lake-manifest.json`, or in the Leanify repository newer than the compiler's
+sources); otherwise lake rebuilds and runs it. If the article has not changed
+since the last run, as in the later passes of `latexmk` or a recompile for the
+bibliography, nothing runs: the findings are read from `\jobname.leanify.log`
+again (delete it to force a run). With `certify`, `prepare` writes the lexing
+cache of the article (`LexCache/`, imported by `Compiled.lean`), so that after an
+edit the kernel relexes only the sections that changed, and nothing is rebuilt
+while the status file is newer than the article.
+
 Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project, as on arXiv or a journal's server, the package runs
 nothing and says nothing. Without `status` the typeset article is unchanged,

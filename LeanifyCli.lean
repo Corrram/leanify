@@ -96,6 +96,13 @@ def prepare (path : System.FilePath) (opts : List String) : IO UInt32 := do
     let indexFile := dirP.withExtension "lean"
     let old ← if ← indexFile.pathExists then IO.FS.readFile indexFile else pure ""
     if old != index then IO.FS.writeFile indexFile index
+    -- the compiled file imports the cache
+    if let some lean := optArg opts "--lean" then
+      let text ← IO.FS.readFile lean
+      let imp := s!"import {pre}"
+      unless (text.splitOn "\n").any (fun l => l.replace "\r" "" == imp) do
+        IO.FS.writeFile lean (imp ++ "\n" ++ text)
+        IO.println s!"{lean}: imports {pre}"
     IO.println s!"{names.size} cache modules for {bs.length} blocks"
     pure 0
   | _, _ => pure 0

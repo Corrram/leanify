@@ -29,7 +29,8 @@ The kernel's work is split so that an edit is checked where it happened:
 * **Blocks.** The body is cut at blank lines outside math and environments.
   Each block is lexed and segmented on its own, with positions relative to the
   block, and the kernel checks each block's stage separately.
-* **Lexing cache.** `leanify prepare article.tex --lean Compiled.lean
+* **Lexing cache.** With `\usepackage[certify]{leanify}` it is written and
+  imported automatically. By hand: `leanify prepare article.tex --lean Compiled.lean
   --cache LexCache --module Foo.LexCache` writes one Lean module per section,
   named after its content, with the lexing certificate of each block
   (`#leanify_lex_cache`). `#leanify_article` reuses a certificate whose key
