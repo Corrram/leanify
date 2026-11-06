@@ -139,6 +139,9 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
     | .id n => do
       -- the real numbers
       if n == w!"\\mathbb{R}" then pure (.real, none) else
+      match ← lookupGlob n, Elab.builtinConst n with
+      | none, some (p, .fn .real .prop) => pure (.real, some p)
+      | _, _ =>
       let (i, g) ← liftO (← lookupGlob n) E.undefined n
       match g.ty with
       | .fn a .prop => pure (a, some (.glob i))

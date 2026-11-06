@@ -3,7 +3,8 @@
 \newtheorem{lemma}{Lemma}
 % The expected output of `leanify check --claims` is check.txt: composition,
 % inclusion, suprema and infima, finite sums and products, equivalent statements,
-% `$$` displays and abbreviations.
+% `$$` displays, abbreviations, standard functions and constants, set operations,
+% connectives and quantifiers.
 \begin{document}
 Define $f\colon(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
 Define $g\colon\mathbb{R}\to\mathbb{R}$ by $g(x)\coloneqq x^2+1$.
@@ -44,6 +45,36 @@ Then the following are equivalent:
 \item $\lvert x\rvert=1$;
 \item[(c)] $(x-1)(x+1)=0$.
 \end{enumerate}
+\end{lemma}
+
+\begin{lemma}\label{lem:functions}
+For every $x\in(0,\infty)$, $\ln x\le x-1$.
+Moreover, for every $y\in\mathbb{R}$, $\cos^2 y+\sin^2 y=1$.
+\end{lemma}
+
+\begin{lemma}\label{lem:exp}
+For every $x\in\mathbb{R}$, $e^{x}\ge1+x$ and $\exp(x)>0$.
+\end{lemma}
+
+\begin{lemma}\label{lem:pi}
+$3<\pi$ and $\pi<\frac{22}{7}$.
+\end{lemma}
+
+\begin{lemma}\label{lem:setops}
+$[0,1]\cap[1,2]=\{1\}$ and $[0,2]\setminus(0,2)=\{0,2\}$.
+\end{lemma}
+
+\begin{lemma}\label{lem:empty}
+For every $x\in\mathbb{R}_{>0}$, $x\notin\emptyset$ and $x\in\{y\in\mathbb{R}\mid y>0\}$.
+\end{lemma}
+
+\begin{lemma}\label{lem:logic}
+$\forall x\in\mathbb{R}: \exists y\in\mathbb{R}: y>x$.
+Moreover, for every $x\in\mathbb{R}$, $x>1\Rightarrow x^2>1$ and $\neg(x<x)$.
+\end{lemma}
+
+\begin{lemma}\label{lem:misc}
+For every $x\in\mathbb{R}$, $\max(x,-x)=|x|$ and $\operatorname{sgn}(x)\,x=|x|$. Moreover, $\sqrt[3]{8}=2$, $2\times3=6$ and $\int_0^1 x\,dx=\frac12$.
 \end{lemma}
 
 The value of $f$ at $1$, i.e.\ $f(1)$, is $2$, cf.\ Lemma~\ref{lem:inf}.

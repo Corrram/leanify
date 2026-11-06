@@ -2,6 +2,7 @@ import Leanify.Syntax
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Convex.Function
@@ -148,6 +149,13 @@ def ClassProp.denote : ClassProp → ((I → I → ℝ) → Prop) → Prop
   | .compactUniform => Prelude.compactUniform
   | .closedUniform => Prelude.closedUniform
 
+noncomputable def RealFn.denote : RealFn → ℝ → ℝ
+  | .exp => Real.exp
+  | .log => Real.log
+  | .sin => Real.sin
+  | .cos => Real.cos
+  | .tan => Real.tan
+
 noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .rpow => fun x y => x ^ y
   | .min => fun x y => Min.min x y
@@ -170,6 +178,8 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .setProp k => k.denote
   | .sqProp k => k.denote
   | .classProp k => k.denote
+  | .realFn k => k.denote
+  | .pi => Real.pi
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

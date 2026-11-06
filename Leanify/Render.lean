@@ -46,6 +46,9 @@ def Prim.tex : Prim → String
   | .setProp k => "\\operatorname{" ++ k.word ++ "}"
   | .sqProp k => "\\operatorname{" ++ k.word ++ "}"
   | .classProp k => "\\operatorname{" ++ k.word ++ "}"
+  | .realFn k => match k with
+    | .exp => "\\exp" | .log => "\\log" | .sin => "\\sin" | .cos => "\\cos" | .tan => "\\tan"
+  | .pi => "\\pi"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/

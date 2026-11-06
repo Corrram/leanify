@@ -360,6 +360,31 @@ def applyAll (head : Tm) (ty : Ty) (doms : List (Option Tm)) : List (Tm × Ty) �
         pure (.mul head a', .real)
       else fail E.type
 
+/-- The standard functions (`\exp`, `\log`, …) as heads, with their domains:
+`\log` on `(0,\infty)`, `\tan` where `\cos` is not zero. -/
+def builtinFn (n : Codes) : Option (Tm × Ty × List (Option Tm)) :=
+  let fn (k : RealFn) (dom : Option Tm) := some (Tm.prim (.realFn k), Ty.real ⟶ .real, [dom])
+  if n == w!"\\exp" then fn .exp none
+  else if n == w!"\\log" then fn .log (some (.lam .real .tt (.lt (.num 0) (.loc 0))))
+  else if n == w!"\\sin" then fn .sin none
+  else if n == w!"\\cos" then fn .cos none
+  else if n == w!"sgn" || n == w!"\\sgn" || n == w!"sign" then
+    -- the sign: 1, -1 or 0
+    some (.lam .real .tt (.cases (.lt (.num 0) (.loc 0)) (.num 1)
+      (.cases (.lt (.loc 0) (.num 0)) (.neg (.num 1)) (.num 0))), Ty.real ⟶ .real, [none])
+  else if n == w!"\\tan" then
+    fn .tan (some (.lam .real .tt (.not (.eq (.app (.prim (.realFn .cos)) (.loc 0)) (.num 0)))))
+  else none
+
+/-- Standard constants and sets: `\pi`, `\emptyset`, `\mathbb{R}` and its rays. -/
+def builtinConst (n : Codes) : Option (Tm × Ty) :=
+  if n == w!"\\pi" then some (.prim .pi, .real)
+  else if n == w!"\\emptyset" || n == w!"\\varnothing" then some (.lam .real .tt (.not .tt), .fn .real .prop)
+  else if n == w!"\\mathbb{R}" then some (.lam .real .tt .tt, .fn .real .prop)
+  else if n == w!"\\mathbb{R}_{>0}" then some (.lam .real .tt (.lt (.num 0) (.loc 0)), .fn .real .prop)
+  else if n == w!"\\mathbb{R}_{\\ge0}" then some (.lam .real .tt (.le (.num 0) (.loc 0)), .fn .real .prop)
+  else none
+
 /-- Pointwise inclusion `a ⊆ b` of two predicates of the same (curried) type. -/
 def setSub (ty : Ty) (a b : Tm) : Tm :=
   match ty with
@@ -464,7 +489,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | some (s, sty), .fn a _ =>
             if a == sty then applyAll t ty doms [(s, sty)] else pure (t, ty)
           | _, _ => pure (t, ty)
-        | none => fail E.undefined n
+        | none =>
+          match builtinConst n with
+          | some r => pure r
+          | none => fail E.undefined n
     | .add x y => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.add a b, .real)
     | .minus x y => do
@@ -556,7 +584,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .app hd args => do
       match hd, args with
       | .id op, [x, y] =>
-        if op == w!"\\cup" || op == w!"\\times" then setOp f sc pf op x y
+        if op == w!"\\cup" || op == w!"\\times" || op == w!"\\cap" || op == w!"\\setminus" then setOp f sc pf op x y
         else do
           let (h, hty, doms) ← head f sc hd
           let xs ← args.mapM (term f sc pf)
@@ -574,6 +602,41 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if xs.length != ys.length then fail E.type
       let ps ← (xs.zip ys).mapM fun (a, b) => do relTm .eq (← term f sc pf a) (← term f sc pf b)
       pure (conjAll ps, .prop)
+    -- `(a,b)` as a set: the open interval (as after `\in`)
+    | .tuple [a, b] => do
+      let sc' : Scope := (w!"@x", Ty.real) :: sc
+      let p ← member f sc' (.loc 0, .real) (.tuple [a, b])
+      pure (.lam .real .tt p, .fn .real .prop)
+    | .finset xs => do
+      -- `\{a,b\}`: the numbers equal to one of the elements
+      let ts ← xs.mapM fun x => do asReal (← term f sc none x)
+      let eqs := ts.map fun t => Tm.eq (.loc 0) (shift 1 0 t)
+      match eqs with
+      | e :: es => pure (.lam .real .tt (es.foldl (fun acc q => .or acc q) e), .fn .real .prop)
+      | [] => fail E.unsupported
+    -- connectives and quantifiers between formulas
+    | .lnot x => do pure (.not (← propOf f sc pf x), .prop)
+    | .land x y => do pure (.and (← propOf f sc pf x) (← propOf f sc pf y), .prop)
+    | .lor x y => do pure (.or (← propOf f sc pf x) (← propOf f sc pf y), .prop)
+    | .limp x y => do pure (.imp (← propOf f sc pf x) (← propOf f sc pf y), .prop)
+    | .liff x y => do pure (.iff (← propOf f sc pf x) (← propOf f sc pf y), .prop)
+    | .quant isAll vs dom body =>
+      -- each variable ranges over the real numbers in `dom`
+      match vs with
+      | [] => do pure (← propOf f sc pf body, .prop)
+      | v :: rest => do
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        let sc' : Scope := (v, Ty.real) :: sc
+        let pf' := pf.map fun (s, t) => (shift 1 0 s, t)
+        let m ← member f sc' (.loc 0, .real) dom
+        let b ← propOf f sc' pf' (.quant isAll rest dom body)
+        -- (over all real numbers, without a condition)
+        pure (if isAll then .all .real (if m == .tt then b else .imp m b)
+          else .ex .real (if m == .tt then b else .and m b), .prop)
+    -- `x\notin A`
+    | .chain x [(.nmem, dom)] => do
+      let a ← term f sc pf x
+      pure (.not (← member f sc a dom), .prop)
     -- `A\subseteq B`: every real number in `A` is in `B`
     | .chain x [(.subset, y)] => do
       let sc' : Scope := (w!"@x", Ty.real) :: sc
@@ -600,6 +663,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       match ts, rels with
       | [a, b], [.eq] =>
         if isPredTy a.2 && a.2 == b.2 then pure (setEq a.2 a.1 b.1, .prop)
+        -- `A=\{1\}`: a set of numbers and the set of one number
+        else if a.2 == .fn .real .prop && b.2 == .real then
+          pure (setEq a.2 a.1 (.lam .real .tt (.eq (.loc 0) (shift 1 0 b.1))), .prop)
+        else if b.2 == .fn .real .prop && a.2 == .real then
+          pure (setEq b.2 (.lam .real .tt (.eq (.loc 0) (shift 1 0 a.1))) b.1, .prop)
         else do pure (← relTm .eq a b, .prop)
       | _, _ => do
         let rec pairs : List (Tm × Ty) → List Rel → M (List Tm)
@@ -761,6 +829,14 @@ where
   supTerm : Nat → Scope → PF → MT → MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | f + 1, sc, pf, b, e => do
+      -- `e^x` is `\exp(x)`, unless the article names something `e`
+      let isE ← match b with
+        | .id [101] => do pure ((lookupLocal sc [101]).isNone && (← lookupGlob [101]).isNone)
+        | _ => pure false
+      if isE then do
+        let a ← asReal (← term f sc pf e)
+        pure (.app (.prim (.realFn .exp)) a, .real)
+      else
       -- a family written with a superscript (`\gamma^T`)
       let fam ← match b, e with
         | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")
@@ -794,6 +870,9 @@ where
         match lookupLocal sc n with
         | some (i, t) => pure (.loc i, t, [])
         | none => do
+          match ← lookupGlob n, builtinFn n with
+          | none, some b => pure b
+          | _, _ =>
           let (i, gl) ← liftO (← lookupGlob n) E.undefined n
           pure (.glob i, gl.ty, gl.doms)
       | .sub (.id key) i => do
@@ -838,16 +917,21 @@ where
     | g + 1, sc, pf, op, x, y => do
       let a ← term g sc pf x
       let b ← term g sc pf y
-      if op == w!"\\cup" then
+      -- `A\cup B`, `A\cap B`, `A\setminus B`
+      let comb (p q : Tm) : Tm :=
+        if op == w!"\\cup" then .or p q else if op == w!"\\cap" then .and p q else .and p (.not q)
+      if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\setminus" then
         if a.2 != b.2 then fail E.type
         match a.2 with
         | .fn t1 .prop =>
-          pure (.lam t1 .tt (.or (.app (shift 1 0 a.1) (.loc 0)) (.app (shift 1 0 b.1) (.loc 0))), a.2)
+          pure (.lam t1 .tt (comb (.app (shift 1 0 a.1) (.loc 0)) (.app (shift 1 0 b.1) (.loc 0))), a.2)
         | .fn t1 (.fn t2 .prop) =>
           let ap := Tm.app (.app (shift 2 0 a.1) (.loc 1)) (.loc 0)
           let bp := Tm.app (.app (shift 2 0 b.1) (.loc 1)) (.loc 0)
-          pure (.lam t1 .tt (.lam t2 .tt (.or ap bp)), a.2)
+          pure (.lam t1 .tt (.lam t2 .tt (comb ap bp)), a.2)
         | _ => fail E.type
+      -- `2\times3`: a product of numbers
+      else if a.2 == .real && b.2 == .real then pure (.mul a.1 b.1, .real)
       else do
         let set1 (p : Tm × Ty) : M Tm := do
           match p.2 with
@@ -859,6 +943,11 @@ where
         let sb ← set1 b
         pure (.lam .real .tt (.lam .real .tt (.and (.app (shift 2 0 sa) (.loc 1)) (.app (shift 2 0 sb) (.loc 0)))),
           .fn .real (.fn .real .prop))
+  propOf : Nat → Scope → PF → MT → M Tm
+    | 0, _, _, _ => fail E.unsupported
+    | g + 1, sc, pf, x => do
+      let (p, t) ← term g sc pf x
+      if t == .prop then pure p else fail E.type
   member : Nat → Scope → Tm × Ty → MT → M Tm
     | 0, _, _, _ => fail E.unsupported
     | g + 1, sc, x, dom =>
@@ -884,11 +973,19 @@ where
         pure (rayTm l h true true (← asReal x))
       | .id n => do
         if n == w!"\\mathbb{R}" then do let _ ← asReal x; pure .tt else
+        match ← lookupGlob n, builtinConst n with
+        | none, some (p, .fn a .prop) => do let x' ← coerce x.1 x.2 a; pure (.app p x')
+        | _, _ =>
         let (i, gl) ← liftO (← lookupGlob n) E.undefined n
         match gl.ty with
         | .fn a .prop => do let x' ← coerce x.1 x.2 a; pure (.app (.glob i) x')
         | _ => fail E.type
-      | _ => fail E.unsupported
+      | _ => do
+        -- any other set of real numbers: `\{x\in A : …\}`, `A\cup B`, …
+        let (p, t) ← term g sc none dom
+        match t with
+        | .fn a .prop => do let x' ← coerce x.1 x.2 a; pure (.app p x')
+        | _ => fail E.type
   setOf : Nat → Scope → MT → MT → List MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | g + 1, sc, pat, dom, conds =>
@@ -930,6 +1027,11 @@ where
           let a' ← constEnd false true a
           let b' ← constEnd true true b
           pure (.real, some (rayTm a' b' true true (.loc 0)))
+        | .id n =>
+          if n == w!"\\mathbb{R}" then pure (.real, none)
+          else match builtinConst n with
+            | some (.lam .real .tt p, .fn .real .prop) => pure (.real, some p)
+            | _ => fail E.unsupported
         | _ => fail E.unsupported
 
 /-- Elaborate a lambda `pat ↦ body` with the given argument types and result type. -/

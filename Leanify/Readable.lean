@@ -69,6 +69,10 @@ def primConst : Prim → Option Name
   | .classProp k => some <| match k with
     | .convex => ``Prelude.convexClass | .compactUniform => ``Prelude.compactUniform
     | .closedUniform => ``Prelude.closedUniform
+  | .realFn k => some <| match k with
+    | .exp => ``Real.exp | .log => ``Real.log | .sin => ``Real.sin | .cos => ``Real.cos
+    | .tan => ``Real.tan
+  | .pi => some ``Real.pi
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

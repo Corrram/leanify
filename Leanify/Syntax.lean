@@ -67,6 +67,12 @@ inductive ClassProp where
   | convex | compactUniform | closedUniform
   deriving DecidableEq, Repr, Lean.ToExpr
 
+/-- Standard functions of a real variable, with their mathlib meaning. `\log` and
+`\tan` are applied only inside their domains (the compiler adds the condition). -/
+inductive RealFn where
+  | exp | log | sin | cos | tan
+  deriving DecidableEq, Repr, Lean.ToExpr
+
 /-- The core prelude: standard notions of real analysis with their usual mathlib
 meaning (`Leanify.Prelude`). -/
 inductive Prim where
@@ -96,6 +102,10 @@ inductive Prim where
   | sqProp (k : SqProp)
   /-- Properties of a class of functions on the unit square. -/
   | classProp (k : ClassProp)
+  /-- `\exp`, `\log`, `\sin`, `\cos`, `\tan`. -/
+  | realFn (k : RealFn)
+  /-- The number `π`. -/
+  | pi
   deriving DecidableEq, Repr, Lean.ToExpr
 
 def Prim.ty : Prim → Ty
@@ -113,6 +123,8 @@ def Prim.ty : Prim → Ty
   | .setProp _ => (.real ⟶ .real ⟶ .prop) ⟶ .prop
   | .sqProp _ => (Ty.sq ⟶ .real) ⟶ (Ty.sq ⟶ .prop) ⟶ .prop
   | .classProp _ => (Ty.sq ⟶ .prop) ⟶ .prop
+  | .realFn _ => .real ⟶ .real
+  | .pi => .real
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

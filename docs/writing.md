@@ -31,8 +31,23 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 | `A\subseteq B`, `A\supseteq B` | every real number in `A` is in `B` (and the reverse), for intervals, sets `\{x\in A : …\}` and sets the article defines |
 | `\sup_{x\in A} e`, `\sup\{e : x\in A\}`, `\sup S` (and `\inf`) | the least upper (greatest lower) bound: defined only when it exists, so a claim about an unbounded or empty set is not meaningful |
 | `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | the finite sum (product) of the terms, for numeral bounds; a sum up to a variable is not read (formulas have no natural numbers) |
+| `\exp(x)`, `\exp x`, `e^{x}` | the exponential function (`e` unless the article names something `e`) |
+| `\log x`, `\ln x` | the natural logarithm, applied only to positive numbers (the claim asks that the argument be positive) |
+| `\sin x`, `\cos x`, `\tan x`, `\sin^2 x` | the trigonometric functions (`\tan` only where `\cos` is not zero); `\sin^2 x` is the square of `\sin x` |
+| `\pi` | the number π, unless the article defines `\pi` |
+| `\operatorname{sgn}(x)` | the sign of `x`: 1, −1 or 0 |
+| `\max(a,b)`, `\min(a,b)` | as `\max\{a,b\}` |
+| `\sqrt[3]{x}` | `x^{1/3}`, for `x\ge0` |
+| `2\times3` | the product of two numbers (between sets, `\times` is the product of the sets) |
+| `A\cap B`, `A\setminus B`, `\{a,b\}`, `\emptyset` | intersection, difference, finite sets and the empty set of real numbers; `(a,b)` as a set is the open interval |
+| `x\notin A` | not `x\in A` |
+| `\mathbb{R}_{>0}`, `\mathbb{R}_{\ge0}`, `\mathbb{R}_+` | `(0,\infty)`, `[0,\infty)`, `[0,\infty)` |
+| `\{x\in A\mid φ\}` | as `\{x\in A : φ\}` |
+| `\forall x,y\in A: φ`, `\exists x\in A: φ` | quantifiers over real numbers in `A` (the domain ends at the first `:` or `,`; the body extends to the end of the formula) |
+| `\neg`, `\land`/`\wedge`, `\lor`/`\vee`, `\Rightarrow`/`\implies`, `\iff`/`\Leftrightarrow` | the connectives, binding in this order (`\neg` the tightest) |
+| `\int_0^1 x\,dx` | as `\int_0^1 x\,\mathrm{d}x` |
 | `$$…$$` | a display, like `\[…\]` |
-| `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
+| `\colon`, `\mid`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
 
 The period of an abbreviation (i.e., e.g., cf., resp., Thm., Eq., Fig., …)
 does not end a sentence.

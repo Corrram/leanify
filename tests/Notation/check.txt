@@ -1,15 +1,33 @@
-tests/Notation/article.tex:8:1: info: defines f (f)
-tests/Notation/article.tex:9:1: info: defines g (g)
-tests/Notation/article.tex:12:1: info: claim 0: \forall x\in \mathbb{R},\ 2\le f(g(x))
-tests/Notation/article.tex:16:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow 0\le x\land x\le 1
-tests/Notation/article.tex:20:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow 0\le x\land x\le 1
-tests/Notation/article.tex:24:1: info: claim 3: (\sup\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ (0<s\land s<1)\land {s}^{2}=x\})=1
-tests/Notation/article.tex:28:1: info: claim 4: (\inf\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ 0<s\land f(s)=x\})=2
-tests/Notation/article.tex:32:1: info: claim 5: 1+2+3+4=10
-tests/Notation/article.tex:36:1: info: claim 6: \forall x\in \mathbb{R},\ (x+1)\,(x+2)={x}^{2}+3\,x+2
-tests/Notation/article.tex:41:1: info: claim 7: \forall x\in \mathbb{R},\ {x}^{2}=1\Leftrightarrow \lvert x\rvert=1
-tests/Notation/article.tex:41:1: info: claim 8: \forall x\in \mathbb{R},\ \lvert x\rvert=1\Leftrightarrow (x-1)\,(x+1)=0
-tests/Notation/article.tex: 2 definitions, 9 claims
+tests/Notation/article.tex:9:1: info: defines f (f)
+tests/Notation/article.tex:10:1: info: defines g (g)
+tests/Notation/article.tex:13:1: info: claim 0: \forall x\in \mathbb{R},\ 2\le f(g(x))
+tests/Notation/article.tex:17:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow 0\le x\land x\le 1
+tests/Notation/article.tex:21:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow 0\le x\land x\le 1
+tests/Notation/article.tex:25:1: info: claim 3: (\sup\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ (0<s\land s<1)\land {s}^{2}=x\})=1
+tests/Notation/article.tex:29:1: info: claim 4: (\inf\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ 0<s\land f(s)=x\})=2
+tests/Notation/article.tex:33:1: info: claim 5: 1+2+3+4=10
+tests/Notation/article.tex:37:1: info: claim 6: \forall x\in \mathbb{R},\ (x+1)\,(x+2)={x}^{2}+3\,x+2
+tests/Notation/article.tex:42:1: info: claim 7: \forall x\in \mathbb{R},\ {x}^{2}=1\Leftrightarrow \lvert x\rvert=1
+tests/Notation/article.tex:42:1: info: claim 8: \forall x\in \mathbb{R},\ \lvert x\rvert=1\Leftrightarrow (x-1)\,(x+1)=0
+tests/Notation/article.tex:51:1: info: claim 9: \forall x\in \mathbb{R},\ 0<x\Rightarrow \log(x)\le x-1
+tests/Notation/article.tex:52:1: info: claim 10: \forall x\in \mathbb{R},\ {\cos(x)}^{2}+{\sin(x)}^{2}=1
+tests/Notation/article.tex:56:1: info: claim 11: \forall x\in \mathbb{R},\ 1+x\le \exp(x)
+tests/Notation/article.tex:56:1: info: claim 12: \forall x\in \mathbb{R},\ 0<\exp(x)
+tests/Notation/article.tex:60:1: info: claim 13: 3<\pi
+tests/Notation/article.tex:60:1: info: claim 14: \pi<\frac{22}{7}
+tests/Notation/article.tex:64:1: info: claim 15: \forall x\in \mathbb{R},\ (0\le x\land x\le 1)\land 1\le x\land x\le 2\Leftrightarrow x=1
+tests/Notation/article.tex:64:1: info: claim 16: \forall x\in \mathbb{R},\ (0\le x\land x\le 2)\land \neg (0<x\land x<2)\Leftrightarrow x=0\lor x=2
+tests/Notation/article.tex:68:1: info: claim 17: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg \neg \top
+tests/Notation/article.tex:68:1: info: claim 18: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x
+tests/Notation/article.tex:72:1: info: claim 19: \forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ x<y
+tests/Notation/article.tex:73:1: info: claim 20: \forall x\in \mathbb{R},\ 1<x\Rightarrow 1<{x}^{2}
+tests/Notation/article.tex:73:1: info: claim 21: \forall x\in \mathbb{R},\ \neg (x<x)
+tests/Notation/article.tex:77:1: info: claim 22: \forall x\in \mathbb{R},\ \max\{x,-x\}=\lvert x\rvert
+tests/Notation/article.tex:77:1: info: claim 23: \forall x\in \mathbb{R},\ \begin{cases}1&0<x\\-1&x<0\\\end{cases}\,x=\lvert x\rvert
+tests/Notation/article.tex:77:82: info: claim 24: {8}^{\frac{1}{3}}=2
+tests/Notation/article.tex:77:82: info: claim 25: 2\,3=6
+tests/Notation/article.tex:77:82: info: claim 26: \int_0^1 x\,dx=\frac{1}{2}
+tests/Notation/article.tex: 2 definitions, 27 claims
   text: 2 compiled, 0 failed, 1 prose (of 3)
-  results: 9 compiled, 0 failed, 0 prose (of 9)
-  all: 11 compiled, 0 failed, 1 prose (of 12)
+  results: 19 compiled, 0 failed, 0 prose (of 19)
+  all: 21 compiled, 0 failed, 1 prose (of 22)
