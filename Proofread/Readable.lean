@@ -51,6 +51,24 @@ def primConst : Prim → Option Name
   | .continuousOn => some ``Prelude.continuousOn
   | .concaveOn => some ``Prelude.concaveOn
   | .strictMonoOn => some ``Prelude.strictMonoOn
+  | .fnProp k => some <| match k with
+    | .convex => ``Prelude.convexOn | .strictConvex => ``Prelude.strictConvexOn
+    | .strictConcave => ``Prelude.strictConcaveOn | .strictAnti => ``Prelude.strictAntiOn
+    | .monotone => ``Prelude.monotoneOn | .antitone => ``Prelude.antitoneOn
+    | .bounded => ``Prelude.boundedOn | .nonneg => ``Prelude.nonnegOn | .pos => ``Prelude.posOn
+    | .differentiable => ``Prelude.differentiableOn | .contDiff => ``Prelude.contDiffOn
+    | .injective => ``Prelude.injOn | .lowerSemicont => ``Prelude.lowerSemicontinuousOn
+    | .upperSemicont => ``Prelude.upperSemicontinuousOn | .lipschitz => ``Prelude.lipschitzOn
+  | .setProp k => some <| match k with
+    | .closed => ``Prelude.closed2 | .isOpen => ``Prelude.open2
+    | .bounded => ``Prelude.bounded2 | .connected => ``Prelude.connected2
+  | .sqProp k => some <| match k with
+    | .convex => ``Prelude.convexOnSq | .concave => ``Prelude.concaveOnSq
+    | .lowerUniform => ``Prelude.lscUniform | .upperUniform => ``Prelude.uscUniform
+    | .contUniform => ``Prelude.continuousUniform
+  | .classProp k => some <| match k with
+    | .convex => ``Prelude.convexClass | .compactUniform => ``Prelude.compactUniform
+    | .closedUniform => ``Prelude.closedUniform
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

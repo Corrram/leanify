@@ -223,7 +223,12 @@ def run : Nat → Mode → List MTok → R
       run f (.postfix bar (.sup x e)) rest'
     | .sym 95 :: rest => do
       let (i, rest') ← run f .group rest
-      run f (.postfix bar (.sub x i)) rest'
+      -- `T^0_q` is `T_q^0`, as typeset, and `\widehat S_s` is the hat of `S_s`
+      let x' := match x with
+        | .sup b e => MT.sup (.sub b i) e
+        | .hat b => MT.hat (.sub b i)
+        | _ => .sub x i
+      run f (.postfix bar x') rest'
     | .sym 40 :: rest =>
       if !appHead x then some (x, ts) else do
         let (m, rest') ← run f (.list 41 []) rest

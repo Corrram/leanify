@@ -16,6 +16,23 @@ def Ty.tex : Ty → String
 
 def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"]
 
+def FnProp.word : FnProp → String
+  | .convex => "convex" | .strictConvex => "strictly\\ convex" | .strictConcave => "strictly\\ concave"
+  | .strictAnti => "decreasing" | .monotone => "nondecreasing" | .antitone => "nonincreasing"
+  | .bounded => "bounded" | .nonneg => "nonnegative" | .pos => "positive"
+  | .differentiable => "differentiable" | .contDiff => "C^1" | .injective => "injective"
+  | .lowerSemicont => "lsc" | .upperSemicont => "usc" | .lipschitz => "Lipschitz"
+
+def SetProp.word : SetProp → String
+  | .closed => "closed" | .isOpen => "open" | .bounded => "bounded" | .connected => "connected"
+
+def SqProp.word : SqProp → String
+  | .convex => "convex" | .concave => "concave" | .lowerUniform => "lsc\\ (uniform)"
+  | .upperUniform => "usc\\ (uniform)" | .contUniform => "continuous\\ (uniform)"
+
+def ClassProp.word : ClassProp → String
+  | .convex => "convex" | .compactUniform => "compact\\ (uniform)" | .closedUniform => "closed\\ (uniform)"
+
 def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
   | .leb => "\\lambda" | .borel => "\\operatorname{Borel}"
@@ -25,6 +42,10 @@ def Prim.tex : Prim → String
   | .compact2 => "\\operatorname{compact}" | .convex2 => "\\operatorname{convex}"
   | .symm2 => "\\operatorname{symmetric}" | .continuousOn => "\\operatorname{continuous}"
   | .concaveOn => "\\operatorname{concave}" | .strictMonoOn => "\\operatorname{increasing}"
+  | .fnProp k => "\\operatorname{" ++ k.word ++ "}"
+  | .setProp k => "\\operatorname{" ++ k.word ++ "}"
+  | .sqProp k => "\\operatorname{" ++ k.word ++ "}"
+  | .classProp k => "\\operatorname{" ++ k.word ++ "}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -67,6 +88,11 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .strictMonoOn) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       Prim.strictMonoOn.tex ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }\\{" ++ v ++ ":" ++ body.tex cs gs (v :: ls) ++ "\\}"
+  | .app (.app (.prim (.fnProp k)) f) (.lam _ _ body) =>
+      let v := varNames.getD ls.length "t"
+      Prim.tex (.fnProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }\\{" ++ v ++ ":" ++ body.tex cs gs (v :: ls) ++ "\\}"
+  | .app (.app (.prim (.sqProp k)) f) d =>
+      Prim.tex (.sqProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }" ++ d.tex cs gs ls
   | .app (.app (.app (.prim .intervalIntegral) a) b) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       "\\int_{" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\,d" ++ v

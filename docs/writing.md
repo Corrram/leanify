@@ -18,6 +18,13 @@ vocabulary, such as *probability measure on $[0,1]^2$*, or of a class the
 article defines. Symbols such as $\alpha$, $\beta$ or $\mathcal{X}$ stand for
 quantities and classes defined earlier in the article.
 
+## Notation
+
+Formulas are read as they are typeset: `T^0_q` and `T_q^0` are the same symbol,
+`\widehat S_s` is the hat of `S_s`, `\min\{a,b,c\}` takes three arguments, a
+variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
+`\{(x,x):0\le x\le1\}` is the diagonal.
+
 ## House style
 
 1. **Define before use.** The defining sentence of a symbol comes before its
@@ -82,6 +89,10 @@ quantities and classes defined earlier in the article.
 | family with a local map | `For $w\in[0,1]$, let $A_w$ be the NOUN associated with $\gamma_{T_w}$, where $T_w:[0,1]\to[0,1]$ is given by \begin{equation}…\end{equation}` |
 | auxiliary symbol | `For $b\in(0,\frac12]$, set $z_b\coloneqq\frac{b}{2(1-b)}$ and let $B_b$ be …` |
 | functions of several variables | `For $u,v\in[0,1]$, set $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq\max\{u+v-1,0\}$ and $\Pi(u,v)\coloneqq uv$.` (the arguments are the binder's variables, in its order; on $[0,1]$ the result is a function on the unit square) |
+| a family of functions | `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq\min\{u,v,1-s\}+\max\{u+v+s-2,0\}$.` (indexed by the first variable, a function of the others) |
+| a family of maps | `For $s\in(0,1]$, define $\varphi_s:[0,1]\to\R$ by \[\varphi_s(t)\coloneqq\begin{cases}…\end{cases}\]` (also `T^0_q`, `R_b^-`; the map takes values in its codomain, a claim) |
+| a definition in a proof | `For $v\in[0,s]$ and $w\in[0,1-s]$, set $g_v(w)\coloneqq(v+w)^2(2s-3v+3w)$.` inside the proof of a result about $s$ (the result's variables it uses are implicit arguments: `g_v(0)` is `g` at `s`, `v`, `0`) |
+| a definition with a binder | `For every $r\in(-1,1)$ and $s\coloneqq(\frac{1-r}{2})^{1/3}$, $S_s$ is …` (a function of the binder's variables, local to the result) |
 | decorated names | `For $b\in[-1,1]$, set \begin{equation}r_-(b)\coloneqq-1+\tfrac{3}{16}(1+b)^3,\qquad r_+(b)\coloneqq1-\tfrac{3}{16}(1-b)^3.\end{equation}` |
 | named map | `For $c\in[0,1]$, the corresponding rank map $\zeta_c:[0,1]\to[0,1]$ reads \[…\]` |
 | notion of the vocabulary | `Lebesgue measure on $[0,1]$ is denoted by $\mathrm{Leb}$.` |
@@ -142,7 +153,8 @@ citations.
 | formula, chain, equivalence | `$\lvert\alpha(x)-\beta(x)\rvert\le\frac14$`, `$0\le\Upsilon(e)\le\frac{27}{128}$ for every $e\in[-1,1]$` |
 | joint range | `It holds that \[\bigl\{(\alpha(x),\beta(x)):x\in\mathcal{X}\bigr\}=\bigl\{(s,t)\in[-1,1]^2:2s-\Phi(s)\le t\le\Phi(s)\bigr\}.\]` |
 | unique attainment | `exactly one NOUN $x$ with $\alpha(x)=s$ satisfies $\beta(x)=\Phi(s)$` |
-| the only one | `its transpose is the only NOUN with $\alpha=s$ and $\beta=2s-\Phi(s)$` |
+| the only one | `its transpose is the only NOUN with $\alpha=s$ and $\beta=2s-\Phi(s)$`, `$S_{3/4}$ is the only NOUN $C$ with $\eta(C)-\rho(C)=\frac{27}{128}$` |
+| a condition on the variable | `Every NOUN $C$ with $\rho(C)=0$ satisfies $|\eta(C)|\le1-2^{-1/3}$.` |
 | extremum | `The maximum $\frac{27}{128}$ of $\beta-\alpha$ is attained only by $A_{3/4}$, at which $(\alpha,\beta)=(-\frac{5}{32},\frac{7}{128})$, and the minimum $-\frac{27}{128}$ only by $A_{3/4}^\top$.` |
 | monotone bijection | `$c\mapsto\alpha(D_c)$ increases bijectively from $[0,1]$ onto $[-1,1]$` |
 | monotone maps, ranges | `Both parameter maps $w\mapsto\alpha(A_w)$ and $b\mapsto\alpha(B_b)$ are strictly increasing. For $w\in[\frac12,1]$, the first ranges over $[-\frac34,1]$, …` |
@@ -156,12 +168,39 @@ citations.
 | an inequality on a square | `Then every $(x,z)\in[0,1]^2$ satisfies \begin{equation}\varphi_w(x)+\psi_w(z)\ge d_{\kappa_w}(x,z).\end{equation}` |
 | sharpness | `Both constants are sharp.` (after a claim `a\le c` about every element of a domain: for every `ε > 0` some element has `c - a < ε`) |
 | shape | `Moreover, $\Om$ is compact, convex and centrally symmetric, and $\rhoup$ is continuous, concave and strictly increasing.` (a function on the domain its definition states) |
+| standard properties | `The function $g$ is convex, nondecreasing on $[0,\infty)$ and Lipschitz on $[0,1]$.`, `Then $c$ is positive.`, `Moreover, $\xi$ is convex on $\CC$ and lower semicontinuous with respect to uniform convergence.` (see [Standard notions](#standard-notions)) |
 | comparison in words | `$Q$ is at least the arithmetic mean $\frac{a+b}{2}$`, `is at most`, `is less than`, `is greater than`, `is equal to`, `does not exceed` |
 | if and only if | `Moreover, $G=A$ if and only if $a=b$.` |
 | several facts | `We have $(\sqrt a)^2=a$, $(\sqrt b)^2=b$ and $\sqrt a\sqrt b=\sqrt{ab}$.` (each fact is a claim of the same sentence) |
 | facts used by a step | `Since $G\le A$ and $G>0$, it follows that $H=G\cdot\frac{G}{A}\le G$.` (the facts after "Since" are premises of the step, so the step may use them) |
 | a reason in words | `Moreover, $\sqrt a=\sqrt b$ if and only if $a=b$, since the square root is injective.` (the reason is prose, the claim before it is checked) |
 | equality sets | `If $w>\frac12$, equality holds exactly on $S_w$, and if $w=\frac12$, it holds exactly on $S_{1/2}\cup([\frac12,1]\times\{\frac12\})$.`, `…, and equality holds exactly when $x=R_b(z)$.`, `For every $x\in(0,\infty)$, $f(x)\ge2$. Equality holds exactly when $x=1$.` (about the preceding inequality, for every point of its domain) |
+
+### Standard notions
+
+A claim `$X$ is ADJ, ADJ [on $A$] and ADJ` (also `The function|map|set|number
+$X$ is …`) uses the standard notions below, with their mathlib meaning
+(`Proofread.Prelude` in `Proofread/Denote.lean`). A function has them on the
+domain its definition states, or on `A`, which must lie in that domain.
+
+| Of | Adjectives | Meaning |
+| --- | --- | --- |
+| a number | positive, negative, nonnegative, nonpositive | `0 < x`, `x < 0`, `0 ≤ x`, `x ≤ 0` |
+| a real function | continuous, differentiable, continuously differentiable | `ContinuousOn`, `DifferentiableOn ℝ`, `ContDiffOn ℝ 1` |
+| | convex, concave, strictly convex, strictly concave | `ConvexOn ℝ`, `ConcaveOn ℝ`, `StrictConvexOn ℝ`, `StrictConcaveOn ℝ` |
+| | strictly increasing, strictly decreasing, nondecreasing, nonincreasing | `StrictMonoOn`, `StrictAntiOn`, `MonotoneOn`, `AntitoneOn` |
+| | bounded, nonnegative, positive, injective | bounded image, `0 ≤ f x`, `0 < f x` on the domain, `Set.InjOn` |
+| | lower semicontinuous, upper semicontinuous, Lipschitz (continuous) | `LowerSemicontinuousOn`, `UpperSemicontinuousOn`, `∃ K, LipschitzOnWith K` |
+| a set of the plane | compact, convex, centrally symmetric, closed, open, bounded, connected | `IsCompact`, `Convex ℝ`, `(a,b) ↦ (-a,-b)`, `IsClosed`, `IsOpen`, `Bornology.IsBounded`, `IsConnected` |
+| a quantity of NOUNS on the unit square (on its class, or on `A`) | convex, concave | `ConvexOn ℝ`, `ConcaveOn ℝ`, with the pointwise mixture of functions |
+| | lower semicontinuous, upper semicontinuous, continuous, each *with respect to uniform convergence* | semicontinuity and continuity for the topology of uniform convergence on `[0,1]²` |
+| a class of such NOUNS | convex, compact with respect to uniform convergence, closed with respect to uniform convergence | `Convex ℝ`, `IsCompact`, `IsClosed` for uniform convergence |
+
+`Increasing` and `decreasing` alone are not read, because articles use them both
+for the strict and for the weak property: write *strictly increasing* or
+*nondecreasing*. A hyphen may join the words (`non-decreasing`, `lower
+semi-continuous`). `Continuous` for a quantity of NOUNS needs its topology:
+*continuous with respect to uniform convergence*.
 
 The readings are fixed and documented next to each construction in
 `Proofread/Grammar.lean` (parsing) and `Proofread/Doc.lean` (meaning). Run

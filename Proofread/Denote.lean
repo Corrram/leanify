@@ -5,6 +5,11 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Convex.Function
+import Mathlib.Analysis.Calculus.ContDiff.Defs
+import Mathlib.Topology.Semicontinuity.Defs
+import Mathlib.Topology.EMetricSpace.Lipschitz
+import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
+import Mathlib.Topology.Connected.Basic
 
 /-! # The meaning of core terms
 
@@ -60,7 +65,88 @@ def symm2 (S : ℝ → ℝ → Prop) : Prop := ∀ a b, S a b → S (-a) (-b)
 def continuousOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ContinuousOn f {x | D x}
 def concaveOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ConcaveOn ℝ {x | D x} f
 def strictMonoOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := StrictMonoOn f {x | D x}
+
+/-! Standard properties of a real function on a domain. `increasing` alone is
+not one of them (it is used for both `StrictMonoOn` and `MonotoneOn`). -/
+def convexOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ConvexOn ℝ {x | D x} f
+def strictConvexOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := StrictConvexOn ℝ {x | D x} f
+def strictConcaveOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := StrictConcaveOn ℝ {x | D x} f
+def strictAntiOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := StrictAntiOn f {x | D x}
+def monotoneOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := MonotoneOn f {x | D x}
+def antitoneOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := AntitoneOn f {x | D x}
+def boundedOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop :=
+  BddAbove (f '' {x | D x}) ∧ BddBelow (f '' {x | D x})
+def nonnegOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ∀ x, D x → 0 ≤ f x
+def posOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ∀ x, D x → 0 < f x
+def differentiableOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := DifferentiableOn ℝ f {x | D x}
+/-- Continuously differentiable: of class `C¹`. -/
+def contDiffOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ContDiffOn ℝ 1 f {x | D x}
+def injOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := Set.InjOn f {x | D x}
+def lowerSemicontinuousOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := LowerSemicontinuousOn f {x | D x}
+def upperSemicontinuousOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := UpperSemicontinuousOn f {x | D x}
+def lipschitzOn (f : ℝ → ℝ) (D : ℝ → Prop) : Prop := ∃ K : NNReal, LipschitzOnWith K f {x | D x}
+
+/-! Standard properties of a set of points of the plane. -/
+def closed2 (S : ℝ → ℝ → Prop) : Prop := IsClosed {p : ℝ × ℝ | S p.1 p.2}
+def open2 (S : ℝ → ℝ → Prop) : Prop := IsOpen {p : ℝ × ℝ | S p.1 p.2}
+def bounded2 (S : ℝ → ℝ → Prop) : Prop := Bornology.IsBounded {p : ℝ × ℝ | S p.1 p.2}
+def connected2 (S : ℝ → ℝ → Prop) : Prop := IsConnected {p : ℝ × ℝ | S p.1 p.2}
+
+/-! Quantities of functions on the unit square (of copulas, say), on a class of
+them, and classes of such functions. Convexity uses the pointwise vector space
+structure; "with respect to uniform convergence" uses the topology of uniform
+convergence on `[0,1]²`. -/
+/-- A function on the unit square, from the space of uniform convergence on `[0,1]²`. -/
+def ofUniform (g : UniformFun (I × I) ℝ) : I → I → ℝ := fun u v => UniformFun.toFun g (u, v)
+def convexOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop := ConvexOn ℝ {C | D C} F
+def concaveOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop := ConcaveOn ℝ {C | D C} F
+def lscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
+  LowerSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
+def uscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
+  UpperSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
+def continuousUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
+  ContinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
+def convexClass (D : (I → I → ℝ) → Prop) : Prop := Convex ℝ {C | D C}
+def compactUniform (D : (I → I → ℝ) → Prop) : Prop :=
+  IsCompact {g : UniformFun (I × I) ℝ | D (ofUniform g)}
+def closedUniform (D : (I → I → ℝ) → Prop) : Prop :=
+  IsClosed {g : UniformFun (I × I) ℝ | D (ofUniform g)}
 end Prelude
+
+def FnProp.denote : FnProp → (ℝ → ℝ) → (ℝ → Prop) → Prop
+  | .convex => Prelude.convexOn
+  | .strictConvex => Prelude.strictConvexOn
+  | .strictConcave => Prelude.strictConcaveOn
+  | .strictAnti => Prelude.strictAntiOn
+  | .monotone => Prelude.monotoneOn
+  | .antitone => Prelude.antitoneOn
+  | .bounded => Prelude.boundedOn
+  | .nonneg => Prelude.nonnegOn
+  | .pos => Prelude.posOn
+  | .differentiable => Prelude.differentiableOn
+  | .contDiff => Prelude.contDiffOn
+  | .injective => Prelude.injOn
+  | .lowerSemicont => Prelude.lowerSemicontinuousOn
+  | .upperSemicont => Prelude.upperSemicontinuousOn
+  | .lipschitz => Prelude.lipschitzOn
+
+def SetProp.denote : SetProp → (ℝ → ℝ → Prop) → Prop
+  | .closed => Prelude.closed2
+  | .isOpen => Prelude.open2
+  | .bounded => Prelude.bounded2
+  | .connected => Prelude.connected2
+
+def SqProp.denote : SqProp → ((I → I → ℝ) → ℝ) → ((I → I → ℝ) → Prop) → Prop
+  | .convex => Prelude.convexOnSq
+  | .concave => Prelude.concaveOnSq
+  | .lowerUniform => Prelude.lscUniform
+  | .upperUniform => Prelude.uscUniform
+  | .contUniform => Prelude.continuousUniform
+
+def ClassProp.denote : ClassProp → ((I → I → ℝ) → Prop) → Prop
+  | .convex => Prelude.convexClass
+  | .compactUniform => Prelude.compactUniform
+  | .closedUniform => Prelude.closedUniform
 
 noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .rpow => fun x y => x ^ y
@@ -80,6 +166,10 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .continuousOn => Prelude.continuousOn
   | .concaveOn => Prelude.concaveOn
   | .strictMonoOn => Prelude.strictMonoOn
+  | .fnProp k => k.denote
+  | .setProp k => k.denote
+  | .sqProp k => k.denote
+  | .classProp k => k.denote
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

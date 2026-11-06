@@ -43,6 +43,30 @@ abbrev Ty.sq : Ty := .unit ⟶ .unit ⟶ .real
 abbrev Ty.self : Ty := .unit ⟶ .unit
 abbrev Ty.rfun : Ty := .real ⟶ .real
 
+/-- Standard properties of a real function on a domain (`Proofread.Prelude`). -/
+inductive FnProp where
+  | convex | strictConvex | strictConcave | strictAnti | monotone | antitone
+  | bounded | nonneg | pos | differentiable | contDiff | injective
+  | lowerSemicont | upperSemicont | lipschitz
+  deriving DecidableEq, Repr, Lean.ToExpr
+
+/-- Standard properties of a set of points of the plane. -/
+inductive SetProp where
+  | closed | isOpen | bounded | connected
+  deriving DecidableEq, Repr, Lean.ToExpr
+
+/-- Properties of a quantity of functions on the unit square (of a copula, say) on a
+class of them: convexity, and semicontinuity and continuity for uniform convergence. -/
+inductive SqProp where
+  | convex | concave | lowerUniform | upperUniform | contUniform
+  deriving DecidableEq, Repr, Lean.ToExpr
+
+/-- Properties of a class of functions on the unit square: convexity, and
+compactness and closedness for uniform convergence. -/
+inductive ClassProp where
+  | convex | compactUniform | closedUniform
+  deriving DecidableEq, Repr, Lean.ToExpr
+
 /-- The core prelude: standard notions of real analysis with their usual mathlib
 meaning (`Proofread.Prelude`). -/
 inductive Prim where
@@ -64,6 +88,14 @@ inductive Prim where
   | compact2 | convex2 | symm2
   /-- Properties of a real function on a domain: continuous, concave, strictly increasing. -/
   | continuousOn | concaveOn | strictMonoOn
+  /-- Further properties of a real function on a domain. -/
+  | fnProp (k : FnProp)
+  /-- Further properties of a set of points of the plane. -/
+  | setProp (k : SetProp)
+  /-- Properties of a quantity of functions on the unit square, on a class. -/
+  | sqProp (k : SqProp)
+  /-- Properties of a class of functions on the unit square. -/
+  | classProp (k : ClassProp)
   deriving DecidableEq, Repr, Lean.ToExpr
 
 def Prim.ty : Prim → Ty
@@ -77,7 +109,10 @@ def Prim.ty : Prim → Ty
   | .intervalIntegral => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
   | .intervalIntegrable => Ty.rfun ⟶ .real ⟶ .real ⟶ .prop
   | .compact2 | .convex2 | .symm2 => (.real ⟶ .real ⟶ .prop) ⟶ .prop
-  | .continuousOn | .concaveOn | .strictMonoOn => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
+  | .continuousOn | .concaveOn | .strictMonoOn | .fnProp _ => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
+  | .setProp _ => (.real ⟶ .real ⟶ .prop) ⟶ .prop
+  | .sqProp _ => (Ty.sq ⟶ .real) ⟶ (Ty.sq ⟶ .prop) ⟶ .prop
+  | .classProp _ => (Ty.sq ⟶ .prop) ⟶ .prop
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

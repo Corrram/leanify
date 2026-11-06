@@ -332,7 +332,7 @@ inductive Clause where
   | fact (f : MT)
   | holds (f : MT)
   | exactlyOne (noun : List Codes) (v : Codes) (cond sat : MT)
-  | onlyWith (s : Subj) (noun : List Codes) (conds : List MT)
+  | onlyWith (s : Subj) (noun : List Codes) (conds : List MT) (var : Option Codes)
   | every (vars : List Codes) (dom body : MT)
   | extremum (isMax : Bool) (fv : MT) (s : Subj) (rels : List RelPart)
   | increases (f dom cod : MT)
@@ -364,10 +364,10 @@ inductive Clause where
   /-- `if $φ$, CLAUSE`: the clause under the hypothesis `φ` about variables
   that are already bound. -/
   | ifThen (cond : MT) (c : Clause)
-  /-- `$X$ is ADJ, ADJ and ADJ`: properties of a set of points of the plane
-  (`compact`, `convex`, `centrally symmetric`) or of a function on its domain
-  (`continuous`, `concave`, `strictly increasing`). -/
-  | adjectives (s : MT) (adjs : List (List Codes))
+  /-- `$X$ is ADJ, ADJ [on $A$] and ADJ`: standard properties of a number, of a set
+  of points of the plane, of a real function (on its domain, or on `A`), of a
+  quantity of functions on the unit square, or of a class of them. -/
+  | adjectives (s : MT) (adjs : List (List Codes × Option MT))
   /-- `Both constants are sharp.`, `The bound is sharp.`: each inequality `a ≤ b` of
   the preceding claim about every element of a domain cannot be improved: for every
   `ε > 0`, some element has `b - a < ε`. -/
@@ -459,20 +459,58 @@ def mapList : Nat → List Chunk → List MT → Option (List MT × List Chunk)
     | some r' => mapList f r' (m :: acc)
     | none => some ((m :: acc).reverse, r)
 
-/-- Adjectives of the core: shapes of sets of the plane and properties of functions. -/
-def wAdjectives : List (List Codes) :=
-  [[w!"compact"], [w!"convex"], [w!"centrally", w!"symmetric"], [w!"continuous"], [w!"concave"],
-   [w!"strictly", w!"increasing"]]
+/-- The standard adjectives: each pattern of words (a hyphen may join them) with
+the adjective it spells. A longer pattern comes before the patterns it starts with.
+`increasing` and `decreasing` alone are not read: they are used both for the strict
+and for the weak property. -/
+def wAdjectives : List (List Codes × List Codes) :=
+  let u := [w!"with", w!"respect", w!"to", w!"uniform", w!"convergence"]
+  let same (ws : List Codes) := (ws, ws)
+  [ ([w!"lower", w!"semicontinuous"] ++ u, [w!"lower", w!"semicontinuous"] ++ u),
+    ([w!"lower", w!"semi", w!"continuous"] ++ u, [w!"lower", w!"semicontinuous"] ++ u),
+    ([w!"upper", w!"semicontinuous"] ++ u, [w!"upper", w!"semicontinuous"] ++ u),
+    ([w!"upper", w!"semi", w!"continuous"] ++ u, [w!"upper", w!"semicontinuous"] ++ u),
+    ([w!"continuous"] ++ u, [w!"continuous"] ++ u),
+    ([w!"compact"] ++ u, [w!"compact"] ++ u),
+    ([w!"closed"] ++ u, [w!"closed"] ++ u),
+    same [w!"lower", w!"semicontinuous"], ([w!"lower", w!"semi", w!"continuous"], [w!"lower", w!"semicontinuous"]),
+    same [w!"upper", w!"semicontinuous"], ([w!"upper", w!"semi", w!"continuous"], [w!"upper", w!"semicontinuous"]),
+    same [w!"continuously", w!"differentiable"],
+    ([w!"lipschitz", w!"continuous"], [w!"lipschitz"]), same [w!"lipschitz"],
+    same [w!"strictly", w!"increasing"], same [w!"strictly", w!"decreasing"],
+    same [w!"strictly", w!"convex"], same [w!"strictly", w!"concave"],
+    same [w!"nondecreasing"], ([w!"non", w!"decreasing"], [w!"nondecreasing"]),
+    same [w!"nonincreasing"], ([w!"non", w!"increasing"], [w!"nonincreasing"]),
+    same [w!"nonnegative"], ([w!"non", w!"negative"], [w!"nonnegative"]),
+    same [w!"nonpositive"], ([w!"non", w!"positive"], [w!"nonpositive"]),
+    same [w!"positive"], same [w!"negative"],
+    same [w!"compact"], same [w!"convex"], same [w!"concave"], same [w!"centrally", w!"symmetric"],
+    same [w!"continuous"], same [w!"differentiable"], same [w!"injective"], same [w!"bounded"],
+    same [w!"closed"], same [w!"open"], same [w!"connected"] ]
+
+/-- Exact words, where a hyphen may join two of them (`non-decreasing`). -/
+def kwH : List Codes → List Chunk → Option (List Chunk)
+  | [], cs => some cs
+  | w :: ws, .w v :: cs =>
+    if v != w then none else
+    match ws, cs with
+    | _ :: _, .p 45 :: cs' => kwH ws cs'
+    | _, _ => kwH ws cs
+  | _ :: _, _ => none
 
 def adjective (cs : List Chunk) : Option (List Codes × List Chunk) :=
-  wAdjectives.findSome? fun a => (kw a cs).map (a, ·)
+  wAdjectives.findSome? fun (pat, a) => (kwH pat cs).map (a, ·)
 
-/-- `ADJ, ADJ and ADJ`. -/
-def adjectiveList : Nat → List Chunk → List (List Codes) → Option (List (List Codes) × List Chunk)
+/-- `ADJ, ADJ [on $A$] and ADJ`. -/
+def adjectiveList : Nat → List Chunk → List (List Codes × Option MT) →
+    Option (List (List Codes × Option MT) × List Chunk)
   | 0, _, _ => none
   | f + 1, cs, acc => do
     let (a, r) ← adjective cs
-    let acc := a :: acc
+    let (on, r) := match kw [w!"on"] r >>= formula with
+      | some (m, r') => (some m, r')
+      | none => (none, r)
+    let acc := (a, on) :: acc
     let next := (punct 44 r >>= fun r' => (kw [w!"and"] r').getD r' |> some) <|> kw [w!"and"] r
     match next with
     | some r' =>
@@ -551,11 +589,14 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       some (Clause.sharp, r2)) with
   | some res => some res
   | none =>
-  -- $X$ is ADJ, ADJ and ADJ
+  -- [the function|map|set] $X$ is ADJ, ADJ and ADJ
   match (do
+      let cs := match kw [w!"the", w!"function"] cs <|> kw [w!"the", w!"map"] cs <|> kw [w!"the", w!"set"] cs <|>
+          kw [w!"the", w!"number"] cs <|> kw [w!"the", w!"class"] cs with
+        | some r => r | none => cs
       let (m, r) ← formula cs
       let r1 ← kw [w!"is"] r
-      let (adjs, r2) ← adjectiveList 6 r1 []
+      let (adjs, r2) ← adjectiveList 16 r1 []
       some (Clause.adjectives m adjs, r2)) with
   | some res => some res
   | none =>
@@ -758,12 +799,18 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
   | some (s, r) =>
     match kw [w!"is", w!"the", w!"only"] r with
     | some r1 => do
-      let (noun, r2) ← wordsUntil [w!"with"] 6 r1 []
+      -- `the only NOUN with $\alpha=s$`, or with a variable: `the only NOUN $C$ with $\alpha(C)=s$`
+      let ws := r1.takeWhile (fun c => match c with | .w v => v != w!"with" | _ => false)
+      let noun := ws.filterMap (fun c => match c with | .w w => some w | _ => none)
+      let (var, r2) := match r1.drop ws.length with
+        | .m [.id v] :: rest => (some v, rest)
+        | rest => (none, rest)
+      if noun.isEmpty then none else
       let r3 ← kw [w!"with"] r2
       let (c1, r4) ← formula r3
       match kw [w!"and"] r4 >>= formula with
-      | some (c2, r5) => some (.onlyWith s noun [c1, c2], r5)
-      | none => some (.onlyWith s noun [c1], r4)
+      | some (c2, r5) => some (.onlyWith s noun [c1, c2] var, r5)
+      | none => some (.onlyWith s noun [c1] var, r4)
     | none =>
     match kw [w!"is"] r with
     | some r1 =>
@@ -945,6 +992,9 @@ inductive Sent where
   | defClass (sym : MT) (plural : List Codes) (np : List Chunk)
   | defIs (bind : Bind) (items : List DefItem)
   | defReads (bind : Bind) (name : List Codes) (sig : MT) (disp : MT) (labels : List Codes)
+  /-- `For B, define $f_b:A\to B$ by DISPLAY.`: a family of maps, one for each value of
+  the binder's variable (`f_b`, `f^0_b`, `f_b^+`). -/
+  | defByFamily (bind : Bind) (sig : MT) (pieces : List DefPiece) (labels : List Codes)
   | defBy (sig : MT) (pieces : List DefPiece) (labels : List Codes) (observe : Option (MT × List Codes × MT))
   | denotedBy (name : List Chunk) (sym : MT)
   | letDenote (bind : Bind) (sym : MT) (np : List Chunk)
@@ -1379,6 +1429,9 @@ where
     | none =>
     match binder cs with
     | some (b, r) =>
+      -- `For every $r\in(-1,1)$ and $s\coloneqq e$, CLAUSES`: definitions with the binder,
+      -- made with the first clause
+      let (bdefs, r) := binderDefs 4 r []
       match (punct 44 r).map fun r1 => (kw [w!"then"] r1).getD r1 with
       | some r1 =>
         -- For B, let $S$ denote NP.
@@ -1392,6 +1445,15 @@ where
             let rest := trailer (r4.drop np.length)
             if isEnd rest then some (.letDenote b s np) else none) <|>
           letBe b [] r2
+        | none =>
+        -- For B, define $f_b:A\to B$ by DISPLAY.
+        match (do
+            let r2 ← kw [w!"define"] r1
+            let (sg, r3) ← sig r2
+            let r4 ← kw [w!"by"] r3
+            let (pieces, ls, r5) ← defPieces 6 r4 [] []
+            if isEnd (trailer r5) then some (Sent.defByFamily b sg pieces ls) else none) with
+        | some st => some st
         | none =>
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
         match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 with
@@ -1411,6 +1473,9 @@ where
           -- For B, (For B,)* CLAUSES.
           let (bs, r2) ← moreBinders 3 r1 [b]
           let cs ← clauses 8 r2 []
+          let cs := match cs with
+            | c :: rest => { c with defs := bdefs ++ c.defs } :: rest
+            | [] => []
           some (.claims topic bs cs)
       | none => none
     | none =>
@@ -1421,6 +1486,13 @@ where
       (do
         let cs ← clauses 8 cs []
         some (.claims topic [] cs))
+  /-- `and $s\coloneqq e$` after a binder: definitions made with the sentence's binders. -/
+  binderDefs : Nat → List Chunk → List MT → List MT × List Chunk
+    | 0, cs, acc => (acc.reverse, cs)
+    | f + 1, cs, acc =>
+      match kw [w!"and"] cs >>= formula with
+      | some (m, r) => if isDefeq m then binderDefs f r (m :: acc) else (acc.reverse, cs)
+      | none => (acc.reverse, cs)
   /-- `$φ$[, $ψ$] [and $χ$]` before the comma of `since`. -/
   sinceFacts : Nat → List Chunk → List MT → Option (List MT × List Chunk)
     | 0, _, _ => none

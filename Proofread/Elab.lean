@@ -470,32 +470,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .maxm [x, y] => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y)
       pure (.app (.app (.prim .max) a) b, .real)
-    | .sup b e => do
-      -- a family written with a superscript (`\gamma^T`)
-      let fam ← match b, e with
-        | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")
-        | .id _, .num _ => pure none
-        | .id k, _ => lookupGlob (k ++ w!"^")
-        | _, _ => pure none
-      match fam with
-      | some (h, g) => do
-        let a ← term f sc none e
-        applyAll (.glob h) g.ty g.doms [a]
-      | none =>
-      match e with
-      | .id d =>
-        if d == w!"\\top" || d == w!"\\perp" then do
-          let (h, g) ← liftO (← lookupGlob (w!"^" ++ d)) E.undefined (w!"^" ++ d)
-          let x ← term f sc pf b
-          applyAll (.glob h) g.ty g.doms [x]
-        else fail E.unsupported d
-      | .num n => do
-        let a ← asReal (← term f sc pf b)
-        pure (.powNat a n, .real)
-      | _ => do
-        let a ← asReal (← term f sc pf b)
-        let p ← asReal (← term f sc pf e)
-        pure (.guard (.le (.num 0) a) (.app (.app (.prim .rpow) a) p), .real)
+    -- `\min\{a,b,c\}` is `\min\{\min\{a,b\},c\}`
+    | .minm (x :: y :: z :: rest) => term f sc pf (.minm (.minm [x, y] :: z :: rest))
+    | .maxm (x :: y :: z :: rest) => term f sc pf (.maxm (.maxm [x, y] :: z :: rest))
+    -- `v(s-v)^2`: a number before parentheses is a factor, and the exponent is the factor's
+    | .sup (.app (.id n) [a]) e =>
+      match lookupLocal sc n with
+      | some (_, t) =>
+        if t == .real || t == .unit then term f sc pf (.mul (.id n) (.sup a e))
+        else supTerm f sc pf (.app (.id n) [a]) e
+      | none => supTerm f sc pf (.app (.id n) [a]) e
+    | .sup b e => supTerm f sc pf b e
     | .hat x => do
       let (h, g) ← liftO (← lookupGlob w!"\\widehat") E.undefined w!"\\widehat"
       let a ← term f sc pf x
@@ -525,7 +510,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let (h, g) ← liftO (← lookupGlob key) E.undefined key
         if !g.family then fail E.unsupported key
         let a ← term f sc none i
-        applyAll (.glob h) g.ty g.doms [a]
+        let (h0, ty0, doms0) ← withImplicit sc h g
+        applyAll h0 ty0 doms0 [a]
       | _ => fail E.unsupported
     | .app (.sup (.id fn) (.neg (.num 1))) [a] => do
       -- `f^{-1}(a)`: the element of the domain of `f` that `f` sends to `a`
@@ -538,6 +524,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let dom := match g.doms.head? with | some (some p) => [Tm.app p (.loc 0)] | _ => []
         pure (.the dty (conjAll (dom ++ [.eq fy.1 (shift 1 0 a')])), dty)
       | _ => fail E.type fn
+    -- `xz(x+z)`: a number before parentheses is a factor, not a function
+    | .app (.id n) [a] =>
+      match lookupLocal sc n with
+      | some (_, t) =>
+        if t == .real || t == .unit then term f sc pf (.mul (.id n) a)
+        else do
+          let (h, hty, doms) ← head f sc (.id n)
+          applyAll h hty doms [← term f sc pf a]
+      | none => do
+        let (h, hty, doms) ← head f sc (.id n)
+        applyAll h hty doms [← term f sc pf a]
     | .app hd args => do
       match hd, args with
       | .id op, [x, y] =>
@@ -616,13 +613,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let body := conjAll cs
       let lams (b : Tm) : Tm := fv.foldr (fun (_, t) acc => Tm.lam t .tt acc) b
       let tyOf : Ty := ftys.foldr Ty.fn .prop
-      match pat with
-      | .id v => if fresh == [v] then pure (lams body, tyOf) else fail E.unsupported
-      | .tuple [.id v1, .id v2] =>
-        if fresh == [v1, v2] then pure (lams body, tyOf)
-        else fail E.unsupported
-      | .tuple [e1, e2] => do
-        -- the image `{(e₁,e₂) : conds}` as the relation `(p,q) ↦ ∃ vars, conds ∧ p = e₁ ∧ q = e₂`
+      -- the image `{(e₁,e₂) : conds}` as the relation `(p,q) ↦ ∃ vars, conds ∧ p = e₁ ∧ q = e₂`
+      let image2 (e1 e2 : MT) : M (Tm × Ty) := do
         let k := fresh.length
         let a ← term f sc' none e1
         let b ← term f sc' none e2
@@ -635,6 +627,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           (.and (.eq (.loc (k + 1)) (shift 2 k a')) (.eq (.loc k) (shift 2 k b')))
         let exs := fv.foldr (fun (_, t) acc => Tm.ex t acc) inner
         pure (.lam aty .tt (.lam bty .tt exs), .fn aty (.fn bty .prop))
+      match pat with
+      | .id v => if fresh == [v] then pure (lams body, tyOf) else fail E.unsupported
+      | .tuple [e1, e2] =>
+        match e1, e2 with
+        -- `{(u,v) : conds}`: a pattern of two variables (`{(x,x) : …}` is an image)
+        | .id v1, .id v2 =>
+          if v1 != v2 && fresh == [v1, v2] then pure (lams body, tyOf) else image2 e1 e2
+        | _, _ => image2 e1 e2
       | e => do
         -- the image `{e : conds}` as the set `y ↦ ∃ vars, conds ∧ y = e`
         let k := fresh.length
@@ -695,6 +695,35 @@ where
       if cty != .prop then fail E.type
       let (rt, _) ← casesRows g sc pf rs
       pure (.cases ct vt rt, .real)
+  /-- A superscript: a family (`\gamma^T`), a transpose, or a power. -/
+  supTerm : Nat → Scope → PF → MT → MT → M (Tm × Ty)
+    | 0, _, _, _, _ => fail E.unsupported
+    | f + 1, sc, pf, b, e => do
+      -- a family written with a superscript (`\gamma^T`)
+      let fam ← match b, e with
+        | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")
+        | .id _, .num _ => pure none
+        | .id k, _ => lookupGlob (k ++ w!"^")
+        | _, _ => pure none
+      match fam with
+      | some (h, g) => do
+        let a ← term f sc none e
+        applyAll (.glob h) g.ty g.doms [a]
+      | none =>
+      match e with
+      | .id d =>
+        if d == w!"\\top" || d == w!"\\perp" then do
+          let (h, g) ← liftO (← lookupGlob (w!"^" ++ d)) E.undefined (w!"^" ++ d)
+          let x ← term f sc pf b
+          applyAll (.glob h) g.ty g.doms [x]
+        else fail E.unsupported d
+      | .num n => do
+        let a ← asReal (← term f sc pf b)
+        pure (.powNat a n, .real)
+      | _ => do
+        let a ← asReal (← term f sc pf b)
+        let p ← asReal (← term f sc pf e)
+        pure (.guard (.le (.num 0) a) (.app (.app (.prim .rpow) a) p), .real)
   head : Nat → Scope → MT → M (Tm × Ty × List (Option Tm))
     | 0, _, _ => fail E.unsupported
     | g + 1, sc, hd =>
@@ -722,10 +751,15 @@ where
         if sign then fail E.undefined ((symKey hd).getD key)
         let (h, gl) ← liftO (← lookupGlob key) E.undefined key
         let a ← term g sc none i
-        let (t, ty) ← applyAll (.glob h) gl.ty gl.doms [a]
-        pure (t, ty, gl.doms.drop 1)
-      -- a family written with a sub- and a superscript (`R_b^-`)
-      | .sup (.sub (.id key) i) (.id s) => do
+        let (h0, ty0, doms0) ← withImplicit sc h gl
+        let (t, ty) ← applyAll h0 ty0 doms0 [a]
+        pure (t, ty, doms0.drop 1)
+      -- a family written with a sub- and a superscript (`R_b^-`, `T^0_q`)
+      | .sup (.sub (.id key) i) sup => do
+        let s ← match sup with
+          | .id s => pure s
+          | .num n => pure ((Nat.toDigits 10 n).map Char.toNat)
+          | _ => fail E.unsupported
         let k := key ++ w!"^" ++ s
         let (h, gl) ← liftO (← lookupGlob k) E.undefined k
         if !gl.family then fail E.unsupported k

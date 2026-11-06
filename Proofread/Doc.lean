@@ -154,6 +154,17 @@ def varChunk (ts : List MTok) : M (Codes × Option (Ty × Option Tm)) := do
     | some ([v], dom) => do pure (v, some (← domainOf false dom))
     | _ => fail E.unsupported
 
+/-- `$φ$ [and $ψ$]`: the conditions after `with` in a noun phrase. -/
+def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
+  | 0, cs, acc => (acc.reverse, cs)
+  | f + 1, cs, acc =>
+    match Grammar.formula cs with
+    | some (m, r) =>
+      match r with
+      | .w w :: r' => if w == w!"and" then condsOf f r' (m :: acc) else ((m :: acc).reverse, r)
+      | _ => ((m :: acc).reverse, r)
+    | none => (acc.reverse, cs)
+
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase (np : List Chunk) : M BindInfo := do
   let st ← get
@@ -242,6 +253,10 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
       | some (m, r) => post f r (m.pred :: acc)
       | none => pure (acc.reverse, cs)
   let (qms, r2) ← post 4 r1 []
+  -- `a copula $C$ with $\rho(C)=0$ [and $\beta(C)=0$]`: conditions on the variable
+  let (conds, r2) := match r2 with
+    | .w w :: r => if w == w!"with" then condsOf 4 r [] else ([], r2)
+    | _ => ([], r2)
   if !r2.isEmpty then fail E.noun ((wordsOf np).flatten)
   let (name, member) ← match var with
     | some ts => do let (v, d) ← varChunk ts; pure (v, d)
@@ -249,7 +264,12 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
   let memberPred ← match member with
     | some (t, p) => if t == ty then pure p.toList else fail E.type
     | none => pure []
-  let all := (preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds).eraseDups
+  if !conds.isEmpty && name.isEmpty then fail E.unsupported
+  let condPreds ← conds.mapM fun φ => do
+    let (p, pty) ← Elab.term 100000 [(name, ty)] none φ
+    if pty != .prop then fail E.type
+    pure (Tm.lam ty .tt p)
+  let all := (preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).eraseDups
   pure ⟨name, ty, conjPreds ty all⟩
 
 /-- Free identifiers of a formula (for `On I,`). -/
@@ -302,8 +322,11 @@ def binderInfos : Bind → M (List BindInfo)
 where
   /-- `Let $x\in(0,1]$ and $e\in[0,x]$`: a domain may use the variables bound
   before it; its predicate is applied where they and the variable are bound. -/
-  everyAfter (before : List BindInfo) (vs : List Codes) (d : MT) : M (List BindInfo) := do
-    let (ty, p) ← domainOf false d (before.map fun b => (b.name, b.ty)).reverse
+  everyAfter (before : List BindInfo) (vs : List Codes) (d : MT) : M (List BindInfo) :=
+    everyIn (before.map fun b => (b.name, b.ty)).reverse vs d
+  /-- The same, with the domain in the scope `sc` of the binders around it. -/
+  everyIn (sc : Scope) (vs : List Codes) (d : MT) : M (List BindInfo) := do
+    let (ty, p) ← domainOf false d sc
     let (bis, _) := vs.foldl (fun (acc, j) v =>
       (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
     pure bis
@@ -317,11 +340,11 @@ def usedBinders (bs : List BindInfo) (used : List Codes) : List BindInfo :=
 
 /-- The variables of a list of binders, each domain in the scope of the variables
 before it (`For $x\in(0,1]$ and $e\in[0,x]$`). -/
-def bindersInfos (binds : List Bind) : M (List BindInfo) := do
+def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List BindInfo) := do
   let mut out : List BindInfo := []
   for b in binds do
     match b with
-    | .every vs d => out := out ++ (← binderInfos.everyAfter out vs d)
+    | .every vs d => out := out ++ (← binderInfos.everyAfter (before ++ out) vs d)
     | b => out := out ++ (← binderInfos b)
   pure out
 
@@ -357,7 +380,7 @@ def clauseMaths : Clause → List MT
   | .equalityOn s => [s]
   | .equalityWhen φ => [φ]
   | .ifThen c cl => c :: clauseMaths cl
-  | .adjectives s _ => [s]
+  | .adjectives s adjs => s :: adjs.filterMap (·.2)
   | .notions s _ _ => [s]
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
@@ -743,6 +766,43 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
     pure ((List.range (i + 1 - start)).map (· + start), ids ++ obs)
   | _ => fail E.unsupported
 
+/-- The key and the index variable of a family's name: `f_b` is `f`, `R_b^-` is
+`R^-` and `T^0_q` (that is, `T_q^0`) is `T^0`. -/
+def familyKey : MT → Option (Codes × Codes)
+  | .sub (.id f) (.id p) => some (f, p)
+  | .sup (.sub (.id f) (.id p)) (.id s) => some (f ++ w!"^" ++ s, p)
+  | .sup (.sub (.id f) (.id p)) (.num n) => some (f ++ w!"^" ++ (Nat.toDigits 10 n).map Char.toNat, p)
+  | _ => none
+
+/-- `For $b\in B$, define $f_b:A\to C$ by DISPLAY.`: the family `b ↦ f_b`, a map of
+`A` for every `b`, with the claim that it takes values in `C`. -/
+def defByFamily (c : SentCtx) (b : BindInfo) (sg : MT) (pieces : List DefPiece) (labels : List Codes) :
+    M (List Nat × List Nat) := do
+  match sg with
+  | .sig name dom cod => do
+    let some (f, p) := familyKey name | fail E.unsupported
+    if p != b.name then fail E.unsupported
+    let (aty, apred) ← domainOf true dom
+    let (cty, cpred) ← domainOf true cod
+    let (x, rhs) ← match pieces with
+      | [.formula (.chain (.app lhs [.id x]) [(.defeq, rhs)])] =>
+        if familyKey lhs == some (f, p) then pure (x, rhs) else fail E.unsupported
+      | _ => fail E.unsupported
+    let sc : Scope := [(x, aty), (b.name, b.ty)]
+    let (body, bty) ← term F sc none rhs
+    let body ← coerce body bty cty
+    let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (.lam aty (holdsAt apred (.loc 0)) body)
+    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true⟩ value
+    let ids ← match cpred with
+      | some q => do
+        let applied := Tm.guard (holdsAt b.pred (.loc 1))
+          (Tm.guard (holdsAt apred (.loc 0)) (Tm.app (.app (.glob i) (.loc 1)) (.loc 0)))
+        pure [← emit c (wrap [b, ⟨x, aty, apred⟩] (.app q applied)) []]
+      | none => pure []
+    addLabels labels ids true
+    pure ([i], ids)
+  | _ => fail E.unsupported
+
 /-- `For B, the NAME $f_c:A\to B$ reads DISPLAY`. -/
 def defReads (c : SentCtx) (b : BindInfo) (sg disp : MT) (labels : List Codes) : M (List Nat × List Nat) := do
   match sg, disp with
@@ -891,12 +951,28 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
 /-- `For $u,v\in A$, set $f(u,v)\coloneqq e$, …`: functions of all the binder's
 variables, in their order. Under `u,v\in[0,1]`, `M(u,v)\coloneqq\min\{u,v\}` is a
 function on the unit square, like a copula. -/
-def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) :
+def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp : List BindInfo := []) :
     M (List Nat × List Nat) := do
   let mut ds : List Nat := []
   for m in defs do
     match m with
+    -- `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq e$`: a family, indexed by
+    -- the first variable, of functions of the others. Inside a result or a proof, the
+    -- variables of the result it uses (`imp`) are implicit parameters
     | .chain (.app h args) [(.defeq, rhs)] =>
+      if let some (k, p) := familyKey h then
+        if bs.head?.map (·.name) == some p then
+          let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+          if names != (bs.drop 1).map (·.name) then fail E.unsupported
+          let all := imp ++ bs
+          let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
+          let (v, vty) ← term F sc none rhs
+          let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+          let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
+          let i ← addGlob ⟨k, ty, all.map (·.pred), true⟩ value
+          if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+          ds := ds ++ [i]
+          continue
       let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
       if names != bs.map (·.name) then fail E.unsupported
       let some key := Elab.symKey h | fail E.unsupported
@@ -1135,6 +1211,80 @@ def disjAll : List Tm → Tm
   | [p] => p
   | p :: ps => .or p (disjAll ps)
 
+/-! ## Standard adjectives -/
+
+/-- `∀ x, A x → D x`: the domain `A` named by `on $A$` lies in the domain `D` of a
+definition (the property of the function on `A` is then about its defined values). -/
+def within (ty : Ty) (a d : Tm) : Tm :=
+  .all ty (.imp (.app (shift 1 0 a) (.loc 0)) (.app (shift 1 0 d) (.loc 0)))
+
+/-- `ADJ [on $A$]` about a term `t` of type `ty`: a property of a number, of a set of
+points of the plane, of a real function (on its domain or on `A`), of a quantity of
+functions on the unit square (on the class of its definition, or on `A`), or of a
+class of such functions. -/
+def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
+    (on : Option MT) : M Tm := do
+  let u := [w!"with", w!"respect", w!"to", w!"uniform", w!"convergence"]
+  if ty == .real then
+    if on.isSome then fail E.unsupported
+    if a == [w!"positive"] then pure (.lt (.num 0) t)
+    else if a == [w!"negative"] then pure (.lt t (.num 0))
+    else if a == [w!"nonnegative"] then pure (.le (.num 0) t)
+    else if a == [w!"nonpositive"] then pure (.le t (.num 0))
+    else fail E.type
+  else if ty == .fn .real (.fn .real .prop) then
+    if on.isSome then fail E.unsupported
+    if a == [w!"compact"] then pure (Tm.app (.prim .compact2) t)
+    else if a == [w!"convex"] then pure (Tm.app (.prim .convex2) t)
+    else if a == [w!"centrally", w!"symmetric"] then pure (Tm.app (.prim .symm2) t)
+    else if a == [w!"closed"] then pure (Tm.app (.prim (.setProp .closed)) t)
+    else if a == [w!"open"] then pure (Tm.app (.prim (.setProp .isOpen)) t)
+    else if a == [w!"bounded"] then pure (Tm.app (.prim (.setProp .bounded)) t)
+    else if a == [w!"connected"] then pure (Tm.app (.prim (.setProp .connected)) t)
+    else fail E.type
+  else if ty == .fn .real .real then
+    let p : Option Prim :=
+      if a == [w!"continuous"] then some .continuousOn
+      else if a == [w!"concave"] then some .concaveOn
+      else if a == [w!"strictly", w!"increasing"] then some .strictMonoOn
+      else ([([w!"convex"], FnProp.convex), ([w!"strictly", w!"convex"], .strictConvex),
+          ([w!"strictly", w!"concave"], .strictConcave), ([w!"strictly", w!"decreasing"], .strictAnti),
+          ([w!"nondecreasing"], .monotone), ([w!"nonincreasing"], .antitone), ([w!"bounded"], .bounded),
+          ([w!"nonnegative"], .nonneg), ([w!"positive"], .pos), ([w!"differentiable"], .differentiable),
+          ([w!"continuously", w!"differentiable"], .contDiff), ([w!"injective"], .injective),
+          ([w!"lower", w!"semicontinuous"], .lowerSemicont), ([w!"upper", w!"semicontinuous"], .upperSemicont),
+          ([w!"lipschitz"], .lipschitz)].lookup a).map Prim.fnProp
+    let some p := p | fail E.type
+    let own := defDom.getD (.lam .real .tt .tt)
+    match on with
+    | none => pure (Tm.app (.app (.prim p) t) own)
+    | some m => do
+      let (_, d) ← domainOf true m sc
+      let d := d.getD (.lam .real .tt .tt)
+      let body := Tm.app (.app (.prim p) t) d
+      pure (match defDom with | some dd => .guard (within .real d dd) body | none => body)
+  else if ty == .fn Ty.sq .real then
+    let p : Option SqProp := [([w!"convex"], SqProp.convex), ([w!"concave"], .concave),
+      ([w!"lower", w!"semicontinuous"] ++ u, .lowerUniform), ([w!"upper", w!"semicontinuous"] ++ u, .upperUniform),
+      ([w!"continuous"] ++ u, .contUniform)].lookup a
+    let some p := p | fail E.type
+    match on with
+    | none =>
+      let some d := defDom | fail E.unsupported
+      pure (Tm.app (.app (.prim (.sqProp p)) t) d)
+    | some m => do
+      let (d, dty) ← Elab.term 100000 sc none m
+      if dty != .fn Ty.sq .prop then fail E.type
+      let body := Tm.app (.app (.prim (.sqProp p)) t) d
+      pure (match defDom with | some dd => .guard (within Ty.sq d dd) body | none => body)
+  else if ty == .fn Ty.sq .prop then
+    if on.isSome then fail E.unsupported
+    let p : Option ClassProp := [([w!"convex"], ClassProp.convex), ([w!"compact"] ++ u, .compactUniform),
+      ([w!"closed"] ++ u, .closedUniform)].lookup a
+    let some p := p | fail E.type
+    pure (Tm.app (.prim (.classProp p)) t)
+  else fail E.type
+
 /-! ## Claim sentences -/
 
 /-- One clause; `rest` are the following clauses of the sentence (for scopes). -/
@@ -1168,13 +1318,13 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       pure (Tm.and bound (.ex ty (Elab.conjAll [.app p (.loc 0), cx, .eq fx x1, uniq])))
     pure (Elab.conjAll parts)
   | .every vs d body => do
-    let bs ← binderInfos (.every vs d)
+    let bs ← binderInfos.everyIn sc vs d
     let p ← prop (scopeOf bs ++ sc) none body
     recordBounds bs body
     pure (wrap bs p)
   | .scoped f vs d eq => do
     let bs ← match d with
-      | some d => binderInfos (.every vs d)
+      | some d => binderInfos.everyIn sc vs d
       | none => pure []
     let sc' := scopeOf bs ++ sc
     let p ← prop sc' none f
@@ -1254,12 +1404,17 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .pred s ph o => do
     let st ← subjectTm sc s
     predicate sc st ph o
-  | .onlyWith s noun conds => do
+  | .onlyWith s noun conds var => do
     let some ni := lookupWords (← get).nouns noun | fail E.noun noun.flatten
     let (st, sty) ← subjectTm sc s
-    let atS ← conds.mapM (prop sc (some (st, sty)))
-    let sc' := (w!"", sty) :: sc
-    let ay ← conds.mapM (prop sc' (some (.loc 0, sty)))
+    -- with a variable, the conditions are about it; otherwise about the subject
+    let sc' := (var.getD w!"", sty) :: sc
+    let ay ← conds.mapM fun c => match var with
+      | some _ => prop sc' none c
+      | none => prop sc' (some (.loc 0, sty)) c
+    let atS ← conds.mapM fun c => match var with
+      | some _ => do pure (Tm.app (.lam sty .tt (← prop sc' none c)) st)
+      | none => prop sc (some (st, sty)) c
     let uniq := Tm.all sty (.imp (.app (.glob ni) (.loc 0)) (.imp (conjAll ay) (.eq (.loc 0) (shift 1 0 st))))
     pure (conjAll ([Tm.app (.glob ni) st] ++ atS ++ [uniq]))
   | .everyNP np body inner => do
@@ -1328,24 +1483,13 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .adjectives s adjs => do
     let (t, ty) ← term F sc none s
     -- a function's domain is the one its definition states
-    let dom : Tm ← match Elab.symKey s with
+    let defDom : Option Tm ← match Elab.symKey s with
       | some k => do
         match ← lookupGlob k with
-        | some (_, g) => pure (((g.doms.head?).join).getD (.lam .real .tt .tt))
-        | none => pure (.lam .real .tt .tt)
-      | none => pure (.lam .real .tt .tt)
-    let ps ← adjs.mapM fun a => do
-      if ty == .fn .real (.fn .real .prop) then
-        if a == [w!"compact"] then pure (Tm.app (.prim .compact2) t)
-        else if a == [w!"convex"] then pure (Tm.app (.prim .convex2) t)
-        else if a == [w!"centrally", w!"symmetric"] then pure (Tm.app (.prim .symm2) t)
-        else fail E.type
-      else if ty == .fn .real .real then
-        if a == [w!"continuous"] then pure (Tm.app (.app (.prim .continuousOn) t) dom)
-        else if a == [w!"concave"] then pure (Tm.app (.app (.prim .concaveOn) t) dom)
-        else if a == [w!"strictly", w!"increasing"] then pure (Tm.app (.app (.prim .strictMonoOn) t) dom)
-        else fail E.type
-      else fail E.type
+        | some (_, g) => pure (g.doms.head?).join
+        | none => pure none
+      | none => pure none
+    let ps ← adjs.mapM fun (a, on) => adjectiveTm sc t ty defDom a on
     pure (conjAll ps)
   | .extremumOf isMax value f s at_ rels => do
     let fm ← match f with
@@ -1455,7 +1599,8 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         | .every vs _ => vs | _ => []) ++ (match cl.clause with
           | .scoped _ vs _ _ | .every vs _ _ => vs | _ => [])
       let free := (cls.flatMap (fun cl => clauseFree st (known ++ clBound) cl)).eraseDups
-      let free := free.filter fun n => !(st.globs.any fun g => g.key == n && !g.family)
+      -- a variable of the result shadows a definition of the same name
+      let free := free.filter fun n => st.envBinders.any (·.name == n) || !(st.globs.any fun g => g.key == n && !g.family)
       pure (usedBinders st.envBinders free)
     else pure []
   if inResult && !bs.isEmpty then
@@ -1498,16 +1643,28 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         let ids ← go g rest last
         pure (id :: ids)
       | k => do
-        let cbs := (← bindersInfos cl.binds)
+        -- the variables of the clause's own binders, and the domains they range over
+        let cbVars := cl.binds.flatMap fun b => match b with
+          | .every vs _ => vs
+          | .many bs => bs.flatMap fun b => match b with | .every vs _ => vs | _ => []
+          | _ => []
+        let cbDoms := cl.binds.flatMap fun b => match b with
+          | .every _ d => [d]
+          | .many bs => bs.filterMap fun b => match b with | .every _ d => some d | _ => none
+          | _ => []
         -- a clause with its own binder is not in the scope of the sentence's opening
         -- binders; inherited binders bind the variables the clause uses
         let own := match k with | .scoped _ vs _ _ | .every vs _ _ => vs | _ => []
         -- `equality holds …` binds the variables of the inequality it refers to
         let stNow ← get
         let own := own ++ (if usesIneq k then ((stNow.lastIneq.map (·.1.map (·.name))).getD []) else [])
-        let free := clauseFree stNow ((scopeOf (bs ++ cbs)).map (·.1) ++ own) cl
-        let inh := usedBinders inherited free
-        let outer := if cbs.isEmpty then inh ++ bs ++ onVar.toList else inh
+        let free := clauseFree stNow ((scopeOf bs).map (·.1) ++ cbVars ++ own) cl
+        -- a domain of the clause's binders may use a variable of the result (`for every $v\in[0,s]$`)
+        let domFree := (cbDoms.flatMap (freeIds 64 [])).filter fun n => !(stNow.globs.any (·.key == n))
+        let inh := usedBinders inherited (free ++ domFree)
+        let hasOwn := !cl.binds.isEmpty
+        let outer := if hasOwn then inh else inh ++ bs ++ onVar.toList
+        let cbs := (← bindersInfos cl.binds outer)
         -- definitions inside the clause (`the mean $G\coloneqq\sqrt{ab}$`) and after it
         -- (`…, where $d\coloneqq …$`), in the scope of its binders
         let k ← inlineClause c (outer ++ cbs) cl.defs k
@@ -1543,11 +1700,30 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .constDefs b defs labels => do
     match b with
     | some bd => do
-      match ← binderInfos bd with
-      | [bi] => constDefs c (some bi) defs labels
-      | bis@(_ :: _ :: _) => multiDefs bis defs labels
+      -- inside a result or a proof (`For $v\in[0,s]$ and $w\in[0,1-s]$, set $g_v(w)\coloneqq…$`
+      -- with `s` bound by the result), the variables it uses are implicit parameters
+      let env := (← get).envBinders
+      let maths := defs ++ (match bd with
+        | .every _ d => [d]
+        | .many bs => bs.filterMap fun b => match b with | .every _ d => some d | _ => none
+        | _ => [])
+      -- a variable of the result (it shadows a definition of the same name)
+      let used := (maths.flatMap (freeIds 64 [])).eraseDups.filter fun n => env.any (·.name == n)
+      let imp := if c.ctx.kind == .text then [] else usedBinders env used
+      let bis ← match bd with
+        | .many bs => bindersInfos (bs.map id) imp
+        | .every vs d => bindersInfos [.every vs d] imp
+        | bd => binderInfos bd
+      let binderNames := bis.map (·.name)
+      let imp := imp.filter fun b => !binderNames.contains b.name
+      match bis with
+      | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
+      | _ :: _ :: _ => multiDefs bis defs labels imp
       | [] => fail E.unsupported
     | none => constDefs c none defs labels
+  | .defByFamily b sg pieces labels => do
+    let [bi] ← binderInfos b | fail E.unsupported
+    defByFamily c bi sg pieces labels
   | .defReads b _ sg disp labels => do
     let [bi] ← binderInfos b | fail E.unsupported
     defReads c bi sg disp labels
