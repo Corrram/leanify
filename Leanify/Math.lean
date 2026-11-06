@@ -10,6 +10,8 @@ namespace Leanify
 
 inductive Rel where
   | eq | lt | le | gt | ge | mem | defeq | ne
+  /-- `A\subseteq B` and `A\supseteq B`. -/
+  | subset | supset
   deriving DecidableEq, Repr, Lean.ToExpr
 
 inductive MT where
@@ -44,6 +46,11 @@ inductive MT where
   /-- `\max\{e : …\}`, `\max_{x\in A} e` (and `\min`): the largest (smallest)
   element of a set of numbers. -/
   | extr (isMax : Bool) (set : MT)
+  /-- `\sup S` and `\inf S` (`\sup\{e : …\}`, `\sup_{x\in A} e`): the least upper
+  (greatest lower) bound of a set of numbers. -/
+  | bound (isSup : Bool) (set : MT)
+  /-- `\sum_{v=lo}^{hi} body` and `\prod_{v=lo}^{hi} body`. -/
+  | bigop (isSum : Bool) (v : Codes) (lo hi body : MT)
   deriving Repr, Inhabited, Lean.ToExpr
 
 /-- Math tokens after removing typesetting. -/
@@ -60,6 +67,50 @@ inductive MTok where
   | text (w : Codes)
   | begin (e : Codes) | finish (e : Codes)
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+namespace MT
+
+/-- Replace the variable `v` by `k` (for the terms of a sum with numeral bounds).
+Binders of `v` (an integral or image over `v`, a sum over `v`) are left alone. -/
+def substId (v : Codes) (k : MT) : Nat → MT → MT
+  | 0, m => m
+  | f + 1, m =>
+    let go := substId v k f
+    match m with
+    | .id n => if n == v then k else .id n
+    | .num n => .num n
+    | .sub b i => .sub (go b) (go i)
+    | .sup b e => .sup (go b) (go e)
+    | .hat x => .hat (go x)
+    | .app g args => .app (go g) (args.map go)
+    | .add x y => .add (go x) (go y)
+    | .minus x y => .minus (go x) (go y)
+    | .mul x y => .mul (go x) (go y)
+    | .div x y => .div (go x) (go y)
+    | .neg x => .neg (go x)
+    | .abs x => .abs (go x)
+    | .frac x y => .frac (go x) (go y)
+    | .minm xs => .minm (xs.map go)
+    | .maxm xs => .maxm (xs.map go)
+    | .int lo hi body w => .int (go lo) (go hi) (if w == v then body else go body) w
+    | .tuple xs => .tuple (xs.map go)
+    | .interval a b => .interval (go a) (go b)
+    | .ival a b l r => .ival (go a) (go b) l r
+    | .setOf pat dom conds => .setOf pat (go dom) conds
+    | .setCond pat conds => .setCond pat conds
+    | .image e w dom => .image (if w == v then e else go e) w (go dom)
+    | .mapsto pat body => .mapsto pat body
+    | .chain x rest => .chain (go x) (rest.map fun (r, y) => (r, go y))
+    | .cases rows => .cases (rows.map fun (a, b) => (go a, go b))
+    | .sig n d c => .sig n d c
+    | .conj xs => .conj (xs.map go)
+    | .equiv x y => .equiv (go x) (go y)
+    | .text w => .text w
+    | .extr b st => .extr b (go st)
+    | .bound b st => .bound b (go st)
+    | .bigop b w lo hi body => .bigop b w (go lo) (go hi) (if w == v then body else go body)
+
+end MT
 
 namespace Math
 
@@ -142,6 +193,8 @@ def relOf : MTok → Option Rel
     else if n == w!"in" then some .mem
     else if n == w!"coloneqq" then some .defeq
     else if n == w!"neq" || n == w!"ne" then some .ne
+    else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
+    else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
     else none
   | _ => none
 
@@ -149,10 +202,11 @@ def relOf : MTok → Option Rel
 def startsFactor : MTok → Bool
   | .id _ | .digit _ | .lb | .setl => true
   | .sym 40 => true
-  | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"widehat"
+  | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"sup" ||
+      n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
-        n != w!"cup" && n != w!"cap" &&
+        n != w!"cup" && n != w!"cap" && n != w!"circ" &&
         n != w!"approx" && n != w!"ldots")
   | _ => false
 
@@ -289,6 +343,43 @@ def run : Nat → Mode → List MTok → R
       else if n == w!"sqrt" then do
         let (a, r1) ← run f .group rest
         some (.sup a (.frac (.num 1) (.num 2)), r1)
+      else if n == w!"sum" || n == w!"prod" then
+        match rest with
+        | .sym 95 :: r => do
+          -- `\sum_{j=1}^{3} e`
+          let (b, r1) ← run f .group r
+          let r2 ← expect (.sym 94) r1
+          let (hi, r3) ← run f .group r2
+          match b with
+          | .chain (.id v) [(.eq, lo)] => do
+            let (body, r4) ← run f (.product false) r3
+            some (.bigop (n == w!"sum") v lo hi body, r4)
+          | _ => none
+        | _ => none
+      else if n == w!"sup" || n == w!"inf" then
+        let isSup := n == w!"sup"
+        match rest with
+        | .setl :: r =>
+          (do
+            let (m, r') ← run f (.list 125 []) r
+            match m with
+            | .conj xs => some (if isSup then .maxm xs else .minm xs, r')
+            | _ => none) <|>
+          (do
+            let (st, r') ← setBuilder f r
+            some (.bound isSup st, r'))
+        | .sym 95 :: r => do
+          -- `\sup_{x\in A} e`
+          let (b, r1) ← run f .group r
+          match b with
+          | .chain (.id v) [(.mem, dom)] => do
+            let (body, r2) ← run f (.product false) r1
+            some (.bound isSup (.image body v dom), r2)
+          | _ => none
+        | _ => do
+          -- `\sup A` for a named set
+          let (a, r1) ← run f (.atom false) rest
+          some (.bound isSup a, r1)
       else if n == w!"min" || n == w!"max" then
         match rest with
         | .setl :: r =>
@@ -418,6 +509,10 @@ where
       | .cmd [116, 105, 109, 101, 115] :: rest => do
         let (y, rest') ← run g (.factor bar) rest
         mulRest g bar (.app (.id w!"\\times") [x, y]) rest'
+      -- `f\circ g`
+      | .cmd [99, 105, 114, 99] :: rest => do
+        let (y, rest') ← run g (.factor bar) rest
+        mulRest g bar (.app (.id w!"\\circ") [x, y]) rest'
       | t :: _ =>
         if startsFactor t || (t == .sym 124 && !bar) then
           match run g (.atom bar) ts with

@@ -1,0 +1,15 @@
+tests/Notation/article.tex:8:1: info: defines f (f)
+tests/Notation/article.tex:9:1: info: defines g (g)
+tests/Notation/article.tex:12:1: info: claim 0: \forall x\in \mathbb{R},\ 2\le f(g(x))
+tests/Notation/article.tex:16:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow 0\le x\land x\le 1
+tests/Notation/article.tex:20:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow 0\le x\land x\le 1
+tests/Notation/article.tex:24:1: info: claim 3: (\sup\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ (0<s\land s<1)\land {s}^{2}=x\})=1
+tests/Notation/article.tex:28:1: info: claim 4: (\inf\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ 0<s\land f(s)=x\})=2
+tests/Notation/article.tex:32:1: info: claim 5: 1+2+3+4=10
+tests/Notation/article.tex:36:1: info: claim 6: \forall x\in \mathbb{R},\ (x+1)\,(x+2)={x}^{2}+3\,x+2
+tests/Notation/article.tex:41:1: info: claim 7: \forall x\in \mathbb{R},\ {x}^{2}=1\Leftrightarrow \lvert x\rvert=1
+tests/Notation/article.tex:41:1: info: claim 8: \forall x\in \mathbb{R},\ \lvert x\rvert=1\Leftrightarrow (x-1)\,(x+1)=0
+tests/Notation/article.tex: 2 definitions, 9 claims
+  text: 2 compiled, 0 failed, 1 prose (of 3)
+  results: 9 compiled, 0 failed, 0 prose (of 9)
+  all: 11 compiled, 0 failed, 1 prose (of 12)

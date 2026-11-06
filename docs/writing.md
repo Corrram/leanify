@@ -25,6 +25,18 @@ Formulas are read as they are typeset: `T^0_q` and `T_q^0` are the same symbol,
 variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 `\{(x,x):0\le x\le1\}` is the diagonal.
 
+| Notation | Read as |
+| --- | --- |
+| `(f\circ g)(x)` | `f(g(x))`, with `g(x)` in the domain of `f` |
+| `A\subseteq B`, `A\supseteq B` | every real number in `A` is in `B` (and the reverse), for intervals, sets `\{x\in A : …\}` and sets the article defines |
+| `\sup_{x\in A} e`, `\sup\{e : x\in A\}`, `\sup S` (and `\inf`) | the least upper (greatest lower) bound: defined only when it exists, so a claim about an unbounded or empty set is not meaningful |
+| `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | the finite sum (product) of the terms, for numeral bounds; a sum up to a variable is not read (formulas have no natural numbers) |
+| `$$…$$` | a display, like `\[…\]` |
+| `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
+
+The period of an abbreviation (i.e., e.g., cf., resp., Thm., Eq., Fig., …)
+does not end a sentence.
+
 ## House style
 
 1. **Define before use.** The defining sentence of a symbol comes before its
@@ -171,6 +183,7 @@ citations.
 | standard properties | `The function $g$ is convex, nondecreasing on $[0,\infty)$ and Lipschitz on $[0,1]$.`, `Then $c$ is positive.`, `Moreover, $\xi$ is convex on $\CC$ and lower semicontinuous with respect to uniform convergence.` (see [Standard notions](#standard-notions)) |
 | comparison in words | `$Q$ is at least the arithmetic mean $\frac{a+b}{2}$`, `is at most`, `is less than`, `is greater than`, `is equal to`, `does not exceed` |
 | if and only if | `Moreover, $G=A$ if and only if $a=b$.` |
+| equivalent statements | `Then the following are equivalent: \begin{enumerate}\item $x^2=1$; \item $\lvert x\rvert=1$; \item $(x-1)(x+1)=0$. \end{enumerate}` (each item a formula; each is equivalent to the next) |
 | several facts | `We have $(\sqrt a)^2=a$, $(\sqrt b)^2=b$ and $\sqrt a\sqrt b=\sqrt{ab}$.` (each fact is a claim of the same sentence) |
 | facts used by a step | `Since $G\le A$ and $G>0$, it follows that $H=G\cdot\frac{G}{A}\le G$.` (the facts after "Since" are premises of the step, so the step may use them) |
 | a reason in words | `Moreover, $\sqrt a=\sqrt b$ if and only if $a=b$, since the square root is injective.` (the reason is prose, the claim before it is checked) |

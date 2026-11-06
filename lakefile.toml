@@ -43,6 +43,12 @@ srcDir = "examples"
 globs = ["Demo.+"]
 
 [[lean_lib]]
+# Notation beyond the core grammar, compiled by the kernel (a test of the compiler).
+name = "Notation"
+srcDir = "tests"
+globs = ["Notation.+"]
+
+[[lean_lib]]
 # The demonstration article with a false theorem, refuted in Lean (a test of the
 # `refuted` status and of claims that cite it).
 name = "Refuted"

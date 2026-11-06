@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted
+        run: lake build leanify Demo Means TailDependence Refuted Notation
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -29,6 +29,10 @@ jobs:
         run: |
           lake exe leanify check tests/Notions/article.tex --vocab unitsquare --claims > "$RUNNER_TEMP/notions.check.txt"
           diff tests/Notions/check.txt "$RUNNER_TEMP/notions.check.txt"
+      - name: Notation beyond the core grammar is read as documented
+        run: |
+          lake exe leanify check tests/Notation/article.tex --claims > "$RUNNER_TEMP/notation.check.txt"
+          diff tests/Notation/check.txt "$RUNNER_TEMP/notation.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

@@ -1256,8 +1256,46 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
           | _ => some (bs.reverse, ds.reverse, cs)
         | none => some (bs.reverse, ds.reverse, cs)
 
+/-- The chunks between the markers of a list (`\begin{enumerate}`, `\item`, `\end`). -/
+def listItems : List Chunk → List Chunk → List (List Chunk) → List (List Chunk)
+  | [], cur, acc => (cur.reverse :: acc).reverse
+  | .x :: rest, cur, acc => listItems rest [] (cur.reverse :: acc)
+  | c :: rest, cur, acc => listItems rest (c :: cur) acc
+
+/-- The formula of an item: `$φ$`, or a display, with its label `[(i)]` and its
+final `;`, `.`, `,` or `, and` removed. -/
+def itemFormula (it : List Chunk) : Option MT :=
+  let it := match it with
+    | .p 91 :: rest => (rest.dropWhile (fun (c : Chunk) => match c with
+        | .p 93 => false | .w _ | .p _ => true | _ => false)).drop 1
+    | _ => it
+  let it := match it.reverse with
+    | .w a :: .p 44 :: r => if a == w!"and" then r.reverse else it
+    | .w a :: r => if a == w!"and" then r.reverse else it
+    | _ => it
+  let it := match it.reverse with
+    | .p c :: r => if c == 59 || c == 46 || c == 44 then r.reverse else it
+    | _ => it
+  match it with
+  | [.m ts] => Math.parseFormula ts
+  | [.d ts _] => Math.parseDisplay ts
+  | _ => none
+
+/-- `the following are equivalent:` and a list of formulas: each is equivalent to
+the next (and so all are). -/
+def tfae (cs : List Chunk) : Option (List (MT × MT)) := do
+  let r ← kw [w!"the", w!"following", w!"are", w!"equivalent"] cs >>= punct 58
+  let items := (listItems r [] []).filter fun it => match it with
+    | [] | [.p 46] => false
+    | _ => true
+  let fs ← items.mapM itemFormula
+  if fs.length < 2 then none else some (fs.zip (fs.drop 1))
+
 def sentence (cs : List Chunk) : Option Sent :=
   let (topic, cs) := marker cs
+  match tfae cs with
+  | some ps => some (.claims topic [] (ps.map fun (p, q) => ({ cites := [], clause := .iff p q } : CClause)))
+  | none =>
   match notionDef cs with
   | some s => some s
   | none =>

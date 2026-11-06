@@ -141,6 +141,15 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let s := b.tex cs gs (v :: ls)
     "\\int_0^1 " ++ (if b.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,d" ++ v
   | .guard _ e => e.tex cs gs ls
+  -- the least upper (greatest lower) bound of a set, as `\sup` and `\inf` compile
+  | .the .real (.and (.all .real (.imp p (.le (.loc 0) (.loc 1))))
+      (.all .real (.imp (.all .real (.imp _ (.le (.loc 0) (.loc 1)))) (.le (.loc 1) (.loc 0))))) =>
+    let v := varNames.getD ls.length "v"
+    "\\sup\\{" ++ v ++ "\\in \\mathbb{R} : " ++ p.tex cs gs (v :: "\\_" :: ls) ++ "\\}"
+  | .the .real (.and (.all .real (.imp p (.le (.loc 1) (.loc 0))))
+      (.all .real (.imp (.all .real (.imp _ (.le (.loc 1) (.loc 0)))) (.le (.loc 0) (.loc 1))))) =>
+    let v := varNames.getD ls.length "v"
+    "\\inf\\{" ++ v ++ "\\in \\mathbb{R} : " ++ p.tex cs gs (v :: "\\_" :: ls) ++ "\\}"
   | .the t b => let v := varNames.getD ls.length "v"
     "\\iota " ++ v ++ "\\in " ++ t.tex ++ ".\\ " ++ b.tex cs gs (v :: ls)
 where

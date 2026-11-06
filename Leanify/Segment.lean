@@ -65,6 +65,13 @@ def abbrevBefore : List PTok → Bool
         | _, _ => false)
   | _ => false
 
+/-- Does the current sentence (latest token first) end with `the following are
+equivalent:`? Its list then belongs to it. -/
+def tfaeIntro : List PTok → Bool
+  | ⟨.punct 58, _, false⟩ :: ⟨.word e, _, _⟩ :: ⟨.word a, _, _⟩ :: ⟨.word f, _, _⟩ :: _ =>
+    e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following")
+  | _ => false
+
 /-- Index of the token closing the current display environment `e`. -/
 def displayEnd (e : Codes) : List PTok → Nat → Option Nat
   | [], _ => none
@@ -94,6 +101,9 @@ structure St where
   lastResult : Codes := []
   sec : Nat := 0
   skipDepth : Nat := 0
+  /-- Inside the list of a sentence `… the following are equivalent:`: its items
+  belong to the sentence. -/
+  tfae : Bool := false
   deriving Inhabited, Lean.ToExpr
 
 /-- The label of a proof that is a section (`\subsection{Proof of Theorem~\ref{l}}`):
@@ -170,15 +180,19 @@ def go : Nat → List PTok → St → St
             | .finish _ | .rbrace | .csym 92 | .ref .label _ => false | _ => true)
           let ends : Bool := match last with | some p => p.tok == .msym 46 | none => false
           let s := { s with cur := closer :: (body.reverse ++ (t :: s.cur)) }
-          if ends then go f rest (flush s) else go f rest s
+          if ends && !s.tfae then go f rest (flush s) else go f rest s
         | none => go f ts { s with cur := t :: s.cur }
+      else if Lex.wListEnvs.contains e && tfaeIntro s.cur then
+        go f ts { s with cur := t :: s.cur, tfae := true }
       else go f ts (flush s)
     | .finish e =>
-      if wResults.contains e || e == w!"proof" then
+      if s.tfae && Lex.wListEnvs.contains e then
+        go f ts { flush { s with cur := t :: s.cur } with tfae := false }
+      else if wResults.contains e || e == w!"proof" then
         let c : Context := ⟨.text, 0, [], [], s.sec⟩
         go f ts { flush s with ctx := c }
       else go f ts (flush s)
-    | .par => go f ts (flush s)
+    | .par => if s.tfae then go f ts s else go f ts (flush s)
     | .cmd n =>
       if n == w!"section" || n == w!"section*" then
         let c : Context := ⟨.text, 0, [], [], s.sec + 1⟩
@@ -186,11 +200,12 @@ def go : Nat → List PTok → St → St
       else if s.secProof && (n == w!"subsection" || n == w!"subsubsection" || n == w!"paragraph" || n == w!"appendix") then
         let c : Context := ⟨.text, 0, [], [], s.sec⟩
         go f ts { flush s with ctx := c }
+      else if s.tfae && n == w!"item" then go f ts { s with cur := t :: s.cur }
       else if n == w!"subsection" || n == w!"subsubsection" || n == w!"item" || n == w!"appendix" then
         go f ts (flush s)
       else go f ts { s with cur := t :: s.cur }
     | .punct 46 =>
-      if !t.math && endsAfter ts && !abbrevBefore s.cur then go f ts (flush { s with cur := t :: s.cur })
+      if !t.math && !s.tfae && endsAfter ts && !abbrevBefore s.cur then go f ts (flush { s with cur := t :: s.cur })
       else go f ts { s with cur := t :: s.cur }
     | _ => go f ts { s with cur := t :: s.cur }
 

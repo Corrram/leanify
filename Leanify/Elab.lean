@@ -360,6 +360,20 @@ def applyAll (head : Tm) (ty : Ty) (doms : List (Option Tm)) : List (Tm × Ty) �
         pure (.mul head a', .real)
       else fail E.type
 
+/-- Pointwise inclusion `a ⊆ b` of two predicates of the same (curried) type. -/
+def setSub (ty : Ty) (a b : Tm) : Tm :=
+  match ty with
+  | .fn t1 (.fn t2 .prop) =>
+    .all t1 (.all t2 (.imp (.app (.app (shift 2 0 a) (.loc 1)) (.loc 0))
+      (.app (.app (shift 2 0 b) (.loc 1)) (.loc 0))))
+  | .fn t1 .prop => .all t1 (.imp (.app (shift 1 0 a) (.loc 0)) (.app (shift 1 0 b) (.loc 0)))
+  | _ => .tt
+
+def isPredTy : Ty → Bool
+  | .fn _ .prop => true
+  | .fn _ (.fn _ .prop) => true
+  | _ => false
+
 def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
   match r with
   | .eq =>
@@ -372,6 +386,8 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
   | .lt => pure (.lt (← asReal x) (← asReal y))
   | .ge => pure (.le (← asReal y) (← asReal x))
   | .gt => pure (.lt (← asReal y) (← asReal x))
+  | .subset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 x.1 y.1) else fail E.type
+  | .supset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 y.1 x.1) else fail E.type
   | _ => fail E.unsupported
 
 def conjAll : List Tm → Tm
@@ -396,11 +412,6 @@ def setEq (ty : Ty) (a b : Tm) : Tm :=
       (.app (.app (shift 2 0 b) (.loc 1)) (.loc 0))))
   | .fn t1 .prop => .all t1 (.iff (.app (shift 1 0 a) (.loc 0)) (.app (shift 1 0 b) (.loc 0)))
   | _ => .eq a b
-
-def isPredTy : Ty → Bool
-  | .fn _ .prop => true
-  | .fn _ (.fn _ .prop) => true
-  | _ => false
 
 def isZeroOne : MT → Bool
   | .interval (.num 0) (.num 1) => true
@@ -535,6 +546,13 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | none => do
         let (h, hty, doms) ← head f sc (.id n)
         applyAll h hty doms [← term f sc pf a]
+    -- `(f\circ g)(x)` is `f(g(x))`
+    | .app (.app (.id op) [f', g']) args =>
+      if op == w!"\\circ" then term f sc pf (.app f' [.app g' args])
+      else do
+        let (h, hty, doms) ← head f sc (.app (.id op) [f', g'])
+        let xs ← args.mapM (term f sc pf)
+        applyAll h hty doms xs
     | .app hd args => do
       match hd, args with
       | .id op, [x, y] =>
@@ -556,6 +574,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if xs.length != ys.length then fail E.type
       let ps ← (xs.zip ys).mapM fun (a, b) => do relTm .eq (← term f sc pf a) (← term f sc pf b)
       pure (conjAll ps, .prop)
+    -- `A\subseteq B`: every real number in `A` is in `B`
+    | .chain x [(.subset, y)] => do
+      let sc' : Scope := (w!"@x", Ty.real) :: sc
+      let a ← member f sc' (.loc 0, .real) x
+      let b ← member f sc' (.loc 0, .real) y
+      pure (.all .real (.imp a b), .prop)
+    | .chain x [(.supset, y)] => do
+      let sc' : Scope := (w!"@x", Ty.real) :: sc
+      let a ← member f sc' (.loc 0, .real) x
+      let b ← member f sc' (.loc 0, .real) y
+      pure (.all .real (.imp b a), .prop)
     | .chain x rest => do
       let ts ← (x :: rest.map (·.2)).mapM (term f sc pf)
       let rels := rest.map (·.1)
@@ -666,12 +695,45 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let sc' := (v, vty) :: (w!"", .real) :: sc
       let a ← asReal (← term f sc' none e)
       pure (.lam .real .tt (.ex vty (.and (.app (.glob dp) (.loc 0)) (.eq a (.loc 1)))), .fn .real .prop)
+    | .image e v dom => do
+      -- {e(v) : v ∈ D} for a set D of real numbers: y ↦ ∃ v ∈ D, e = y
+      let sc' := (v, Ty.real) :: (w!"", .real) :: sc
+      let m ← member f sc' (.loc 0, .real) dom
+      let a ← asReal (← term f sc' none e)
+      pure (.lam .real .tt (.ex .real (.and m (.eq a (.loc 1)))), .fn .real .prop)
     | .cases rows => casesRows f sc pf rows
     | .interval lo hi => do
       -- an interval as a set of real numbers
       let l ← asReal (← term f sc none lo)
       let h ← asReal (← term f sc none hi)
       pure (.lam .real .tt (interval (shift 1 0 l) (shift 1 0 h) (.loc 0)), .fn .real .prop)
+    | .bigop isSum v lo hi body => do
+      -- with numeral bounds, the finite sum (product) of the terms
+      match constMT lo, constMT hi with
+      | some (.num a), some (.num b) => do
+        if b < a || b > a + 100 then fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        -- each term is the body with the index replaced by its value
+        let terms ← (List.range (b - a + 1)).mapM fun k =>
+          do asReal (← term f sc pf (MT.substId v (MT.num (a + k)) 64 body))
+        match terms with
+        | t0 :: ts => pure (ts.foldl (fun acc x => if isSum then .add acc x else .mul acc x) t0, .real)
+        | [] => fail E.unsupported
+      -- a sum up to a variable needs natural numbers, which formulas do not have
+      | _, _ => fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
+    | .bound isSup st => do
+      -- the `s` with `y ≤ s` for every element `y`, and `s ≤ u` for every such bound `u`
+      -- (for `\inf`, the reverse); defined exactly when the bound exists
+      let (p, pty) ← term f sc pf st
+      match pty with
+      | .fn ety .prop => do
+        if ety != .real then fail E.type
+        let le (a b : Tm) : Tm := if isSup then .le a b else .le b a
+        let isBound := Tm.all .real (.imp (.app (shift 2 0 p) (.loc 0)) (le (.loc 0) (.loc 1)))
+        let isBoundU := Tm.all .real (.imp (.app (shift 3 0 p) (.loc 0)) (le (.loc 0) (.loc 1)))
+        let least := Tm.all .real (.imp isBoundU (le (.loc 1) (.loc 0)))
+        pure (.the .real (.and isBound least), .real)
+      | _ => fail E.type
     | .extr isMax st => do
       -- the element `x` of the set with `y ≤ x` (`x ≤ y`) for every element `y`
       let (p, pty) ← term f sc pf st

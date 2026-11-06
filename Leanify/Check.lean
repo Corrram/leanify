@@ -48,7 +48,7 @@ def structuralCmds : List String :=
    "min", "max", "int", "hat", "widehat", "cdot", "to", "mapsto", "longmapsto", "times", "top",
    "perp", "cup", "cap", "approx", "ldots", "quad", "qquad", "pm", "mp", "infty",
    "text", "mathcal", "mathbb", "mathbf", "mathrm", "operatorname", "mathit", "overline", "bar",
-   "tilde", "underline", "check"]
+   "tilde", "underline", "check", "sup", "inf", "sum", "prod", "circ", "subseteq", "subseteqq", "supseteq", "supseteqq"]
 
 /-- A symbol written as a command that is not a variable name (a Greek letter):
 notation the article or its vocabulary must define. -/
@@ -314,7 +314,7 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
     if deps.isEmpty then "" else
       let syms := (deps.filterMap fun t => match (d.outcomes[t]? : Option Outcome) with
         | some (Outcome.failed e) => some (Codes.toString e.detail) | _ => none).eraseDups
-      s!"; {andList syms} then undefined at {linesText (deps.map lineOf)}"
+      s!"; {andList syms} {if syms.length == 1 then "is" else "are"} then undefined at {linesText (deps.map lineOf)}"
   -- a sentence of a statement without a reading leaves the statement partly
   -- unchecked: always reported, once per statement
   let stated (ctx : Context) : Bool := match ctx.kind with

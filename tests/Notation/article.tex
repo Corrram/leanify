@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools}
+\newtheorem{lemma}{Lemma}
+% The expected output of `leanify check --claims` is check.txt: composition,
+% inclusion, suprema and infima, finite sums and products, equivalent statements,
+% `$$` displays and abbreviations.
+\begin{document}
+Define $f\colon(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
+Define $g\colon\mathbb{R}\to\mathbb{R}$ by $g(x)\coloneqq x^2+1$.
+
+\begin{lemma}\label{lem:comp}
+For every $x\in\mathbb{R}$, $(f\circ g)(x)\ge2$.
+\end{lemma}
+
+\begin{lemma}\label{lem:sub}
+$(0,1)\subseteq[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{lem:sup}
+$[0,1]\supseteq(0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{lem:bounds}
+$\sup_{x\in(0,1)} x^2=1$.
+\end{lemma}
+
+\begin{lemma}\label{lem:inf}
+$\inf\{f(x) : x\in(0,\infty)\}=2$.
+\end{lemma}
+
+\begin{lemma}\label{lem:sums}
+$\sum_{j=1}^{4} j=10$.
+\end{lemma}
+
+\begin{lemma}\label{lem:products}
+For every $x\in\mathbb{R}$, $$\prod_{k=1}^{2}(x+k)=x^2+3x+2.$$
+\end{lemma}
+
+\begin{lemma}\label{lem:tfae}
+Let $x\in\mathbb{R}$.
+Then the following are equivalent:
+\begin{enumerate}
+\item $x^2=1$;
+\item $\lvert x\rvert=1$;
+\item[(c)] $(x-1)(x+1)=0$.
+\end{enumerate}
+\end{lemma}
+
+The value of $f$ at $1$, i.e.\ $f(1)$, is $2$, cf.\ Lemma~\ref{lem:inf}.
+\end{document}
