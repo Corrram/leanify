@@ -9,3 +9,4 @@ article-reader/
 /_site/
 /docs/demo/
 *.leanify.log
+/sandbox/
