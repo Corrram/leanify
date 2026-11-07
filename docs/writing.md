@@ -389,6 +389,13 @@ Add `--vocab unitsquare` for articles about probability on the unit square
 corollary that the grammar does not read is a warning: that part of the
 statement would not be checked.
 
+A sentence that is read but cannot be given a meaning says why and how to write
+it: `a variable without a noun or a domain: say what it ranges over (every
+integer $n$, every $x\in A$)` for `Every $M_r$ is positive.`, `Q(…) is a product
+or a name that states what it depends on` for `$Q(x)$` with `Q` a number, `the left
+side of a definition is a symbol or a function of variables` for `$A_{ij}=…$`
+without a binder, or that a norm, a set or a subscript is not one Leanify knows.
+
 The check takes about a second and certifies nothing. `lake build` of the
 certifying module checks everything in the kernel. `editors/vscode/tasks.json`
 shows both as problems in the `.tex` file. With `\usepackage{leanify}`, an

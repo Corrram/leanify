@@ -757,6 +757,9 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       return ⟨v, ty, p⟩
     | _ => pure ()
   | _ => pure ()
+  -- `every $M_r$`, `for every fixed $l$`: no noun says what the variable ranges over
+  if (wordsOf np).isEmpty then
+    fail E.finding w!"a variable without a noun or a domain: say what it ranges over (every integer $n$, every $x\\in A$)"
   let st ← get
   let V := st.vocab
   -- prenominal modifiers
@@ -1641,7 +1644,7 @@ def defReads (c : SentCtx) (b : BindInfo) (sg disp : MT) (labels : List Codes) :
 /-- `NAME is denoted by $S$`: binds the symbol `S` to a named notion of the
 vocabulary (`Lebesgue measure on $[0,1]$`). -/
 def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
-  let key ← match sym with | .id k => pure k | _ => fail E.unsupported
+  let key ← match sym with | .id k => pure k | _ => fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
   let V := (← get).vocab
   let cands := V.notions.filterMap fun n => match matchPhrase n.name name with
     | some (none, []) => some (n, [])
@@ -1797,8 +1800,15 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
         ds := ds ++ [i]
       else
       match m with
+      -- `Define $f(x,y)\coloneqq e$.` without a binder: a function of real variables
+      | .chain (.app h args) [(.defeq, _)] => do
+        if (symKey h).isNone || !args.all (fun a => match a with | .id _ => true | _ => false) then
+          fail E.finding w!"the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$)"
+        let i ← inlineDef c [] m
+        ds := ds ++ [i]
       | .chain lhs ((.defeq, rhs) :: more) => do
-        let some key := symKey lhs | fail E.unsupported
+        let some key := symKey lhs
+          | fail E.finding w!"the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$); for a family ($A_{ij}$), say what its indices range over (For $i,j\\in\\{1,2\\}$, set …)"
         let (v, vty) ← term F [] none rhs
         let i ← addGlob ⟨key, vty, [], false⟩ v
         let x : Tm × Ty := (.glob i, vty)
@@ -1901,11 +1911,13 @@ def defDeriv (bi : Option BindInfo) (names : List MT) (dom cod : MT) (anchors : 
 /-- `For B, let $X_p$ denote NP`. -/
 def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List Nat) := do
   let (key, family) ← match sym with
-    | .sub (.id k) (.id p) => if p == b.name then pure (k, true) else fail E.unsupported
+    | .sub (.id k) (.id p) => if p == b.name then pure (k, true) else
+        fail E.finding (w!"a family defined under a binder carries the binder's variable " ++ b.name ++ w!" as its subscript ($D_c$ for every $c$)")
     -- `\gamma^T`: a family written with a superscript
-    | .sup (.id k) (.id p) => if p == b.name then pure (k ++ w!"^", true) else fail E.unsupported
+    | .sup (.id k) (.id p) => if p == b.name then pure (k ++ w!"^", true) else
+        fail E.finding (w!"a family defined under a binder carries the binder's variable " ++ b.name ++ w!" as its subscript ($D_c$ for every $c$)")
     | .id k => pure (k, false)
-    | _ => fail E.unsupported
+    | _ => fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
   let sc : Scope := [(b.name, b.ty)]
   let (val, vty) ← match np with
     -- the law of $(X, f(X))$ for $X$ uniformly distributed on $[0,1]$
@@ -2867,8 +2879,8 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   let (hd, args) := match lhs with
     | .app h as => (h, as)
     | _ => (lhs, [])
-  let some key := Elab.symKey hd | fail E.unsupported
-  let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+  let some key := Elab.symKey hd | fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
+  let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
   let st ← get
   -- the variables the description uses, apart from its own
   let own := npVars np
@@ -2980,7 +2992,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
       match bis with
       | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
       | _ :: _ :: _ => multiDefs bis defs labels imp
-      | [] => fail E.unsupported
+      | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
     | none => constDefs c none defs labels
   | .defByFamily b sg pieces labels => do
     let [bi] ← binderInfos b | fail E.unsupported

@@ -1353,7 +1353,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let body := Tm.and (.app (shift 1 0 p) (.loc 0)) (.all ety (.imp (.app (shift 2 0 p) (.loc 0)) bound))
         pure (.the ety body, ety)
       | _ => fail E.type
-    | _ => fail E.unsupported
+    | m => match m with
+      | .tuple _ => fail E.finding w!"a tuple $(a,b,…)$ is read only as an interval or as the point of a domain, not as a value"
+      | .mapsto .. => fail E.finding w!"a map $x\\mapsto e$ is read only after `the map` or `the function` (its monotonicity, its range) or in a definition"
+      | .setCond .. => fail E.finding w!"a set $\\{x : φ\\}$ needs the set its elements are taken from: $\\{x\\in A : φ\\}$"
+      | _ => fail E.unsupported
 where
   casesRows : Nat → Scope → PF → List (MT × MT) → M (Tm × Ty)
     | 0, _, _, _ => fail E.unsupported
@@ -1737,7 +1741,7 @@ where
             | .id i => if i == w!"\\infty" then some false else none
             | _ => none
         | _ => none
-      let some isL2 := p | fail E.unsupported
+      let some isL2 := p | fail E.finding w!"a norm other than \\|u(t)\\|_{L^2} and \\|u(t)\\|_{L^\\infty} of a field: the norm of this space is not in the vocabulary"
       -- the field, at the given time, as a function of the spatial coordinates
       let (u, targs) ← match x with
         | .app (.id u) as => pure (u, as)
@@ -1825,7 +1829,7 @@ where
         let a ← term f sc none i
         let (h0, ty0, doms0) ← withImplicit sc h g
         applyAll h0 ty0 doms0 [a]
-      | _ => fail E.unsupported
+      | _ => fail E.finding w!"a subscript on a formula, such as $(B_k)_L$: name the quantity (Set $C_k\\coloneqq …$) and subscript the name"
   propOf : Nat → Scope → PF → MT → M Tm
     | 0, _, _, _ => fail E.unsupported
     | g + 1, sc, pf, x => do
@@ -1914,7 +1918,7 @@ where
           if n == w!"\\mathbb{R}" then pure (.real, none)
           else match builtinConst n with
             | some (.lam .real .tt p, .fn .real .prop) => pure (.real, some p)
-            | _ => fail E.unsupported
+            | _ => fail E.finding (w!"the elements of a set $\\{x\\in A : …\\}$ are taken from a set of numbers; " ++ n ++ w!" is not one Leanify knows")
         | _ => do
           -- any other closed set of real numbers (`\mathbb{R}\setminus\{0\}`)
           let (p, t) ← term g [] none d
