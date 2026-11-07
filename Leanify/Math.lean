@@ -16,6 +16,10 @@ inductive Rel where
   | nmem
   /-- `a\ll b`: `a/b` sufficiently small (read only in binders). -/
   | ll
+  /-- `a\mid b`, `a\nmid b`: divisibility of integers. -/
+  | dvd | ndvd
+  /-- `a\equiv b`: a congruence, read only with its modulus (`\pmod m`). -/
+  | equiv
   deriving DecidableEq, Repr, Lean.ToExpr
 
 inductive MT where
@@ -169,7 +173,17 @@ def wConnectives : List Codes := wIff ++ wImp ++ wOr ++ wAnd ++ [w!"neg", w!"lno
 def wFonts : List Codes := [w!"mathcal", w!"mathbb", w!"mathbf", w!"mathrm", w!"operatorname", w!"mathit"]
 
 /-- Accents that make a new symbol (`\overline{\rho}` is not `\rho`). -/
-def decorations : List Codes := [w!"overline", w!"bar", w!"tilde", w!"underline", w!"check"]
+def decorations : List Codes := [w!"overline", w!"bar", w!"tilde", w!"underline", w!"check",
+  w!"widetilde", w!"dot", w!"ddot", w!"breve", w!"acute", w!"grave", w!"vec", w!"mathring",
+  w!"widecheck", w!"overrightarrow"]
+
+/-- Commands that name a variable: the Greek letters and `\ell`. -/
+def greekNames : List Codes :=
+  [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta",
+   w!"theta", w!"vartheta", w!"iota", w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"pi",
+   w!"varpi", w!"rho", w!"varrho", w!"sigma", w!"varsigma", w!"tau", w!"upsilon", w!"phi",
+   w!"varphi", w!"chi", w!"psi", w!"omega", w!"Gamma", w!"Delta", w!"Theta", w!"Lambda", w!"Xi",
+   w!"Pi", w!"Sigma", w!"Upsilon", w!"Phi", w!"Psi", w!"Omega", w!"ell"]
 
 /-- Join font commands with their letters; `\mathrm{d}` is a differential. -/
 def simplify : Nat → List PTok → Option (List MTok)
@@ -253,6 +267,9 @@ def relOf : MTok → Option Rel
     else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
     else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
     else if n == w!"ll" then some .ll
+    else if n == w!"mid" || n == w!"divides" then some .dvd
+    else if n == w!"nmid" then some .ndvd
+    else if n == w!"equiv" then some .equiv
     else none
   | _ => none
 
@@ -278,7 +295,8 @@ def startsFactor : MTok → Bool
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
         n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
-        n != w!"approx" && n != w!"ldots" && n != w!"rVert")
+        n != w!"approx" && n != w!"ldots" && n != w!"rVert" && n != w!"pmod" && n != w!"cdots" &&
+        n != w!"dots")
   | _ => false
 
 /-- Heads that may be applied to a parenthesized argument list. -/
@@ -643,7 +661,14 @@ where
         match relOf t with
         | some r => do
           let (y, rest') ← run g (.additive false) rest
-          chainRest g x ((r, y) :: acc) rest'
+          -- `a\equiv b\pmod m`: the modulus belongs to the congruence
+          match rest' with
+          | .cmd pm :: r2 =>
+            if pm == w!"pmod" then do
+              let (m, r3) ← run g .group r2
+              chainRest g x ((r, .app (.id w!"@mod") [y, m]) :: acc) r3
+            else chainRest g x ((r, y) :: acc) rest'
+          | _ => chainRest g x ((r, y) :: acc) rest'
         | none =>
           -- `\approx 0.4002`: a numerical illustration, which asserts nothing
           if t == .cmd w!"approx" then
@@ -888,6 +913,40 @@ def logic : Nat → List MTok → Option MT
     | .cmd n :: rest => if n == w!"neg" || n == w!"lnot" then (logic f rest).map .lnot else wholeTop ts
     | _ => wholeTop ts
 
+/-- Spellings of number theory: `\mid` separates a set-builder (`\{n\mid n>0\}`) and is
+divisibility elsewhere; a modulus `(\bmod m)`, `(\operatorname{mod} m)` or `\pmod m`
+is `\pmod{m}`. `sets` has an entry for each set brace open: whether its separator is
+still to come (the separator is the first `\mid` or `:` of a set). -/
+def modToks : Nat → List Bool → List MTok → List MTok
+  | 0, _, ts => ts
+  | _ + 1, _, [] => []
+  | f + 1, sets, t :: ts =>
+    match t, sets with
+    | .setl, _ => .setl :: modToks f (true :: sets) ts
+    | .setr, _ :: r => .setr :: modToks f r ts
+    | .cmd m, true :: r =>
+      if m == w!"mid" then .sym 58 :: modToks f (false :: r) ts else .cmd m :: modToks f sets ts
+    -- after the separator `:`, `\mid` is divisibility (`\{m : m\mid 6\}`)
+    | .sym 58, true :: r => .sym 58 :: modToks f (false :: r) ts
+    | .sym 40, _ =>
+      -- `(\bmod m)`: the modulus up to the matching parenthesis
+      match ts with
+      | .cmd b :: rest | .id b :: rest =>
+        if b == w!"bmod" || b == w!"mod" then
+          let inner := rest.takeWhile (· != .sym 41)
+          if inner.isEmpty || inner.length == rest.length then .sym 40 :: modToks f sets ts
+          else .cmd w!"pmod" :: .lb :: inner ++ .rb :: modToks f sets (rest.drop (inner.length + 1))
+        else .sym 40 :: modToks f sets ts
+      | _ => .sym 40 :: modToks f sets ts
+    | .cmd pm, _ =>
+      if pm == w!"pmod" then
+        match ts with
+        | .lb :: _ => .cmd pm :: modToks f sets ts
+        | u :: rest => .cmd pm :: .lb :: u :: .rb :: modToks f sets rest
+        | [] => [.cmd pm]
+      else .cmd pm :: modToks f sets ts
+    | _, _ => t :: modToks f sets ts
+
 /-- `\nabla\cdot` is the divergence (`\operatorname{div}`): without the `\cdot`,
 `\nabla u` would be the gradient. -/
 def divergenceToks : List MTok → List MTok
@@ -898,7 +957,7 @@ def divergenceToks : List MTok → List MTok
   | [] => []
 
 def parseFormula (ts : List MTok) : Option MT :=
-  let ts := divergenceToks ts
+  let ts := modToks (ts.length + 1) [] (divergenceToks ts)
   match run (8 * ts.length + 64) .top ts with
   | some (x, []) => some x
   | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
@@ -924,7 +983,7 @@ def pmAs (upper : Bool) : List MTok → List MTok :=
 /-- Parse the content of a display or inline formula. A formula with `\pm` or `\mp` stands for two formulas,
 the upper and the lower signs: `x_\pm(c)\coloneqq c\pm1` defines `x_+` and `x_-`. -/
 def parseDisplay (ts : List MTok) : Option MT := do
-  let ts := stripEnv ts
+  let ts := modToks (ts.length + 1) [] (stripEnv ts)
   -- the punctuation that ends a display (`u(\cdot,0)=0,\tag{1.1}`)
   let ts := match ts.reverse with
     | .sym 44 :: r | .sym 46 :: r | .sym 59 :: r => r.reverse

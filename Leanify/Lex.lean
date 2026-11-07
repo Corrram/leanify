@@ -99,7 +99,7 @@ def wDropMath : List Codes :=
 /-- Commands of formulas that are another spelling of a symbol the grammar reads:
 `\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`. -/
 def mathAlias (n : Codes) : Option Tok :=
-  if n == w!"colon" || n == w!"mid" then some (.msym 58)
+  if n == w!"colon" then some (.msym 58)
   else if n == w!"leqslant" || n == w!"leqq" then some (.cmd w!"le")
   else if n == w!"geqslant" || n == w!"geqq" then some (.cmd w!"ge")
   else if n == w!"lvert" || n == w!"rvert" || n == w!"vert" then some (.msym 124)

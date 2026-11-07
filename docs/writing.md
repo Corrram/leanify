@@ -56,7 +56,13 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
 | `$$…$$` | a display, like `\[…\]` |
-| `\colon`, `\mid`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
+| `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
+| `a\mid b`, `a\nmid b` | `a` and `b` are integers and `b=ak` for an integer `k` (and its negation, for integers); the first `\mid` of a set `\{x\in A\mid φ\}` separates the condition, and a `\mid` after it is divisibility |
+| `a\equiv b\pmod m`, `a\equiv b\ (\bmod m)`, `(\operatorname{mod} m)` | `m\mid a-b` |
+| `\gcd(a,b)` | for integers `a`, `b`: the natural number `d` that divides both and that every common divisor divides (so `\gcd(0,0)=0`) |
+| `\mathbb{Q}` | the rational numbers, as real numbers |
+| `\hat x`, `\hat{x}` | a name of its own (a variable `\hat x` beside `x`), unless the article or its vocabulary defines `\widehat` as an operation |
+| `\tilde x`, `\bar x`, `\dot x`, `\ddot x`, `\vec x`, `\breve x`, `\check x`, … | names of their own |
 
 The period of an abbreviation (i.e., e.g., cf., resp., Thm., Eq., Fig., …)
 does not end a sentence.
@@ -103,6 +109,7 @@ Generic constants and existence (`tests/Fields/article.tex`,
 | `… for every integer $m\ge0$ and every smooth function $\varphi$ on …` | binders after a claim, the first one outermost |
 | `For every positive integer $k$, every positive integer $N$ and every $x\in[0,1]$, …` | several binders before a claim (`, every`, `and every`, `and each`, `and all`, `and $y\in[0,1]$`), the first one outermost |
 | `For every integer $n\ge1$, …`, `For every real $\nu>2$, …`, `For every fixed real $c>0$, …` | a noun with a bounded variable; `fixed` marks a parameter and does not change the binder |
+| `For all integers $a,b\ge1$, …`, `For all positive integers $a$ and $b$, …` | a binder for each variable, the first outermost; a bound after the last variable bounds each (`a\ge1` and `b\ge1`) |
 | `There is an absolute constant $C>0$ such that …`, `there is an integer $Q$ such that …` | an existential constant (also `a universal constant`, `absolute constants`), an object of a noun |
 | `There are absolute constants $c_1,c_2>0$ and an integer $b_0\ge2$ such that, for every integer $b\ge b_0$, …` | several constants (`a,b>0` bounds each), then binders of the clause after `such that`, whose bounds may use the constants |
 | `\[ k\le Ck^2\qquad\text{for every integer }k\ge1. \]` | words after a display formula bind its variables, as `for every NP` after a clause (`\text{for all }x\in A`; `\text{if }x>0` is a condition) |

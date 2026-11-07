@@ -14,11 +14,22 @@ tests/Statements/article.tex:76:1: info: claim 12: \exists x\in \mathbb{R},\ 0<x
 tests/Statements/article.tex:80:1: info: claim 13: \exists x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land x\le y)\land x\le y)
 tests/Statements/article.tex:84:1: info: claim 14: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y\Rightarrow x\le y)
 tests/Statements/article.tex:88:1: info: claim 15: \exists x\in \mathbb{R},\ 0<x\land (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land 2\le z)\land (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land z\le s\Rightarrow x\,\log(s)\le y\,s)))
-tests/Statements/article.tex:101:1: warning: q is not defined: sentence not checked
-tests/Statements/article.tex:105:1: info: claim 16: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
-tests/Statements/article.tex:111:1: warning: e is not defined: sentence not checked
-tests/Statements/article.tex:115:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
-tests/Statements/article.tex: 0 definitions, 17 claims
+tests/Statements/article.tex:98:1: info: claim 16: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow 2\le x+y)
+tests/Statements/article.tex:102:1: info: claim 17: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow 1\le x\,y)
+tests/Statements/article.tex:106:1: info: claim 18: \forall x\in \mathbb{R},\ \top\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ \top\land 0\le y\Rightarrow 0<x+y)
+tests/Statements/article.tex:110:32: info: claim 19: \forall x\in \mathbb{R},\ \top\Rightarrow 0\le {x}^{2}
+tests/Statements/article.tex:116:1: info: claim 20: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow x\in \mathbb{Z}\land x\,y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x\,y=x\,z))
+tests/Statements/article.tex:116:1: info: claim 21: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow 2\in \mathbb{Z}\land 7\in \mathbb{Z}\land \neg (2\in \mathbb{Z}\land 7\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land 7=2\,z)))
+tests/Statements/article.tex:120:1: info: claim 22: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow 2\in \mathbb{Z}\land {x}^{2}-x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-x=2\,y)
+tests/Statements/article.tex:120:1: info: claim 23: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow 3\in \mathbb{Z}\land {x}^{3}-x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{3}-x=3\,y)
+tests/Statements/article.tex:124:1: info: claim 24: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow \iota z\in \mathbb{R}.\ z\in \mathbb{N}\land (z\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=z\,s))\land (z\in \mathbb{Z}\land y\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land y=z\,s))\land (\forall s\in \mathbb{R},\ (s\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land x=s\,t))\land s\in \mathbb{Z}\land y\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=s\,t)\Rightarrow s\in \mathbb{Z}\land z\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land z=s\,t))\le x)
+tests/Statements/article.tex:128:1: info: claim 25: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow x\in \mathbb{Z}\land x\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=x\,z)
+tests/Statements/article.tex:128:1: info: claim 26: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists z\in \mathbb{R},\ \exists s\in \mathbb{R},\ z\in \mathbb{Z}\land s\in \mathbb{Z}\land \neg (s=0)\land \frac{1}{2}\,s=z)
+tests/Statements/article.tex:137:1: warning: q is not defined: sentence not checked
+tests/Statements/article.tex:141:1: info: claim 27: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
+tests/Statements/article.tex:147:1: warning: e is not defined: sentence not checked
+tests/Statements/article.tex:151:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex: 0 definitions, 28 claims
   text: 0 compiled, 0 failed, 6 prose (of 6)
-  results: 19 compiled, 2 failed, 1 prose (of 22)
-  all: 19 compiled, 2 failed, 7 prose (of 28)
+  results: 28 compiled, 2 failed, 1 prose (of 31)
+  all: 28 compiled, 2 failed, 7 prose (of 37)

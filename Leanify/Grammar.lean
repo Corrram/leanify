@@ -97,6 +97,12 @@ def sig (cs : List Chunk) : Option (MT × List Chunk) := do
   let m ← Math.parseSig ts
   some (m, rest)
 
+/-- `\hat x` or `\hat{x}` (or `\widehat`) at the start of `ts`: the name `\hat{x}` and
+the tokens after it. -/
+def hatName : List MTok → Option (Codes × List MTok)
+  | .cmd h :: .id n :: r | .cmd h :: .lb :: .id n :: .rb :: r =>
+    if h == w!"hat" || h == w!"widehat" then some ([92] ++ w!"hat{" ++ n ++ [125], r) else none
+  | _ => none
 
 /-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
@@ -107,8 +113,19 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
       | .sym 41 :: r' => (r'.reverse, true)
       | _ => (pre, false)
     | _ => (pre, false)
-  let vars := pre.filter (· != .sym 44)
-  let names ← vars.mapM fun t => match t with | .id n => some n | .cmd n => some ([92] ++ n) | _ => none
+  -- the names: letters, Greek letters, and `\hat x` (a command that is not a name, such
+  -- as an accent, never is one)
+  let rec names0 : Nat → List MTok → Option (List Codes)
+    | _, [] => some []
+    | 0, _ => none
+    | f + 1, .sym 44 :: r => names0 f r
+    | f + 1, .id n :: r => (n :: ·) <$> names0 f r
+    | f + 1, .cmd n :: r =>
+      match hatName (.cmd n :: r) with
+      | some (v, r') => (v :: ·) <$> names0 f r'
+      | none => if Math.greekNames.contains n then (([92] ++ n) :: ·) <$> names0 f r else none
+    | _, _ => none
+  let names ← names0 (pre.length + 1) pre
   let dom ← Math.parseFormula (ts.drop (i + 1))
   let dom ← if square then
       match dom with
@@ -469,6 +486,22 @@ def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
       | _, _ => false
     if stop || andNext then (acc.reverse, c :: rest) else npUpTo f rest (c :: acc)
 
+/-- The variables of `a,b`, `a,b\ge1` or `c_1,c_2>0`, each with the bound written after the
+last (`a\ge1`, `b\ge1`). -/
+def splitVars (ts : List MTok) : Option (List (List MTok)) := do
+  let parts := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+  if parts.length < 2 then none else
+  let last ← parts.getLast?
+  let i := (last.findIdx? fun t => (Math.relOf t).isSome).getD last.length
+  let (lastName, suffix) := (last.take i, last.drop i)
+  let names := parts.dropLast ++ [lastName]
+  -- (each is the name of one variable: no relation, no operation)
+  if names.any (fun n => n.isEmpty || n.any fun t => match t with
+      | .id _ | .digit _ | .sym 95 | .lb | .rb => false
+      | .cmd c => !Math.greekNames.contains c
+      | _ => true) then none
+  else some (names.map (· ++ suffix))
+
 /-- One binder after `for every|each|all`: a smallness chain, `$x\in A$` (with
 conditions), or `NP $x$` (`For every LTD copula $C$`, as `For an LTD copula $C$`). -/
 def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
@@ -481,14 +514,24 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     let (vs, dom) ← binderMath ts
     some (withBind (.every vs dom) r')) <|>
   (do
+    -- `all integers $a,b\ge1$`, `all positive integers $a$ and $b$`: a binder for each
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    if ws.isEmpty then none else
+    let (vars, r'') : List (List MTok) × List Chunk ← match np.drop ws.length, r' with
+      | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], r'') else none
+      | [.m ts], _ => (splitVars ts).map (·, r')
+      | _, _ => none
+    some (Bind.many (vars.map fun v => Bind.noun (ws ++ [.m v])), r'')) <|>
+  (do
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
     | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r')
     -- `every integer $n\ge1$`, `every integer $n$ with $n\ge1$`: one variable with a bound
     | some (.w _), some (.m ts) =>
-      match binderMath ts with
-      | some ([_], _) => some (.noun np, r')
-      | _ => none
+      match binderMath ts, hatName ts with
+      | some ([_], _), _ | _, some (_, []) => some (.noun np, r')
+      | _, _ => none
     | _, _ => none)
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
@@ -1782,7 +1825,10 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     if isCondition m then some (.ifCond m, r) else none) <|>
   (do
     let (ts, r) ← mathChunk cs
-    let v ← match ts with | [.id v] => some (MTok.id v) | [.cmd n] => some (MTok.cmd n) | _ => none
+    let v ← match ts with
+      | [.id v] => some [MTok.id v]
+      | [.cmd n] => some [MTok.cmd n]
+      | _ => match hatName ts with | some (_, []) => some ts | _ => none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
     let ws := r1.takeWhile (fun c => match c with
       | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
@@ -1800,7 +1846,7 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _ => false
     let post := if tail.isEmpty && !opensPost then [] else
       rest.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
-    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m [v]] ++ post), rest.drop post.length))
+    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m v] ++ post), rest.drop post.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/

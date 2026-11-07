@@ -397,11 +397,13 @@ signature `$f:A\to B$`), at most one variable (possibly with a membership
 `$C\in\CC$`), and postnominal modifiers of the vocabulary. Its meaning is the
 conjunction of the predicates of its parts. Every chunk must be read. -/
 
-/-- The name of a variable chunk: a letter or a command (`\gamma`). -/
+/-- The name of a variable chunk: a letter, a command (`\gamma`) or `\hat x`. -/
 def varName : List MTok → Option Codes
   | [.id v] => some v
   | [.cmd c] => some ([92] ++ c)
-  | _ => none
+  | ts => match Grammar.hatName ts with
+    | some (v, []) => some v
+    | _ => none
 
 /-- Match a vocabulary phrase at the start of `cs`. The variable slot matches a
 variable chunk (returned) or nothing. -/
@@ -906,6 +908,10 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .sub (.id _) i => freeIds f bound i
     | .sub b i => freeIds f bound b ++ freeIds f bound i
     | .sup b e => freeIds f bound b ++ freeIds f bound e
+    -- `\hat x` is the name `\hat{x}`, or `\widehat` applied to `x`
+    | .hat (.id k) =>
+      let v := [92] ++ w!"hat{" ++ k ++ [125]
+      (if bound.contains v then [] else [v]) ++ (if bound.contains k then [] else [k])
     | .hat x | .neg x | .abs x => freeIds f bound x
     | .app h as => freeIds f bound h ++ (as.flatMap (freeIds f bound))
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => freeIds f bound x ++ freeIds f bound y

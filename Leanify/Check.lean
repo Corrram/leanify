@@ -52,7 +52,9 @@ def structuralCmds : List String :=
    "text", "mathcal", "mathbb", "mathbf", "mathrm", "operatorname", "mathit", "overline", "bar",
    "tilde", "underline", "check", "sup", "inf", "sum", "prod", "circ", "exp", "log", "ln", "sin", "cos", "tan", "pi",
    "emptyset", "varnothing", "setminus", "notin", "forall", "exists", "neg", "lnot", "land", "lor",
-   "wedge", "vee", "lfloor", "rfloor", "lceil", "rceil", "lim", "binom", "tbinom", "dbinom", "Rightarrow", "implies", "Longrightarrow", "iff", "Leftrightarrow", "Longleftrightarrow", "subseteq", "subseteqq", "supseteq", "supseteqq"]
+   "wedge", "vee", "lfloor", "rfloor", "lceil", "rceil", "lim", "binom", "tbinom", "dbinom", "Rightarrow", "implies", "Longrightarrow", "iff", "Leftrightarrow", "Longleftrightarrow", "subseteq", "subseteqq", "supseteq", "supseteqq",
+   "mid", "nmid", "divides", "equiv", "pmod", "bmod", "mod", "gcd", "dot", "ddot", "breve", "acute",
+   "grave", "vec", "mathring", "widetilde", "widecheck", "overrightarrow"]
 
 /-- A symbol written as a command that is not a variable name (a Greek letter):
 notation the article or its vocabulary must define. -/

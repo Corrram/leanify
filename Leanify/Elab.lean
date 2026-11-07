@@ -287,6 +287,7 @@ def rayTm (lo hi : Option Tm) (lopen ropen : Bool) (x : Tm) : Tm :=
 `\Delta_0`), whose key is the whole symbol. -/
 def symKey : MT → Option Codes
   | .id k => some k
+  | .hat (.id k) => some ([92] ++ w!"hat{" ++ k ++ [125])
   | .sub (.id k) (.num n) => some (k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)
   | .sub (.id k) (.id i) => some (k ++ [95] ++ i)
   | .sub (.id k) (.tuple xs) => do
@@ -307,6 +308,8 @@ def mtIds : Nat → MT → List Codes
       | none => [k]
     | .tuple xs | .conj xs | .minm xs | .maxm xs => xs.flatMap (mtIds f)
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => mtIds f x ++ mtIds f y
+    -- `\hat x` is the name `\hat{x}`, or `\widehat` applied to `x`
+    | .hat (.id k) => [[92] ++ w!"hat{" ++ k ++ [125], k]
     | .neg x | .abs x | .hat x => mtIds f x
     | .sub b i => mtIds f b ++ mtIds f i
     | .sup b e => mtIds f b ++ mtIds f e
@@ -474,12 +477,33 @@ def builtinFn (n : Codes) : Option (Tm × Ty × List (Option Tm)) :=
     fn .tan (some (.lam .real .tt (.not (.eq (.app (.prim (.realFn .cos)) (.loc 0)) (.num 0)))))
   else none
 
+/-- `x ∣ y` for integers: `y = x·k` for an integer `k`. -/
+def dvdTm (x y : Tm) : Tm :=
+  let isInt (t : Tm) : Tm := .app (.prim .isInt) t
+  .and (isInt x) (.and (isInt y)
+    (.ex .real (.and (isInt (.loc 0)) (.eq (shift 1 0 y) (.mul (shift 1 0 x) (.loc 0))))))
+
+/-- `\gcd(a,b)`: the natural number that divides `a` and `b` and that every common
+divisor divides (`\gcd(0,0)=0`); defined for integers. -/
+def gcdTm (a b : Tm) : Tm :=
+  let isInt (t : Tm) : Tm := .app (.prim .isInt) t
+  .guard (.and (isInt a) (isInt b))
+    (.the .real (.and (.app (.prim .isNat) (.loc 0))
+      (.and (dvdTm (.loc 0) (shift 1 0 a)) (.and (dvdTm (.loc 0) (shift 1 0 b))
+        (.all .real (.imp (.and (dvdTm (.loc 0) (shift 2 0 a)) (dvdTm (.loc 0) (shift 2 0 b)))
+          (dvdTm (.loc 0) (.loc 1))))))))
+
 /-- Standard constants and sets: `\pi`, `\emptyset`, `\mathbb{R}` and its rays. -/
 def builtinConst (n : Codes) : Option (Tm × Ty) :=
   if n == w!"\\pi" then some (.prim .pi, .real)
   else if n == w!"\\emptyset" || n == w!"\\varnothing" then some (.lam .real .tt (.not .tt), .fn .real .prop)
   else if n == w!"\\mathbb{R}" then some (.lam .real .tt .tt, .fn .real .prop)
   else if n == w!"\\mathbb{Z}" then some (.lam .real .tt (.app (.prim .isInt) (.loc 0)), .fn .real .prop)
+  -- the rational numbers: `x·q = p` for integers `p` and `q ≠ 0`
+  else if n == w!"\\mathbb{Q}" then
+    some (.lam .real .tt (.ex .real (.ex .real (.and (.app (.prim .isInt) (.loc 1))
+      (.and (.app (.prim .isInt) (.loc 0)) (.and (.not (.eq (.loc 0) (.num 0)))
+        (.eq (.mul (.loc 2) (.loc 0)) (.loc 1))))))), .fn .real .prop)
   -- the natural numbers include 0, as in mathlib (`\mathbb{N}_0` says so explicitly)
   else if n == w!"\\mathbb{N}" || n == w!"\\mathbb{N}_0" then
     some (.lam .real .tt (.app (.prim .isNat) (.loc 0)), .fn .real .prop)
@@ -554,6 +578,10 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
   | .lt => pure (.lt (← asReal x) (← asReal y))
   | .ge => pure (.le (← asReal y) (← asReal x))
   | .gt => pure (.lt (← asReal y) (← asReal x))
+  | .dvd => pure (dvdTm (← asReal x) (← asReal y))
+  | .ndvd => do
+    let a ← asReal x; let b ← asReal y
+    pure (.and (.app (.prim .isInt) a) (.and (.app (.prim .isInt) b) (.not (dvdTm a b))))
   | .subset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 x.1 y.1) else fail E.type
   | .supset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 y.1 x.1) else fail E.type
   | _ => fail E.unsupported
@@ -871,6 +899,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       else supTerm f sc pf (.app h [a]) e
     | .sup b e => supTerm f sc pf b e
     | .hat x => do
+      -- `\hat x` is a name of its own (`\hat{x}`), unless the article or its vocabulary
+      -- defines `\widehat` as an operation (the Fourier transform, the survival copula)
+      match ← lookupGlob w!"\\widehat", x with
+      | none, .id v => term f sc pf (.id ([92] ++ w!"hat{" ++ v ++ [125]))
+      | _, _ =>
       let (h, g) ← liftO (← lookupGlob w!"\\widehat") E.undefined w!"\\widehat"
       let a ← term f sc pf x
       applyAll (.glob h) g.ty g.doms [a]
@@ -892,6 +925,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `xz(x+z)`: a number before parentheses is a factor, not a function
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
+      -- `\gcd(a,b)`
+      if n == w!"\\gcd" && (lookupLocal sc n).isNone then
+        match a with
+        | .tuple [x, y] => do
+          if (← lookupGlob n).isSome then fail E.unsupported
+          pure (gcdTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
+        | _ => fail E.undefined n
+      else
       match lookupLocal sc n with
       | some (_, t) =>
         if t == .real || t == .unit then term f sc pf (.mul (.id n) a)
@@ -910,7 +951,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         applyAll h hty doms xs
     | .app hd args => do
       match hd, args with
+      -- `\gcd(a,b)`, unless the article defines `\gcd`
       | .id op, [x, y] =>
+        if op == w!"\\gcd" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do
+          pure (gcdTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
+        else
         if op == w!"\\cup" || op == w!"\\times" || op == w!"\\cap" || op == w!"\\setminus" then setOp f sc pf op x y
         else do
           let (h, hty, doms) ← head f sc hd
@@ -1060,6 +1105,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let inDom := match tdom with | some d => Tm.app d (.loc 0) | none => .tt
       pure (.all .real (.all .real (.imp (.lt (.num 0) (.loc 0))
         (.ex .real (conjAll [near, inDom, definedAnd e (.lt (.loc 2) e)])))), .prop)
+    -- `a\equiv b\pmod m`: `m` divides `a-b`
+    | .chain x [(.equiv, .app (.id md) [y, m])] =>
+      if md == w!"@mod" then term f sc pf (.chain m [(.dvd, .minus x y)])
+      else fail E.unsupported
     | .chain x rest => do
       -- an equation between fields (`\partial_tu+\nabla p=f`, `\nabla\cdot u=0`,
       -- `u(\cdot,0)=0`): componentwise, at every point of the fields' domain
