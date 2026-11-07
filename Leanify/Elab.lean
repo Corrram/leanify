@@ -987,6 +987,31 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         applyAll h hty doms xs
     | .app hd args => do
       match hd, args with
+      -- `\limsup_{n\to\infty} a_n`, `\liminf_{x\to\infty} f(x)`: the number `L` such that, for
+      -- every `ε>0`, the values beyond every `N` exceed `L-ε` somewhere and eventually stay
+      -- below `L+ε` (for `\liminf`, the reverse); defined only when it exists. An index runs
+      -- through the natural numbers
+      | .id op, [.id v, a, body] =>
+        if op == w!"@limsup" || op == w!"@liminf" then do
+          if !isInfty true a then fail E.unsupported
+          if (lookupLocal sc v).isSome then fail E.shadow v
+          let sc' : Scope := (v, .real) :: (w!"@N", .real) :: (w!"@e", .real) :: (w!"@L", .real) :: sc
+          let pf' := pf.map fun (s, t) => (shift 4 0 s, t)
+          let e ← asReal (← term f sc' pf' body)
+          let inDom := if indexNames.contains v then Tm.app (.prim .isNat) (.loc 0) else .tt
+          -- (`v` is `loc 0`, `N` `loc 1`, `ε` `loc 2`, `L` `loc 3`)
+          let beyond := Tm.and inDom (.le (.loc 1) (.loc 0))
+          let above := Tm.lt (.sub (.loc 3) (.loc 2)) e
+          let below := Tm.lt e (.add (.loc 3) (.loc 2))
+          let (often, eventually) := if op == w!"@limsup" then (above, below) else (below, above)
+          let p := Tm.all .real (.imp (.lt (.num 0) (.loc 0)) (.and
+            (.all .real (.ex .real (conjAll [beyond, definedAnd e often])))
+            (.ex .real (.all .real (.imp beyond (definedAnd e eventually))))))
+          pure (.the .real p, .real)
+        else do
+          let (h, hty, doms) ← head f sc hd
+          let xs ← args.mapM (term f sc pf)
+          applyAll h hty doms xs
       -- `\gcd(a,b)`, unless the article defines `\gcd`
       | .id op, [x, y] =>
         if op == w!"\\gcd" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do

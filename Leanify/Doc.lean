@@ -1066,6 +1066,8 @@ def clauseMaths : Clause → List MT
   | .thereIs _ c => clauseMaths c
   | .aliased _ c => clauseMaths c
   | .both cs => clauseMathsAll cs
+  | .infinitelyMany np (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
+  | .infinitelyMany np none => (mathsOf np).filterMap Math.parseFormula
   | .under _ c => clauseMaths c
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
@@ -2550,6 +2552,17 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some q => .and (.app q (.loc 0)) acc
       | none => acc)) (Elab.conjAll ps))
   | .noneExist cl => do pure (.not (← clauseTm c sc onVar lastRhs cl))
+  | .infinitelyMany np cl => do
+    let b ← nounPhrase np sc
+    if b.ty != .real then fail E.type
+    let inner ← match cl with
+      | some cl => do
+        if b.name.isEmpty then fail E.unsupported
+        clauseTm c ((b.name, b.ty) :: sc) onVar lastRhs cl
+      | none => pure .tt
+    -- the set of the numbers described is not finite (it has no number of elements)
+    let set := Tm.lam .real .tt (.and (holdsAt b.pred (.loc 0)) inner)
+    pure (.not (.ex .real (.app (.app (.prim .cardIs) (shift 1 0 set)) (.loc 0))))
   | .both cls => do
     let ps ← cls.mapM (clauseTm c sc onVar lastRhs)
     pure (Elab.conjAll ps)

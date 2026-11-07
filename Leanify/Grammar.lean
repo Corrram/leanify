@@ -782,6 +782,9 @@ inductive Clause where
   | aliased (pairs : List (MT × MT)) (c : Clause)
   /-- `such that CLAUSE and CLAUSE`: both clauses. -/
   | both (cs : List Clause)
+  /-- `there are infinitely many NPs [such that CLAUSE]`, `CLAUSE for infinitely many NPs`:
+  the numbers the noun phrase (and the clause) describe are not finitely many. -/
+  | infinitelyMany (np : List Chunk) (c : Option Clause)
   deriving Repr, Inhabited
 
 /-- A clause with the citations that justify it, its own binders
@@ -989,8 +992,42 @@ def compareRel (cs : List Chunk) : Option (Rel × List Chunk) :=
   ((kw [w!"is", w!"larger", w!"than"] cs).map (.gt, ·)) <|> ((kw [w!"is", w!"equal", w!"to"] cs).map (.eq, ·)) <|>
   ((kw [w!"equals"] cs).map (.eq, ·))
 
+/-- `$A\to L$ as $v\to c$`, `$A\sim B$ as $v\to c$`, `$A=o(B)$ as $v\to c$`: the limit of `A`
+is `L`, of `A/B` is `1`, of `A/B` is `0` (a finite limit). -/
+def asLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
+  let (ts, r) ← mathChunk cs
+  let r1 ← kw [w!"as"] r
+  let (ts2, r2) ← mathChunk r1
+  let i ← ts2.findIdx? (· == .cmd w!"to")
+  let v ← match ts2.take i with
+    | [.id v] => some v
+    | [.cmd c] => if Math.greekNames.contains c then some ([92] ++ c) else none
+    | _ => none
+  let c ← Math.parseFormula (ts2.drop (i + 1))
+  let lim (e : MT) (l : MT) : MT := .chain (.limit v c e) [(.eq, l)]
+  let m ← match ts.findIdx? (· == .cmd w!"to"), ts.findIdx? (· == .cmd w!"sim") with
+    | some j, _ => do
+      let a ← Math.parseFormula (ts.take j)
+      let l ← Math.parseFormula (ts.drop (j + 1))
+      -- (a limit `\infty` is not a number)
+      match l with
+      | .id n => if n == w!"\\infty" then none else some (lim a l)
+      | _ => some (lim a l)
+    | none, some j => do
+      let a ← Math.parseFormula (ts.take j)
+      let b ← Math.parseFormula (ts.drop (j + 1))
+      some (lim (.frac a b) (.num 1))
+    | none, none => do
+      match ← Math.parseFormula ts with
+      | .chain a [(.eq, .app (.id [111]) [b])] => some (lim (.frac a b) (.num 0))
+      | _ => none
+  some (.fact m, r2)
+
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
 def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+  match asLimit cs with
+  | some res => some res
+  | none =>
   -- It holds that DISPLAY
   match kw [w!"it", w!"holds", w!"that"] cs with
   | some r => do let (m, _, r') ← display r; some (.holds m, r')
@@ -1287,6 +1324,13 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
 /-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
 a formula, `for every $x\in A$`, belongs to the clause itself). -/
 def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
+  -- `CLAUSE for infinitely many NPs $q$`
+  match (do
+      let r1 ← kw [w!"for", w!"infinitely", w!"many"] r
+      let (np, r2) ← untilClauseEnd 48 r1 []
+      if np.isEmpty then none else some (Clause.infinitelyMany np (some c), r2)) with
+  | some res => res
+  | none =>
   -- `CLAUSE for [all] sufficiently large $n$`
   match (do
       let r1 := (kw [w!"for", w!"all"] r <|> kw [w!"for", w!"every"] r <|> kw [w!"for", w!"each"] r).getD
@@ -1367,6 +1411,26 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   let (none_, r) := match kw [w!"no"] r with
     | some r' => (true, r')
     | none => (false, r)
+  -- `there are infinitely many NPs [such that CLAUSE]`
+  match (do
+      let r1 ← kw [w!"infinitely", w!"many"] r
+      let rec upToMany : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+        | 0, _, _ => none
+        | f + 1, cs, acc =>
+          if (kw [w!"such", w!"that"] cs).isSome || (followingProperty cs).isSome || clauseEnd cs then
+            some (acc.reverse, cs) else
+          match cs with
+          | [] => none
+          | c :: rest => upToMany f rest (c :: acc)
+      let (np, r2) ← upToMany (r1.length + 1) r1 []
+      if np.isEmpty then none else
+      match followingProperty r2 <|> kw [w!"such", w!"that"] r2 with
+      | some r3 => do
+        let (c, r4) ← suchThatClauses sub r3
+        some (Clause.infinitelyMany np (some c), r4)
+      | none => some (Clause.infinitelyMany np none, r2)) with
+  | some res => if none_ then none else some res
+  | none =>
   -- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, CLAUSE]`
   match (do
       -- the noun phrases: up to `satisfying`, `such that` or the end; a comma before a
