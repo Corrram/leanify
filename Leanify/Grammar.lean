@@ -97,12 +97,6 @@ def sig (cs : List Chunk) : Option (MT × List Chunk) := do
   let m ← Math.parseSig ts
   some (m, rest)
 
-def display (cs : List Chunk) : Option (MT × List Codes × List Chunk) :=
-  match cs with
-  | .d ts ls :: rest => do
-    let m ← Math.parseDisplay ts
-    some (m, ls, rest)
-  | _ => none
 
 /-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
@@ -131,8 +125,31 @@ def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
   let named : MT → Option Codes := fun m => match m with
     | .id x => some x
     | .sub (.id k) (.id i) => some (k ++ [95] ++ i)
+    | .sub (.id k) (.num n) => some (k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)
     | _ => none
   match ← Math.parseFormula ts with
+  -- `c_1,c_2>0`: the same bound on each variable
+  | .tuple xs@(_ :: _ :: _) => do
+    let (vs, last) ← match xs.reverse with
+      | .chain v [(r, b)] :: rest => some (rest.reverse ++ [v], (r, b))
+      | _ => none
+    let ns ← vs.mapM named
+    let (r, b) := last
+    match r with
+    | .gt => some (ns, .ival b inf true true)
+    | .ge => some (ns, .ival b inf false true)
+    | .lt => some (ns, .ival (.neg inf) b true true)
+    | .le => some (ns, .ival (.neg inf) b true false)
+    | _ => none
+  | .chain (.tuple vs) [(r, b)] => do
+    let xs ← vs.mapM named
+    if xs.length < 2 then none else
+    match r with
+    | .gt => some (xs, .ival b inf true true)
+    | .ge => some (xs, .ival b inf false true)
+    | .lt => some (xs, .ival (.neg inf) b true true)
+    | .le => some (xs, .ival (.neg inf) b true false)
+    | _ => none
   | .chain v [(r, b)] =>
     let x ← named v
     match r with
@@ -148,9 +165,123 @@ def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
     else none
   | _ => none
 
-/-- A binder: `x\in A`, or a bound on one real variable (`c>0`). -/
+/-- The same bound on several variables: `a,b>0`, `c_1,c_2\ge1`. -/
+def boundBinders (ts : List MTok) : Option (List Codes × MT) := do
+  let parts := Math.commaParts (ts.length + 1) 0 [] ts []
+  if parts.length < 2 then none else
+  let (vs, d) ← boundBinder (parts.getLast?.getD [])
+  let names ← (parts.dropLast).mapM fun p => match Math.parseFormula p with
+    | some (.id x) => some x
+    | some (.sub (.id k) (.id i)) => some (k ++ [95] ++ i)
+    | some (.sub (.id k) (.num n)) => some (k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)
+    | _ => none
+  some (names ++ vs, d)
+
+/-- A binder: `x\in A`, or a bound on one real variable (`c>0`) or several (`a,b>0`). -/
 def binderMath (ts : List MTok) : Option (List Codes × MT) :=
-  binderIn ts <|> boundBinder ts
+  binderIn ts <|> boundBinder ts <|> boundBinders ts
+
+/-- The part of a display after its last top-level `\quad` or `\qquad`: `(head, tail)`. -/
+def lastQuad : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok) →
+    Option (List MTok × List MTok)
+  | 0, _, _, _, best => best
+  | _ + 1, _, _, [], best => best
+  | f + 1, d, acc, t :: ts, best =>
+    let d' : Int := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    let best := if d == 0 && (t == .cmd w!"qquad" || t == .cmd w!"quad") then some (acc.reverse, ts) else best
+    lastQuad f d' (t :: acc) ts best
+
+/-- The inside of parentheses around all of `ts` (`(a)+(b)` is not one group). -/
+def parenInside (ts : List MTok) : Option (List MTok) :=
+  match ts with
+  | .sym 40 :: r =>
+    match r.reverse with
+    | .sym 41 :: r' =>
+      let inner := r'.reverse
+      let (d, ok) := inner.foldl (fun (acc : Int × Bool) t =>
+        let d := match t with | .sym 40 => acc.1 + 1 | .sym 41 => acc.1 - 1 | _ => acc.1
+        (d, acc.2 && 0 ≤ d)) (0, true)
+      if ok && d == 0 then some inner else none
+    | _ => none
+  | _ => none
+
+/-- The words of the `\text{…}` tokens at the start of `ts`. -/
+def textWords : List MTok → List Codes × List MTok
+  | .text w :: ts => let (ws, r) := textWords ts; (lower w :: ws, r)
+  | ts => ([], ts)
+
+/-- The parts of `(p\in\mathbb Z,\ q\ge Q)` after a display formula, around its formula
+`body`: a part binds its variables (`p\in A`, `q\ge Q`), unless one of them is already
+bound in the parentheses; then it is a condition (`q\ge Q(\nu)` after `q\in\mathbb Z`). -/
+def condParts : List Codes → List (List MTok) → MT → Option MT
+  | _, [], body => some body
+  | bound, p :: ps, body =>
+    match binderMath p with
+    | some (vs, dom) =>
+      if vs.any bound.contains then do
+        let c ← Math.parseFormula p
+        some (.limp c (← condParts bound ps body))
+      else do
+        some (.quant true vs dom (← condParts (bound ++ vs) ps body))
+    | none => do
+      let c ← Math.parseFormula p
+      some (.limp c (← condParts bound ps body))
+
+/-- A display formula with what is written after it: binders and conditions in
+parentheses (`\qquad(p\in\mathbb Z,\ q\ge Q)`), or in words (`\qquad\text{for every
+}x\in A`, `\qquad\text{if }x>0`), read into the formula; and a noun-phrase binder
+(`\qquad\text{for every integer }k\ge1`) for the clause, as `for every NP` after it. -/
+def displayParts (ts : List MTok) : Option (MT × Option (List Chunk)) :=
+  let ts' := match ts.reverse with
+    | .sym 44 :: r | .sym 46 :: r | .sym 59 :: r => r.reverse
+    | _ => ts
+  let plain : Option (MT × Option (List Chunk)) := (Math.parseDisplay ts).map (·, none)
+  match lastQuad (ts'.length + 1) 0 [] ts' none with
+  | none => plain
+  | some (head, tail) =>
+    let head := match head.reverse with
+      | .sym 44 :: r => r.reverse
+      | _ => head
+    match parenInside tail with
+    | some inner => do
+      -- (a formula in parentheses after a display is never a further claim)
+      let body ← Math.parseDisplay head
+      let parts := (Math.commaParts (inner.length + 1) 0 [] inner []).filter (!·.isEmpty)
+      some (← condParts [] parts body, none)
+    | none =>
+      match textWords tail with
+      | ([], _) => plain
+      | (w :: ws, r) =>
+        if r.isEmpty then plain
+        else if w == w!"if" || w == w!"whenever" || w == w!"when" then do
+          if !ws.isEmpty then none else
+          let body ← Math.parseDisplay head
+          let c ← Math.parseFormula r
+          some (.limp c body, none)
+        else if w == w!"for" then do
+          let body ← Math.parseDisplay head
+          let ws ← match ws with
+            | q :: rest =>
+              if q == w!"every" || q == w!"all" || q == w!"each" || q == w!"any" then some rest
+              -- (`for some`: not a binder of every element)
+              else if q == w!"some" then none else some ws
+            | [] => some []
+          if ws.isEmpty then do
+            let (vs, dom) ← binderMath r
+            some (.quant true vs dom body, none)
+          else some (body, some (ws.map Chunk.w ++ [Chunk.m r]))
+        else plain
+
+def display (cs : List Chunk) : Option (MT × List Codes × List Chunk) :=
+  match cs with
+  | .d ts ls :: rest => do
+    let (m, np) ← displayParts ts
+    -- (a noun-phrase binder belongs to a clause: `displayClause`)
+    if np.isSome then none else some (m, ls, rest)
+  | _ => none
 
 /-- Words until (not including) a stop word; fails if a non-word chunk occurs. -/
 def wordsUntil (stop : List Codes) : Nat → List Chunk → List Codes → Option (List Codes × List Chunk)
@@ -353,6 +484,11 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
     | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r')
+    -- `every integer $n\ge1$`, `every integer $n$ with $n\ge1$`: one variable with a bound
+    | some (.w _), some (.m ts) =>
+      match binderMath ts with
+      | some ([_], _) => some (.noun np, r')
+      | _ => none
     | _, _ => none)
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
@@ -491,6 +627,8 @@ inductive Clause where
   | isA (s : MT) (np : List Chunk) (neg : Bool)
   /-- `there is $C>0$ such that CLAUSE`: an existential binder. -/
   | thereIs (b : Bind) (c : Clause)
+  /-- `such that, for every $b\ge b_0$, CLAUSE`: the clause for every value of the binder. -/
+  | under (b : Bind) (c : Clause)
   /-- `CLAUSE for every NP $x$`: the clause for every object the noun phrase
   describes. -/
   | forEveryNP (c : Clause) (np : List Chunk)
@@ -911,6 +1049,12 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     let r2 ← kw [w!"attains", w!"it"] r1
     some (.onlyAttains x, r2)
   | none =>
+  -- DISPLAY \qquad\text{for every NP}: the formula for every object of the noun phrase
+  match (match cs with
+      | .d ts _ :: rest => (displayParts ts).bind fun (m, np) => np.map fun np => (Clause.forEveryNP (.fact m) np, rest)
+      | _ => none) with
+  | some res => some res
+  | none =>
   -- DISPLAY (and DISPLAY)*
   match display cs with
   | some (m, _, r) =>
@@ -1017,6 +1161,15 @@ def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
     | _ => (c, r)
   | none => (c, r)
 
+/-- `[,] for every B, CLAUSE` after `such that`: the clause under the binders. -/
+def underBinder (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
+    Option (Clause × List Chunk) := do
+  let cs := optPunct 44 cs
+  let (b, r) ← binder cs
+  let r ← punct 44 r
+  let (c, r') ← sub r
+  some (.under b c, r')
+
 /-- `there is|exists [a constant] $C>0$ such that CLAUSE`; `sub` reads the clauses
 after `such that`. -/
 def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
@@ -1024,6 +1177,8 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   let r ← kw [w!"there", w!"is"] cs <|> kw [w!"there", w!"exists"] cs <|> kw [w!"there", w!"are"] cs <|>
     kw [w!"there", w!"exist"] cs
   let r := (kw [w!"a", w!"constant"] r <|> kw [w!"constants"] r <|> kw [w!"a", w!"number"] r <|>
+    kw [w!"an", w!"absolute", w!"constant"] r <|> kw [w!"absolute", w!"constants"] r <|>
+    kw [w!"a", w!"universal", w!"constant"] r <|> kw [w!"universal", w!"constants"] r <|>
     kw [w!"a", w!"real", w!"number"] r <|> kw [w!"some"] r).getD r
   -- `there is no NP …`, `there are no NPs …`
   let (none_, r) := match kw [w!"no"] r with
@@ -1100,7 +1255,7 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         else r2
       let (conds, r5) ← match kw [w!"such", w!"that"] r2 with
         | some r3 => do
-          let (c, r4) ← (display r3).map (fun (m, _, r') => (Clause.fact m, r')) <|> sub r3
+          let (c, r4) ← (display r3).map (fun (m, _, r') => (Clause.fact m, r')) <|> underBinder sub r3 <|> sub r3
           let (c, r4) := everyNPAfter c r4
           more 6 r4 [c]
         | none => some ([], r2)
@@ -1129,20 +1284,51 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         let (np, r1) ← upTo (r.length + 1) r []
         match kw [w!"such", w!"that"] r1 with
         | some r2 => do
-          let (c, r3) ← sub r2
+          let (c, r3) ← underBinder sub r2 <|> sub r2
           let (c, r4) := everyNPAfter c r3
           some (Clause.existsNP np unique (some c), r4)
         | none => some (Clause.existsNP np unique none, r1)
       | _ => none) with
   | some res => some res
   | none =>
-  let (ts, r1) ← mathChunk r
-  let b ← (do let (vs, d) ← binderMath ts; some (Bind.every vs d)) <|>
-    (match ts with
-      | [.id v] => some (Bind.every [v] (.id w!"\\mathbb{R}"))
-      | _ => none)
+  -- `there are $c_1,c_2>0$ and $b_0$ such that`: several constants, each a bound or a
+  -- name (a real number)
+  let one (cs : List Chunk) : Option (Bind × List Chunk) :=
+    -- `an integer $n_0\ge3$`: a noun phrase of words and its variable
+    (do
+      let r ← kw [w!"a"] cs <|> kw [w!"an"] cs
+      let ws : List Chunk := r.takeWhile fun c => match c with
+        | Chunk.w w => w != w!"such" && w != w!"and"
+        | _ => false
+      if ws.isEmpty then none else
+      match r.drop ws.length with
+      | Chunk.m ts :: r' => some (Bind.noun (ws ++ [Chunk.m ts]), r')
+      | _ => none) <|> do
+    let (ts, r1) ← mathChunk cs
+    let b ← (do let (vs, d) ← binderMath ts; some (Bind.every vs d)) <|>
+      (match Math.parseFormula ts with
+        | some (.id v) => some (Bind.every [v] (.id w!"\\mathbb{R}"))
+        | some (.sub (.id k) (.id i)) => some (Bind.every [k ++ [95] ++ i] (.id w!"\\mathbb{R}"))
+        | some (.sub (.id k) (.num n)) =>
+          some (Bind.every [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat] (.id w!"\\mathbb{R}"))
+        | _ => none)
+    some (b, r1)
+  let rec moreConsts : Nat → List Chunk → List Bind → List Bind × List Chunk
+    | 0, cs, acc => (acc.reverse, cs)
+    | f + 1, cs, acc =>
+      match ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some) <|> kw [w!"and"] cs with
+      | some r =>
+        match one r with
+        | some (b, r') => moreConsts f r' (b :: acc)
+        | none => (acc.reverse, cs)
+      | none => (acc.reverse, cs)
+  let (b0, r1) ← one r
+  let b := match moreConsts 4 r1 [] with
+    | ([], _) => b0
+    | (bs, _) => Bind.many (b0 :: bs)
+  let r1 := (moreConsts 4 r1 []).2
   let r2 ← kw [w!"such", w!"that"] r1
-  let (c, r3) ← sub r2
+  let (c, r3) ← underBinder sub r2 <|> sub r2
   let (c, r4) := everyNPAfter c r3
   some (.thereIs b c, r4)
 

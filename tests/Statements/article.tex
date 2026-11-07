@@ -1,0 +1,107 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers}]{leanify}
+\newcommand{\ZZ}{\mathbb{Z}}
+\let\oldmapsto\mapsto
+\renewcommand{\mapsto}{\mathrel{\oldmapsto}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Objects and binders}\label{sec:objects}
+
+\begin{lemma}\label{prime}
+Let $p$ be a prime number. Then $p\ge2$.
+\end{lemma}
+
+\begin{lemma}\label{odd-prime}
+Let $p$ be an odd prime. Then $p\ge3$.
+\end{lemma}
+
+\begin{lemma}\label{integer-exists}
+For every real $\nu>2$, there is an integer $Q$ such that $\nu\le Q$.
+\end{lemma}
+
+\begin{lemma}\label{bounded-binder}
+For every integer $n\ge1$, $n\le n^2$.
+\end{lemma}
+
+\begin{lemma}\label{fixed}
+For every fixed real $c>0$, $c^2>0$.
+\end{lemma}
+
+\begin{lemma}\label{absolute}
+There is an absolute constant $C>0$ such that $x\le C$ for every $x\in[0,1]$.
+\end{lemma}
+
+\section{Conditions after a display}
+
+\begin{theorem}\label{text-binder}
+There is an absolute constant $C>0$ such that
+\[
+ k\le Ck^2\qquad\text{for every integer }k\ge1.
+\]
+\end{theorem}
+
+\begin{theorem}\label{paren-binders}
+For every real $\nu>2$, there is an integer $Q$ such that
+\[
+ \left|\frac pq\right|\ge q^{-\nu}
+ \qquad(p\in\ZZ,\ q\in\ZZ,\ q\ge Q,\ |p|\ge q).
+\]
+\end{theorem}
+
+\begin{lemma}\label{text-for-all}
+For every $t>0$,
+\[
+ x^2+t>0\qquad\text{for all }x\in\mathbb R.
+\]
+\end{lemma}
+
+\section{Bounds that use variables bound before}
+
+\begin{lemma}\label{exists-bound}
+For every $c>0$ there is an integer $b\ge c$ such that $b\le c+1$.
+\end{lemma}
+
+\begin{lemma}\label{exists-with}
+For every $c>0$ there is an integer $b$ with $b\ge c$ such that $b\le c+1$.
+\end{lemma}
+
+\begin{lemma}\label{exactly-one}
+For every $c>0$ there is exactly one integer $b$ with $c<b\le c+1$ such that $b\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{for-every-after}
+There is $c>0$ such that $c\le b$ for every integer $b\ge c$.
+\end{lemma}
+
+\begin{lemma}\label{objects}
+There exist an integer $a$ and an integer $b$ with $b\ge a$ such that $a\le b$.
+\end{lemma}
+
+\begin{lemma}\label{binders}
+For every $c>0$ and every integer $b\ge c$, $c\le b$.
+\end{lemma}
+
+\begin{theorem}\label{constants-then-binder}
+There are absolute constants $c_1,c_2>0$ and an integer $b_0\ge2$ such that, for every
+integer $b\ge b_0$,
+\[
+ c_1\log b\le c_2 b.
+\]
+\end{theorem}
+
+The results of Section~\ref*{sec:objects} use the field of numbers
+\cite[Section~2.1 and
+Lemma~3]
+{numbers}. The map $x\mapsto x^2$ appears there as well.
+
+\begin{figure}
+\begin{tikzpicture}
+ \foreach \x/\label in {0/{a},1/{$b$}} {\node at (\x,0) {\label};}
+\end{tikzpicture}
+\caption{A drawing, which is not read.}
+\end{figure}
+
+\end{document}

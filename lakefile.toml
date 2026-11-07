@@ -93,3 +93,10 @@ globs = ["PDE.+"]
 name = "Conventions"
 srcDir = "tests"
 globs = ["Conventions.+"]
+
+[[lean_lib]]
+# Statement forms found in OpenAI's collection of AI-written manuscripts, compiled by
+# the kernel.
+name = "Statements"
+srcDir = "tests"
+globs = ["Statements.+"]

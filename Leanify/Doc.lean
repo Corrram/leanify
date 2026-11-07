@@ -713,12 +713,17 @@ def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
   | _ => pure none
 
 /-- A variable chunk: its name, and the domain of a membership `$x\in A$`. -/
-def varChunk (ts : List MTok) : M (Codes × Option (Ty × Option Tm)) := do
+def varChunk (ts : List MTok) (outer : Scope := []) : M (Codes × Option (Ty × Option Tm)) := do
   match varName ts with
   | some v => pure (v, none)
   | none =>
     match Grammar.binderMath ts with
-    | some ([v], dom) => do pure (v, some (← domainOf false dom))
+    -- (the bound may use the variables bound outside: `every integer $b\ge b_0$`; like
+    -- the conditions after `with`, its predicate is stated where the variable is bound,
+    -- one binder further in than `outer`)
+    | some ([v], dom) => do
+      let (ty, p) ← domainOf false dom outer
+      pure (v, some (ty, p.map (shift 1 0)))
     | _ => fail E.unsupported
 
 /-- `$φ$ [and $ψ$]`: the conditions after `with` in a noun phrase. -/
@@ -734,6 +739,11 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
 
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
+  -- (`for every fixed real $c>0$`)
+  let np := match np with
+    | .w w :: c :: rest => if w == w!"fixed" then c :: rest else np
+    | _ => np
   -- `every $x\in[0,1]$` in a list of binders (`for every positive integer $n$ and every
   -- $x\in[0,1]$`): a variable and its domain
   match np with
@@ -758,7 +768,7 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       match (cands.map (·.2.length)).min? with
       | some k => pre f (cs.drop (cs.length - k)) ((cs, (cands.filter (·.2.length == k)).map (·.1)) :: acc)
       | none => (acc.reverse, cs)
-  let (pmGroups, r0) := pre 4 np []
+  let (pmAll, rEnd) := pre 4 np []
   -- notions of the article before the noun (`an LTD copula $C$`)
   let rec matchName : List Codes → List Chunk → Option (List Chunk)
     | [], cs => some cs
@@ -771,56 +781,73 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       match st.notions.findSome? (fun (ph, i) => (matchName ph cs).map (i, ·)) with
       | some (i, r) => preN f r (i :: acc)
       | none => (acc.reverse, cs)
-  let (nms, r0) := preN 4 r0 []
   -- the head: an article class, a vocabulary noun, or a variable with a signature
   -- (the article's own classes take precedence over the vocabulary's nouns)
-  let head : M (Ty × List Tm × Option (List MTok) × List Chunk) := do
-    match matchWords st.nouns r0 with
-    | some (i, r) => do
-      let gty : Option Ty := (st.globs[i]?).map (·.ty)
-      let a ← match gty with
-        | some (.fn a .prop) => pure a
-        | _ => fail E.type
-      match r with
-      | .m ts :: r' =>
-        if (Math.parseSig ts).isSome then fail E.unsupported else pure (a, [.glob i], some ts, r')
-      | _ => pure (a, [.glob i], none, r)
-    | none =>
-      let cands := V.nouns.filterMap (fun n =>
-          ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => ((n, v), r))
-      match ← theMeaning (fun (nv : Noun × Option (List MTok)) => (nv.1.ty, nv.1.pred, nv.2))
-          (·.1.field) r0 cands with
-      | some ((n, v), r) =>
-        match v, r with
-        -- `a copula $C$`: the variable follows a noun without a slot
-        | none, .m ts :: r' =>
-          let single := match ts with | [.id _] | [.cmd _] => true | _ => false
-          if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then pure (n.ty, [n.pred], v, r)
-          else pure (n.ty, [n.pred], some ts, r')
-        | _, _ => pure (n.ty, [n.pred], v, r)
+  let headOf (r00 : List Chunk) : M ((Ty × List Tm × Option (List MTok) × List Chunk) × List Nat) := do
+    let (nms, r0) := preN 4 r00 []
+    let h : Ty × List Tm × Option (List MTok) × List Chunk ← do
+      match matchWords st.nouns r0 with
+      | some (i, r) => do
+        let gty : Option Ty := (st.globs[i]?).map (·.ty)
+        let a ← match gty with
+          | some (.fn a .prop) => pure a
+          | _ => fail E.type
+        match r with
+        | .m ts :: r' =>
+          if (Math.parseSig ts).isSome then fail E.unsupported else pure (a, [.glob i], some ts, r')
+        | _ => pure (a, [.glob i], none, r)
       | none =>
-        -- `$f:A\to B$`, optionally after the noun `map` or `function`
-        let r1 := match r0 with
-          | .w w :: r => if w == w!"map" || w == w!"function" || w == w!"maps" || w == w!"functions" then r else r0
-          | _ => r0
-        match r1 with
-        | .m ts :: r => do
-          let sg ← liftO (Math.parseSig ts) E.noun ((wordsOf np).flatten)
-          match sg with
-          | .sig (.id f) d c => do
-            -- a field (`u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`)
-            match ← fieldSig d c with
-            | some (info, ty) =>
-              modify fun st => { st with fields := (f, info) :: st.fields }
-              pure (ty, [], some [.id f], r)
-            | none =>
-            let ds ← domainsOf false d
-            let (ct, cp) ← domainOf false c
-            if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
-            pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
-          | _ => fail E.unsupported
-        | _ => fail E.noun (((wordsOf np).intersperse [32]).flatten)
-  let (ty, preds, var, r1) ← head
+        let cands := V.nouns.filterMap (fun n =>
+            ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => ((n, v), r))
+        match ← theMeaning (fun (nv : Noun × Option (List MTok)) => (nv.1.ty, nv.1.pred, nv.2))
+            (·.1.field) r0 cands with
+        | some ((n, v), r) =>
+          match v, r with
+          -- `a copula $C$`: the variable follows a noun without a slot
+          | none, .m ts :: r' =>
+            let single := match ts with | [.id _] | [.cmd _] => true | _ => false
+            if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then pure (n.ty, [n.pred], v, r)
+            else pure (n.ty, [n.pred], some ts, r')
+          | _, _ => pure (n.ty, [n.pred], v, r)
+        | none =>
+          -- `$f:A\to B$`, optionally after the noun `map` or `function`
+          let r1 := match r0 with
+            | .w w :: r => if w == w!"map" || w == w!"function" || w == w!"maps" || w == w!"functions" then r else r0
+            | _ => r0
+          match r1 with
+          | .m ts :: r => do
+            let sg ← liftO (Math.parseSig ts) E.noun (((wordsOf np).intersperse [32]).flatten)
+            match sg with
+            | .sig (.id f) d c => do
+              -- a field (`u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`)
+              match ← fieldSig d c with
+              | some (info, ty) =>
+                modify fun st => { st with fields := (f, info) :: st.fields }
+                pure (ty, [], some [.id f], r)
+              | none =>
+              let ds ← domainsOf false d
+              let (ct, cp) ← domainOf false c
+              if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
+              pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
+            | _ => fail E.unsupported
+          | _ => fail E.noun (((wordsOf np).intersperse [32]).flatten)
+    pure (h, nms)
+  -- the longest noun first: the words of a modifier may begin a noun (`prime number`,
+  -- `composite number`); otherwise the modifiers before the noun (`odd prime`)
+  let restAt (k : Nat) : List Chunk := match pmAll[k]? with
+    | some (cs, _) => cs
+    | none => rEnd
+  let rec tryK : Nat → Nat → M (Nat × (Ty × List Tm × Option (List MTok) × List Chunk) × List Nat)
+    | 0, k => do
+      let (h, nms) ← headOf (restAt k)
+      pure (k, h, nms)
+    | f + 1, k =>
+      if pmAll.length ≤ k then do
+        let (h, nms) ← headOf rEnd
+        pure (pmAll.length, h, nms)
+      else tryCatch (do let (h, nms) ← headOf (restAt k); pure (k, h, nms)) fun _ => tryK f (k + 1)
+  let (k, (ty, preds, var, r1), nms) ← tryK (pmAll.length + 1) 0
+  let pmGroups := pmAll.take k
   let pms ← pmGroups.mapM fun (cs, ms) => do
     let ms := ms.filter (·.ty == ty)
     if ms.isEmpty then fail E.type
@@ -853,7 +880,7 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     | _ => ([], r2)
   if !r2.isEmpty then fail E.noun (((wordsOf np).intersperse [32]).flatten)
   let (name, member) ← match var with
-    | some ts => do let (v, d) ← varChunk ts; pure (v, d)
+    | some ts => do let (v, d) ← varChunk ts outer; pure (v, d)
     | none => pure ([], none)
   let memberPred ← match member with
     | some (t, p) => if t == ty then pure p.toList else fail E.type
@@ -1023,6 +1050,7 @@ def clauseMaths : Clause → List MT
   | .notions s _ _ => [s]
   | .isA s np _ => s :: (mathsOf np).filterMap Math.parseFormula
   | .thereIs _ c => clauseMaths c
+  | .under _ c => clauseMaths c
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ none => (mathsOf np).filterMap Math.parseFormula
@@ -2399,20 +2427,36 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
       | some q => .and (.app q (.loc 0)) acc
       | none => acc)) p)
+  | .under b cl => do
+    -- the domains may use the variables bound outside (`for every integer $b\ge b_0$`):
+    -- each predicate is about the scope outside, applied under its own binder and those
+    -- before it
+    let items : List (BindInfo × Nat) ← match b with
+      | .every vs d => do
+        let (ty, p) ← domainOf false d sc
+        pure ((vs.zip (List.range vs.length)).map fun (v, j) => (⟨v, ty, p⟩, j + 1))
+      | .noun np => do pure [(← nounPhrase np sc, 0)]
+      | _ => do pure ((← binderInfos b).map (·, 0))
+    let bs := items.map (·.1)
+    let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
+    pure (items.foldr (fun (bi, k) acc => Tm.all bi.ty (match bi.pred with
+      | some q => .imp (.app (shift k 0 q) (.loc 0)) acc
+      | none => acc)) p)
   | .existsNP np unique cl => do
     let b ← match ← pdeNoun np with
       | some [b] => pure b
       | _ => nounPhrase np sc
     if b.name.isEmpty then fail E.unsupported
-    -- `P x`: the noun phrase and the clause about `x`
+    -- `P x`: the noun phrase and the clause about `x`, where `x` is bound (the
+    -- predicate of a noun phrase is stated there)
     let inner ← match cl with
       | some cl => clauseTm c ((b.name, b.ty) :: sc) onVar lastRhs cl
       | none => pure .tt
-    let P := Tm.lam b.ty .tt (.and (holdsAt b.pred (.loc 0)) inner)
+    let px := Tm.and (holdsAt b.pred (.loc 0)) inner
+    -- (`exactly one`: every `y` with `P y` is `x`; `P y` under one more binder)
     let body := if unique then
-        Tm.and (.app (shift 1 0 P) (.loc 0))
-          (.all b.ty (.imp (.app (shift 2 0 P) (.loc 0)) (.eq (.loc 0) (.loc 1))))
-      else Tm.app (shift 1 0 P) (.loc 0)
+        Tm.and px (.all b.ty (.imp (shift 1 1 px) (.eq (.loc 0) (.loc 1))))
+      else px
     pure (.ex b.ty body)
   | .existsNPs nps cls => do
     -- the objects, each NP after the ones before it
@@ -2423,14 +2467,16 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some more => bs := bs ++ more
       | none =>
         -- a noun phrase that is not the vocabulary's makes the sentence prose
+        let np := (kw [w!"a"] np <|> kw [w!"an"] np).getD np
         let b ← tryCatch (nounPhrase np outer) fun e =>
           if e.code == E.noun || e.code == E.unsupported then fail E.prose else throw e
         bs := bs ++ [b]
     let sc' := (bs.map fun b => (b.name, b.ty)).reverse ++ sc
     let ps ← clauseTms c sc' onVar lastRhs cls
-    -- (the predicate of each object refers to the objects before it)
+    -- (the predicate of each object refers to the objects before it, stated where the
+    -- object is bound)
     pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
-      | some q => .and (.app (shift 1 0 q) (.loc 0)) acc
+      | some q => .and (.app q (.loc 0)) acc
       | none => acc)) (Elab.conjAll ps))
   | .noneExist cl => do pure (.not (← clauseTm c sc onVar lastRhs cl))
   | .forEveryNP cl np => do

@@ -100,7 +100,7 @@ These hold for every change. A feature that cannot meet them is not added.
      and every certificate then fails with
      `(kernel) declaration type mismatch, 'Foo.run0'`.
    After a change on the compile path, build the test articles (`lake build
-   Demo Notation Refuted Vocabulary Fields Calculus PDE Conventions`), not only the checker.
+   Demo Notation Refuted Vocabulary Fields Calculus PDE Conventions Statements`), not only the checker.
 10. **No `native_decide`.** The certificate depends on the kernel alone.
 
 ### The LaTeX package

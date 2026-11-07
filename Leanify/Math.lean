@@ -196,7 +196,11 @@ def simplify : Nat → List PTok → Option (List MTok)
         | ⟨.lbrace, _, _⟩ :: rest =>
           let inner := rest.takeWhile (fun p => p.tok != .rbrace)
           let word := inner.filterMap (fun p => match p.tok with | .mvar c => some c | _ => none)
-          if word.length != inner.length then none
+          -- (`\text{for every integer }`: its words, one by one)
+          let words := inner.filterMap (fun p => match p.tok with | .word w => some w | _ => none)
+          if !words.isEmpty && inner.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
+            ((words.map MTok.text) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
+          else if word.length != inner.length then none
           else (MTok.text word :: ·) <$> simplify f (rest.drop (inner.length + 1))
         | _ => none
       else if wFonts.contains n then

@@ -87,8 +87,8 @@ Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 | `\Delta f(x,y)` | the Laplacian, `∑ⱼ ∂ⱼ∂ⱼ f` |
 | `For every $I\in\mathbb N_0^2$, $|\partial^If(x,y)|\le C_I$` | a multi-index `I` (in `\mathbb N_0^n`, `\mathbb N^n`) is the `n` natural numbers `I_1`, …, `I_n`; `\partial^I f` is the derivative of order `I_k` in the `k`-th argument, defined only where `f` is smooth (`C^∞`); a constant `C_I` may depend on the components |
 
-Generic constants and existence (`tests/Fields/article.tex` and
-`tests/Conventions/article.tex` use each form):
+Generic constants and existence (`tests/Fields/article.tex`,
+`tests/Conventions/article.tex` and `tests/Statements/article.tex` use each form):
 
 | Sentence | Reading |
 | --- | --- |
@@ -102,6 +102,11 @@ Generic constants and existence (`tests/Fields/article.tex` and
 | `For $0<h\ll\lambda\ll1$, …`, `Let $0<\varepsilon\ll1$.` | smallness, chosen from right to left: there is `c > 0` such that for every `λ ∈ (0, c)` there is `c' > 0` such that for every `h ∈ (0, c'λ)` the claim holds (`C^{-1}\ll b`: `C > 1/(c b)`) |
 | `… for every integer $m\ge0$ and every smooth function $\varphi$ on …` | binders after a claim, the first one outermost |
 | `For every positive integer $k$, every positive integer $N$ and every $x\in[0,1]$, …` | several binders before a claim (`, every`, `and every`, `and each`, `and all`, `and $y\in[0,1]$`), the first one outermost |
+| `For every integer $n\ge1$, …`, `For every real $\nu>2$, …`, `For every fixed real $c>0$, …` | a noun with a bounded variable; `fixed` marks a parameter and does not change the binder |
+| `There is an absolute constant $C>0$ such that …`, `there is an integer $Q$ such that …` | an existential constant (also `a universal constant`, `absolute constants`), an object of a noun |
+| `There are absolute constants $c_1,c_2>0$ and an integer $b_0\ge2$ such that, for every integer $b\ge b_0$, …` | several constants (`a,b>0` bounds each), then binders of the clause after `such that`, whose bounds may use the constants |
+| `\[ k\le Ck^2\qquad\text{for every integer }k\ge1. \]` | words after a display formula bind its variables, as `for every NP` after a clause (`\text{for all }x\in A`; `\text{if }x>0` is a condition) |
+| `\[ \left|\pi-\frac pq\right|\ge q^{-\nu}\qquad(p\in\mathbb Z,\ q\in\mathbb Z,\ q\ge Q). \]` | the parts in parentheses after a display formula bind its variables from left to right; a part about variables bound before (`q\ge Q`) is a condition. Such a part is never read as one more claim |
 | `Let $\varphi$ be a smooth function on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | a condition may use the variables bound before it |
 
 Fields and equations (`tests/PDE/article.tex` uses each form). A field on a product

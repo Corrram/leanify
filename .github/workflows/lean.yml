@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE Conventions
+        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE Conventions Statements
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -58,6 +58,10 @@ jobs:
         run: |
           lake exe leanify check tests/Conventions/article.tex --vocab numbers --claims > "$RUNNER_TEMP/conventions.check.txt" || true
           diff tests/Conventions/check.txt "$RUNNER_TEMP/conventions.check.txt"
+      - name: Statement forms of research manuscripts are read as documented
+        run: |
+          lake exe leanify check tests/Statements/article.tex --vocab numbers --claims > "$RUNNER_TEMP/statements.check.txt"
+          diff tests/Statements/check.txt "$RUNNER_TEMP/statements.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

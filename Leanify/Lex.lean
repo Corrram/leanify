@@ -83,6 +83,10 @@ def wDisplayEnvs : List Codes :=
   [w!"equation", w!"equation*", w!"align", w!"align*", w!"gather", w!"gather*", w!"multline",
    w!"multline*", w!"displaymath"]
 def wListEnvs : List Codes := [w!"enumerate", w!"itemize", w!"description"]
+/-- Environments of drawings and verbatim text, skipped to their end. -/
+def wSkipEnvs : List Codes :=
+  [w!"tikzpicture", w!"pgfpicture", w!"picture", w!"tikzcd", w!"verbatim", w!"lstlisting",
+   w!"minted", w!"comment"]
 def wDropText : List Codes :=
   [w!"emph", w!"textit", w!"textbf", w!"textup", w!"noindent", w!"centering", w!"medskip",
    w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null",
@@ -321,10 +325,14 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
           match macros.lookup name with
           | some body0 =>
             let (body, rest, k) := expand macros name body0 rest
-            match lexAux macros f body pos st [] with
-            | some (ts, st') => if st' == st then
-                lexAux macros f rest (pos + n + k) st (ts.reverse ++ out) else none
-            | none => none
+            -- (the body without the macro itself: `\let\old\longmapsto` and then
+            -- `\renewcommand{\longmapsto}{…\old…}` uses the original `\longmapsto`)
+            match lexAux (macros.filter (·.1 != name)) f body pos st [] with
+            -- (a macro may open or close a formula: `\newcommand{\be}{\begin{equation}}`)
+            | some (ts, st') => lexAux macros f rest (pos + n + k) st' (ts.reverse ++ out)
+            -- a body the lexer cannot read (layout code with `\makeatletter` internals) is an
+            -- unknown command
+            | none => lexAux macros f rest (pos + n + k) st (⟨.cmd name, pos, math⟩ :: out)
           | none =>
           if name == w!"begin" || name == w!"end" then
             match rest with
@@ -333,6 +341,19 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               let len := n + env0.length + 2
               let env := envAlias macros env0
               let isDisplay := wDisplayEnvs.contains env
+              -- drawings and verbatim text are not prose: skipped to their end
+              if name == w!"begin" && wSkipEnvs.contains env0 then
+                let close := w!"\\end{" ++ env0 ++ w!"}"
+                let rec find : Nat → Codes → Nat → Option (Codes × Nat)
+                  | 0, _, _ => none
+                  | _ + 1, [], _ => none
+                  | g + 1, d :: ds, k =>
+                    if (d :: ds).take close.length == close then some ((d :: ds).drop close.length, k + close.length)
+                    else find g ds (k + 1)
+                match find (r'.length + 1) (r'.drop 1) 0 with
+                | some (r'', k) => lexAux macros f r'' (pos + len + k) st out
+                | none => none
+              else
               if name == w!"begin" then
                 -- the options of a list environment are layout
                 let (r'', k) := if wListEnvs.contains env then optArg (r'.drop 1) else (r'.drop 1, 0)
@@ -343,7 +364,15 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             | _ => none
           else if name == w!"label" || name == w!"ref" || name == w!"eqref" || name == w!"cite"
               || name == w!"citep" || name == w!"citet" || wSelfRefs.contains name then
+            -- (`\ref*{l}`, `\cref*{l}`: the starred forms print the same reference)
+            let (rest, nStar) := match rest with
+              | 42 :: r => (r, 1)
+              | _ => (rest, 0)
             let (r1, n1) := optArg rest
+            -- (spaces and a line break may stand before the braces: `\cite[Lemma~2]` at the
+            -- end of a line, `{key}` on the next)
+            let sp := (r1.takeWhile fun c => c == 32 || c == 10 || c == 9).length
+            let (r1, n1) := (r1.drop sp, n1 + nStar + sp)
             match r1 with
             | 123 :: r =>
               let (arg, r') := takeWhile (· != 125) r
@@ -351,7 +380,8 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               let kind := if name == w!"label" then RefKind.label else if name == w!"ref" then .ref
                 else if name == w!"eqref" || wSelfRefs.contains name then .eqref else .cite
               emit (.ref kind arg) (r'.drop 1) (n + n1 + arg.length + 2) st
-            | _ => none
+            -- (`\label` as a name in drawing code: `\foreach \x/\label in …`)
+            | _ => emit (.cmd name) rest n st
           else if wSkipArgs.contains name then
             -- skip an optional argument and all directly following braced groups
             let rec skip : Nat → Codes → Nat → Option (Codes × Nat)
@@ -388,6 +418,24 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               emit (.cmd w!"@heading") rest n st
             else lexAux macros f rest (pos + n) st out
           else if math && wDropMath.contains name then lexAux macros f rest (pos + n) st out
+          else if math && (name == w!"text" || name == w!"textup" || name == w!"textrm" ||
+              name == w!"mbox" || name == w!"textnormal") then
+            -- `\text{for every integer }`: words, as in the running text (anything but words
+            -- and punctuation keeps the letters, as before)
+            match rest with
+            | 123 :: r =>
+              match group 100000 0 r [] with
+              | some (inner, r', k) =>
+                match lexAux macros f inner (pos + n + 1) [] [] with
+                | some (ts, []) =>
+                  if !ts.isEmpty && ts.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
+                    lexAux macros f r' (pos + n + 1 + k) st
+                      (⟨.rbrace, pos + n + k, true⟩ :: (ts.reverse.map fun p => { p with math := true }) ++
+                        ⟨.lbrace, pos + n, true⟩ :: ⟨.cmd w!"text", pos, true⟩ :: out)
+                  else emit (.cmd name) rest n st
+                | _ => emit (.cmd name) rest n st
+              | none => emit (.cmd name) rest n st
+            | _ => emit (.cmd name) rest n st
           else if math then
             match mathAlias name with
             | some t => emit t rest n st
@@ -575,12 +623,25 @@ def linesOffset (ls : List Codes) : Nat := ls.foldl (fun a l => a + l.length + 1
 
 def blankLine (l : Codes) : Bool := l.all Lex.isSpace
 
+/-- The number of occurrences of `pat` in `l`. -/
+def countSub (pat : Codes) : Codes → Nat
+  | [] => 0
+  | c :: cs => (if (c :: cs).take pat.length == pat then 1 else 0) + countSub pat cs
+
+/-- Do the lines open a drawing or verbatim environment that they do not close (a
+blank line inside it does not end the block)? -/
+def openSkip (ls : List Codes) : Bool :=
+  Lex.wSkipEnvs.any fun e =>
+    let b := ls.foldl (fun n l => n + countSub (w!"\\begin{" ++ e ++ w!"}") l) 0
+    let d := ls.foldl (fun n l => n + countSub (w!"\\end{" ++ e ++ w!"}") l) 0
+    d < b
+
 /-- Group lines into paragraph blocks (start offset, lines); blank lines separate
-blocks. -/
+blocks, except inside a drawing or verbatim environment. -/
 def blocksOf : List Codes → Nat → Option (Nat × List Codes) → List (Nat × List Codes) → List (Nat × List Codes)
   | [], _, cur, acc => (cur.toList ++ acc).reverse
   | l :: ls, pos, cur, acc =>
-    if blankLine l then blocksOf ls (pos + l.length + 1) none (cur.toList ++ acc)
+    if blankLine l && !(cur.any fun (_, c) => openSkip c) then blocksOf ls (pos + l.length + 1) none (cur.toList ++ acc)
     else match cur with
       | none => blocksOf ls (pos + l.length + 1) (some (pos, [l])) acc
       | some (p, c) => blocksOf ls (pos + l.length + 1) (some (p, c ++ [l])) acc
