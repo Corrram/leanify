@@ -70,6 +70,8 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\{1\le n\le N : φ\}`, `\{x>0 : φ\}` | the variable bounded by the inequalities, with `φ`: an index (`n`, `m`, `k`, `j`, `i`, `N`, `M`, `K`) among the integers, any other variable among the real numbers |
 | `\gcd(a,b)` | for integers `a`, `b`: the natural number `d` that divides both and that every common divisor divides (so `\gcd(0,0)=0`) |
 | `\mathbb{Q}` | the rational numbers, as real numbers |
+| `\mathbb{C}`, `complex number`, `\mathrm{i}` (`\mathrm i`), `z+w`, `zw`, `z/w`, `z^n`, `\lvert z\rvert`, `\overline{z}`, `\bar z`, `\operatorname{Re}(z)`, `\Re z`, `\Im z`, `e^{z}`, `\exp(z)` | the complex numbers (mathlib `ℂ`): with a complex operand, arithmetic is complex (a real number is a complex number); `z/w` is defined for `w\ne0`, `z^n` for a natural number `n` (`z^{-n}` is `1/z^n`); `\lvert z\rvert` is the modulus. Complex numbers are not ordered: `z\le w` is refused with a finding. A bare `i` is a variable, not the imaginary unit |
+| `\mathbb{F}_p`, `\mathbb{Z}/p\mathbb{Z}` | refused with a finding: write their elements as integers, and equations between them as congruences (`a\equiv b\pmod p`) |
 | `\hat x`, `\hat{x}` | a name of its own (a variable `\hat x` beside `x`), unless the article or its vocabulary defines `\widehat` as an operation |
 | `\tilde x`, `\bar x`, `\dot x`, `\ddot x`, `\vec x`, `\breve x`, `\check x`, … | names of their own |
 
@@ -319,13 +321,17 @@ citations.
 | comparison in words | `$Q$ is at least the arithmetic mean $\frac{a+b}{2}$`, `is at most`, `is less than`, `is greater than`, `is equal to`, `does not exceed` |
 | if and only if | `Moreover, $G=A$ if and only if $a=b$.` |
 | a binder with a condition | `For every $x\in\mathbb{R}$ with $x\neq0$, $x^{-1}x=1$.`, `For all $x\in\mathbb{R}$ such that $x>0$ and $x<1$, $x^2<x$.`, `For every $y\in\mathbb{R}\setminus\{0\}$, …` |
+| several variables of a noun | `Let $a,b$ be positive integers with $a<b$.`, `If $a$ and $b$ are positive integers, then …`, `There are integers $c,d$ with $c+d=1$.` (each variable is of the noun; the condition after `with` is about all of them, and without `such that` it is what `there are` asserts) |
+| a sequence of variables | `For all $x_1,\ldots,x_n\in[0,1]$, …`, `for all $a_1,\ldots,a_n>0$`, `Let $a_1,\dots,a_k$ be positive integers.`, `If $b_1,\ldots,b_k$ are real numbers with $b_1\ge1$, then …`, `there are $\varepsilon_1,\ldots,\varepsilon_N\in\{-1,1\}$ such that …` (a sequence `x`, a real function, each of whose terms `x_i`, for the integers `i` from the first index to the last, is as the noun or the domain says; the terms written before the dots are the first ones, `x_1,x_2,\ldots,x_n`. A term `x_i` is defined only for those `i`: a claim about `x_{n+1}` is not meaningful) |
 | equivalent statements | `Then the following are equivalent: \begin{enumerate}\item $x^2=1$; \item $\lvert x\rvert=1$; \item $(x-1)(x+1)=0$. \end{enumerate}` (each item a formula; each is equivalent to the next) |
 | several facts | `We have $(\sqrt a)^2=a$, $(\sqrt b)^2=b$ and $\sqrt a\sqrt b=\sqrt{ab}$.` (each fact is a claim of the same sentence) |
 | facts used by a step | `Since $G\le A$ and $G>0$, it follows that $H=G\cdot\frac{G}{A}\le G$.` (the facts after "Since" are premises of the step, so the step may use them) |
 | a reason in words | `Moreover, $\sqrt a=\sqrt b$ if and only if $a=b$, since the square root is injective.` (the reason is prose, the claim before it is checked) |
 | equality sets | `If $w>\frac12$, equality holds exactly on $S_w$, and if $w=\frac12$, it holds exactly on $S_{1/2}\cup([\frac12,1]\times\{\frac12\})$.`, `…, and equality holds exactly when $x=R_b(z)$.`, `For every $x\in(0,\infty)$, $f(x)\ge2$. Equality holds exactly when $x=1$.` (about the preceding inequality, for every point of its domain) |
 
-In `If $φ$, then …` the free variables of `φ` range over the real numbers. A symbol
+In `If $φ$, then …` the free variables of `φ` range over the real numbers, except the
+variables of the result (`Let $m\ge1$ be an integer. If $x\in[0,m]$, then …` binds `x`
+only); the domains of binders may use the variables of the result as well. A symbol
 that an earlier sentence introduces in words that Leanify does not read (`Let $q$
 denote the charge of the surface.`, `Consider the idempotent $e$.`) is an object of the
 article, not such a variable: the claim is refused (`q is not defined`), and so is `e^2`

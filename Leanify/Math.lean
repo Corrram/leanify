@@ -142,7 +142,7 @@ end MT
 namespace Math
 
 /-- Standard functions of a real variable (`\ln` is `\log`). -/
-def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan"]
+def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im"]
 
 def isReals : MT → Bool
   | .id n => n == w!"\\mathbb{R}"
@@ -229,12 +229,15 @@ def simplify : Nat → List PTok → Option (List MTok)
           match rest.drop letters.length with
           | ⟨.rbrace, _, _⟩ :: rest' =>
             if n == w!"mathrm" && word == w!"d" then (MTok.diff :: ·) <$> simplify f rest'
+            -- `\mathrm{i}`: the imaginary unit
+            else if n == w!"mathrm" && word == w!"i" then (MTok.id w!"\\mathrm{i}" :: ·) <$> simplify f rest'
             else if n == w!"mathrm" || n == w!"operatorname" then (MTok.id word :: ·) <$> simplify f rest'
             else (MTok.id ([92] ++ n ++ [123] ++ word ++ [125]) :: ·) <$> simplify f rest'
           | _ => none
         -- `\mathbb R`: a single letter without braces
         | ⟨.mvar c, _, _⟩ :: rest =>
-          if n == w!"mathrm" || n == w!"operatorname" then (MTok.id [c] :: ·) <$> simplify f rest
+          if n == w!"mathrm" && c == 105 then (MTok.id w!"\\mathrm{i}" :: ·) <$> simplify f rest
+          else if n == w!"mathrm" || n == w!"operatorname" then (MTok.id [c] :: ·) <$> simplify f rest
           else (MTok.id ([92] ++ n ++ [123, c, 125]) :: ·) <$> simplify f rest
         | _ => none
       else if n == w!"tfrac" || n == w!"dfrac" then (MTok.cmd w!"frac" :: ·) <$> simplify f ts

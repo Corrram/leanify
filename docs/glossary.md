@@ -52,6 +52,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | integer | ℝ | an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number) |
 | real number | ℝ | a real number (`ℝ`) |
 | real | ℝ | a real number (`ℝ`), as in `for every real $x$` |
+| complex number | ℂ | a complex number (`ℂ`) |
 | nonnegative integer | ℝ | `x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`) |
 | positive integer | ℝ | `x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`) |
 | negative integer | ℝ | `x ∈ ℤ`, `x < 0` |

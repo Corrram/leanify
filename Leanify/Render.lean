@@ -13,6 +13,7 @@ def Ty.tex : Ty → String
   | .prop => "\\mathrm{Prop}"
   | .fn a b => (match a with | .fn .. => "(" ++ a.tex ++ ")" | _ => a.tex) ++ "\\to " ++ b.tex
   | .base k => s!"\\mathsf\{T}_\{{k}}"
+  | .complex => "\\mathbb{C}"
 
 def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"] ++
   (List.range 40).map fun i => s!"v_\{{i + 1}}"
@@ -61,6 +62,11 @@ def Prim.tex : Prim → String
   | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
   | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
   | .cardIs => "\\operatorname{card}"
+  | .cx k => match k with
+    | .ofReal => "" | .add => "+" | .sub => "-" | .mul => "\\cdot" | .div => "/" | .neg => "-"
+    | .re => "\\operatorname{Re}" | .im => "\\operatorname{Im}" | .abs => "\\operatorname{abs}"
+    | .conj => "\\operatorname{conj}" | .I => "\\mathrm{i}" | .pow => "\\operatorname{pow}"
+    | .exp => "\\exp"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -74,6 +80,11 @@ def Tm.prec : Tm → Nat
   | .add .. | .sub .. => 6
   | .mul .. | .div .. => 7
   | .neg .. => 8
+  -- complex arithmetic, as the real
+  | .app (.app (.prim (.cx .add)) _) _ | .app (.app (.prim (.cx .sub)) _) _ => 6
+  | .app (.app (.prim (.cx .mul)) _) _ | .app (.app (.prim (.cx .div)) _) _ => 7
+  | .app (.prim (.cx .neg)) _ => 8
+  | .app (.prim (.cx .ofReal)) x => x.prec
   | _ => 9
 
 /-- A numeral or a quotient of numerals (displayed without its coercion to `[0,1]`). -/
@@ -111,6 +122,19 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .limTopConv) _) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  -- complex arithmetic, written as the real (a real number is its own complex number)
+  | .app (.app (.prim (.cx .add)) x) y => (Tm.add x y).tex cs gs ls
+  | .app (.app (.prim (.cx .sub)) x) y => (Tm.sub x y).tex cs gs ls
+  | .app (.app (.prim (.cx .mul)) x) y => (Tm.mul x y).tex cs gs ls
+  | .app (.app (.prim (.cx .div)) x) y => (Tm.div x y).tex cs gs ls
+  | .app (.prim (.cx .neg)) x => (Tm.neg x).tex cs gs ls
+  | .app (.prim (.cx .abs)) x => (Tm.abs x).tex cs gs ls
+  | .app (.prim (.cx .ofReal)) x => x.tex cs gs ls
+  | .app (.prim (.cx .conj)) x => "\\overline{" ++ x.tex cs gs ls ++ "}"
+  | .app (.prim (.cx .re)) x => "\\operatorname{Re}(" ++ x.tex cs gs ls ++ ")"
+  | .app (.prim (.cx .im)) x => "\\operatorname{Im}(" ++ x.tex cs gs ls ++ ")"
+  | .app (.prim (.cx .exp)) x => "\\exp(" ++ x.tex cs gs ls ++ ")"
+  | .app (.app (.prim (.cx .pow)) x) e => "{" ++ wrap 9 x ++ "}^{" ++ e.tex cs gs ls ++ "}"
   | .app (.prim .factorial) x => wrap 9 x ++ "!"
   | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"

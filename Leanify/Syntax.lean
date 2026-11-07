@@ -29,6 +29,8 @@ inductive Ty where
   | fn (a b : Ty)
   /-- The `k`-th base type declared by the vocabulary. -/
   | base (k : Nat)
+  /-- The complex numbers. -/
+  | complex
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 infixr:60 " ⟶ " => Ty.fn
@@ -72,6 +74,21 @@ inductive ClassProp where
 inductive RealFn where
   | exp | log | sin | cos | tan
   deriving DecidableEq, Repr, Lean.ToExpr
+
+/-- Complex numbers: `ofReal x` is the real number `x` as a complex number; `pow z r`
+is `z^r` for a natural number `r` (callers guard `r ∈ ℕ`); `abs z` is the modulus,
+`conj z` the conjugate, `I` the imaginary unit. -/
+inductive CxOp where
+  | ofReal | add | sub | mul | div | neg | re | im | abs | conj | I | pow | exp
+  deriving DecidableEq, Repr, Lean.ToExpr
+
+def CxOp.ty : CxOp → Ty
+  | .ofReal => .real ⟶ .complex
+  | .add | .sub | .mul | .div => .complex ⟶ .complex ⟶ .complex
+  | .neg | .conj | .exp => .complex ⟶ .complex
+  | .re | .im | .abs => .complex ⟶ .real
+  | .I => .complex
+  | .pow => .complex ⟶ .real ⟶ .complex
 
 /-- The core prelude: standard notions of real analysis with their usual mathlib
 meaning (`Leanify.Prelude`). -/
@@ -143,6 +160,8 @@ inductive Prim where
   /-- `cardIs P r`: the set of real numbers `P` is finite and has `r` elements. A number of
   elements is a description (`the r with cardIs P r`), so that an infinite set has none. -/
   | cardIs
+  /-- Complex arithmetic. -/
+  | cx (k : CxOp)
   deriving DecidableEq, Repr, Lean.ToExpr
 
 /-- Real functions of `n` real variables, curried. -/
@@ -188,6 +207,7 @@ def Prim.ty : Prim → Ty
   | .l2NormN n | .supNormN n | .integralN n => Ty.fns n ⟶ .real ⟶ .prop
   | .partialMulti n => Ty.fns n ⟶ Ty.fns (n + n) ⟶ .prop
   | .cardIs => (.real ⟶ .prop) ⟶ .real ⟶ .prop
+  | .cx k => k.ty
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

@@ -188,6 +188,28 @@ Let $c>0$ be fixed, and let $m\ge1$ be a fixed integer. Then $c^m>0$.
 Let $x>0$. Set $y\coloneqq x^2$. Then $y>0$.
 \end{lemma}
 
+\section{Several variables and sequences}
+
+\begin{lemma}\label{plural}
+Let $a,b$ be positive integers with $a<b$. Then $ab\ge a$. There are integers $c,d$ with $c+d=1$.
+\end{lemma}
+
+\begin{lemma}\label{sequence}
+For every integer $n\ge1$ and all $x_1,\ldots,x_n\in[0,1]$, $x_1+\cdots+x_n\le n$.
+\end{lemma}
+
+\begin{lemma}\label{sequence-let}
+Let $k\ge1$ be an integer, and let $a_1,\ldots,a_k$ be positive integers. Then $\prod_{i=1}^k a_i\ge1$. If $b_1,\dots,b_k$ are real numbers with $b_1\ge a_1$, then $b_1\ge1$.
+\end{lemma}
+
+\begin{lemma}\label{signs}
+For every integer $N\ge1$ there are $\varepsilon_1,\ldots,\varepsilon_N\in\{-1,1\}$ such that $\varepsilon_1=1$.
+\end{lemma}
+
+\begin{lemma}\label{result-variable}
+Let $m\ge1$ be an integer. If $x\in[0,m]$, then $x\le m^2$.
+\end{lemma}
+
 \section{Names that state their dependence}
 
 \begin{lemma}\label{depends}
@@ -265,6 +287,24 @@ $\lim_{n\to\infty}\frac{n^2}{n+1}=\infty$, $\lim_{x\to0}\frac{-1}{x^2}=-\infty$,
 
 \begin{lemma}\label{infinitely-many}
 There are infinitely many primes $p$ such that $p+2$ is prime, and $q^2\ge q$ for infinitely many integers $q$.
+\end{lemma}
+
+\section{Complex numbers}
+
+\begin{lemma}\label{complex}
+For every $z\in\mathbb C$, $z\overline{z}=|z|^2$ and $z+\bar z=2\operatorname{Re}(z)$. Moreover, $\mathrm{i}^2=-1$ and $|3+4\mathrm i|=5$.
+\end{lemma}
+
+\begin{lemma}\label{complex-noun}
+For all complex numbers $z,w$ with $w\ne0$, $|z/w|=|z|/|w|$ and $e^{z+w}=e^ze^w$.
+\end{lemma}
+
+\begin{lemma}\label{complex-order}
+For every $z\in\mathbb C$, $z\le|z|$.
+\end{lemma}
+
+\begin{lemma}\label{finite-field}
+For every prime $p$ and every $x\in\mathbb F_p$, $x^p=x$.
 \end{lemma}
 
 \section{Findings}

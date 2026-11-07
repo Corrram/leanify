@@ -40,7 +40,7 @@ def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do
   return " ".intercalate out
 
 def tyText : Ty → String
-  | .real => "ℝ" | .unit => "[0,1]" | .prop => "Prop" | .base k => s!"B{k}"
+  | .real => "ℝ" | .unit => "[0,1]" | .prop => "Prop" | .base k => s!"B{k}" | .complex => "ℂ"
   | .fn a b => (match a with | .fn .. => "(" ++ tyText a ++ ")" | _ => tyText a) ++ " → " ++ tyText b
 
 def cell (s : String) : String := s.replace "|" "\\|"

@@ -47,43 +47,58 @@ tests/Statements/article.tex:180:25: info: claim 40: \forall x\in \mathbb{R},\ x
 tests/Statements/article.tex:184:57: info: claim 41: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow 0<{x}^{y})
 tests/Statements/article.tex:188:12: info: defines y (y)
 tests/Statements/article.tex:188:34: info: claim 42: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<y(x)
-tests/Statements/article.tex:194:1: info: claim 43: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
-tests/Statements/article.tex:198:1: info: claim 44: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ z\in \mathbb{Z}\land y\le z\Rightarrow 1\le x\,z)
-tests/Statements/article.tex:202:1: info: claim 45: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ y\le x\land x\le z))
-tests/Statements/article.tex:206:1: warning: Q is chosen after x, but its name says it depends only on \nu: list every variable it may depend on, or move the binder of x after the constant: sentence not checked
-tests/Statements/article.tex:210:1: warning: Q(…) is a product or a name that states what it depends on: write the product without parentheses, or introduce the name as `there is $Q=Q(…)$`: sentence not checked
-tests/Statements/article.tex:216:1: info: claim 46: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow 1+\sum_{y=2}^{x}y=\frac{x\,(x+1)}{2}
-tests/Statements/article.tex:216:1: info: claim 47: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow {2}^{0}+\sum_{y=1}^{x}{2}^{y}={2}^{x+1}-1
-tests/Statements/article.tex:219:1: info: defines a (a)
-tests/Statements/article.tex:222:1: info: claim 48: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 0\le a(1)\land (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\land y<x\Rightarrow a(y)<a(y+1))\land a(x)\le {x}^{2}
-tests/Statements/article.tex:222:1: info: claim 49: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 1\,\prod_{y=2}^{x}y=x!
-tests/Statements/article.tex:228:1: info: claim 50: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ 0<s\land s<z\Rightarrow s<x\,y+z)))
-tests/Statements/article.tex:233:1: info: claim 51: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 0<z\land z<y\Rightarrow x\,z<x\,y))
-tests/Statements/article.tex:239:1: warning: \ll, \gg and O(…) need a convention for their implied constants: say what they may depend on (Implied constants are absolute. Implied constants may depend on $k$.): sentence not checked
-tests/Statements/article.tex:245:1: info: claim 52: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert x\,z\rvert\le y\,z))
-tests/Statements/article.tex:245:1: info: claim 53: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert 2\,z+x\rvert\le y\,\lvert z\rvert))
-tests/Statements/article.tex:245:1: info: claim 54: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z\rvert\le y\,{z}^{2}))
-tests/Statements/article.tex:249:1: info: claim 55: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z+x\rvert\le y\,(x\,z)\land \lvert x\,z\rvert\le y\,(z+x)))
-tests/Statements/article.tex:255:1: info: claim 56: \lim_{x\to\infty}\frac{1}{x}=0
-tests/Statements/article.tex:255:1: info: claim 57: \lim_{x\to\infty}\frac{x+1}{x}=1
-tests/Statements/article.tex:255:1: info: claim 58: \lim_{x\to\infty}\frac{1}{x}=0
-tests/Statements/article.tex:259:1: info: claim 59: (\iota x\in \mathbb{R}.\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (s\in \mathbb{N}\land z\le s)\land ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land x-y<\frac{{(-1)}^{s}\,s}{s+1})\land (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land \frac{{(-1)}^{s}\,s}{s+1}<x+y))=1
-tests/Statements/article.tex:259:1: info: claim 60: (\iota x\in \mathbb{R}.\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (s\in \mathbb{N}\land z\le s)\land ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land \frac{{(-1)}^{s}\,s}{s+1}<x+y)\land (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land x-y<\frac{{(-1)}^{s}\,s}{s+1}))=-1
-tests/Statements/article.tex:263:1: info: claim 61: (\forall x\in \mathbb{R},\ \top\Rightarrow (\exists y\in \mathbb{R},\ (y\in \mathbb{N}\land \neg (y+1=0))\land x\le y))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ \top\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\land \neg (z+1=0))\land y\le z\Rightarrow x<\frac{{z}^{2}}{z+1}))
-tests/Statements/article.tex:263:1: info: claim 62: (\forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \neg ({y}^{2}=0)\land 0<\lvert y-0\rvert\land \lvert y-0\rvert<x))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ \neg ({z}^{2}=0)\land 0<\lvert z-0\rvert\land \lvert z-0\rvert<y\Rightarrow \frac{-1}{{z}^{2}}<x))
-tests/Statements/article.tex:263:1: info: claim 63: (\forall x\in \mathbb{R},\ \top\Rightarrow (\exists y\in \mathbb{R},\ \top\land x\le y))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ \top\land (\forall z\in \mathbb{R},\ \top\land y\le z\Rightarrow x<{z}^{2}))
-tests/Statements/article.tex:267:1: info: claim 64: \#\{y : (y\in \mathbb{Z}\land 2\le y\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=y\Rightarrow s=1\lor t=1))\land y+2\in \mathbb{Z}\land 2\le y+2\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=y+2\Rightarrow s=1\lor t=1)\}=\infty
-tests/Statements/article.tex:267:1: info: claim 65: \#\{y : y\in \mathbb{Z}\land y\le {y}^{2}\}=\infty
-tests/Statements/article.tex:272:1: info: defines C (C)
-tests/Statements/article.tex:275:1: info: claim 66: C(1,2)=3
-tests/Statements/article.tex:278:1: warning: the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$); for a family ($A_{ij}$), say what its indices range over (For $i,j\in\{1,2\}$, set …): sentence not checked
-tests/Statements/article.tex:281:1: warning: a variable without a noun or a domain: say what it ranges over (every integer $n$, every $x\in A$): sentence not checked
-tests/Statements/article.tex:285:1: warning: a norm other than \|u(t)\|_{L^2} and \|u(t)\|_{L^\infty} of a field: the norm of this space is not in the vocabulary: sentence not checked
-tests/Statements/article.tex:294:1: warning: q is not defined: sentence not checked
-tests/Statements/article.tex:298:1: info: claim 67: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
-tests/Statements/article.tex:304:1: warning: e is not defined: sentence not checked
-tests/Statements/article.tex:308:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
-tests/Statements/article.tex: 7 definitions, 68 claims
+tests/Statements/article.tex:194:44: info: claim 43: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 0<y)\land x<y\Rightarrow x\le x\,y)
+tests/Statements/article.tex:194:60: info: claim 44: \exists x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x+y=1)
+tests/Statements/article.tex:198:1: info: claim 45: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow 0\le y(s)\land y(s)\le 1)\Rightarrow \sum_{z=1}^{x}y(z)\le x)
+tests/Statements/article.tex:202:75: info: claim 46: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow y(s)\in \mathbb{Z}\land 0<y(s))\Rightarrow 1\le \prod_{z=1}^{x}y(z))
+tests/Statements/article.tex:202:105: info: claim 47: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow y(s)\in \mathbb{Z}\land 0<y(s))\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ (\forall a\in \mathbb{R},\ a\in \mathbb{Z}\land 1\le a\land a\le x\Rightarrow \top)\land y(1)\le z(1)\Rightarrow 1\le z(1)))
+tests/Statements/article.tex:206:1: info: claim 48: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow y(s)=-1\lor y(s)=1)\land y(1)=1)
+tests/Statements/article.tex:210:28: info: claim 49: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow y\le {x}^{2})
+tests/Statements/article.tex:216:1: info: claim 50: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
+tests/Statements/article.tex:220:1: info: claim 51: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ z\in \mathbb{Z}\land y\le z\Rightarrow 1\le x\,z)
+tests/Statements/article.tex:224:1: info: claim 52: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ y\le x\land x\le z))
+tests/Statements/article.tex:228:1: warning: Q is chosen after x, but its name says it depends only on \nu: list every variable it may depend on, or move the binder of x after the constant: sentence not checked
+tests/Statements/article.tex:232:1: warning: Q(…) is a product or a name that states what it depends on: write the product without parentheses, or introduce the name as `there is $Q=Q(…)$`: sentence not checked
+tests/Statements/article.tex:238:1: info: claim 53: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow 1+\sum_{y=2}^{x}y=\frac{x\,(x+1)}{2}
+tests/Statements/article.tex:238:1: info: claim 54: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow {2}^{0}+\sum_{y=1}^{x}{2}^{y}={2}^{x+1}-1
+tests/Statements/article.tex:241:1: info: defines a (a)
+tests/Statements/article.tex:244:1: info: claim 55: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 0\le a(1)\land (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\land y<x\Rightarrow a(y)<a(y+1))\land a(x)\le {x}^{2}
+tests/Statements/article.tex:244:1: info: claim 56: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 1\,\prod_{y=2}^{x}y=x!
+tests/Statements/article.tex:250:1: info: claim 57: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ 0<s\land s<z\Rightarrow s<x\,y+z)))
+tests/Statements/article.tex:255:1: info: claim 58: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 0<z\land z<y\Rightarrow x\,z<x\,y))
+tests/Statements/article.tex:261:1: warning: \ll, \gg and O(…) need a convention for their implied constants: say what they may depend on (Implied constants are absolute. Implied constants may depend on $k$.): sentence not checked
+tests/Statements/article.tex:267:1: info: claim 59: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert x\,z\rvert\le y\,z))
+tests/Statements/article.tex:267:1: info: claim 60: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert 2\,z+x\rvert\le y\,\lvert z\rvert))
+tests/Statements/article.tex:267:1: info: claim 61: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z\rvert\le y\,{z}^{2}))
+tests/Statements/article.tex:271:1: info: claim 62: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z+x\rvert\le y\,(x\,z)\land \lvert x\,z\rvert\le y\,(z+x)))
+tests/Statements/article.tex:277:1: info: claim 63: \lim_{x\to\infty}\frac{1}{x}=0
+tests/Statements/article.tex:277:1: info: claim 64: \lim_{x\to\infty}\frac{x+1}{x}=1
+tests/Statements/article.tex:277:1: info: claim 65: \lim_{x\to\infty}\frac{1}{x}=0
+tests/Statements/article.tex:281:1: info: claim 66: (\iota x\in \mathbb{R}.\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (s\in \mathbb{N}\land z\le s)\land ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land x-y<\frac{{(-1)}^{s}\,s}{s+1})\land (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land \frac{{(-1)}^{s}\,s}{s+1}<x+y))=1
+tests/Statements/article.tex:281:1: info: claim 67: (\iota x\in \mathbb{R}.\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (s\in \mathbb{N}\land z\le s)\land ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land \frac{{(-1)}^{s}\,s}{s+1}<x+y)\land (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land x-y<\frac{{(-1)}^{s}\,s}{s+1}))=-1
+tests/Statements/article.tex:285:1: info: claim 68: (\forall x\in \mathbb{R},\ \top\Rightarrow (\exists y\in \mathbb{R},\ (y\in \mathbb{N}\land \neg (y+1=0))\land x\le y))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ \top\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\land \neg (z+1=0))\land y\le z\Rightarrow x<\frac{{z}^{2}}{z+1}))
+tests/Statements/article.tex:285:1: info: claim 69: (\forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \neg ({y}^{2}=0)\land 0<\lvert y-0\rvert\land \lvert y-0\rvert<x))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ \neg ({z}^{2}=0)\land 0<\lvert z-0\rvert\land \lvert z-0\rvert<y\Rightarrow \frac{-1}{{z}^{2}}<x))
+tests/Statements/article.tex:285:1: info: claim 70: (\forall x\in \mathbb{R},\ \top\Rightarrow (\exists y\in \mathbb{R},\ \top\land x\le y))\land (\forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ \top\land (\forall z\in \mathbb{R},\ \top\land y\le z\Rightarrow x<{z}^{2}))
+tests/Statements/article.tex:289:1: info: claim 71: \#\{y : (y\in \mathbb{Z}\land 2\le y\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=y\Rightarrow s=1\lor t=1))\land y+2\in \mathbb{Z}\land 2\le y+2\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=y+2\Rightarrow s=1\lor t=1)\}=\infty
+tests/Statements/article.tex:289:1: info: claim 72: \#\{y : y\in \mathbb{Z}\land y\le {y}^{2}\}=\infty
+tests/Statements/article.tex:295:1: info: claim 73: \forall x\in \mathbb{C},\ x\,\overline{x}={\lvert x\rvert}^{2}
+tests/Statements/article.tex:295:1: info: claim 74: \forall x\in \mathbb{C},\ x+\overline{x}=2\,\operatorname{Re}(x)
+tests/Statements/article.tex:295:88: info: claim 75: {\mathrm{i}}^{2}=-1
+tests/Statements/article.tex:295:88: info: claim 76: \lvert 3+4\,\mathrm{i}\rvert=5
+tests/Statements/article.tex:299:1: info: claim 77: \forall x\in \mathbb{C},\ \top\Rightarrow (\forall y\in \mathbb{C},\ \top\land \neg (y=0)\Rightarrow \lvert \frac{x}{y}\rvert=\frac{\lvert x\rvert}{\lvert y\rvert})
+tests/Statements/article.tex:299:1: info: claim 78: \forall x\in \mathbb{C},\ \top\Rightarrow (\forall y\in \mathbb{C},\ \top\land \neg (y=0)\Rightarrow \exp(x+y)=\exp(x)\,\exp(y))
+tests/Statements/article.tex:303:1: warning: complex numbers are not ordered: compare real numbers, such as $|z|$ or $\operatorname{Re} z$: sentence not checked
+tests/Statements/article.tex:307:1: warning: finite fields and residue rings ($\mathbb{F}_p$, $\mathbb{Z}/p\mathbb{Z}$) are not read: write their elements as integers and equations between them as congruences ($a\equiv b\pmod p$): sentence not checked
+tests/Statements/article.tex:312:1: info: defines C (C)
+tests/Statements/article.tex:315:1: info: claim 79: C(1,2)=3
+tests/Statements/article.tex:318:1: warning: the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$); for a family ($A_{ij}$), say what its indices range over (For $i,j\in\{1,2\}$, set …): sentence not checked
+tests/Statements/article.tex:321:1: warning: a variable without a noun or a domain: say what it ranges over (every integer $n$, every $x\in A$): sentence not checked
+tests/Statements/article.tex:325:1: warning: a norm other than \|u(t)\|_{L^2} and \|u(t)\|_{L^\infty} of a field: the norm of this space is not in the vocabulary: sentence not checked
+tests/Statements/article.tex:334:1: warning: q is not defined: sentence not checked
+tests/Statements/article.tex:338:1: info: claim 80: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
+tests/Statements/article.tex:344:1: warning: e is not defined: sentence not checked
+tests/Statements/article.tex:348:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex: 7 definitions, 81 claims
   text: 7 compiled, 1 failed, 6 prose (of 14)
-  results: 59 compiled, 8 failed, 1 prose (of 68)
-  all: 66 compiled, 9 failed, 7 prose (of 82)
+  results: 72 compiled, 10 failed, 1 prose (of 83)
+  all: 79 compiled, 11 failed, 7 prose (of 97)

@@ -495,8 +495,9 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       let h ← if Elab.isInfty true hi then pure none else some <$> closedBound hi sc
       pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) true true (.loc 0))))
     | .id n => do
-      -- the real numbers
+      -- the real numbers, the complex numbers
       if n == w!"\\mathbb{R}" then pure (.real, none) else
+      if n == w!"\\mathbb{C}" then pure (.complex, none) else
       match ← lookupGlob n, Elab.builtinConst n with
       | none, some (p, .fn .real .prop) => pure (.real, some p)
       | _, _ =>
@@ -511,6 +512,37 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       match t with
       | .fn a .prop => pure (a, some p)
       | _ => fail E.unsupported
+
+/-- The predicate of a sequence whose terms, for the integers from `l` to `h`, satisfy
+`p`: `fun x => ∀ i, i ∈ ℤ ∧ l ≤ i ≤ h → p (x i)`. `l` and `h` are shifted by `k` into
+the scope of `i` (2 for terms of the scope the predicate is stated in, 3 for terms of the
+scope outside its variable); `p` is a term of that scope or the predicate of an element
+stated where its variable is bound. -/
+def seqPred (k : Nat) (l h : Tm) (p : Option Tm) : Tm :=
+  let i := Tm.loc 0
+  let range := Tm.and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
+  let elem := match p with
+    | some p => Tm.app (shift 2 0 p) (.app (.loc 1) i)
+    | none => .tt
+  .lam (.fn .real .real) .tt (.all .real (.imp range elem))
+
+/-- The type and predicate of the domain of the variables `vs` of a binder: `domainOf`,
+or, for a sequence (`x_1,\ldots,x_n\in A`, `@seq lo hi A`), a real function whose terms
+`x_i`, for the integers `i` from `lo` to `hi`, are in `A`. The sequences are recorded
+(and the other variables forgotten as sequences). -/
+def binderDomain (vs : List Codes) (d : MT) (sc : Scope := []) : M (Ty × Option Tm) := do
+  match d with
+  | .app (.id s) [lo, hi, d'] =>
+    if s != w!"@seq" then domainOf false d sc else do
+    let (ty, p) ← domainOf true d' sc
+    if ty != .real then fail E.unsupported
+    let l ← closedBound lo sc
+    let h ← closedBound hi sc
+    modify fun st => { st with seqs := vs.map (·, lo, hi) ++ st.seqs.filter fun e => !vs.contains e.1 }
+    pure (.fn .real .real, some (seqPred 2 l h p))
+  | _ => do
+    modify fun st => { st with seqs := st.seqs.filter fun e => !vs.contains e.1 }
+    domainOf false d sc
 
 def lamWrap : List Ty → Tm → Tm
   | [], b => b
@@ -741,7 +773,7 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
     | none => (acc.reverse, cs)
 
 /-- Read a noun phrase (without its determiner). -/
-def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
   -- (`for every fixed real $c>0$`)
   let np := match np with
@@ -753,8 +785,9 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   | [.m ts] =>
     match Grammar.binderMath ts with
     | some ([v], d) => do
-      let (ty, p) ← domainOf false d outer
-      return ⟨v, ty, p⟩
+      -- (the predicate is stated where the variable is bound)
+      let (ty, p) ← binderDomain [v] d outer
+      return ⟨v, ty, p.map (shift 1 0)⟩
     | _ => pure ()
   | _ => pure ()
   -- `every $M_r$`, `for every fixed $l$`: no noun says what the variable ranges over
@@ -901,6 +934,64 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let all := (preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).eraseDups
   pure ⟨name, ty, conjPreds ty all⟩
 
+/-- Read a noun phrase (without its determiner). A plural noun with a sequence
+(`positive integers $a_1,\ldots,a_n$`, `integers $a_1,\ldots,a_n\ge1$`) binds the
+sequence `a`, each of whose terms `a_i`, for the integers `i` from the first index to the
+last, is as the noun phrase says of a single variable. -/
+def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  let seq : Option (List Chunk × Codes × List MTok × List MTok × MT × MT) := match np.reverse with
+    | .m ts :: rest => (Grammar.seqBound ts).bind fun (list, bound) =>
+        (Grammar.seqVars list).map fun (x, name, lo, hi) => (rest.reverse, x, name, bound, lo, hi)
+    | _ => none
+  match seq with
+  | some (pre, x, name, bound, lo, hi) => do
+    let b ← nounPhrase1 (pre ++ [.m (name ++ bound)]) outer
+    if b.ty != .real then fail E.unsupported
+    let l ← closedBound lo outer
+    let h ← closedBound hi outer
+    modify fun st => { st with seqs := (x, lo, hi) :: st.seqs.filter (·.1 != x) }
+    -- (the predicate is stated where the sequence is bound)
+    pure ⟨x, .fn .real .real, some (seqPred 3 l h b.pred)⟩
+  | none => do
+    let b ← nounPhrase1 np outer
+    modify fun st => { st with seqs := st.seqs.filter (·.1 != b.name) }
+    pure b
+
+/-- The subformulas of a formula. -/
+def mtChildren : MT → List MT
+  | .sub b i | .sup b i => [b, i]
+  | .hat x | .neg x | .abs x | .lnot x => [x]
+  | .app f as => f :: as
+  | .add x y | .minus x y | .mul x y | .div x y | .frac x y | .equiv x y
+  | .land x y | .lor x y | .limp x y | .liff x y => [x, y]
+  | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => xs
+  | .int lo hi b _ => [lo, hi, b]
+  | .interval a b | .ival a b _ _ => [a, b]
+  | .setOf p d cs => p :: d :: cs
+  | .setCond p cs => p :: cs
+  | .image e _ d => [e, d]
+  | .mapsto p b => [p, b]
+  | .chain x rs => x :: rs.map (·.2)
+  | .cases rows => rows.flatMap fun (a, b) => [a, b]
+  | .sig n d c => [n, d, c]
+  | .extr _ s | .bound _ s => [s]
+  | .bigop _ _ lo hi b => [lo, hi, b]
+  | .quant _ _ d b => [d, b]
+  | .limit _ t b => [t, b]
+  | _ => []
+
+/-- The bases of the subscripted symbols of a formula (`x` of `x_i`). -/
+def subBases : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m =>
+    (match m with | .sub (.id k) _ => [k] | _ => []) ++ (mtChildren m).flatMap (subBases f)
+
+/-- The sequences of the scope among the free identifiers `ids` of a formula `m`: the
+term `x_1` of a sequence `x` is `x`. -/
+def seqFree (st : St) (bound : List Codes) (m : MT) (ids : List Codes) : List Codes :=
+  let seqs := (subBases 64 m).filter fun k => st.seqs.any (·.1 == k) && !bound.contains k
+  ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs
+
 /-- Free identifiers of a formula (for `On I,`). -/
 def freeIds : Nat → List Codes → MT → List Codes
   | 0, _, _ => []
@@ -910,8 +1001,9 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .num _ => []
     -- the base of `e_b` is a symbol, not a variable; `a_0` may be a variable
     | .sub (.id k) i =>
+      -- (`x_1` of a bound sequence `x` is its term)
       let key : List Codes := match i with
-        | .num n => [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat]
+        | .num n => if bound.contains k then [] else [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat]
         | _ => []
       key.filter (!bound.contains ·) ++ freeIds f bound i
     | .sub b i => freeIds f bound b ++ freeIds f bound i
@@ -957,29 +1049,30 @@ def multiIndex (d : MT) : Option (MT × Nat) :=
     if b == w!"\\mathbb{N}" && 2 ≤ n && n ≤ 8 then some (.sub (.id b) (.num 0), n) else none
   | _ => none
 
-def binderInfos : Bind → M (List BindInfo)
-  | .every vs d => do
-    -- a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`
-    match vs, multiIndex d with
-    | [v], some (base, n) => do
-      let (ty, p) ← domainOf false base
-      pure ((List.range n).map fun k => ⟨v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, ty, p⟩)
-    | _, _ => do
-    let (ty, p) ← domainOf false d
-    pure (vs.map fun v => ⟨v, ty, p⟩)
-  | .noun np => do pure [← nounPhrase np]
+def binderInfos (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
+  let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
+  match b with
+  -- (a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`)
+  | .every vs d => everyIn outer vs d
+  | .noun np => do pure [← nounPhrase np outer]
   | .on _ => pure []
   | .ifCond φ => do
-    -- the free variables of φ range over ℝ; φ is the domain of the last one
+    -- the free variables of φ range over ℝ; φ is the domain of the last one. The
+    -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
+    -- bound again
     let st ← get
     let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
+    let free := (seqFree st [] φ free).filter fun n => !before.any (·.name == n)
+    -- (a term `x_1` of a sequence is not a variable of its own)
+    if let some x := free.find? fun n => st.seqs.any (·.1 == n) then
+      fail E.finding (w!"a condition on the terms of the sequence " ++ x ++ w!" together with new variables: state it where " ++ x ++ w!" is introduced (with $…$)")
     match free.reverse with
     | [] => fail E.unsupported
     | last :: _ =>
-      let sc : Scope := free.reverse.map (·, Ty.real)
+      let sc : Scope := free.reverse.map (·, Ty.real) ++ outer
       let (p, pty) ← Elab.term 100000 sc none φ
       if pty != .prop then fail E.type
       -- the predicate is applied to the last variable where all of them are bound,
@@ -989,12 +1082,12 @@ def binderInfos : Bind → M (List BindInfo)
     let mut out : List BindInfo := []
     for b in bs do
       match b with
-      | .every vs d => out := out ++ (← everyAfter out vs d)
+      | .every vs d => out := out ++ (← everyAfter (before ++ out) vs d)
       -- `For every $x\in A$ with $φ$`: a condition on the variables bound before it,
       -- part of the domain of the last one
       | .ifCond φ => do
         let some last := out.getLast? | fail E.unsupported
-        let sc : Scope := (out.map fun b => (b.name, b.ty)).reverse
+        let sc : Scope := ((before ++ out).map fun b => (b.name, b.ty)).reverse
         let (p, pty) ← Elab.term 100000 sc none φ
         if pty != .prop then fail E.type
         let pred := match last.pred with
@@ -1004,7 +1097,7 @@ def binderInfos : Bind → M (List BindInfo)
       -- `For every positive integer $n$ and every $x\in[0,1]$`: a noun phrase, whose
       -- condition may use the variables bound before it
       | .noun np => do
-        let b ← nounPhrase np (out.map fun b => (b.name, b.ty)).reverse
+        let b ← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse
         out := out ++ [b]
       | _ => fail E.unsupported
     pure out
@@ -1019,7 +1112,7 @@ where
     let (vs, d) := match vs, multiIndex d with
       | [v], some (base, n) => ((List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, base)
       | _, _ => (vs, d)
-    let (ty, p) ← domainOf false d sc
+    let (ty, p) ← binderDomain vs d sc
     let (bis, _) := vs.foldl (fun (acc, j) v =>
       (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
     pure bis
@@ -1039,7 +1132,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
     match b with
     | .every vs d => out := out ++ (← binderInfos.everyAfter (before ++ out) vs d)
     | .noun np => out := out ++ [← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse]
-    | b => out := out ++ (← binderInfos b)
+    | b => out := out ++ (← binderInfos b (before ++ out))
   pure out
 
 def scopeOf (bs : List BindInfo) : Scope := (bs.map fun b => (b.name, b.ty)).reverse
@@ -1098,29 +1191,6 @@ def clauseMathsAll : List Clause → List MT
   | [] => []
   | c :: cs => clauseMaths c ++ clauseMathsAll cs
 end
-
-/-- The subformulas of a formula. -/
-def mtChildren : MT → List MT
-  | .sub b i | .sup b i => [b, i]
-  | .hat x | .neg x | .abs x | .lnot x => [x]
-  | .app f as => f :: as
-  | .add x y | .minus x y | .mul x y | .div x y | .frac x y | .equiv x y
-  | .land x y | .lor x y | .limp x y | .liff x y => [x, y]
-  | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => xs
-  | .int lo hi b _ => [lo, hi, b]
-  | .interval a b | .ival a b _ _ => [a, b]
-  | .setOf p d cs => p :: d :: cs
-  | .setCond p cs => p :: cs
-  | .image e _ d => [e, d]
-  | .mapsto p b => [p, b]
-  | .chain x rs => x :: rs.map (·.2)
-  | .cases rows => rows.flatMap fun (a, b) => [a, b]
-  | .sig n d c => [n, d, c]
-  | .extr _ s | .bound _ s => [s]
-  | .bigop _ _ lo hi b => [lo, hi, b]
-  | .quant _ _ d b => [d, b]
-  | .limit _ t b => [t, b]
-  | _ => []
 
 /-- The generic constants of a formula (`C`, `C_m`, `C_{j,I}`): their names and the
 variables of their indices. -/
@@ -1231,7 +1301,7 @@ def ineqFree (st : St) (cl : Clause) : List Codes :=
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
-  let ids := (clauseMaths cl.clause ++ cl.defs).flatMap (freeIds 64 bound)
+  let ids := (clauseMaths cl.clause ++ cl.defs).flatMap fun m => seqFree st bound m (freeIds 64 bound m)
   ids ++ implicitVars st ids ++ ineqFree st cl.clause
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
@@ -2004,6 +2074,40 @@ def npVars (np : List Chunk) : List Codes :=
     | some v => [v]
     | none => ((Grammar.binderMath ts).map (·.1)).getD []
 
+/-- The variables a binder binds, as its words name them; a condition `If $φ$` binds the
+free variables of `φ` other than those of `env` (the variables of the result) and the
+terms of sequences. -/
+def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
+  | .every vs _ => vs
+  | .noun np => (mathsOf np).flatMap fun ts =>
+    match (Grammar.seqBound ts).bind fun (l, _) => Grammar.seqVars l with
+    | some (x, _, _, _) => [x]
+    | none => npVars [.m ts]
+  | .ifCond φ =>
+    let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    (seqFree st [] φ free).filter (!env.contains ·)
+  | _ => []
+
+def bindNames (st : St) (env : List Codes) (bs : List Bind) : List Codes :=
+  bs.flatMap fun b => match b with
+    | .many bs => bs.flatMap (bindNames1 st env)
+    | b => bindNames1 st env b
+
+/-- The formulas of a binder's domain and conditions (the ends of a sequence's indices). -/
+def bindMaths1 : Bind → List MT
+  | .every _ d => [d]
+  | .noun np => (mathsOf np).flatMap fun ts =>
+    match (Grammar.seqBound ts).bind fun (l, b) => (Grammar.seqVars l).map (·, b) with
+    | some ((_, name, lo, hi), bound) => [lo, hi] ++ (Math.parseFormula (name ++ bound)).toList
+    | none => (Math.parseFormula ts).toList
+  | .ifCond φ => [φ]
+  | _ => []
+
+def bindMaths (bs : List Bind) : List MT :=
+  bs.flatMap fun b => match b with
+    | .many bs => bs.flatMap bindMaths1
+    | b => bindMaths1 b
+
 /-- Make the definitions of a clause: those after it (`where`) and those inside a
 comparison (`the geometric mean $G\coloneqq\sqrt{ab}$`), which become their symbols. -/
 def inlineClause (c : SentCtx) (bs : List BindInfo) (defs : List MT) (k : Clause) : M Clause := do
@@ -2520,7 +2624,9 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         if e.code == E.ambiguous then throw e else fail E.prose n.flatten
     pure (if disj then disjAll ps else conjAll ps)
   | .thereIs b cl => do
-    let bs ← binderInfos b
+    -- (the domains may use the variables bound outside: `there are
+    -- $\varepsilon_1,\ldots,\varepsilon_N\in\{-1,1\}$`)
+    let bs ← binderInfos b (sc.reverse.map fun (n, t) => ⟨n, t, none⟩)
     checkDependence sc cl
     let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
     pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
@@ -2532,10 +2638,10 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     -- before it
     let items : List (BindInfo × Nat) ← match b with
       | .every vs d => do
-        let (ty, p) ← domainOf false d sc
+        let (ty, p) ← binderDomain vs d sc
         pure ((vs.zip (List.range vs.length)).map fun (v, j) => (⟨v, ty, p⟩, j + 1))
       | .noun np => do pure [(← nounPhrase np sc, 0)]
-      | _ => do pure ((← binderInfos b).map (·, 0))
+      | _ => do pure ((← binderInfos b (sc.reverse.map fun (n, t) => ⟨n, t, none⟩)).map (·, 0))
     let bs := items.map (·.1)
     checkThreshold (sc.map (·.1)) bs
     let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
@@ -2728,6 +2834,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
   let isHyp (b : Bind) : Bool := match b with
     | .ifCond φ =>
       let fr := ((freeIds 64 [] φ).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
+      let fr := seqFree st0 [] φ fr
       !fr.isEmpty && fr.all known.contains
     | _ => false
   let hyps := binds.filter isHyp
@@ -2740,38 +2847,49 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         | [] => []
       else acc.map fun cl => { cl with clause := Clause.ifThen φ cl.clause }
     | _ => acc) cls
-  let bs ← bindersInfos binds
-  checkThreshold known bs
+  -- variables bound by the opening binders of the current result carry over to
+  -- its later sentences (`For $w\in[0,1]$, … . In particular, … w …`), and a
+  -- variable introduced in a proof (`Let $x\in A$.`) to the proof's later steps; the
+  -- domains of the sentence's binders may use them (`If $x_1,\ldots,x_n$ are …`)
+  let st ← get
+  let inResult := match c.ctx.kind with | .result _ => true | _ => false
+  let inScope := match c.ctx.kind with | .result _ | .proof => true | _ => false
+  let envNames := st.envBinders.map (·.name)
+  let bNames := bindNames st (if inScope then envNames else []) binds
   -- `On I,`: the sentence's single free variable ranges over I
   let onVar ← match binds.find? (fun b => match b with | .on _ => true | _ => false) with
     | some (.on d) => do
       let (_, p) ← domainOf true d
-      let known := (scopeOf bs).map (·.1)
-      let st ← get
-      let free := (cls.flatMap (fun cl => (clauseMaths cl.clause).flatMap (freeIds 64 known))).eraseDups
+      let free := (cls.flatMap (fun cl => (clauseMaths cl.clause).flatMap (freeIds 64 bNames))).eraseDups
       let free := free.filter fun n => !(st.globs.any (·.key == n))
       match free with
       | [v] => pure (some (⟨v, .real, p⟩ : BindInfo))
       | _ => fail E.free free.flatten
     | _ => pure none
-  -- variables bound by the opening binders of the current result carry over to
-  -- its later sentences (`For $w\in[0,1]$, … . In particular, … w …`), and a
-  -- variable introduced in a proof (`Let $x\in A$.`) to the proof's later steps
-  let st ← get
-  let inResult := match c.ctx.kind with | .result _ => true | _ => false
-  let inScope := match c.ctx.kind with | .result _ | .proof => true | _ => false
-  let inherited ← if inScope && !st.envBinders.isEmpty then do
-      let known := (scopeOf (bs ++ onVar.toList)).map (·.1)
+  let isGlob (n : Codes) : Bool := st.globs.any fun g => g.key == n && !g.family
+  let domEnv := if inScope then ((bindMaths binds).flatMap fun m => seqFree st bNames m (freeIds 64 bNames m)).filter
+      fun n => envNames.contains n else []
+  -- (binders whose domains use variables of the result come after all of them)
+  let inherited := if !domEnv.isEmpty then st.envBinders
+    else if inScope && !st.envBinders.isEmpty then
+      let known := bNames ++ onVar.toList.map (·.name)
       let clBound := cls.flatMap fun cl => (cl.binds.flatMap fun b => match b with
         | .every vs _ => vs | _ => []) ++ (match cl.clause with
           | .scoped _ vs _ _ | .every vs _ _ => vs | _ => [])
       let free := (cls.flatMap (fun cl => clauseFree st (known ++ clBound) cl)).eraseDups
       -- a variable of the result shadows a definition of the same name
-      let free := free.filter fun n => st.envBinders.any (·.name == n) || !(st.globs.any fun g => g.key == n && !g.family)
-      pure (usedBinders st.envBinders free)
-    else pure []
+      let free := free.filter fun n => envNames.contains n || !isGlob n
+      usedBinders st.envBinders (free ++ domEnv)
+    else []
+  -- (the binders' domains are in the scope of the inherited binders)
+  let bs ← bindersInfos binds inherited
+  checkThreshold known bs
   if inResult && !bs.isEmpty then
-    modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun b => !(bs.any (·.name == b.name)) }
+    -- (a binder is in the scope of those before it in the list: new binders that use
+    -- variables of the result come after them)
+    if domEnv.isEmpty then
+      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun b => !(bs.any (·.name == b.name)) }
+    else modify fun st => { st with envBinders := st.envBinders ++ bs }
   let allBs := inherited ++ bs ++ onVar.toList
   let sc := scopeOf allBs
   let rec go : Nat → List CClause → Option MT → M (List Nat)
@@ -2830,7 +2948,8 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         let domFree := (cbDoms.flatMap (freeIds 64 [])).filter fun n => !(stNow.globs.any (·.key == n))
         let inh := usedBinders inherited (free ++ domFree)
         let hasOwn := !cl.binds.isEmpty
-        let outer := if hasOwn then inh else inh ++ bs ++ onVar.toList
+        -- (the sentence's binders may depend on any inherited binder)
+        let outer := if hasOwn then inh else (if domEnv.isEmpty then inh else inherited) ++ bs ++ onVar.toList
         let cbs := (← bindersInfos cl.binds outer)
         -- definitions inside the clause (`the mean $G\coloneqq\sqrt{ab}$`) and after it
         -- (`…, where $d\coloneqq …$`), in the scope of its binders
@@ -2943,12 +3062,20 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
 /-- `Let B, …, and let DEFS.`: variables of the rest of the result or proof (of the section,
 in the running text), and definitions local to it. -/
 def assumeIn (c : SentCtx) (binds : List Bind) (defs : List MT) : M (List Nat × List Nat) := do
-  let bs := (← bindersInfos binds)
+  -- (a domain may use the variables of the result: `Let $n\ge1$. Let $x_1,\ldots,x_n$ be
+  -- real numbers.`; these binders come after all of them)
+  let st0 ← get
+  let envNames := match c.ctx.kind with | .text => [] | _ => st0.envBinders.map (·.name)
+  let bNames := bindNames st0 envNames binds
+  let domEnv := ((bindMaths binds).flatMap fun m => seqFree st0 bNames m (freeIds 64 bNames m)).filter envNames.contains
+  let bs := (← bindersInfos binds (if domEnv.isEmpty then [] else st0.envBinders))
   match c.ctx.kind with
   | .text =>
     modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }
   | _ =>
-    modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
+    if domEnv.isEmpty then
+      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
+    else modify fun st => { st with envBinders := st.envBinders ++ bs }
   let st ← get
   let scope := match c.ctx.kind with
     | .text => (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2)
@@ -3076,14 +3203,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
     descDef c bs lhs kind np cond
   | .assumeAll binds defs => assumeIn c binds defs
-  | .assume b => do
-    let bs ← binderInfos b
-    match c.ctx.kind with
-    | .text =>
-      modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }
-    | _ =>
-      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
-    pure ([], [])
+  | .assume b => assumeIn c [b] []
   | .notation .. => fail E.unsupported
   | .meaning ws rhs noun => meaningDef ws rhs noun
   | .generic ms deps uni => do
@@ -3344,8 +3464,10 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let inheritedBinders : List BindInfo := match proved with
     | some e => (st0.resultBinders.lookup e).getD []
     | none => []
+  -- (the sequences of the result a proof proves, and those fixed in the text, stay)
+  let seqs0 := st0.seqs.filter fun e => inheritedBinders.any (·.name == e.1) || st0.fixed.any (·.2.name == e.1)
   let st0 := if st0.proofEnv != s.ctx.env then
-      { st0 with proofEnv := s.ctx.env, proofCites := [], proofSteps := [], topic := Topic.none, envBinders := inheritedBinders }
+      { st0 with proofEnv := s.ctx.env, proofCites := [], proofSteps := [], topic := Topic.none, envBinders := inheritedBinders, seqs := seqs0 }
     else st0
   -- definitions local to a result are visible in it and in its proof
   let st0 := { st0 with curEnv := s.ctx.env, curProved := proved }

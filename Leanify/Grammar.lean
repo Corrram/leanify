@@ -104,10 +104,48 @@ def hatName : List MTok → Option (Codes × List MTok)
     if h == w!"hat" || h == w!"widehat" then some ([92] ++ w!"hat{" ++ n ++ [125], r) else none
   | _ => none
 
-/-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`). -/
+/-- A list of variables `x_1,\ldots,x_n` (`x_0,x_1,\dots,x_{N-1}`, `\varepsilon_1,\ldots,\varepsilon_N`):
+the terms `x_i` of a sequence `x`, for the integers `i` from the first index to the last.
+Its name, the tokens of the name, and the two indices. The terms written before the dots
+are the first ones (`x_1,x_2,\ldots`). -/
+def seqVars (ts : List MTok) : Option (Codes × List MTok × MT × MT) := do
+  let parts := Math.commaParts (ts.length + 1) 0 [] ts []
+  if parts.length < 3 then none else
+  let first ← parts.head?
+  let last ← parts.getLast?
+  let mid := (parts.drop 1).dropLast
+  let dots := match mid.getLast? with | some [t] => Math.isDots t | _ => false
+  if !dots then none else
+  let (x, lo) ← match Math.parseFormula first with
+    | some (.sub (.id x) lo) => some (x, lo)
+    | _ => none
+  let hi ← match Math.parseFormula last with
+    | some (.sub (.id y) hi) => if y == x then some hi else none
+    | _ => none
+  let consecutive := mid.dropLast.zipIdx.all fun (p, k) =>
+    match Math.parseFormula p, lo with
+    | some (.sub (.id y) (.num m)), .num l => y == x && m == l + k + 1
+    | _, _ => false
+  if !consecutive then none else
+  some (x, first.takeWhile (· != .sym 95), lo, hi)
+
+/-- A sequence variable with a bound written after its last term (`a_1,\ldots,a_n\ge1`):
+the list, and the bound (`\ge1`; empty without one). -/
+def seqBound (ts : List MTok) : Option (List MTok × List MTok) := do
+  let last ← (Math.commaParts (ts.length + 1) 0 [] ts []).getLast?
+  let k := (last.findIdx? fun t => (Math.relOf t).isSome).getD last.length
+  let list := ts.take (ts.length - (last.length - k))
+  let _ ← seqVars list
+  some (list, ts.drop list.length)
+
+/-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`);
+`x_1,\ldots,x_n\in A` binds the sequence `x` (`@seq lo hi A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
   let i ← ts.findIdx? (· == .cmd w!"in")
   let pre := ts.take i
+  if let some (x, _, lo, hi) := seqVars pre then
+    let dom ← Math.parseFormula (ts.drop (i + 1))
+    return ([x], .app (.id w!"@seq") [lo, hi, dom])
   let (pre, square) := match pre with
     | .sym 40 :: r => match r.reverse with
       | .sym 41 :: r' => (r'.reverse, true)
@@ -183,8 +221,13 @@ def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
     else none
   | _ => none
 
-/-- The same bound on several variables: `a,b>0`, `c_1,c_2\ge1`. -/
+/-- The same bound on several variables: `a,b>0`, `c_1,c_2\ge1`; on each term of a
+sequence: `a_1,\ldots,a_n>0`. -/
 def boundBinders (ts : List MTok) : Option (List Codes × MT) := do
+  if let some (list, bound) := seqBound ts then
+    let (x, _, lo, hi) ← seqVars list
+    let (_, d) ← boundBinder (.id w!"x" :: bound)
+    return ([x], .app (.id w!"@seq") [lo, hi, d])
   let parts := Math.commaParts (ts.length + 1) 0 [] ts []
   if parts.length < 2 then none else
   let (vs, d) ← boundBinder (parts.getLast?.getD [])
@@ -635,11 +678,17 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     let (np, r') := npUpTo (r.length + 1) r []
     let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
     if ws.isEmpty then none else
-    let (vars, r'') : List (List MTok) × List Chunk ← match np.drop ws.length, r' with
-      | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], r'') else none
-      | [.m ts], _ => (splitVars ts).map (·, r')
+    let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws.length, r' with
+      | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
+      | [.m ts], _ => ((seqBound ts).map fun _ => ([ts], [], r')) <|> (splitVars ts).map (·, [], r')
+      -- `all real numbers $x,y$ with $y\ne0$`: a condition on all of them
+      | .m ts :: post, _ => do
+        let (c, rest) ← withConds post
+        if !rest.isEmpty then none else
+        let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+        some (vars, [Bind.ifCond c], r')
       | _, _ => none
-    some (Bind.many (vars.map fun v => Bind.noun (ws ++ [.m v])), r'')) <|>
+    some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ conds), r'')) <|>
   (do
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
@@ -674,6 +723,24 @@ def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
     | (bs, r'') => some (.many ((b :: bs).flatMap flat), r'')
   | none => none
 
+/-- `positive integers` after the variables `ts` of `$a,b$ are` (`be`), possibly with
+conditions (`with $a<b$`): a binder for each variable (a sequence `x_1,\ldots,x_n` is one),
+then the conditions. -/
+def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) := do
+  let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+  -- (a singular noun is read where its variable is)
+  if (kw [w!"a"] r).isSome || (kw [w!"an"] r).isSome then none else
+  let ws := r.takeWhile fun c => match c with
+    | .w w => w != w!"with" && w != w!"such" && w != w!"then" && w != w!"and"
+    | .p 45 => true
+    | _ => false
+  if ws.isEmpty then none else
+  let nouns := vars.map fun v => Bind.noun (ws ++ [.m v])
+  let r1 := r.drop ws.length
+  match withConds r1 with
+  | some (c, r2) => some (.many (nouns ++ [.ifCond c]), r2)
+  | none => some (.many nouns, r1)
+
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
 def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
@@ -706,6 +773,18 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
           | some r =>
             -- `If $n$ is sufficiently large,`
             postSufficient r <|>
+            -- `If $a,b$ are positive integers,`, `If $a$ and $b$ are …`,
+            -- `If $a_1,\ldots,a_k$ are nonnegative integers with $φ$,`
+            (do
+              let (ts, r1) ← mathChunk r
+              let (ts, r1) := match kw [w!"and"] r1 with
+                | some (.m [b] :: r2) => match ts with
+                  | [a] => ([a, .sym 44, b], r2)
+                  | _ => (ts, r1)
+                | _ => (ts, r1)
+              let r2 ← kw [w!"are"] r1
+              let (b, r3) ← pluralNoun ts r2
+              if (punct 44 r3).isNone then none else some (b, r3)) <|>
             -- `If $C$ is an LTD copula,`: as `For an LTD copula $C$,`
             (do
               let (ts, r1) ← mathChunk r
@@ -1463,6 +1542,29 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
       | none => some (Clause.infinitelyMany np none, r2)) with
   | some res => if none_ then none else some res
   | none =>
+  -- `there are integers $a,b$ with $a+b=1$`, `there are real numbers $x_1,\ldots,x_n$
+  -- [with $φ$] such that CLAUSE`: a variable for each (a sequence is one); without
+  -- `such that`, the condition after `with` is the clause
+  match (do
+      if none_ then none else
+      let ws := r.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
+      if ws.isEmpty then none else
+      let (ts, r1) ← mathChunk (r.drop ws.length)
+      let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+      let nouns : List Bind := vars.map fun v => Bind.noun (ws ++ [Chunk.m v])
+      match withConds r1 with
+      | some (φ, r2) =>
+        match followingProperty r2 <|> kw [w!"such", w!"that"] r2 with
+        | some r3 => do
+          let (c, r4) ← suchThatClauses sub r3
+          some (Clause.thereIs (.many (nouns ++ [Bind.ifCond φ])) c, r4)
+        | none => if clauseEnd r2 then some (Clause.thereIs (.many nouns) (.fact φ), r2) else none
+      | none => do
+        let r2 ← followingProperty r1 <|> kw [w!"such", w!"that"] r1
+        let (c, r3) ← suchThatClauses sub r2
+        some (Clause.thereIs (.many nouns) c, r3)) with
+  | some res => some res
+  | none =>
   -- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, CLAUSE]`
   match (do
       -- the noun phrases: up to `satisfying`, `such that` or the end; a comma before a
@@ -2125,6 +2227,11 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let m ← Math.parseFormula ts
     if (kw [w!"be"] r).isSome then none else
     if isCondition m then some (.ifCond m, r) else none) <|>
+  -- `$a,b$ be positive integers`, `$x_1,\ldots,x_n$ be real numbers [with $φ$]`
+  (do
+    let (ts, r) ← mathChunk cs
+    let r1 ← kw [w!"be"] r
+    pluralNoun ts r1) <|>
   (do
     let (ts, r) ← mathChunk cs
     let v ← match ts with
@@ -2566,7 +2673,7 @@ def sentence (cs : List Chunk) : Option Sent :=
     (do
       let (b1, r1) ← letBinder r
       let (bs, ds, r2) ← letMore 6 r1 [b1] []
-      let isNoun := match b1 with | .noun _ => true | _ => false
+      let isNoun := match b1 with | .noun _ | .many _ => true | _ => false
       if isEnd r2 && (isNoun || bs.length > 1 || !ds.isEmpty) then some (.assumeAll bs ds) else none) <|>
     -- `Let $X\coloneqq e$.`, `Let $h(k)=e$.`: as `set`
     constDefsOf none r <|>

@@ -213,6 +213,9 @@ structure St where
   lastMaps : List (Codes × MT) := []
   /-- Binders of the current result that later sentences of the result inherit. -/
   envBinders : List BindInfo := []
+  /-- The sequences bound so far (`x_1,\ldots,x_n`): the name and the first and last
+  index, for the definedness of their terms `x_i`. -/
+  seqs : List (Codes × MT × MT) := []
   topic : Topic := .none
   /-- Variables fixed in the running text (`fix $b\in B$`), by section. -/
   fixed : List (Nat × BindInfo) := []
@@ -422,9 +425,25 @@ def coerce (t : Tm) (src dst : Ty) : M Tm :=
   if src == dst then pure t
   else if src == .unit && dst == .real then pure (.ofUnit t)
   else if src == .real && dst == .unit then pure (.toUnit t)
+  -- a real number is a complex number
+  else if src == .real && dst == .complex then pure (.app (.prim (.cx .ofReal)) t)
+  else if src == .unit && dst == .complex then pure (.app (.prim (.cx .ofReal)) (.ofUnit t))
   else fail E.type
 
 def asReal (p : Tm × Ty) : M Tm := coerce p.1 p.2 .real
+
+def asComplex (p : Tm × Ty) : M Tm := coerce p.1 p.2 .complex
+
+/-- The finding for `\mathbb{F}_p` and `\mathbb{Z}/p\mathbb{Z}`. -/
+def finiteField : Codes :=
+  w!"finite fields and residue rings ($\\mathbb{F}_p$, $\\mathbb{Z}/p\\mathbb{Z}$) are not read: write their elements as integers and equations between them as congruences ($a\\equiv b\\pmod p$)"
+
+/-- A complex operation applied to two complex numbers. -/
+def cx2 (k : CxOp) (a b : Tm) : Tm := .app (.app (.prim (.cx k)) a) b
+
+/-- `a/b` of complex numbers, defined for `b ≠ 0`. -/
+def cdivTm (a b : Tm) : Tm :=
+  .guard (.not (.eq b (.app (.prim (.cx .ofReal)) (.num 0)))) (cx2 .div a b)
 
 def isMeasure : Ty → Bool
   | .fn (.fn .unit .prop) .real => true
@@ -517,6 +536,9 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
     some (.lam .real .tt (.app (.prim .isNat) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{>0}" then some (.lam .real .tt (.lt (.num 0) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{\\ge0}" then some (.lam .real .tt (.le (.num 0) (.loc 0)), .fn .real .prop)
+  -- the complex numbers, and the imaginary unit
+  else if n == w!"\\mathbb{C}" then some (.lam .complex .tt .tt, .fn .complex .prop)
+  else if n == w!"\\mathrm{i}" then some (.prim (.cx .I), .complex)
   else none
 
 /-- Names of indices (`n`, `k`, …): integers, in exponents and limits. -/
@@ -575,12 +597,16 @@ def isPredTy : Ty → Bool
   | _ => false
 
 def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
+  if (x.2 == .complex || y.2 == .complex) && (r == .le || r == .lt || r == .ge || r == .gt) then
+    fail E.finding w!"complex numbers are not ordered: compare real numbers, such as $|z|$ or $\\operatorname{Re} z$"
   match r with
   | .eq =>
     if x.2 == y.2 then pure (.eq x.1 y.1)
+    else if x.2 == .complex || y.2 == .complex then pure (.eq (← asComplex x) (← asComplex y))
     else pure (.eq (← asReal x) (← asReal y))
   | .ne =>
     if x.2 == y.2 then pure (.not (.eq x.1 y.1))
+    else if x.2 == .complex || y.2 == .complex then pure (.not (.eq (← asComplex x) (← asComplex y)))
     else pure (.not (.eq (← asReal x) (← asReal y)))
   | .le => pure (.le (← asReal x) (← asReal y))
   | .lt => pure (.lt (← asReal x) (← asReal y))
@@ -839,11 +865,22 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | none =>
           match builtinConst n with
           | some r => pure r
-          | none => fail E.undefined n
+          | none =>
+            -- `\overline{z}`, `\bar z` of a complex number `z`: its conjugate
+            let conjOf : Option Codes := [w!"\\overline{", w!"\\bar{"].findSome? fun p =>
+              if n.take p.length == p && n.getLast? == some 125 then some ((n.drop p.length).dropLast) else none
+            match conjOf.bind (lookupLocal sc ·) with
+            | some (i, .complex) => pure (.app (.prim (.cx .conj)) (.loc i), .complex)
+            | _ => fail E.undefined n
+    -- (with a complex operand, complex arithmetic)
     | .add x y => do
-      let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.add a b, .real)
+      let a ← term f sc pf x; let b ← term f sc pf y
+      if a.2 == .complex || b.2 == .complex then pure (cx2 .add (← asComplex a) (← asComplex b), .complex)
+      else pure (.add (← asReal a) (← asReal b), .real)
     | .minus x y => do
-      let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.sub a b, .real)
+      let a ← term f sc pf x; let b ← term f sc pf y
+      if a.2 == .complex || b.2 == .complex then pure (cx2 .sub (← asComplex a) (← asComplex b), .complex)
+      else pure (.sub (← asReal a) (← asReal b), .real)
     | .mul x y => do
       -- `\partial^I f(x,y)`
       match ← multiPartial f sc pf x y with
@@ -890,13 +927,22 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | some as => applyAll D fty [] (← as.mapM (term f sc pf))
         | none => pure (D, fty)
       | none => do
-      let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.mul a b, .real)
+      let a ← term f sc pf x; let b ← term f sc pf y
+      if a.2 == .complex || b.2 == .complex then pure (cx2 .mul (← asComplex a) (← asComplex b), .complex)
+      else pure (.mul (← asReal a) (← asReal b), .real)
     | .div x y | .frac x y => do
       match fracDeriv m with
       | some dm => term f sc pf dm
       | none => do
-      let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.div a b, .real)
-    | .neg x => do let a ← asReal (← term f sc pf x); pure (.neg a, .real)
+      -- (a quotient ring `\mathbb{Z}/p\mathbb{Z}` is not a set of real numbers)
+      if let .id z := x then if z == w!"\\mathbb{Z}" then fail E.finding finiteField
+      let a ← term f sc pf x; let b ← term f sc pf y
+      if a.2 == .complex || b.2 == .complex then pure (cdivTm (← asComplex a) (← asComplex b), .complex)
+      else pure (.div (← asReal a) (← asReal b), .real)
+    | .neg x => do
+      let a ← term f sc pf x
+      if a.2 == .complex then pure (.app (.prim (.cx .neg)) a.1, .complex)
+      else pure (.neg (← asReal a), .real)
     | .abs x => do
       let st ← get
       match x with
@@ -911,6 +957,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         -- `|A|` of a set: its number of elements
         let (a, aty) ← term f sc pf x
         if aty == .fn .real .prop then pure (cardTm a, .real)
+        -- the modulus of a complex number
+        else if aty == .complex then pure (.app (.prim (.cx .abs)) a, .real)
         else do let a ← asReal (a, aty); pure (.abs a, .real)
     | .minm [x, y] => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y)
@@ -976,6 +1024,19 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let (h, hty, doms) ← head f sc (.id n)
           applyAll h hty doms [← term f sc pf a]
       | none => do
+        -- `\exp` of a complex number, and the real and imaginary parts (`\Re z`,
+        -- `\operatorname{Re}(z)`)
+        let cxFn : Option CxOp := if n == w!"\\exp" then some .exp
+          else if n == w!"\\Re" || n == w!"Re" then some .re
+          else if n == w!"\\Im" || n == w!"Im" then some .im
+          else none
+        if let some k := cxFn then
+          if (← lookupGlob n).isNone then
+            let at_ ← term f sc pf a
+            if k == .exp then
+              if at_.2 == .complex then return (.app (.prim (.cx .exp)) at_.1, .complex)
+              else return (.app (.prim (.realFn .exp)) (← asReal at_), .real)
+            else return (.app (.prim (.cx k)) (← asComplex at_), .real)
         let (h, hty, doms) ← head f sc (.id n)
         applyAll h hty doms [← term f sc pf a]
     -- `(f\circ g)(x)` is `f(g(x))`
@@ -1410,9 +1471,24 @@ where
             !(← get).unreadIds.contains [101])
         | _ => pure false
       if isE then do
-        let a ← asReal (← term f sc pf e)
-        pure (.app (.prim (.realFn .exp)) a, .real)
+        let a ← term f sc pf e
+        if a.2 == .complex then pure (.app (.prim (.cx .exp)) a.1, .complex)
+        else pure (.app (.prim (.realFn .exp)) (← asReal a), .real)
       else
+      -- a power of a complex number: a natural exponent (`z^n` with `n ∈ ℕ`); the base is
+      -- read again below otherwise (the state is restored)
+      let st0 ← get
+      let bt ← tryCatch (some <$> term f sc pf b) (fun _ => pure none)
+      if let some (z, .complex) := bt then
+        match e with
+        | .num n => return (.app (.app (.prim (.cx .pow)) z) (.num n), .complex)
+        | .neg (.num n) =>
+          return (cdivTm (.app (.prim (.cx .ofReal)) (.num 1)) (.app (.app (.prim (.cx .pow)) z) (.num n)), .complex)
+        | _ => do
+          let p ← asReal (← term f sc pf e)
+          return (.guard (.app (.prim .isNat) p) (.app (.app (.prim (.cx .pow)) z) p), .complex)
+      else
+      set st0
       -- a family written with a superscript (`\gamma^T`)
       let fam ← match b, e with
         | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")
@@ -1839,6 +1915,16 @@ where
       | none =>
       match b with
       | .id key => do
+        -- (a finite field is not a set of real numbers)
+        if key == w!"\\mathbb{F}" then fail E.finding finiteField
+        -- `x_i` for a sequence `x` of the scope (`x_1,\ldots,x_n`): its term, defined for
+        -- the integers `i` from the first index to the last
+        if let some (j, .fn .real .real) := lookupLocal sc key then
+          if let some (_, lo, hi) := (← get).seqs.find? (·.1 == key) then
+            let a ← asReal (← term f sc none i)
+            let l ← asReal (← term f sc none lo)
+            let h ← asReal (← term f sc none hi)
+            return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), .real)
         -- a constant with a subscript (`d_0`), unless the index is a variable
         let ck := match i with
           | .id x => if (lookupLocal sc x).isSome then none else symKey m
