@@ -1326,6 +1326,15 @@ def underBinder (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   let (c, r') ← sub r
   some (.under b c, r')
 
+/-- `with the following property.`, `such that the following holds:` before the sentence
+that states the property: the chunks of that sentence. -/
+def followingProperty (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"with", w!"the", w!"following", w!"property"] cs <|>
+    kw [w!"such", w!"that", w!"the", w!"following", w!"holds"] cs
+  match r with
+  | .p 46 :: r' | .p 58 :: r' => some r'
+  | _ => none
+
 /-- The clauses after `such that`: `CLAUSE [and CLAUSE]*`, each with the binders after it
 (`for every NP`). -/
 def suchThatClauses (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
@@ -1366,7 +1375,7 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         | 0, _, _, _ => none
         | f + 1, cs, cur, acc =>
           let stop := (kw [w!"satisfying"] cs).isSome || (kw [w!"such", w!"that"] cs).isSome ||
-            isEnd cs || (match cs with | .p 59 :: _ => true | _ => false)
+            (followingProperty cs).isSome || isEnd cs || (match cs with | .p 59 :: _ => true | _ => false)
           if stop then
             if cur.isEmpty then none else some ((cur.reverse :: acc).reverse, cs)
           else match cs with
@@ -1427,7 +1436,7 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
           | some r' => if (kw [w!"such", w!"that"] r').isSome then r' else r2
           | none => r2
         else r2
-      let (conds, r5) ← match kw [w!"such", w!"that"] r2 with
+      let (conds, r5) ← match followingProperty r2 <|> kw [w!"such", w!"that"] r2 with
         | some r3 => do
           let (c, r4) ← (display r3).map (fun (m, _, r') => (Clause.fact m, r')) <|> underBinder sub r3 <|> sub r3
           let (c, r4) := everyNPAfter c r4
@@ -1461,7 +1470,8 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         let rec upTo : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
           | 0, _, _ => none
           | f + 1, cs, acc =>
-            if (kw [w!"such", w!"that"] cs).isSome || clauseEnd cs then some (acc.reverse, cs) else
+            if (kw [w!"such", w!"that"] cs).isSome || (followingProperty cs).isSome || clauseEnd cs then
+              some (acc.reverse, cs) else
             match cs with
             | [] => none
             | c :: rest => upTo f rest (c :: acc)
@@ -1474,7 +1484,7 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
             | _ => (np, [])
           | _ => (np, [])
         let wrap (c : Clause) : Clause := if als.isEmpty then c else .aliased als c
-        match kw [w!"such", w!"that"] r1 with
+        match followingProperty r1 <|> kw [w!"such", w!"that"] r1 with
         | some r2 => do
           let (c, r4) ← suchThatClauses sub r2
           some (Clause.existsNP np unique (some (wrap c)), r4)
@@ -1543,7 +1553,8 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   let b := match bs with
     | [] => b0
     | bs => Bind.many (b0 :: bs)
-  let r2 ← kw [w!"such", w!"that"] r1
+  -- `such that CLAUSE`, `with the following property. CLAUSE` (the next sentence)
+  let r2 ← followingProperty r1 <|> kw [w!"such", w!"that"] r1
   let (c, r4) ← suchThatClauses sub r2
   some (.thereIs b (if als.isEmpty then c else .aliased als c), r4)
 
@@ -2291,6 +2302,31 @@ def genericSent (cs : List Chunk) : Option Sent := do
   if !named && deps.isNone && uni.1.isEmpty && uni.2.isEmpty then none
   some (.generic ms deps uni)
 
+/-- `[Throughout,] [all] [the] implied constants [in …] are absolute.`, `… may depend [only] on
+$k$ [and $\varepsilon$].`: the convention for the constant of `\ll`, `\gg` and `O(…)`, a
+positive generic constant (`@ll`). -/
+def impliedSent (cs : List Chunk) : Option Sent := do
+  let r := ((kw [w!"throughout"] cs <|> kw [w!"in", w!"this", w!"paper"] cs <|> kw [w!"in", w!"what", w!"follows"] cs).map
+    fun r => (punct 44 r).getD r).getD cs
+  let r := (kw [w!"all"] r).getD r
+  let r := (kw [w!"the"] r).getD r
+  let r ← kw [w!"implied", w!"constants"] r <|> kw [w!"implicit", w!"constants"] r <|>
+    kw [w!"implied", w!"constant"] r <|> kw [w!"implicit", w!"constant"] r
+  -- (`in the $O$- and $\ll$-notation`: which notation)
+  let stop (c : Chunk) : Bool := match c with
+    | .w w => [w!"are", w!"is", w!"may", w!"depend", w!"depends"].contains w
+    | _ => false
+  let r := r.dropWhile (!stop ·)
+  match kw [w!"are", w!"absolute"] r <|> kw [w!"is", w!"absolute"] r with
+  | some r' => if isEnd r' then some (.generic [(.id w!"@ll", 1)] (some ([], [])) ([], [])) else none
+  | none => do
+    let r' ← kw [w!"may", w!"depend", w!"only", w!"on"] r <|> kw [w!"may", w!"depend", w!"on"] r <|>
+      kw [w!"depend", w!"only", w!"on"] r <|> kw [w!"depends", w!"only", w!"on"] r <|>
+      kw [w!"depend", w!"on"] r <|> kw [w!"depends", w!"on"] r
+    let (ms, ws, rest) := depList r'
+    if (ms.isEmpty && ws.isEmpty) || !isEnd rest then none else
+    some (.generic [(.id w!"@ll", 1)] (some (ms, ws)) ([], []))
+
 /-- `[We say that] a NP $f$ belongs to|is in|lies in $\mathcal M_\alpha$ if COND`, COND being
 `$φ$ [for every B]` or `for every B, $φ$`. -/
 def memberDef (cs : List Chunk) : Option Sent := do
@@ -2384,7 +2420,7 @@ def sentence (cs : List Chunk) : Option Sent :=
   match notationSent cs with
   | some s => some s
   | none =>
-  match genericSent cs with
+  match impliedSent cs <|> genericSent cs with
   | some s => some s
   | none =>
   match memberDef cs with

@@ -14,8 +14,9 @@ inductive Rel where
   | subset | supset
   /-- `x\notin A`. -/
   | nmem
-  /-- `a\ll b`: `a/b` sufficiently small (read only in binders). -/
-  | ll
+  /-- `a\ll b`: in a binder, `a/b` sufficiently small; in a claim, `|a|\le Cb` for an implied
+  constant `C`. `a\gg b`: `b\ll a`. -/
+  | ll | gg
   /-- `a\mid b`, `a\nmid b`: divisibility of integers. -/
   | dvd | ndvd
   /-- `a\equiv b`: a congruence, read only with its modulus (`\pmod m`). -/
@@ -268,6 +269,7 @@ def relOf : MTok → Option Rel
     else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
     else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
     else if n == w!"ll" then some .ll
+    else if n == w!"gg" then some .gg
     else if n == w!"mid" || n == w!"divides" then some .dvd
     else if n == w!"nmid" then some .ndvd
     else if n == w!"equiv" then some .equiv
@@ -1027,11 +1029,151 @@ def divergenceToks : List MTok → List MTok
   | t :: rest => t :: divergenceToks rest
   | [] => []
 
+/-! ### Ellipses
+
+`x_1+\cdots+x_n` is the sum over the integers `i` from `1` to `n` of the term that the first
+and the last term are instances of; `a_1<\cdots<a_m` says that each term is less than the
+next. The terms must differ in one place only, the index (`x_1` and `x_n`; `\frac1{n_1}` and
+`\frac1{n_k}`; `x_0` and `x_{N-1}`). -/
+
+/-- Is `t` an ellipsis (`\cdots`, `\dots`, `\ldots`)? -/
+def isDots (t : MTok) : Bool := t == .cmd w!"cdots" || t == .cmd w!"dots" || t == .cmd w!"ldots"
+
+/-- The items of a formula: single tokens, and braced groups (a group of one token is
+that token). -/
+def items : Nat → List MTok → List (List MTok)
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .lb :: ts =>
+    match untilClose (ts.length + 1) 0 [] ts with
+    | some (inner, after) => (if inner.length == 1 then inner else .lb :: inner ++ [.rb]) :: items f after
+    | none => [.lb] :: items f ts
+  | f + 1, t :: ts => [t] :: items f ts
+
+/-- The inside of a braced group, or the tokens. -/
+def unbrace (ts : List MTok) : List MTok :=
+  match ts with
+  | .lb :: r => match r.reverse with
+    | .rb :: r' => r'.reverse
+    | _ => ts
+  | _ => ts
+
+/-- The term that the item lists are instances of, item by item: the template, with the
+index `v` where they differ, and the pairs of what stands there. -/
+def antiUnifyItems (v : Codes) : Nat → List (List MTok × List MTok) →
+    Option (List MTok × List (List MTok × List MTok))
+  | 0, _ => none
+  | _ + 1, [] => some ([], [])
+  | f + 1, (p, q) :: rest => do
+    let (t, ds) ← antiUnifyItems v f rest
+    if p == q then some (p ++ t, ds) else
+    match p, q with
+    | .lb :: _, .lb :: _ =>
+      let ia := items (p.length + 1) (unbrace p)
+      let ib := items (q.length + 1) (unbrace q)
+      if ia.length != ib.length then some ([.lb, .id v, .rb] ++ t, (p, q) :: ds) else do
+      let (t', ds') ← antiUnifyItems v f (ia.zip ib)
+      some ([.lb] ++ t' ++ [.rb] ++ t, ds' ++ ds)
+    | _, _ => some ([.lb, .id v, .rb] ++ t, (p, q) :: ds)
+
+/-- The term that `a` and `b` are instances of: the template, with the index `v` where they
+differ, and the pairs of what stands there in `a` and in `b`. -/
+def antiUnify (v : Codes) (a b : List MTok) : Option (List MTok × List (List MTok × List MTok)) :=
+  let ia := items (a.length + 1) a
+  let ib := items (b.length + 1) b
+  if ia.length != ib.length then some ([.lb, .id v, .rb], [(a, b)])
+  else antiUnifyItems v (2 * (a.length + b.length) + 4) (ia.zip ib)
+
+/-- The template and the bounds of `a ⋯ b`, with a fresh index. -/
+def instances (all a b : List MTok) : Option (Codes × List MTok × List MTok × List MTok) := do
+  let ids := all.filterMap fun t => match t with | .id c => some c | _ => none
+  let v ← [w!"i", w!"j", w!"l", w!"r", w!"s", w!"t"].find? (!ids.contains ·)
+  let (tmpl, ds) ← antiUnify v a b
+  let (lo, hi) ← ds.head?
+  let lo := unbrace lo
+  let hi := unbrace hi
+  if lo.isEmpty || hi.isEmpty || !ds.all (fun (p, q) => unbrace p == lo && unbrace q == hi) then none else
+  some (v, tmpl, lo, hi)
+
+/-- The depth of brackets before each token. -/
+def depths (ts : List MTok) : List Int :=
+  (ts.foldl (fun (acc : List Int × Int) t =>
+    let d := acc.2
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    (d :: acc.1, d')) ([], 0)).1.reverse
+
+/-- `X+\cdots+Y` (and `X\cdot\cdots\cdot Y`) as `\sum_{i=lo}^{hi}(T)` (`\prod`): the first such
+ellipsis outside brackets. -/
+def sumEllipsis (ts : List MTok) : Option (List MTok) := do
+  let ds := depths ts
+  let n := ts.length
+  let at_ (k : Nat) : MTok := ts.getD k (.sym 0)
+  let k ← (List.range n).find? fun k =>
+    ds.getD k 1 == 0 && isDots (at_ (k + 1)) &&
+      ((at_ k == .sym 43 && at_ (k + 2) == .sym 43) || (at_ k == .cmd w!"cdot" && at_ (k + 2) == .cmd w!"cdot"))
+  let isSum := at_ k == .sym 43
+  let boundary (t : MTok) : Bool :=
+    t == .sym 43 || t == .sym 45 || t == .sym 44 || (relOf t).isSome || t == .cmd w!"quad" ||
+      t == .cmd w!"qquad" || isCmdIn wConnectives t || (!isSum && t == .cmd w!"cdot")
+  let start := ((List.range k).filter fun j => ds.getD j 1 == 0 && boundary (at_ j)).getLast?.map (· + 1) |>.getD 0
+  let stop := ((List.range n).find? fun j => k + 2 < j && ds.getD j 1 == 0 && boundary (at_ j)).getD n
+  let a := (ts.take k).drop start
+  let b := (ts.take stop).drop (k + 3)
+  let (v, tmpl, lo, hi) ← instances ts a b
+  let op := if isSum then w!"sum" else w!"prod"
+  some (ts.take start ++ [.cmd op, .sym 95, .lb, .id v, .sym 61] ++ lo ++ [.rb, .sym 94, .lb] ++ hi ++
+    [.rb, .sym 40] ++ tmpl ++ [.sym 41] ++ ts.drop stop)
+
+/-- All the sums and products with an ellipsis. -/
+def sumEllipses : Nat → List MTok → List MTok
+  | 0, ts => ts
+  | f + 1, ts => match sumEllipsis ts with
+    | some ts' => sumEllipses f ts'
+    | none => ts
+
+/-- `L X r\cdots r Y R` (`a_1<\cdots<a_m`, `2\le n_1<\cdots<n_k`): the tokens before and
+after the ellipsis and its relation. -/
+def chainEllipsis (ts : List MTok) : Option (List MTok × MTok × List MTok) := do
+  let ds := depths ts
+  let at_ (k : Nat) : MTok := ts.getD k (.sym 0)
+  let k ← (List.range ts.length).find? fun k =>
+    ds.getD k 1 == 0 && isDots (at_ (k + 1)) && (relOf (at_ k)).isSome && at_ (k + 2) == at_ k
+  some (ts.take k, at_ k, ts.drop (k + 3))
+
 def parseFormula (ts : List MTok) : Option MT :=
   let ts := modToks (ts.length + 1) [] (divergenceToks ts)
-  match run (8 * ts.length + 64) .top ts with
-  | some (x, []) => some x
-  | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
+  let ts := sumEllipses 8 ts
+  let plain (ts : List MTok) : Option MT :=
+    match run (8 * ts.length + 64) .top ts with
+    | some (x, []) => some x
+    | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
+  match chainEllipsis ts with
+  | some (left, r, right) => do
+    -- `X` ends the left part, `Y` begins the right one (each up to a relation)
+    let lds := depths left
+    let rds := depths right
+    let isRel (t : MTok) : Bool := (relOf t).isSome
+    let xs := ((List.range left.length).filter fun j => lds.getD j 1 == 0 && isRel (left.getD j (.sym 0))).getLast?.map (· + 1) |>.getD 0
+    let ye := ((List.range right.length).find? fun j => rds.getD j 1 == 0 && isRel (right.getD j (.sym 0))).getD right.length
+    let x := left.drop xs
+    let y := right.take ye
+    let (v, tmpl, lo, hi) ← instances ts x y
+    let next := tmpl.flatMap fun t => if t == .id v then [.lb, .id v, .sym 43, .digit 1, .rb] else [t]
+    let rel ← relOf r
+    let e ← plain tmpl
+    let e1 ← plain next
+    let lo ← plain lo
+    let hi ← plain hi
+    -- each term and the next: for every integer `i` with `lo ≤ i < hi`
+    let step := MT.quant true [v] (.setOf (.id v) (.id w!"\\mathbb{Z}") [.chain lo [(.le, .id v), (.lt, hi)]])
+      (.chain e [(rel, e1)])
+    let before ← if xs == 0 then some [] else (plain left).map ([·])
+    let after ← if ye == right.length then some [] else (plain right).map ([·])
+    some (.conj (before ++ [step] ++ after))
+  | none => plain ts
 
 def joinRows : List MT → Option (List MT)
   | [] => some []

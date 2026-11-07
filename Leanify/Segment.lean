@@ -72,6 +72,13 @@ def tfaeIntro : List PTok → Bool
     e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following")
   | _ => false
 
+/-- `… with the following property.`, `… such that the following holds.` (reversed): the next
+sentence states the property, and belongs to this one. -/
+def followingIntro : List PTok → Bool
+  | ⟨.word p, _, false⟩ :: ⟨.word f, _, false⟩ :: ⟨.word t, _, false⟩ :: _ =>
+    t == w!"the" && f == w!"following" && (p == w!"property" || p == w!"holds")
+  | _ => false
+
 /-- Index of the token closing the current display environment `e`. -/
 def displayEnd (e : Codes) : List PTok → Nat → Option Nat
   | [], _ => none
@@ -205,7 +212,8 @@ def go : Nat → List PTok → St → St
         go f ts (flush s)
       else go f ts { s with cur := t :: s.cur }
     | .punct 46 =>
-      if !t.math && !s.tfae && endsAfter ts && !abbrevBefore s.cur then go f ts (flush { s with cur := t :: s.cur })
+      if !t.math && !s.tfae && endsAfter ts && !abbrevBefore s.cur && !followingIntro s.cur then
+        go f ts (flush { s with cur := t :: s.cur })
       else go f ts { s with cur := t :: s.cur }
     | _ => go f ts { s with cur := t :: s.cur }
 

@@ -490,9 +490,10 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
         else some <$> closedBound hi sc
       pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) lopen ropen (.loc 0))))
     | .tuple [lo, hi] => do
-      let l ← Elab.constEnd false true lo
-      let h ← Elab.constEnd true true hi
-      pure (.real, some (.lam .real .tt (Elab.rayTm l h true true (.loc 0))))
+      -- an open interval, whose ends may use the variables bound before (`(0,c)`)
+      let l ← if Elab.isInfty false lo then pure none else some <$> closedBound lo sc
+      let h ← if Elab.isInfty true hi then pure none else some <$> closedBound hi sc
+      pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) true true (.loc 0))))
     | .id n => do
       -- the real numbers
       if n == w!"\\mathbb{R}" then pure (.real, none) else
@@ -1109,6 +1110,13 @@ variables of their indices. -/
 def genericsOf (bases : List Codes) : Nat → MT → List (Codes × List Codes)
   | 0, _ => []
   | f + 1, m =>
+    -- the implied constant of `\ll`, `\gg` and `O(…)` (`@ll`)
+    let implied : List (Codes × List Codes) := match m with
+      | .chain _ rs =>
+        if bases.contains w!"@ll" && rs.any (fun (r, y) => r == .ll || r == .gg ||
+            (match y with | .app (.id [79]) [_] => true | _ => false)) then [(w!"@ll", [])] else []
+      | _ => []
+    implied ++
     match m with
     | .id k => if bases.contains k then [(k, [])] else []
     | .sub (.id k) i =>
@@ -3238,7 +3246,9 @@ def introducedSymbols (ts : List PTok) : List Codes :=
     let w1 := ws.headD []
     let w2 := (ws.drop 1).headD []
     if intro.contains w1 || intro.contains w2 then symbolsOf ((lhs chunk 0 false []).reverse)
-    else if w1 != [] && !notName.contains w1 then
+    -- (`for every real $x$`: a variable of a binder, not an object)
+    else if w1 != [] && !notName.contains w1 &&
+        ![w!"every", w!"all", w!"each", w!"any"].contains w2 then
       -- a single symbol named by a noun (`the idempotent $e$`)
       let inner := chunk.filter fun p => match p.tok with | .mopen | .mclose => false | _ => true
       match inner with

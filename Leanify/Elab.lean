@@ -1488,6 +1488,19 @@ where
   chainRest : Nat → Scope → PF → MT → List (Rel × MT) → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | f + 1, sc, pf, x, rest => do
+      -- the implied constant of `\ll`, `\gg` and `O(…)`, placed by the article's convention
+      let implied : M Tm := match lookupLocal sc w!"@ll" with
+        | some (i, _) => pure (.loc i)
+        | none => fail E.finding w!"\\ll, \\gg and O(…) need a convention for their implied constants: say what they may depend on (Implied constants are absolute. Implied constants may depend on $k$.)"
+      -- `A=O(B)`: `|A|\le C|B|`
+      match rest with
+      | [(.eq, .app (.id [79]) [b])] =>
+        if (lookupLocal sc [79]).isSome || (← lookupGlob [79]).isSome then fail E.unsupported else do
+        let c ← implied
+        let a ← asReal (← term f sc pf x)
+        let b ← asReal (← term f sc pf b)
+        pure (.le (.abs a) (.mul c (.abs b)), .prop)
+      | _ =>
       let ts ← (x :: rest.map (·.2)).mapM (term f sc pf)
       let rels := rest.map (·.1)
       if rels.any (· == .mem) then
@@ -1511,7 +1524,11 @@ where
       | _, _ => do
         let rec pairs : List (Tm × Ty) → List Rel → M (List Tm)
           | a :: b :: more, r :: rs => do
-            let p ← if r == .eq && isPredTy a.2 && a.2 == b.2 then pure (setEq a.2 a.1 b.1) else relTm r a b
+            let p ← if r == .eq && isPredTy a.2 && a.2 == b.2 then pure (setEq a.2 a.1 b.1)
+              -- `A\ll B`: `|A|\le CB`; `A\gg B`: `|B|\le CA`
+              else if r == .ll then do pure (.le (.abs (← asReal a)) (.mul (← implied) (← asReal b)))
+              else if r == .gg then do pure (.le (.abs (← asReal b)) (.mul (← implied) (← asReal a)))
+              else relTm r a b
             let ps ← pairs (b :: more) rs
             pure (p :: ps)
           | _, _ => pure []
