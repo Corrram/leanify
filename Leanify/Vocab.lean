@@ -32,6 +32,10 @@ structure Noun where
   plural : Phrase
   ty : Ty
   pred : Tm
+  /-- The field of the vocabulary the noun belongs to (empty: the core). -/
+  field : Codes := []
+  /-- Its meaning and Mathlib counterpart, for the glossary. -/
+  doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives
@@ -41,13 +45,20 @@ structure Modifier where
   prenominal : Bool
   ty : Ty
   pred : Tm
+  field : Codes := []
+  doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
-/-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. -/
+/-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. A notion
+with variables in its phrase (`Poisson distribution with mean $v$`) is a function of
+them, in order; `doms` are their domains (as for an article's definitions). -/
 structure Notion where
   name : Phrase
   value : Tm
   ty : Ty
+  doms : List (Option Tm) := []
+  field : Codes := []
+  doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Vocab where
@@ -111,9 +122,15 @@ def append (V W : Vocab) : Vocab :=
     constNames := V.constNames ++ W.constNames
     nouns := V.nouns ++ W.nouns.map fun n => { n with ty := shiftTy kt n.ty, pred := tm n.pred }
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
-    notions := V.notions ++ W.notions.map fun n => { n with ty := shiftTy kt n.ty, value := tm n.value } }
+    notions := V.notions ++ W.notions.map fun n =>
+      { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) } }
 
 instance : Append Vocab := ⟨append⟩
+
+/-- The entries of `V`, as the field `f`. -/
+def tag (f : Codes) (V : Vocab) : Vocab :=
+  { V with nouns := V.nouns.map ({ · with field := f }), mods := V.mods.map ({ · with field := f }),
+           notions := V.notions.map ({ · with field := f }) }
 
 end Vocab
 

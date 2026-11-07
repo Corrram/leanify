@@ -32,6 +32,266 @@ structure Doc where
   names : List (List Codes × Nat)
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+/-! ## Notation templates
+
+`We write $\mathbf E[X]$ for …` declares a notation: later formulas that match the
+template are read as what it stands for. A template is a list of fixed tokens and
+arguments: the variables of the template that also occur in what it stands for.
+An argument between fixed tokens is everything up to the next fixed token (as
+for delimited TeX macros); an argument at the start or end is one atom (a symbol
+or a group, with its sub- and superscripts). Matching is on the tokens of the
+formulas, before they are parsed. -/
+
+namespace Notation
+
+def opens : Tok → Bool
+  | .lbrace | .msym 40 | .msym 91 | .begin _ => true
+  | _ => false
+
+def closes : Tok → Bool
+  | .rbrace | .msym 41 | .msym 93 | .finish _ => true
+  | _ => false
+
+/-- A balanced group starting with an opening token: the group and the rest. -/
+def group : Nat → Nat → List PTok → List PTok → Option (List PTok × List PTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    if opens t.tok then group f (d + 1) (t :: acc) ts
+    else if closes t.tok then
+      if d ≤ 1 then some ((t :: acc).reverse, ts) else group f (d - 1) (t :: acc) ts
+    else group f d (t :: acc) ts
+
+/-- One token or a group. -/
+def unit (ts : List PTok) : Option (List PTok × List PTok) :=
+  match ts with
+  | t :: rest =>
+    if opens t.tok then group (ts.length + 1) 0 [] ts
+    else if closes t.tok then none
+    else match t.tok with
+      | .msym _ => none
+      | _ => some ([t], rest)
+  | [] => none
+
+/-- Sub- and superscripts and primes after an atom. -/
+def scripts : Nat → List PTok → List PTok → List PTok × List PTok
+  | 0, acc, ts => (acc, ts)
+  | f + 1, acc, t :: ts =>
+    if t.tok == .msym 95 || t.tok == .msym 94 then
+      match unit ts with
+      | some (u, r) => scripts f (acc ++ [t] ++ u) r
+      | none => (acc, t :: ts)
+    else if t.tok == .msym 39 then scripts f (acc ++ [t]) ts
+    else (acc, t :: ts)
+  | _ + 1, acc, [] => (acc, [])
+
+/-- An atom: a symbol (with a font: `\mathbf{x}`, `\mathcal P`, or the digits of a
+number) or a group, with its scripts. -/
+def atom (ts : List PTok) : Option (List PTok × List PTok) := do
+  let (base, rest) ← match ts with
+    | t :: r =>
+      match t.tok with
+      | .cmd n => if Math.wFonts.contains n then (unit r).map fun (u, r') => (t :: u, r') else some ([t], r)
+      | .mnum _ =>
+        let ds := r.takeWhile fun p => match p.tok with | .mnum _ => true | _ => false
+        some (t :: ds, r.drop ds.length)
+      | _ => unit ts
+    | [] => none
+  some (scripts (rest.length + 1) base rest)
+
+/-- The shortest nonempty balanced prefix before a token `stop` outside groups. -/
+def delimited (stop : Tok) : Nat → Nat → List PTok → List PTok → Option (List PTok × List PTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    if d == 0 && t.tok == stop && !acc.isEmpty then some (acc.reverse, t :: ts)
+    else if opens t.tok then delimited stop f (d + 1) (t :: acc) ts
+    else if closes t.tok then (if d == 0 then none else delimited stop f (d - 1) (t :: acc) ts)
+    else delimited stop f d (t :: acc) ts
+
+def sameToks (a b : List PTok) : Bool := a.map (·.tok) == b.map (·.tok)
+
+/-- Bind argument `k` (an argument used twice must match the same tokens). -/
+def bind (k : Nat) (arg : List PTok) (acc : List (Nat × List PTok)) : Option (List (Nat × List PTok)) :=
+  match acc.lookup k with
+  | some old => if sameToks old arg then some acc else none
+  | none => some ((k, arg) :: acc)
+
+/-- Match the items of a template at the start of the tokens. -/
+def matchItems : Nat → List TItem → List PTok → List (Nat × List PTok) →
+    Option (List (Nat × List PTok) × List PTok)
+  | 0, _, _, _ => none
+  | _ + 1, [], ts, acc => some (acc, ts)
+  | f + 1, .fixed t :: is, u :: ts, acc => if u.tok == t then matchItems f is ts acc else none
+  | _ + 1, .fixed _ :: _, [], _ => none
+  | f + 1, .slot k :: .fixed t :: is, ts, acc => do
+    let (arg, r) ← delimited t (ts.length + 1) 0 [] ts
+    matchItems f (.fixed t :: is) r (← bind k arg acc)
+  | f + 1, .slot k :: is, ts, acc => do
+    let (arg, r) ← atom ts
+    matchItems f is r (← bind k arg acc)
+
+/-- Match a template at the start of the tokens; a first argument is an atom. -/
+def matchAt (pat : List TItem) (ts : List PTok) : Option (List (Nat × List PTok) × List PTok) :=
+  let f := pat.length + ts.length + 2
+  match pat with
+  | .slot k :: rest => do
+    let (arg, r) ← atom ts
+    matchItems f rest r [(k, arg)]
+  | _ => matchItems f pat ts []
+
+/-- The tokens of what a template stands for, with the arguments put in (an
+argument of several tokens in braces). -/
+def substitute (repl : List TItem) (args : List (Nat × List PTok)) (pos : Nat) : List PTok :=
+  repl.flatMap fun it => match it with
+    | .fixed t => [⟨t, pos, true⟩]
+    | .slot k =>
+      match args.lookup k with
+      | some [p] => [p]
+      | some ps => ⟨.lbrace, pos, true⟩ :: ps ++ [⟨.rbrace, pos, true⟩]
+      | none => []
+
+/-- Replace every match of a template in the formulas of a token list. -/
+def rewrite (tpl : Template) : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    if !t.math then t :: rewrite tpl f ts else
+    match matchAt tpl.pat (t :: ts) with
+    | some (args, rest) =>
+      if rest.length < ts.length + 1 then substitute tpl.repl args t.pos ++ rewrite tpl f rest
+      else t :: rewrite tpl f ts
+    | none => t :: rewrite tpl f ts
+
+/-- All templates, in order, three times (a notation may use an earlier one). -/
+def rewriteAll (tpls : List Template) (ts : List PTok) : List PTok :=
+  if tpls.isEmpty then ts else
+  let pass (ts : List PTok) := tpls.foldl (fun acc tpl => rewrite tpl (acc.length + 1) acc) ts
+  pass (pass (pass ts))
+
+/-- The formulas of a sentence, in order (the tokens between `$…$`). -/
+def formulas : Nat → List PTok → List (List PTok) → List (List PTok)
+  | 0, _, acc => acc.reverse
+  | _ + 1, [], acc => acc.reverse
+  | f + 1, t :: ts, acc =>
+    if t.tok == .mopen then
+      let body := ts.takeWhile (·.tok != .mclose)
+      formulas f (ts.drop (body.length + 1)) (body :: acc)
+    else formulas f ts acc
+
+/-- A token that may be an argument: a letter or a command that is not a font. -/
+def slotTok : Tok → Bool
+  | .mvar _ => true
+  | .cmd n => !Math.wFonts.contains n
+  | _ => false
+
+/-- Which tokens are part of a name set in a font (`\mathrm{Bin}`, `\mathcal P`):
+those are never arguments. -/
+def fontMask : Nat → List Tok → List Bool
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .cmd n :: .lbrace :: ts =>
+    if Math.wFonts.contains n then
+      let body := ts.takeWhile (· != .rbrace)
+      false :: List.replicate (body.length + 2) true ++ fontMask f (ts.drop (body.length + 1))
+    else false :: fontMask f (.lbrace :: ts)
+  | f + 1, .cmd n :: t :: ts =>
+    if Math.wFonts.contains n then false :: true :: fontMask f ts else false :: fontMask f (t :: ts)
+  | f + 1, _ :: ts => false :: fontMask f ts
+
+/-- Items of tokens, given the argument tokens (font-set names stay fixed). -/
+def items (args : List Tok) (ts : List Tok) : List TItem :=
+  (ts.zip (fontMask (ts.length + 1) ts ++ List.replicate ts.length false)).map fun (t, fixed) =>
+    if fixed then .fixed t else
+    match args.idxOf? t with
+    | some k => if k < args.length then .slot k else .fixed t
+    | none => .fixed t
+
+/-- A template from a pattern and what it stands for: the arguments are the
+letters and commands of the pattern that occur in `repl`, numbered by first
+occurrence. -/
+def template (pat repl : List PTok) : Template :=
+  let ptoks := pat.map (·.tok)
+  let free := (ptoks.zip (fontMask (ptoks.length + 1) ptoks ++ List.replicate ptoks.length false)).filterMap
+    fun (t, fixed) => if fixed then none else some t
+  let args := (free.filter fun t => slotTok t && repl.any (·.tok == t)).eraseDups
+  ⟨items args ptoks, items args (repl.map (·.tok))⟩
+
+/-- The sentence declares a notation (`We write …`): its own formulas are not rewritten. -/
+def declares (ts : List PTok) : Bool :=
+  let ws := ts.filterMap fun p => match p.tok with | .word w => some (Grammar.lower w) | _ => none
+  ws.take 2 == [w!"we", w!"write"] || ws.take 3 == [w!"let", w!"us", w!"write"]
+
+/-- The variables of a phrase, in order, as formulas of the sentence. -/
+def matchSlots : Phrase → List Chunk → List (List MTok) → Option (List (List MTok))
+  | [], [], acc => some acc.reverse
+  | .w w :: ps, .w v :: cs, acc => if v == w then matchSlots ps cs acc else none
+  | .m t :: ps, .m u :: cs, acc => if t == u then matchSlots ps cs acc else none
+  | .v :: ps, .m u :: cs, acc => matchSlots ps cs (u :: acc)
+  | _, _, _ => none
+
+def tokTex : Tok → Codes
+  | .cmd n => [92] ++ n
+  | .mvar c | .msym c | .csym c => [c]
+  | .mnum n => (toString n).toList.map Char.toNat
+  | .lbrace => [123]
+  | .rbrace => [125]
+  | _ => []
+
+/-- TeX text of formula tokens (a font command's single argument in braces). -/
+def texOf : Nat → List Tok → Codes
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .cmd n :: t :: ts =>
+    if Math.wFonts.contains n && t != .lbrace then
+      [92] ++ n ++ [123] ++ tokTex t ++ [125] ++ texOf f ts
+    else
+      let sp : Codes := match t with | .mvar _ => [32] | _ => []
+      [92] ++ n ++ sp ++ texOf f (t :: ts)
+  | f + 1, t :: ts =>
+    tokTex t ++ texOf f ts
+
+/-- The symbol of a notation: its text up to its first argument, when that starts
+with a command (`\mathrm{Poi}`, `\delta`, `\mathcal{P}`). -/
+def symbolOf (pat : List TItem) : Option Codes :=
+  let pre := pat.takeWhile fun it => match it with | .fixed _ => true | _ => false
+  let toks : List Tok := pre.filterMap fun it => match it with | .fixed t => some t | _ => none
+  let toks := (toks.reverse.dropWhile fun t => t == .msym 95 || t == .msym 94 || t == .msym 40).reverse
+  match toks with
+  | .cmd _ :: _ =>
+    let tx := texOf (toks.length + 1) toks
+    if tx.length ≤ 1 then none else some (tx.drop 1)
+  | _ => none
+
+/-- The token of a variable formula `$X$` or `$\lambda$`. -/
+def varTok : List MTok → Option Tok
+  | [.id [c]] => some (.mvar c)
+  | [.cmd n] => some (.cmd n)
+  | _ => none
+
+/-- Replace the words of the article's conventions in the text of a sentence (not
+after `strictly` or `non`: `strictly increasing` keeps its meaning). -/
+def rewriteWords (aliases : List (List Codes × List Tok)) : Nat → Option Tok → List PTok → List PTok
+  | 0, _, ts => ts
+  | _ + 1, _, [] => []
+  | f + 1, prev, t :: ts =>
+    let guarded := match prev with
+      | some (.word w) => Grammar.lower w == w!"strictly" || Grammar.lower w == w!"non"
+      | some (.punct 45) => true
+      | _ => false
+    let hit := if t.math || guarded then none else aliases.findSome? fun (ws, repl) =>
+      let n := ws.length
+      let here := (t :: ts).take n
+      if here.length == n && (here.zip ws).all (fun (p, w) => match p.tok with
+          | .word v => Grammar.lower v == w
+          | _ => false) then some (n, repl) else none
+    match hit with
+    | some (n, repl) =>
+      repl.map (fun r => (⟨r, t.pos, false⟩ : PTok)) ++ rewriteWords aliases f none ((t :: ts).drop n)
+    | none => t :: rewriteWords aliases f (some t.tok) ts
+
+end Notation
+
 namespace Compile
 
 
@@ -88,6 +348,31 @@ def matchPhrase : Phrase → List Chunk → Option (Option (List MTok) × List C
     | _ => matchPhrase ps (.m u :: cs)
   | .v :: ps, cs => matchPhrase ps cs
   | _, _ => none
+
+/-- The words `ws` joined by spaces, in quotes. -/
+def quoted (ws : List Codes) : Codes := [34] ++ (ws.intersperse [32]).flatten ++ [34]
+
+/-- The fields of entries, for messages: `core`, `numbers and analysis`. -/
+def fieldsText (fs : List Codes) : Codes :=
+  ((fs.map fun f => if f.isEmpty then w!"core" else f).eraseDups.intersperse w!" and ").flatten
+
+/-- The one meaning of a phrase among the vocabulary entries that match it (each
+with the chunks after it): the longest matches count, and entries with the same
+key (type and meaning) are one meaning. Several meanings are an error that names
+their fields: the article must say which one it means. -/
+def theMeaning {α β : Type} [BEq β] (key : α → β) (field : α → Codes) (cs : List Chunk)
+    (cands : List (α × List Chunk)) : M (Option (α × List Chunk)) := do
+  match (cands.map (·.2.length)).min? with
+  | none => pure none
+  | some k =>
+    let best := cands.filter (·.2.length == k)
+    let distinct := best.foldl (fun acc c => if acc.any (fun d => key d.1 == key c.1) then acc else acc ++ [c]) []
+    match distinct with
+    | [c] => pure (some c)
+    | _ =>
+      let ws := wordsOf (cs.take (cs.length - k))
+      fail E.ambiguous (quoted ws ++ w!" has several meanings (in " ++
+        fieldsText (distinct.map (field ·.1)) ++ [41])
 
 /-- Words of a noun, matched against the article's noun table (longest first). -/
 def matchWords (tbl : List (List Codes × Nat)) (cs : List Chunk) : Option (Nat × List Chunk) :=
@@ -176,15 +461,18 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
   let st ← get
   let V := st.vocab
   -- prenominal modifiers
-  let rec pre : Nat → List Chunk → List Modifier → List Modifier × List Chunk
+  -- (each is the list of the vocabulary's modifiers with those words: the noun's type
+  -- decides between them)
+  let rec pre : Nat → List Chunk → List (List Chunk × List Modifier) → List (List Chunk × List Modifier) × List Chunk
     | 0, cs, acc => (acc.reverse, cs)
     | f + 1, cs, acc =>
-      match V.mods.findSome? (fun m => if m.prenominal then
+      let cands := V.mods.filterMap (fun m => if m.prenominal then
           (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
-        else none) with
-      | some (m, r) => pre f r (m :: acc)
+        else none)
+      match (cands.map (·.2.length)).min? with
+      | some k => pre f (cs.drop (cs.length - k)) ((cs, (cands.filter (·.2.length == k)).map (·.1)) :: acc)
       | none => (acc.reverse, cs)
-  let (pms, r0) := pre 4 np []
+  let (pmGroups, r0) := pre 4 np []
   -- notions of the article before the noun (`an LTD copula $C$`)
   let rec matchName : List Codes → List Chunk → Option (List Chunk)
     | [], cs => some cs
@@ -212,13 +500,15 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
         if (Math.parseSig ts).isSome then fail E.unsupported else pure (a, [.glob i], some ts, r')
       | _ => pure (a, [.glob i], none, r)
     | none =>
-      match V.nouns.findSome? (fun n =>
-          ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => (n, v, r)) with
-      | some (n, v, r) =>
+      let cands := V.nouns.filterMap (fun n =>
+          ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => ((n, v), r))
+      match ← theMeaning (fun (nv : Noun × Option (List MTok)) => (nv.1.ty, nv.1.pred, nv.2))
+          (·.1.field) r0 cands with
+      | some ((n, v), r) =>
         match v, r with
         -- `a copula $C$`: the variable follows a noun without a slot
         | none, .m ts :: r' =>
-          if (Math.parseSig ts).isSome || !(n.sing.all fun p => p != .v) then pure (n.ty, [n.pred], v, r)
+          if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty) then pure (n.ty, [n.pred], v, r)
           else pure (n.ty, [n.pred], some ts, r')
         | _, _ => pure (n.ty, [n.pred], v, r)
       | none =>
@@ -238,8 +528,12 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
           | _ => fail E.unsupported
         | _ => fail E.noun ((wordsOf np).flatten)
   let (ty, preds, var, r1) ← head
-  for m in pms do
-    if m.ty != ty then fail E.type
+  let pms ← pmGroups.mapM fun (cs, ms) => do
+    let ms := ms.filter (·.ty == ty)
+    if ms.isEmpty then fail E.type
+    match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (ms.map (·, [])) with
+    | some (m, _) => pure m
+    | none => fail E.type
   let notionPreds ← nms.mapM fun i => do
     let some g := st.globs[i]? | fail E.type
     match g.ty with
@@ -252,10 +546,11 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
   -- postnominal modifiers
   let rec post : Nat → List Chunk → List Tm → M (List Tm × List Chunk)
     | 0, cs, acc => pure (acc.reverse, cs)
-    | f + 1, cs, acc =>
-      match V.mods.findSome? (fun m => if !m.prenominal && m.ty == ty then
+    | f + 1, cs, acc => do
+      let cands := V.mods.filterMap (fun m => if !m.prenominal && m.ty == ty then
           (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
-        else none) with
+        else none)
+      match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
       | some (m, r) => post f r (m.pred :: acc)
       | none => pure (acc.reverse, cs)
   let (qms, r2) ← post 4 r1 []
@@ -399,6 +694,7 @@ def clauseMaths : Clause → List MT
   | .ifThen c cl => c :: clauseMaths cl
   | .adjectives s adjs => s :: adjs.filterMap (·.2)
   | .notions s _ _ => [s]
+  | .isA s _ _ => [s]
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
   | _ => []
@@ -844,10 +1140,11 @@ vocabulary (`Lebesgue measure on $[0,1]$`). -/
 def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
   let key ← match sym with | .id k => pure k | _ => fail E.unsupported
   let V := (← get).vocab
-  match V.notions.find? (fun n => match matchPhrase n.name name with
-      | some (none, []) => true
-      | _ => false) with
-  | some n => do
+  let cands := V.notions.filterMap fun n => match matchPhrase n.name name with
+    | some (none, []) => some (n, [])
+    | _ => none
+  match ← theMeaning (fun (n : Notion) => (n.ty, n.value)) (·.field) name cands with
+  | some (n, _) => do
     let i ← addGlob ⟨key, n.ty, [], false⟩ n.value
     pure ([i], [])
   | none => fail E.noun (wordsOf name).flatten
@@ -1223,6 +1520,56 @@ def notionApp (x : Tm × Ty) (name : List Codes) : M Tm := do
   let (t, _) ← applyAll (.glob i) g.ty g.doms [x]
   pure t
 
+/-- The chunks of a name (a hyphen as `-`). -/
+def nameChunks (name : List Codes) : List Chunk :=
+  name.map fun w => if w == w!"-" then Chunk.p 45 else .w w
+
+/-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
+(with its modifiers), or prenominal modifiers alone. The type of `x` decides between
+modifiers with the same words. -/
+def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
+  let V := (← get).vocab
+  let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
+  let np ← tryCatch (some <$> nounPhrase cs) fun e =>
+    if e.code == E.ambiguous then throw e else pure none
+  -- a notion with its arguments: `$X$ is the Poisson distribution with mean $\lambda$`
+  let notion ← if np.isSome then pure none else do
+    let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
+    match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) cs cands with
+    | some ((n, args), _) => do
+      let ts ← args.mapM fun a => do
+        let some m := Math.parseFormula a | fail E.unsupported
+        term F sc none m
+      let (v, vty) ← applyAll n.value n.ty n.doms ts
+      if vty != x.2 then fail E.type
+      if vty == .real then pure (some (Tm.eq x.1 v))
+      else if vty == .fn .real .real then
+        pure (some (Tm.all .real (.eq (.app (shift 1 0 x.1) (.loc 0)) (.app (shift 1 0 v) (.loc 0)))))
+      else fail E.type
+    | none => pure none
+  match np, notion with
+  | _, some p => pure p
+  | some b, _ =>
+    if !b.name.isEmpty then fail E.unsupported b.name
+    if b.ty != x.2 then fail E.type
+    pure (holdsAt b.pred x.1)
+  | none, none =>
+    let rec adjs : Nat → List Chunk → List Tm → M (List Tm)
+      | 0, _, _ => fail E.unsupported
+      | _ + 1, [], acc => pure acc.reverse
+      | f + 1, cs, acc => do
+        let cs := ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some).getD cs
+        let cs := (kw [w!"and"] cs).getD cs
+        if cs.isEmpty then pure acc.reverse else
+        let cands := V.mods.filterMap fun m => if m.prenominal && m.ty == x.2 then
+            (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
+          else none
+        match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
+        | some (m, r) => adjs f r (Tm.app m.pred x.1 :: acc)
+        | none => fail E.noun ((wordsOf cs).intersperse [32]).flatten
+    let ps ← adjs (cs.length + 1) cs []
+    pure (conjAll ps)
+
 def disjAll : List Tm → Tm
   | [] => .not .tt
   | [p] => p
@@ -1489,8 +1836,27 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.imp h p)
   | .notions s names disj => do
     let x ← term F sc none s
-    let ps ← names.mapM (notionApp x)
+    -- a name the article does not define is an adjective of the vocabulary
+    let notions := (← get).notions
+    let ps ← names.mapM fun n =>
+      if (notions.lookup n).isSome then notionApp x n else
+      tryCatch (vocabPredicate sc x (nameChunks n)) fun e =>
+        if e.code == E.ambiguous then throw e else fail E.prose n.flatten
     pure (if disj then disjAll ps else conjAll ps)
+  | .isA s np neg => do
+    -- words with which no phrase of the vocabulary starts are prose
+    let V := (← get).vocab
+    let cs := (kw [w!"a"] np <|> kw [w!"an"] np <|> kw [w!"the"] np).getD np
+    let first : Option PItem := match cs with | .w w :: _ => some (.w w) | _ => none
+    let starts (p : Phrase) : Bool := first.isSome && p.head? == first
+    unless V.nouns.any (fun n => starts n.sing || starts n.plural) || V.mods.any (fun m => starts m.phrase) ||
+        V.notions.any (fun n => starts n.name) || ((← get).nouns.any fun (ws, _) => ws.head? == (match cs with | .w w :: _ => some w | _ => none)) do
+      fail E.prose
+    let x ← term F sc none s
+    -- words that are not the vocabulary's are prose
+    let p ← tryCatch (vocabPredicate sc x np) fun e =>
+      if e.code == E.noun || e.code == E.unsupported then fail E.prose e.detail else throw e
+    pure (if neg then .not p else p)
   | .everyIs np names disj => do
     let b ← nounPhrase np
     let ps ← names.mapM (notionApp (.loc 0, b.ty))
@@ -1506,7 +1872,12 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         | some (_, g) => pure (g.doms.head?).join
         | none => pure none
       | none => pure none
-    let ps ← adjs.mapM fun (a, on) => adjectiveTm sc t ty defDom a on
+    let ps ← adjs.mapM fun (a, on) =>
+      -- the standard adjectives, else the vocabulary's (`even` of an integer)
+      tryCatch (adjectiveTm sc t ty defDom a on) fun e =>
+        if on.isSome then throw e else
+        tryCatch (vocabPredicate sc (t, ty) (nameChunks a)) fun e' =>
+          if e'.code == E.ambiguous then throw e' else throw e
     pure (conjAll ps)
   | .extremumOf isMax value f s at_ rels => do
     let fm ← match f with
@@ -1698,6 +2069,27 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         pure (id :: ids)
   go 16 cls none
 
+/-- A convention of the article: a noun the article names (`By a distribution we mean
+a probability distribution on $\mathbb{N}_0$.`), which is a class like the article's
+own, or words that stand for other words in the following sentences (`Throughout,
+increasing means non-decreasing.`). -/
+def meaningDef (ws : List Codes) (rhs : List Chunk) (noun : Bool) : M (List Nat × List Nat) := do
+  if noun then
+    let b ← nounPhrase rhs
+    if !b.name.isEmpty then fail E.unsupported b.name
+    let p := b.pred.getD (.lam b.ty .tt .tt)
+    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false⟩ p
+    let plural := ws.dropLast ++ (ws.getLast?.map (· ++ [115])).toList
+    modify fun st => { st with nouns := st.nouns ++ [(ws, i), (plural, i)], classes := st.classes ++ [(ws, i)] }
+    pure ([i], [])
+  else
+    let toks ← rhs.mapM fun c => match c with
+      | .w w => pure (Tok.word w)
+      | .p c => pure (Tok.punct c)
+      | _ => fail E.unsupported
+    modify fun st => { st with wordAliases := st.wordAliases ++ [(ws, toks)] }
+    pure ([], [])
+
 /-- Compile one sentence: definitions and claims, or a reason it has none. -/
 def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   match s with
@@ -1803,6 +2195,8 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     | _ =>
       modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
     pure ([], [])
+  | .notation .. => fail E.unsupported
+  | .meaning ws rhs noun => meaningDef ws rhs noun
   | .defDeriv b sets names dom cod anchors derivs labels => do
     let bi ← match b with
       | some bd => do
@@ -1822,6 +2216,60 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
       | none, _ => fail E.unsupported
     let (d2, c2) ← defDeriv bi names dom cod anchors derivs labels
     pure (d1 ++ d2, c1 ++ c2)
+
+/-- `We write $T$ for $F$`, `We write $T$ if $F$`: the template `T` stands for the
+formula `F` (in braces). `We write $T$ for the NAME`: a notion of the vocabulary,
+whose variables are those of `T`, or `the set of NOUNS`, a class; it becomes a
+definition of the article, and `T` stands for it. -/
+def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat × List Nat) := do
+  let fs := Notation.formulas (toks.length + 1) toks []
+  let some pat := fs.head? | fail E.unsupported
+  let st ← get
+  let push (tpl : Template) : M Unit := do
+    if !tpl.pat.any (fun it => match it with | .fixed _ => true | _ => false) then fail E.unsupported
+    modify fun st => { st with templates := st.templates ++ [tpl] }
+  if kind == 2 then
+    let key : Codes := w!"@n" ++ (toString st.templates.length).toList.map Char.toNat
+    let V := st.vocab
+    let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name rhs []).map fun a => ((n, a), [])
+    match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) rhs cands with
+    | some ((n, args), _) => do
+      let ts ← args.mapM fun a => match Notation.varTok a with
+        | some t => pure t
+        | none => fail E.unsupported
+      let pat' := Notation.items ts (pat.map (·.tok))
+      let key := match Notation.symbolOf pat' with
+        | some k => if st.globs.any (·.key == [92] ++ k) then key else k
+        | none => key
+      let i ← addGlob ⟨[92] ++ key, n.ty, n.doms, false⟩ n.value
+      let slots := (List.range ts.length).map TItem.slot
+      let call : List TItem := if slots.isEmpty then [] else
+        [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]
+      push ⟨pat', .fixed (.cmd key) :: call⟩
+      pure ([i], [])
+    | none =>
+      -- `the set|class of NOUNS`
+      let rest ← match rhs with
+        | .w a :: .w b :: r => if (a == w!"set" || a == w!"class") && b == w!"of" then pure r else fail E.noun (wordsOf rhs).flatten
+        | _ => fail E.noun (wordsOf rhs).flatten
+      let cands := V.nouns.filterMap fun n => match matchPhrase n.plural rest with
+        | some (_, []) => some (n, [])
+        | _ => none
+      match ← theMeaning (fun (n : Noun) => (n.ty, n.pred)) (·.field) rest cands with
+      | some (n, _) => do
+        let pat' := pat.map (TItem.fixed ·.tok)
+        let key := match Notation.symbolOf pat' with
+          | some k => if st.globs.any (·.key == [92] ++ k) then key else k
+          | none => key
+        let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false⟩ n.pred
+        push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)]⟩
+        pure ([i], [])
+      | none => fail E.noun (wordsOf rest).flatten
+  else
+    let some repl := fs[1]? | fail E.unsupported
+    let tpl := Notation.template pat repl
+    push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
+    pure ([], [])
 
 end Compile
 
@@ -1864,12 +2312,20 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     | _ => c.proofs
   let incomplete (ps : List ProofInfo) : List ProofInfo :=
     ps.map fun p => if p.env == s.ctx.env then { p with complete := false } else p
+  -- the article's notations, in the formulas of later sentences
+  let toks0 := s.toks
+  let s := if st0.templates.isEmpty || Notation.declares s.toks then s
+    else { s with toks := Notation.rewriteAll st0.templates s.toks }
+  let s := if st0.wordAliases.isEmpty then s
+    else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   match Grammar.parseSentence s with
   | none => { c with st := st0, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some sent =>
     let sc : SentCtx := ⟨s.ctx, (envs.lookup s.ctx.proves).getD 0, c.idx⟩
     let labelled : M (List Nat × List Nat) := do
-      let (ds, cs) ← Compile.sentence sc sent
+      let (ds, cs) ← match sent with
+        | .notation k rhs => Compile.notationDef toks0 k rhs
+        | _ => Compile.sentence sc sent
       match sent with
       | .claims _ _ _ =>
         -- labels of displays in the sentence, and of the enclosing result, name its claims

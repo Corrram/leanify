@@ -54,3 +54,10 @@ globs = ["Notation.+"]
 name = "Refuted"
 srcDir = "tests"
 globs = ["Refuted.+"]
+
+[[lean_lib]]
+# The article's notation and conventions, and a field of the vocabulary
+# (distributions on the natural numbers), compiled by the kernel.
+name = "Vocabulary"
+srcDir = "tests"
+globs = ["Vocabulary.+"]

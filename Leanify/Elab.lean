@@ -103,6 +103,8 @@ def E.shadow := 9
 /-- The sentence has the form of an open construction (`$x$ is NAME`), but its words are
 not a notion of the article: it is prose. -/
 def E.prose := 10
+/-- A phrase has several meanings in the article's vocabulary (in different fields). -/
+def E.ambiguous := 11
 
 abbrev Local := Codes × Ty
 abbrev Scope := List Local
@@ -121,6 +123,19 @@ structure BindInfo where
   ty : Ty
   pred : Option Tm
   deriving Inhabited, DecidableEq, Repr, Lean.ToExpr
+
+/-- An item of a notation template: a fixed token, or the `k`-th argument. -/
+inductive TItem where
+  | fixed (t : Tok)
+  | slot (k : Nat)
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A notation of the article (`We write $\mathbf E[X]$ for …`): formulas matching
+`pat` are read as `repl`, with the arguments put in. -/
+structure Template where
+  pat : List TItem
+  repl : List TItem
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure St where
   /-- The vocabulary of the article. -/
@@ -180,6 +195,11 @@ structure St where
   /-- The binders and the inequalities of the latest claim about every element of a
   domain (for `both constants are sharp`). -/
   lastBounds : Option (List BindInfo × List MT) := none
+  /-- The notations of the article, in order. -/
+  templates : List Template := []
+  /-- The article's conventions for words (`Throughout, increasing means
+  non-decreasing.`): the words, and the words they stand for. -/
+  wordAliases : List (List Codes × List Tok) := []
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -949,7 +969,13 @@ where
           | _, _ =>
           let (i, gl) ← liftO (← lookupGlob n) E.undefined n
           pure (.glob i, gl.ty, gl.doms)
-      | .sub (.id key) i => do
+      -- `x_n` for a real function `x` of the scope (the weights of a distribution): `x(n)`
+      | .sub (.id key) i =>
+        match lookupLocal sc key with
+        | some (j, .fn .real b) => do
+          let a ← asReal (← term g sc none i)
+          pure (.app (.loc j) a, b, [])
+        | _ => do
         -- a constant with a subscript (`z_-`), unless the index is a variable
         let ck := match i with
           | .id x => if (lookupLocal sc x).isSome then none else symKey hd

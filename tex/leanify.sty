@@ -27,7 +27,8 @@
 %%   \usepackage[status]{leanify}               % marks from the last build
 %%   \usepackage[certify, vocab=unitsquare]{leanify}  % build on every compile
 %% Options: status, certify (implies status), check=false (no quick check),
-%% vocab=core|unitsquare (the vocabulary of the article), lean=FILE (its
+%% vocab=FIELDS (the fields of the vocabulary the article uses, e.g.
+%% vocab={numbers,analysis}; see docs/vocabulary.md), lean=FILE (its
 %% compiled Lean file, default Compiled.lean next to the article).
 %% Compile with shell escape (pdflatex -shell-escape, or the editor's setting)
 %% and with `lake` on the PATH. Leanify's output is in \jobname.leanify.log.
@@ -59,6 +60,15 @@
     lean    .initial:n  = Compiled.lean ,
   }
 \ProcessKeyOptions [ leanify ]
+% The vocabulary the article is read with, as printed by \leanifyreport.
+\tl_new:N \l__leanify_vocab_tl
+\tl_set:Ne \l__leanify_vocab_tl { \l__leanify_vocab_str }
+\tl_replace_all:Nnn \l__leanify_vocab_tl { , } { , ~ }
+\cs_new:Npn \leanify@vocab
+  {
+    \str_if_empty:NTF \l__leanify_vocab_str { core }
+      { core, ~ \tl_use:N \l__leanify_vocab_tl }
+  }
 \ExplSyntaxOff
 
 % The Lean module whose #leanify_certify checks this article.
@@ -72,7 +82,7 @@
     their citations); #5 of #6 sentences compiled; #4
     \ifnum#4=1 definition\else definitions\fi\ well defined}}
 \newcommand*\leanify@summary{no status file (build the Lean module first)}
-\newcommand*\leanifyreport{\textsf{Leanify:} \leanify@summary.}
+\newcommand*\leanifyreport{\textsf{Leanify} (vocabulary: \leanify@vocab): \leanify@summary.}
 
 % The margin marks.
 \newcommand*\leanify@markof[1]{%

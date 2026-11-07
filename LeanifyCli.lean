@@ -1,15 +1,15 @@
 import Leanify.Check
 import Leanify.Meta
 import Leanify.Report
-import Leanify.Library.UnitSquare
+import Leanify.Library.Fields
 
 /-! The `leanify` command line.
 
-* `leanify check ARTICLE.tex [--vocab core|unitsquare] [--prose] [--claims]`
+* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims]`
   compiles the article natively and prints its diagnostics (fast; certifies
   nothing). Projects with their own vocabulary define a three-line executable
   calling `Leanify.checkArticle`.
-* `leanify init ARTICLE.tex [--name NAME] [--vocab core|unitsquare]` writes the
+* `leanify init ARTICLE.tex [--name NAME] [--vocab FIELDS]` writes the
   four Lean files of an article next to it (`Compiled`, `Article`, `Proofs`,
   `Certified`, in namespace `NAME`, by default the article's folder name), with a
   stub proof of every claim, and prints the `lean_lib` entry for `lakefile.toml`.
@@ -17,19 +17,36 @@ import Leanify.Library.UnitSquare
 * `leanify prepare ARTICLE.tex --lean COMPILED.lean [--cache DIR --module PREFIX]`
   updates the article's pin in `COMPILED.lean` and writes the lexing cache: one
   module per section, named after its content, with the certificates of its
-  blocks, and the index module `DIR.lean`. Run it before `lake build`. -/
+  blocks, and the index module `DIR.lean`. Run it before `lake build`.
+
+`FIELDS` are the fields of the vocabulary the article uses, separated by commas
+(`numbers,analysis`; `docs/vocabulary.md` lists them); the core vocabulary is
+always there. -/
 
 open Leanify
 
 def usage : String :=
-  "usage: leanify check ARTICLE.tex [--vocab core|unitsquare] [--prose] [--claims]\n" ++
-  "       leanify init ARTICLE.tex [--name NAME] [--vocab core|unitsquare]\n" ++
+  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims]\n" ++
+  "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…]\n" ++
   "       leanify prepare ARTICLE.tex --lean COMPILED.lean [--cache DIR --module PREFIX]"
 
 def optArg (opts : List String) (flag : String) : Option String :=
   match opts.dropWhile (· != flag) with
   | _ :: v :: _ => some v
   | _ => none
+
+/-- The fields named by `--vocab` (none: the core vocabulary alone). -/
+def fieldsOf (opts : List String) : List String :=
+  (((optArg opts "--vocab").getD "").splitOn ",").map (fun n => String.ofList (n.toList.filter (· != ' ')))
+    |>.filter fun n => n != "" && n != "core"
+
+/-- The vocabulary of the named fields, or the names that are not fields. -/
+def vocabOf (fs : List String) : Except String Vocab :=
+  match Fields.unknown fs with
+  | [] => .ok (if fs == ["unitsquare"] then UnitSquare.withCore
+      else if fs.isEmpty then Vocab.core else Fields.select fs)
+  | bad => .error s!"unknown vocabulary field {String.intercalate ", " bad}; the fields are \
+      {String.intercalate ", " Fields.names}"
 
 def fnvHex (s : String) : String :=
   let h := s.toUTF8.foldl (fun (h : UInt64) b => (h ^^^ b.toUInt64) * 0x100000001b3) 0xcbf29ce484222325
@@ -125,8 +142,13 @@ def writeNew (file : System.FilePath) (contents : String) : IO Unit := do
     IO.println s!"wrote {file}"
 
 def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
-  let unitSquare := optArg opts "--vocab" == some "unitsquare"
-  let V := if unitSquare then UnitSquare.withCore else Vocab.core
+  let fs := fieldsOf opts
+  if let .error e := vocabOf fs then
+    IO.eprintln s!"leanify init: {e}"
+    return 2
+  let V := (vocabOf fs).toOption.getD Vocab.core
+  let unitSquare := fs.contains "unitsquare"
+  let selected := !fs.isEmpty && fs != ["unitsquare"]
   let dir := path.parent.getD "."
   let file := (path.fileName.getD "article.tex")
   let some ns := (optArg opts "--name").orElse (fun _ => dir.normalize.fileName)
@@ -149,8 +171,15 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
       let pre := dirParts.take (dirParts.length - nsParts.length)
       some (if pre.isEmpty then "." else String.intercalate "/" pre)
     else none
-  let vocabImport := if unitSquare then "import Leanify.Library.UnitSquare\n" else ""
-  let vocabWith := if unitSquare then " with Leanify.UnitSquare.withCore" else ""
+  let fieldList := String.intercalate ", " (fs.map fun f => s!"\"{f}\"")
+  let vocabImport := if selected then "import Leanify.Library.Fields\n"
+    else if unitSquare then "import Leanify.Library.UnitSquare\n" else ""
+  let vocabDef := if selected then
+      s!"\n/-- The vocabulary of the article: the core and the fields {String.intercalate ", " fs}. -/\n" ++
+      s!"def {ns}.vocabulary : Leanify.Vocab := Leanify.Fields.select [{fieldList}]\n"
+    else ""
+  let vocabWith := if selected then s!" with {ns}.vocabulary"
+    else if unitSquare then " with Leanify.UnitSquare.withCore" else ""
   let modelImport := if unitSquare then "import Leanify.Library.UnitSquareModel\n" else ""
   let modelWith := if unitSquare then " with Leanify.UnitSquare.model" else ""
   let compiled := s!"import Leanify.Meta\n{vocabImport}
@@ -166,7 +195,7 @@ and then `lake build`. -/
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
-
+{vocabDef}
 #leanify_article {ns} \"{file}\" \"{pin}\"{vocabWith}
 "
   let article := s!"import {ns}.Compiled
@@ -273,9 +302,10 @@ then build the certificate with `lake build {ns}.Certified`."
 def main (args : List String) : IO UInt32 := do
   match args with
   | "check" :: path :: opts =>
-    let vocab := match optArg opts "--vocab" with
-      | some "unitsquare" => UnitSquare.withCore
-      | _ => Vocab.core
+    if let .error e := vocabOf (fieldsOf opts) then
+      IO.eprintln s!"leanify check: {e}"
+      return 2
+    let vocab := (vocabOf (fieldsOf opts)).toOption.getD Vocab.core
     let failed ← checkArticle vocab path (opts.contains "--prose") (opts.contains "--claims")
     pure (if failed == 0 then 0 else 1)
   | "prepare" :: path :: opts => prepare path opts

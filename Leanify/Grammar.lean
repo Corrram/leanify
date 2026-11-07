@@ -114,7 +114,7 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
       | _ => (pre, false)
     | _ => (pre, false)
   let vars := pre.filter (· != .sym 44)
-  let names ← vars.mapM fun t => match t with | .id n => some n | _ => none
+  let names ← vars.mapM fun t => match t with | .id n => some n | .cmd n => some ([92] ++ n) | _ => none
   let dom ← Math.parseFormula (ts.drop (i + 1))
   let dom ← if square then
       match dom with
@@ -392,6 +392,9 @@ inductive Clause where
   | everyIs (np : List Chunk) (names : List (List Codes)) (disj : Bool)
   /-- `$φ$ if and only if $ψ$`. -/
   | iff (p q : MT)
+  /-- `$X$ is [not] a|an NP`, `$X$ is [not] ADJ [and ADJ]`: a noun or adjectives of the
+  vocabulary, about `X`. -/
+  | isA (s : MT) (np : List Chunk) (neg : Bool)
   /-- `[the WORDS] $X$ is at most [the WORDS] $Y$` (at least, less than, greater than,
   equal to); either side may define its symbol (`the geometric mean $G\coloneqq\sqrt{ab}$`). -/
   | compare (lhs : MT) (rel : Rel) (rhs : MT)
@@ -550,6 +553,15 @@ def nameWords : Nat → List Chunk → List Codes → List Codes × List Chunk
 /-- The end of a clause: the period, a comma, or a trailing citation. -/
 def clauseEnd (cs : List Chunk) : Bool :=
   isEnd cs || (punct 44 cs).isSome || (kw [w!"by"] cs >>= cite).isSome
+
+/-- The chunks up to the end of a clause. -/
+def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+  | 0, _, _ => none
+  | f + 1, cs, acc =>
+    if clauseEnd cs then some (acc.reverse, cs) else
+    match cs with
+    | [] => none
+    | c :: r => untilClauseEnd f r (c :: acc)
 
 /-- `NAME[, NAME] and|or NAME`, ending a clause; `or` makes a disjunction. -/
 def notionList (cs : List Chunk) : Option (List (List Codes) × Bool × List Chunk) := do
@@ -833,7 +845,14 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
         let r3 ← kw [w!"of"] r2
         let (o, r4) ← obj r3
         some (.pred s phrase o, r4)
-      | none => none
+      | none =>
+        -- `$X$ is [not] a|an NP`, `$X$ is [not] ADJ`: the vocabulary's nouns and adjectives
+        match s with
+        | .math f => do
+          let (neg, r2) := match kw [w!"not"] r1 with | some r' => (true, r') | none => (false, r1)
+          let (np, r3) ← untilClauseEnd 32 r2 []
+          if np.isEmpty then none else some (.isA f np neg, r3)
+        | _ => none
     | none =>
     match s, kw [w!"increases", w!"bijectively", w!"from"] r with
     | .math f, some r1 => do
@@ -1045,6 +1064,13 @@ inductive Sent where
   $a,b\in A$, and let $X\coloneqq e$.`: variables of the rest of the result or proof,
   and definitions local to it. -/
   | assumeAll (binds : List Bind) (defs : List MT)
+  /-- `We write $T$ for $F$` (`kind` 0), `We write $T$ if $F$` (1), `We write $T$ for
+  the NAME` (2, `rhs` the words and formulas of the name): a notation of the article. -/
+  | notation (kind : Nat) (rhs : List Chunk)
+  /-- `By a|an WORDS we mean a|an NP.`, `Throughout, a|an WORDS means a|an NP.` (`noun`),
+  `By WORDS we mean WORDS'.`, `Throughout, WORDS means WORDS'.`: a convention of the
+  article for a noun or for words. -/
+  | meaning (words : List Codes) (rhs : List Chunk) (noun : Bool)
   deriving Repr, Inhabited
 
 /-- `$f,g:A\to B$`: several names with one signature. -/
@@ -1245,10 +1271,17 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     if isCondition m then some (.ifCond m, r) else none) <|>
   (do
     let (ts, r) ← mathChunk cs
-    let v ← match ts with | [.id v] => some v | _ => none
+    let v ← match ts with | [.id v] => some (MTok.id v) | [.cmd n] => some (MTok.cmd n) | _ => none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
     let ws := r1.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
-    if ws.isEmpty then none else some (.noun (ws ++ [.m [.id v]]), r1.drop ws.length))
+    -- a noun that ends in a fixed formula: `probability distribution on $\mathbb{N}_0$`
+    let tail := match r1.drop ws.length with
+      | .m t :: _ =>
+        match ws.getLast? with
+        | some (.w w) => if w == w!"on" || w == w!"in" then [Chunk.m t] else []
+        | _ => []
+      | _ => []
+    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m [v]]), r1.drop (ws.length + tail.length)))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
@@ -1305,7 +1338,57 @@ def tfae (cs : List Chunk) : Option (List (MT × MT)) := do
   let fs ← items.mapM itemFormula
   if fs.length < 2 then none else some (fs.zip (fs.drop 1))
 
+/-- `We write $T$ for $F$.`, `We write $T$ if|when $F$.`, `We write $T$ for [the] NAME.` -/
+def notationSent (cs : List Chunk) : Option Sent := do
+  let r ← kw [w!"we", w!"write"] cs <|> kw [w!"let", w!"us", w!"write"] cs
+  let (_, r1) ← mathChunk r
+  match kw [w!"for"] r1, (kw [w!"if"] r1 <|> kw [w!"when"] r1) with
+  | some r2, _ =>
+    match r2 with
+    | [.m _, .p 46] => some (.notation 0 [])
+    | _ =>
+      let name := (kw [w!"the"] r2 <|> kw [w!"a"] r2 <|> kw [w!"an"] r2).getD r2
+      if name.isEmpty || !isEnd (name.drop (name.length - 1)) then none
+      else some (.notation 2 name.dropLast)
+  | none, some r2 =>
+    match r2 with
+    | [.m _, .p 46] => some (.notation 1 [])
+    | _ => none
+  | none, none => none
+
+/-- `By a|an WORDS we mean …`, `Throughout[ the|this paper|article], WORDS means …`,
+`In this paper|article, WORDS means …`. -/
+def meaningSent (cs : List Chunk) : Option Sent := do
+  let det (r : List Chunk) : Bool × List Chunk := match kw [w!"a"] r <|> kw [w!"an"] r with
+    | some r' => (true, r')
+    | none => (false, r)
+  let (lhsNoun, ws, body) ← (do
+      let r ← kw [w!"by"] cs
+      let (n, r) := det r
+      let (ws, r1) ← wordsUntil [w!"we"] 8 r []
+      let r2 ← kw [w!"we", w!"mean"] r1
+      some (n, ws, r2)) <|> (do
+      let r ← (kw [w!"throughout"] cs) <|> (kw [w!"in", w!"this", w!"paper"] cs) <|> (kw [w!"in", w!"this", w!"article"] cs)
+      let r := (kw [w!"the", w!"paper"] r <|> kw [w!"this", w!"paper"] r <|> kw [w!"this", w!"article"] r <|>
+        kw [w!"the", w!"article"] r).getD r
+      let r ← punct 44 r
+      let (n, r) := det r
+      let (ws, r1) ← wordsUntil [w!"means"] 8 r []
+      let r2 ← kw [w!"means"] r1
+      some (n, ws, r2))
+  if ws.isEmpty || !isEnd (body.drop (body.length - 1)) then none else
+  let rhs := body.dropLast
+  let (rhsNoun, rhs) := det rhs
+  if rhs.isEmpty || lhsNoun != rhsNoun then none else
+  some (.meaning (ws.map lower) rhs lhsNoun)
+
 def sentence (cs : List Chunk) : Option Sent :=
+  match notationSent cs with
+  | some s => some s
+  | none =>
+  match meaningSent cs with
+  | some s => some s
+  | none =>
   let (topic, cs) := marker cs
   match tfae cs with
   | some ps => some (.claims topic [] (ps.map fun (p, q) => ({ cites := [], clause := .iff p q } : CClause)))

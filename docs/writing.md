@@ -61,6 +61,25 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 The period of an abbreviation (i.e., e.g., cf., resp., Thm., Eq., Fig., …)
 does not end a sentence.
 
+### The article's own notation and conventions
+
+An article introduces notation and conventions in sentences of its own; they hold
+for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
+
+| Sentence | Effect |
+| --- | --- |
+| `We write $\langle a,b\rangle$ for $\frac{a+b}{2}$.` | later formulas `\langle x,y\rangle` are read as `\frac{x+y}{2}`; the letters and commands of the pattern that occur on the right are its arguments (`Let us write …` too) |
+| `We write $a\sim b$ if $|a-b|\le1$.` | a relation, read the same way |
+| `We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.` | a symbol for a notion of the vocabulary, with its arguments |
+| `We write $\mathcal P$ for the set of probability distributions on $\mathbb{N}_0$.` | a symbol for the class of a vocabulary noun |
+| `By a distribution we mean a probability distribution on $\mathbb{N}_0$.` | a noun of the article (`Let $\nu$ be a distribution.`) |
+| `Throughout, increasing means non-decreasing.`, `In this paper, …` | the words stand for the others in the following sentences (`strictly increasing` is unchanged) |
+
+Nouns, adjectives and notions of the vocabulary are also read after `is`: `$\nu$
+is a probability distribution on $\mathbb{N}_0$`, `$n$ is prime`, `$\nu$ is not
+the point mass at $0$`. `docs/vocabulary.md` explains how the article chooses the
+fields of the vocabulary and what happens when a word has several meanings.
+
 ## House style
 
 1. **Define before use.** The defining sentence of a symbol comes before its

@@ -30,6 +30,7 @@ def errMessage (e : Err) : String :=
     else if e.code == E.redefined then "symbol defined twice"
     else if e.code == E.referent then "no referent"
     else if e.code == E.shadow then "variable shadows a definition"
+    else if e.code == E.ambiguous then "ambiguous phrase"
     else s!"error {e.code}"
   if d.isEmpty then what else s!"{what}: {d}"
 
@@ -64,6 +65,8 @@ def failedMessage (e : Err) : String :=
   let d := Codes.toString e.detail
   if e.code == E.undefined && !d.isEmpty then
     if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
+  else if e.code == E.ambiguous then
+    s!"{d}; say which is meant in the text (By a … we mean …)"
   else errMessage e
 
 /-- Line and column (both from 1) of a code point offset. -/
