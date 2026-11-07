@@ -297,6 +297,14 @@ citations.
 | a reason in words | `Moreover, $\sqrt a=\sqrt b$ if and only if $a=b$, since the square root is injective.` (the reason is prose, the claim before it is checked) |
 | equality sets | `If $w>\frac12$, equality holds exactly on $S_w$, and if $w=\frac12$, it holds exactly on $S_{1/2}\cup([\frac12,1]\times\{\frac12\})$.`, `…, and equality holds exactly when $x=R_b(z)$.`, `For every $x\in(0,\infty)$, $f(x)\ge2$. Equality holds exactly when $x=1$.` (about the preceding inequality, for every point of its domain) |
 
+In `If $φ$, then …` the free variables of `φ` range over the real numbers. A symbol
+that an earlier sentence introduces in words that Leanify does not read (`Let $q$
+denote the charge of the surface.`, `Consider the idempotent $e$.`) is an object of the
+article, not such a variable: the claim is refused (`q is not defined`), and so is `e^2`
+with that `e`, which otherwise is the exponential. Words before a formula name it only
+without a preposition: `the arithmetic mean $\frac{a+b}{2}$ is at least …` compares the
+mean, `the probability of an exit at $-1$ is at least …` is not read.
+
 ### Standard notions
 
 A claim `$X$ is ADJ, ADJ [on $A$] and ADJ` (also `The function|map|set|number

@@ -14,7 +14,11 @@ tests/Statements/article.tex:76:1: info: claim 12: \exists x\in \mathbb{R},\ 0<x
 tests/Statements/article.tex:80:1: info: claim 13: \exists x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land x\le y)\land x\le y)
 tests/Statements/article.tex:84:1: info: claim 14: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y\Rightarrow x\le y)
 tests/Statements/article.tex:88:1: info: claim 15: \exists x\in \mathbb{R},\ 0<x\land (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land 2\le z)\land (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land z\le s\Rightarrow x\,\log(s)\le y\,s)))
-tests/Statements/article.tex: 0 definitions, 16 claims
-  text: 0 compiled, 0 failed, 3 prose (of 3)
-  results: 18 compiled, 0 failed, 0 prose (of 18)
-  all: 18 compiled, 0 failed, 3 prose (of 21)
+tests/Statements/article.tex:101:1: warning: q is not defined: sentence not checked
+tests/Statements/article.tex:105:1: info: claim 16: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
+tests/Statements/article.tex:111:1: warning: e is not defined: sentence not checked
+tests/Statements/article.tex:115:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex: 0 definitions, 17 claims
+  text: 0 compiled, 0 failed, 6 prose (of 6)
+  results: 19 compiled, 2 failed, 1 prose (of 22)
+  all: 19 compiled, 2 failed, 7 prose (of 28)

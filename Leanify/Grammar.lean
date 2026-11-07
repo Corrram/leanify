@@ -826,10 +826,18 @@ def notionList (cs : List Chunk) : Option (List (List Codes) × Bool × List Chu
   | none => if clauseEnd r1 then some ([n1], false, r1) else none
 
 /-- `[the WORDS] $X$`, possibly `$X\coloneqq e$`: a term named by a phrase. -/
-def namedTerm (cs : List Chunk) : Option (MT × List Chunk) :=
-  let r := match kw [w!"the"] cs with
-    | some r' => r'.dropWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
-    | none => cs
+def namedTerm (cs : List Chunk) : Option (MT × List Chunk) := do
+  let r ← match kw [w!"the"] cs with
+    | some r' =>
+      let ws := r'.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+      -- (the words name the term: `the arithmetic mean $\frac{a+b}{2}$`; after a
+      -- preposition the formula is not what they name: `the probability of an exit at $-1$`)
+      let preps := [w!"of", w!"at", w!"in", w!"on", w!"to", w!"for", w!"by", w!"with", w!"from",
+        w!"over", w!"under", w!"between", w!"into", w!"through", w!"about", w!"near", w!"after",
+        w!"before", w!"than", w!"as", w!"per", w!"via", w!"along", w!"across", w!"among", w!"within"]
+      if ws.any (fun c => match c with | .w w => preps.contains (lower w) | _ => false) then none
+      else some (r'.drop ws.length)
+    | none => some cs
   formula r
 
 /-- `is at most`, `is at least`, `is less than`, `is greater than`, `is equal to`,
@@ -1154,7 +1162,7 @@ def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
             if a == w!"and" && (e == w!"every" || e == w!"all" || e == w!"each" || e == w!"any") && !cur.isEmpty then
               split f rest [] (cur.reverse :: acc)
             else split f (.w e :: rest) (.w a :: cur) acc
-          | f + 1, x :: rest, cur, acc => split f rest (x :: cur) acc
+          | f + 1, c0 :: rest, cur, acc => split f rest (c0 :: cur) acc
         let nps := split (np.length + 1) np [] []
         (nps.foldr (fun np acc => Clause.forEveryNP acc np) c, r3)
       | none => (c, r)

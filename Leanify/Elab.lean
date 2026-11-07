@@ -177,6 +177,10 @@ structure Template where
 structure St where
   /-- The vocabulary of the article. -/
   vocab : Vocab := {}
+  /-- Letters and Greek letters of the formulas of the sentences Leanify did not read so
+  far: symbols the article may have introduced in words (`e` is in it when it is not
+  only the base of a power). -/
+  unreadIds : List Codes := []
   globs : List Glob := []
   values : List Tm := []
   claims : List Claim := []
@@ -1257,7 +1261,9 @@ where
     | f + 1, sc, pf, b, e => do
       -- `e^x` is `\exp(x)`, unless the article names something `e`
       let isE ← match b with
-        | .id [101] => do pure ((lookupLocal sc [101]).isNone && (← lookupGlob [101]).isNone)
+        | .id [101] => do
+          pure ((lookupLocal sc [101]).isNone && (← lookupGlob [101]).isNone &&
+            !(← get).unreadIds.contains [101])
         | _ => pure false
       if isE then do
         let a ← asReal (← term f sc pf e)
@@ -1592,7 +1598,7 @@ where
   (over space; the Euclidean norm of its value at each point). -/
   normTm : Nat → Scope → PF → MT → Option MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
-    | f + 1, sc, pf, x, none => do
+    | f + 1, sc, _, x, none => do
       let vals ← fieldAt f sc [] x
       pure (.app (.app (.prim .rpow) (sumAll (vals.map fun v => Tm.mul v v))) (.div (.num 1) (.num 2)), .real)
     | f + 1, sc, pf, x, some space => do

@@ -947,6 +947,9 @@ def binderInfos : Bind → M (List BindInfo)
     -- the free variables of φ range over ℝ; φ is the domain of the last one
     let st ← get
     let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    -- (a symbol of an earlier sentence that Leanify did not read is an object of the
+    -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
+    if let some v := free.find? st.unreadIds.contains then fail E.undefined v
     match free.reverse with
     | [] => fail E.unsupported
     | last :: _ =>
@@ -3025,6 +3028,95 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
 
 end Compile
 
+/-- Greek letters: names of variables. -/
+def greekLetters : List Codes :=
+  [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta",
+   w!"theta", w!"vartheta", w!"iota", w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"pi",
+   w!"rho", w!"varrho", w!"sigma", w!"tau", w!"upsilon", w!"phi", w!"varphi", w!"chi", w!"psi",
+   w!"omega", w!"Gamma", w!"Delta", w!"Theta", w!"Lambda", w!"Xi", w!"Sigma", w!"Phi", w!"Psi",
+   w!"Omega", w!"ell"]
+
+/-- The letters and Greek letters of the formulas of a sentence (`e` only where it is not
+the base of a power). -/
+def symbolsOf (ts : List PTok) : List Codes :=
+  let rec go : List PTok → List Codes → List Codes
+    | [], acc => acc
+    | t :: rest, acc =>
+      let add (n : Codes) := if acc.contains n then acc else n :: acc
+      match t.tok with
+      | .mvar c =>
+        if !t.math then go rest acc
+        else
+          match rest with
+          -- (`g_*` is a symbol of its own, not `g`)
+          | ⟨.msym 95, _, _⟩ :: _ => go rest acc
+          -- (`e^x` is the exponential, not a symbol `e`)
+          | ⟨.msym 94, _, _⟩ :: _ => if c == 101 then go rest acc else go rest (add [c])
+          | _ => go rest (add [c])
+      | .cmd n =>
+        if t.math && greekLetters.contains n then go rest (add ([92] ++ n)) else go rest acc
+      | _ => go rest acc
+  (go ts []).reverse
+
+/-- The symbols a sentence introduces: the left sides of the formulas after `let`, `fix`,
+`set`, `put`, `define`, `write`, `denote [by]`, `choose`, `take`, `consider`, `call` or
+`where` (`Let $q$ denote the charge`, `define \[X=2U-1,\qquad Y=2V-1\]`), and a single
+symbol named by the words before it (`the idempotent $e$`). -/
+def introducedSymbols (ts : List PTok) : List Codes :=
+  let intro := [w!"let", w!"fix", w!"set", w!"put", w!"define", w!"write", w!"denote", w!"denotes",
+    w!"choose", w!"take", w!"consider", w!"call", w!"where", w!"given", w!"suppose", w!"assume"]
+  -- words after which a formula is not named by the words before it
+  let notName := [w!"of", w!"at", w!"in", w!"on", w!"to", w!"for", w!"by", w!"with", w!"from",
+    w!"and", w!"or", w!"is", w!"are", w!"be", w!"was", w!"that", w!"then", w!"if", w!"when",
+    w!"every", w!"all", w!"each", w!"any", w!"some", w!"no", w!"as", w!"than", w!"so", w!"hence",
+    w!"thus", w!"since", w!"because", w!"over", w!"under", w!"into", w!"equals", w!"has", w!"have",
+    w!"gives", w!"satisfies", w!"holds", w!"implies", w!"yields", w!"whenever", w!"unless", w!"not",
+    w!"between", w!"through", w!"via", w!"along", w!"after", w!"before", w!"until", w!"while",
+    w!"also", w!"only", w!"both", w!"either", w!"neither", w!"but", w!"whether", w!"which", w!"whose"]
+  let isRel (t : Tok) : Bool := match t with
+    | .msym c => c == 61 || c == 60 || c == 62 || c == 58
+    | .cmd n => [w!"le", w!"ge", w!"leq", w!"geq", w!"in", w!"coloneqq", w!"sim", w!"subset",
+        w!"subseteq", w!"ne", w!"neq", w!"to", w!"equiv", w!"approx", w!"mapsto"].contains n
+    | _ => false
+  -- the left sides of the parts of a formula (split at top-level `,` and `\qquad`)
+  let rec lhs : List PTok → Int → Bool → List PTok → List PTok
+    | [], _, _, acc => acc
+    | t :: rest, d, done, acc =>
+      let d' : Int := match t.tok with
+        | .lbrace | .msym 40 | .msym 91 => d + 1
+        | .rbrace | .msym 41 | .msym 93 => d - 1
+        | _ => d
+      if d == 0 && (t.tok == .msym 44 || t.tok == .cmd w!"qquad" || t.tok == .cmd w!"quad") then lhs rest d' false acc
+      else if done then lhs rest d' true acc
+      else if d == 0 && isRel t.tok then lhs rest d' true acc
+      else lhs rest d' false (t :: acc)
+  -- the symbols a formula introduces, given the two words before it (`cur` is reversed)
+  let chunkSyms (ws : List Codes) (cur : List PTok) : List Codes :=
+    if cur.isEmpty then [] else
+    let chunk := cur.reverse
+    let w1 := ws.headD []
+    let w2 := (ws.drop 1).headD []
+    if intro.contains w1 || intro.contains w2 then symbolsOf ((lhs chunk 0 false []).reverse)
+    else if w1 != [] && !notName.contains w1 then
+      -- a single symbol named by a noun (`the idempotent $e$`)
+      let inner := chunk.filter fun p => match p.tok with | .mopen | .mclose => false | _ => true
+      match inner with
+      | [⟨.mvar c, _, _⟩] => [[c]]
+      | [⟨.cmd n, _, _⟩] => if greekLetters.contains n then [[92] ++ n] else []
+      | _ => []
+    else []
+  -- the chunks of formulas with the two words before each
+  let rec go : List PTok → List Codes → List PTok → List Codes → List Codes
+    | [], ws, cur, acc => acc ++ chunkSyms ws cur
+    | t :: rest, ws, cur, acc =>
+      if t.math then go rest ws (t :: cur) acc
+      else
+        let acc := acc ++ chunkSyms ws cur
+        match t.tok with
+        | .word w => go rest ((Grammar.lower w :: ws).take 2) [] acc
+        | _ => go rest ws [] acc
+  go ts [] [] []
+
 /-- The state of the compiler between sentences. -/
 structure CState where
   st : St
@@ -3074,8 +3166,11 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     else { s with toks := Notation.rewriteAll st0.templates s.toks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
+  -- the symbols this sentence introduces, if it is not read
+  let unread : List Codes := introducedSymbols s.toks
+  let st0u := { st0 with unreadIds := (st0.unreadIds ++ unread.filter (!st0.unreadIds.contains ·)) }
   match Grammar.parseSentence s with
-  | none => { c with st := st0, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
+  | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some sent =>
     let sc : SentCtx := ⟨s.ctx, (envs.lookup s.ctx.proves).getD 0, c.idx⟩
     let labelled : M (List Nat × List Nat) := do
@@ -3112,7 +3207,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       { st, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := ps }
     | .error e =>
       let o : Outcome := if e.code == E.prose then .prose else .failed e
-      { c with st := st0, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
+      { c with st := st0u, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
 
 /-- Compile a list of sentences, starting from a compiler state. -/
 def compileAll (envs : List (Codes × Nat)) (c : CState) (ss : List Sentence) : CState :=
