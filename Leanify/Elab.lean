@@ -477,6 +477,9 @@ def builtinFn (n : Codes) : Option (Tm × Ty × List (Option Tm)) :=
     fn .tan (some (.lam .real .tt (.not (.eq (.app (.prim (.realFn .cos)) (.loc 0)) (.num 0)))))
   else none
 
+/-- The number of elements of the set `p` of real numbers: defined only when it is finite. -/
+def cardTm (p : Tm) : Tm := .the .real (.app (.app (.prim .cardIs) (shift 1 0 p)) (.loc 0))
+
 /-- `x ∣ y` for integers: `y = x·k` for an integer `k`. -/
 def dvdTm (x y : Tm) : Tm :=
   let isInt (t : Tm) : Tm := .app (.prim .isInt) t
@@ -512,7 +515,7 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
   else none
 
 /-- Names of indices (`n`, `k`, …): integers, in exponents and limits. -/
-def indexNames : List Codes := [w!"n", w!"m", w!"k", w!"j", w!"i", w!"N", w!"M", w!"K"]
+def indexNames : List Codes := Math.indexNames
 
 /-- The exponent mentions an index. -/
 def indexExp (e : MT) : Bool := (mtIds 32 e).any indexNames.contains
@@ -883,7 +886,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | [v] => pure (.abs v, .real)
           | vs => pure (.app (.app (.prim .rpow) (sumAll (vs.map fun v => Tm.mul v v))) (.div (.num 1) (.num 2)), .real)
         else do let a ← asReal (← term f sc pf x); pure (.abs a, .real)
-      | _ => do let a ← asReal (← term f sc pf x); pure (.abs a, .real)
+      | _ => do
+        -- `|A|` of a set: its number of elements
+        let (a, aty) ← term f sc pf x
+        if aty == .fn .real .prop then pure (cardTm a, .real)
+        else do let a ← asReal (a, aty); pure (.abs a, .real)
     | .minm [x, y] => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y)
       pure (.app (.app (.prim .min) a) b, .real)
@@ -925,6 +932,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `xz(x+z)`: a number before parentheses is a factor, not a function
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
+      if n == w!"@card" then do
+        let (p, pty) ← term f sc pf a
+        if pty == .fn .real .prop then pure (cardTm p, .real) else fail E.type
+      else
       -- `\gcd(a,b)`
       if n == w!"\\gcd" && (lookupLocal sc n).isNone then
         match a with

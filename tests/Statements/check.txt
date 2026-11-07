@@ -25,11 +25,22 @@ tests/Statements/article.tex:120:1: info: claim 23: \forall x\in \mathbb{R},\ x\
 tests/Statements/article.tex:124:1: info: claim 24: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow \iota z\in \mathbb{R}.\ z\in \mathbb{N}\land (z\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=z\,s))\land (z\in \mathbb{Z}\land y\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land y=z\,s))\land (\forall s\in \mathbb{R},\ (s\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land x=s\,t))\land s\in \mathbb{Z}\land y\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=s\,t)\Rightarrow s\in \mathbb{Z}\land z\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land z=s\,t))\le x)
 tests/Statements/article.tex:128:1: info: claim 25: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow x\in \mathbb{Z}\land x\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=x\,z)
 tests/Statements/article.tex:128:1: info: claim 26: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists z\in \mathbb{R},\ \exists s\in \mathbb{R},\ z\in \mathbb{Z}\land s\in \mathbb{Z}\land \neg (s=0)\land \frac{1}{2}\,s=z)
-tests/Statements/article.tex:137:1: warning: q is not defined: sentence not checked
-tests/Statements/article.tex:141:1: info: claim 27: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
-tests/Statements/article.tex:147:1: warning: e is not defined: sentence not checked
-tests/Statements/article.tex:151:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
-tests/Statements/article.tex: 0 definitions, 28 claims
-  text: 0 compiled, 0 failed, 6 prose (of 6)
-  results: 28 compiled, 2 failed, 1 prose (of 31)
-  all: 28 compiled, 2 failed, 7 prose (of 37)
+tests/Statements/article.tex:133:1: info: defines j (j)
+tests/Statements/article.tex:134:1: info: defines g (g)
+tests/Statements/article.tex:135:1: info: defines \omega (omega)
+tests/Statements/article.tex:136:1: info: defines h (h)
+tests/Statements/article.tex:142:1: info: claim 27: j(5)=3
+tests/Statements/article.tex:142:1: info: claim 28: g(10)=3
+tests/Statements/article.tex:142:1: info: claim 29: \omega(12)=2
+tests/Statements/article.tex:142:1: info: claim 30: h(4)=2
+tests/Statements/article.tex:146:1: info: claim 31: (\#\{y : y\in \mathbb{Z}\land {y}^{2}<5\})=5
+tests/Statements/article.tex:146:1: info: claim 32: (\#\{y : y\in \mathbb{Z}\land 0<y\land y<4\})=3
+tests/Statements/article.tex:150:1: info: claim 33: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow (\iota y\in \mathbb{R}.\ (\exists s\in \mathbb{R},\ (s\in \mathbb{Z}\land 1\le s\land s<x)\land s=y)\land (\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ (t\in \mathbb{Z}\land 1\le t\land t<x)\land t=z)\Rightarrow z\le y))=x-1
+tests/Statements/article.tex:159:1: warning: q is not defined: sentence not checked
+tests/Statements/article.tex:163:1: info: claim 34: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
+tests/Statements/article.tex:169:1: warning: e is not defined: sentence not checked
+tests/Statements/article.tex:173:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex: 4 definitions, 35 claims
+  text: 4 compiled, 0 failed, 6 prose (of 10)
+  results: 31 compiled, 2 failed, 1 prose (of 34)
+  all: 35 compiled, 2 failed, 7 prose (of 44)

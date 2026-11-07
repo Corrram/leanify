@@ -17,7 +17,7 @@ def mtokText : MTok → String
   | .begin e => "\\begin{" ++ Codes.toString e ++ "}"
   | .finish e => "\\end{" ++ Codes.toString e ++ "}"
 
-def toksText (ts : List MTok) : String := String.join (ts.map mtokText) |>.trimRight
+def toksText (ts : List MTok) : String := (String.join (ts.map mtokText)).trimAsciiEnd.toString
 
 /-- A phrase as written (`$x$` for the variable, `$a$`, `$b$`, … for arguments). -/
 def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do

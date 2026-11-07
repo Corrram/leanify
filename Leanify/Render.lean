@@ -60,6 +60,7 @@ def Prim.tex : Prim → String
   | .supportIn _ => "\\operatorname{supportIn}" | .isCompactN _ => "\\operatorname{compact}"
   | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
   | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
+  | .cardIs => "\\operatorname{card}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -248,6 +249,12 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     | .l2NormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^2}"
     | .supNormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^\\infty}"
     | .integralN n => "\\int_{\\mathbb{R}^{" ++ toString n ++ "}} " ++ fs
+    -- the number of elements of a set
+    | .cardIs => match f with
+      | .lam _ _ b =>
+        let u := varNames.getD (ls.length + 1) "u"
+        "\\#\\{" ++ u ++ " : " ++ b.tex cs gs (u :: v :: ls) ++ "\\}"
+      | _ => "\\#" ++ fs
     | _ => "\\iota " ++ v ++ "\\in \\mathbb{R}.\\ " ++ (Tm.app (.app (.prim p) f) (.loc 0)).tex cs gs (v :: ls)
   -- a derivative within a domain (one-sided at an end point)
   | .the .real (.app (.app (.app (.app (.prim .hasDerivWithin) (.lam _ _ body)) dom) x) (.loc 0)) =>

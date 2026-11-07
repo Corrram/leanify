@@ -140,6 +140,9 @@ inductive Prim where
   derivatives of every order: `g(I₁,…,Iₙ,x₁,…,xₙ) = ∂^I f(x)` for a multi-index `I`
   (`0` where `I` is not one). `∂^I f` is the description of `g`. -/
   | partialMulti (n : Nat)
+  /-- `cardIs P r`: the set of real numbers `P` is finite and has `r` elements. A number of
+  elements is a description (`the r with cardIs P r`), so that an infinite set has none. -/
+  | cardIs
   deriving DecidableEq, Repr, Lean.ToExpr
 
 /-- Real functions of `n` real variables, curried. -/
@@ -184,6 +187,7 @@ def Prim.ty : Prim → Ty
   | .isCompactN n => Ty.setN n ⟶ .prop
   | .l2NormN n | .supNormN n | .integralN n => Ty.fns n ⟶ .real ⟶ .prop
   | .partialMulti n => Ty.fns n ⟶ Ty.fns (n + n) ⟶ .prop
+  | .cardIs => (.real ⟶ .prop) ⟶ .real ⟶ .prop
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

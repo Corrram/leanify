@@ -43,6 +43,8 @@ variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
 | `\pi` | the number π, unless the article defines `\pi` |
 | `\operatorname{sgn}(x)` | the sign of `x`: 1, −1 or 0 |
 | `\max(a,b)`, `\min(a,b)` | as `\max\{a,b\}` |
+| `\max_{x\in A} e`, `\max_{1\le k\le n} e`, `\sup_{\substack{n\ge1\\ \omega(n)\le k}} e`, `\min_{n\ge1,\ φ} e` | over the variable of the first condition, with all the conditions; a variable bounded by inequalities alone ranges over the real numbers, an index (`n`, `m`, `k`, `j`, `i`, `N`, `M`, `K`) over the integers. `e` must be defined at every such point |
+| `\#\{x\in A : φ\}`, `\#A`, `|\{x : φ\}|`, `|A|` for a set `A` | the number of elements, defined only when the set is finite |
 | `\sqrt[3]{x}` | `x^{1/3}`, for `x\ge0` |
 | `2\times3` | the product of two numbers (between sets, `\times` is the product of the sets) |
 | `A\cap B`, `A\setminus B`, `\{a,b\}`, `\emptyset` | intersection, difference, finite sets and the empty set of real numbers; `(a,b)` as a set is the open interval |
@@ -237,6 +239,9 @@ fields of the vocabulary and what happens when a word has several meanings.
 | a domain that uses an earlier variable | `Let $x\in(0,1]$ and $e\in[0,x]$.` (the claims that use `e` are also about `x`) |
 | upper and lower signs | `For $c\in(0,\infty)$, set $x_\pm(c)\coloneqq c\pm1$.` defines `x_+` and `x_-`; a claim with `\pm` or `\mp` is the two claims, one for each sign |
 | the variable after the definition | `Write $g(t)\coloneqq\min\{\max\{t,0\},1\}$ for $t\in\mathbb{R}$.`, `Define the weight \[a(x,z)\coloneqq x(x+2z),\qquad (x,z)\in[0,1]^2.\]` |
+| the least or the greatest | `For a positive integer $n$, let $j(n)$ be the least positive integer $m$ such that $m^2\ge n$.` (also `smallest`, `minimal`, `largest`, `greatest`, `maximal`; `for which DISPLAY`; `Define $L$ to be|as …`, `We write $L$ for …`, `Denote by $L$ …`): a definite description, well defined where such a least number exists |
+| how many | `Let $N$ be the number of primes $p\le 10$.`, `Write $\omega(n)$ for the number of primes $p$ such that $p\mid n$.` (well defined where finitely many numbers are described) |
+| a symbol after `let` | `Let $c\coloneqq2$.`, `For $k\ge1$, let \[h(k)=\sup_{\substack{n\ge1\\ n\le k}} j(n).\]` (as after `set`) |
 | law of a construction | `For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma_T$ denote the law of $(X,T(X))$ for $X$ uniformly distributed on $[0,1]$.` |
 
 ## Definitions in the running text

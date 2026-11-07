@@ -199,6 +199,8 @@ def partialMulti {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (g : (Ty
       uncurryN (n + n) g p = iteratedFDeriv ℝ L.length (uncurryN n f) (fun i => p (Fin.natAdd n i))
         (fun j => Pi.single (L.get j) 1)) ∧
     ((¬ ∀ i : Fin n, ∃ k : ℕ, p (Fin.castAdd n i) = k) → uncurryN (n + n) g p = 0)
+/-- The set `P` is finite and has `r` elements. -/
+def cardIs (P : ℝ → Prop) (r : ℝ) : Prop := {x | P x}.Finite ∧ r = ({x | P x}.ncard : ℝ)
 /-- `f` is integrable on `ℝⁿ` and `∫_{ℝⁿ} f = r`. -/
 def integralN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
   Integrable (uncurryN n f) volume ∧ ∫ p, uncurryN n f p = r
@@ -293,6 +295,7 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .supNormN n => Prelude.supNormN n
   | .integralN n => Prelude.integralN n
   | .partialMulti n => Prelude.partialMulti n
+  | .cardIs => Prelude.cardIs
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

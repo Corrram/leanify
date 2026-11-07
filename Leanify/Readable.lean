@@ -88,6 +88,7 @@ def primConst : Prim → Option Name
   | .factorial => some ``Prelude.factorial
   | .binom => some ``Prelude.binom
   | .zpow => some ``Prelude.zpow
+  | .cardIs => some ``Prelude.cardIs
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

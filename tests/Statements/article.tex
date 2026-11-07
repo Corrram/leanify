@@ -128,6 +128,28 @@ For all integers $a,b\ge1$, $\gcd(a,b)\le a$.
 For every integer $n\ge1$, $n\in\{m\in\mathbb Z\mid m\mid n\}$ and $\tfrac12\in\mathbb Q$.
 \end{lemma}
 
+\section{Descriptions and numbers of elements}
+
+For a positive integer $n$, let $j(n)$ be the least positive integer $m$ such that $m^2\ge n$.
+We write $g(n)$ for the largest integer $m$ such that $m^2\le n$.
+Write $\omega(n)$ for the number of primes $p$ such that $p\mid n$.
+For $k\ge1$, let
+\[
+ h(k)=\sup_{\substack{n\ge1\\ n\le k}} j(n).
+\]
+
+\begin{lemma}\label{least}
+$j(5)=3$, $g(10)=3$, $\omega(12)=2$ and $h(4)=2$.
+\end{lemma}
+
+\begin{lemma}\label{count}
+$\#\{n\in\mathbb Z : n^2<5\}=5$ and $|\{n\in\mathbb Z : 0<n<4\}|=3$.
+\end{lemma}
+
+\begin{lemma}\label{extremum-subscript}
+For every integer $b\ge2$, $\max_{1\le k<b} k=b-1$.
+\end{lemma}
+
 \section{Symbols introduced in words}
 
 A symbol that a sentence Leanify does not read introduces is an object of the article,

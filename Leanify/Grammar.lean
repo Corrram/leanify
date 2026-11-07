@@ -1542,6 +1542,12 @@ inductive NotionCond where
   | mono (binds : List Bind) (map : MT) (mono : Mono)
   deriving Repr, Inhabited
 
+/-- What a description describes: the least or the greatest of the numbers it names, or
+how many there are. -/
+inductive DescKind where
+  | least | greatest | count
+  deriving Repr, Inhabited, BEq
+
 inductive Sent where
   | defClass (sym : MT) (plural : List Codes) (np : List Chunk)
   | defIs (bind : Bind) (items : List DefItem)
@@ -1561,6 +1567,15 @@ inductive Sent where
   under a binder `For B, set $f(x)\coloneqq e$.`: definitions of constants (or of
   functions of the binder's variable), possibly several, each `\coloneqq`. -/
   | constDefs (bind : Option Bind) (defs : List MT) (labels : List Codes)
+  /-- `[For B,] let $L$ be|denote DESC`, `Define $L$ to be|as DESC`, `[We] write $L$ for
+  DESC`, `[We] denote by $L$ DESC`, where DESC is `the least|smallest|minimal NP $m$ [such
+  that|for which CLAUSE]`, `the largest|greatest|maximal …` or `the number of NPs [$m$]
+  [such that|for which CLAUSE]`: the definition of a symbol, or of a function of the
+  variables written in it (`j(n)`), by a description. `asNotation` is the reading of `We
+  write $L$ for the WORDS` as a notation for an operation of the vocabulary (`the greatest
+  common divisor of $a$ and $b$`), which comes first. -/
+  | defDesc (bind : Option Bind) (lhs : MT) (kind : DescKind) (np : List Chunk) (cond : Option Clause)
+      (asNotation : Option (Nat × List Chunk))
   /-- `fix $B$ [and define|set|put DEFS]`: the binder stays fixed for the following
   sentences of the section (its variable names the same object until the section
   ends or the variable is fixed again); the definitions are made under it. -/
@@ -2119,7 +2134,69 @@ def memberDef (cs : List Chunk) : Option Sent := do
     let (b, r7) ← everyBinders r6
     if isEnd r7 then some (.defMember np cls φ [b]) else none)
 
+/-- `the least|smallest|minimal NP [such that|for which CLAUSE]`, `the largest|greatest|maximal
+…`, `the number of NPs [such that|for which CLAUSE]` (the clause may be a display): the
+kind, the noun phrase, the clause and the chunks after it. -/
+def description (cs : List Chunk) : Option (DescKind × List Chunk × Option Clause × List Chunk) := do
+  let r ← kw [w!"the"] cs
+  let (k, r) ← match r with
+    | .w w :: r' =>
+      if [w!"least", w!"smallest", w!"minimal"].contains w then some (DescKind.least, r')
+      else if [w!"largest", w!"greatest", w!"maximal"].contains w then some (.greatest, r')
+      else if w == w!"number" then (kw [w!"of"] r').map (.count, ·)
+      else none
+    | _ => none
+  -- the noun phrase ends at `such that`, `for which`, a comma or the end of the sentence
+  let stops (cs : List Chunk) : Bool :=
+    (kw [w!"such", w!"that"] cs).isSome || (kw [w!"for", w!"which"] cs).isSome || isEnd cs ||
+      (punct 44 cs).isSome
+  let rec upTo : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, acc =>
+      if stops cs then some (acc.reverse, cs) else
+      match cs with
+      | [] => none
+      | c :: rest => upTo f rest (c :: acc)
+  let (np, r1) ← upTo (r.length + 1) r []
+  if np.isEmpty then none else
+  match kw [w!"such", w!"that"] r1 <|> kw [w!"for", w!"which"] r1 with
+  | some r2 =>
+    match display r2 with
+    | some (m, _, r3) => some (k, np, some (.holds m), r3)
+    | none => do
+      let (c, r3) ← clause r2
+      some (k, np, some c, r3)
+  | none => some (k, np, none, r1)
+
+/-- A definition by a description (`Sent.defDesc`), under the binder `b` of a `For B,` before it. -/
+def descSent (b : Option Bind) (cs : List Chunk) : Option Sent :=
+  let cs := (kw [w!"we"] cs).getD cs
+  let finish (s : MT) (r : List Chunk) : Option Sent := do
+    let (k, np, c, r') ← description r
+    if isEnd r' then some (.defDesc b s k np c none) else none
+  (do
+    let r ← kw [w!"let"] cs <|> kw [w!"define"] cs
+    let (s, r1) ← formula r
+    let r2 ← kw [w!"be"] r1 <|> kw [w!"denote"] r1 <|> kw [w!"to", w!"be"] r1 <|> kw [w!"as"] r1
+    finish s r2) <|>
+  (do
+    let r ← kw [w!"write"] cs
+    let (s, r1) ← formula r
+    let r2 ← kw [w!"for"] r1
+    finish s r2) <|>
+  (do
+    let r ← kw [w!"denote", w!"by"] cs
+    let (s, r1) ← formula r
+    finish s r1)
+
 def sentence (cs : List Chunk) : Option Sent :=
+  match descSent none cs with
+  | some (.defDesc b s k np c _) =>
+    some (.defDesc b s k np c (match notationSent cs with
+      | some (.notation k' rhs) => some (k', rhs)
+      | _ => none))
+  | some s => some s
+  | none =>
   match notationSent cs with
   | some s => some s
   | none =>
@@ -2169,6 +2246,8 @@ def sentence (cs : List Chunk) : Option Sent :=
       let (bs, ds, r2) ← letMore 6 r1 [b1] []
       let isNoun := match b1 with | .noun _ => true | _ => false
       if isEnd r2 && (isNoun || bs.length > 1 || !ds.isEmpty) then some (.assumeAll bs ds) else none) <|>
+    -- `Let $X\coloneqq e$.`, `Let $h(k)=e$.`: as `set`
+    constDefsOf none r <|>
     -- `Let $f,g:A\to B$ be continuous, normalized by …, with derivatives DISPLAY.`
     (do
       let (ts, r1) ← mathChunk r
@@ -2333,6 +2412,9 @@ where
         | _ => r
       match (punct 44 r).map fun r1 => (kw [w!"then"] r1).getD r1 with
       | some r1 =>
+        match descSent (some b) r1 with
+        | some s => some s
+        | none =>
         -- For B, let $S$ denote NP.
         match kw [w!"let"] r1 with
         | some r2 =>
@@ -2343,7 +2425,9 @@ where
               | .p 46 => false | .w v => v != w!"from" | _ => true)
             let rest := trailer (r4.drop np.length)
             if isEnd rest then some (.letDenote b s np) else none) <|>
-          letBe b [] r2
+          letBe b [] r2 <|>
+          -- For B, let $h(k)=e$.: as `set`
+          constDefsOf (some b) r2
         | none =>
         -- For B, define $f_b:A\to B$ by DISPLAY.
         match (do

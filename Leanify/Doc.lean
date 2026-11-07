@@ -1942,6 +1942,12 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     pure i
   | _ => fail E.unsupported
 
+/-- The variables a noun phrase binds: the variables of its formulas (`$m$`, `$1\le m\le n$`). -/
+def npVars (np : List Chunk) : List Codes :=
+  (mathsOf np).flatMap fun ts => match varName ts with
+    | some v => [v]
+    | none => ((Grammar.binderMath ts).map (·.1)).getD []
+
 /-- Make the definitions of a clause: those after it (`where`) and those inside a
 comparison (`the geometric mean $G\coloneqq\sqrt{ab}$`), which become their symbols. -/
 def inlineClause (c : SentCtx) (bs : List BindInfo) (defs : List MT) (k : Clause) : M Clause := do
@@ -2766,6 +2772,54 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         pure (id :: ids)
   go 16 cls none
 
+/-- The definition of `L` (`j(n)`) by a description: the least (greatest) number that the
+noun phrase and the clause describe, defined only when there is one; or how many numbers
+they describe, defined only when finitely many. The variables of `L` range as the
+binders `bs` before it say (the real numbers otherwise); the variables of the result or
+section the description uses are implicit parameters. -/
+def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np : List Chunk)
+    (cond : Option Clause) : M (List Nat × List Nat) := do
+  let (hd, args) := match lhs with
+    | .app h as => (h, as)
+    | _ => (lhs, [])
+  let some key := Elab.symKey hd | fail E.unsupported
+  let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+  let st ← get
+  -- the variables the description uses, apart from its own
+  let own := npVars np
+  let maths := (mathsOf np).filterMap Math.parseFormula ++ (cond.map clauseMaths).getD []
+  let ids := (maths.flatMap (freeIds 64 [])).filter (!own.contains ·)
+  let used := ids ++ implicitVars st ids
+  let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
+  let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
+    | some b => b
+    | none => ⟨n, .real, none⟩
+  let all := imp ++ argInfo
+  let sc := scopeOf all
+  let b ← nounPhrase np sc
+  if b.ty != .real then fail E.type
+  let inner ← match cond with
+    | some cl => do
+      if b.name.isEmpty then fail E.unsupported
+      clauseTm c ((b.name, b.ty) :: sc) none none cl
+    | none => pure .tt
+  -- `P x`: the noun phrase and the clause about `x`, where `x` is bound
+  let px := match cond with
+    | some _ => Tm.and (holdsAt b.pred (.loc 0)) inner
+    | none => holdsAt b.pred (.loc 0)
+  let v := match kind with
+    | .least => Tm.the .real (.and px (.all .real (.imp (shift 1 1 px) (.le (.loc 1) (.loc 0)))))
+    | .greatest => Tm.the .real (.and px (.all .real (.imp (shift 1 1 px) (.le (.loc 0) (.loc 1)))))
+    | .count => Elab.cardTm (.lam .real .tt px)
+  let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
+  let ty := all.foldr (fun b acc => Ty.fn b.ty acc) Ty.real
+  let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+  if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+  match c.ctx.kind with
+  | .text => pure ()
+  | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
+  pure ([i], [])
+
 /-- A convention of the article: a noun the article names (`By a distribution we mean
 a probability distribution on $\mathbb{N}_0$.`), which is a class like the article's
 own, or words that stand for other words in the following sentences (`Throughout,
@@ -2872,6 +2926,17 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     if s.name.isEmpty then fail E.prose
     modify fun st => { st with notionSubject := some s }
     pure ([], [])
+  | .defDesc b lhs kind np cond _ => do
+    -- the variables of the section or result, then those of the binder before it
+    let st ← get
+    let ctx : List BindInfo := match c.ctx.kind with
+      | .text => (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2)
+      | _ => st.envBinders
+    let own ← match b with
+      | some bd => binderInfos bd
+      | none => pure []
+    let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
+    descDef c bs lhs kind np cond
   | .assumeAll binds defs => do
     let bs := (← bindersInfos binds)
     match c.ctx.kind with
@@ -3182,6 +3247,13 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     let labelled : M (List Nat × List Nat) := do
       let (ds, cs) ← match sent with
         | .notation k rhs => Compile.notationDef toks0 k rhs
+        -- `We write $L$ for the WORDS`: a notation for an operation of the vocabulary, or
+        -- else a description
+        | .defDesc _ _ _ _ _ (some (k, rhs)) => do
+          let st ← get
+          tryCatch (Compile.notationDef toks0 k rhs) fun _ => do
+            set st
+            Compile.sentence sc sent
         | _ => Compile.sentence sc sent
       match sent with
       | .claims _ _ _ =>

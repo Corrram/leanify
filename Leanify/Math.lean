@@ -200,6 +200,7 @@ def simplify : Nat → List PTok → Option (List MTok)
     | .csym 125 => (MTok.setr :: ·) <$> simplify f ts
     | .csym 124 => (MTok.cmd w!"Vert" :: ·) <$> simplify f ts
     | .csym 92 => (MTok.row :: ·) <$> simplify f ts
+    | .csym 35 => (MTok.cmd [35] :: ·) <$> simplify f ts
     | .begin e => (MTok.begin e :: ·) <$> simplify f ts
     | .finish e => (MTok.finish e :: ·) <$> simplify f ts
     | .ref _ _ => simplify f ts
@@ -283,6 +284,81 @@ def untilVert : Nat → Int → List MTok → List MTok → Option (List MTok ×
     | .lb | .setl | .sym 40 | .sym 91 | .begin _ => untilVert f (d + 1) (t :: acc) ts
     | .rb | .setr | .sym 41 | .sym 93 | .finish _ => untilVert f (d - 1) (t :: acc) ts
     | _ => untilVert f d (t :: acc) ts
+
+/-- The tokens up to the `}` that closes a group whose `{` was read, and the tokens after it. -/
+def untilClose : Nat → Nat → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    match t with
+    | .rb => if d == 0 then some (acc.reverse, ts) else untilClose f (d - 1) (t :: acc) ts
+    | .lb => untilClose f (d + 1) (t :: acc) ts
+    | _ => untilClose f d (t :: acc) ts
+
+/-- `ts` split at `sep` outside brackets. -/
+def splitOuter (sep : MTok) : Nat → Int → List MTok → List MTok → List (List MTok) → List (List MTok)
+  | 0, _, cur, _, acc => (cur.reverse :: acc).reverse
+  | _ + 1, _, cur, [], acc => (cur.reverse :: acc).reverse
+  | f + 1, d, cur, t :: ts, acc =>
+    if d == 0 && t == sep then splitOuter sep f d [] ts (cur.reverse :: acc) else
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    splitOuter sep f d' (t :: cur) ts acc
+
+/-- The conditions in the subscript of `\max_{…}`, `\sup_{…}` (the tokens after `_`): one
+formula, formulas separated by commas, or the rows of a `\substack`; and the tokens after
+the subscript. -/
+def subParts (ts : List MTok) : Option (List (List MTok) × List MTok) :=
+  match ts with
+  | .lb :: rest => do
+    let (inner, after) ← untilClose (rest.length + 1) 0 [] rest
+    let parts := match inner with
+      | .cmd s :: .lb :: body =>
+        if s == w!"substack" then
+          match body.reverse with
+          | .rb :: b => splitOuter .row (b.length + 1) 0 [] b.reverse []
+          | _ => [inner]
+        else splitOuter (.sym 44) (inner.length + 1) 0 [] inner []
+      | _ => splitOuter (.sym 44) (inner.length + 1) 0 [] inner []
+    let parts := parts.filter (!·.isEmpty)
+    if parts.isEmpty then none else some (parts, after)
+  | t :: after => some ([[t]], after)
+  | [] => none
+
+/-- Names of indices: an extremum over an index bounded by inequalities ranges over the
+integers, a limit of a sequence (`n\to\infty`) over the natural numbers. -/
+def indexNames : List Codes := [w!"n", w!"m", w!"k", w!"j", w!"i", w!"N", w!"M", w!"K"]
+
+/-- The variable of an extremum and the set it ranges over, from the conditions of its
+subscript: `x\in A` (and conditions), bounds (`0\le t<1`, `t\ge0`), or conditions the
+first of which bounds the variable (`n\ge1,\ \omega(n)\le k`). A variable bounded by
+inequalities alone ranges over the real numbers (`\mathbb{R}`), an index over the
+integers. -/
+def extrRange (conds : List MT) : Option (Codes × MT) :=
+  let ival (lo : MT) (r1 : Rel) (hi : MT) (r2 : Rel) : Option MT :=
+    if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then some (.ival lo hi (r1 == .lt) (r2 == .lt))
+    else none
+  let inf := MT.id w!"\\infty"
+  let bounds : Option (Codes × MT) := match conds with
+    | [.chain lo [(r1, .id v), (r2, hi)]] => (ival lo r1 hi r2).map (v, ·)
+    | [.chain (.id v) [(.ge, lo)]] => some (v, .ival lo inf false true)
+    | [.chain (.id v) [(.gt, lo)]] => some (v, .ival lo inf true true)
+    | [.chain (.id v) [(.le, hi)]] => some (v, .ival (.neg inf) hi true false)
+    | [.chain (.id v) [(.lt, hi)]] => some (v, .ival (.neg inf) hi true true)
+    | _ => none
+  match conds, bounds with
+  | [.chain (.id v) [(.mem, dom)]], _ => some (v, dom)
+  | .chain (.id v) [(.mem, dom)] :: rest, _ => some (v, .setOf (.id v) dom rest)
+  | _, some (v, d) => if indexNames.contains v then some (v, .setOf (.id v) (.id w!"\\mathbb{Z}") conds) else some (v, d)
+  | c :: _, none =>
+    let v? := match c with
+      | .chain (.id v) _ => some v
+      | .chain _ ((_, .id v) :: _ :: _) => some v
+      | _ => none
+    v?.map fun v => (v, .setOf (.id v) (.id (if indexNames.contains v then w!"\\mathbb{Z}" else w!"\\mathbb{R}")) conds)
+  | [], _ => none
 
 /-- Tokens that may begin an implicit product factor. -/
 def startsFactor : MTok → Bool
@@ -498,24 +574,14 @@ def run : Nat → Mode → List MTok → R
             let (st, r') ← setBuilder f r
             some (.bound isSup st, r'))
         | .sym 95 :: r => do
-          -- `\sup_{x\in A} e`, `\sup_{0\le t<1} e`, `\sup_{t\ge0} e`
-          let (b, r1) ← run f .group r
-          let ival (lo : MT) (r1 : Rel) (hi : MT) (r2 : Rel) : Option MT :=
-            if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then some (.ival lo hi (r1 == .lt) (r2 == .lt))
-            else none
-          let dom : Option (Codes × MT) := match b with
-            | .chain (.id v) [(.mem, dom)] => some (v, dom)
-            | .chain lo [(r1, .id v), (r2, hi)] => (ival lo r1 hi r2).map (v, ·)
-            | .chain (.id v) [(.ge, lo)] => some (v, .ival lo (.id w!"\\infty") false true)
-            | .chain (.id v) [(.gt, lo)] => some (v, .ival lo (.id w!"\\infty") true true)
-            | .chain (.id v) [(.le, hi)] => some (v, .ival (.neg (.id w!"\\infty")) hi true false)
-            | .chain (.id v) [(.lt, hi)] => some (v, .ival (.neg (.id w!"\\infty")) hi true true)
-            | _ => none
-          match dom with
-          | some (v, dom) => do
-            let (body, r2) ← run f (.product false) r1
-            some (.bound isSup (.image body v dom), r2)
-          | none => none
+          -- `\sup_{x\in A} e`, `\sup_{0\le t<1} e`, `\sup_{t\ge0} e`, `\sup_{\substack{n\ge1\\ φ}} e`
+          let (parts, r1) ← subParts r
+          let conds ← parts.mapM fun p => do
+            let (m, rest) ← run f .top p
+            if rest.isEmpty then some m else none
+          let (v, dom) ← extrRange conds
+          let (body, r2) ← run f (.product false) r1
+          some (.bound isSup (.image body v dom), r2)
         | _ => do
           -- `\sup A` for a named set
           let (a, r1) ← run f (.atom false) rest
@@ -556,6 +622,10 @@ def run : Nat → Mode → List MTok → R
           let (body, r3) ← run f (.product false) r2
           some (.app (.id (w!"@" ++ n ++ dir)) [.id v, target, body], r3)
         | _ => none
+      else if n == [35] then do
+        -- `\#\{…\}`, `\#A`: the number of elements of a set
+        let (x, r1) ← run f (.atom false) rest
+        some (.app (.id w!"@card") [x], r1)
       else if n == w!"lfloor" || n == w!"lceil" then do
         -- `\lfloor x\rfloor`, `\lceil x\rceil`
         let (x, r1) ← run f (.additive false) rest
@@ -579,13 +649,14 @@ def run : Nat → Mode → List MTok → R
             let (st, r') ← setBuilder f r
             some (.extr (n == w!"max") st, r'))
         | .sym 95 :: r => do
-          -- `\max_{x\in A} e`
-          let (b, r1) ← run f .group r
-          match b with
-          | .chain (.id v) [(.mem, dom)] => do
-            let (body, r2) ← run f (.product false) r1
-            some (.extr (n == w!"max") (.image body v dom), r2)
-          | _ => none
+          -- `\max_{x\in A} e`, `\max_{1\le a<b} e`, `\min_{\substack{…}} e`
+          let (parts, r1) ← subParts r
+          let conds ← parts.mapM fun p => do
+            let (m, rest) ← run f .top p
+            if rest.isEmpty then some m else none
+          let (v, dom) ← extrRange conds
+          let (body, r2) ← run f (.product false) r1
+          some (.extr (n == w!"max") (.image body v dom), r2)
         | _ => none
       else if n == w!"int" then
         match rest with
