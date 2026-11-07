@@ -105,9 +105,30 @@ not a notion of the article: it is prose. -/
 def E.prose := 10
 /-- A phrase has several meanings in the article's vocabulary (in different fields). -/
 def E.ambiguous := 11
+/-- A convention lets constants depend on a phrase that is neither a variable nor the
+fixed data. -/
+def E.dependence := 12
 
 abbrev Local := Codes × Ty
 abbrev Scope := List Local
+
+/-- A generic constant of the article's conventions: `Throughout, $C$ and $C_m$ denote
+positive constants.`, `In the definitions below, $C_{j,I}>0$ and $b_{j,I}\ge0$ may depend
+on $j,I$ and the fixed data, and are uniform in $\ell$.` -/
+structure GenericConst where
+  /-- The letter (`C` for `C`, `C_m`, `C_{j,I}`). -/
+  base : Codes
+  /-- 0: a real number, 1: positive, 2: non-negative. -/
+  sign : Nat := 0
+  /-- The variables it may depend on besides the indices in its subscript, when the
+  convention lists them (`strict`); otherwise its indices and the fixed data. -/
+  deps : List Codes := []
+  strict : Bool := false
+  /-- Whether it may depend on the fixed data (`Fix …`, `… are fixed`). -/
+  fixedOk : Bool := true
+  /-- Variables it does not depend on (`uniform in`, `independent of`). -/
+  uniform : List Codes := []
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A field: a function of `space` spatial coordinates (and a last time coordinate
 if `time`), real-valued (`dim = 1`) or with `dim` components, the component index
@@ -216,9 +237,9 @@ structure St where
   /-- The article's conventions for words (`Throughout, increasing means
   non-decreasing.`): the words, and the words they stand for. -/
   wordAliases : List (List Codes × List Tok) := []
-  /-- The letters the article declares generic constants (`Throughout, $C$ and $C_m$
-  denote positive constants.`), and whether they are positive. -/
-  genericConsts : List (Codes × Bool) := []
+  /-- The generic constants the article declares (`Throughout, $C$ and $C_m$ denote
+  positive constants.`), the latest last. -/
+  genericConsts : List GenericConst := []
   /-- The names of the variables of the functions of several variables the article
   defines (`f(x,y)\coloneqq …`), by definition: `\partial_x f` is the derivative in
   the argument named `x`. -/
@@ -347,6 +368,27 @@ def globTy (i : Nat) : M Ty := do
 def lookupLocal : Scope → Codes → Option (Nat × Ty)
   | [], _ => none
   | (n, t) :: sc, x => if n == x then some (0, t) else (lookupLocal sc x).map fun (i, t) => (i + 1, t)
+
+/-- Is `h` a number, so that `h(a)` is a product: a bound real variable (`c`, `B_I` of a
+convention), a sequence of real numbers at an index (`x_n`), or a defined real constant
+(`d_0`)? -/
+def numberHead (sc : Scope) (h : MT) : M Bool := do
+  let num (t : Ty) : Bool := t == .real || t == .unit
+  match h with
+  | .id n =>
+    match lookupLocal sc n with
+    | some (_, t) => pure (num t)
+    | none => pure ((← lookupGlob n).any fun (_, g) => g.ty == .real)
+  | .sub (.id k) _ =>
+    match (symKey h).bind (lookupLocal sc ·) with
+    | some (_, t) => pure (num t)
+    | none =>
+      match lookupLocal sc k with
+      | some (_, t) => pure (t == .fn .real .real)
+      | none => match symKey h with
+        | some key => pure ((← lookupGlob key).any fun (_, g) => g.ty == .real)
+        | none => pure false
+  | _ => pure false
 
 /-- Shift free local indices `≥ c` by `k`. -/
 abbrev shift := Tm.shift
@@ -747,6 +789,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .minus x y => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.sub a b, .real)
     | .mul x y => do
+      -- `\partial^I f(x,y)`
+      match ← multiPartial f sc pf x y with
+      | some r => pure r
+      | none =>
       -- `\frac{\partial f}{\partial x}(x,y)`
       match fracDeriv x, y with
       | some dx, .tuple as => term f sc pf (match dx with
@@ -816,12 +862,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .minm (x :: y :: z :: rest) => term f sc pf (.minm (.minm [x, y] :: z :: rest))
     | .maxm (x :: y :: z :: rest) => term f sc pf (.maxm (.maxm [x, y] :: z :: rest))
     -- `v(s-v)^2`: a number before parentheses is a factor, and the exponent is the factor's
-    | .sup (.app (.id n) [a]) e =>
-      match lookupLocal sc n with
-      | some (_, t) =>
-        if t == .real || t == .unit then term f sc pf (.mul (.id n) (.sup a e))
-        else supTerm f sc pf (.app (.id n) [a]) e
-      | none => supTerm f sc pf (.app (.id n) [a]) e
+    | .sup (.app h [a]) e => do
+      if ← numberHead sc h then term f sc pf (.mul h (.sup a e))
+      else supTerm f sc pf (.app h [a]) e
     | .sup b e => supTerm f sc pf b e
     | .hat x => do
       let (h, g) ← liftO (← lookupGlob w!"\\widehat") E.undefined w!"\\widehat"
@@ -910,6 +953,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .lor x y => do pure (.or (← propOf f sc pf x) (← propOf f sc pf y), .prop)
     | .limp x y => do pure (.imp (← propOf f sc pf x) (← propOf f sc pf y), .prop)
     | .liff x y => do pure (.iff (← propOf f sc pf x) (← propOf f sc pf y), .prop)
+    -- `\forall I\in\mathbb{N}_0^n`: a multi-index, its components `I_1`, …, `I_n`
+    | .quant isAll [v] (.sup base (.num n)) body =>
+      if n < 2 || 8 < n then fail E.unsupported else
+      let names := (List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat
+      term f sc pf (names.foldr (fun nm acc => MT.quant isAll [nm] base acc) body)
     | .quant isAll vs dom body =>
       -- each variable ranges over the real numbers in `dom`
       match vs with
@@ -1262,6 +1310,11 @@ where
           pure (.glob i, gl.ty, gl.doms)
       -- `x_n` for a real function `x` of the scope (the weights of a distribution): `x(n)`
       | .sub (.id key) i =>
+        -- a bound variable with a subscript in its name (`B_I` of a convention): a number
+        -- before parentheses is a factor
+        match (symKey hd).bind (lookupLocal sc ·) with
+        | some (j, t) => pure (.loc j, t, [])
+        | none =>
         match lookupLocal sc key with
         | some (j, .fn .real b) => do
           let a ← asReal (← term g sc none i)
@@ -1577,6 +1630,34 @@ where
         (.app (.app (.prim .rpow) sq) (.div (.num 1) (.num 2)))
       -- the norm, a description: undefined when infinite
       pure (.the .real (.app (.app (.prim (if isL2 then .l2NormN s else .supNormN s)) (shift 1 0 mag)) (.loc 0)), .real)
+  /-- `\partial^I f(x,y)`: the partial derivative of a multi-index `I` (its components
+  `I_1`, … bound as variables) of a function of several variables, at a point or as a
+  function; `none` for any other product. -/
+  multiPartial : Nat → Scope → PF → MT → MT → M (Option (Tm × Ty))
+    | 0, _, _, _, _ => pure none
+    | f + 1, sc, pf, x, y => do
+      let some mi := (match x with
+          | .sup (.id d) (.id mi) => if d == w!"\\partial" then some mi else none
+          | _ => none) | pure none
+      let comps := ((List.range 8).map fun k => mi ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat).takeWhile
+        fun nm => (lookupLocal sc nm).isSome
+      let n := comps.length
+      if n < 1 then fail E.undefined mi
+      let (hd, args) := match y with
+        | .app h as => (h, as)
+        | _ => (y, [])
+      let (F, fty, _) ← head f sc hd
+      if realArity fty != some n then fail E.type
+      let G := Tm.the (Ty.fns (n + n)) (.app (.app (.prim (.partialMulti n)) (shift 1 0 F)) (.loc 0))
+      let idx ← comps.mapM fun nm => do asReal (← term f sc none (.id nm))
+      if args.isEmpty then
+        -- as a function of the point
+        pure (some ((List.range n).foldl (fun acc _ => Tm.lam .real .tt acc)
+          (applyN (shift n 0 G) (idx.map (shift n 0) ++ (List.range n).map fun j => Tm.loc (n - 1 - j))), Ty.fns n))
+      else do
+        if args.length != n then fail E.type
+        let xs ← args.mapM fun a => do asReal (← term f sc pf a)
+        pure (some (applyN G (idx ++ xs), .real))
   /-- A subscripted symbol `b_i` (the formula `m`). -/
   subTm : Nat → Scope → PF → MT → MT → MT → M (Tm × Ty)
     | 0, _, _, _, _, _ => fail E.unsupported

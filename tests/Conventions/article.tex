@@ -1,0 +1,88 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers}]{leanify}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\begin{document}
+
+\section{Constants with dependence}
+
+Here and below, $K$ denotes a positive constant that depends only on $n$.
+
+In the lemmas below, $A_k>0$ and $b_k\ge0$ may depend on $k$ and the fixed data, and are uniform in $N$ and $x$.
+
+\begin{lemma}\label{powers}
+For every positive integer $n$ and every $x\in[0,1]$, $x^n\le K$.
+\end{lemma}
+
+\begin{lemma}\label{exponential}
+For every positive integer $k$ and every positive integer $N$, $N^k\le A_k2^N$.
+\end{lemma}
+
+\begin{lemma}\label{logarithm}
+For every positive integer $k$, every positive integer $N$ and every $x\ge1$, $\log x\le A_kx^{1/k}$.
+\end{lemma}
+
+\begin{lemma}\label{sine}
+For every positive integer $k$ and every $x\in\mathbb R$, $|\sin(kx)|\le b_k|x|$.
+\end{lemma}
+
+\begin{lemma}\label{noparameter}
+For every positive integer $N$ and every $x\in[0,1]$, $x^N\le K$.
+\end{lemma}
+
+The constants $c$ and $c_m$ are positive and independent of $N$.
+
+\begin{lemma}\label{independent}
+For every positive integer $m$ and every positive integer $N$, $c_m\le N+1$.
+\end{lemma}
+
+A dependence that the article does not define is not read:
+
+In the lemmas below, $D>0$ may depend on the shape of the domain.
+
+\section{Multi-indices}
+
+Define $f:\mathbb R^2\to\mathbb R$ by $f(x,y)\coloneqq e^{x}\sin y$.
+
+In the lemmas below, $C_I>0$ may depend on $I$, and is uniform in $x$ and $y$.
+
+\begin{lemma}\label{derivatives}
+For every $I\in\mathbb N_0^2$ and every $x,y\in[0,1]$, $|\partial^If(x,y)|\le C_I$.
+\end{lemma}
+
+\begin{lemma}\label{explicit}
+$\forall I\in\mathbb N_0^2\ \exists C_I: |\partial^If(0,0)|\le C_I$.
+\end{lemma}
+
+\begin{lemma}\label{components}
+For every $I\in\mathbb N_0^2$, $I_1+I_2\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{sums}
+$\forall x\in\mathbb R\ \exists y,z: y+z=x$.
+\end{lemma}
+
+\section{Classes of functions}
+
+For a positive integer $j$, we set $\lambda=2^{j}$ and $\mu=\lambda^{1/2}$.
+
+In the definitions below, $B_I>0$ may depend on $I$, and is uniform in $j$.
+
+\begin{definition}\label{bernstein}
+A map $f:\mathbb R^2\to\mathbb R$ belongs to $\mathcal B_s$ if $|\partial^If(x,y)|\le B_I\lambda^{s+I_1+I_2}$ for every $I\in\mathbb N_0^2$ and every $x,y\in\mathbb R$.
+\end{definition}
+
+\begin{definition}\label{symbols}
+A map $a:\mathbb R^2\to\mathbb R$ belongs to $\mathcal S_m$ if $|\partial^Ia(x,\xi)|\le B_I(1+|\xi|)^{m-I_2}$ for every $I\in\mathbb N_0^2$ and every $x,\xi\in\mathbb R$.
+\end{definition}
+
+\begin{lemma}\label{bernstein-inclusion}
+For all $s,t\in\mathbb R$ with $s\le t$ and every $f\in\mathcal B_s$, $f\in\mathcal B_t$.
+\end{lemma}
+
+\begin{lemma}\label{symbol-inclusion}
+For all $m,p\in\mathbb R$ with $m\le p$ and every $a\in\mathcal S_m$, $a\in\mathcal S_p$.
+\end{lemma}
+
+\end{document}

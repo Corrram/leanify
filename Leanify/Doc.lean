@@ -502,9 +502,12 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       | .fn a .prop => pure (a, some (.glob i))
       | _ => fail E.type n
     | _ => do
-      -- any other set of real numbers: `\mathbb{R}\setminus\{0\}`, `\{x\in A : …\}`
+      -- any other set of real numbers: `\mathbb{R}\setminus\{0\}`, `\{x\in A : …\}`; or a
+      -- class of the article with its parameter (`\mathcal M_\beta`)
       let (p, t) ← Elab.term 100000 sc none d
-      if t == .fn .real .prop then pure (.real, some p) else fail E.unsupported
+      match t with
+      | .fn a .prop => pure (a, some p)
+      | _ => fail E.unsupported
 
 def lamWrap : List Ty → Tm → Tm
   | [], b => b
@@ -679,7 +682,7 @@ def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
   | [.m vs, .w on, .m dts] =>
     if Grammar.lower on != w!"on" then return none
     -- the names, separated by commas: letters, or letters with a subscript (`P_{\mathrm{per}}`)
-    let parts := (Math.splitTop (vs.length + 1) [] (vs.map fun t => if t == .sym 44 then MTok.row else t) 0 []).filter (!·.isEmpty)
+    let parts := (Grammar.topCommas (vs.length + 1) 0 [] vs []).filter (!·.isEmpty)
     let some names := parts.mapM (fun p => (Math.parseFormula p).bind Elab.symKey) | pure none
     let some d := Math.parseFormula dts | pure none
     -- the kinds: `velocity`, `vector`, `force` (vector fields), `pressure`, `scalar` (real)
@@ -731,6 +734,16 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
 
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  -- `every $x\in[0,1]$` in a list of binders (`for every positive integer $n$ and every
+  -- $x\in[0,1]$`): a variable and its domain
+  match np with
+  | [.m ts] =>
+    match Grammar.binderMath ts with
+    | some ([v], d) => do
+      let (ty, p) ← domainOf false d outer
+      return ⟨v, ty, p⟩
+    | _ => pure ()
+  | _ => pure ()
   let st ← get
   let V := st.vocab
   -- prenominal modifiers
@@ -876,8 +889,29 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .mapsto p b => freeIds f (freeIds f [] p ++ bound) b
     | _ => []
 
+/-- A domain of multi-indices `\mathbb{N}_0^n` (`n ≥ 2`): the domain of the components and
+`n`. -/
+def multiIndex (d : MT) : Option (MT × Nat) :=
+  match d with
+  | .sup base (.num n) =>
+    let nat := match base with
+      | .id b => b == w!"\\mathbb{N}" || b == w!"\\mathbb{N}_0"
+      | .sub (.id b) (.num 0) => b == w!"\\mathbb{N}"
+      | _ => false
+    if nat && 2 ≤ n && n ≤ 8 then some (base, n) else none
+  -- `\mathbb{N}_0^n`, with both scripts on `\mathbb{N}`
+  | .sub (.id b) (.sup (.num 0) (.num n)) =>
+    if b == w!"\\mathbb{N}" && 2 ≤ n && n ≤ 8 then some (.sub (.id b) (.num 0), n) else none
+  | _ => none
+
 def binderInfos : Bind → M (List BindInfo)
   | .every vs d => do
+    -- a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`
+    match vs, multiIndex d with
+    | [v], some (base, n) => do
+      let (ty, p) ← domainOf false base
+      pure ((List.range n).map fun k => ⟨v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, ty, p⟩)
+    | _, _ => do
     let (ty, p) ← domainOf false d
     pure (vs.map fun v => ⟨v, ty, p⟩)
   | .noun np => do pure [← nounPhrase np]
@@ -911,6 +945,11 @@ def binderInfos : Bind → M (List BindInfo)
           | some q => Tm.lam last.ty .tt (.and (.app (shift 1 0 q) (.loc 0)) (shift 1 0 p))
           | none => Tm.lam last.ty .tt (shift 1 0 p)
         out := out.dropLast ++ [{ last with pred := some pred }]
+      -- `For every positive integer $n$ and every $x\in[0,1]$`: a noun phrase, whose
+      -- condition may use the variables bound before it
+      | .noun np => do
+        let b ← nounPhrase np (out.map fun b => (b.name, b.ty)).reverse
+        out := out ++ [b]
       | _ => fail E.unsupported
     pure out
 where
@@ -920,6 +959,10 @@ where
     everyIn (before.map fun b => (b.name, b.ty)).reverse vs d
   /-- The same, with the domain in the scope `sc` of the binders around it. -/
   everyIn (sc : Scope) (vs : List Codes) (d : MT) : M (List BindInfo) := do
+    -- a multi-index: its components
+    let (vs, d) := match vs, multiIndex d with
+      | [v], some (base, n) => ((List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, base)
+      | _, _ => (vs, d)
     let (ty, p) ← domainOf false d sc
     let (bis, _) := vs.foldl (fun (acc, j) v =>
       (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
@@ -1042,31 +1085,51 @@ def wrapMixed : List (BindInfo × Bool) → Tm → Tm
     if isEx || b.name.head? == some 64 then .ex b.ty (match p with | some p => .and p inner | none => inner)
     else .all b.ty (match p with | some p => .imp p inner | none => inner)
 
-/-- The binders with the generic constants: the binders of the constants' indices and
-of the fixed data first, then the constants, then the other binders (a constant
-`C_m` depends only on `m` and the fixed data). Where moving a binder would change
-what a domain refers to, each constant comes right after the last binder of its
-indices instead. -/
-def placeGenerics (gens : List (BindInfo × List Codes)) (bs : List BindInfo) (fixedNames : List Codes) :
-    List (BindInfo × Bool) :=
-  let need := gens.flatMap (·.2)
-  let isFront (b : BindInfo) : Bool := need.contains b.name || fixedNames.contains b.name
+/-- What a generic constant of a claim may depend on: the variables (its indices and the
+dependencies its convention lists), whether the fixed data, the variables it must not
+depend on, and whether its convention lists its dependencies. -/
+structure GenSpec where
+  allowed : List Codes
+  fixedOk : Bool
+  uniform : List Codes
+  strict : Bool
+
+/-- The binders with the generic constants: the binders a constant may depend on first
+(its indices, the variables its convention names, the fixed data), each constant right
+after the last of them, then the other binders, which it does not depend on. Where moving a
+binder would change what a domain refers to, the binders keep their order and each
+constant comes right after the last binder it may depend on; `none` if a constant would
+then depend on a variable its convention excludes. -/
+def placeGenerics (gens : List (BindInfo × GenSpec)) (bs : List BindInfo) (fixedNames : List Codes) :
+    Option (List (BindInfo × Bool)) :=
+  -- (a multi-index `I` stands for its components `I_1`, …)
+  let component (a n : Codes) : Bool :=
+    n.take (a.length + 1) == a ++ [95] && !(n.drop (a.length + 1)).isEmpty &&
+      (n.drop (a.length + 1)).all fun c => 48 ≤ c && c ≤ 57
+  let allows (s : GenSpec) (b : BindInfo) : Bool :=
+    s.allowed.contains b.name || s.allowed.any (component · b.name) || (s.fixedOk && fixedNames.contains b.name)
+  let isFront (b : BindInfo) : Bool := gens.any fun (_, s) => allows s b
   let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
   let firstRest := (List.range bs.length).find? fun i => !isFront bs[i]!
   -- a front binder after a rest binder, followed by a dependent rest binder
   let risky := (List.range bs.length).any fun i =>
     isFront bs[i]! && firstRest.any (· < i) &&
       ((List.range bs.length).any fun j => i < j && !isFront bs[j]! && dependent bs[j]!)
-  if !risky && !(bs.filter isFront).any dependent then
-    ((bs.filter isFront).map (·, false)) ++ (gens.map fun (g, _) => (g, true)) ++
-      ((bs.filter fun b => !isFront b).map (·, false))
-  else
-    let lastIdx (idx : List Codes) : Option Nat :=
-      (List.range bs.length).foldl (fun acc i => if idx.contains (bs[i]!).name then some i else acc) none
-    let before := gens.filter fun (_, idx) => (lastIdx idx).isNone
-    (before.map fun (g, _) => (g, true)) ++
-      (List.range bs.length).flatMap fun i =>
-        (bs[i]!, false) :: ((gens.filter fun (_, idx) => lastIdx idx == some i).map fun (g, _) => (g, true))
+  let ordered := if !risky && !(bs.filter isFront).any dependent then
+      bs.filter isFront ++ bs.filter fun b => !isFront b
+    else bs
+  let lastIdx (s : GenSpec) : Option Nat :=
+    (List.range ordered.length).foldl (fun acc i => if allows s ordered[i]! then some i else acc) none
+  let order := ((gens.filter fun (_, s) => (lastIdx s).isNone).map fun (g, _) => (g, true)) ++
+    (List.range ordered.length).flatMap fun i =>
+      (ordered[i]!, false) :: ((gens.filter fun (_, s) => lastIdx s == some i).map fun (g, _) => (g, true))
+  -- each constant depends only on what it may depend on
+  let ok := gens.all fun (g, s) =>
+    match order.findIdx? (fun (b, ex) => ex && b.name == g.name) with
+    | some p => (order.take p).all fun (b, ex) =>
+        ex || allows s b || (!s.strict && !s.uniform.contains b.name)
+    | none => true
+  if ok then some order else none
 
 /-- The two sides `(smaller, larger)` of a single inequality. -/
 def ineqSides : MT → Option (MT × MT)
@@ -1900,6 +1963,90 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond) :
   modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
   pure ([i], [])
 
+/-- `A NP $f$ belongs to $\mathcal M_\alpha$ if $φ$ for every B`: the class `\mathcal M_\alpha`
+(a family over the parameter `α` of its subscript). The generic constants of `φ` are
+placed by their conventions. When `φ` uses quantities that depend on a parameter `ℓ`
+(`\varepsilon` set for every positive integer `ℓ`) and a constant of `φ` is uniform in
+`ℓ`, the class consists of families `ℓ ↦ f_ℓ`: `f` in `φ` is the member at `ℓ`, and `ℓ`
+is bound after the constants. -/
+def defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Grammar.Bind) :
+    M (List Nat × List Nat) := do
+  let (key, param) ← match cls with
+    | .sub (.id k) (.id p) => pure (k, some p)
+    | .id k => pure (k, none)
+    | _ => fail E.unsupported
+  -- the member: a noun phrase (`function $f:\mathbb R^2\to\mathbb R$` as a map)
+  let subj := match subj with
+    | .w w :: rest => if w == w!"function" then .w w!"map" :: rest else subj
+    | _ => subj
+  let s ← nounPhrase subj
+  if s.name.isEmpty then fail E.unsupported
+  let st ← get
+  -- `\forall I\in A\ \exists C_I: φ`: the constants are placed by their conventions
+  let isGen (k : Codes) : Bool := st.genericConsts.any fun g =>
+    k == g.base || k.take (g.base.length + 1) == g.base ++ [95]
+  let (cond, binds) := match cond with
+    | .quant true vs dom (.quant false gs _ body) =>
+      if !gs.isEmpty && gs.all isGen then (body, binds ++ [Grammar.Bind.every vs dom]) else (cond, binds)
+    | .quant false gs _ body => if !gs.isEmpty && gs.all isGen then (body, binds) else (cond, binds)
+    | _ => (cond, binds)
+  let pScope : List BindInfo := match param with
+    | some p => [⟨p, .real, none⟩]
+    | none => []
+  let cbs ← bindersInfos binds
+  let bound := (pScope ++ [s] ++ cbs).map (·.name)
+  -- the parameters of the quantities `φ` uses (`ℓ` of `\varepsilon`), with their domains
+  let ids := (freeIds 64 bound cond).eraseDups
+  let params := ((implicitVars st ids).eraseDups.filter (!bound.contains ·))
+  let domOf (p : Codes) : Option Tm := (st.implicits.findSome? fun (i, ns) =>
+      match ns.idxOf? p with
+      | some j => (st.globs[i]?).bind fun g => (g.doms[j]?).join
+      | none => none)
+  let pbs : List BindInfo := params.map fun p => ⟨p, .real, domOf p⟩
+  -- the generic constants of `φ`
+  let bases := st.genericConsts.map (·.base)
+  let gens := (genericsOf bases 64 cond).filter (fun (k, _) => !(st.globs.any (·.key == k)) && !bound.contains k)
+  let gens := gens.foldl (fun acc g => if acc.any (·.1 == g.1) then acc else acc ++ [g]) []
+  let convOf (k : Codes) : GenericConst :=
+    ((st.genericConsts.filter fun g => k == g.base || k.take (g.base.length + 1) == g.base ++ [95]).getLast?).getD {base := k}
+  let gbs : List (BindInfo × GenSpec) := gens.map fun (k, idx) =>
+    let g := convOf k
+    let pred : Option Tm := if g.sign == 1 then some (.lam .real .tt (.lt (.num 0) (.loc 0)))
+      else if g.sign == 2 then some (.lam .real .tt (.le (.num 0) (.loc 0))) else none
+    (⟨k, .real, pred⟩, { allowed := idx ++ g.deps, fixedOk := g.fixedOk, uniform := g.uniform, strict := g.strict })
+  -- a class of families when a constant is uniform in a parameter
+  let family := !pbs.isEmpty && gbs.any fun (_, sp) => pbs.any fun p => !sp.allowed.contains p.name
+  if !pbs.isEmpty && !family then fail E.unsupported (params.headD [])
+  let some order := placeGenerics gbs (cbs ++ pbs) [] | fail E.unsupported
+  let m := order.length
+  let fTy : Ty := if family then .fn .real s.ty else s.ty
+  -- the scope of `φ`: the parameter, the member (or the family), the binders in order, and
+  -- (for a family) the member at `ℓ`
+  let outer : Scope := (pScope.map fun b => (b.name, b.ty)).reverse
+  let fam : Scope := [(if family then w!"@F" else s.name, fTy)]
+  let mid : Scope := (order.map fun (b, _) => (b.name, b.ty)).reverse
+  let inner : Scope := if family then [(s.name, s.ty)] else []
+  let ψ ← prop (inner ++ mid ++ fam ++ outer) none cond
+  let body ← if family then do
+      let some (_, ℓ) := pbs.head?.map (fun b => ((), b)) | fail E.unsupported
+      let some li := order.findIdx? (fun (b, _) => b.name == ℓ.name) | fail E.unsupported
+      -- `(λ f. ψ) (F ℓ)`
+      pure (Tm.app (.lam s.ty .tt ψ) (.app (.loc m) (.loc (m - 1 - li))))
+    else pure ψ
+  let body := wrapMixed order body
+  -- the member's own condition (for a family: at every `ℓ`)
+  let memberOk : Tm := match s.pred, family, pbs.head? with
+    | some q, true, some ℓ =>
+      .all .real (.imp (holdsAt ℓ.pred (.loc 0)) (.app (shift 2 0 q) (.app (.loc 1) (.loc 0))))
+    | some q, false, _ => .app (shift 1 0 q) (.loc 0)
+    | _, _, _ => .tt
+  let pred := Tm.lam fTy .tt (if memberOk == .tt then body else .and memberOk body)
+  let (value, ty) := match param with
+    | some _ => (Tm.lam .real .tt pred, Ty.fn .real (.fn fTy .prop))
+    | none => (pred, Ty.fn fTy .prop)
+  let i ← addGlob ⟨key, ty, (if param.isSome then [none, none] else [none]), param.isSome⟩ value
+  pure ([i], [])
+
 /-- A notion of the article applied to a term. -/
 def notionApp (x : Tm × Ty) (name : List Codes) : M Tm := do
   let st ← get
@@ -2507,32 +2654,50 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         -- definitions inside the clause (`the mean $G\coloneqq\sqrt{ab}$`) and after it
         -- (`…, where $d\coloneqq …$`), in the scope of its binders
         let k ← inlineClause c (outer ++ cbs) cl.defs k
-        -- generic constants (`C_m`): existential, after the binders of their indices
+        -- `\forall I\in A\ \exists C_I: φ` with `C_I` a generic constant: the convention
+        -- places the constant (after `I`, before the variables it is uniform in)
         let stG ← get
+        let isGen (key : Codes) : Bool := stG.genericConsts.any fun g =>
+          key == g.base || key.take (g.base.length + 1) == g.base ++ [95]
+        let k := match k with
+          | .fact (.quant true vs dom (.quant false gs _ body)) | .holds (.quant true vs dom (.quant false gs _ body))
+          | .scoped (.quant true vs dom (.quant false gs _ body)) [] none none =>
+            if !gs.isEmpty && gs.all isGen then Clause.scoped body vs (some dom) none else k
+          | .fact (.quant false gs _ body) | .holds (.quant false gs _ body)
+          | .scoped (.quant false gs _ body) [] none none =>
+            if !gs.isEmpty && gs.all isGen then Clause.fact body else k
+          | _ => k
+        -- generic constants (`C_m`): existential, after the binders of their indices
         let bases := stG.genericConsts.map (·.1)
         let gens := if bases.isEmpty then [] else
           ((clauseMaths k).flatMap (genericsOf bases 64)).filter (fun (key, _) =>
             !(stG.globs.any (·.key == key)) && !((outer ++ cbs).any (·.name == key)))
         let gens := gens.foldl (fun acc g => if acc.any (·.1 == g.1) then acc else acc ++ [g]) []
-        let positive (key : Codes) : Bool := stG.genericConsts.any fun (b, pos) =>
-          pos && (key == b || key.take (b.length + 1) == b ++ [95])
-        let gbs : List (BindInfo × List Codes) := gens.map fun (key, idx) =>
-          (⟨key, .real, if positive key then some (.lam .real .tt (.lt (.num 0) (.loc 0))) else none⟩, idx)
-        -- a clause's own binder that names a constant's index (`… for every integer
-        -- $m\ge0$`) binds before the constant: it becomes a binder of the claim
+        -- the convention of a constant: the latest for its letter
+        let convOf (key : Codes) : GenericConst :=
+          ((stG.genericConsts.filter fun g => key == g.base || key.take (g.base.length + 1) == g.base ++ [95]).getLast?).getD {base := key}
+        let gbs : List (BindInfo × GenSpec) := gens.map fun (key, idx) =>
+          let g := convOf key
+          let pred : Option Tm := if g.sign == 1 then some (.lam .real .tt (.lt (.num 0) (.loc 0)))
+            else if g.sign == 2 then some (.lam .real .tt (.le (.num 0) (.loc 0))) else none
+          (⟨key, .real, pred⟩, { allowed := idx ++ g.deps, fixedOk := g.fixedOk, uniform := g.uniform, strict := g.strict })
+        -- a clause's own binder that a constant may depend on (its index: `… for every
+        -- integer $m\ge0$`) binds before the constant: it becomes a binder of the claim
+        let mayDepend (vs : List Codes) : Bool := gbs.any fun (_, s) => s.allowed.any vs.contains
         let (k, ownBs) ← match k with
           | .scoped f vs (some d) eq =>
-            if gens.any (fun (_, idx) => idx.any vs.contains) then do
+            if mayDepend vs then do
               let bis ← binderInfos.everyIn (scopeOf (outer ++ cbs)) vs d
               pure (Clause.scoped f [] none eq, bis)
             else pure (k, [])
           | .forEveryNP c' np => do
             if gens.isEmpty then pure (k, []) else
             let b ← nounPhrase np (scopeOf (outer ++ cbs))
-            if gens.any (fun (_, idx) => idx.contains b.name) then pure (c', [b]) else pure (k, [])
+            if mayDepend [b.name] then pure (c', [b]) else pure (k, [])
           | _ => pure (k, [])
         let fixedNames := stG.fixed.map (·.2.name)
-        let order := placeGenerics gbs (outer ++ cbs ++ ownBs) fixedNames
+        let some order := placeGenerics gbs (outer ++ cbs ++ ownBs) fixedNames
+          | fail E.unsupported
         let p ← clauseTm c (scopeOf (order.map (·.1))) onVar last k
         -- an inequality about the bound variables is the referent of a later
         -- `equality holds exactly when …`
@@ -2644,6 +2809,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     modify fun st => { st with fixed := (c.ctx.sec, bi) :: st.fixed.filter (·.2.name != bi.name) }
     if defs.isEmpty then pure ([], []) else constDefs c (some bi) defs labels
   | .defNotion subj name abbr cond => defNotion subj name abbr cond
+  | .defMember subj cls cond binds => defMember subj cls cond binds
   | .notionSubject subj => do
     -- only the running text introduces the subject of later notions
     if c.ctx.kind != .text then fail E.prose
@@ -2674,12 +2840,33 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     pure ([], [])
   | .notation .. => fail E.unsupported
   | .meaning ws rhs noun => meaningDef ws rhs noun
-  | .generic ms pos => do
-    let bases ← ms.mapM fun m => match m with
-      | .id k => pure k
-      | .sub (.id k) _ => pure k
+  | .generic ms deps uni => do
+    let bases ← ms.mapM fun (m, sign) => match m with
+      | .id k => pure (k, sign)
+      | .sub (.id k) _ => pure (k, sign)
       | _ => fail E.unsupported
-    modify fun st => { st with genericConsts := st.genericConsts ++ bases.map (·, pos) }
+    -- the variables of the formulas of a list (`$j,I$`)
+    let varsOf (tss : List (List MTok)) : M (List Codes) := do
+      let parts := tss.flatMap fun ts => (Grammar.topCommas (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+      parts.mapM fun p => do
+        let some m := Math.parseFormula p | fail E.unsupported
+        let some k := Elab.symKey m | fail E.unsupported
+        pure k
+    -- the dependencies: variables, and the fixed data (a phrase with `fixed`); a phrase
+    -- that names neither is not read
+    let (strict, depVars, fixedOk) ← match deps with
+      | some (ms', ws) => do
+        if ws.any (fun w => !w.contains w!"fixed") then fail E.dependence ((ws.find? (fun w => !w.contains w!"fixed")).getD [] |>.intersperse [32] |>.flatten)
+        pure (true, ← varsOf ms', !ws.isEmpty)
+      | none => pure (false, [], true)
+    -- uniform in: variables; phrases only beside the list of dependencies (which already
+    -- excludes them)
+    if !strict && !uni.2.isEmpty then fail E.dependence ((uni.2.headD []).intersperse [32] |>.flatten)
+    let uniVars ← varsOf uni.1
+    if uniVars.any depVars.contains then fail E.unsupported
+    let gcs : List GenericConst := bases.map fun (b, sign) =>
+      { base := b, sign, deps := depVars, strict, fixedOk, uniform := uniVars }
+    modify fun st => { st with genericConsts := st.genericConsts.filter (fun g => !bases.any (·.1 == g.base)) ++ gcs }
     pure ([], [])
   | .defDeriv b sets names dom cod anchors derivs labels => do
     let bi ← match b with

@@ -85,3 +85,11 @@ globs = ["Calculus.+"]
 name = "PDE"
 srcDir = "tests"
 globs = ["PDE.+"]
+
+[[lean_lib]]
+# Conventions about constants and their dependence, multi-indices, quantities set for
+# every value of a parameter, and classes of functions and of families, compiled by
+# the kernel.
+name = "Conventions"
+srcDir = "tests"
+globs = ["Conventions.+"]

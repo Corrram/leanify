@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE
+        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE Conventions
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -54,6 +54,10 @@ jobs:
         run: |
           lake exe leanify check tests/PDE/article.tex --claims > "$RUNNER_TEMP/pde.check.txt"
           diff tests/PDE/check.txt "$RUNNER_TEMP/pde.check.txt"
+      - name: Conventions about constants, multi-indices and classes of functions are read as documented
+        run: |
+          lake exe leanify check tests/Conventions/article.tex --vocab numbers --claims > "$RUNNER_TEMP/conventions.check.txt" || true
+          diff tests/Conventions/check.txt "$RUNNER_TEMP/conventions.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

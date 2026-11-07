@@ -136,6 +136,10 @@ inductive Prim where
   (`‖f‖_{L^∞} = r`), `integralN n f r` (`f` is integrable and `∫ f = r`). -/
   | smoothN (n : Nat) | compactSuppIn (n : Nat) | isCompactN (n : Nat) | supportIn (n : Nat)
   | l2NormN (n : Nat) | supNormN (n : Nat) | integralN (n : Nat)
+  /-- `partialMulti n f g`: `f` (of `n` variables) is smooth, and `g` gives its partial
+  derivatives of every order: `g(I₁,…,Iₙ,x₁,…,xₙ) = ∂^I f(x)` for a multi-index `I`
+  (`0` where `I` is not one). `∂^I f` is the description of `g`. -/
+  | partialMulti (n : Nat)
   deriving DecidableEq, Repr, Lean.ToExpr
 
 /-- Real functions of `n` real variables, curried. -/
@@ -179,6 +183,7 @@ def Prim.ty : Prim → Ty
   | .smoothN n | .compactSuppIn n | .supportIn n => Ty.fns n ⟶ Ty.setN n ⟶ .prop
   | .isCompactN n => Ty.setN n ⟶ .prop
   | .l2NormN n | .supNormN n | .integralN n => Ty.fns n ⟶ .real ⟶ .prop
+  | .partialMulti n => Ty.fns n ⟶ Ty.fns (n + n) ⟶ .prop
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

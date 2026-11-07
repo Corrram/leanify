@@ -19,6 +19,7 @@ import Mathlib.Topology.Connected.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Topology.Algebra.Support
 import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
+import Mathlib.Analysis.Calculus.ContDiff.Basic
 
 /-! # The meaning of core terms
 
@@ -188,6 +189,16 @@ def l2NormN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : P
 /-- `‖f‖_{L^∞(ℝⁿ)} = r` (the essential supremum of `|f|` is finite). -/
 def supNormN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
   eLpNorm (uncurryN n f) ⊤ volume = ENNReal.ofReal r ∧ 0 ≤ r
+/-- `f` is smooth and `g` gives its partial derivatives of every order:
+`g(I, x) = ∂^I f(x)` for a multi-index `I ∈ ℕⁿ`, and `0` at any other first argument. -/
+def partialMulti {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (g : (Ty.fns (n + n)).denote B) : Prop :=
+  (∀ k : ℕ, ContDiff ℝ k (uncurryN n f)) ∧
+  ∀ p : Fin (n + n) → ℝ,
+    ((∀ i : Fin n, ∃ k : ℕ, p (Fin.castAdd n i) = k) →
+      let L := (List.finRange n).flatMap fun i => List.replicate ⌊p (Fin.castAdd n i)⌋₊ i
+      uncurryN (n + n) g p = iteratedFDeriv ℝ L.length (uncurryN n f) (fun i => p (Fin.natAdd n i))
+        (fun j => Pi.single (L.get j) 1)) ∧
+    ((¬ ∀ i : Fin n, ∃ k : ℕ, p (Fin.castAdd n i) = k) → uncurryN (n + n) g p = 0)
 /-- `f` is integrable on `ℝⁿ` and `∫_{ℝⁿ} f = r`. -/
 def integralN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
   Integrable (uncurryN n f) volume ∧ ∫ p, uncurryN n f p = r
@@ -281,6 +292,7 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .l2NormN n => Prelude.l2NormN n
   | .supNormN n => Prelude.supNormN n
   | .integralN n => Prelude.integralN n
+  | .partialMulti n => Prelude.partialMulti n
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

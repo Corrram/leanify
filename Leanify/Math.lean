@@ -789,6 +789,37 @@ def isCmdIn (ops : List Codes) : MTok → Bool
   | .cmd n => ops.contains n
   | _ => false
 
+/-- The parts between top-level commas (`C_{j,I},b_{j,I}`). -/
+def commaParts : Nat → Int → List MTok → List MTok → List (List MTok) → List (List MTok)
+  | 0, _, cur, _, acc => (cur.reverse :: acc).reverse
+  | _ + 1, _, cur, [], acc => (cur.reverse :: acc).reverse
+  | f + 1, d, cur, t :: ts, acc =>
+    if d == 0 && t == .sym 44 then commaParts f d [] ts (cur.reverse :: acc) else
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    commaParts f d' (t :: cur) ts acc
+
+/-- The name of a quantified variable, with its subscript (`C`, `C_m`, `C_{j,I}`; as
+`Elab.symKey` names it). -/
+def quantVarKey : List MTok → Option Codes
+  | [.id k] => some k
+  | [.id k, .sym 95, .id i] => some (k ++ [95] ++ i)
+  | .id k :: .sym 95 :: .digit d :: ds => do
+    let ns ← ds.mapM fun t => match t with | .digit e => some e | _ => none
+    some (k ++ [95] ++ (d :: ns).flatMap fun e => (Nat.toDigits 10 e).map Char.toNat)
+  | .id k :: .sym 95 :: .lb :: rest => do
+    let inner ← match rest.reverse with | .rb :: r => some r.reverse | _ => none
+    match inner with
+    | [.id i] => some (k ++ [95] ++ i)
+    | _ =>
+      let parts := (commaParts (inner.length + 1) 0 [] inner []).filter (!·.isEmpty)
+      let ns ← parts.mapM fun p => match p with | [.id n] => some n | _ => none
+      if ns.length < 2 then none
+      some (k ++ [95, 123] ++ (ns.intersperse [44]).flatten ++ [125])
+  | _ => none
+
 /-- The variables of a quantifier, `x,y\in`: their names and the tokens after `\in`. -/
 def quantVars : List MTok → Option (List Codes × List MTok)
   | .id v :: .sym 44 :: rest => do let (vs, r) ← quantVars rest; some (v :: vs, r)
@@ -810,13 +841,27 @@ def logic : Nat → List MTok → Option MT
     let quant : Option MT := match ts with
       | .cmd q :: rest =>
         if q == w!"forall" || q == w!"exists" then do
-          let (vs, r) ← quantVars rest
-          let (dts, bts) ← splitTop1 (fun t => t == .sym 58 || t == .sym 44) (r.length + 1) 0 [] r
-          let dom ← match run (8 * dts.length + 64) (.additive false) dts with
-            | some (x, []) => some x
-            | _ => none
-          let body ← logic f bts
-          some (.quant (q == w!"forall") vs dom body)
+          (do
+            let (vs, r) ← quantVars rest
+            -- the domain ends at `:`, `,` or the next quantifier
+            let isQ (t : MTok) := t == .cmd w!"exists" || t == .cmd w!"forall"
+            let (dts, bts) ← splitTop1 (fun t => t == .sym 58 || t == .sym 44 || isQ t) (r.length + 1) 0 [] r
+            let bts := match r.drop dts.length with
+              | t :: _ => if isQ t then t :: bts else bts
+              | [] => bts
+            let dom ← match run (8 * dts.length + 64) (.additive false) dts with
+              | some (x, []) => some x
+              | _ => none
+            let body ← logic f bts
+            some (.quant (q == w!"forall") vs dom body)) <|>
+          (do
+            -- `\exists C_{j,I},b_{j,I}: φ`: real numbers (the variables may have subscripts)
+            let (vts, bts) ← splitTop1 (fun t => t == .sym 58) (rest.length + 1) 0 [] rest
+            let parts := (commaParts (vts.length + 1) 0 [] vts []).filter (!·.isEmpty)
+            let vs ← parts.mapM quantVarKey
+            if vs.isEmpty then none
+            let body ← logic f bts
+            some (.quant (q == w!"forall") vs (.id w!"\\mathbb{R}") body))
         else none
       | _ => none
     match quant with

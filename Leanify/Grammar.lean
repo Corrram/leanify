@@ -323,26 +323,67 @@ def smallBinder (ts : List MTok) : Option Bind := do
      Bind.every [x] (if inv then .ival (.frac (.num 1) (.mul (.id c) bound)) inf true true
        else .ival (.num 0) (.mul (.id c) bound) true true)]))
 
+/-- A noun phrase of a binder, up to a comma, `and every|each|all`, `and $…$`, or `there`. -/
+def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
+  | 0, cs, acc => (acc.reverse, cs)
+  | _ + 1, [], acc => (acc.reverse, [])
+  | f + 1, c :: rest, acc =>
+    let stop := match c with
+      | .p 44 => true
+      | .w w => w == w!"there"
+      | _ => false
+    let andNext := match c, rest with
+      | .w a, .w e :: _ => a == w!"and" && (e == w!"every" || e == w!"each" || e == w!"all")
+      | .w a, .m _ :: _ => a == w!"and"
+      | _, _ => false
+    if stop || andNext then (acc.reverse, c :: rest) else npUpTo f rest (c :: acc)
+
+/-- One binder after `for every|each|all`: a smallness chain, `$x\in A$` (with
+conditions), or `NP $x$` (`For every LTD copula $C$`, as `For an LTD copula $C$`). -/
+def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
+  (do
+    let (ts, r') ← mathChunk r
+    let b ← smallBinder ts
+    some (b, r')) <|>
+  (do
+    let (ts, r') ← mathChunk r
+    let (vs, dom) ← binderMath ts
+    some (withBind (.every vs dom) r')) <|>
+  (do
+    let (np, r') := npUpTo (r.length + 1) r []
+    match np.head?, np.getLast? with
+    | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r')
+    | _, _ => none)
+
+/-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
+def everyMore : Nat → List Chunk → List Bind → List Bind × List Chunk
+  | 0, cs, acc => (acc.reverse, cs)
+  | f + 1, cs, acc =>
+    let next := (kw [w!"and", w!"every"] cs <|> kw [w!"and", w!"each"] cs <|> kw [w!"and", w!"all"] cs <|>
+      (do let r ← kw [w!"and"] cs; match r with | .m _ :: _ => some r | _ => none) <|>
+      -- `For every $k$, every $N$ and every $x$`
+      (do let r ← punct 44 cs; kw [w!"every"] r <|> kw [w!"each"] r <|> kw [w!"and", w!"every"] r))
+    match next.bind everyOne with
+    | some (b, r) => everyMore f r (b :: acc)
+    | none => (acc.reverse, cs)
+
+/-- The binders after `for every|each|all`: one, or several joined by `and [every]`. -/
+def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
+  -- (a binder with conditions is itself several: they are flattened)
+  let flat (b : Bind) : List Bind := match b with | .many bs => bs | _ => [b]
+  match everyOne r with
+  | some (b, r') =>
+    match everyMore 4 r' [] with
+    | ([], _) => some (b, r')
+    | (bs, r'') => some (.many ((b :: bs).flatMap flat), r'')
+  | none => none
+
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
 def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
   match (kw [w!"for", w!"every"] cs <|> kw [w!"for", w!"each"] cs), kw [w!"for", w!"all"] cs with
   | some r, _ | none, some r =>
-    (do
-      let (ts, r') ← mathChunk r
-      let b ← smallBinder ts
-      some (b, r')) <|>
-    (do
-      let (ts, r') ← mathChunk r
-      let (vs, dom) ← binderMath ts
-      some (withBind (.every vs dom) r')) <|>
-    -- `For every LTD copula $C$,`: as `For an LTD copula $C$,`
-    (do
-      -- (up to the comma, or to `there is` without one)
-      let np := r.takeWhile (fun c => match c with | .p 44 => false | .w w => w != w!"there" | _ => true)
-      match np.head?, np.getLast? with
-      | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r.drop np.length)
-      | _, _ => none)
+    everyBinders r
   | none, none =>
     match kw [w!"for", w!"a"] cs, kw [w!"for", w!"an"] cs with
     | some r, _ | none, some r =>
@@ -1314,9 +1355,17 @@ inductive Sent where
   `By WORDS we mean WORDS'.`, `Throughout, WORDS means WORDS'.`: a convention of the
   article for a noun or for words. -/
   | meaning (words : List Codes) (rhs : List Chunk) (noun : Bool)
-  /-- `Throughout, $C$ and $C_m$ denote [positive] constants [that depend only on …].`:
-  generic constants (`positive`). -/
-  | generic (syms : List MT) (positive : Bool)
+  /-- `A NP $f$ belongs to $\mathcal M_\alpha$ if $φ$ for every B.`, `We say that a NP $f$
+  belongs to $\mathcal M$ if for every B, $φ$.`: a class of the article (with a parameter
+  in its subscript). -/
+  | defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Bind)
+  /-- `Throughout, $C$ and $C_m$ denote positive constants.`, `In the definitions below,
+  $C_{j,I}>0$ and $b_{j,I},d_{j,I}\ge0$ may depend on $j,I$ and the fixed data, and are
+  uniform in $\ell$.`: generic constants, each with its sign (0 any, 1 positive, 2
+  non-negative); what they may depend on (formulas and word phrases), when the sentence
+  says; and what they are uniform in. -/
+  | generic (syms : List (MT × Nat)) (deps : Option (List (List MTok) × List (List Codes)))
+      (uniform : List (List MTok) × List (List Codes))
   deriving Repr, Inhabited
 
 /-- `$f,g:A\to B$`: several names with one signature. -/
@@ -1348,6 +1397,18 @@ def fixBinder (ts : List MTok) : Option Bind :=
   match binderMath ts with
   | some (vs, d) => some (.every vs d)
   | none => (Math.parseFormula ts).map Bind.ifCond
+
+/-- `X=e` after `set`: the definition `X\coloneqq e` of a symbol (`Q`, `S_*`, `\varepsilon`) or
+of a function of variables (`f(x,y)`). -/
+def asDefeq : MT → MT
+  | .chain lhs [(.eq, rhs)] =>
+    let ok := match lhs with
+      | .id _ => true
+      | .sub (.id _) _ => true
+      | .app (.id _) args => args.all fun a => match a with | .id _ => true | _ => false
+      | _ => false
+    if ok then .chain lhs [(.defeq, rhs)] else .chain lhs [(.eq, rhs)]
+  | m => m
 
 def isDefeq : MT → Bool
   | .chain _ ((.defeq, _) :: _) => true
@@ -1390,6 +1451,9 @@ def constDefsOf (b : Option Bind) (cs : List Chunk) : Option Sent := do
       then rest.drop ws.length else cs
     | _ => cs
   let (items, ls, r) ← defList 6 cs [] []
+  -- after `set`, `put`, `define`: `$Q=2^{-\ell}$` defines `Q` (a symbol, or a function of
+  -- variables)
+  let items := items.map asDefeq
   -- `b(x)\coloneqq x+1,\qquad x\in[0,1]`: the range of the variables, after the definitions
   let (items, b) := match b, items.reverse with
     | none, last :: defs@(_ :: _) =>
@@ -1643,36 +1707,186 @@ def meaningSent (cs : List Chunk) : Option Sent := do
   if rhs.isEmpty || lhsNoun != rhsNoun then none else
   some (.meaning (ws.map lower) rhs lhsNoun)
 
-/-- `Throughout[ the paper], $C$[, $C'$] and $C_m$ denote [positive] constants …`. -/
+/-- A list of formulas and word phrases (`$j,I$ and the fixed profile data`), separated by
+`,` and `and`, up to `;`, the end of the sentence, or `[,] and are|is|they …`. -/
+def depList (cs : List Chunk) : List (List MTok) × List (List Codes) × List Chunk :=
+  let rec go : Nat → List Chunk → List Codes → List (List MTok) → List (List Codes) →
+      List (List MTok) × List (List Codes) × List Chunk
+    | 0, cs, cur, ms, ws => (ms.reverse, (if cur.isEmpty then ws else cur.reverse :: ws).reverse, cs)
+    | f + 1, cs, cur, ms, ws =>
+      let flush := if cur.isEmpty then ws else cur.reverse :: ws
+      let stop := isEnd cs || (match cs with
+        | .p 59 :: _ => true
+        | .p 44 :: .w a :: .w b :: _ => a == w!"and" && (b == w!"are" || b == w!"is" || b == w!"they" || b == w!"may")
+        | .p 44 :: .w a :: _ => a == w!"they"
+        | .w a :: .w b :: _ => a == w!"and" && (b == w!"are" || b == w!"is" || b == w!"they" || b == w!"may")
+        | _ => false)
+      if stop then (ms.reverse, flush.reverse, cs) else
+      match cs with
+      | .m ts :: r => go f r [] (ts :: ms) flush
+      | .p 44 :: r => go f r [] ms flush
+      | .w a :: r => if a == w!"and" then go f r [] ms flush else go f r (a :: cur) ms ws
+      | _ => (ms.reverse, flush.reverse, cs)
+  go (cs.length + 1) cs [] [] []
+
+/-- The parts of a formula between its commas outside brackets and braces (`u,P_{a,b}`). -/
+def topCommas : Nat → Int → List MTok → List MTok → List (List MTok) → List (List MTok)
+  | 0, _, cur, _, acc => (cur.reverse :: acc).reverse
+  | _ + 1, _, cur, [], acc => (cur.reverse :: acc).reverse
+  | f + 1, d, cur, t :: ts, acc =>
+    if d == 0 && t == .sym 44 then topCommas f d [] ts (cur.reverse :: acc) else
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    topCommas f d' (t :: cur) ts acc
+
+/-- The symbols of a formula of constants with their sign: `C`, `C_{j,I}>0`,
+`b_{j,I},d_{j,I}\ge0`. -/
+def constSyms (ts : List MTok) : Option (List (MT × Nat)) := do
+  let (ts, sign) := match ts.reverse with
+    | .digit 0 :: .sym 62 :: r => (r.reverse, 1)
+    | .digit 0 :: .cmd g :: r =>
+      if g == w!"ge" || g == w!"geq" || g == w!"geqslant" then (r.reverse, 2) else (ts, 0)
+    | _ => (ts, 0)
+  let parts := (topCommas (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+  if parts.isEmpty then none
+  parts.mapM fun p => do
+    let m ← Math.parseFormula p
+    match m with
+    | .id _ | .sub (.id _) _ => some (m, sign)
+    | _ => none
+
+/-- `Throughout, $C$ and $C_m$ denote positive constants.`, `In the definitions below,
+$C_{j,I}>0$ and $b_{j,I},d_{j,I}\ge0$ may depend on $j,I$ and the fixed profile data, and
+are uniform in band, label and point.`, `Here and below, $K$ denotes a positive constant
+that depends only on $n$.`: generic constants. -/
 def genericSent (cs : List Chunk) : Option Sent := do
-  let r ← kw [w!"throughout"] cs <|> kw [w!"in", w!"this", w!"paper"] cs <|> kw [w!"in", w!"this", w!"article"] cs
+  -- where the convention holds (a convention sentence starts with it, or with `The constants`)
+  let lead := (kw [w!"throughout"] cs <|> kw [w!"in", w!"this", w!"paper"] cs <|> kw [w!"in", w!"this", w!"article"] cs <|>
+    kw [w!"here", w!"and", w!"below"] cs <|> kw [w!"here", w!"and", w!"in", w!"what", w!"follows"] cs <|>
+    kw [w!"in", w!"what", w!"follows"] cs <|> kw [w!"in", w!"the", w!"following"] cs <|> kw [w!"below"] cs <|>
+    (do
+      -- `In the definitions|lemmas|estimates below`
+      let r ← kw [w!"in", w!"the"] cs
+      match r with
+      | .w _ :: .w b :: r' => if b == w!"below" then some r' else
+        match r' with
+        | .w c :: r'' => if c == w!"below" then some r'' else none
+        | _ => none
+      | _ => none))
+  let r := lead.getD cs
   let r := (kw [w!"the", w!"paper"] r <|> kw [w!"this", w!"paper"] r <|> kw [w!"this", w!"article"] r).getD r
   let r := (punct 44 r).getD r
-  let rec syms : Nat → List Chunk → List MT → Option (List MT × List Chunk)
+  let (theConstants, r) := match kw [w!"the", w!"constants"] r with
+    | some r' => (true, r')
+    | none => (false, r)
+  if lead.isNone && !theConstants then none
+  -- the constants: formulas separated by `,` and `and`
+  let rec syms : Nat → List Chunk → List (MT × Nat) → Option (List (MT × Nat) × List Chunk)
     | 0, _, _ => none
     | f + 1, cs, acc => do
-      let (m, r) ← formula cs
-      let acc := acc ++ (match m with | .conj xs => xs | _ => [m])
+      let (ts, r) ← mathChunk cs
+      let acc := acc ++ (← constSyms ts)
       match (punct 44 r >>= fun r' => (kw [w!"and"] r').getD r' |> some) <|> kw [w!"and"] r with
       | some r' => match r' with
         | .m _ :: _ => syms f r' acc
         | _ => some (acc, r)
       | none => some (acc, r)
-  let (ms, r1) ← syms 6 r []
-  let r2 ← kw [w!"denote"] r1 <|> kw [w!"denotes"] r1 <|> kw [w!"are"] r1 <|> kw [w!"is"] r1
-  let (pos, r3) := match kw [w!"positive"] r2 <|> kw [w!"a", w!"positive"] r2 with
-    | some r' => (true, r')
-    | none => (false, (kw [w!"a"] r2).getD r2)
-  let r4 ← kw [w!"constants"] r3 <|> kw [w!"constant"] r3 <|> kw [w!"generic", w!"constants"] r3
-  -- what the constants may depend on is the order of the quantifiers: prose
-  let rest := r4.dropWhile fun c => match c with | .p 46 => false | _ => true
-  if isEnd rest then some (.generic ms pos) else none
+  let (ms, r1) ← syms 8 r []
+  -- `denote[s] [positive|non-negative] constant[s]`
+  let (ms, r2, named) : List (MT × Nat) × List Chunk × Bool := match kw [w!"denote"] r1 <|> kw [w!"denotes"] r1 <|>
+      kw [w!"are"] r1 <|> kw [w!"is"] r1 with
+    | some r' =>
+      let r' := (kw [w!"a"] r').getD r'
+      let (sign, r'') := match kw [w!"positive"] r' with
+        | some x => (1, x)
+        | none => match kw [w!"nonnegative"] r' <|> kw [w!"non", w!"negative"] r' <|> (do let x ← kw [w!"non"] r'; let x ← punct 45 x; kw [w!"negative"] x) with
+          | some x => (2, x)
+          | none => (0, r')
+      match kw [w!"constants"] r'' <|> kw [w!"constant"] r'' <|> kw [w!"generic", w!"constants"] r'' with
+      | some x => (ms.map (fun (m, s) => (m, if sign == 0 then s else sign)), x, true)
+      | none =>
+        -- `The constants $c$ and $c_m$ are positive [and independent of $N$]`
+        if theConstants && sign != 0 then (ms.map (fun (m, s) => (m, if s == 0 then sign else s)), r'', true)
+        else (ms, r1, false)
+    | none => (ms, r1, false)
+  -- what the constants may depend on, and what they are uniform in
+  let rec clauses : Nat → List Chunk → Option (List (List MTok) × List (List Codes)) →
+      (List (List MTok) × List (List Codes)) → Option (Option (List (List MTok) × List (List Codes)) ×
+        (List (List MTok) × List (List Codes)))
+    | 0, _, _, _ => none
+    | f + 1, cs, deps, uni =>
+      if isEnd cs then some (deps, uni) else
+      let cs := (punct 44 cs <|> punct 59 cs).getD cs
+      let cs := (kw [w!"and"] cs).getD cs
+      let cs := (kw [w!"they"] cs <|> kw [w!"that"] cs <|> kw [w!"which"] cs <|> kw [w!"each"] cs).getD cs
+      -- `may differ by row and` (each occurrence is its own constant)
+      let cs := (do
+          let x ← kw [w!"may", w!"differ", w!"by"] cs
+          match x with
+          | .w _ :: .w a :: x' => if a == w!"and" then some (Chunk.w w!"may" :: x') else none
+          | _ => none).getD cs
+      let depOn := kw [w!"may", w!"depend", w!"only", w!"on"] cs <|> kw [w!"may", w!"depend", w!"on"] cs <|>
+        kw [w!"depend", w!"only", w!"on"] cs <|> kw [w!"depends", w!"only", w!"on"] cs <|>
+        kw [w!"depend", w!"on"] cs <|> kw [w!"depends", w!"on"] cs <|> kw [w!"depending", w!"only", w!"on"] cs <|>
+        kw [w!"depending", w!"on"] cs
+      match depOn with
+      | some r' =>
+        let (ms, ws, rest) := depList r'
+        if ms.isEmpty && ws.isEmpty then none else
+        let old := deps.getD ([], [])
+        clauses f rest (some (old.1 ++ ms, old.2 ++ ws)) uni
+      | none =>
+        let uniIn := kw [w!"are", w!"uniform", w!"in"] cs <|> kw [w!"is", w!"uniform", w!"in"] cs <|>
+          kw [w!"uniform", w!"in"] cs <|> kw [w!"are", w!"independent", w!"of"] cs <|>
+          kw [w!"is", w!"independent", w!"of"] cs <|> kw [w!"independent", w!"of"] cs
+        match uniIn with
+        | some r' =>
+          let (ms, ws, rest) := depList r'
+          if ms.isEmpty && ws.isEmpty then none else
+          clauses f rest deps (uni.1 ++ ms, uni.2 ++ ws)
+        | none => none
+  let (deps, uni) ← clauses 6 r2 none ([], [])
+  -- a convention says that the symbols are constants, or what they depend on
+  if !named && deps.isNone && uni.1.isEmpty && uni.2.isEmpty then none
+  some (.generic ms deps uni)
+
+/-- `[We say that] a NP $f$ belongs to|is in|lies in $\mathcal M_\alpha$ if COND`, COND being
+`$φ$ [for every B]` or `for every B, $φ$`. -/
+def memberDef (cs : List Chunk) : Option Sent := do
+  let r := (kw [w!"we", w!"say", w!"that"] cs).getD cs
+  let r ← kw [w!"a"] r <|> kw [w!"an"] r
+  let (np, r1) ← chunksUntil [w!"belongs", w!"is", w!"lies"] r []
+  let r2 ← kw [w!"belongs", w!"to"] r1 <|> kw [w!"is", w!"in"] r1 <|> kw [w!"lies", w!"in"] r1
+  let (cls, r3) ← formula r2
+  match cls with
+  | .id _ | .sub (.id _) (.id _) => pure ()
+  | _ => none
+  let r4 ← kw [w!"if"] r3
+  let forEvery (cs : List Chunk) : Option (List Chunk) :=
+    kw [w!"for", w!"every"] cs <|> kw [w!"for", w!"all"] cs <|> kw [w!"for", w!"each"] cs
+  (do
+    let r5 ← forEvery r4
+    let (b, r6) ← everyBinders r5
+    let r7 ← punct 44 r6
+    let (φ, r8) ← (display r7).map (fun (m, _, r) => (m, r)) <|> formula r7
+    if isEnd r8 then some (.defMember np cls φ [b]) else none) <|>
+  (do
+    let (φ, r5) ← (display r4).map (fun (m, _, r) => (m, r)) <|> formula r4
+    if isEnd r5 then some (.defMember np cls φ []) else do
+    let r6 ← forEvery (optPunct 44 r5)
+    let (b, r7) ← everyBinders r6
+    if isEnd r7 then some (.defMember np cls φ [b]) else none)
 
 def sentence (cs : List Chunk) : Option Sent :=
   match notationSent cs with
   | some s => some s
   | none =>
   match genericSent cs with
+  | some s => some s
+  | none =>
+  match memberDef cs with
   | some s => some s
   | none =>
   match meaningSent cs with
@@ -1772,7 +1986,8 @@ def sentence (cs : List Chunk) : Option Sent :=
       if isEnd r7 then some (.defBy s pieces ls (some (φ, vs, dom))) else none) <|>
     constDefsOf none r
   | none =>
-  match kw [w!"set"] cs <|> kw [w!"put"] cs <|> kw [w!"write"] cs with
+  match kw [w!"set"] cs <|> kw [w!"put"] cs <|> kw [w!"write"] cs <|> kw [w!"we", w!"set"] cs <|>
+      kw [w!"we", w!"put"] cs <|> kw [w!"let", w!"us", w!"set"] cs with
   | some r => constDefsOf none r
   | none =>
   -- fix $B$ [and define|set|put DEFS].
@@ -1900,7 +2115,8 @@ where
         | some st => some st
         | none =>
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
-        match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 with
+        match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 <|> kw [w!"we", w!"set"] r1 <|>
+            kw [w!"we", w!"put"] r1 with
         | some r2 => (do
           let (m, r3) ← formula r2
           let r4 ← kw [w!"and", w!"let"] r3

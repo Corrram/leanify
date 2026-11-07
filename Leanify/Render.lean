@@ -59,7 +59,7 @@ def Prim.tex : Prim → String
   | .smoothN _ => "\\operatorname{smooth}" | .compactSuppIn _ => "\\operatorname{compactSupportIn}"
   | .supportIn _ => "\\operatorname{supportIn}" | .isCompactN _ => "\\operatorname{compact}"
   | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
-  | .integralN _ => "\\operatorname{integral}"
+  | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -146,7 +146,25 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
   -- a function of several variables: `f(x,y)` (definedness guards are not shown)
+  -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
   | .app (.app f x) y =>
+    let rec mspine : Nat → Tm → List Tm → Option (Nat × Tm × List Tm)
+      | 0, _, _ => none
+      | k + 1, .app g a, acc => mspine k g (a :: acc)
+      | k + 1, .guard _ e, acc => mspine k e acc
+      | _ + 1, .the _ (.app (.app (.prim (.partialMulti n)) F) (.loc 0)), acc => some (n, F, acc)
+      | _ + 1, _, _ => none
+    let multi : Option String := match mspine 32 f [x, y] with
+      | some (n, F, args) =>
+        if n < args.length then
+          let v := varNames.getD ls.length "v"
+          some ("\\partial^{(" ++ ",".intercalate ((args.take n).map (·.tex cs gs ls)) ++ ")}" ++
+            F.tex cs gs (v :: ls) ++ "(" ++ ",".intercalate ((args.drop n).map (·.tex cs gs ls)) ++ ")")
+        else none
+      | none => none
+    match multi with
+    | some s => s
+    | none =>
     let rec spine : Nat → Tm → List Tm → Option (Nat × List Tm)
       | 0, _, _ => none
       | k + 1, .app g a, acc => spine k g (a :: acc)
@@ -218,6 +236,10 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let v := varNames.getD (ls.length + 1) "v"
     "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
       "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}"
+  -- the partial derivatives of every order of `f`
+  | .the _ (.app (.app (.prim (.partialMulti _)) f) (.loc 0)) =>
+    let v := varNames.getD ls.length "v"
+    "\\partial^{\\bullet}" ++ f.tex cs gs (v :: ls)
   -- a norm or an integral over `ℝⁿ`
   | .the .real (.app (.app (.prim p) f) (.loc 0)) =>
     let v := varNames.getD ls.length "v"

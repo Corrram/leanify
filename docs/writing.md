@@ -85,16 +85,23 @@ Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 | `Define $f:\mathbb R^2\to\mathbb R$ by $f(x,y)\coloneqq x^2y$.`, `Let $g:\mathbb R^2\to\mathbb R$ be given by $g(s,t)=s-t$.`, `For $x,y\in\mathbb R$ set $h(x,y)\coloneqq xy$.` | a function of several variables; the names of its variables are remembered |
 | `\partial_x f(1,2)`, `\partial_2 h(x,y,z)`, `\frac{\partial f}{\partial y}(x,y)`, `\partial_x\partial_y f`, `\partial_x^2 f` | partial derivatives: in the argument named `x` (by the application, or by the definition of `f`) or numbered from 1; the derivative of `t ↦ f(…,t,…)`, defined where it exists |
 | `\Delta f(x,y)` | the Laplacian, `∑ⱼ ∂ⱼ∂ⱼ f` |
+| `For every $I\in\mathbb N_0^2$, $|\partial^If(x,y)|\le C_I$` | a multi-index `I` (in `\mathbb N_0^n`, `\mathbb N^n`) is the `n` natural numbers `I_1`, …, `I_n`; `\partial^I f` is the derivative of order `I_k` in the `k`-th argument, defined only where `f` is smooth (`C^∞`); a constant `C_I` may depend on the components |
 
-Generic constants and existence:
+Generic constants and existence (`tests/Fields/article.tex` and
+`tests/Conventions/article.tex` use each form):
 
 | Sentence | Reading |
 | --- | --- |
 | `Throughout, $C$ and $C_m$ denote positive constants.` | in every later claim, a constant `C_{…}` is existential: for all values of its indices there is a `C > 0` such that the claim holds for all other variables (it depends only on its indices and on the fixed data) |
+| `Here and below, $K$ denotes a positive constant that depends only on $n$.` | `K` comes right after `n` when the claim binds `n` (`∀ n, ∃ K > 0, ∀ x, …`), and before every binder otherwise. The sentence may begin with `Throughout`, `In this paper`, `Here and below`, `In what follows`, `In the following`, `Below` or `In the lemmas below` (any words before `below`); the constants may be `nonnegative` |
+| `In the lemmas below, $A_k>0$ and $b_k\ge0$ may depend on $k$ and the fixed data, and are uniform in $N$ and $x$.` | each constant comes right after the variables it may depend on, its indices included: `∀ k, ∃ A_k > 0, ∃ b_k ≥ 0, ∀ N, ∀ x, …`. Also `depends only on`, `depending only on`, `independent of`. A dependence is a list of variables or a phrase with `fixed`; another phrase (`the shape of the domain`) is refused, since its variables are not named. A claim whose binders cannot be ordered so (a domain of `k` that uses `N`) is refused |
+| `The constants $c$ and $c_m$ are positive and independent of $N$.` | as above; without a list of dependencies, a constant may depend on everything except the variables named after `independent of` or `uniform in` |
+| `$\forall I\in\mathbb N_0^2\ \exists C_I: |\partial^If(0,0)|\le C_I$` | an explicit `\exists` of a constant of a convention: the convention places it (`C_I > 0`) |
 | `For every positive integer $m$ there is $c>0$ such that $c\,n^m\le n^{m+1}$ for every positive integer $n$.` | `∀ m, ∃ c > 0, ∀ n, …` (`there is|exists $c>0$ such that`, `there exists a constant $C$ such that`) |
 | `Then there is exactly one smooth function $\varphi$ on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | existence and uniqueness (`there is a NP`, `there is a unique NP`, `… such that CLAUSE`) |
 | `For $0<h\ll\lambda\ll1$, …`, `Let $0<\varepsilon\ll1$.` | smallness, chosen from right to left: there is `c > 0` such that for every `λ ∈ (0, c)` there is `c' > 0` such that for every `h ∈ (0, c'λ)` the claim holds (`C^{-1}\ll b`: `C > 1/(c b)`) |
 | `… for every integer $m\ge0$ and every smooth function $\varphi$ on …` | binders after a claim, the first one outermost |
+| `For every positive integer $k$, every positive integer $N$ and every $x\in[0,1]$, …` | several binders before a claim (`, every`, `and every`, `and each`, `and all`, `and $y\in[0,1]$`), the first one outermost |
 | `Let $\varphi$ be a smooth function on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | a condition may use the variables bound before it |
 
 Fields and equations (`tests/PDE/article.tex` uses each form). A field on a product
@@ -206,6 +213,9 @@ fields of the vocabulary and what happens when a word has several meanings.
 | constants | `Set $r_0\coloneqq\frac{144+9\sqrt6}{500}\approx0.33209$.`, `Define \begin{equation}d_0\coloneqq…,\qquad\Delta_0\coloneqq….\end{equation}` |
 | a named set | `The joint range of $\alpha$ and $\beta$ is \begin{equation}\Omega\coloneqq\{(\alpha(x),\beta(x)):x\in\mathcal{X}\}.\end{equation}` |
 | a maximum | `For $t\in[-1,1]$, set \begin{align}u(t)\coloneqq\max\{\alpha(x):x\in\mathcal{X},\ \beta(x)=t\}.\end{align}` (a definite description: well defined when the maximum exists) |
+| quantities of a parameter | `For a positive integer $\ell$, we set $Q=2^{-\ell}$ and $\varepsilon=Q^{1/2}$.` (`=` after `we set`, `we put`, `let us set` or `set` defines the left side, as `\coloneqq`; `\ell` is an implicit argument of `Q` and `\varepsilon`) |
+| a class of functions | `A map $a:\mathbb R^2\to\mathbb R$ belongs to $\mathcal S_m$ if $|\partial^Ia(x,\xi)|\le B_I(1+|\xi|)^{m-I_2}$ for every $I\in\mathbb N_0^2$ and every $x,\xi\in\mathbb R$.` (also `is in`, `lies in`; the subscript is a parameter of the class, `f\in\mathcal S_m` its use; the constants are placed by their conventions, `B_I` after `I`) |
+| a class of families | the same with a quantity of a parameter (`\lambda=2^j` set for every positive integer `j`) and a constant `uniform in $j$`: the members are families `j ↦ f_j`, `f` in the condition is the member at `j`, and `j` is bound after the constants, so the bound is uniform in `j` |
 | a fixed variable | `To describe the supporting lines of the region, fix $\kappa>0$ and define \[d_\kappa(x,z)\coloneqq x^2z-\kappa\,xz^2.\]`, `For the second regime, fix $b\in(0,\frac12)$ and put $\kappa_b\coloneqq\frac{2(1-b)}{b}$.` |
 | an implicit parameter | `For $b\in(0,\frac12]$, set \begin{equation}z_-(x)\coloneqq\frac{x+b-1}{2(1-b)},\qquad z_+(x)\coloneqq\frac{1-b-(1-2b)x}{2(1-b)}.\end{equation}` |
 | value and derivative | `define continuous functions $\varphi_w,\psi_w:[0,1]\to\R$ by $\varphi_w(1-w)=0$, $\psi_w(0)=0$, and DISPLAY` with `\varphi_w'(x)=\begin{cases}…\end{cases}` in the display, or `Let $\varphi_b,\psi_b:[0,1]\to\R$ be continuous, normalized by $\varphi_b(1-b)=0$ and $\psi_b(0)=0$, with derivatives DISPLAY` (read as `φ(x) = φ(a) + ∫_a^x φ'`; the derivative may be given on open pieces) |
