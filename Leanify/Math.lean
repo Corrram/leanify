@@ -184,7 +184,7 @@ def simplify : Nat → List PTok → Option (List MTok)
     | .rbrace => (MTok.rb :: ·) <$> simplify f ts
     | .csym 123 => (MTok.setl :: ·) <$> simplify f ts
     | .csym 125 => (MTok.setr :: ·) <$> simplify f ts
-    | .csym 124 => (MTok.sym 124 :: ·) <$> simplify f ts
+    | .csym 124 => (MTok.cmd w!"Vert" :: ·) <$> simplify f ts
     | .csym 92 => (MTok.row :: ·) <$> simplify f ts
     | .begin e => (MTok.begin e :: ·) <$> simplify f ts
     | .finish e => (MTok.finish e :: ·) <$> simplify f ts
@@ -251,6 +251,17 @@ def relOf : MTok → Option Rel
     else if n == w!"ll" then some .ll
     else none
   | _ => none
+
+/-- The tokens up to the next `\|` (`\Vert`) outside brackets, and the rest after it. -/
+def untilVert : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    if d == 0 && t == .cmd w!"Vert" then some (acc.reverse, ts) else
+    match t with
+    | .lb | .setl | .sym 40 | .sym 91 | .begin _ => untilVert f (d + 1) (t :: acc) ts
+    | .rb | .setr | .sym 41 | .sym 93 | .finish _ => untilVert f (d - 1) (t :: acc) ts
+    | _ => untilVert f d (t :: acc) ts
 
 /-- Tokens that may begin an implicit product factor. -/
 def startsFactor : MTok → Bool
@@ -506,6 +517,12 @@ def run : Nat → Mode → List MTok → R
         let (x, r1) ← run f (.additive false) rest
         let r2 ← expect (.cmd w!"rVert") r1
         some (.app (.id w!"@norm") [x], r2)
+      else if n == w!"Vert" then do
+        -- `\|x\|`: a norm, as `\lVert x\rVert`
+        let (inner, r1) ← untilVert (rest.length + 1) 0 [] rest
+        let (x, r2) ← run f (.additive false) inner
+        if !r2.isEmpty then none
+        some (.app (.id w!"@norm") [x], r1)
       else if n == w!"limsup" || n == w!"liminf" then
         match rest with
         | .sym 95 :: .lb :: .id v :: .cmd a :: r => do

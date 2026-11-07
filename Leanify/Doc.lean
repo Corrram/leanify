@@ -542,6 +542,10 @@ def fieldSig (d c : MT) : M (Option (FieldInfo × Ty)) := do
       | [a] => some (a, none)
       | [a, b] => some (a, some b)
       | _ => none) | pure none
+  -- the torus `\mathbb{T}^n`: periodic functions on `ℝⁿ`
+  let (sp, periodic) : MT × Bool := match sp with
+    | .sup (.id t) (.num n) => if t == w!"\\mathbb{T}" then (.sup (.id w!"\\mathbb{R}") (.num n), true) else (sp, false)
+    | _ => (sp, false)
   let sds ← domainsOf true sp
   let tds ← match tm with
     | some b => domainsOf true b
@@ -551,7 +555,7 @@ def fieldSig (d c : MT) : M (Option (FieldInfo × Ty)) := do
     | .sup (.id r) (.num m) => if r == w!"\\mathbb{R}" && 2 ≤ m then pure m else return none
     | .id r => if r == w!"\\mathbb{R}" then pure 1 else return none
     | _ => return none
-  let info : FieldInfo := { dim, space := sds.length, time := tds.length == 1, doms := (sds ++ tds).map (·.2) }
+  let info : FieldInfo := { dim, space := sds.length, time := tds.length == 1, doms := (sds ++ tds).map (·.2), periodic }
   if info.coords < 2 then return none
   let coordTy := tyWrap (List.replicate info.coords .real) .real
   pure (some (info, if 1 < dim then .fn .real coordTy else coordTy))
@@ -561,6 +565,25 @@ def domainSet (i : FieldInfo) : Tm :=
   let k := i.coords
   let body := Elab.conjAll ((i.doms.zip (List.range k)).filterMap fun (d, j) => d.map fun p => Tm.app p (.loc (k - 1 - j)))
   (List.range k).foldl (fun acc _ => Tm.lam .real .tt acc) body
+
+/-- A component `c` of a periodic field has period 1 in each spatial coordinate. -/
+def periodicTm (i : FieldInfo) (c : Tm) : Tm :=
+  let k := i.coords
+  let args := (List.range k).map fun l => Tm.loc (k - 1 - l)
+  let moved (j : Nat) := (List.range k).map fun l => if l == j then Tm.add (.loc (k - 1 - l)) (.num 1) else .loc (k - 1 - l)
+  let eqs := (List.range i.space).map fun j => Tm.eq (applyN (shift k 0 c) (moved j)) (applyN (shift k 0 c) args)
+  (List.range k).foldl (fun acc _ => Tm.all .real acc) (Elab.conjAll eqs)
+
+/-- A component `c` of a periodic field vanishes outside a compact time interval
+inside `(0,∞)`: there are `0 < a ≤ b` with `c = 0` at every time outside `[a,b]`. -/
+def timeSupportTm (i : FieldInfo) (c : Tm) : Tm :=
+  let k := i.coords
+  let args := (List.range k).map fun l => Tm.loc (k - 1 - l)
+  -- under `a`, `b` and the `k` coordinates (the time last)
+  let outside := Tm.or (.lt (.loc 0) (.loc (k + 1))) (.lt (.loc k) (.loc 0))
+  let body := (List.range k).foldl (fun acc _ => Tm.all .real acc)
+    (.imp outside (.eq (applyN (shift (k + 2) 0 c) args) (.num 0)))
+  .ex .real (.ex .real (Elab.conjAll [.lt (.num 0) (.loc 1), .le (.loc 1) (.loc 0), body]))
 
 /-- The components of a field (the bound variable `.loc 0`), as functions of the
 coordinates. -/
@@ -601,11 +624,16 @@ def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
   let register (n : Codes) (i : FieldInfo) : M Unit :=
     modify fun st => { st with fields := (n, i) :: st.fields }
   -- the predicate `smooth on the domain` of each component (of the variable `.loc 0`)
-  let smoothPred (i : FieldInfo) (ty : Ty) (compactSupp : Bool) : Tm :=
+  let smoothPred (i : FieldInfo) (ty : Ty) (compactSupp : Bool) (smooth : Bool := true) : Tm :=
     let S := domainSet i
     let ps := (fieldComps i (.loc 0)).flatMap fun c =>
-      [Tm.app (.app (.prim (.smoothN i.coords)) c) (shift 1 0 S)] ++
-      (if compactSupp then [Tm.app (.app (.prim (.compactSuppIn i.coords)) c) (shift 1 0 S)] else [])
+      (if smooth then [Tm.app (.app (.prim (.smoothN i.coords)) c) (shift 1 0 S)] else []) ++
+      (if i.periodic then [periodicTm i c] else []) ++
+      (if compactSupp then
+        -- on a torus, compact support is in time
+        (if i.periodic then (if i.time then [timeSupportTm i c] else [])
+         else [Tm.app (.app (.prim (.compactSuppIn i.coords)) c) (shift 1 0 S)])
+       else [])
     .lam ty .tt (Elab.conjAll ps)
   match rest with
   -- `NOUN $f\in C_c^\infty(D;\mathbb{R}^m)$`
@@ -621,21 +649,38 @@ def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
         register v i
         pure (some [⟨v, ty, some (smoothPred i ty compact)⟩])
       | none => pure none
-    -- `[compact] set $K\subset\mathbb{R}^n$`
+    -- `[compact] set $K\subset\mathbb{R}^n$`, `… $K\subset(-1/2,1/2)^3$` (in a box)
     | none, some j =>
       let some v := (match ts.take j with | [.id v] => some v | _ => none) | pure none
-      let some (.sup (.id r) (.num n)) := Math.parseFormula (ts.drop (j + 1)) | pure none
-      if r != w!"\\mathbb{R}" then return none
+      let some dm := Math.parseFormula (ts.drop (j + 1)) | pure none
+      let some (n, side) ← (match dm with
+          | .sup (.id r) (.num n) =>
+            if r == w!"\\mathbb{R}" then pure (some (n, none)) else pure none
+          | .sup s (.num n) =>
+            tryCatch (do
+              let (ty, p) ← domainOf true s
+              pure (if ty == .real then some (n, p) else none)) fun _ => pure none
+          | _ => pure none) | pure none
+      if n < 1 || 8 < n then return none
       let compact := words == [w!"compact", w!"set"] || words == [w!"compact", w!"subset"]
       if !(compact || words == [w!"set"] || words == [w!"subset"]) then return none
       let ty := Ty.setN n
-      pure (some [⟨v, ty, if compact then some (.lam ty .tt (.app (.prim (.isCompactN n)) (.loc 0))) else none⟩])
+      -- `K ⊆ Sⁿ`: under the set and its `n` points
+      let inBox : List Tm := match side with
+        | some p =>
+          let xs := (List.range n).map fun l => Tm.loc (n - 1 - l)
+          [(List.range n).foldl (fun acc _ => Tm.all .real acc)
+            (.imp (applyN (.loc n) xs) (Elab.conjAll (xs.map fun x => Tm.app (shift (n + 1) 0 p) x)))]
+        | none => []
+      let conds := (if compact then [Tm.app (.prim (.isCompactN n)) (.loc 0)] else []) ++ inBox
+      pure (some [⟨v, ty, if conds.isEmpty then none else some (.lam ty .tt (Elab.conjAll conds))⟩])
     | none, none => pure none
   -- `[smooth] velocity and pressure fields $u,p$ on $D$`, `a [smooth] vector field $u$ on $D$`
   | [.m vs, .w on, .m dts] =>
     if Grammar.lower on != w!"on" then return none
-    let names := (vs.filter (· != .sym 44)).filterMap fun t => match t with | .id n => some n | _ => none
-    if names.length != (vs.filter (· != .sym 44)).length then return none
+    -- the names, separated by commas: letters, or letters with a subscript (`P_{\mathrm{per}}`)
+    let parts := (Math.splitTop (vs.length + 1) [] (vs.map fun t => if t == .sym 44 then MTok.row else t) 0 []).filter (!·.isEmpty)
+    let some names := parts.mapM (fun p => (Math.parseFormula p).bind Elab.symKey) | pure none
     let some d := Math.parseFormula dts | pure none
     -- the kinds: `velocity`, `vector`, `force` (vector fields), `pressure`, `scalar` (real)
     let some last := words.getLast? | pure none
@@ -650,13 +695,17 @@ def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
     let mut out : List BindInfo := []
     for (n, vec) in names.zip kinds do
       -- the codomain: `\mathbb{R}^n` for a vector field on `n`-dimensional space
-      let sp ← domainsOf true (match d with
+      let spD := match d with
         | .app (.id t) [a, _] => if t == w!"\\times" then a else d
-        | _ => d)
+        | _ => d
+      -- (the torus `\mathbb{T}^n` has `n` coordinates)
+      let sp ← match spD with
+        | .sup (.id t) (.num n) => if t == w!"\\mathbb{T}" then pure (List.replicate n (Ty.real, (none : Option Tm))) else domainsOf true spD
+        | _ => domainsOf true spD
       let cod : MT := if vec then .sup (.id w!"\\mathbb{R}") (.num sp.length) else .id w!"\\mathbb{R}"
       let some (i, ty) ← fieldSig d cod | return none
       register n i
-      out := out ++ [⟨n, ty, if smooth then some (smoothPred i ty false) else none⟩]
+      out := out ++ [⟨n, ty, if smooth || i.periodic then some (smoothPred i ty false smooth) else none⟩]
     pure (some out)
   | _ => pure none
 
@@ -1084,6 +1133,9 @@ def recordBounds (bs : List BindInfo) (body : MT) : M Unit := do
 def F := 100000
 
 def prop (sc : Scope) (pf : PF) (m : MT) : M Tm := do
+  let st ← get
+  -- fields with a subscript in their name, as identifiers
+  let m := if st.fields.any (fun (n, _) => n.contains 95) then Elab.fieldIds st.fields 64 m else m
   let (t, ty) ← term F sc pf m
   if ty == .prop then pure t else fail E.type
 

@@ -118,6 +118,8 @@ structure FieldInfo where
   space : Nat
   time : Bool
   doms : List (Option Tm)
+  /-- On a torus `\mathbb{T}^n`: a function on `ℝⁿ` of period 1 in each spatial coordinate. -/
+  periodic : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- The number of coordinates of a field. -/
@@ -612,6 +614,16 @@ def realArity : Ty → Option Nat
 /-- `F` applied to arguments. -/
 def applyN (F : Tm) (args : List Tm) : Tm := args.foldl (fun acc a => .app acc a) F
 
+/-- The translates of a set `K` of `ℝˢ` by the integer lattice: `λ x, ∃ m ∈ ℤˢ, K (x - m)`
+(the support of a periodic function in `K`, on the torus). -/
+def latticeSet (s : Nat) (K : Tm) : Tm :=
+  let xs := (List.range s).map fun l => Tm.loc (2 * s - 1 - l)
+  let ms := (List.range s).map fun l => Tm.loc (s - 1 - l)
+  let body := conjAll (ms.map (fun m => Tm.app (.prim .isInt) m) ++
+    [applyN (shift (2 * s) 0 K) (List.zipWith Tm.sub xs ms)])
+  let exs := (List.range s).foldl (fun acc _ => Tm.ex .real acc) body
+  (List.range s).foldl (fun acc _ => Tm.lam .real .tt acc) exs
+
 /-- The partial derivative of `F` (a function of `n` real variables) in its `j`-th
 variable (from 0): `(x₁,…,xₙ) ↦ the d with HasDerivAt (t ↦ F(…,t,…)) d xⱼ`. It is
 defined where that derivative exists. -/
@@ -662,6 +674,33 @@ def fieldsIn (fs : List (Codes × FieldInfo)) : Nat → MT → List (Codes × Fi
     | .add a b | .minus a b | .mul a b => fieldsIn fs f a ++ fieldsIn fs f b
     | .neg a => fieldsIn fs f a
     | _ => []
+
+/-- Fields with a subscript in their name (`P_{\mathrm{per}}`) as identifiers. -/
+def fieldIds (fs : List (Codes × FieldInfo)) : Nat → MT → MT
+  | 0, m => m
+  | f + 1, m =>
+    let go := fieldIds fs f
+    match m with
+    | .sub b i =>
+      match symKey m with
+      | some k => if (fs.lookup k).isSome then .id k else .sub (go b) (go i)
+      | none => .sub (go b) (go i)
+    | .sup b e => .sup (go b) (go e)
+    | .app g as => .app (go g) (as.map go)
+    | .add x y => .add (go x) (go y)
+    | .minus x y => .minus (go x) (go y)
+    | .mul x y => .mul (go x) (go y)
+    | .div x y => .div (go x) (go y)
+    | .frac x y => .frac (go x) (go y)
+    | .neg x => .neg (go x)
+    | .abs x => .abs (go x)
+    | .tuple xs => .tuple (xs.map go)
+    | .chain x rs => .chain (go x) (rs.map fun (r, y) => (r, go y))
+    | .conj xs => .conj (xs.map go)
+    | .bound b s => .bound b (go s)
+    | .image e v d => .image (go e) v (go d)
+    | .int lo hi b v => .int (go lo) (go hi) (go b) v
+    | _ => m
 
 /-- Does a formula apply a vector field to a point (`u(x,t)`)? -/
 def appliesVector (fs : List (Codes × FieldInfo)) : Nat → MT → Bool
@@ -932,7 +971,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           pure (comps.map fun c =>
             let slice := (List.range s).foldl (fun acc _ => Tm.lam .real .tt acc)
               (applyN (shift s 0 c) (((List.range s).map fun j => Tm.loc (s - 1 - j)) ++ rest.map (shift s 0)))
-            Tm.app (.app (.prim (.supportIn s)) slice) kt)
+            -- on a torus, in `K` up to integer translations
+            Tm.app (.app (.prim (.supportIn s)) slice) (if i.periodic then latticeSet s kt else kt))
         pure (conjAll ps.flatten, .prop)
     | .chain x [(.supset, y)] => do
       let sc' : Scope := (w!"@x", Ty.real) :: sc
@@ -1518,6 +1558,14 @@ where
         | .id u => pure (u, [])
         | _ => fail E.unsupported
       let some i := st.fields.lookup u | fail E.unsupported
+      -- the space of the norm is the field's: `\mathbb{R}^n`, or `\mathbb{T}^n` for a periodic
+      -- field (its `L^\infty` norm over a period is its `L^\infty` norm on `ℝⁿ`; an `L^2`
+      -- norm over a period is not read yet)
+      let onTorus : Option Bool := match space with
+        | .mul _ (.sup (.id d) _) => if d == w!"\\mathbb{T}" then some true else if d == w!"\\mathbb{R}" then some false else none
+        | .mul _ (.id d) => if d == w!"\\mathbb{T}" then some true else if d == w!"\\mathbb{R}" then some false else none
+        | _ => none
+      if onTorus.any (· != i.periodic) || (i.periodic && isL2) then fail E.unsupported
       let rest ← targs.mapM fun a => do asReal (← term f sc pf a)
       let s := i.coords - rest.length
       if s != i.space && rest.length != 0 then fail E.unsupported

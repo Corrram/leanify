@@ -4,6 +4,8 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
 \DeclareMathOperator{\supp}{supp}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\R}{\mathbb{R}}
 \begin{document}
 
 A test of fields on $\mathbb R^3\times[0,1)$: vector and scalar fields, function
@@ -53,6 +55,28 @@ $0\leq t<1$,
 and consequently there are no smooth velocity and pressure fields $u,p$ on
 $\mathbb R^3\times[0,\infty)$ satisfying \eqref{eq:ns} such that
 $\sup_{t\geq0}\frac12\int_{\mathbb R^3}|u(x,t)|^2\,dx<\infty$.
+\end{theorem}
+
+On the torus $\T^3$, a field is a function on $\R^3$ of period $1$ in each spatial
+coordinate; norms are taken over a period.
+
+\begin{theorem}\label{periodic}
+For every $\nu>0$ there exist a force $f\in C_c^\infty(\T^3\times(0,\infty);\R^3)$, a
+compact set $K\subset(-1/2,1/2)^3$, and smooth velocity and pressure fields
+$U,P_{\mathrm{per}}$ on $\T^3\times[0,1)$ satisfying
+\begin{equation}
+  \partial_tU+(U\cdot\nabla)U-\nu\Delta U+\nabla P_{\mathrm{per}}=f,
+  \qquad \nabla\cdot U=0,
+  \qquad U(\cdot,0)=0,
+  \label{eq:per}
+\end{equation}
+such that $\supp U(\cdot,t)\cup\supp P_{\mathrm{per}}(\cdot,t)\subset K$ for every
+$0\le t<1$,
+\[
+  \limsup_{t\uparrow1}\|U(t)\|_{L^\infty(\T^3)}=\infty,
+\]
+and consequently there are no smooth velocity and pressure fields
+$U,P_{\mathrm{per}}$ on $\T^3\times[0,\infty)$ satisfying \eqref{eq:per}.
 \end{theorem}
 
 \end{document}

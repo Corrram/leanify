@@ -115,6 +115,9 @@ one-sided derivative on `[0,1)`.
 | `\lVert u(t)\rVert_{L^2(\mathbb R^3)}`, `\lVert u(t)\rVert_{L^\infty(\mathbb R^3)}` | the norm over space of the Euclidean length of `u(\cdot,t)`, defined only when it is finite |
 | `\int_{\mathbb R^3}|u(x,t)|^2\,dx` | the integral over the point `x` of `\mathbb R^3`, defined only when the integrand is integrable |
 | `\sup_{0\le t<1} e<\infty` | `e` is defined and at most some `M` for every such `t` |
+| `fields $U,P_{\mathrm{per}}$ on $\mathbb T^3\times[0,1)$`, `f\in C_c^\infty(\mathbb T^3\times(0,\infty);\mathbb R^3)` | on the torus: functions on `\mathbb R^3` of period 1 in each spatial coordinate; compact support is support in a compact time interval inside `(0,\infty)`; `\supp U(\cdot,t)\subset K` is in `K` up to integer translations; `\|U(t)\|_{L^\infty(\mathbb T^3)}` is the norm over a period. A field's name may carry a subscript |
+| `a compact set $K\subset(-1/2,1/2)^3$` | a compact set in the box |
+| `\|x\|` | as `\lVert x\rVert` |
 | `\limsup_{t\uparrow1} e=\infty` | for every `M` there are `t` arbitrarily close to `1` from below, in the domain of the fields of `e`, where `e` is defined and greater than `M` |
 
 A bound on a norm or an integral asserts that it is finite, wherever the bound

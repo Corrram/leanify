@@ -227,6 +227,12 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     | .supNormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^\\infty}"
     | .integralN n => "\\int_{\\mathbb{R}^{" ++ toString n ++ "}} " ++ fs
     | _ => "\\iota " ++ v ++ "\\in \\mathbb{R}.\\ " ++ (Tm.app (.app (.prim p) f) (.loc 0)).tex cs gs (v :: ls)
+  -- a derivative within a domain (one-sided at an end point)
+  | .the .real (.app (.app (.app (.app (.prim .hasDerivWithin) (.lam _ _ body)) dom) x) (.loc 0)) =>
+    let z := varNames.getD ls.length "z"
+    let v := varNames.getD (ls.length + 1) "v"
+    "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
+      "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}^{" ++ (Tm.app dom (.loc 0)).tex cs gs (v :: z :: ls) ++ "}"
   | .the t b => let v := varNames.getD ls.length "v"
     "\\iota " ++ v ++ "\\in " ++ t.tex ++ ".\\ " ++ b.tex cs gs (v :: ls)
 where
