@@ -322,7 +322,7 @@
    "sentence": 13,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=0\\Rightarrow x(y)(z)=0\\land 0=y\\,z)",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=0\\Rightarrow x(y,z)=0\\land 0=y\\,z)",
    "rank": 0,
    "premises": [],
    "note": "",
@@ -337,7 +337,7 @@
    "sentence": 14,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ 0<y\\Rightarrow x(1)(z)\\le \\frac{x(y)(z)}{y}\\land x(1)(z)=z)",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ 0<y\\Rightarrow x(1,z)\\le \\frac{x(y,z)}{y}\\land x(1,z)=z)",
    "rank": 1,
    "premises": [1],
    "note": "",
@@ -353,7 +353,7 @@
    "sentence": 15,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y)(z))",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y,z))",
    "rank": 2,
    "premises": [1, 2],
    "note": "",
@@ -383,7 +383,7 @@
    "sentence": 18,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=1\\Rightarrow x(y)(z)=z\\land z=y\\,z)",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=1\\Rightarrow x(y,z)=z\\land z=y\\,z)",
    "rank": 0,
    "premises": [],
    "note": "",
@@ -398,7 +398,7 @@
    "sentence": 19,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y<1\\Rightarrow 1-z+x(0)(z)\\le \\frac{1-y-z+x(y)(z)}{1-y}\\land 1-z+x(0)(z)=1-z)",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y<1\\Rightarrow 1-z+x(0,z)\\le \\frac{1-y-z+x(y,z)}{1-y}\\land 1-z+x(0,z)=1-z)",
    "rank": 1,
    "premises": [5],
    "note": "",
@@ -414,7 +414,7 @@
    "sentence": 20,
    "role": "proof step",
    "reading":
-   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y)(z))",
+   "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y,z))",
    "rank": 2,
    "premises": [5, 6],
    "note": "",

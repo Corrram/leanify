@@ -14,7 +14,8 @@ def Ty.tex : Ty → String
   | .fn a b => (match a with | .fn .. => "(" ++ a.tex ++ ")" | _ => a.tex) ++ "\\to " ++ b.tex
   | .base k => s!"\\mathsf\{T}_\{{k}}"
 
-def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"]
+def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"] ++
+  (List.range 40).map fun i => s!"v_\{{i + 1}}"
 
 def FnProp.word : FnProp → String
   | .convex => "convex" | .strictConvex => "strictly\\ convex" | .strictConcave => "strictly\\ concave"
@@ -55,6 +56,10 @@ def Prim.tex : Prim → String
   | .seriesConv => "\\operatorname{converges}" | .limAt | .limTop => "\\lim"
   | .limAtConv | .limTopConv => "\\operatorname{exists}"
   | .factorial => "\\operatorname{factorial}" | .binom => "\\binom" | .zpow => "\\operatorname{pow}"
+  | .smoothN _ => "\\operatorname{smooth}" | .compactSuppIn _ => "\\operatorname{compactSupportIn}"
+  | .supportIn _ => "\\operatorname{supportIn}" | .isCompactN _ => "\\operatorname{compact}"
+  | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
+  | .integralN _ => "\\operatorname{integral}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -147,10 +152,11 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
       | k + 1, .app g a, acc => spine k g (a :: acc)
       | k + 1, .guard _ e, acc => spine k e acc
       | _ + 1, .glob i, acc => some (i, acc)
+      | _ + 1, .loc i, acc => some (1000000 + i, acc)
       | _ + 1, _, _ => none
     match spine 16 f [x, y] with
     | some (i, args) =>
-      let n := gs.getD i s!"g_{i}"
+      let n := if i ≥ 1000000 then ls.getD (i - 1000000) "?" else gs.getD i s!"g_{i}"
       if n.startsWith "^" || n == "\\widehat" then
         (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
       else n ++ "(" ++ ",".intercalate (args.map (·.tex cs gs ls)) ++ ")"
@@ -212,6 +218,15 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let v := varNames.getD (ls.length + 1) "v"
     "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
       "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}"
+  -- a norm or an integral over `ℝⁿ`
+  | .the .real (.app (.app (.prim p) f) (.loc 0)) =>
+    let v := varNames.getD ls.length "v"
+    let fs := f.tex cs gs (v :: ls)
+    match p with
+    | .l2NormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^2}"
+    | .supNormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^\\infty}"
+    | .integralN n => "\\int_{\\mathbb{R}^{" ++ toString n ++ "}} " ++ fs
+    | _ => "\\iota " ++ v ++ "\\in \\mathbb{R}.\\ " ++ (Tm.app (.app (.prim p) f) (.loc 0)).tex cs gs (v :: ls)
   | .the t b => let v := varNames.getD ls.length "v"
     "\\iota " ++ v ++ "\\in " ++ t.tex ++ ".\\ " ++ b.tex cs gs (v :: ls)
 where

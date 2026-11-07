@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{leanify}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\DeclareMathOperator{\supp}{supp}
+\begin{document}
+
+A test of fields on $\mathbb R^3\times[0,1)$: vector and scalar fields, function
+spaces, compact sets, supports, norms, energies, and the Navier--Stokes equations,
+in the words of Theorem~1.1 of the Navier--Stokes blowup paper.
+
+We write $A\subset B$ if $A\subseteq B$.
+
+\begin{lemma}\label{sets}
+There exist a compact set $K\subset\mathbb R^3$ and a compact set $L\subset\mathbb R^3$
+such that $K\subset L$.
+\end{lemma}
+
+\begin{lemma}\label{force}
+There is a force $f\in C_c^\infty(\mathbb R^3\times(0,\infty);\mathbb R^3)$.
+\end{lemma}
+
+\begin{lemma}\label{fields}
+There exist smooth velocity and pressure fields $u,p$ on $\mathbb R^3\times[0,1)$
+satisfying
+\begin{equation}
+  \nabla\cdot u=0,
+  \qquad u(\cdot,0)=0,
+  \label{eq:div}
+\end{equation}
+such that $\sup_{0\leq t<1}\lVert u(t)\rVert_{L^2(\mathbb R^3)}<\infty$.
+\end{lemma}
+
+\begin{theorem}\label{blowup}
+For every $\nu>0$ there exist a force
+$f\in C_c^\infty(\mathbb R^3\times(0,\infty);\mathbb R^3)$, a compact set
+$K\subset\mathbb R^3$, and smooth velocity and pressure fields
+$u,p$ on $\mathbb R^3\times[0,1)$ satisfying
+\begin{equation}
+  \partial_tu+(u\cdot\nabla)u-\nu\Delta u+\nabla p=f,
+  \qquad \nabla\cdot u=0,
+  \qquad u(\cdot,0)=0,
+  \label{eq:ns}
+\end{equation}
+such that $\supp u(\cdot,t)\cup\supp p(\cdot,t)\subset K$ for every
+$0\leq t<1$,
+\begin{equation*}
+  \sup_{0\leq t<1}\lVert u(t)\rVert_{L^2(\mathbb R^3)}<\infty,
+  \qquad
+  \limsup_{t\uparrow1}\lVert u(t)\rVert_{L^\infty(\mathbb R^3)}=\infty,
+\end{equation*}
+and consequently there are no smooth velocity and pressure fields $u,p$ on
+$\mathbb R^3\times[0,\infty)$ satisfying \eqref{eq:ns} such that
+$\sup_{t\geq0}\frac12\int_{\mathbb R^3}|u(x,t)|^2\,dx<\infty$.
+\end{theorem}
+
+\end{document}

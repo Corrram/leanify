@@ -257,12 +257,13 @@ def startsFactor : MTok → Bool
   | .id _ | .digit _ | .lb | .setl => true
   | .sym 40 => true
   | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"sup" ||
+      n == w!"limsup" || n == w!"liminf" || n == w!"lVert" ||
       n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"lim" || n == w!"binom" ||
       n == w!"tbinom" || n == w!"dbinom" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
         n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
-        n != w!"approx" && n != w!"ldots")
+        n != w!"approx" && n != w!"ldots" && n != w!"rVert")
   | _ => false
 
 /-- Heads that may be applied to a parenthesized argument list. -/
@@ -464,13 +465,24 @@ def run : Nat → Mode → List MTok → R
             let (st, r') ← setBuilder f r
             some (.bound isSup st, r'))
         | .sym 95 :: r => do
-          -- `\sup_{x\in A} e`
+          -- `\sup_{x\in A} e`, `\sup_{0\le t<1} e`, `\sup_{t\ge0} e`
           let (b, r1) ← run f .group r
-          match b with
-          | .chain (.id v) [(.mem, dom)] => do
+          let ival (lo : MT) (r1 : Rel) (hi : MT) (r2 : Rel) : Option MT :=
+            if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then some (.ival lo hi (r1 == .lt) (r2 == .lt))
+            else none
+          let dom : Option (Codes × MT) := match b with
+            | .chain (.id v) [(.mem, dom)] => some (v, dom)
+            | .chain lo [(r1, .id v), (r2, hi)] => (ival lo r1 hi r2).map (v, ·)
+            | .chain (.id v) [(.ge, lo)] => some (v, .ival lo (.id w!"\\infty") false true)
+            | .chain (.id v) [(.gt, lo)] => some (v, .ival lo (.id w!"\\infty") true true)
+            | .chain (.id v) [(.le, hi)] => some (v, .ival (.neg (.id w!"\\infty")) hi true false)
+            | .chain (.id v) [(.lt, hi)] => some (v, .ival (.neg (.id w!"\\infty")) hi true true)
+            | _ => none
+          match dom with
+          | some (v, dom) => do
             let (body, r2) ← run f (.product false) r1
             some (.bound isSup (.image body v dom), r2)
-          | _ => none
+          | none => none
         | _ => do
           -- `\sup A` for a named set
           let (a, r1) ← run f (.atom false) rest
@@ -489,6 +501,22 @@ def run : Nat → Mode → List MTok → R
         let (a, r1) ← run f .group rest
         let (b, r2) ← run f .group r1
         some (.app (.id w!"@binom") [a, b], r2)
+      else if n == w!"lVert" then do
+        -- `\lVert x\rVert`: a norm (its space in the subscript after it)
+        let (x, r1) ← run f (.additive false) rest
+        let r2 ← expect (.cmd w!"rVert") r1
+        some (.app (.id w!"@norm") [x], r2)
+      else if n == w!"limsup" || n == w!"liminf" then
+        match rest with
+        | .sym 95 :: .lb :: .id v :: .cmd a :: r => do
+          -- `\limsup_{t\uparrow1} e`: from below (`\uparrow`), above (`\downarrow`) or both (`\to`)
+          let dir ← if a == w!"uparrow" then some w!"-" else if a == w!"downarrow" then some w!"+"
+            else if a == w!"to" then some w!"" else none
+          let (target, r1) ← run f (.additive false) r
+          let r2 ← expect .rb r1
+          let (body, r3) ← run f (.product false) r2
+          some (.app (.id (w!"@" ++ n ++ dir)) [.id v, target, body], r3)
+        | _ => none
       else if n == w!"lfloor" || n == w!"lceil" then do
         -- `\lfloor x\rfloor`, `\lceil x\rceil`
         let (x, r1) ← run f (.additive false) rest
@@ -524,9 +552,12 @@ def run : Nat → Mode → List MTok → R
         match rest with
         | .sym 95 :: r => do
           let (lo, r1) ← run f .group r
-          let r2 ← expect (.sym 94) r1
-          let (hi, r3) ← run f .group r2
-          integralBody f lo hi r3
+          match r1 with
+          | .sym 94 :: r2 => do
+            let (hi, r3) ← run f .group r2
+            integralBody f lo hi r3
+          -- `\int_{\mathbb{R}^3} e\,dx`: over a domain (`hi` is the marker `@over`)
+          | _ => integralBody f lo (.id w!"@over") r1
         | _ => none
       else if (relOf (.cmd n)).isSome || n == w!"mapsto" || n == w!"to" || n == w!"qquad" || n == w!"quad" ||
           n == w!"approx" || n == w!"ldots" || wConnectives.contains n || n == w!"rfloor" ||
@@ -791,7 +822,17 @@ def logic : Nat → List MTok → Option MT
     | .cmd n :: rest => if n == w!"neg" || n == w!"lnot" then (logic f rest).map .lnot else wholeTop ts
     | _ => wholeTop ts
 
+/-- `\nabla\cdot` is the divergence (`\operatorname{div}`): without the `\cdot`,
+`\nabla u` would be the gradient. -/
+def divergenceToks : List MTok → List MTok
+  | .cmd n :: .cmd c :: rest =>
+    if n == w!"nabla" && c == w!"cdot" then .id w!"div" :: divergenceToks rest
+    else .cmd n :: divergenceToks (.cmd c :: rest)
+  | t :: rest => t :: divergenceToks rest
+  | [] => []
+
 def parseFormula (ts : List MTok) : Option MT :=
+  let ts := divergenceToks ts
   match run (8 * ts.length + 64) .top ts with
   | some (x, []) => some x
   | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
@@ -818,6 +859,10 @@ def pmAs (upper : Bool) : List MTok → List MTok :=
 the upper and the lower signs: `x_\pm(c)\coloneqq c\pm1` defines `x_+` and `x_-`. -/
 def parseDisplay (ts : List MTok) : Option MT := do
   let ts := stripEnv ts
+  -- the punctuation that ends a display (`u(\cdot,0)=0,\tag{1.1}`)
+  let ts := match ts.reverse with
+    | .sym 44 :: r | .sym 46 :: r | .sym 59 :: r => r.reverse
+    | _ => ts
   let parts := splitTop (ts.length + 1) [] ts 0 []
   let parts := parts.filter (!·.isEmpty)
   let parts := if ts.any (fun t => t == .cmd w!"pm" || t == .cmd w!"mp") then

@@ -79,3 +79,9 @@ globs = ["Fields.+"]
 name = "Calculus"
 srcDir = "tests"
 globs = ["Calculus.+"]
+
+[[lean_lib]]
+# Fields, function spaces, norms and the Navier–Stokes equations, compiled by the kernel.
+name = "PDE"
+srcDir = "tests"
+globs = ["PDE.+"]

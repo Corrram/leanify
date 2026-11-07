@@ -126,7 +126,27 @@ inductive Prim where
   | factorial | binom
   /-- `zpow x k`: `x^k` for an integer `k`. -/
   | zpow
+  /-- Functions of `n` real variables (curried, `Ty.fns n`) and sets of points of
+  `ℝⁿ` (`Ty.setN n`): `smoothN n f S` (`C^∞` on `S`), `compactSuppIn n f S` (the
+  support of `f` is compact and contained in `S`), `isCompactN n S`, `supportIn n f S`
+  (the support of `f`, its closure, is contained in `S`). Norms and integrals over
+  `ℝⁿ` are relations, used through a description (`the r with l2NormN n f r`), so
+  that an infinite norm or a non-integrable function leaves the quantity undefined
+  rather than giving it a junk value: `l2NormN n f r` (`‖f‖_{L²} = r`), `supNormN n f r`
+  (`‖f‖_{L^∞} = r`), `integralN n f r` (`f` is integrable and `∫ f = r`). -/
+  | smoothN (n : Nat) | compactSuppIn (n : Nat) | isCompactN (n : Nat) | supportIn (n : Nat)
+  | l2NormN (n : Nat) | supNormN (n : Nat) | integralN (n : Nat)
   deriving DecidableEq, Repr, Lean.ToExpr
+
+/-- Real functions of `n` real variables, curried. -/
+def Ty.fns : Nat → Ty
+  | 0 => .real
+  | n + 1 => .real ⟶ Ty.fns n
+
+/-- Sets of points of `ℝⁿ`, as curried predicates. -/
+def Ty.setN : Nat → Ty
+  | 0 => .prop
+  | n + 1 => .real ⟶ Ty.setN n
 
 def Prim.ty : Prim → Ty
   | .rpow | .min | .max => .real ⟶ .real ⟶ .real
@@ -156,6 +176,9 @@ def Prim.ty : Prim → Ty
   | .limTopConv => (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .prop
   | .factorial => .real ⟶ .real
   | .binom | .zpow => .real ⟶ .real ⟶ .real
+  | .smoothN n | .compactSuppIn n | .supportIn n => Ty.fns n ⟶ Ty.setN n ⟶ .prop
+  | .isCompactN n => Ty.setN n ⟶ .prop
+  | .l2NormN n | .supNormN n | .integralN n => Ty.fns n ⟶ .real ⟶ .prop
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

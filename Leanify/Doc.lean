@@ -163,6 +163,36 @@ def rewrite (tpl : Template) : Nat → List PTok → List PTok
       else t :: rewrite tpl f ts
     | none => t :: rewrite tpl f ts
 
+/-- The labelled displays of a sentence: each label with the display's tokens
+(without its labels and its final punctuation). -/
+def labelledDisplays : Nat → List PTok → List (Codes × List PTok) → List (Codes × List PTok)
+  | 0, _, acc => acc
+  | _ + 1, [], acc => acc
+  | f + 1, t :: ts, acc =>
+    match t.tok with
+    | .begin e =>
+      if Lex.wDisplayEnvs.contains e then
+        let body := ts.takeWhile (fun p => p.tok != .finish e)
+        let labels := body.filterMap fun p => match p.tok with | .ref .label l => some l | _ => none
+        let clean := body.filter fun p => match p.tok with | .ref .label _ => false | _ => true
+        let clean := (clean.reverse.dropWhile fun p => p.tok == .msym 44 || p.tok == .msym 46).reverse
+        let span := t :: clean ++ [⟨.finish e, t.pos, t.math⟩]
+        labelledDisplays f (ts.drop (body.length + 1)) (labels.map (·, span) ++ acc)
+      else labelledDisplays f ts acc
+    | _ => labelledDisplays f ts acc
+
+/-- `satisfying \eqref{l}`: the display `l` in place of the reference. -/
+def expandRefs (ds : List (Codes × List PTok)) : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | f + 1, a :: b :: rest =>
+    match a.tok, b.tok with
+    | .word w, .ref .eqref l =>
+      match (if Grammar.lower w == w!"satisfying" then ds.lookup l else none) with
+      | some span => a :: span.map (fun p => { p with pos := b.pos }) ++ expandRefs ds f rest
+      | none => a :: expandRefs ds f (b :: rest)
+    | _, _ => a :: expandRefs ds f (b :: rest)
+  | _ + 1, ts => ts
+
 /-- All templates, in order, three times (a notation may use an earlier one). -/
 def rewriteAll (tpls : List Template) (ts : List PTok) : List PTok :=
   if tpls.isEmpty then ts else
@@ -501,6 +531,135 @@ def domainsOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (List (Ty × Opt
   | _ => pure [← domainOf calculus d sc]
 termination_by sizeOf d
 
+/-- A field of a signature `u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`: its description
+and its type (the component index first for a vector field), when the domain has at
+least two coordinates; `\mathbb{R}^n\times I` has `n` spatial coordinates and a time. -/
+def fieldSig (d c : MT) : M (Option (FieldInfo × Ty)) := do
+  let groups := match d with
+    | .app (.id t) [a, b] => if t == w!"\\times" then [a, b] else [d]
+    | _ => [d]
+  let some (sp, tm) := (match groups with
+      | [a] => some (a, none)
+      | [a, b] => some (a, some b)
+      | _ => none) | pure none
+  let sds ← domainsOf true sp
+  let tds ← match tm with
+    | some b => domainsOf true b
+    | none => pure []
+  if tds.length > 1 || sds.any (·.1 != .real) || tds.any (·.1 != .real) then return none
+  let dim ← match c with
+    | .sup (.id r) (.num m) => if r == w!"\\mathbb{R}" && 2 ≤ m then pure m else return none
+    | .id r => if r == w!"\\mathbb{R}" then pure 1 else return none
+    | _ => return none
+  let info : FieldInfo := { dim, space := sds.length, time := tds.length == 1, doms := (sds ++ tds).map (·.2) }
+  if info.coords < 2 then return none
+  let coordTy := tyWrap (List.replicate info.coords .real) .real
+  pure (some (info, if 1 < dim then .fn .real coordTy else coordTy))
+
+/-- The set of points of a field's domain, as a curried predicate. -/
+def domainSet (i : FieldInfo) : Tm :=
+  let k := i.coords
+  let body := Elab.conjAll ((i.doms.zip (List.range k)).filterMap fun (d, j) => d.map fun p => Tm.app p (.loc (k - 1 - j)))
+  (List.range k).foldl (fun acc _ => Tm.lam .real .tt acc) body
+
+/-- The components of a field (the bound variable `.loc 0`), as functions of the
+coordinates. -/
+def fieldComps (i : FieldInfo) (F : Tm) : List Tm :=
+  if 1 < i.dim then (List.range i.dim).map fun c => Tm.app F (.num (c + 1)) else [F]
+
+/-- A function space `C^\infty(D;\mathbb{R}^m)`, `C_c^\infty(D;\mathbb{R}^m)`, `C^\infty(D)`:
+its domain, codomain and whether its functions have compact support in `D`. -/
+def funSpace (ts : List MTok) : Option (MT × MT × Bool) := do
+  let r ← match ts with | .id [67] :: r => some r | _ => none
+  let (compact, r) := match r with
+    | .sym 95 :: .id [99] :: r' => (true, r')
+    | .sym 95 :: .lb :: .id [99] :: .rb :: r' => (true, r')
+    | _ => (false, r)
+  let r ← match r with
+    | .sym 94 :: .cmd i :: r' => if i == w!"infty" then some r' else none
+    | .sym 94 :: .lb :: .cmd i :: .rb :: r' => if i == w!"infty" then some r' else none
+    | _ => none
+  let inner ← match r with
+    | .sym 40 :: r' => if r'.getLast? == some (.sym 41) then some r'.dropLast else none
+    | _ => none
+  let (dts, cts) := match inner.findIdx? (· == .sym 59) with
+    | some j => (inner.take j, inner.drop (j + 1))
+    | none => (inner, [MTok.id w!"\\mathbb{R}"])
+  some (← Math.parseFormula dts, ← Math.parseFormula cts, compact)
+
+/-- The binders of a noun phrase about fields and sets of points (`a force
+$f\in C_c^\infty(\mathbb{R}^3\times(0,\infty);\mathbb{R}^3)$`, `a compact set
+$K\subset\mathbb{R}^3$`, `smooth velocity and pressure fields $u,p$ on $D$`), which it
+registers as fields; `none` for any other noun phrase. -/
+def pdeNoun (np : List Chunk) : M (Option (List BindInfo)) := do
+  let np := (kw [w!"a"] np <|> kw [w!"an"] np).getD np
+  let ws := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+  let words := ws.filterMap fun c => match c with | .w w => some (Grammar.lower w) | _ => none
+  let rest := np.drop ws.length
+  let smooth := words.head? == some w!"smooth"
+  let words := if smooth then words.drop 1 else words
+  let register (n : Codes) (i : FieldInfo) : M Unit :=
+    modify fun st => { st with fields := (n, i) :: st.fields }
+  -- the predicate `smooth on the domain` of each component (of the variable `.loc 0`)
+  let smoothPred (i : FieldInfo) (ty : Ty) (compactSupp : Bool) : Tm :=
+    let S := domainSet i
+    let ps := (fieldComps i (.loc 0)).flatMap fun c =>
+      [Tm.app (.app (.prim (.smoothN i.coords)) c) (shift 1 0 S)] ++
+      (if compactSupp then [Tm.app (.app (.prim (.compactSuppIn i.coords)) c) (shift 1 0 S)] else [])
+    .lam ty .tt (Elab.conjAll ps)
+  match rest with
+  -- `NOUN $f\in C_c^\infty(D;\mathbb{R}^m)$`
+  | [.m ts] =>
+    match ts.findIdx? (· == .cmd w!"in"), ts.findIdx? (fun t => t == .cmd w!"subset" || t == .cmd w!"subseteq") with
+    | some j, _ =>
+      let some v := (match ts.take j with | [.id v] => some v | _ => none) | pure none
+      let some (d, cod, compact) := funSpace (ts.drop (j + 1)) | pure none
+      let labels := [w!"force", w!"function", w!"map", w!"field", w!"vector", w!"velocity"]
+      if !words.all labels.contains then return none
+      match ← fieldSig d cod with
+      | some (i, ty) => do
+        register v i
+        pure (some [⟨v, ty, some (smoothPred i ty compact)⟩])
+      | none => pure none
+    -- `[compact] set $K\subset\mathbb{R}^n$`
+    | none, some j =>
+      let some v := (match ts.take j with | [.id v] => some v | _ => none) | pure none
+      let some (.sup (.id r) (.num n)) := Math.parseFormula (ts.drop (j + 1)) | pure none
+      if r != w!"\\mathbb{R}" then return none
+      let compact := words == [w!"compact", w!"set"] || words == [w!"compact", w!"subset"]
+      if !(compact || words == [w!"set"] || words == [w!"subset"]) then return none
+      let ty := Ty.setN n
+      pure (some [⟨v, ty, if compact then some (.lam ty .tt (.app (.prim (.isCompactN n)) (.loc 0))) else none⟩])
+    | none, none => pure none
+  -- `[smooth] velocity and pressure fields $u,p$ on $D$`, `a [smooth] vector field $u$ on $D$`
+  | [.m vs, .w on, .m dts] =>
+    if Grammar.lower on != w!"on" then return none
+    let names := (vs.filter (· != .sym 44)).filterMap fun t => match t with | .id n => some n | _ => none
+    if names.length != (vs.filter (· != .sym 44)).length then return none
+    let some d := Math.parseFormula dts | pure none
+    -- the kinds: `velocity`, `vector`, `force` (vector fields), `pressure`, `scalar` (real)
+    let some last := words.getLast? | pure none
+    if !(last == w!"field" || last == w!"fields") then return none
+    let kinds := (words.dropLast).filter (· != w!"and")
+    let vectorKind (k : Codes) : Option Bool :=
+      if k == w!"velocity" || k == w!"vector" || k == w!"force" then some true
+      else if k == w!"pressure" || k == w!"scalar" then some false else none
+    let some kinds := kinds.mapM vectorKind | pure none
+    let kinds := if kinds.length == 1 then List.replicate names.length (kinds.getD 0 false) else kinds
+    if kinds.length != names.length then return none
+    let mut out : List BindInfo := []
+    for (n, vec) in names.zip kinds do
+      -- the codomain: `\mathbb{R}^n` for a vector field on `n`-dimensional space
+      let sp ← domainsOf true (match d with
+        | .app (.id t) [a, _] => if t == w!"\\times" then a else d
+        | _ => d)
+      let cod : MT := if vec then .sup (.id w!"\\mathbb{R}") (.num sp.length) else .id w!"\\mathbb{R}"
+      let some (i, ty) ← fieldSig d cod | return none
+      register n i
+      out := out ++ [⟨n, ty, if smooth then some (smoothPred i ty false) else none⟩]
+    pure (some out)
+  | _ => pure none
+
 /-- A variable chunk: its name, and the domain of a membership `$x\in A$`. -/
 def varChunk (ts : List MTok) : M (Codes × Option (Ty × Option Tm)) := do
   match varName ts with
@@ -587,6 +746,12 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           let sg ← liftO (Math.parseSig ts) E.noun ((wordsOf np).flatten)
           match sg with
           | .sig (.id f) d c => do
+            -- a field (`u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`)
+            match ← fieldSig d c with
+            | some (info, ty) =>
+              modify fun st => { st with fields := (f, info) :: st.fields }
+              pure (ty, [], some [.id f], r)
+            | none =>
             let ds ← domainsOf false d
             let (ct, cp) ← domainOf false c
             if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
@@ -746,6 +911,7 @@ def implicitVars (st : St) (ids : List Codes) : List Codes :=
     | some i => (st.implicits.lookup i).getD []
     | none => []
 
+mutual
 def clauseMaths : Clause → List MT
   | .fact f | .holds f => [f]
   | .deriv d _ c => [d, c]
@@ -768,9 +934,17 @@ def clauseMaths : Clause → List MT
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ none => (mathsOf np).filterMap Math.parseFormula
+  | .existsNPs nps cs => clauseMathsAll cs ++ (nps.flatMap mathsOf).filterMap Math.parseFormula
+  | .noneExist c => clauseMaths c
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
   | _ => []
+
+/-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
+def clauseMathsAll : List Clause → List MT
+  | [] => []
+  | c :: cs => clauseMaths c ++ clauseMathsAll cs
+end
 
 /-- The subformulas of a formula. -/
 def mtChildren : MT → List MT
@@ -1825,6 +1999,7 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
 
 /-! ## Claim sentences -/
 
+mutual
 /-- One clause; `rest` are the following clauses of the sentence (for scopes). -/
 def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Option MT) :
     Clause → M Tm
@@ -2026,7 +2201,9 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some q => .and (.app q (.loc 0)) acc
       | none => acc)) p)
   | .existsNP np unique cl => do
-    let b ← nounPhrase np sc
+    let b ← match ← pdeNoun np with
+      | some [b] => pure b
+      | _ => nounPhrase np sc
     if b.name.isEmpty then fail E.unsupported
     -- `P x`: the noun phrase and the clause about `x`
     let inner ← match cl with
@@ -2038,6 +2215,25 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
           (.all b.ty (.imp (.app (shift 2 0 P) (.loc 0)) (.eq (.loc 0) (.loc 1))))
       else Tm.app (shift 1 0 P) (.loc 0)
     pure (.ex b.ty body)
+  | .existsNPs nps cls => do
+    -- the objects, each NP after the ones before it
+    let mut bs : List BindInfo := []
+    for np in nps do
+      let outer := (bs.map fun b => (b.name, b.ty)).reverse ++ sc
+      match ← pdeNoun np with
+      | some more => bs := bs ++ more
+      | none =>
+        -- a noun phrase that is not the vocabulary's makes the sentence prose
+        let b ← tryCatch (nounPhrase np outer) fun e =>
+          if e.code == E.noun || e.code == E.unsupported then fail E.prose else throw e
+        bs := bs ++ [b]
+    let sc' := (bs.map fun b => (b.name, b.ty)).reverse ++ sc
+    let ps ← clauseTms c sc' onVar lastRhs cls
+    -- (the predicate of each object refers to the objects before it)
+    pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
+      | some q => .and (.app (shift 1 0 q) (.loc 0)) acc
+      | none => acc)) (Elab.conjAll ps))
+  | .noneExist cl => do pure (.not (← clauseTm c sc onVar lastRhs cl))
   | .forEveryNP cl np => do
     let b ← nounPhrase np sc
     if b.name.isEmpty then fail E.unsupported
@@ -2111,6 +2307,15 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     modify fun st => { st with lastMaps := infos }
     pure (conjAll parts)
   | _ => fail E.unsupported
+
+/-- Several clauses in the same scope (structural, so that the kernel evaluates it). -/
+def clauseTms (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Option MT) :
+    List Clause → M (List Tm)
+  | [] => pure []
+  | cl :: rest => do
+    let p ← clauseTm c sc onVar lastRhs cl
+    pure (p :: (← clauseTms c sc onVar lastRhs rest))
+end
 
 /-- `for $v\in D$, the k-th ranges over $B$`: the image of `D` under the `k`-th map
 of the preceding sentence is `B`. -/
@@ -2524,7 +2729,13 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
   else
     let some repl := fs[1]? | fail E.unsupported
     let tpl := Notation.template pat repl
-    push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
+    match tpl.pat, tpl.repl with
+    -- `We write $A\subset B$ if $A\subseteq B$`: one relation symbol for another, in
+    -- place (the arguments are whatever stands on either side)
+    | [.slot a, .fixed t, .slot b], [.slot a', .fixed t', .slot b'] =>
+      if a == a' && b == b' && a != b then push ⟨[.fixed t], [.fixed t']⟩
+      else push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
+    | _, _ => push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
     pure ([], [])
 
 end Compile
@@ -2568,6 +2779,10 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     | _ => c.proofs
   let incomplete (ps : List ProofInfo) : List ProofInfo :=
     ps.map fun p => if p.env == s.ctx.env then { p with complete := false } else p
+  -- `satisfying \eqref{l}`, with `l` a display of the same sentence: that display
+  let expanded := Notation.expandRefs (Notation.labelledDisplays (s.toks.length + 1) s.toks [])
+    (s.toks.length + 1) s.toks
+  let s := { s with toks := expanded }
   -- the article's notations, in the formulas of later sentences
   let toks0 := s.toks
   let s := if st0.templates.isEmpty || Notation.declares s.toks then s

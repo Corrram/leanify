@@ -455,6 +455,11 @@ inductive Clause where
   | forEveryNP (c : Clause) (np : List Chunk)
   /-- `there is [exactly one|a unique] NP [such that CLAUSE]`. -/
   | existsNP (np : List Chunk) (unique : Bool) (c : Option Clause)
+  /-- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, …]`: objects
+  with the conditions. -/
+  | existsNPs (nps : List (List Chunk)) (conds : List Clause)
+  /-- `there is no NP …`, `there are no NP, NP …`: no such objects exist. -/
+  | noneExist (c : Clause)
   /-- `[the WORDS] $X$ is at most [the WORDS] $Y$` (at least, less than, greater than,
   equal to); either side may define its symbol (`the geometric mean $G\coloneqq\sqrt{ab}$`). -/
   | compare (lhs : MT) (rel : Rel) (rhs : MT)
@@ -971,12 +976,101 @@ def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
     | _ => (c, r)
   | none => (c, r)
 
-/-- `there is|exists [a constant] $C>0$ such that CLAUSE`. -/
-def thereIs (cs : List Chunk) : Option (Clause × List Chunk) := do
+/-- `there is|exists [a constant] $C>0$ such that CLAUSE`; `sub` reads the clauses
+after `such that`. -/
+def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
+    Option (Clause × List Chunk) := do
   let r ← kw [w!"there", w!"is"] cs <|> kw [w!"there", w!"exists"] cs <|> kw [w!"there", w!"are"] cs <|>
     kw [w!"there", w!"exist"] cs
   let r := (kw [w!"a", w!"constant"] r <|> kw [w!"constants"] r <|> kw [w!"a", w!"number"] r <|>
     kw [w!"a", w!"real", w!"number"] r <|> kw [w!"some"] r).getD r
+  -- `there is no NP …`, `there are no NPs …`
+  let (none_, r) := match kw [w!"no"] r with
+    | some r' => (true, r')
+    | none => (false, r)
+  -- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, CLAUSE]`
+  match (do
+      -- the noun phrases: up to `satisfying`, `such that` or the end; a comma before a
+      -- word (or `, and`) separates them
+      let rec nps : Nat → List Chunk → List Chunk → List (List Chunk) → Option (List (List Chunk) × List Chunk)
+        | 0, _, _, _ => none
+        | f + 1, cs, cur, acc =>
+          let stop := (kw [w!"satisfying"] cs).isSome || (kw [w!"such", w!"that"] cs).isSome ||
+            isEnd cs || (match cs with | .p 59 :: _ => true | _ => false)
+          if stop then
+            if cur.isEmpty then none else some ((cur.reverse :: acc).reverse, cs)
+          else match cs with
+            | .p 44 :: .w a :: rest =>
+              if cur.isEmpty then none else
+              let rest := if a == w!"and" then rest else .w a :: rest
+              nps f rest [] (cur.reverse :: acc)
+            | c :: rest => nps f rest (c :: cur) acc
+            | [] => none
+      let (list, r1) ← nps (r.length + 1) r [] []
+      -- `and` before the last one without a comma: `a set $K$ and a force $f$`
+      let list := list.flatMap fun np =>
+        let rec splitAnd : Nat → List Chunk → List Chunk → List (List Chunk)
+          | 0, cs, cur => [cur.reverse ++ cs]
+          | _ + 1, [], cur => [cur.reverse]
+          | f + 1, .w a :: .w d :: rest, cur =>
+            if a == w!"and" && (d == w!"a" || d == w!"an") && !cur.isEmpty then
+              cur.reverse :: splitAnd f (.w d :: rest) []
+            else splitAnd f (.w d :: rest) (.w a :: cur)
+          | f + 1, c :: rest, cur => splitAnd f rest (c :: cur)
+        splitAnd (np.length + 1) np []
+      let hasSat := (kw [w!"satisfying"] r1).isSome
+      let unique := match list with
+        | (.w a :: .w b :: _) :: _ => (a == w!"exactly" && b == w!"one") || (a == w!"a" && b == w!"unique")
+        | _ => false
+      -- (each object is a noun phrase: `there is $c>0$ such that …` is read below)
+      if unique || list.any (fun np => match np with | .w _ :: _ => false | _ => true) then none else
+      -- `satisfying DISPLAY|$φ$`
+      let (sat, r2) ← match kw [w!"satisfying"] r1 with
+        | some r' =>
+          match display r' with
+          | some (m, _, r'') => some ([Clause.fact m], r'')
+          | none => do
+            let (m, r'') ← formula r'
+            some ([Clause.fact m], r'')
+        | none => some ([], r1)
+      -- `such that CLAUSE[, CLAUSE]*` (a display is a clause)
+      let rec more : Nat → List Chunk → List Clause → Option (List Clause × List Chunk)
+        | 0, cs, acc => some (acc.reverse, cs)
+        | f + 1, cs, acc =>
+          -- `, and consequently CLAUSE`: one more condition (that follows from the others)
+          let cs' := (punct 44 cs).map fun r =>
+            let r := (kw [w!"and"] r).getD r
+            (kw [w!"consequently"] r).getD r
+          match cs' with
+          | some r =>
+            match display r with
+            | some (m, _, r') => more f r' (Clause.fact m :: acc)
+            | none =>
+              match sub r with
+              | some (c, r') =>
+                let (c, r'') := everyNPAfter c r'
+                more f r'' (c :: acc)
+              | none => some (acc.reverse, cs)
+          | none => some (acc.reverse, cs)
+      -- (a display may end with a comma)
+      let r2 := if hasSat then match punct 44 r2 with
+          | some r' => if (kw [w!"such", w!"that"] r').isSome then r' else r2
+          | none => r2
+        else r2
+      let (conds, r5) ← match kw [w!"such", w!"that"] r2 with
+        | some r3 => do
+          let (c, r4) ← (display r3).map (fun (m, _, r') => (Clause.fact m, r')) <|> sub r3
+          let (c, r4) := everyNPAfter c r4
+          more 6 r4 [c]
+        | none => some ([], r2)
+      -- (one object with at most one condition is `there is a NP such that …` below)
+      if list.length < 2 && !hasSat && !none_ && conds.isEmpty then none else
+      let c := Clause.existsNPs list (sat ++ conds)
+      some (if none_ then Clause.noneExist c else c, r5)) with
+  | some res => some res
+  | none =>
+  -- (`there is no …` is read only as above, never as an existence)
+  if none_ then none else
   -- `there is exactly one NP [such that …]`, `there is a NP …`
   match (do
       let (unique, r) ← (kw [w!"exactly", w!"one"] r).map (true, ·) <|> (kw [w!"a", w!"unique"] r).map (true, ·) <|>
@@ -994,7 +1088,7 @@ def thereIs (cs : List Chunk) : Option (Clause × List Chunk) := do
         let (np, r1) ← upTo (r.length + 1) r []
         match kw [w!"such", w!"that"] r1 with
         | some r2 => do
-          let (c, r3) ← clause r2
+          let (c, r3) ← sub r2
           let (c, r4) := everyNPAfter c r3
           some (Clause.existsNP np unique (some c), r4)
         | none => some (Clause.existsNP np unique none, r1)
@@ -1007,9 +1101,17 @@ def thereIs (cs : List Chunk) : Option (Clause × List Chunk) := do
       | [.id v] => some (Bind.every [v] (.id w!"\\mathbb{R}"))
       | _ => none)
   let r2 ← kw [w!"such", w!"that"] r1
-  let (c, r3) ← clause r2
+  let (c, r3) ← sub r2
   let (c, r4) := everyNPAfter c r3
   some (.thereIs b c, r4)
+
+/-- `there is …` with plain clauses as its conditions. -/
+def thereIs0 (cs : List Chunk) : Option (Clause × List Chunk) := thereIsWith clause cs
+
+/-- `there is …`; a condition may itself be `there is …` (`…, and consequently there are
+no NPs such that …`). -/
+def thereIs (cs : List Chunk) : Option (Clause × List Chunk) :=
+  thereIsWith (fun r => thereIs0 r <|> clause r) cs
 
 /-- A clause with its leading citations: `By CITE, ...`, `CITE gives ...`, trailing `by CITE`. -/
 def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
@@ -1408,6 +1510,13 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let (ts, r) ← mathChunk cs
     let (vs, d) ← binderMath ts
     some (.every vs d, r)) <|>
+  -- `$u:A\to B$ [be a map|function|field]`: a map of its signature
+  (do
+    let (ts, r) ← mathChunk cs
+    let _ ← Math.parseSig ts
+    let r' := (kw [w!"be", w!"a", w!"map"] r <|> kw [w!"be", w!"a", w!"function"] r <|>
+      kw [w!"be", w!"a", w!"field"] r <|> kw [w!"be", w!"a", w!"vector", w!"field"] r).getD r
+    some (.noun [.w w!"map", .m ts], r')) <|>
   -- `$c>0$`: a condition, assumed like a binder
   (do
     let (ts, r) ← mathChunk cs
@@ -1441,7 +1550,7 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
   | 0, cs, bs, ds => some (bs.reverse, ds.reverse, cs)
   | f + 1, cs, bs, ds =>
     let next := (punct 44 cs >>= kw [w!"and", w!"let"]) <|> (punct 44 cs >>= kw [w!"and"]) <|>
-      kw [w!"and", w!"let"] cs <|> kw [w!"and"] cs <|> punct 44 cs
+      (punct 44 cs >>= kw [w!"let"]) <|> kw [w!"and", w!"let"] cs <|> kw [w!"and"] cs <|> punct 44 cs
     match next with
     | none => some (bs.reverse, ds.reverse, cs)
     | some r =>

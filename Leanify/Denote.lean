@@ -16,6 +16,9 @@ import Mathlib.Topology.Semicontinuity.Defs
 import Mathlib.Topology.EMetricSpace.Lipschitz
 import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
 import Mathlib.Topology.Connected.Basic
+import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.Topology.Algebra.Support
+import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
 
 /-! # The meaning of core terms
 
@@ -157,6 +160,37 @@ def compactUniform (D : (I → I → ℝ) → Prop) : Prop :=
   IsCompact {g : UniformFun (I × I) ℝ | D (ofUniform g)}
 def closedUniform (D : (I → I → ℝ) → Prop) : Prop :=
   IsClosed {g : UniformFun (I × I) ℝ | D (ofUniform g)}
+
+/-! Functions of several variables: a curried function of `n` real variables is a
+function on `Fin n → ℝ` (with the supremum norm and the product Lebesgue measure). -/
+
+/-- The uncurried form of a function of `n` real variables. -/
+def uncurryN {B : Nat → Type} : (n : Nat) → (Ty.fns n).denote B → (Fin n → ℝ) → ℝ
+  | 0, f, _ => f
+  | n + 1, f, p => uncurryN n (f (p 0)) (fun i => p i.succ)
+
+/-- The set of points of `ℝⁿ` of a curried predicate. -/
+def setOfN {B : Nat → Type} : (n : Nat) → (Ty.setN n).denote B → Set (Fin n → ℝ)
+  | 0, S => {_p | S}
+  | n + 1, S => {p | (fun i => p i.succ) ∈ setOfN n (S (p 0))}
+
+def smoothN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (S : (Ty.setN n).denote B) : Prop :=
+  ∀ k : ℕ, ContDiffOn ℝ k (uncurryN n f) (setOfN n S)
+def compactSuppIn {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (S : (Ty.setN n).denote B) : Prop :=
+  HasCompactSupport (uncurryN n f) ∧ tsupport (uncurryN n f) ⊆ setOfN n S
+def supportIn {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (S : (Ty.setN n).denote B) : Prop :=
+  tsupport (uncurryN n f) ⊆ setOfN n S
+def isCompactN {B : Nat → Type} (n : Nat) (S : (Ty.setN n).denote B) : Prop :=
+  IsCompact (setOfN n S)
+/-- `‖f‖_{L²(ℝⁿ)} = r` (the norm is finite). -/
+def l2NormN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
+  eLpNorm (uncurryN n f) 2 volume = ENNReal.ofReal r ∧ 0 ≤ r
+/-- `‖f‖_{L^∞(ℝⁿ)} = r` (the essential supremum of `|f|` is finite). -/
+def supNormN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
+  eLpNorm (uncurryN n f) ⊤ volume = ENNReal.ofReal r ∧ 0 ≤ r
+/-- `f` is integrable on `ℝⁿ` and `∫_{ℝⁿ} f = r`. -/
+def integralN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
+  Integrable (uncurryN n f) volume ∧ ∫ p, uncurryN n f p = r
 end Prelude
 
 def FnProp.denote : FnProp → (ℝ → ℝ) → (ℝ → Prop) → Prop
@@ -240,6 +274,13 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .factorial => Prelude.factorial
   | .binom => Prelude.binom
   | .zpow => Prelude.zpow
+  | .smoothN n => Prelude.smoothN n
+  | .compactSuppIn n => Prelude.compactSuppIn n
+  | .supportIn n => Prelude.supportIn n
+  | .isCompactN n => Prelude.isCompactN n
+  | .l2NormN n => Prelude.l2NormN n
+  | .supNormN n => Prelude.supNormN n
+  | .integralN n => Prelude.integralN n
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

@@ -70,6 +70,7 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | --- | --- |
 | `We write $\langle a,b\rangle$ for $\frac{a+b}{2}$.` | later formulas `\langle x,y\rangle` are read as `\frac{x+y}{2}`; the letters and commands of the pattern that occur on the right are its arguments (`Let us write …` too) |
 | `We write $a\sim b$ if $|a-b|\le1$.` | a relation, read the same way |
+| `We write $A\subset B$ if $A\subseteq B$.` | one relation symbol for another: every later `\subset` is `\subseteq`, whatever stands on either side (Leanify refuses `\subset` without such a sentence, since it also means strict inclusion) |
 | `We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.` | a symbol for a notion of the vocabulary, with its arguments |
 | `We write $\mathcal P$ for the set of probability distributions on $\mathbb{N}_0$.` | a symbol for the class of a vocabulary noun |
 | `By a distribution we mean a probability distribution on $\mathbb{N}_0$.` | a noun of the article (`Let $\nu$ be a distribution.`) |
@@ -95,6 +96,30 @@ Generic constants and existence:
 | `For $0<h\ll\lambda\ll1$, …`, `Let $0<\varepsilon\ll1$.` | smallness, chosen from right to left: there is `c > 0` such that for every `λ ∈ (0, c)` there is `c' > 0` such that for every `h ∈ (0, c'λ)` the claim holds (`C^{-1}\ll b`: `C > 1/(c b)`) |
 | `… for every integer $m\ge0$ and every smooth function $\varphi$ on …` | binders after a claim, the first one outermost |
 | `Let $\varphi$ be a smooth function on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | a condition may use the variables bound before it |
+
+Fields and equations (`tests/PDE/article.tex` uses each form). A field on a product
+`\mathbb R^n\times I` has `n` spatial coordinates and a time; a vector field takes
+the index of its component first, and an equation between fields holds
+componentwise at every point of the domain of its first field. Derivatives are
+taken within the domain of each coordinate, so `\partial_t u` at `t=0` is the
+one-sided derivative on `[0,1)`.
+
+| Sentence | Reading |
+| --- | --- |
+| `there exist a force $f\in C_c^\infty(\mathbb R^3\times(0,\infty);\mathbb R^3)$, a compact set $K\subset\mathbb R^3$, and smooth velocity and pressure fields $u,p$ on $\mathbb R^3\times[0,1)$ satisfying DISPLAY such that …` | several objects, each a noun phrase, then the conditions: a display after `satisfying`, clauses and displays after `such that` (`velocity`, `vector` and `force` fields are vector fields, `pressure` and `scalar` fields real ones; `C^\infty(D;\mathbb R^m)` is smooth on `D`, `C_c^\infty` also with compact support in `D`) |
+| `there are no NPs … such that …` | no such objects exist |
+| `…, and consequently there are no …` | one more condition on the objects already introduced, which may use them |
+| `satisfying \eqref{l}` | the display `l` of the same sentence, read again for the objects of this noun phrase |
+| `\partial_tu+(u\cdot\nabla)u-\nu\Delta u+\nabla p=f`, `\nabla\cdot u=0`, `u(\cdot,0)=0` | componentwise at every point of the domain (`u(\cdot,0)`: at every spatial point) |
+| `\supp u(\cdot,t)\cup\supp p(\cdot,t)\subset K for every $0\le t<1$` | the closed supports of the slices lie in `K` |
+| `\lVert u(t)\rVert_{L^2(\mathbb R^3)}`, `\lVert u(t)\rVert_{L^\infty(\mathbb R^3)}` | the norm over space of the Euclidean length of `u(\cdot,t)`, defined only when it is finite |
+| `\int_{\mathbb R^3}|u(x,t)|^2\,dx` | the integral over the point `x` of `\mathbb R^3`, defined only when the integrand is integrable |
+| `\sup_{0\le t<1} e<\infty` | `e` is defined and at most some `M` for every such `t` |
+| `\limsup_{t\uparrow1} e=\infty` | for every `M` there are `t` arbitrarily close to `1` from below, in the domain of the fields of `e`, where `e` is defined and greater than `M` |
+
+A bound on a norm or an integral asserts that it is finite, wherever the bound
+stands; so `there are no fields … such that $\sup_{t\geq0}\frac12\int|u|^2<\infty$`
+excludes exactly the fields of finite, bounded energy.
 
 Nouns, adjectives and notions of the vocabulary are also read after `is`: `$\nu$
 is a probability distribution on $\mathbb{N}_0$`, `$n$ is prime`, `$\nu$ is not
