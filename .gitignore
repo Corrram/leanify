@@ -10,3 +10,4 @@ article-reader/
 /docs/demo/
 *.leanify.log
 /sandbox/
+/Claude outputs/
