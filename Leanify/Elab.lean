@@ -1166,6 +1166,31 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let inDom := match tdom with | some d => Tm.app d (.loc 0) | none => .tt
       pure (.all .real (.all .real (.imp (.lt (.num 0) (.loc 0))
         (.ex .real (conjAll [near, inDom, definedAnd e (.lt (.loc 2) e)])))), .prop)
+    -- `\lim_{v\to a} e=\infty` (`-\infty`): beyond every bound near `a` (beyond every bound of
+    -- `v` for `a=\infty`), within the points where `e` is defined (for an index, the natural
+    -- numbers), which accumulate at `a`
+    | .chain (.limit v target body) [(.eq, inf)] =>
+      if !(isInfty true inf || isInfty false inf) then chainRest f sc pf (.limit v target body) [(.eq, inf)] else do
+      if (lookupLocal sc v).isSome then fail E.shadow v
+      let up := isInfty true inf
+      let toInf := isInfty true target
+      -- (`v` is `loc 0`, the nearness `d` (or the bound `N`) `loc 1`, `M` `loc 2`)
+      let sc' : Scope := (v, .real) :: (w!"@d", .real) :: (w!"@M", .real) :: sc
+      let pf' := pf.map fun (s, t) => (shift 3 0 s, t)
+      let e ← asReal (← term f sc' pf' body)
+      let a' ← if toInf then pure (Tm.num 0) else asReal (← term f sc' pf' target)
+      let inDom := if indexNames.contains v && toInf then Tm.and (.app (.prim .isNat) (.loc 0)) (Tm.defined e)
+        else Tm.defined e
+      let near := if toInf then Tm.le (.loc 1) (.loc 0)
+        else Tm.and (.lt (.num 0) (.abs (.sub (.loc 0) a'))) (.lt (.abs (.sub (.loc 0) a')) (.loc 1))
+      let big := if up then Tm.lt (.loc 2) e else Tm.lt e (.loc 2)
+      -- (`d > 0` for a finite `a`; in the scope `d :: M :: sc`)
+      let pos := if toInf then Tm.tt else Tm.lt (.num 0) (.loc 0)
+      -- (the accumulation does not mention `M`: `subst` drops its binder)
+      let accumulate := Tm.all .real (.imp (Tm.subst (.num 0) 1 pos)
+        (.ex .real (Tm.subst (.num 0) 2 (.and inDom near))))
+      let diverge := Tm.all .real (.ex .real (.and pos (.all .real (.imp (.and inDom near) big))))
+      pure (.and accumulate diverge, .prop)
     -- `a\equiv b\pmod m`: `m` divides `a-b`
     | .chain x [(.equiv, .app (.id md) [y, m])] =>
       if md == w!"@mod" then do
@@ -1562,6 +1587,10 @@ where
               -- `A\ll B`: `|A|\le CB`; `A\gg B`: `|B|\le CA`
               else if r == .ll then do pure (.le (.abs (← asReal a)) (.mul (← implied) (← asReal b)))
               else if r == .gg then do pure (.le (.abs (← asReal b)) (.mul (← implied) (← asReal a)))
+              -- `A\asymp B`: `|A|\le CB` and `|B|\le CA`
+              else if r == .asymp then do
+                let c ← implied
+                pure (.and (.le (.abs (← asReal a)) (.mul c (← asReal b))) (.le (.abs (← asReal b)) (.mul c (← asReal a))))
               else relTm r a b
             let ps ← pairs (b :: more) rs
             pure (p :: ps)

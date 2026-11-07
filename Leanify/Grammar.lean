@@ -339,7 +339,7 @@ def wMarkers : List (List Codes) :=
    [w!"in", w!"addition"], [w!"finally"], [w!"again"], [w!"conversely"], [w!"similarly"],
    [w!"in", w!"other", w!"words"], [w!"that", w!"is"], [w!"we", w!"have"], [w!"it", w!"follows", w!"that"],
    [w!"we", w!"obtain"], [w!"note", w!"that"], [w!"we", w!"see", w!"that"], [w!"more", w!"precisely"],
-   [w!"equivalently"]]
+   [w!"equivalently"], [w!"also"]]
 
 /-- Discourse markers have no content of their own (`For the minimum` sets a topic). -/
 inductive Topic where
@@ -563,6 +563,30 @@ def depBinder (ts : List MTok) : Option (List MTok × MT × MT × List (Rel × M
   let toks ← nameToks nm
   some (toks, al, nm, rest)
 
+/-- The variable before `sufficiently large|small`: `$n$ [is] sufficiently large`, `$n$ [is] large
+enough`, `$n$ is a sufficiently large integer`, `$\varepsilon>0$ is sufficiently small`; as
+`sufficientBinder`. -/
+def postSufficient (cs : List Chunk) : Option (Bind × List Chunk) := do
+  let (ts, r) ← mathChunk cs
+  let r := (kw [w!"is"] r <|> kw [w!"are"] r).getD r
+  let size (r : List Chunk) : Option (Codes × List Chunk) :=
+    ((kw [w!"sufficiently", w!"large"] r <|> kw [w!"large", w!"enough"] r).map (w!"large", ·)) <|>
+    ((kw [w!"sufficiently", w!"small"] r <|> kw [w!"small", w!"enough"] r).map (w!"small", ·))
+  (do
+    -- `is a sufficiently large integer`
+    let r1 ← kw [w!"a"] r <|> kw [w!"an"] r
+    let (s, r2) ← size r1
+    let ws := r2.takeWhile fun c => match c with
+      | .w w => ![w!"then", w!"and", w!"such", w!"with", w!"we"].contains w
+      | .p 45 => true
+      | _ => false
+    if ws.isEmpty then none else
+    let (b, _) ← sufficientBinder ([.w w!"sufficiently", .w s] ++ ws ++ [.m ts])
+    some (b, r2.drop ws.length)) <|> do
+  let (s, r1) ← size r
+  let (b, _) ← sufficientBinder [.w w!"sufficiently", .w s, .m ts]
+  some (b, r1)
+
 /-- A noun phrase of a binder, up to a comma, `and every|each|all`, `and $…$`, or `there`. -/
 def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
@@ -663,7 +687,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
       some (.noun np, r.drop np.length)
     | none, none =>
       match kw [w!"for"] cs with
-      | some r => sufficientBinder r <|> (do
+      | some r => sufficientBinder r <|> postSufficient r <|> (do
           let (ts, r') ← mathChunk r
           let b ← smallBinder ts
           some (b, r')) <|> do
@@ -678,8 +702,10 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
           let (m, r') ← formula r
           some (.on m, r')
         | none =>
-          match kw [w!"if"] cs with
+          match kw [w!"if"] cs <|> kw [w!"whenever"] cs <|> kw [w!"provided", w!"that"] cs with
           | some r =>
+            -- `If $n$ is sufficiently large,`
+            postSufficient r <|>
             -- `If $C$ is an LTD copula,`: as `For an LTD copula $C$,`
             (do
               let (ts, r1) ← mathChunk r
@@ -1010,10 +1036,7 @@ def asLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
     | some j, _ => do
       let a ← Math.parseFormula (ts.take j)
       let l ← Math.parseFormula (ts.drop (j + 1))
-      -- (a limit `\infty` is not a number)
-      match l with
-      | .id n => if n == w!"\\infty" then none else some (lim a l)
-      | _ => some (lim a l)
+      some (lim a l)
     | none, some j => do
       let a ← Math.parseFormula (ts.take j)
       let b ← Math.parseFormula (ts.drop (j + 1))
@@ -1337,6 +1360,14 @@ def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
       let r1 := (kw [w!"for", w!"all"] r <|> kw [w!"for", w!"every"] r <|> kw [w!"for", w!"each"] r).getD
         ((kw [w!"for"] r).getD [])
       let (b, r2) ← sufficientBinder r1
+      if clauseEnd r2 then some (Clause.under b c, r2) else none) with
+  | some res => res
+  | none =>
+  -- `CLAUSE for $n$ sufficiently large`, `… if|whenever|provided [that] $n$ is sufficiently large`
+  match (do
+      let r1 ← kw [w!"for"] r <|> kw [w!"if"] r <|> kw [w!"whenever"] r <|>
+        kw [w!"provided", w!"that"] r <|> kw [w!"provided"] r <|> kw [w!"as", w!"long", w!"as"] r
+      let (b, r2) ← postSufficient r1
       if clauseEnd r2 then some (Clause.under b c, r2) else none) with
   | some res => res
   | none =>

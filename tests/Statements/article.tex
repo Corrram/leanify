@@ -168,6 +168,14 @@ For every positive integer $k$ and every sufficiently large integer $t$, $t\ge k
 We have $\varepsilon^2<\varepsilon$ for every sufficiently small $\varepsilon>0$.
 \end{lemma}
 
+\begin{lemma}\label{large-if}
+If $n$ is a sufficiently large integer, then $n^2\ge 10n$. Also, $\varepsilon^3<\varepsilon$ provided that $\varepsilon>0$ is sufficiently small.
+\end{lemma}
+
+\begin{lemma}\label{large-too-late}
+Let $m$ be a positive integer. If $m$ is sufficiently large, then $m\ge5$.
+\end{lemma}
+
 \begin{lemma}\label{fix}
 Fix an integer $k\ge3$. Then $k^2\ge9$.
 \end{lemma}
@@ -237,6 +245,10 @@ Throughout, implied constants may depend on $k$.
 For every integer $k\ge1$ and every $x\ge1$, $kx\ll x$, $2x+k=O(x)$ and $x^2\gg x$.
 \end{lemma}
 
+\begin{lemma}\label{asymp}
+For every integer $k\ge1$ and every $x\ge1$, $x+k\asymp kx$.
+\end{lemma}
+
 \section{Limits}
 
 \begin{lemma}\label{limits}
@@ -245,6 +257,10 @@ $\frac1n\to0$ as $n\to\infty$, $x+1\sim x$ as $x\to\infty$, and $1=o(x)$ as $x\t
 
 \begin{lemma}\label{limsup}
 $\limsup_{n\to\infty}\frac{(-1)^n n}{n+1}=1$ and $\liminf_{n\to\infty}\frac{(-1)^n n}{n+1}=-1$.
+\end{lemma}
+
+\begin{lemma}\label{limit-infinity}
+$\lim_{n\to\infty}\frac{n^2}{n+1}=\infty$, $\lim_{x\to0}\frac{-1}{x^2}=-\infty$, and $x^2\to\infty$ as $x\to\infty$.
 \end{lemma}
 
 \begin{lemma}\label{infinitely-many}

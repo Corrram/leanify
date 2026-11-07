@@ -924,11 +924,23 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .app h as => freeIds f bound h ++ (as.flatMap (freeIds f bound))
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => freeIds f bound x ++ freeIds f bound y
     | .minm xs | .maxm xs | .tuple xs | .conj xs => xs.flatMap (freeIds f bound)
-    | .int _ _ b v => freeIds f (v :: bound) b
+    | .int lo hi b v => freeIds f bound lo ++ freeIds f bound hi ++ freeIds f (v :: bound) b
     | .interval a b => freeIds f bound a ++ freeIds f bound b
     | .chain x rs => freeIds f bound x ++ rs.flatMap (fun r => freeIds f bound r.2)
     | .mapsto p b => freeIds f (freeIds f [] p ++ bound) b
-    | _ => []
+    | .ival a b _ _ => freeIds f bound a ++ freeIds f bound b
+    | .setOf p d cs => freeIds f bound d ++ cs.flatMap (freeIds f (freeIds f [] p ++ bound))
+    | .setCond p cs => cs.flatMap (freeIds f (freeIds f [] p ++ bound))
+    | .image e v d => freeIds f bound d ++ freeIds f (v :: bound) e
+    | .cases rows => rows.flatMap fun (a, b) => freeIds f bound a ++ freeIds f bound b
+    | .equiv x y | .land x y | .lor x y | .limp x y | .liff x y =>
+      freeIds f bound x ++ freeIds f bound y
+    | .lnot x | .extr _ x | .bound _ x => freeIds f bound x
+    | .finset xs => xs.flatMap (freeIds f bound)
+    | .bigop _ v lo hi b => freeIds f bound lo ++ freeIds f bound hi ++ freeIds f (v :: bound) b
+    | .quant _ vs d b => freeIds f bound d ++ freeIds f (vs ++ bound) b
+    | .limit v t b => freeIds f bound t ++ freeIds f (v :: bound) b
+    | .sig .. | .text _ => []
 
 /-- A domain of multi-indices `\mathbb{N}_0^n` (`n ≥ 2`): the domain of the components and
 `n`. -/
@@ -1118,7 +1130,7 @@ def genericsOf (bases : List Codes) : Nat → MT → List (Codes × List Codes)
     -- the implied constant of `\ll`, `\gg` and `O(…)` (`@ll`)
     let implied : List (Codes × List Codes) := match m with
       | .chain _ rs =>
-        if bases.contains w!"@ll" && rs.any (fun (r, y) => r == .ll || r == .gg ||
+        if bases.contains w!"@ll" && rs.any (fun (r, y) => r == .ll || r == .gg || r == .asymp ||
             (match y with | .app (.id [79]) [_] => true | _ => false)) then [(w!"@ll", [])] else []
       | _ => []
     implied ++
@@ -2285,6 +2297,15 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
 
 /-! ## Claim sentences -/
 
+/-- `if $n$ is sufficiently large` about a variable bound before (`bound`): its threshold would
+come after it and say nothing; refused. -/
+def checkThreshold (bound : List Codes) (bs : List BindInfo) : M Unit := do
+  for b in bs do
+    if b.name.take 2 == w!"@N" || b.name.take 2 == w!"@d" then
+      let v := b.name.drop 2
+      if bound.contains v then
+        fail E.finding (v ++ w!" is bound before it is said to be sufficiently large or small: say so where it is introduced (for all sufficiently large $" ++ v ++ w!"$)")
+
 /-- `there is $Q=Q(\nu)$ such that …`: `Q` is chosen after the variables its name lists
 (bound in `sc`), and after no other. -/
 def checkDependence (sc : Scope) (cl : Clause) : M Unit := do
@@ -2516,6 +2537,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | .noun np => do pure [(← nounPhrase np sc, 0)]
       | _ => do pure ((← binderInfos b).map (·, 0))
     let bs := items.map (·.1)
+    checkThreshold (sc.map (·.1)) bs
     let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
     -- (a threshold `@…` of `sufficiently large` is existential)
     pure (items.foldr (fun (bi, k) acc =>
@@ -2719,6 +2741,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
       else acc.map fun cl => { cl with clause := Clause.ifThen φ cl.clause }
     | _ => acc) cls
   let bs ← bindersInfos binds
+  checkThreshold known bs
   -- `On I,`: the sentence's single free variable ranges over I
   let onVar ← match binds.find? (fun b => match b with | .on _ => true | _ => false) with
     | some (.on d) => do
