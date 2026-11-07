@@ -222,11 +222,49 @@ def declares (ts : List PTok) : Bool :=
   let ws := ts.filterMap fun p => match p.tok with | .word w => some (Grammar.lower w) | _ => none
   ws.take 2 == [w!"we", w!"write"] || ws.take 3 == [w!"let", w!"us", w!"write"]
 
+/-- The first occurrence of `seg` in `ts`: the tokens before it and after it. -/
+def splitAt (seg : List MTok) : Nat → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _ => none
+  | _ + 1, [], acc => if seg.isEmpty then some (acc.reverse, []) else none
+  | f + 1, t :: ts, acc =>
+    if !seg.isEmpty && (t :: ts).take seg.length == seg then some (acc.reverse, (t :: ts).drop seg.length)
+    else splitAt seg f ts (t :: acc)
+
+/-- An argument in braces is its contents. -/
+def unbrace (arg : List MTok) : List MTok :=
+  match arg with
+  | .lb :: r => if r.getLast? == some .rb then r.dropLast else arg
+  | _ => arg
+
+/-- The arguments after the first fixed piece: each runs up to the next piece; the
+last piece ends the formula. -/
+def splitRest : Nat → List (List MTok) → List MTok → List (List MTok) → Option (List (List MTok))
+  | 0, _, _, _ => none
+  | _ + 1, [], rest, acc => if rest.isEmpty then some acc.reverse else none
+  | _ + 1, [last], rest, acc =>
+    if rest.length ≤ last.length then none else
+    let arg := rest.take (rest.length - last.length)
+    if rest.drop arg.length != last then none else some (unbrace arg :: acc).reverse
+  | f + 1, s :: ss, rest, acc =>
+    match splitAt s (rest.length + 1) rest [] with
+    | some (arg, r) => if arg.isEmpty then none else splitRest f ss r (unbrace arg :: acc)
+    | none => none
+
+/-- The arguments of a formula with fixed pieces `segs` (`$C^v$` against `$C^{m+4}$`). -/
+def splitSegs (segs : List (List MTok)) (u : List MTok) : Option (List (List MTok)) :=
+  match segs with
+  | [] => none
+  | s0 :: more =>
+    if u.take s0.length != s0 then none else splitRest (more.length + 1) more (u.drop s0.length) []
+
 /-- The variables of a phrase, in order, as formulas of the sentence. -/
 def matchSlots : Phrase → List Chunk → List (List MTok) → Option (List (List MTok))
   | [], [], acc => some acc.reverse
   | .w w :: ps, .w v :: cs, acc => if v == w then matchSlots ps cs acc else none
   | .m t :: ps, .m u :: cs, acc => if t == u then matchSlots ps cs acc else none
+  | .f segs :: ps, .m u :: cs, acc => do
+    let args ← splitSegs segs u
+    matchSlots ps cs (args.reverse ++ acc)
   | .v :: ps, .m u :: cs, acc => matchSlots ps cs (u :: acc)
   | _, _, _ => none
 
@@ -389,7 +427,9 @@ def matchWords (tbl : List (List Codes × Nat)) (cs : List Chunk) : Option (Nat 
 def conjPreds (ty : Ty) : List Tm → Option Tm
   | [] => none
   | [p] => some p
-  | ps => some (.lam ty .tt (Elab.conjAll (ps.map fun p => Tm.app p (.loc 0))))
+  -- (a predicate may use the variables bound before: under the new binder they
+  -- are one further out)
+  | ps => some (.lam ty .tt (Elab.conjAll (ps.map fun p => Tm.app (shift 1 0 p) (.loc 0))))
 
 /-- An endpoint of an interval domain: a numeral, or a term in the scope `sc` of
 the binders before it (`g_*`, or `x` in `e\in[0,x]`). -/
@@ -457,7 +497,7 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
     | none => (acc.reverse, cs)
 
 /-- Read a noun phrase (without its determiner). -/
-def nounPhrase (np : List Chunk) : M BindInfo := do
+def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st ← get
   let V := st.vocab
   -- prenominal modifiers
@@ -508,7 +548,8 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
         match v, r with
         -- `a copula $C$`: the variable follows a noun without a slot
         | none, .m ts :: r' =>
-          if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty) then pure (n.ty, [n.pred], v, r)
+          let single := match ts with | [.id _] | [.cmd _] => true | _ => false
+          if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then pure (n.ty, [n.pred], v, r)
           else pure (n.ty, [n.pred], some ts, r')
         | _, _ => pure (n.ty, [n.pred], v, r)
       | none =>
@@ -526,7 +567,7 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
             if dp.isSome || cp.isSome then fail E.unsupported
             pure (.fn dt ct, [], some [.id f], r)
           | _ => fail E.unsupported
-        | _ => fail E.noun ((wordsOf np).flatten)
+        | _ => fail E.noun (((wordsOf np).intersperse [32]).flatten)
   let (ty, preds, var, r1) ← head
   let pms ← pmGroups.mapM fun (cs, ms) => do
     let ms := ms.filter (·.ty == ty)
@@ -558,7 +599,7 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
   let (conds, r2) := match r2 with
     | .w w :: r => if w == w!"with" then condsOf 4 r [] else ([], r2)
     | _ => ([], r2)
-  if !r2.isEmpty then fail E.noun ((wordsOf np).flatten)
+  if !r2.isEmpty then fail E.noun (((wordsOf np).intersperse [32]).flatten)
   let (name, member) ← match var with
     | some ts => do let (v, d) ← varChunk ts; pure (v, d)
     | none => pure ([], none)
@@ -566,8 +607,10 @@ def nounPhrase (np : List Chunk) : M BindInfo := do
     | some (t, p) => if t == ty then pure p.toList else fail E.type
     | none => pure []
   if !conds.isEmpty && name.isEmpty then fail E.unsupported
+  -- (a condition may use the variables bound before: `let $\varphi$ be … with
+  -- $N\varphi=F$`; inside the predicate they are one binder further out)
   let condPreds ← conds.mapM fun φ => do
-    let (p, pty) ← Elab.term 100000 [(name, ty)] none φ
+    let (p, pty) ← Elab.term 100000 ([(name, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer) none φ
     if pty != .prop then fail E.type
     pure (Tm.lam ty .tt p)
   let all := (preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).eraseDups
@@ -657,6 +700,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
   for b in binds do
     match b with
     | .every vs d => out := out ++ (← binderInfos.everyAfter (before ++ out) vs d)
+    | .noun np => out := out ++ [← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse]
     | b => out := out ++ (← binderInfos b)
   pure out
 
@@ -694,10 +738,87 @@ def clauseMaths : Clause → List MT
   | .ifThen c cl => c :: clauseMaths cl
   | .adjectives s adjs => s :: adjs.filterMap (·.2)
   | .notions s _ _ => [s]
-  | .isA s _ _ => [s]
+  | .isA s np _ => s :: (mathsOf np).filterMap Math.parseFormula
+  | .thereIs _ c => clauseMaths c
+  | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
+  | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
+  | .existsNP np _ none => (mathsOf np).filterMap Math.parseFormula
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
   | _ => []
+
+/-- The subformulas of a formula. -/
+def mtChildren : MT → List MT
+  | .sub b i | .sup b i => [b, i]
+  | .hat x | .neg x | .abs x | .lnot x => [x]
+  | .app f as => f :: as
+  | .add x y | .minus x y | .mul x y | .div x y | .frac x y | .equiv x y
+  | .land x y | .lor x y | .limp x y | .liff x y => [x, y]
+  | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => xs
+  | .int lo hi b _ => [lo, hi, b]
+  | .interval a b | .ival a b _ _ => [a, b]
+  | .setOf p d cs => p :: d :: cs
+  | .setCond p cs => p :: cs
+  | .image e _ d => [e, d]
+  | .mapsto p b => [p, b]
+  | .chain x rs => x :: rs.map (·.2)
+  | .cases rows => rows.flatMap fun (a, b) => [a, b]
+  | .sig n d c => [n, d, c]
+  | .extr _ s | .bound _ s => [s]
+  | .bigop _ _ lo hi b => [lo, hi, b]
+  | .quant _ _ d b => [d, b]
+  | .limit _ t b => [t, b]
+  | _ => []
+
+/-- The generic constants of a formula (`C`, `C_m`, `C_{j,I}`): their names and the
+variables of their indices. -/
+def genericsOf (bases : List Codes) : Nat → MT → List (Codes × List Codes)
+  | 0, _ => []
+  | f + 1, m =>
+    match m with
+    | .id k => if bases.contains k then [(k, [])] else []
+    | .sub (.id k) i =>
+      if bases.contains k then
+        match symKey m with
+        | some key => [(key, freeIds 64 [] i)]
+        | none => []
+      else genericsOf bases f i
+    | _ => (mtChildren m).flatMap (genericsOf bases f)
+
+/-- Binders, each universal or (`true`) existential with its domain as a conjunct. -/
+def wrapMixed : List (BindInfo × Bool) → Tm → Tm
+  | [], body => body
+  | (b, isEx) :: bs, body =>
+    let inner := wrapMixed bs body
+    let p := b.pred.map fun p => Tm.app p (.loc 0)
+    if isEx then .ex b.ty (match p with | some p => .and p inner | none => inner)
+    else .all b.ty (match p with | some p => .imp p inner | none => inner)
+
+/-- The binders with the generic constants: the binders of the constants' indices and
+of the fixed data first, then the constants, then the other binders (a constant
+`C_m` depends only on `m` and the fixed data). Where moving a binder would change
+what a domain refers to, each constant comes right after the last binder of its
+indices instead. -/
+def placeGenerics (gens : List (BindInfo × List Codes)) (bs : List BindInfo) (fixedNames : List Codes) :
+    List (BindInfo × Bool) :=
+  let need := gens.flatMap (·.2)
+  let isFront (b : BindInfo) : Bool := need.contains b.name || fixedNames.contains b.name
+  let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
+  let firstRest := (List.range bs.length).find? fun i => !isFront bs[i]!
+  -- a front binder after a rest binder, followed by a dependent rest binder
+  let risky := (List.range bs.length).any fun i =>
+    isFront bs[i]! && firstRest.any (· < i) &&
+      ((List.range bs.length).any fun j => i < j && !isFront bs[j]! && dependent bs[j]!)
+  if !risky && !(bs.filter isFront).any dependent then
+    ((bs.filter isFront).map (·, false)) ++ (gens.map fun (g, _) => (g, true)) ++
+      ((bs.filter fun b => !isFront b).map (·, false))
+  else
+    let lastIdx (idx : List Codes) : Option Nat :=
+      (List.range bs.length).foldl (fun acc i => if idx.contains (bs[i]!).name then some i else acc) none
+    let before := gens.filter fun (_, idx) => (lastIdx idx).isNone
+    (before.map fun (g, _) => (g, true)) ++
+      (List.range bs.length).flatMap fun i =>
+        (bs[i]!, false) :: ((gens.filter fun (_, idx) => lastIdx idx == some i).map fun (g, _) => (g, true))
 
 /-- The two sides `(smaller, larger)` of a single inequality. -/
 def ineqSides : MT → Option (MT × MT)
@@ -814,7 +935,7 @@ def object (sc : Scope) (ty : Ty) : Obj → M Tm
   | _ => fail E.unsupported
 
 def predicate (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm := do
-  let some i := lookupWords (← get).preds phrase | fail E.noun phrase.flatten
+  let some i := lookupWords (← get).preds phrase | fail E.noun ((phrase.intersperse [32]).flatten)
   let g := ((← get).globs[i]?).getD default
   match g.ty with
   | .fn _ (.fn b .prop) => do
@@ -827,7 +948,7 @@ def subjectTm (sc : Scope) : Subj → M (Tm × Ty)
   | .math m => term F sc none m
   | .its name => do
     let some (s, sty) := (← get).subject | fail E.referent
-    let some i := lookupWords (← get).ops name | fail E.noun name.flatten
+    let some i := lookupWords (← get).ops name | fail E.noun ((name.intersperse [32]).flatten)
     let g := ((← get).globs[i]?).getD default
     applyAll (.glob i) g.ty g.doms [(s, sty)]
 
@@ -1147,7 +1268,7 @@ def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
   | some (n, _) => do
     let i ← addGlob ⟨key, n.ty, [], false⟩ n.value
     pure ([i], [])
-  | none => fail E.noun (wordsOf name).flatten
+  | none => fail E.noun (((wordsOf name).intersperse [32]).flatten)
 
 /-- `For B, set $X_p\coloneqq e [\in D]$` or `$f(p)\coloneqq e$`. -/
 def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := do
@@ -1382,7 +1503,7 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
         let ws := wordsOf rest
         match mathsOf rest with
         | [arg] => do
-          let some i := lookupWords (← get).ops ws | fail E.noun ws.flatten
+          let some i := lookupWords (← get).ops ws | fail E.noun ((ws.intersperse [32]).flatten)
           let g := ((← get).globs[i]?).getD default
           let m ← liftO (Math.parseFormula arg) E.unsupported
           let a ← term F sc none m
@@ -1516,9 +1637,21 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond) :
 def notionApp (x : Tm × Ty) (name : List Codes) : M Tm := do
   let st ← get
   let some i := st.notions.lookup name | fail E.prose name.flatten
-  let some g := st.globs[i]? | fail E.noun name.flatten
+  let some g := st.globs[i]? | fail E.noun ((name.intersperse [32]).flatten)
   let (t, _) ← applyAll (.glob i) g.ty g.doms [x]
   pure t
+
+/-- Does a phrase of the vocabulary, or a noun of the article, start with the first
+word of `np` (after `a`, `an`, `the`)? Otherwise the words are prose. -/
+def knownStart (st : St) (np : List Chunk) : Bool :=
+  let V := st.vocab
+  let cs := (kw [w!"a"] np <|> kw [w!"an"] np <|> kw [w!"the"] np).getD np
+  match cs with
+  | .w w :: _ =>
+    let starts (p : Phrase) : Bool := p.head? == some (.w w)
+    V.nouns.any (fun n => starts n.sing || starts n.plural) || V.mods.any (fun m => starts m.phrase) ||
+      V.notions.any (fun n => starts n.name) || st.nouns.any (fun (ws, _) => ws.head? == some w)
+  | _ => false
 
 /-- The chunks of a name (a hyphen as `-`). -/
 def nameChunks (name : List Codes) : List Chunk :=
@@ -1660,7 +1793,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let sing := noun.dropLast ++ (noun.getLast?.map singular).toList
     let nouns := (← get).nouns
     let some ni := (lookupWords nouns noun).orElse (fun _ => lookupWords nouns sing)
-      | fail E.noun noun.flatten
+      | fail E.noun ((noun.intersperse [32]).flatten)
     let gty : Option Ty := ((← get).globs[ni]?).map (·.ty)
     let ty ← match gty with
       | some (.fn a .prop) => pure a
@@ -1743,7 +1876,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.and hd (.imp ct sign))
   | .noOther noun x isMax => do
     let ex ← findExtremum c.target isMax
-    let some ni := lookupWords (← get).nouns noun | fail E.noun noun.flatten
+    let some ni := lookupWords (← get).nouns noun | fail E.noun ((noun.intersperse [32]).flatten)
     let xt ← term F sc none x
     let u ← attainsOnly sc ex xt false
     match u with
@@ -1769,7 +1902,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let st ← subjectTm sc s
     predicate sc st ph o
   | .onlyWith s noun conds var => do
-    let some ni := lookupWords (← get).nouns noun | fail E.noun noun.flatten
+    let some ni := lookupWords (← get).nouns noun | fail E.noun ((noun.intersperse [32]).flatten)
     let (st, sty) ← subjectTm sc s
     -- with a variable, the conditions are about it; otherwise about the subject
     let sc' := (var.getD w!"", sty) :: sc
@@ -1835,6 +1968,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let p ← clauseTm c sc onVar lastRhs cl
     pure (.imp h p)
   | .notions s names disj => do
+    let st ← get
+    unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
     let x ← term F sc none s
     -- a name the article does not define is an adjective of the vocabulary
     let notions := (← get).notions
@@ -1843,15 +1978,33 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       tryCatch (vocabPredicate sc x (nameChunks n)) fun e =>
         if e.code == E.ambiguous then throw e else fail E.prose n.flatten
     pure (if disj then disjAll ps else conjAll ps)
+  | .thereIs b cl => do
+    let bs ← binderInfos b
+    let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
+    pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
+      | some q => .and (.app q (.loc 0)) acc
+      | none => acc)) p)
+  | .existsNP np unique cl => do
+    let b ← nounPhrase np sc
+    if b.name.isEmpty then fail E.unsupported
+    -- `P x`: the noun phrase and the clause about `x`
+    let inner ← match cl with
+      | some cl => clauseTm c ((b.name, b.ty) :: sc) onVar lastRhs cl
+      | none => pure .tt
+    let P := Tm.lam b.ty .tt (.and (holdsAt b.pred (.loc 0)) inner)
+    let body := if unique then
+        Tm.and (.app (shift 1 0 P) (.loc 0))
+          (.all b.ty (.imp (.app (shift 2 0 P) (.loc 0)) (.eq (.loc 0) (.loc 1))))
+      else Tm.app (shift 1 0 P) (.loc 0)
+    pure (.ex b.ty body)
+  | .forEveryNP cl np => do
+    let b ← nounPhrase np sc
+    if b.name.isEmpty then fail E.unsupported
+    let p ← clauseTm c (scopeOf [b] ++ sc) onVar lastRhs cl
+    pure (wrap [b] p)
   | .isA s np neg => do
     -- words with which no phrase of the vocabulary starts are prose
-    let V := (← get).vocab
-    let cs := (kw [w!"a"] np <|> kw [w!"an"] np <|> kw [w!"the"] np).getD np
-    let first : Option PItem := match cs with | .w w :: _ => some (.w w) | _ => none
-    let starts (p : Phrase) : Bool := first.isSome && p.head? == first
-    unless V.nouns.any (fun n => starts n.sing || starts n.plural) || V.mods.any (fun m => starts m.phrase) ||
-        V.notions.any (fun n => starts n.name) || ((← get).nouns.any fun (ws, _) => ws.head? == (match cs with | .w w :: _ => some w | _ => none)) do
-      fail E.prose
+    unless knownStart (← get) np do fail E.prose
     let x ← term F sc none s
     -- words that are not the vocabulary's are prose
     let p ← tryCatch (vocabPredicate sc x np) fun e =>
@@ -2001,7 +2154,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
     | g + 1, cl :: rest, last =>
       match cl.clause with
       | .exactlyOne noun v cond sat => do
-        let some ni := lookupWords (← get).nouns noun | fail E.noun noun.flatten
+        let some ni := lookupWords (← get).nouns noun | fail E.noun ((noun.intersperse [32]).flatten)
         let gty : Option Ty := ((← get).globs[ni]?).map (·.ty)
         let ty ← match gty with
           | some (.fn a .prop) => pure a
@@ -2056,7 +2209,33 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         -- definitions inside the clause (`the mean $G\coloneqq\sqrt{ab}$`) and after it
         -- (`…, where $d\coloneqq …$`), in the scope of its binders
         let k ← inlineClause c (outer ++ cbs) cl.defs k
-        let p ← clauseTm c (scopeOf cbs ++ scopeOf outer) onVar last k
+        -- generic constants (`C_m`): existential, after the binders of their indices
+        let stG ← get
+        let bases := stG.genericConsts.map (·.1)
+        let gens := if bases.isEmpty then [] else
+          ((clauseMaths k).flatMap (genericsOf bases 64)).filter (fun (key, _) =>
+            !(stG.globs.any (·.key == key)) && !((outer ++ cbs).any (·.name == key)))
+        let gens := gens.foldl (fun acc g => if acc.any (·.1 == g.1) then acc else acc ++ [g]) []
+        let positive (key : Codes) : Bool := stG.genericConsts.any fun (b, pos) =>
+          pos && (key == b || key.take (b.length + 1) == b ++ [95])
+        let gbs : List (BindInfo × List Codes) := gens.map fun (key, idx) =>
+          (⟨key, .real, if positive key then some (.lam .real .tt (.lt (.num 0) (.loc 0))) else none⟩, idx)
+        -- a clause's own binder that names a constant's index (`… for every integer
+        -- $m\ge0$`) binds before the constant: it becomes a binder of the claim
+        let (k, ownBs) ← match k with
+          | .scoped f vs (some d) eq =>
+            if gens.any (fun (_, idx) => idx.any vs.contains) then do
+              let bis ← binderInfos.everyIn (scopeOf (outer ++ cbs)) vs d
+              pure (Clause.scoped f [] none eq, bis)
+            else pure (k, [])
+          | .forEveryNP c' np => do
+            if gens.isEmpty then pure (k, []) else
+            let b ← nounPhrase np (scopeOf (outer ++ cbs))
+            if gens.any (fun (_, idx) => idx.contains b.name) then pure (c', [b]) else pure (k, [])
+          | _ => pure (k, [])
+        let fixedNames := stG.fixed.map (·.2.name)
+        let order := placeGenerics gbs (outer ++ cbs ++ ownBs) fixedNames
+        let p ← clauseTm c (scopeOf (order.map (·.1))) onVar last k
         -- an inequality about the bound variables is the referent of a later
         -- `equality holds exactly when …`
         match k with
@@ -2064,7 +2243,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
           if !(outer ++ cbs).isEmpty && (inequality f).isSome then
             modify fun st => { st with lastIneq := some (outer ++ cbs, f) }
         | _ => pure ()
-        let id ← emit c (wrap (outer ++ cbs) p) cl.cites
+        let id ← emit c (if gens.isEmpty then wrap (outer ++ cbs) p else wrapMixed order p) cl.cites
         let ids ← go g rest (match rhsOf k with | some r => some r | none => last)
         pure (id :: ids)
   go 16 cls none
@@ -2197,6 +2376,13 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     pure ([], [])
   | .notation .. => fail E.unsupported
   | .meaning ws rhs noun => meaningDef ws rhs noun
+  | .generic ms pos => do
+    let bases ← ms.mapM fun m => match m with
+      | .id k => pure k
+      | .sub (.id k) _ => pure k
+      | _ => fail E.unsupported
+    modify fun st => { st with genericConsts := st.genericConsts ++ bases.map (·, pos) }
+    pure ([], [])
   | .defDeriv b sets names dom cod anchors derivs labels => do
     let bi ← match b with
       | some bd => do
@@ -2234,24 +2420,53 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
     let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name rhs []).map fun a => ((n, a), [])
     match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) rhs cands with
     | some ((n, args), _) => do
-      let ts ← args.mapM fun a => match Notation.varTok a with
-        | some t => pure t
-        | none => fail E.unsupported
+      -- each argument is a variable of the pattern, or a fixed value
+      -- (`We write $NF$ for the derivative of $F$ in the direction $(\sqrt2-1,1)$.`)
+      let fixedArgs ← args.mapM fun a => match Notation.varTok a with
+        | some _ => pure none
+        | none => do
+          let some m := Math.parseFormula a | fail E.unsupported
+          let (v, vty) ← term F [] none m
+          pure (some (v, vty))
+      let ts := (args.zip fixedArgs).filterMap fun (a, c) => if c.isSome then none else Notation.varTok a
+      let rec argTys : Ty → List Ty
+        | .fn a b => a :: argTys b
+        | _ => []
+      let tys := argTys n.ty
+      let k := ts.length
+      let varTys : List Ty := ((tys.zip fixedArgs).filter (fun (p : Ty × Option (Tm × Ty)) => p.2.isNone)).map (·.1)
+      let allDoms : List (Option Tm) := n.doms ++ List.replicate tys.length none
+      let varDoms : List (Option Tm) := ((allDoms.zip fixedArgs).filter
+        (fun (p : Option Tm × Option (Tm × Ty)) => p.2.isNone)).map (·.1)
+      -- the arguments in order: the pattern's variables as locals, the fixed values as given
+      let rec place : Nat → List (Option (Tm × Ty)) → List Ty → List (Tm × Ty)
+        | _, [], _ => []
+        | j, none :: cs, t :: tys => (.loc (k - 1 - j), t) :: place (j + 1) cs tys
+        | j, some c :: cs, _ :: tys => c :: place j cs tys
+        | _, _, [] => []
+      let (body, resTy) ← applyAll n.value n.ty n.doms (place 0 fixedArgs tys)
+      let value := varTys.foldr (fun t b => Tm.lam t .tt b) body
+      let gty := varTys.foldr (fun t r => Ty.fn t r) resTy
       let pat' := Notation.items ts (pat.map (·.tok))
       let key := match Notation.symbolOf pat' with
         | some k => if st.globs.any (·.key == [92] ++ k) then key else k
         | none => key
-      let i ← addGlob ⟨[92] ++ key, n.ty, n.doms, false⟩ n.value
+      -- a notation that starts with a letter (`N\varphi`) is that letter
+      let letter : Option Nat := match pat' with
+        | .fixed (.mvar c) :: .slot _ :: _ => if st.globs.any (·.key == [c]) then none else some c
+        | _ => none
+      let gkey := match letter with | some c => [c] | none => [92] ++ key
+      let i ← addGlob ⟨gkey, gty, varDoms, false⟩ (if fixedArgs.all (·.isNone) then n.value else value)
       let slots := (List.range ts.length).map TItem.slot
       let call : List TItem := if slots.isEmpty then [] else
         [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]
-      push ⟨pat', .fixed (.cmd key) :: call⟩
+      push ⟨pat', .fixed (match letter with | some c => .mvar c | none => .cmd key) :: call⟩
       pure ([i], [])
     | none =>
       -- `the set|class of NOUNS`
       let rest ← match rhs with
-        | .w a :: .w b :: r => if (a == w!"set" || a == w!"class") && b == w!"of" then pure r else fail E.noun (wordsOf rhs).flatten
-        | _ => fail E.noun (wordsOf rhs).flatten
+        | .w a :: .w b :: r => if (a == w!"set" || a == w!"class") && b == w!"of" then pure r else fail E.noun (((wordsOf rhs).intersperse [32]).flatten)
+        | _ => fail E.noun (((wordsOf rhs).intersperse [32]).flatten)
       let cands := V.nouns.filterMap fun n => match matchPhrase n.plural rest with
         | some (_, []) => some (n, [])
         | _ => none
@@ -2264,7 +2479,7 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false⟩ n.pred
         push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)]⟩
         pure ([i], [])
-      | none => fail E.noun (wordsOf rest).flatten
+      | none => fail E.noun (((wordsOf rest).intersperse [32]).flatten)
   else
     let some repl := fs[1]? | fail E.unsupported
     let tpl := Notation.template pat repl

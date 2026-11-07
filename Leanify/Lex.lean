@@ -91,7 +91,7 @@ def wDropText : List Codes :=
    w!"clearpage"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
-   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits"]
+   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]
 /-- Commands of formulas that are another spelling of a symbol the grammar reads:
 `\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`. -/
 def mathAlias (n : Codes) : Option Tok :=
@@ -110,7 +110,7 @@ def wSkipArgs : List Codes :=
   [w!"section", w!"subsection", w!"subsubsection", w!"section*", w!"caption", w!"includegraphics",
    w!"bibliographystyle", w!"bibliography", w!"vspace", w!"hspace", w!"thanks", w!"title",
    w!"author", w!"date", w!"address", w!"email", w!"keywords", w!"maketitle", w!"Needspace",
-   w!"texorpdfstring"]
+   w!"texorpdfstring", w!"tag", w!"tag*"]
 
 /-! ### Theorem environments
 

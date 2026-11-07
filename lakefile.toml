@@ -23,6 +23,11 @@ globs = ["Leanify.*"]
 name = "leanify"
 root = "LeanifyCli"
 
+[[lean_exe]]
+# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
+name = "glossary"
+root = "GlossaryMain"
+
 [[lean_lib]]
 # A short paper on the harmonic, geometric and arithmetic mean: definitions inside a
 # result, in a claim and after it.
@@ -61,3 +66,10 @@ globs = ["Refuted.+"]
 name = "Vocabulary"
 srcDir = "tests"
 globs = ["Vocabulary.+"]
+
+[[lean_lib]]
+# The fields numbers and torus, generic constants and existence statements,
+# compiled by the kernel.
+name = "Fields"
+srcDir = "tests"
+globs = ["Fields.+"]

@@ -22,6 +22,8 @@ inductive PItem where
   | w (word : Codes)
   | m (toks : List MTok)
   | v
+  /-- A formula with arguments (`$C^v$`): the fixed pieces between them. -/
+  | f (segs : List (List MTok))
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 abbrev Phrase := List PItem
@@ -129,8 +131,11 @@ instance : Append Vocab := ⟨append⟩
 
 /-- The entries of `V`, as the field `f`. -/
 def tag (f : Codes) (V : Vocab) : Vocab :=
-  { V with nouns := V.nouns.map ({ · with field := f }), mods := V.mods.map ({ · with field := f }),
-           notions := V.notions.map ({ · with field := f }) }
+  -- an entry's own sense (`natural number`, `with 0`) is kept after the field
+  let t (g : Codes) : Codes := if g.isEmpty then f else f ++ [32, 40] ++ g ++ [41]
+  { V with nouns := V.nouns.map (fun n => { n with field := t n.field }),
+           mods := V.mods.map (fun m => { m with field := t m.field }),
+           notions := V.notions.map (fun n => { n with field := t n.field }) }
 
 end Vocab
 
@@ -156,7 +161,16 @@ def phraseOf (s : String) : Except String Phrase := do
         let rest := ts.drop (body.length + 1)
         match Math.simplify (body.length + 1) body with
         | some [.id [118]] => go f rest (.v :: acc)
-        | some ms => go f rest (.m ms :: acc)
+        | some ms =>
+          if ms.contains (.id [118]) then
+            -- split at the arguments `v`
+            let segs := ms.foldl (fun (acc : List (List MTok)) t =>
+              if t == .id [118] then [] :: acc
+              else match acc with
+                | cur :: more => (cur ++ [t]) :: more
+                | [] => [[t]]) [[]]
+            go f rest (.f segs.reverse :: acc)
+          else go f rest (.m ms :: acc)
         | none => throw s!"cannot read the formula in phrase {s}"
       | .punct 39 => go f ts acc
       | _ => throw s!"unexpected token in phrase {s}"
@@ -181,9 +195,11 @@ namespace Vocab
 def core : Vocab where
   mods := [
     { phrase := phrase!"Borel measurable", prenominal := true, ty := Ty.self,
-      pred := .lam Ty.self .tt (.app (.prim .borel) (.loc 0)) }]
+      pred := .lam Ty.self .tt (.app (.prim .borel) (.loc 0)),
+      doc := "a Borel measurable map of `[0,1]` (Mathlib `Measurable`)" }]
   notions := [
-    { name := phrase!"Lebesgue measure on $[0,1]$", value := .prim .leb, ty := Ty.set1 ⟶ .real }]
+    { name := phrase!"Lebesgue measure on $[0,1]$", value := .prim .leb, ty := Ty.set1 ⟶ .real,
+      doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" }]
 
 end Vocab
 

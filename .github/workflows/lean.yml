@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary
+        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -37,6 +37,15 @@ jobs:
         run: |
           lake exe leanify check tests/Vocabulary/article.tex --vocab distributions --claims > "$RUNNER_TEMP/vocabulary.check.txt"
           diff tests/Vocabulary/check.txt "$RUNNER_TEMP/vocabulary.check.txt"
+      - name: The glossary of the vocabulary is up to date
+        run: |
+          lake build glossary
+          lake exe glossary > "$RUNNER_TEMP/glossary.md"
+          diff docs/glossary.md "$RUNNER_TEMP/glossary.md"
+      - name: The fields numbers and torus, generic constants and existence are read as documented
+        run: |
+          lake exe leanify check tests/Fields/article.tex --vocab numbers,torus --claims > "$RUNNER_TEMP/fields.check.txt" || true
+          diff tests/Fields/check.txt "$RUNNER_TEMP/fields.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

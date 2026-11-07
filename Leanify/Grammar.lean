@@ -128,8 +128,13 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
 `x\in(a,b]`. -/
 def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
   let inf : MT := .id w!"\\infty"
+  let named : MT → Option Codes := fun m => match m with
+    | .id x => some x
+    | .sub (.id k) (.id i) => some (k ++ [95] ++ i)
+    | _ => none
   match ← Math.parseFormula ts with
-  | .chain (.id x) [(r, b)] =>
+  | .chain v [(r, b)] =>
+    let x ← named v
     match r with
     | .gt => some ([x], .ival b inf true true)
     | .ge => some ([x], .ival b inf false true)
@@ -289,9 +294,10 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
       some (withBind (.every vs dom) r')) <|>
     -- `For every LTD copula $C$,`: as `For an LTD copula $C$,`
     (do
-      let np := r.takeWhile (fun c => match c with | .p 44 => false | _ => true)
+      -- (up to the comma, or to `there is` without one)
+      let np := r.takeWhile (fun c => match c with | .p 44 => false | .w w => w != w!"there" | _ => true)
       match np.head?, np.getLast? with
-      | some (.w _), some (.m [.id _]) => some (.noun np, r.drop np.length)
+      | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r.drop np.length)
       | _, _ => none)
   | none, none =>
     match kw [w!"for", w!"a"] cs, kw [w!"for", w!"an"] cs with
@@ -395,6 +401,13 @@ inductive Clause where
   /-- `$X$ is [not] a|an NP`, `$X$ is [not] ADJ [and ADJ]`: a noun or adjectives of the
   vocabulary, about `X`. -/
   | isA (s : MT) (np : List Chunk) (neg : Bool)
+  /-- `there is $C>0$ such that CLAUSE`: an existential binder. -/
+  | thereIs (b : Bind) (c : Clause)
+  /-- `CLAUSE for every NP $x$`: the clause for every object the noun phrase
+  describes. -/
+  | forEveryNP (c : Clause) (np : List Chunk)
+  /-- `there is [exactly one|a unique] NP [such that CLAUSE]`. -/
+  | existsNP (np : List Chunk) (unique : Bool) (c : Option Clause)
   /-- `[the WORDS] $X$ is at most [the WORDS] $Y$` (at least, less than, greater than,
   equal to); either side may define its symbol (`the geometric mean $G\coloneqq\sqrt{ab}$`). -/
   | compare (lhs : MT) (rel : Rel) (rhs : MT)
@@ -558,7 +571,9 @@ def clauseEnd (cs : List Chunk) : Bool :=
 def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
   | 0, _, _ => none
   | f + 1, cs, acc =>
-    if clauseEnd cs then some (acc.reverse, cs) else
+    -- `and` before a formula starts the next clause (`$7$ is prime and $9$ is …`)
+    let nextClause := match cs with | .w w :: .m _ :: _ => w == w!"and" | _ => false
+    if clauseEnd cs || (nextClause && !acc.isEmpty) then some (acc.reverse, cs) else
     match cs with
     | [] => none
     | c :: r => untilClauseEnd f r (c :: acc)
@@ -571,7 +586,12 @@ def notionList (cs : List Chunk) : Option (List (List Codes) × Bool × List Chu
   | some r2 =>
     let disj := (kw [w!"or"] r1).isSome
     let (n2, r3) := nameWords 8 r2 []
-    if n2.isEmpty || !clauseEnd r3 then none else some ([n1, n2], disj, r3)
+    if n2.isEmpty then
+      -- `and` before a formula: the next clause
+      match r2 with
+      | .m _ :: _ => if disj then none else some ([n1], false, r1)
+      | _ => none
+    else if !clauseEnd r3 then none else some ([n1, n2], disj, r3)
   | none => if clauseEnd r1 then some ([n1], false, r1) else none
 
 /-- `[the WORDS] $X$`, possibly `$X\coloneqq e$`: a term named by a phrase. -/
@@ -879,6 +899,71 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     | _ => none
   | none => none
 
+/-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
+a formula, `for every $x\in A$`, belongs to the clause itself). -/
+def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
+  match kw [w!"for", w!"every"] r <|> kw [w!"for", w!"all"] r <|> kw [w!"for", w!"each"] r <|>
+      kw [w!"for", w!"any"] r with
+  | some r2 =>
+    match r2 with
+    | .w _ :: _ =>
+      match untilClauseEnd 48 r2 [] with
+      | some (np, r3) =>
+        -- `for every NP and every NP`: the first binds first
+        let rec split : Nat → List Chunk → List Chunk → List (List Chunk) → List (List Chunk)
+          | 0, _, cur, acc => (cur.reverse :: acc).reverse
+          | _ + 1, [], cur, acc => (cur.reverse :: acc).reverse
+          | f + 1, .w a :: .w e :: rest, cur, acc =>
+            if a == w!"and" && (e == w!"every" || e == w!"all" || e == w!"each" || e == w!"any") && !cur.isEmpty then
+              split f rest [] (cur.reverse :: acc)
+            else split f (.w e :: rest) (.w a :: cur) acc
+          | f + 1, x :: rest, cur, acc => split f rest (x :: cur) acc
+        let nps := split (np.length + 1) np [] []
+        (nps.foldr (fun np acc => Clause.forEveryNP acc np) c, r3)
+      | none => (c, r)
+    | _ => (c, r)
+  | none => (c, r)
+
+/-- `there is|exists [a constant] $C>0$ such that CLAUSE`. -/
+def thereIs (cs : List Chunk) : Option (Clause × List Chunk) := do
+  let r ← kw [w!"there", w!"is"] cs <|> kw [w!"there", w!"exists"] cs <|> kw [w!"there", w!"are"] cs <|>
+    kw [w!"there", w!"exist"] cs
+  let r := (kw [w!"a", w!"constant"] r <|> kw [w!"constants"] r <|> kw [w!"a", w!"number"] r <|>
+    kw [w!"a", w!"real", w!"number"] r <|> kw [w!"some"] r).getD r
+  -- `there is exactly one NP [such that …]`, `there is a NP …`
+  match (do
+      let (unique, r) ← (kw [w!"exactly", w!"one"] r).map (true, ·) <|> (kw [w!"a", w!"unique"] r).map (true, ·) <|>
+        (kw [w!"a"] r).map (false, ·) <|> (kw [w!"an"] r).map (false, ·) <|> (kw [w!"one"] r).map (false, ·)
+      match r with
+      | .w _ :: _ =>
+        -- the noun phrase ends at `such that` or at the end of the clause
+        let rec upTo : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+          | 0, _, _ => none
+          | f + 1, cs, acc =>
+            if (kw [w!"such", w!"that"] cs).isSome || clauseEnd cs then some (acc.reverse, cs) else
+            match cs with
+            | [] => none
+            | c :: rest => upTo f rest (c :: acc)
+        let (np, r1) ← upTo (r.length + 1) r []
+        match kw [w!"such", w!"that"] r1 with
+        | some r2 => do
+          let (c, r3) ← clause r2
+          let (c, r4) := everyNPAfter c r3
+          some (Clause.existsNP np unique (some c), r4)
+        | none => some (Clause.existsNP np unique none, r1)
+      | _ => none) with
+  | some res => some res
+  | none =>
+  let (ts, r1) ← mathChunk r
+  let b ← (do let (vs, d) ← binderMath ts; some (Bind.every vs d)) <|>
+    (match ts with
+      | [.id v] => some (Bind.every [v] (.id w!"\\mathbb{R}"))
+      | _ => none)
+  let r2 ← kw [w!"such", w!"that"] r1
+  let (c, r3) ← clause r2
+  let (c, r4) := everyNPAfter c r3
+  some (.thereIs b c, r4)
+
 /-- A clause with its leading citations: `By CITE, ...`, `CITE gives ...`, trailing `by CITE`. -/
 def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
   let (pre, r0) : List Codes × List Chunk :=
@@ -911,7 +996,8 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
         | some (vs, d), some r' => ([.every vs d], r')
         | _, _ => ([], r0)
       | none => ([], r0)
-    let (c, r1) ← clause r0
+    let (c, r1) ← thereIs r0 <|> clause r0
+    let (c, r1) := everyNPAfter c r1
     let c := match hyp with | some m => Clause.ifThen m c | none => c
     let post := (kw [w!"by"] r1 >>= cite) <|> (kw [w!"as", w!"specified", w!"in"] r1 >>= cite)
     let (cites, r2) := match post with
@@ -1071,6 +1157,9 @@ inductive Sent where
   `By WORDS we mean WORDS'.`, `Throughout, WORDS means WORDS'.`: a convention of the
   article for a noun or for words. -/
   | meaning (words : List Codes) (rhs : List Chunk) (noun : Bool)
+  /-- `Throughout, $C$ and $C_m$ denote [positive] constants [that depend only on …].`:
+  generic constants (`positive`). -/
+  | generic (syms : List MT) (positive : Bool)
   deriving Repr, Inhabited
 
 /-- `$f,g:A\to B$`: several names with one signature. -/
@@ -1273,7 +1362,8 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let (ts, r) ← mathChunk cs
     let v ← match ts with | [.id v] => some (MTok.id v) | [.cmd n] => some (MTok.cmd n) | _ => none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
-    let ws := r1.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+    let ws := r1.takeWhile (fun c => match c with
+      | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
     -- a noun that ends in a fixed formula: `probability distribution on $\mathbb{N}_0$`
     let tail := match r1.drop ws.length with
       | .m t :: _ =>
@@ -1281,7 +1371,14 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
         | some (.w w) => if w == w!"on" || w == w!"in" then [Chunk.m t] else []
         | _ => []
       | _ => []
-    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m [v]]), r1.drop (ws.length + tail.length)))
+    -- words and conditions after the formula (`with zero mean`), up to a comma or the end
+    let rest := r1.drop (ws.length + tail.length)
+    let opensPost := match rest with
+      | .w w :: _ => w == w!"with" || w == w!"of" || w == w!"such"
+      | _ => false
+    let post := if tail.isEmpty && !opensPost then [] else
+      rest.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m [v]] ++ post), rest.drop post.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
@@ -1382,8 +1479,36 @@ def meaningSent (cs : List Chunk) : Option Sent := do
   if rhs.isEmpty || lhsNoun != rhsNoun then none else
   some (.meaning (ws.map lower) rhs lhsNoun)
 
+/-- `Throughout[ the paper], $C$[, $C'$] and $C_m$ denote [positive] constants …`. -/
+def genericSent (cs : List Chunk) : Option Sent := do
+  let r ← kw [w!"throughout"] cs <|> kw [w!"in", w!"this", w!"paper"] cs <|> kw [w!"in", w!"this", w!"article"] cs
+  let r := (kw [w!"the", w!"paper"] r <|> kw [w!"this", w!"paper"] r <|> kw [w!"this", w!"article"] r).getD r
+  let r := (punct 44 r).getD r
+  let rec syms : Nat → List Chunk → List MT → Option (List MT × List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, acc => do
+      let (m, r) ← formula cs
+      let acc := acc ++ (match m with | .conj xs => xs | _ => [m])
+      match (punct 44 r >>= fun r' => (kw [w!"and"] r').getD r' |> some) <|> kw [w!"and"] r with
+      | some r' => match r' with
+        | .m _ :: _ => syms f r' acc
+        | _ => some (acc, r)
+      | none => some (acc, r)
+  let (ms, r1) ← syms 6 r []
+  let r2 ← kw [w!"denote"] r1 <|> kw [w!"denotes"] r1 <|> kw [w!"are"] r1 <|> kw [w!"is"] r1
+  let (pos, r3) := match kw [w!"positive"] r2 <|> kw [w!"a", w!"positive"] r2 with
+    | some r' => (true, r')
+    | none => (false, (kw [w!"a"] r2).getD r2)
+  let r4 ← kw [w!"constants"] r3 <|> kw [w!"constant"] r3 <|> kw [w!"generic", w!"constants"] r3
+  -- what the constants may depend on is the order of the quantifiers: prose
+  let rest := r4.dropWhile fun c => match c with | .p 46 => false | _ => true
+  if isEnd rest then some (.generic ms pos) else none
+
 def sentence (cs : List Chunk) : Option Sent :=
   match notationSent cs with
+  | some s => some s
+  | none =>
+  match genericSent cs with
   | some s => some s
   | none =>
   match meaningSent cs with
@@ -1567,6 +1692,8 @@ where
       -- `For every $r\in(-1,1)$ and $s\coloneqq e$, CLAUSES`: definitions with the binder,
       -- made with the first clause
       let (bdefs, r) := binderDefs 4 r []
+      -- `For every NP there is …` needs no comma
+      let r := match r with | .w w :: _ => if w == w!"there" then Chunk.p 44 :: r else r | _ => r
       match (punct 44 r).map fun r1 => (kw [w!"then"] r1).getD r1 with
       | some r1 =>
         -- For B, let $S$ denote NP.

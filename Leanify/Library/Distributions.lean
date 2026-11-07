@@ -76,24 +76,30 @@ def dom (p : Tm) : Option Tm := some (.lam .real .tt p)
 def vocab : Vocab where
   nouns := [
     { sing := phrase!"probability distribution $v$ on $\\mathbb{N}_0$",
-      plural := phrase!"probability distributions $v$ on $\\mathbb{N}_0$", ty := Ty.rfun, pred := isDistribution },
+      plural := phrase!"probability distributions $v$ on $\\mathbb{N}_0$", ty := Ty.rfun, pred := isDistribution,
+      doc := "weights `x(k) ≥ 0` at `k ∈ ℕ₀`, `0` elsewhere, `∑ x(k) = 1` (Mathlib `PMF ℕ`)" },
     { sing := phrase!"probability distribution $v$ on $\\mathbb{N}$",
-      plural := phrase!"probability distributions $v$ on $\\mathbb{N}$", ty := Ty.rfun, pred := isDistribution },
+      plural := phrase!"probability distributions $v$ on $\\mathbb{N}$", ty := Ty.rfun, pred := isDistribution,
+      doc := "as on `ℕ₀` (`ℕ` includes 0, as in Mathlib)" },
     { sing := phrase!"distribution $v$ on $\\mathbb{N}_0$",
-      plural := phrase!"distributions $v$ on $\\mathbb{N}_0$", ty := Ty.rfun, pred := isDistribution }]
+      plural := phrase!"distributions $v$ on $\\mathbb{N}_0$", ty := Ty.rfun, pred := isDistribution,
+      doc := "a probability distribution on `ℕ₀`" }]
   notions := [
     { name := phrase!"Poisson distribution with mean $v$", value := poisson, ty := .real ⟶ Ty.rfun,
-      doms := [dom (.le (.num 0) (.loc 0))] },
+      doms := [dom (.le (.num 0) (.loc 0))], doc := "`k ↦ e^{-λ} λ^k / k!`, `λ ≥ 0` (Mathlib `poissonPMF`)" },
     { name := phrase!"binomial distribution with parameters $v$ and $v$", value := binomial,
       ty := .real ⟶ .real ⟶ Ty.rfun,
-      doms := [dom (isNat (.loc 0)), dom (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))] },
+      doms := [dom (isNat (.loc 0)), dom (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))],
+      doc := "`k ↦ C(n,k) p^k (1-p)^{n-k}` for `k ≤ n` (Mathlib `PMF.binomial`)" },
     { name := phrase!"negative binomial distribution with parameters $v$ and $v$", value := negBinomial,
       ty := .real ⟶ .real ⟶ Ty.rfun,
       doms := [dom (.and (isNat (.loc 0)) (.le (.num 1) (.loc 0))),
-        dom (.and (.lt (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))] },
+        dom (.and (.lt (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))],
+      doc := "`k ↦ C(k+r-1,k) p^r (1-p)^k`: failures before the `r`-th success" },
     { name := phrase!"point mass at $v$", value := pointMass, ty := .real ⟶ Ty.rfun,
-      doms := [dom (isNat (.loc 0))] },
-    { name := phrase!"mean of $v$", value := mean, ty := Ty.rfun ⟶ .real, doms := [none] }]
+      doms := [dom (isNat (.loc 0))], doc := "`k ↦ 1` if `k = m`, else `0` (Mathlib `PMF.pure`)" },
+    { name := phrase!"mean of $v$", value := mean, ty := Ty.rfun ⟶ .real, doms := [none],
+      doc := "`∑ k x(k)`, defined when the series converges" }]
 
 /-- The core vocabulary followed by this one. -/
 def withCore : Vocab := Vocab.core ++ vocab

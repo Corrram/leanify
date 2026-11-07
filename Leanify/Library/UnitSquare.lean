@@ -21,17 +21,23 @@ def vocab : Vocab where
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}"]
   nouns := [
     { sing := phrase!"distribution function on $[0,1]^2$",
-      plural := phrase!"distribution functions on $[0,1]^2$", ty := Ty.sq, pred := .const 0 },
+      plural := phrase!"distribution functions on $[0,1]^2$", ty := Ty.sq, pred := .const 0,
+      doc := "`(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²`" },
     { sing := phrase!"probability measure $v$ on $[0,1]^2$",
-      plural := phrase!"probability measures $v$ on $[0,1]^2$", ty := Ty.meas2, pred := .const 2 },
+      plural := phrase!"probability measures $v$ on $[0,1]^2$", ty := Ty.meas2, pred := .const 2,
+      doc := "agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets" },
     -- a (bivariate) copula: a distribution function on `[0,1]^2` with uniform marginals
     { sing := phrase!"bivariate copula", plural := phrase!"bivariate copulas", ty := Ty.sq,
-      pred := .lam Ty.sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0))) },
+      pred := .lam Ty.sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0))),
+      doc := "a distribution function on `[0,1]²` with uniform marginals" },
     { sing := phrase!"copula", plural := phrase!"copulas", ty := Ty.sq,
-      pred := .lam Ty.sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0))) }]
+      pred := .lam Ty.sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0))),
+      doc := "a distribution function on `[0,1]²` with uniform marginals" }]
   mods := [
-    { phrase := phrase!"with uniform marginals", prenominal := false, ty := Ty.sq, pred := .const 1 },
-    { phrase := phrase!"with uniform marginals", prenominal := false, ty := Ty.meas2, pred := .const 3 }]
+    { phrase := phrase!"with uniform marginals", prenominal := false, ty := Ty.sq, pred := .const 1,
+      doc := "`F(u,1) = u`, `F(1,v) = v`" },
+    { phrase := phrase!"with uniform marginals", prenominal := false, ty := Ty.meas2, pred := .const 3,
+      doc := "`γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v`" }]
 
 /-- The core vocabulary followed by this one: what an article about probability on
 the unit square is compiled with. -/

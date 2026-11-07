@@ -1,5 +1,7 @@
 import Leanify.Library.UnitSquare
 import Leanify.Library.Distributions
+import Leanify.Library.Numbers
+import Leanify.Library.Torus
 
 /-! # The fields of the vocabulary
 
@@ -16,7 +18,9 @@ namespace Leanify.Fields
 /-- The fields, by name. -/
 def all : List (String × Vocab) := [
   ("unitsquare", UnitSquare.vocab),
-  ("distributions", Distributions.vocab)]
+  ("distributions", Distributions.vocab),
+  ("numbers", Numbers.vocab),
+  ("torus", Torus.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)

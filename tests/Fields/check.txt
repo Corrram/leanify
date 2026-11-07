@@ -1,0 +1,17 @@
+tests/Fields/article.tex:10:1: info: defines N (N)
+tests/Fields/article.tex:11:1: info: defines \@n1 (n1)
+tests/Fields/article.tex:12:1: info: defines \@n2 (n2)
+tests/Fields/article.tex:17:1: info: claim 0: 7\in \mathbb{Z}\land 2\le 7\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (y\in \mathbb{N}\land z\in \mathbb{N})\land y\,z=7\Rightarrow y=1\lor z=1)
+tests/Fields/article.tex:17:1: info: claim 1: \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land 9=y\,y
+tests/Fields/article.tex:17:1: info: claim 2: \neg (9\in \mathbb{Z}\land 2\le 9\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (y\in \mathbb{N}\land z\in \mathbb{N})\land y\,z=9\Rightarrow y=1\lor z=1))
+tests/Fields/article.tex:21:29: info: claim 3: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)
+tests/Fields/article.tex:25:1: info: claim 4: \@n2(12)(18)=6
+tests/Fields/article.tex:25:1: info: claim 5: \neg (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \neg (z=0)\land {2}^{\frac{1}{2}}=\frac{y}{z}))
+tests/Fields/article.tex:29:1: info: claim 6: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0<z\Rightarrow y\,{z}^{x}\le {z}^{x+1}))
+tests/Fields/article.tex:33:1: warning: "natural number" has several meanings (in numbers (with 0) and numbers (without 0)); say which is meant in the text (By a … we mean …): sentence not checked; n is then undefined at line 33
+tests/Fields/article.tex:39:66: info: claim 7: \forall x\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \operatorname{Smooth}_{\mathbb{T}^2}(x)\land \operatorname{ZeroMean}(x)\Rightarrow (\exists y\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ ((\operatorname{Smooth}_{\mathbb{T}^2}(y)\land \operatorname{ZeroMean}(y)\land N(y)=x)\land \top)\land (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ (\operatorname{Smooth}_{\mathbb{T}^2}(z)\land \operatorname{ZeroMean}(z)\land N(z)=x)\land \top\Rightarrow z=y))
+tests/Fields/article.tex:39:172: info: claim 8: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \operatorname{Smooth}_{\mathbb{T}^2}(z)\land \operatorname{ZeroMean}(z)\Rightarrow (\forall s\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \operatorname{Smooth}_{\mathbb{T}^2}(s)\land \operatorname{ZeroMean}(s)\land N(s)=z\Rightarrow \@n1(x)(s)\le y\,\@n1(x+4)(z))))
+tests/Fields/article.tex: 3 definitions, 9 claims
+  text: 4 compiled, 0 failed, 0 prose (of 4)
+  results: 8 compiled, 2 failed, 0 prose (of 10)
+  all: 12 compiled, 2 failed, 0 prose (of 14)

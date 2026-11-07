@@ -200,6 +200,9 @@ structure St where
   /-- The article's conventions for words (`Throughout, increasing means
   non-decreasing.`): the words, and the words they stand for. -/
   wordAliases : List (List Codes × List Tok) := []
+  /-- The letters the article declares generic constants (`Throughout, $C$ and $C_m$
+  denote positive constants.`), and whether they are positive. -/
+  genericConsts : List (Codes × Bool) := []
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -577,6 +580,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let a ← term f sc pf x
       applyAll (.glob h) g.ty g.doms [a]
     | .sub b i =>
+      -- a bound variable with a subscript in its name (`C_m` of `there is $C_m>0$`)
+      match (symKey m).bind (lookupLocal sc ·) with
+      | some (j, t) => pure (.loc j, t)
+      | none =>
       match b with
       | .id key => do
         -- a constant with a subscript (`d_0`), unless the index is a variable

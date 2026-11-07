@@ -64,7 +64,9 @@ def isNotation (d : String) : Bool :=
 def failedMessage (e : Err) : String :=
   let d := Codes.toString e.detail
   if e.code == E.undefined && !d.isEmpty then
-    if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
+    if d == "\\subset" || d == "\\supset" then
+      s!"{d} is ambiguous (inclusion or strict inclusion): write \\subseteq or \\subsetneq, or state the convention (We write $A\\subset B$ if $A\\subseteq B$.)"
+    else if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
   else if e.code == E.ambiguous then
     s!"{d}; say which is meant in the text (By a … we mean …)"
   else errMessage e

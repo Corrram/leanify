@@ -149,6 +149,14 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let V := (vocabOf fs).toOption.getD Vocab.core
   let unitSquare := fs.contains "unitsquare"
   let selected := !fs.isEmpty && fs != ["unitsquare"]
+  -- the Lean meanings of the constants of a field (at most one field has constants)
+  let model : Option (String × String) :=
+    if unitSquare then some ("Leanify.Library.UnitSquareModel", "Leanify.UnitSquare.model")
+    else if fs.contains "torus" then some ("Leanify.Library.TorusModel", "Leanify.Torus.model")
+    else none
+  if unitSquare && fs.contains "torus" then
+    IO.eprintln "leanify init: the fields unitsquare and torus both have constants; use one of them"
+    return 2
   let dir := path.parent.getD "."
   let file := (path.fileName.getD "article.tex")
   let some ns := (optArg opts "--name").orElse (fun _ => dir.normalize.fileName)
@@ -180,8 +188,8 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
     else ""
   let vocabWith := if selected then s!" with {ns}.vocabulary"
     else if unitSquare then " with Leanify.UnitSquare.withCore" else ""
-  let modelImport := if unitSquare then "import Leanify.Library.UnitSquareModel\n" else ""
-  let modelWith := if unitSquare then " with Leanify.UnitSquare.model" else ""
+  let modelImport := match model with | some (m, _) => s!"import {m}\n" | none => ""
+  let modelWith := match model with | some (_, v) => s!" with {v}" | none => ""
   let compiled := s!"import Leanify.Meta\n{vocabImport}
 /-! # `{file}`, compiled by the kernel
 
