@@ -904,8 +904,12 @@ def freeIds : Nat → List Codes → MT → List Codes
     match m with
     | .id n => if bound.contains n || n == [42] then [] else [n]
     | .num _ => []
-    -- the base of `e_b` is a symbol, not a variable
-    | .sub (.id _) i => freeIds f bound i
+    -- the base of `e_b` is a symbol, not a variable; `a_0` may be a variable
+    | .sub (.id k) i =>
+      let key : List Codes := match i with
+        | .num n => [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat]
+        | _ => []
+      key.filter (!bound.contains ·) ++ freeIds f bound i
     | .sub b i => freeIds f bound b ++ freeIds f bound i
     | .sup b e => freeIds f bound b ++ freeIds f bound e
     -- `\hat x` is the name `\hat{x}`, or `\widehat` applied to `x`
@@ -1714,6 +1718,38 @@ def fixedFor (c : SentCtx) (m : MT) : M (Option BindInfo) := do
   | some p => pure (((← get).fixed.find? fun (s, b) => s == c.ctx.sec && b.name == p).map (·.2))
   | none => pure none
 
+/-- An inline definition `X\coloneqq e` or `f(y)\coloneqq e` among the binders `bs` of
+its context: an argument that is a binder's variable ranges over the binder's
+domain, and the binders that `e` uses are implicit parameters, supplied from the
+scope at each use. Inside a result or a proof, the definition is local to it. -/
+def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
+  match m with
+  | .chain lhs [(.defeq, rhs)] =>
+    let (hd, args) := match lhs with
+      | .app h as => (h, as)
+      | _ => (lhs, [])
+    let some key := Elab.symKey hd | fail E.unsupported
+    let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+    let st ← get
+    let ids := freeIds 64 argNames rhs
+    let used := ids ++ implicitVars st ids
+    let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
+    let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
+      | some b => b
+      | none => ⟨n, .real, none⟩
+    let all := imp ++ argInfo
+    let (v, vty) ← term F (scopeOf all) none rhs
+    let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
+    let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
+    let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+    if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+    match c.ctx.kind with
+    | .text => pure ()
+    | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
+    pure i
+  | _ => fail E.unsupported
+
+
 /-- `Set $d_0\coloneqq e$.`: constants, with the claims of the rest of each chain;
 under a binder, families and functions of the binder's variable (`setDef`). -/
 def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : List Codes) :
@@ -1733,6 +1769,21 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
         ds := ds ++ d'
         cs := cs ++ c'
       | none =>
+      -- a definition that uses variables of the result or proof (of the section, in the
+      -- running text) takes them as implicit parameters
+      let st ← get
+      let scope : List BindInfo := match c.ctx.kind with
+        | .text => (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2)
+        | _ => st.envBinders
+      let usesScope := match m with
+        | .chain _ [(.defeq, rhs)] =>
+          let ids := freeIds 64 [] rhs
+          (ids ++ implicitVars st ids).any fun n => scope.any (·.name == n)
+        | _ => false
+      if usesScope then
+        let i ← inlineDef c scope m
+        ds := ds ++ [i]
+      else
       match m with
       | .chain lhs ((.defeq, rhs) :: more) => do
         let some key := symKey lhs | fail E.unsupported
@@ -1910,37 +1961,6 @@ def defClass (sym : MT) (plural : List Codes) (np : List Chunk) : M (List Nat ×
   pure ([i], [])
 
 /-! ## Inline definitions and notions -/
-
-/-- An inline definition `X\coloneqq e` or `f(y)\coloneqq e` among the binders `bs` of
-its context: an argument that is a binder's variable ranges over the binder's
-domain, and the binders that `e` uses are implicit parameters, supplied from the
-scope at each use. Inside a result or a proof, the definition is local to it. -/
-def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
-  match m with
-  | .chain lhs [(.defeq, rhs)] =>
-    let (hd, args) := match lhs with
-      | .app h as => (h, as)
-      | _ => (lhs, [])
-    let some key := Elab.symKey hd | fail E.unsupported
-    let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
-    let st ← get
-    let ids := freeIds 64 argNames rhs
-    let used := ids ++ implicitVars st ids
-    let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
-    let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
-      | some b => b
-      | none => ⟨n, .real, none⟩
-    let all := imp ++ argInfo
-    let (v, vty) ← term F (scopeOf all) none rhs
-    let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
-    let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
-    let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
-    if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
-    match c.ctx.kind with
-    | .text => pure ()
-    | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
-    pure i
-  | _ => fail E.unsupported
 
 /-- The variables a noun phrase binds: the variables of its formulas (`$m$`, `$1\le m\le n$`). -/
 def npVars (np : List Chunk) : List Codes :=
@@ -2454,9 +2474,14 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | _ => do pure ((← binderInfos b).map (·, 0))
     let bs := items.map (·.1)
     let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
-    pure (items.foldr (fun (bi, k) acc => Tm.all bi.ty (match bi.pred with
-      | some q => .imp (.app (shift k 0 q) (.loc 0)) acc
-      | none => acc)) p)
+    -- (a threshold `@…` of `sufficiently large` is existential)
+    pure (items.foldr (fun (bi, k) acc =>
+      if bi.name.head? == some 64 then Tm.ex bi.ty (match bi.pred with
+        | some q => .and (.app (shift k 0 q) (.loc 0)) acc
+        | none => acc)
+      else Tm.all bi.ty (match bi.pred with
+        | some q => .imp (.app (shift k 0 q) (.loc 0)) acc
+        | none => acc)) p)
   | .existsNP np unique cl => do
     let b ← match ← pdeNoun np with
       | some [b] => pure b
@@ -2820,6 +2845,22 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
   pure ([i], [])
 
+/-- `Let B, …, and let DEFS.`: variables of the rest of the result or proof (of the section,
+in the running text), and definitions local to it. -/
+def assumeIn (c : SentCtx) (binds : List Bind) (defs : List MT) : M (List Nat × List Nat) := do
+  let bs := (← bindersInfos binds)
+  match c.ctx.kind with
+  | .text =>
+    modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }
+  | _ =>
+    modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
+  let st ← get
+  let scope := match c.ctx.kind with
+    | .text => (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2)
+    | _ => st.envBinders
+  let ds ← defs.mapM (inlineDef c scope)
+  pure (ds, [])
+
 /-- A convention of the article: a noun the article names (`By a distribution we mean
 a probability distribution on $\mathbb{N}_0$.`), which is a class like the article's
 own, or words that stand for other words in the following sentences (`Throughout,
@@ -2914,6 +2955,8 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let n1 := (← get).globs.length
     pure ((List.range (n1 - n0)).map (n0 + ·), ids)
   | .fix b defs labels => do
+    -- in a result or a proof, `Fix $c>0$.` is `Let $c>0$.`
+    if c.ctx.kind != .text then assumeIn c [b] defs else
     let [bi] ← binderInfos b | fail E.unsupported
     modify fun st => { st with fixed := (c.ctx.sec, bi) :: st.fixed.filter (·.2.name != bi.name) }
     if defs.isEmpty then pure ([], []) else constDefs c (some bi) defs labels
@@ -2937,19 +2980,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
       | none => pure []
     let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
     descDef c bs lhs kind np cond
-  | .assumeAll binds defs => do
-    let bs := (← bindersInfos binds)
-    match c.ctx.kind with
-    | .text =>
-      modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }
-    | _ =>
-      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
-    let st ← get
-    let scope := match c.ctx.kind with
-      | .text => (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2)
-      | _ => st.envBinders
-    let ds ← defs.mapM (inlineDef c scope)
-    pure (ds, [])
+  | .assumeAll binds defs => assumeIn c binds defs
   | .assume b => do
     let bs ← binderInfos b
     match c.ctx.kind with

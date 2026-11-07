@@ -73,6 +73,10 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | rational | ℝ | `x ∈ ℚ` |
 | irrational | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
 | nonzero | ℝ | `x ≠ 0` |
+| positive | ℝ | `x > 0` |
+| negative | ℝ | `x < 0` |
+| nonnegative | ℝ | `x ≥ 0` |
+| nonpositive | ℝ | `x ≤ 0` |
 | squarefree | ℝ | an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`) |
 
 | Notion | Type | Meaning |

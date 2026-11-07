@@ -95,6 +95,10 @@ def vocab : Vocab where
     adj phrase!"rational" rational "`x ∈ ℚ`",
     adj phrase!"irrational" irrational "`x ∉ ℚ` (Mathlib `Irrational`)",
     adj phrase!"nonzero" nonzero "`x ≠ 0`",
+    adj phrase!"positive" (predR fun x => lt (num 0) x) "`x > 0`",
+    adj phrase!"negative" (predR fun x => lt x (num 0)) "`x < 0`",
+    adj phrase!"nonnegative" (predR fun x => le (num 0) x) "`x ≥ 0`",
+    adj phrase!"nonpositive" (predR fun x => le x (num 0)) "`x ≤ 0`",
     adj phrase!"squarefree" squarefree "an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`)"]
   notions := [
     { name := phrase!"greatest common divisor of $v$ and $v$", value := gcd, ty := .real ⟶ .real ⟶ .real,

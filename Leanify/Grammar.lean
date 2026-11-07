@@ -175,7 +175,8 @@ def boundBinder (ts : List MTok) : Option (List Codes × MT) := do
     | .lt => some ([x], .ival (.neg inf) b true true)
     | .le => some ([x], .ival (.neg inf) b true false)
     | _ => none
-  | .chain a [(r1, .id x), (r2, b)] =>
+  | .chain a [(r1, v), (r2, b)] =>
+    let x ← named v
     if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then
       if r1 == .le && r2 == .le then some ([x], .interval a b)
       else some ([x], .ival a b (r1 == .lt) (r2 == .lt))
@@ -471,6 +472,57 @@ def smallBinder (ts : List MTok) : Option Bind := do
      Bind.every [x] (if inv then .ival (.frac (.num 1) (.mul (.id c) bound)) inf true true
        else .ival (.num 0) (.mul (.id c) bound) true true)]))
 
+/-- A name for the tokens of a variable (`n`, `\varepsilon`, `s_0`). -/
+def toksName (ts : List MTok) : Codes :=
+  ts.flatMap fun t => match t with
+    | .id c => c
+    | .cmd c => 92 :: c
+    | .digit d => [48 + d]
+    | .sym s => [s]
+    | .lb => [123]
+    | .rb => [125]
+    | _ => []
+
+/-- `sufficiently large|small [fixed] [NP] $v$`, `large|small enough …`: there is a threshold
+(`@N…` for a large `v`, `@d…>0` for a small one) such that the rest holds for every `v`
+beyond it: `v\ge N`, or `0<v<d` (also `0\le v<d`). A small variable must be bounded below
+by `0` (`$\varepsilon>0$`, or the word `positive`). -/
+def sufficientBinder (cs : List Chunk) : Option (Bind × List Chunk) := do
+  let (large, r) ← ((kw [w!"sufficiently", w!"large"] cs <|> kw [w!"large", w!"enough"] cs).map (true, ·)) <|>
+    ((kw [w!"sufficiently", w!"small"] cs <|> kw [w!"small", w!"enough"] cs).map (false, ·))
+  let r := (kw [w!"fixed"] r).getD r
+  let ws := r.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+  let (ts, r') ← mathChunk (r.drop ws.length)
+  let isName (xs : List MTok) : Bool := !xs.isEmpty && xs.all fun t => match t with
+    | .id _ | .digit _ | .sym 95 | .lb | .rb => true
+    | .cmd c => Math.greekNames.contains c
+    | _ => false
+  let positive := ws.any fun c => match c with | .w w => w == w!"positive" | _ => false
+  -- the variable, and whether `0\le v` (rather than `0<v`) bounds it
+  let (v, closed) ← match ts.reverse with
+    | .digit 0 :: .sym 62 :: rv => if isName rv.reverse then some (rv.reverse, false) else none
+    | .digit 0 :: .cmd g :: rv =>
+      if (g == w!"ge" || g == w!"geq") && isName rv.reverse then some (rv.reverse, true) else none
+    | _ => match ts with
+      | .digit 0 :: .sym 60 :: v => if isName v then some (v, false) else none
+      | .digit 0 :: .cmd l :: v => if (l == w!"le" || l == w!"leq") && isName v then some (v, true) else none
+      | _ => if isName ts then some (ts, false) else none
+  let bounded := v.length != ts.length || positive
+  let name := toksName v
+  let inf : MT := .id w!"\\infty"
+  if large then
+    if v.length != ts.length then none else
+    let t := w!"@N" ++ name
+    let vb : Bind := if ws.isEmpty then .every [name] (.ival (.id t) inf false true)
+      else .noun (ws ++ [.m (v ++ [.cmd w!"ge", .id t])])
+    some (.many [.every [t] (.id w!"\\mathbb{R}"), vb], r')
+  else
+    if !bounded then none else
+    let t := w!"@d" ++ name
+    let vb : Bind := if ws.isEmpty then .every [name] (.ival (.num 0) (.id t) (!closed) true)
+      else .noun (ws ++ [.m ([.digit 0, if closed then .cmd w!"le" else .sym 60] ++ v ++ [.sym 60, .id t])])
+    some (.many [.every [t] (.ival (.num 0) inf true true), vb], r')
+
 /-- A noun phrase of a binder, up to a comma, `and every|each|all`, `and $…$`, or `there`. -/
 def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
@@ -505,6 +557,7 @@ def splitVars (ts : List MTok) : Option (List (List MTok)) := do
 /-- One binder after `for every|each|all`: a smallness chain, `$x\in A$` (with
 conditions), or `NP $x$` (`For every LTD copula $C$`, as `For an LTD copula $C$`). -/
 def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
+  sufficientBinder r <|>
   (do
     let (ts, r') ← mathChunk r
     let b ← smallBinder ts
@@ -570,7 +623,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
       some (.noun np, r.drop np.length)
     | none, none =>
       match kw [w!"for"] cs with
-      | some r => (do
+      | some r => sufficientBinder r <|> (do
           let (ts, r') ← mathChunk r
           let b ← smallBinder ts
           some (b, r')) <|> do
@@ -1190,6 +1243,14 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
 /-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
 a formula, `for every $x\in A$`, belongs to the clause itself). -/
 def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
+  -- `CLAUSE for [all] sufficiently large $n$`
+  match (do
+      let r1 := (kw [w!"for", w!"all"] r <|> kw [w!"for", w!"every"] r <|> kw [w!"for", w!"each"] r).getD
+        ((kw [w!"for"] r).getD [])
+      let (b, r2) ← sufficientBinder r1
+      if clauseEnd r2 then some (Clause.under b c, r2) else none) with
+  | some res => res
+  | none =>
   match kw [w!"for", w!"every"] r <|> kw [w!"for", w!"all"] r <|> kw [w!"for", w!"each"] r <|>
       kw [w!"for", w!"any"] r with
   | some r2 =>
@@ -1648,7 +1709,14 @@ def anchorList : Nat → List Chunk → List MT → Option (List MT × List Chun
 def fixBinder (ts : List MTok) : Option Bind :=
   match binderMath ts with
   | some (vs, d) => some (.every vs d)
-  | none => (Math.parseFormula ts).map Bind.ifCond
+  | none =>
+    match Math.parseFormula ts with
+    -- `Let $\gamma$ be fixed.`: a real number
+    | some (.id v) => some (.every [v] (.id w!"\\mathbb{R}"))
+    | some (.sub (.id k) (.num n)) => some (.every [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat] (.id w!"\\mathbb{R}"))
+    | some (.sub (.id k) (.id i)) => some (.every [k ++ [95] ++ i] (.id w!"\\mathbb{R}"))
+    | some m => some (.ifCond m)
+    | none => none
 
 /-- `X=e` after `set`: the definition `X\coloneqq e` of a symbol (`Q`, `S_*`, `\varepsilon`) or
 of a function of variables (`f(x,y)`). -/
@@ -1825,7 +1893,15 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   (do
     let (ts, r) ← mathChunk cs
     let (vs, d) ← binderMath ts
+    -- (`$k\ge3$ be a fixed integer` is a noun phrase, below)
+    if (kw [w!"be"] r).isSome then none else
     some (.every vs d, r)) <|>
+  -- `$c>0$ be fixed`
+  (do
+    let (ts, r) ← mathChunk cs
+    let r1 ← kw [w!"be", w!"fixed"] r
+    let b ← fixBinder ts
+    some (b, r1)) <|>
   -- `$u:A\to B$ [be a map|function|field]`: a map of its signature
   (do
     let (ts, r) ← mathChunk cs
@@ -1837,13 +1913,18 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   (do
     let (ts, r) ← mathChunk cs
     let m ← Math.parseFormula ts
+    if (kw [w!"be"] r).isSome then none else
     if isCondition m then some (.ifCond m, r) else none) <|>
   (do
     let (ts, r) ← mathChunk cs
     let v ← match ts with
       | [.id v] => some [MTok.id v]
       | [.cmd n] => some [MTok.cmd n]
-      | _ => match hatName ts with | some (_, []) => some ts | _ => none
+      | _ => match hatName ts, binderMath ts with
+        | some (_, []), _ => some ts
+        -- `Let $k\ge3$ be a [fixed] integer.`
+        | _, some ([_], _) => some ts
+        | _, _ => none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
     let ws := r1.takeWhile (fun c => match c with
       | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
@@ -2225,6 +2306,12 @@ def sentence (cs : List Chunk) : Option Sent :=
       let r2 ← kw [w!"be", w!"given", w!"by"] r1 <|> kw [w!"be", w!"defined", w!"by"] r1
       let (pieces, ls, r3) ← defPieces 6 r2 [] []
       if isEnd (trailer r3) then some (.defBy s (pieces.map piecesDefeq) ls none) else none) <|>
+    -- `Let $c>0$ be fixed.`, `Let $\gamma$ be fixed.`: as `Fix $c>0$.`
+    (do
+      let (ts, r1) ← mathChunk r
+      let r2 ← kw [w!"be", w!"fixed"] r1
+      let b ← fixBinder ts
+      if isEnd r2 then some (.fix b [] []) else none) <|>
     -- `Let $0<\varepsilon\ll1$.`
     (do
       let (ts, r1) ← mathChunk r
@@ -2311,7 +2398,13 @@ def sentence (cs : List Chunk) : Option Sent :=
   | none =>
   -- fix $B$ [and define|set|put DEFS].
   match kw [w!"fix"] cs with
-  | some r => do
+  | some r =>
+    -- `Fix an integer $k\ge3$.`
+    (do
+      let r1 ← kw [w!"a"] r <|> kw [w!"an"] r
+      let np := r1.takeWhile (fun c => match c with | .p 46 | .p 44 => false | _ => true)
+      if np.isEmpty || !isEnd (r1.drop np.length) then none else
+      some (.fix (.noun np) [] [])) <|> do
     let (ts, r1) ← mathChunk r
     let b ← fixBinder ts
     if isEnd r1 then some (.fix b [] []) else do
