@@ -338,7 +338,8 @@ def wMarkers : List (List Codes) :=
    [w!"then"], [w!"thus"], [w!"therefore"], [w!"indeed"], [w!"moreover"], [w!"furthermore"],
    [w!"in", w!"addition"], [w!"finally"], [w!"again"], [w!"conversely"], [w!"similarly"],
    [w!"in", w!"other", w!"words"], [w!"that", w!"is"], [w!"we", w!"have"], [w!"it", w!"follows", w!"that"],
-   [w!"we", w!"obtain"], [w!"note", w!"that"], [w!"we", w!"see", w!"that"]]
+   [w!"we", w!"obtain"], [w!"note", w!"that"], [w!"we", w!"see", w!"that"], [w!"more", w!"precisely"],
+   [w!"equivalently"]]
 
 /-- Discourse markers have no content of their own (`For the minimum` sets a topic). -/
 inductive Topic where

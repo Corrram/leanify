@@ -65,7 +65,8 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `$$…$$` | a display, like `\[…\]` |
 | `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
 | `a\mid b`, `a\nmid b` | `a` and `b` are integers and `b=ak` for an integer `k` (and its negation, for integers); the first `\mid` of a set `\{x\in A\mid φ\}` separates the condition, and a `\mid` after it is divisibility |
-| `a\equiv b\pmod m`, `a\equiv b\ (\bmod m)`, `(\operatorname{mod} m)` | `m\mid a-b` |
+| `a\equiv b\pmod m`, `a\equiv b\ (\bmod m)`, `(\operatorname{mod} m)` | `a` and `b` are integers and `m\mid a-b` |
+| `\{1\le n\le N : φ\}`, `\{x>0 : φ\}` | the variable bounded by the inequalities, with `φ`: an index (`n`, `m`, `k`, `j`, `i`, `N`, `M`, `K`) among the integers, any other variable among the real numbers |
 | `\gcd(a,b)` | for integers `a`, `b`: the natural number `d` that divides both and that every common divisor divides (so `\gcd(0,0)=0`) |
 | `\mathbb{Q}` | the rational numbers, as real numbers |
 | `\hat x`, `\hat{x}` | a name of its own (a variable `\hat x` beside `x`), unless the article or its vocabulary defines `\widehat` as an operation |

@@ -815,7 +815,21 @@ where
         | _ => none
   setBuilder : Nat → List MTok → R
     | 0, _ => none
-    | g + 1, ts => do
+    | g + 1, ts => (do
+      -- `{1\le n\le N : conds}`: a variable bounded by inequalities, an index among the
+      -- integers, any other among the real numbers
+      let (c, r1) ← run g .top ts
+      let r2 ← expect (.sym 58) r1
+      let ineq (r : Rel) : Bool := r == .lt || r == .le || r == .gt || r == .ge
+      let v ← match c with
+        | .chain _ [(r1, .id v), (r2, _)] => if ineq r1 && ineq r2 then some v else none
+        | .chain (.id v) [(r, _)] => if ineq r then some v else none
+        | _ => none
+      let (conds, r3) ← run g (.list 125 []) r2
+      match conds with
+      | .conj cs =>
+        some (.setOf (.id v) (.id (if indexNames.contains v then w!"\\mathbb{Z}" else w!"\\mathbb{R}")) (c :: cs), r3)
+      | _ => none) <|> do
       -- `{pat ∈ dom : conds}` or `{elem : v ∈ dom}`
       let (head, r1) ← run g (.additive false) ts
       match r1 with

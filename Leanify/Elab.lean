@@ -1168,7 +1168,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         (.ex .real (conjAll [near, inDom, definedAnd e (.lt (.loc 2) e)])))), .prop)
     -- `a\equiv b\pmod m`: `m` divides `a-b`
     | .chain x [(.equiv, .app (.id md) [y, m])] =>
-      if md == w!"@mod" then term f sc pf (.chain m [(.dvd, .minus x y)])
+      if md == w!"@mod" then do
+        -- (a congruence is between integers)
+        let a ← asReal (← term f sc pf x)
+        let b ← asReal (← term f sc pf y)
+        let (d, _) ← term f sc pf (.chain m [(.dvd, .minus x y)])
+        pure (.and (.app (.prim .isInt) a) (.and (.app (.prim .isInt) b) d), .prop)
       else fail E.unsupported
     | .chain x rest => do
       -- an equation between fields (`\partial_tu+\nabla p=f`, `\nabla\cdot u=0`,
