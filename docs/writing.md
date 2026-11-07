@@ -75,6 +75,16 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | `By a distribution we mean a probability distribution on $\mathbb{N}_0$.` | a noun of the article (`Let $\nu$ be a distribution.`) |
 | `Throughout, increasing means non-decreasing.`, `In this paper, …` | the words stand for the others in the following sentences (`strictly increasing` is unchanged) |
 
+Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
+`\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
+`x` and `y`.
+
+| Sentence | Reading |
+| --- | --- |
+| `Define $f:\mathbb R^2\to\mathbb R$ by $f(x,y)\coloneqq x^2y$.`, `Let $g:\mathbb R^2\to\mathbb R$ be given by $g(s,t)=s-t$.`, `For $x,y\in\mathbb R$ set $h(x,y)\coloneqq xy$.` | a function of several variables; the names of its variables are remembered |
+| `\partial_x f(1,2)`, `\partial_2 h(x,y,z)`, `\frac{\partial f}{\partial y}(x,y)`, `\partial_x\partial_y f`, `\partial_x^2 f` | partial derivatives: in the argument named `x` (by the application, or by the definition of `f`) or numbered from 1; the derivative of `t ↦ f(…,t,…)`, defined where it exists |
+| `\Delta f(x,y)` | the Laplacian, `∑ⱼ ∂ⱼ∂ⱼ f` |
+
 Generic constants and existence:
 
 | Sentence | Reading |

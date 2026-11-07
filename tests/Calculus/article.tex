@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Functions of several variables}
+
+Define $f:\mathbb R^2\to\mathbb R$ by $f(x,y)\coloneqq x^2y$.
+Let $g:\mathbb R\times\mathbb R\to\mathbb R$ be given by $g(s,t)=s-t$.
+For $x,y,z\in\mathbb R$ set $h(x,y,z)\coloneqq xyz$.
+
+\begin{lemma}\label{values}
+$f(1,2)=2$, $g(3,1)=2$ and $h(1,2,3)=6$.
+\end{lemma}
+
+\section{Partial derivatives}
+
+\begin{lemma}\label{partials}
+$\partial_x f(1,2)=4$ and $\partial_y f(3,1)=9$.
+\end{lemma}
+
+\begin{lemma}\label{identities}
+For all $x,y\in\mathbb R$, $\partial_x f(x,y)=2xy$ and $\frac{\partial f}{\partial y}(x,y)=x^2$.
+\end{lemma}
+
+\begin{lemma}\label{second}
+For all $x,y\in\mathbb R$, $\Delta f(x,y)=2y$ and $\partial_x\partial_y f(x,y)=2x$.
+\end{lemma}
+
+\begin{lemma}\label{numbered}
+For all $x,y,z\in\mathbb R$, $\partial_2 h(x,y,z)=xz$.
+\end{lemma}
+
+\end{document}

@@ -1139,6 +1139,14 @@ inductive DefPiece where
   | param (dom : MT) (m : MT)
   deriving Repr, Inhabited
 
+/-- In a definition of `f` by its values, `f(x,y)=e` defines like `f(x,y)\coloneqq e`. -/
+def piecesDefeq : DefPiece → DefPiece
+  | .formula (.chain (.app (.id f) args) [(.eq, rhs)]) =>
+    if args.all (fun a => match a with | .id _ => true | _ => false) then
+      .formula (.chain (.app (.id f) args) [(.defeq, rhs)])
+    else .formula (.chain (.app (.id f) args) [(.eq, rhs)])
+  | p => p
+
 /-- Monotonicity of a map: `non-increasing`, `non-decreasing`, `strictly increasing`,
 `strictly decreasing`. (A plain `increasing` is ambiguous between the first two
 readings, so the grammar does not read it.) -/
@@ -1571,6 +1579,12 @@ def sentence (cs : List Chunk) : Option Sent :=
   -- let $S$ denote the class of NOUNS, that is, NP.
   match kw [w!"let"] cs with
   | some r =>
+    -- `Let $f:A\to B$ be given|defined by $f(x,y)=e$.`
+    (do
+      let (s, r1) ← sig r
+      let r2 ← kw [w!"be", w!"given", w!"by"] r1 <|> kw [w!"be", w!"defined", w!"by"] r1
+      let (pieces, ls, r3) ← defPieces 6 r2 [] []
+      if isEnd (trailer r3) then some (.defBy s (pieces.map piecesDefeq) ls none) else none) <|>
     -- `Let $0<\varepsilon\ll1$.`
     (do
       let (ts, r1) ← mathChunk r
@@ -1638,6 +1652,7 @@ def sentence (cs : List Chunk) : Option Sent :=
     let (s, r1) ← sig r
     let r2 ← kw [w!"by"] r1
     let (pieces, ls, r3) ← defPieces 6 r2 [] []
+    let pieces := pieces.map piecesDefeq
     if isEnd r3 then some (.defBy s pieces ls none)
     else do
       let r4 ← kw [w!"and", w!"observe", w!"that"] r3
@@ -1745,7 +1760,13 @@ where
       -- made with the first clause
       let (bdefs, r) := binderDefs 4 r []
       -- `For every NP there is …` needs no comma
-      let r := match r with | .w w :: _ => if w == w!"there" then Chunk.p 44 :: r else r | _ => r
+      -- (`For B there is …`, `For B set …`: the comma is optional before a verb)
+      let r := match r with
+        | .w w :: _ =>
+          let w := lower w
+          if [w!"there", w!"set", w!"define", w!"write", w!"put", w!"let", w!"we", w!"consider"].contains w
+          then Chunk.p 44 :: r else r
+        | _ => r
       match (punct 44 r).map fun r1 => (kw [w!"then"] r1).getD r1 with
       | some r1 =>
         -- For B, let $S$ denote NP.

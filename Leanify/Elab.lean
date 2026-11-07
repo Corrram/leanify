@@ -203,6 +203,10 @@ structure St where
   /-- The letters the article declares generic constants (`Throughout, $C$ and $C_m$
   denote positive constants.`), and whether they are positive. -/
   genericConsts : List (Codes × Bool) := []
+  /-- The names of the variables of the functions of several variables the article
+  defines (`f(x,y)\coloneqq …`), by definition: `\partial_x f` is the derivative in
+  the argument named `x`. -/
+  params : List (Nat × List Codes) := []
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -529,6 +533,71 @@ def withImplicit (sc : Scope) (i : Nat) (g : Glob) : M (Tm × Ty × List (Option
     let (t, ty) ← applyAll (.glob i) g.ty g.doms as
     pure (t, ty, g.doms.drop as.length)
 
+/-- The derivative operators in front of a function: `\partial_x`, `\partial_1`,
+`\partial_x^2`, `\partial_x\partial_y` (each `some` subscript) and `\Delta` (`none`). -/
+def derivOps : Nat → MT → Option (List (Option MT))
+  | 0, _ => none
+  | f + 1, m =>
+    match m with
+    | .sub (.id d) i => if d == w!"\\partial" then some [some i] else none
+    | .sup (.sub (.id d) i) (.num k) =>
+      if d == w!"\\partial" && 1 ≤ k && k ≤ 4 then some (List.replicate k (some i)) else none
+    | .id d => if d == w!"\\Delta" then some [none] else none
+    | .mul a b => do
+      let x ← derivOps f a
+      let y ← derivOps f b
+      some (x ++ y)
+    | _ => none
+
+/-- The operators and the function they apply to, through nested products
+(`\partial_x(\partial_y f(x,y))`, `\partial_x\partial_y f`). -/
+def gatherDeriv : Nat → List (Option MT) → MT → List (Option MT) × MT
+  | 0, ops, m => (ops, m)
+  | f + 1, ops, m =>
+    match m with
+    | .mul a b =>
+      match derivOps 8 a with
+      | some more => gatherDeriv f (ops ++ more) b
+      | none => (ops, m)
+    | _ => (ops, m)
+
+/-- `\frac{\partial f}{\partial x}` as `\partial_x f`. -/
+def fracDeriv : MT → Option MT
+  | .frac (.mul (.id d) fn) (.mul (.id d') (.id x)) =>
+    if d == w!"\\partial" && d' == w!"\\partial" then some (.mul (.sub (.id d) (.id x)) fn) else none
+  | _ => none
+
+/-- The number of real arguments of a real function of several real variables. -/
+def realArity : Ty → Option Nat
+  | .fn .real .real => some 1
+  | .fn .real r => (realArity r).map (· + 1)
+  | _ => none
+
+/-- `F` applied to arguments. -/
+def applyN (F : Tm) (args : List Tm) : Tm := args.foldl (fun acc a => .app acc a) F
+
+/-- The partial derivative of `F` (a function of `n` real variables) in its `j`-th
+variable (from 0): `(x₁,…,xₙ) ↦ the d with HasDerivAt (t ↦ F(…,t,…)) d xⱼ`. It is
+defined where that derivative exists. -/
+def partialFn (n j : Nat) (F : Tm) : Tm :=
+  -- under the `n` binders, the description's `d`, and `t`
+  let inner := applyN (shift (n + 2) 0 F)
+    ((List.range n).map fun i => if i == j then Tm.loc 0 else .loc (2 + (n - 1 - i)))
+  let g := Tm.lam .real .tt inner
+  let univ := Tm.lam .real .tt .tt
+  let xj := Tm.loc (1 + (n - 1 - j))
+  let body := Tm.app (.app (.app (.app (.prim .hasDerivWithin) g) univ) xj) (.loc 0)
+  (List.range n).foldl (fun acc _ => Tm.lam .real .tt acc) (.the .real body)
+
+/-- The Laplacian `\Delta F = ∑ⱼ ∂ⱼ∂ⱼ F` of a function of `n` real variables. -/
+def laplacianFn (n : Nat) (F : Tm) : Tm :=
+  let terms := (List.range n).map fun j =>
+    applyN (shift n 0 (partialFn n j (partialFn n j F))) ((List.range n).map fun i => .loc (n - 1 - i))
+  let sum := match terms with
+    | t :: ts => ts.foldl (fun acc x => Tm.add acc x) t
+    | [] => .num 0
+  (List.range n).foldl (fun acc _ => Tm.lam .real .tt acc) sum
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -559,8 +628,52 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .minus x y => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.sub a b, .real)
     | .mul x y => do
+      -- `\frac{\partial f}{\partial x}(x,y)`
+      match fracDeriv x, y with
+      | some dx, .tuple as => term f sc pf (match dx with
+          | .mul op fn => .mul op (.app fn as)
+          | _ => dx)
+      | _, _ =>
+      match derivOps 8 x with
+      | some ops => do
+        -- a partial derivative (or the Laplacian) of a function of several variables
+        let (ops, tgt) := gatherDeriv 8 ops y
+        let (hd, args) := match tgt with
+          | .app h as => (h, some as)
+          | t => (t, none)
+        let (F, fty, doms) ← head f sc hd
+        if doms.any (·.isSome) then fail E.unsupported
+        let some n := realArity fty | fail E.type
+        let st ← get
+        let params : List Codes := match F with
+          | .glob i => (st.params.lookup i).getD []
+          | _ => []
+        let pos (i : MT) : M Nat := do
+          match i with
+          | .num k => if 1 ≤ k && k ≤ n then pure (k - 1) else fail E.type
+          | .id v =>
+            let fromArgs := args.bind fun as => as.findIdx? fun a => match a with
+              | .id w => w == v
+              | _ => false
+            match fromArgs <|> params.idxOf? v with
+            | some j => if j < n then pure j else fail E.type
+            | none => fail E.undefined ([92, 112, 97, 114, 116, 105, 97, 108, 95] ++ v)
+          | _ => fail E.unsupported
+        -- the innermost operator applies first
+        let mut D := F
+        for op in ops.reverse do
+          match op with
+          | some i => D := partialFn n (← pos i) D
+          | none => D := laplacianFn n D
+        match args with
+        | some as => applyAll D fty [] (← as.mapM (term f sc pf))
+        | none => pure (D, fty)
+      | none => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.mul a b, .real)
     | .div x y | .frac x y => do
+      match fracDeriv m with
+      | some dm => term f sc pf dm
+      | none => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y); pure (.div a b, .real)
     | .neg x => do let a ← asReal (← term f sc pf x); pure (.neg a, .real)
     | .abs x => do let a ← asReal (← term f sc pf x); pure (.abs a, .real)

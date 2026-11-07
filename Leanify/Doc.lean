@@ -476,6 +476,31 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       let (p, t) ← Elab.term 100000 sc none d
       if t == .fn .real .prop then pure (.real, some p) else fail E.unsupported
 
+def lamWrap : List Ty → Tm → Tm
+  | [], b => b
+  | t :: ts, b => .lam t .tt (lamWrap ts b)
+
+def tyWrap : List Ty → Ty → Ty
+  | [], r => r
+  | t :: ts, r => .fn t (tyWrap ts r)
+
+/-- The factors of a domain of several variables: `\mathbb{R}^3` is three copies of
+`\mathbb{R}`, `A\times B` is `A` and `B`; any other domain is one factor. A function
+on it is curried: `f:\mathbb{R}^2\to\mathbb{R}` has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies
+it to `x` and then to `y`. -/
+def domainsOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (List (Ty × Option Tm)) := do
+  match d with
+  | .sup base (.num n) =>
+    if 2 ≤ n && n ≤ 8 then do
+      let f ← domainOf calculus base sc
+      pure (List.replicate n f)
+    else pure [← domainOf calculus d sc]
+  | .app (.id t) [a, b] =>
+    if t == w!"\\times" then pure ((← domainsOf calculus a sc) ++ (← domainsOf calculus b sc))
+    else pure [← domainOf calculus d sc]
+  | _ => pure [← domainOf calculus d sc]
+termination_by sizeOf d
+
 /-- A variable chunk: its name, and the domain of a membership `$x\in A$`. -/
 def varChunk (ts : List MTok) : M (Codes × Option (Ty × Option Tm)) := do
   match varName ts with
@@ -562,10 +587,10 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           let sg ← liftO (Math.parseSig ts) E.noun ((wordsOf np).flatten)
           match sg with
           | .sig (.id f) d c => do
-            let (dt, dp) ← domainOf false d
+            let ds ← domainsOf false d
             let (ct, cp) ← domainOf false c
-            if dp.isSome || cp.isSome then fail E.unsupported
-            pure (.fn dt ct, [], some [.id f], r)
+            if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
+            pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
           | _ => fail E.unsupported
         | _ => fail E.noun (((wordsOf np).intersperse [32]).flatten)
   let (ty, preds, var, r1) ← head
@@ -1058,14 +1083,6 @@ def argTypes : Ty → Nat → List Ty
   | .fn a b, n + 1 => a :: argTypes b n
   | _, _ => []
 
-def lamWrap : List Ty → Tm → Tm
-  | [], b => b
-  | t :: ts, b => .lam t .tt (lamWrap ts b)
-
-def tyWrap : List Ty → Ty → Ty
-  | [], r => r
-  | t :: ts, r => .fn t (tyWrap ts r)
-
 /-- Claims `a₁ R₁ a₂ R₂ …` after a definition `X := a₁`, pairwise, under binders. -/
 def chainClaims (sc : Scope) (first : MT) (rest : List (Rel × MT)) : M (List Tm) := do
   let rec go : MT → List (Rel × MT) → M (List Tm)
@@ -1172,8 +1189,31 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
     (observe : Option (MT × List Codes × MT)) : M (List Nat × List Nat) := do
   match sg with
   | .sig (.id f) dom cod => do
-    let (aty, apred) ← domainOf true dom
     let (cty, cpred) ← domainOf true cod
+    -- `f(x,y)\coloneqq e` on `\mathbb{R}^2` or `A\times B`: a curried function
+    let ds ← domainsOf true dom
+    if ds.length ≥ 2 then
+      match pieces with
+      | [.formula (.chain (.app (.id f') args) [(.defeq, rhs)])] => do
+        if f != f' || args.length != ds.length then fail E.unsupported
+        let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+        let bs : List BindInfo := (names.zip ds).map fun (n, (t, p)) => ⟨n, t, p⟩
+        let start := (← get).globs.length
+        let sc : Scope := (bs.map fun b => (b.name, b.ty)).reverse
+        let (body, bty) ← term F sc none rhs
+        let body ← coerce body bty cty
+        let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) body
+        let i ← addGlob ⟨f, tyWrap (ds.map (·.1)) cty, ds.map (·.2), false⟩ value
+        modify fun st => { st with params := st.params ++ [(i, names)] }
+        let k := bs.length
+        let applied := (List.range k).foldl (fun acc j => Tm.app acc (.loc (k - 1 - j))) (Tm.glob i)
+        let ids ← match cpred with
+          | some p => pure [← emit c (wrap bs (.app p applied)) []]
+          | none => pure []
+        addLabels labels ids true
+        return ((List.range (i + 1 - start)).map (· + start), ids)
+      | _ => fail E.unsupported
+    let (aty, apred) ← domainOf true dom
     let start := (← get).globs.length
     let body ← match pieces with
       | [.formula (.chain (.app (.id f') [.id x]) [(.defeq, rhs)])] => do
@@ -1416,6 +1456,7 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
       let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
       let ty := bs.foldr (fun b t => Ty.fn b.ty t) vty
       let i ← addGlob ⟨key, ty, bs.map (·.pred), false⟩ value
+      modify fun st => { st with params := st.params ++ [(i, names)] }
       ds := ds ++ [i]
     | _ => fail E.unsupported
   addLabels labels [] true

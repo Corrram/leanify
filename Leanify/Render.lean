@@ -140,6 +140,21 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   -- a domain predicate applied to an argument: read it about the argument
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
+  -- a function of several variables: `f(x,y)` (definedness guards are not shown)
+  | .app (.app f x) y =>
+    let rec spine : Nat → Tm → List Tm → Option (Nat × List Tm)
+      | 0, _, _ => none
+      | k + 1, .app g a, acc => spine k g (a :: acc)
+      | k + 1, .guard _ e, acc => spine k e acc
+      | _ + 1, .glob i, acc => some (i, acc)
+      | _ + 1, _, _ => none
+    match spine 16 f [x, y] with
+    | some (i, args) =>
+      let n := gs.getD i s!"g_{i}"
+      if n.startsWith "^" || n == "\\widehat" then
+        (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+      else n ++ "(" ++ ",".intercalate (args.map (·.tex cs gs ls)) ++ ")"
+    | none => (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
   | .app (.glob i) x =>
     let n := gs.getD i s!"g_{i}"
     if n.startsWith "^" then "{" ++ wrap 9 x ++ "}" ++ n
@@ -191,6 +206,12 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
       (.all .real (.imp (.all .real (.imp _ (.le (.loc 1) (.loc 0)))) (.le (.loc 0) (.loc 1))))) =>
     let v := varNames.getD ls.length "v"
     "\\inf\\{" ++ v ++ "\\in \\mathbb{R} : " ++ p.tex cs gs (v :: "\\_" :: ls) ++ "\\}"
+  -- a (partial) derivative: `\frac{d}{ds} f(s,y)|_{s=x}`
+  | .the .real (.app (.app (.app (.app (.prim .hasDerivWithin) (.lam _ _ body)) (.lam _ _ .tt)) x) (.loc 0)) =>
+    let z := varNames.getD ls.length "z"
+    let v := varNames.getD (ls.length + 1) "v"
+    "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
+      "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}"
   | .the t b => let v := varNames.getD ls.length "v"
     "\\iota " ++ v ++ "\\in " ++ t.tex ++ ".\\ " ++ b.tex cs gs (v :: ls)
 where

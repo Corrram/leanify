@@ -73,3 +73,9 @@ globs = ["Vocabulary.+"]
 name = "Fields"
 srcDir = "tests"
 globs = ["Fields.+"]
+
+[[lean_lib]]
+# Functions of several variables and partial derivatives, compiled by the kernel.
+name = "Calculus"
+srcDir = "tests"
+globs = ["Calculus.+"]

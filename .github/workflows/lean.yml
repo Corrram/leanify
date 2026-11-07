@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields
+        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -37,6 +37,10 @@ jobs:
         run: |
           lake exe leanify check tests/Vocabulary/article.tex --vocab distributions --claims > "$RUNNER_TEMP/vocabulary.check.txt"
           diff tests/Vocabulary/check.txt "$RUNNER_TEMP/vocabulary.check.txt"
+      - name: Functions of several variables and partial derivatives are read as documented
+        run: |
+          lake exe leanify check tests/Calculus/article.tex --claims > "$RUNNER_TEMP/calculus.check.txt"
+          diff tests/Calculus/check.txt "$RUNNER_TEMP/calculus.check.txt"
       - name: The glossary of the vocabulary is up to date
         run: |
           lake build glossary
