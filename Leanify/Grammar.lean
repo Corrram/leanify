@@ -523,6 +523,45 @@ def sufficientBinder (cs : List Chunk) : Option (Bind × List Chunk) := do
       else .noun (ws ++ [.m ([.digit 0, if closed then .cmd w!"le" else .sym 60] ++ v ++ [.sym 60, .id t])])
     some (.many [.every [t] (.ival (.num 0) inf true true), vb], r')
 
+/-- The tokens of a name (`Q`, `\nu`, `N_0`, `c_k`). -/
+def nameToks : MT → Option (List MTok)
+  | .id v => some (match v with | 92 :: c => [.cmd c] | _ => [.id v])
+  | .sub (.id k) (.num n) =>
+    some ([.id k, .sym 95] ++ (if n < 10 then [.digit n] else [.lb] ++ (Nat.toDigits 10 n).map (fun c => MTok.digit (c.toNat - 48)) ++ [.rb]))
+  | .sub (.id k) (.id i) => some ([.id k, .sym 95] ++ (match i with | 92 :: c => [.cmd c] | _ => [.id i]))
+  | _ => none
+
+/-- The key of a name (`Q`, `N_0`, `c_k`). -/
+def nameKey : MT → Option Codes
+  | .id v => some v
+  | .sub (.id k) (.num n) => some (k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)
+  | .sub (.id k) (.id i) => some (k ++ [95] ++ i)
+  | _ => none
+
+/-- A constant whose name states what it depends on: `Q(\nu)`, `Q=Q(\nu)`, `c(C)>0`,
+`w_0=w_0(d,\kappa)>0`. The constant (`Q`, with its bound) and the pair of the name and the
+symbol. -/
+def depBinder (ts : List MTok) : Option (List MTok × MT × MT × List (Rel × MT)) := do
+  let m ← Math.parseFormula ts
+  let isName (x : MT) : Bool := match x with
+    | .id _ | .sub (.id _) (.num _) | .sub (.id _) (.id _) => true
+    | _ => false
+  let dep (x : MT) : Option (MT × MT) := match x with
+    | .app nm args => if isName nm && !args.isEmpty && args.all isName then some (x, nm) else none
+    | _ => none
+  let ((al, nm), rest) ← match m with
+    | .app .. => do let a ← dep m; some (a, [])
+    | .chain x rs =>
+      match dep x, rs with
+      | some a, _ => some (a, rs)
+      | none, (.eq, y) :: rs' => do
+        let a ← dep y
+        if (nameKey a.2).isSome && nameKey a.2 == nameKey x then some (a, rs') else none
+      | none, _ => none
+    | _ => none
+  let toks ← nameToks nm
+  some (toks, al, nm, rest)
+
 /-- A noun phrase of a binder, up to a comma, `and every|each|all`, `and $…$`, or `there`. -/
 def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
@@ -738,6 +777,11 @@ inductive Clause where
   /-- `[the WORDS] $X$ is at most [the WORDS] $Y$` (at least, less than, greater than,
   equal to); either side may define its symbol (`the geometric mean $G\coloneqq\sqrt{ab}$`). -/
   | compare (lhs : MT) (rel : Rel) (rhs : MT)
+  /-- The clause of `there is $Q=Q(\nu)$ such that CLAUSE`, in which `Q(\nu)` stands for
+  `Q` (each pair: the name that states the dependence, and the symbol). -/
+  | aliased (pairs : List (MT × MT)) (c : Clause)
+  /-- `such that CLAUSE and CLAUSE`: both clauses. -/
+  | both (cs : List Clause)
   deriving Repr, Inhabited
 
 /-- A clause with the citations that justify it, its own binders
@@ -1282,6 +1326,24 @@ def underBinder (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   let (c, r') ← sub r
   some (.under b c, r')
 
+/-- The clauses after `such that`: `CLAUSE [and CLAUSE]*`, each with the binders after it
+(`for every NP`). -/
+def suchThatClauses (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
+    Option (Clause × List Chunk) := do
+  let (c, r) ← underBinder sub cs <|> sub cs
+  let (c, r) := everyNPAfter c r
+  let rec more : Nat → List Chunk → List Clause → List Clause × List Chunk
+    | 0, r, acc => (acc.reverse, r)
+    | f + 1, r, acc =>
+      match (do
+          let r1 ← kw [w!"and"] r
+          let (c', r2) ← underBinder sub r1 <|> sub r1
+          some (everyNPAfter c' r2)) with
+      | some (c', r2) => more f r2 (c' :: acc)
+      | none => (acc.reverse, r)
+  let (rest, r') := more 6 r []
+  some (if rest.isEmpty then c else .both (c :: rest), r')
+
 /-- `there is|exists [a constant] $C>0$ such that CLAUSE`; `sub` reads the clauses
 after `such that`. -/
 def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List Chunk) :
@@ -1373,7 +1435,17 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         | none => some ([], r2)
       -- (one object with at most one condition is `there is a NP such that …` below)
       if list.length < 2 && !hasSat && !none_ && conds.isEmpty then none else
-      let c := Clause.existsNPs list (sat ++ conds)
+      -- `an integer $Q(\nu)$`: the variable `Q`, for which `Q(\nu)` stands in the conditions
+      let rw := list.map fun np => match np.reverse with
+        | .m ts :: rest =>
+          match depBinder ts with
+          | some (toks, al, nm, []) => ((Chunk.m toks :: rest).reverse, [(al, nm)])
+          | _ => (np, [])
+        | _ => (np, [])
+      let list := rw.map (·.1)
+      let als := rw.flatMap (·.2)
+      let conds := (sat ++ conds).map fun c => if als.isEmpty then c else Clause.aliased als c
+      let c := Clause.existsNPs list conds
       some (if none_ then Clause.noneExist c else c, r5)) with
   | some res => some res
   | none =>
@@ -1394,18 +1466,25 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
             | [] => none
             | c :: rest => upTo f rest (c :: acc)
         let (np, r1) ← upTo (r.length + 1) r []
+        -- `an integer $Q(\nu)$`: the variable `Q`, for which `Q(\nu)` stands
+        let (np, als) := match np.reverse with
+          | .m ts :: rest =>
+            match depBinder ts with
+            | some (toks, al, nm, []) => ((Chunk.m toks :: rest).reverse, [(al, nm)])
+            | _ => (np, [])
+          | _ => (np, [])
+        let wrap (c : Clause) : Clause := if als.isEmpty then c else .aliased als c
         match kw [w!"such", w!"that"] r1 with
         | some r2 => do
-          let (c, r3) ← underBinder sub r2 <|> sub r2
-          let (c, r4) := everyNPAfter c r3
-          some (Clause.existsNP np unique (some c), r4)
+          let (c, r4) ← suchThatClauses sub r2
+          some (Clause.existsNP np unique (some (wrap c)), r4)
         | none => some (Clause.existsNP np unique none, r1)
       | _ => none) with
   | some res => some res
   | none =>
   -- `there are $c_1,c_2>0$ and $b_0$ such that`: several constants, each a bound or a
   -- name (a real number)
-  let one (cs : List Chunk) : Option (Bind × List Chunk) :=
+  let one (cs : List Chunk) : Option (Bind × List (MT × MT) × List Chunk) :=
     -- `an integer $n_0\ge3$`: a noun phrase of words and its variable
     (do
       let r ← kw [w!"a"] cs <|> kw [w!"an"] cs
@@ -1414,9 +1493,34 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         | _ => false
       if ws.isEmpty then none else
       match r.drop ws.length with
-      | Chunk.m ts :: r' => some (Bind.noun (ws ++ [Chunk.m ts]), r')
+      | Chunk.m ts :: r' =>
+        -- `an integer $Q(\nu)$`: the variable `Q`
+        match depBinder ts with
+        | some (toks, al, nm, []) => some (Bind.noun (ws ++ [Chunk.m toks]), [(al, nm)], r')
+        | some _ => none
+        | none => some (Bind.noun (ws ++ [Chunk.m ts]), [], r')
       | _ => none) <|> do
     let (ts, r1) ← mathChunk cs
+    -- `$c(C)>0$`, `$Q=Q(\nu)$`: the constant, and its name
+    let (ts, als) := match depBinder ts with
+      | some (toks, al, nm, rest) =>
+        -- (the bound after the name, as tokens: from the formula after the first relation)
+        let i := ts.findIdx? fun t => (Math.relOf t).isSome
+        let boundToks := match rest, i with
+          | [], _ => some []
+          | _, some i =>
+            -- `Q=Q(\nu)>0`: after the second relation
+            let after := ts.drop (i + 1)
+            if (match ts[i]? with | some t => Math.relOf t == some Rel.eq | none => false) then
+              match after.findIdx? fun t => (Math.relOf t).isSome with
+              | some j => some (after.drop j)
+              | none => some []
+            else some (ts.drop i)
+          | _, none => none
+        match boundToks with
+        | some bt => (toks ++ bt, [(al, nm)])
+        | none => (ts, [])
+      | none => (ts, [])
     let b ← (do let (vs, d) ← binderMath ts; some (Bind.every vs d)) <|>
       (match Math.parseFormula ts with
         | some (.id v) => some (Bind.every [v] (.id w!"\\mathbb{R}"))
@@ -1424,25 +1528,24 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         | some (.sub (.id k) (.num n)) =>
           some (Bind.every [k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat] (.id w!"\\mathbb{R}"))
         | _ => none)
-    some (b, r1)
-  let rec moreConsts : Nat → List Chunk → List Bind → List Bind × List Chunk
-    | 0, cs, acc => (acc.reverse, cs)
-    | f + 1, cs, acc =>
+    some (b, als, r1)
+  let rec moreConsts : Nat → List Chunk → List Bind → List (MT × MT) → List Bind × List (MT × MT) × List Chunk
+    | 0, cs, acc, als => (acc.reverse, als, cs)
+    | f + 1, cs, acc, als =>
       match ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some) <|> kw [w!"and"] cs with
       | some r =>
         match one r with
-        | some (b, r') => moreConsts f r' (b :: acc)
-        | none => (acc.reverse, cs)
-      | none => (acc.reverse, cs)
-  let (b0, r1) ← one r
-  let b := match moreConsts 4 r1 [] with
-    | ([], _) => b0
-    | (bs, _) => Bind.many (b0 :: bs)
-  let r1 := (moreConsts 4 r1 []).2
+        | some (b, al, r') => moreConsts f r' (b :: acc) (als ++ al)
+        | none => (acc.reverse, als, cs)
+      | none => (acc.reverse, als, cs)
+  let (b0, al0, r1) ← one r
+  let (bs, als, r1) := moreConsts 4 r1 [] al0
+  let b := match bs with
+    | [] => b0
+    | bs => Bind.many (b0 :: bs)
   let r2 ← kw [w!"such", w!"that"] r1
-  let (c, r3) ← underBinder sub r2 <|> sub r2
-  let (c, r4) := everyNPAfter c r3
-  some (.thereIs b c, r4)
+  let (c, r4) ← suchThatClauses sub r2
+  some (.thereIs b (if als.isEmpty then c else .aliased als c), r4)
 
 /-- `there is …` with plain clauses as its conditions. -/
 def thereIs0 (cs : List Chunk) : Option (Clause × List Chunk) := thereIsWith clause cs

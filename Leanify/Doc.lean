@@ -1063,6 +1063,8 @@ def clauseMaths : Clause → List MT
   | .notions s _ _ => [s]
   | .isA s np _ => s :: (mathsOf np).filterMap Math.parseFormula
   | .thereIs _ c => clauseMaths c
+  | .aliased _ c => clauseMaths c
+  | .both cs => clauseMathsAll cs
   | .under _ c => clauseMaths c
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
@@ -2261,6 +2263,24 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
 
 /-! ## Claim sentences -/
 
+/-- `there is $Q=Q(\nu)$ such that …`: `Q` is chosen after the variables its name lists
+(bound in `sc`), and after no other. -/
+def checkDependence (sc : Scope) (cl : Clause) : M Unit := do
+  if let .aliased ps _ := cl then
+    let outer := (sc.map (·.1)).filter fun n => !n.isEmpty && n.head? != some 64
+    for (al, nm) in ps do
+      let deps := match al with
+        | .app _ args => args.filterMap Elab.symKey
+        | _ => []
+      for d in deps do
+        if !outer.contains d then fail E.undefined d
+      let name := (Elab.symKey nm).getD []
+      match outer.find? (!deps.contains ·) with
+      | some v => fail E.finding (name ++ w!" is chosen after " ++ v ++ w!", but its name says it depends only on " ++
+          ((deps.intersperse w!", ").flatten) ++ w!": list every variable it may depend on, or move the binder of " ++ v ++
+          w!" after the constant")
+      | none => pure ()
+
 mutual
 /-- One clause; `rest` are the following clauses of the sentence (for scopes). -/
 def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Option MT) :
@@ -2458,6 +2478,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (if disj then disjAll ps else conjAll ps)
   | .thereIs b cl => do
     let bs ← binderInfos b
+    checkDependence sc cl
     let p ← clauseTm c (scopeOf bs ++ sc) onVar lastRhs cl
     pure (bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
       | some q => .and (.app q (.loc 0)) acc
@@ -2487,6 +2508,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some [b] => pure b
       | _ => nounPhrase np sc
     if b.name.isEmpty then fail E.unsupported
+    if let some cl := cl then checkDependence sc cl
     -- `P x`: the noun phrase and the clause about `x`, where `x` is bound (the
     -- predicate of a noun phrase is stated there)
     let inner ← match cl with
@@ -2512,6 +2534,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
           if e.code == E.noun || e.code == E.unsupported then fail E.prose else throw e
         bs := bs ++ [b]
     let sc' := (bs.map fun b => (b.name, b.ty)).reverse ++ sc
+    for cl in cls do checkDependence sc cl
     let ps ← clauseTms c sc' onVar lastRhs cls
     -- (the predicate of each object refers to the objects before it, stated where the
     -- object is bound)
@@ -2519,6 +2542,22 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some q => .and (.app q (.loc 0)) acc
       | none => acc)) (Elab.conjAll ps))
   | .noneExist cl => do pure (.not (← clauseTm c sc onVar lastRhs cl))
+  | .both cls => do
+    let ps ← cls.mapM (clauseTm c sc onVar lastRhs)
+    pure (Elab.conjAll ps)
+  | .aliased ps cl => do
+    -- `Q(\nu)` stands for `Q` in the clause
+    let saved := (← get).aliases
+    let keyed := ps.filterMap fun (al, nm) => match al with
+      | .app h args => do
+        let k ← Elab.symKey h
+        let ks ← args.mapM Elab.symKey
+        some (k, ks, nm)
+      | _ => none
+    modify fun st => { st with aliases := keyed ++ st.aliases }
+    let p ← clauseTm c sc onVar lastRhs cl
+    modify fun st => { st with aliases := saved }
+    pure p
   | .forEveryNP cl np => do
     let b ← nounPhrase np sc
     if b.name.isEmpty then fail E.unsupported

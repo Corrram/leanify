@@ -32,6 +32,7 @@ def errMessage (e : Err) : String :=
     else if e.code == E.shadow then "variable shadows a definition"
     else if e.code == E.ambiguous then "ambiguous phrase"
     else if e.code == E.dependence then "unknown dependence"
+    else if e.code == E.finding then "not read"
     else s!"error {e.code}"
   if d.isEmpty then what else s!"{what}: {d}"
 
@@ -72,6 +73,7 @@ def failedMessage (e : Err) : String :=
     else if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
   else if e.code == E.ambiguous then
     s!"{d}; say which is meant in the text (By a … we mean …)"
+  else if e.code == E.finding then d
   else if e.code == E.dependence then
     s!"the dependence of a constant is stated by variables ($k$, $I$) or the fixed data, not by \"{d}\"; name the variables it stands for"
   else errMessage e

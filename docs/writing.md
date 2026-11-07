@@ -22,7 +22,8 @@ quantities and classes defined earlier in the article.
 
 Formulas are read as they are typeset: `T^0_q` and `T_q^0` are the same symbol,
 `\widehat S_s` is the hat of `S_s`, `\min\{a,b,c\}` takes three arguments, a
-variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`), and
+variable before parentheses is a factor (`xz(x+z)`, `v(s-v)^2`; but `Q(x)` with a single
+variable in the parentheses may be a name that states its dependence, and is refused), and
 `\{(x,x):0\le x\le1\}` is the diagonal.
 
 | Notation | Read as |
@@ -115,6 +116,8 @@ Generic constants and existence (`tests/Fields/article.tex`,
 | `For all integers $a,b\ge1$, …`, `For all positive integers $a$ and $b$, …` | a binder for each variable, the first outermost; a bound after the last variable bounds each (`a\ge1` and `b\ge1`) |
 | `There is an absolute constant $C>0$ such that …`, `there is an integer $Q$ such that …` | an existential constant (also `a universal constant`, `absolute constants`), an object of a noun |
 | `There are absolute constants $c_1,c_2>0$ and an integer $b_0\ge2$ such that, for every integer $b\ge b_0$, …` | several constants (`a,b>0` bounds each), then binders of the clause after `such that`, whose bounds may use the constants |
+| `For every real $\nu>2$, there is an integer $Q(\nu)$ such that $\nu\le Q(\nu)$.`, `there is $N_0=N_0(\eta)$ such that …`, `there are constants $c(C)>0$ and $K(C)$ such that …` | a constant whose name lists what it depends on: `Q(\nu)` is `Q` in the conditions. Its name must list every variable bound before it (otherwise the claim is refused: it would say more or less than the text); `Q(3)` is refused, since `Q` is a number, not a function |
+| `there is $c>0$ such that $c\le C$ and $K\ge C$` | the conditions after `such that` joined by `and` are all conditions of the constants |
 | `\[ k\le Ck^2\qquad\text{for every integer }k\ge1. \]` | words after a display formula bind its variables, as `for every NP` after a clause (`\text{for all }x\in A`; `\text{if }x>0` is a condition) |
 | `\[ \left|\pi-\frac pq\right|\ge q^{-\nu}\qquad(p\in\mathbb Z,\ q\in\mathbb Z,\ q\ge Q). \]` | the parts in parentheses after a display formula bind its variables from left to right; a part about variables bound before (`q\ge Q`) is a condition. Such a part is never read as one more claim |
 | `Let $\varphi$ be a smooth function on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | a condition may use the variables bound before it |

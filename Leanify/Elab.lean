@@ -108,6 +108,8 @@ def E.ambiguous := 11
 /-- A convention lets constants depend on a phrase that is neither a variable nor the
 fixed data. -/
 def E.dependence := 12
+/-- A finding whose detail is the whole message: what was not read, and how to write it. -/
+def E.finding := 13
 
 abbrev Local := Codes × Ty
 abbrev Scope := List Local
@@ -250,6 +252,9 @@ structure St where
   params : List (Nat × List Codes) := []
   /-- The fields of the article and of the current result, by name (the latest first). -/
   fields : List (Codes × FieldInfo) := []
+  /-- Names that state their dependence (`Q(\nu)` for the `Q` of `there is $Q=Q(\nu)$`),
+  and the symbols they stand for, while the clause of their existence is read. -/
+  aliases : List (Codes × List Codes × MT) := []
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -797,7 +802,23 @@ def sumAll : List Tm → Tm
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
-  | f + 1, sc, pf, m =>
+  | f + 1, sc, pf, m0 => do
+    -- `Q(\nu)` for the `Q` of `there is $Q=Q(\nu)$`
+    let als : List (Codes × List Codes × MT) := (← get).aliases
+    let m : MT := match m0 with
+      | .app h args =>
+        match symKey h, args.mapM symKey with
+        | some k, some ks =>
+          match als.find? (fun a => a.1 == k && a.2.1 == ks) with
+          | some a => a.2.2
+          | none => m0
+        | _, _ => m0
+      | _ => m0
+    -- (`Q(3)` for the `Q` of `Q(\nu)`: a number, not a function of `\nu`)
+    if let .app h _ := m then
+      if let some k := symKey h then
+        if als.any (·.1 == k) then
+          fail E.finding (k ++ w!" is a number chosen for each value of the variables its name lists, not a function of them: write it with the same variables, or define the function")
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
@@ -946,7 +967,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       else
       match lookupLocal sc n with
       | some (_, t) =>
-        if t == .real || t == .unit then term f sc pf (.mul (.id n) a)
+        -- `Q(\nu)` with `Q` a number is a product or a name that says what it depends on
+        let single := match a with | .id _ | .sub (.id _) _ => true | _ => false
+        if (t == .real || t == .unit) && single then
+          fail E.finding (n ++ w!"(…) is a product or a name that states what it depends on: write the product without parentheses, or introduce the name as `there is $" ++ n ++ w!"=" ++ n ++ w!"(…)$`")
+        else if t == .real || t == .unit then term f sc pf (.mul (.id n) a)
         else do
           let (h, hty, doms) ← head f sc (.id n)
           applyAll h hty doms [← term f sc pf a]

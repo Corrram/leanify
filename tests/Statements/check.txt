@@ -43,11 +43,16 @@ tests/Statements/article.tex:168:25: info: claim 37: \forall x\in \mathbb{R},\ x
 tests/Statements/article.tex:172:57: info: claim 38: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow 0<{x}^{y})
 tests/Statements/article.tex:176:12: info: defines y (y)
 tests/Statements/article.tex:176:34: info: claim 39: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<y(x)
-tests/Statements/article.tex:185:1: warning: q is not defined: sentence not checked
-tests/Statements/article.tex:189:1: info: claim 40: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
-tests/Statements/article.tex:195:1: warning: e is not defined: sentence not checked
-tests/Statements/article.tex:199:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
-tests/Statements/article.tex: 5 definitions, 41 claims
+tests/Statements/article.tex:182:1: info: claim 40: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
+tests/Statements/article.tex:186:1: info: claim 41: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ z\in \mathbb{Z}\land y\le z\Rightarrow 1\le x\,z)
+tests/Statements/article.tex:190:1: info: claim 42: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ y\le x\land x\le z))
+tests/Statements/article.tex:194:1: warning: Q is chosen after x, but its name says it depends only on \nu: list every variable it may depend on, or move the binder of x after the constant: sentence not checked
+tests/Statements/article.tex:198:1: warning: Q(…) is a product or a name that states what it depends on: write the product without parentheses, or introduce the name as `there is $Q=Q(…)$`: sentence not checked
+tests/Statements/article.tex:207:1: warning: q is not defined: sentence not checked
+tests/Statements/article.tex:211:1: warning: x is not defined: sentence not checked
+tests/Statements/article.tex:217:1: warning: e is not defined: sentence not checked
+tests/Statements/article.tex:221:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex: 5 definitions, 43 claims
   text: 4 compiled, 0 failed, 6 prose (of 10)
-  results: 41 compiled, 2 failed, 1 prose (of 44)
-  all: 45 compiled, 2 failed, 7 prose (of 54)
+  results: 43 compiled, 5 failed, 1 prose (of 49)
+  all: 47 compiled, 5 failed, 7 prose (of 59)
