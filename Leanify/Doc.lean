@@ -791,7 +791,7 @@ def wrapMixed : List (BindInfo × Bool) → Tm → Tm
   | (b, isEx) :: bs, body =>
     let inner := wrapMixed bs body
     let p := b.pred.map fun p => Tm.app p (.loc 0)
-    if isEx then .ex b.ty (match p with | some p => .and p inner | none => inner)
+    if isEx || b.name.head? == some 64 then .ex b.ty (match p with | some p => .and p inner | none => inner)
     else .all b.ty (match p with | some p => .imp p inner | none => inner)
 
 /-- The binders with the generic constants: the binders of the constants' indices and

@@ -377,7 +377,10 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             | some (r, k), some l =>
               lexAux macros f r (pos + n + k) st
                 (⟨.ref .ref l, pos, math⟩ :: ⟨.begin w!"@proofsec", pos, math⟩ :: ⟨.cmd name, pos, math⟩ :: out)
-            | some (r, k), none => emit (.cmd name) r (n + k) st
+            | some (r, k), none =>
+              -- an equation tag is layout
+              if name == w!"tag" then lexAux macros f r (pos + n + k) st out
+              else emit (.cmd name) r (n + k) st
             | none, _ => none
           else if !math && wDropText.contains name then
             -- `\item \emph{$A\ge z$ and $B\le1+z$.}`: the heading of a case, not a claim

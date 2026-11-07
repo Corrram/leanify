@@ -14,6 +14,8 @@ inductive Rel where
   | subset | supset
   /-- `x\notin A`. -/
   | nmem
+  /-- `a\ll b`: `a/b` sufficiently small (read only in binders). -/
+  | ll
   deriving DecidableEq, Repr, Lean.ToExpr
 
 inductive MT where
@@ -246,6 +248,7 @@ def relOf : MTok → Option Rel
     else if n == w!"notin" then some .nmem
     else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
     else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
+    else if n == w!"ll" then some .ll
     else none
   | _ => none
 

@@ -283,11 +283,55 @@ def withBind (b : Bind) (cs : List Chunk) : Bind × List Chunk :=
   | some (c, r) => (.many [b, .ifCond c], r)
   | none => (b, cs)
 
+/-- A chain of smallness conditions `0<a\ll b\ll 1` (also `C^{-1}\ll …`): the variables
+from right to left, each after a threshold `@c…` that is existential (there is a
+threshold such that the claim holds for every value below it). `a\ll b` is `a<c\,b`;
+`C^{-1}\ll b` is `C>1/(c\,b)`. The rightmost term bounds the last variable and may use
+the variables bound before. -/
+def smallBinder (ts : List MTok) : Option Bind := do
+  let inf : MT := .id w!"\\infty"
+  let m ← Math.parseFormula ts
+  let (elems, rels) ← match m with
+    | .chain x rs => some (x :: rs.map (·.2), rs.map (·.1))
+    | _ => none
+  if !rels.contains .ll then none else
+  -- an optional `0<` in front
+  let (elems, rels) := match elems, rels with
+    | .num 0 :: es, .lt :: rs => (es, rs)
+    | _, _ => (elems, rels)
+  if !rels.all (· == .ll) || elems.length < 2 then none else
+  let named : MT → Option (Codes × Bool) := fun e => match e with
+    | .id x => some (x, false)
+    | .sub (.id k) (.id i) => some (k ++ [95] ++ i, false)
+    | .sup (.id x) (.neg (.num 1)) => some (x, true)
+    | _ => none
+  -- (variable, inverse?, the term it is small against), from right to left
+  let rec pairs : List MT → List (Codes × Bool × MT) → Option (List (Codes × Bool × MT))
+    | [_], acc => some acc
+    | a :: b :: rest, acc => do
+      let (x, inv) ← named a
+      pairs (b :: rest) ((x, inv, b) :: acc)
+    | [], acc => some acc
+  let ps ← pairs elems []
+  some (.many (ps.flatMap fun (x, inv, b) =>
+    let c := w!"@c" ++ x
+    -- the bound refers to the variable's own value when the term is an inverse
+    let bound : MT := match b with
+      | .sup (.id y) (.neg (.num 1)) => .frac (.num 1) (.id y)
+      | _ => b
+    [Bind.every [c] (.ival (.num 0) inf true true),
+     Bind.every [x] (if inv then .ival (.frac (.num 1) (.mul (.id c) bound)) inf true true
+       else .ival (.num 0) (.mul (.id c) bound) true true)]))
+
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
 def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
   match (kw [w!"for", w!"every"] cs <|> kw [w!"for", w!"each"] cs), kw [w!"for", w!"all"] cs with
   | some r, _ | none, some r =>
+    (do
+      let (ts, r') ← mathChunk r
+      let b ← smallBinder ts
+      some (b, r')) <|>
     (do
       let (ts, r') ← mathChunk r
       let (vs, dom) ← binderMath ts
@@ -306,7 +350,10 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
       some (.noun np, r.drop np.length)
     | none, none =>
       match kw [w!"for"] cs with
-      | some r => do
+      | some r => (do
+          let (ts, r') ← mathChunk r
+          let b ← smallBinder ts
+          some (b, r')) <|> do
         let (ts, r') ← mathChunk r
         let (vs, dom) ← binderMath ts
         match moreAnd 4 r' [] with
@@ -1524,6 +1571,11 @@ def sentence (cs : List Chunk) : Option Sent :=
   -- let $S$ denote the class of NOUNS, that is, NP.
   match kw [w!"let"] cs with
   | some r =>
+    -- `Let $0<\varepsilon\ll1$.`
+    (do
+      let (ts, r1) ← mathChunk r
+      let b ← smallBinder ts
+      if isEnd r1 then some (.assume b) else none) <|>
     -- `Let $x\in A$.`
     (do
       let (ts, r1) ← mathChunk r

@@ -82,6 +82,7 @@ Generic constants and existence:
 | `Throughout, $C$ and $C_m$ denote positive constants.` | in every later claim, a constant `C_{…}` is existential: for all values of its indices there is a `C > 0` such that the claim holds for all other variables (it depends only on its indices and on the fixed data) |
 | `For every positive integer $m$ there is $c>0$ such that $c\,n^m\le n^{m+1}$ for every positive integer $n$.` | `∀ m, ∃ c > 0, ∀ n, …` (`there is|exists $c>0$ such that`, `there exists a constant $C$ such that`) |
 | `Then there is exactly one smooth function $\varphi$ on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | existence and uniqueness (`there is a NP`, `there is a unique NP`, `… such that CLAUSE`) |
+| `For $0<h\ll\lambda\ll1$, …`, `Let $0<\varepsilon\ll1$.` | smallness, chosen from right to left: there is `c > 0` such that for every `λ ∈ (0, c)` there is `c' > 0` such that for every `h ∈ (0, c'λ)` the claim holds (`C^{-1}\ll b`: `C > 1/(c b)`) |
 | `… for every integer $m\ge0$ and every smooth function $\varphi$ on …` | binders after a claim, the first one outermost |
 | `Let $\varphi$ be a smooth function on $\mathbb{T}^2$ of zero Haar mean with $N\varphi=F$.` | a condition may use the variables bound before it |
 

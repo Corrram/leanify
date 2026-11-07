@@ -478,8 +478,14 @@ def conjAll : List Tm → Tm
 /-- `∀` over a list of binders (innermost last), with domain hypotheses. -/
 def forallBinders : List (Codes × Ty × Option Tm) → Tm → Tm
   | [], body => body
-  | (_, t, p) :: bs, body =>
+  | (n, t, p) :: bs, body =>
     let inner := forallBinders bs body
+    -- a threshold of a smallness condition (`@c…`) is existential
+    if n.head? == some 64 then
+      match p with
+      | some p => .ex t (.and p inner)
+      | none => .ex t inner
+    else
     match p with
     | some p => .all t (.imp p inner)
     | none => .all t inner
