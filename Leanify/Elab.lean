@@ -1377,9 +1377,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | some (.num a), some (.num b) => do
         if b < a || b > a + 100 then fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
         if (lookupLocal sc v).isSome then fail E.shadow v
-        -- each term is the body with the index replaced by its value
+        -- each term is the body with the index replaced by its value (complex
+        -- terms: the complex sum)
         let terms ← (List.range (b - a + 1)).mapM fun k =>
-          do asReal (← term f sc pf (MT.substId v (MT.num (a + k)) 64 body))
+          term f sc pf (MT.substId v (MT.num (a + k)) 64 body)
+        if terms.any (·.2 == .complex) then
+          let ts ← terms.mapM asComplex
+          match ts with
+          | t0 :: ts => pure (ts.foldl (fun acc x => cx2 (if isSum then .add else .mul) acc x) t0, .complex)
+          | [] => fail E.unsupported
+        else
+        let terms ← terms.mapM asReal
         match terms with
         | t0 :: ts => pure (ts.foldl (fun acc x => if isSum then .add acc x else .mul acc x) t0, .real)
         | [] => fail E.unsupported
@@ -1390,9 +1398,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let l ← asReal (← term f sc none lo)
         let isInt (t : Tm) : Tm := .app (.prim .isInt) t
         let sc' : Scope := (v, Ty.real) :: sc
-        let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+        let bt ← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body
+        -- (complex terms: the complex finite sum or product)
+        let cx := bt.2 == .complex
+        let b ← if cx then pure bt.1 else asReal bt
         if isInfty true hi then do
-          if !isSum then fail E.unsupported w!"\\prod"
+          if !isSum || cx then fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
           let lam := Tm.lam .real (.and (isInt (.loc 0)) (.le (shift 1 0 l) (.loc 0))) b
           let conv := Tm.app (.app (.prim .seriesConv) l) lam
           pure (.guard (.and (isInt l) conv) (.app (.app (.prim .series) l) lam), .real)
@@ -1400,8 +1411,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let h ← asReal (← term f sc none hi)
           let lam := Tm.lam .real (.and (isInt (.loc 0))
             (.and (.le (shift 1 0 l) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))) b
-          let p : Prim := if isSum then .finSum else .finProd
-          pure (.guard (.and (isInt l) (isInt h)) (.app (.app (.app (.prim p) l) h) lam), .real)
+          let p : Prim := if cx then .cx (if isSum then .sum else .prod) else if isSum then .finSum else .finProd
+          pure (.guard (.and (isInt l) (isInt h)) (.app (.app (.app (.prim p) l) h) lam), if cx then .complex else .real)
     -- `\lim_{x\to a} e`, `\lim_{x\to\infty} e`, and `\lim_{n\to\infty} a_n` for a sequence
     -- (an index `n`, `m`, `k`, `j`, `i` runs through the natural numbers): the limit within
     -- the points where the expression is defined, when it exists

@@ -219,6 +219,10 @@ def cI : ℂ := Complex.I
 /-- `z^r` for a natural number `r` (callers guard `r ∈ ℕ`). -/
 noncomputable def cpow (z : ℂ) (r : ℝ) : ℂ := z ^ ⌊r⌋₊
 noncomputable def cexp (z : ℂ) : ℂ := Complex.exp z
+/-- `∑_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`, of complex terms. -/
+noncomputable def csum (a b : ℝ) (f : ℝ → ℂ) : ℂ := Finset.sum (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
+/-- `∏_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`, of complex factors. -/
+noncomputable def cprod (a b : ℝ) (f : ℝ → ℂ) : ℂ := Finset.prod (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
 /-- `f` is integrable on `ℝⁿ` and `∫_{ℝⁿ} f = r`. -/
 def integralN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
   Integrable (uncurryN n f) volume ∧ ∫ p, uncurryN n f p = r
@@ -280,6 +284,8 @@ noncomputable def CxOp.denote {B : Nat → Type} : (k : CxOp) → k.ty.denote B
   | .I => Prelude.cI
   | .pow => Prelude.cpow
   | .exp => Prelude.cexp
+  | .sum => Prelude.csum
+  | .prod => Prelude.cprod
 
 noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .rpow => fun x y => x ^ y

@@ -138,6 +138,52 @@ def seqBound (ts : List MTok) : Option (List MTok × List MTok) := do
   let _ ← seqVars list
   some (list, ts.drop list.length)
 
+/-- Adjectives about several variables together, among the words `ws`: `distinct`
+(`pairwise distinct`), `relatively prime` or `coprime` (`pairwise …`). The other words, and
+the properties found (`distinct`, `coprime`, `pairwise coprime`). -/
+def collectiveWords : Nat → List Chunk → List Chunk × List Codes
+  | 0, ws => (ws, [])
+  | f + 1, ws =>
+    let found : Option (Codes × List Chunk) :=
+      ((kw [w!"pairwise", w!"distinct"] ws <|> kw [w!"distinct"] ws).map (w!"distinct", ·)) <|>
+      ((kw [w!"pairwise", w!"relatively", w!"prime"] ws <|> kw [w!"pairwise", w!"coprime"] ws).map
+        (w!"pairwise coprime", ·)) <|>
+      ((kw [w!"relatively", w!"prime"] ws <|> kw [w!"coprime"] ws).map (w!"coprime", ·))
+    match found, ws with
+    | some (p, rest), _ => let (ws', ps) := collectiveWords f rest; (ws', p :: ps)
+    | none, c :: rest => let (ws', ps) := collectiveWords f rest; (c :: ws', ps)
+    | none, [] => ([], [])
+
+/-- The condition the collective properties `ps` put on the variables `vars` (several
+variables, each possibly with a bound, or one sequence `x_1,\ldots,x_n`): any two of
+them are different (`distinct`), or have greatest common divisor `1` (`pairwise
+coprime`; `coprime` of exactly two variables: of more it is ambiguous). -/
+def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
+  let pairCond (p : Codes) (a b : MT) : MT :=
+    if p == w!"distinct" then .chain a [(.ne, b)]
+    else .chain (.app (.id w!"\\gcd") [.tuple [a, b]]) [(.eq, .num 1)]
+  let name (v : List MTok) : List MTok := v.takeWhile fun t => (Math.relOf t).isNone
+  let conds ← ps.mapM fun p => do
+    match vars with
+    | [ts] => do
+      -- a sequence: any two terms with different indices of its range
+      let (list, _) ← seqBound ts
+      let (x, _, lo, hi) ← seqVars list
+      if p == w!"coprime" then none else
+      let range (v : Codes) : MT := .setOf (.id v) (.id w!"\\mathbb{Z}") [.chain lo [(.le, .id v), (.le, hi)]]
+      -- (names that are no variable of the article, and no existential threshold `@…`)
+      let (i, j) := (w!"i@", w!"j@")
+      some (.quant true [i] (range i) (.quant true [j] (range j)
+        (.limp (.chain (.id i) [(.ne, .id j)]) (pairCond p (.sub (.id x) (.id i)) (.sub (.id x) (.id j))))))
+    | _ => do
+      let ms ← vars.mapM fun v => Math.parseFormula (name v)
+      if p == w!"coprime" && ms.length != 2 then none else
+      let pairs := ms.zipIdx.flatMap fun (a, k) => (ms.drop (k + 1)).map (a, ·)
+      some (.conj (pairs.map fun (a, b) => pairCond p a b))
+  match conds with
+  | [c] => some c
+  | cs => some (.conj cs)
+
 /-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`);
 `x_1,\ldots,x_n\in A` binds the sequence `x` (`@seq lo hi A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
@@ -448,6 +494,10 @@ inductive Bind where
   | ifCond (cond : MT)
   /-- `For $x\in A$ and $y\in B$,`. -/
   | many (bs : List Bind)
+  /-- A binder written as a hypothesis (`If $n$ is an even integer,`, `If $a$ and $b$ are
+  positive,`): about variables that are already bound, the hypothesis that they are as it
+  says; otherwise the binder. -/
+  | hyp (b : Bind)
   deriving Repr, Inhabited
 
 /-- Further `and $y\in B$` after a binder. -/
@@ -557,7 +607,11 @@ def sufficientBinder (cs : List Chunk) : Option (Bind × List Chunk) := do
   if large then
     if v.length != ts.length then none else
     let t := w!"@N" ++ name
-    let vb : Bind := if ws.isEmpty then .every [name] (.ival (.id t) inf false true)
+    -- (an index name without a noun is an integer, as in `\lim_{n\to\infty}`)
+    let index := match v with | [.id n] => Math.indexNames.contains n | _ => false
+    let vb : Bind := if ws.isEmpty then
+        (if index then .every [name] (.setOf (.id name) (.id w!"\\mathbb{Z}") [.chain (.id name) [(.ge, .id t)]])
+        else .every [name] (.ival (.id t) inf false true))
       else .noun (ws ++ [.m (v ++ [.cmd w!"ge", .id t])])
     some (.many [.every [t] (.id w!"\\mathbb{R}"), vb], r')
   else
@@ -676,9 +730,11 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
   (do
     -- `all integers $a,b\ge1$`, `all positive integers $a$ and $b$`: a binder for each
     let (np, r') := npUpTo (r.length + 1) r []
-    let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    let ws0 := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    -- `all distinct primes $p,q$`: a condition on all of them
+    let (ws, ps) := collectiveWords 8 ws0
     if ws.isEmpty then none else
-    let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws.length, r' with
+    let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws0.length, r' with
       | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
       | [.m ts], _ => ((seqBound ts).map fun _ => ([ts], [], r')) <|> (splitVars ts).map (·, [], r')
       -- `all real numbers $x,y$ with $y\ne0$`: a condition on all of them
@@ -688,7 +744,8 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
         let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
         some (vars, [Bind.ifCond c], r')
       | _, _ => none
-    some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ conds), r'')) <|>
+    let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
+    some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ together ++ conds), r'')) <|>
   (do
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
@@ -734,12 +791,19 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
     | .w w => w != w!"with" && w != w!"such" && w != w!"then" && w != w!"and"
     | .p 45 => true
     | _ => false
-  if ws.isEmpty then none else
-  let nouns := vars.map fun v => Bind.noun (ws ++ [.m v])
   let r1 := r.drop ws.length
+  -- `distinct`, `relatively prime`: a condition on all of them
+  let (ws, ps) := collectiveWords 8 ws
+  let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
+  -- `$v,w\in A$ are distinct`: the variables of their domain, together
+  if ws.isEmpty then
+    if together.isEmpty then none else
+    let (vs, d) ← binderMath ts
+    return (.many (.every vs d :: together), r1)
+  let nouns := vars.map fun v => Bind.noun (ws ++ [.m v])
   match withConds r1 with
-  | some (c, r2) => some (.many (nouns ++ [.ifCond c]), r2)
-  | none => some (.many nouns, r1)
+  | some (c, r2) => some (.many (nouns ++ together ++ [.ifCond c]), r2)
+  | none => some (.many (nouns ++ together), r1)
 
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
@@ -784,7 +848,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
                 | _ => (ts, r1)
               let r2 ← kw [w!"are"] r1
               let (b, r3) ← pluralNoun ts r2
-              if (punct 44 r3).isNone then none else some (b, r3)) <|>
+              if (punct 44 r3).isNone then none else some (.hyp b, r3)) <|>
             -- `If $C$ is an LTD copula,`: as `For an LTD copula $C$,`
             (do
               let (ts, r1) ← mathChunk r
@@ -792,9 +856,11 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
               let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
               let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
               if ws.isEmpty || (punct 44 (r2.drop ws.length)).isNone then none
-              else some (.noun (ws ++ [.m [.id v]]), r2.drop ws.length)) <|>
+              else some (.hyp (.noun (ws ++ [.m [.id v]])), r2.drop ws.length)) <|>
             (do
               let (m, r') ← formula r
+              -- (`If $n$ is even,`: a clause, read as a hypothesis later)
+              if (kw [w!"is"] r').isSome || (kw [w!"are"] r').isSome then none else
               some (.ifCond m, r'))
           | none => none
 
@@ -849,6 +915,10 @@ inductive Clause where
   /-- `if $φ$, CLAUSE`: the clause under the hypothesis `φ` about variables
   that are already bound. -/
   | ifThen (cond : MT) (c : Clause)
+  /-- `if CLAUSE, [then] CLAUSE`: the clause under a hypothesis that is itself a clause
+  about variables that are already bound (`if $n$ is even`, `if $a$ and $b$ are
+  relatively prime`). -/
+  | ifClause (hyp c : Clause)
   /-- `$X$ is ADJ, ADJ [on $A$] and ADJ`: standard properties of a number, of a set
   of points of the plane, of a real function (on its domain, or on `A`), of a
   quantity of functions on the unit square, or of a class of them. -/
@@ -892,6 +962,15 @@ inductive Clause where
   the numbers the noun phrase (and the clause) describe are not finitely many. -/
   | infinitelyMany (np : List Chunk) (c : Option Clause)
   deriving Repr, Inhabited
+
+/-- `$x_1,\ldots,x_n$ are ADJ`: each term `x_i` of the sequence, for the integers `i` of
+its range, is as the words say. -/
+def seqEach (ts : List MTok) (ws : List Chunk) : Option Clause := do
+  let (x, _, lo, hi) ← seqVars ts
+  -- (a name that is no variable of the article, and not an existential threshold `@…`)
+  let i := w!"i@"
+  some (.under (.every [i] (.setOf (.id i) (.id w!"\\mathbb{Z}") [.chain lo [(.le, .id i), (.le, hi)]]))
+    (.isA (.sub (.id x) (.id i)) ws false))
 
 /-- A clause with the citations that justify it, its own binders
 (`…, and for $b\in B$, CLAUSE`) and the definitions of a trailing `where`
@@ -1357,6 +1436,42 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     | some (ms, r') => some (.fact (.conj ms), r')
     | none => none
   | none =>
+  -- `$a$ and $b$ are positive`, `$x_1,\ldots,x_n$ are distinct`, `$r$ and $s$ are
+  -- relatively prime`: each variable has the adjectives (or is of the noun), and the
+  -- collective properties hold together
+  match (do
+      let (ts, r1) ← mathChunk cs
+      let (ts, r1) := match kw [w!"and"] r1 with
+        | some (.m [b] :: r2) => match ts with
+          | [a] => ([a, .sym 44, b], r2)
+          | _ => (ts, r1)
+        | _ => (ts, r1)
+      let vars ← ((seqBound ts).bind fun (l, b) => if b.isEmpty then some [l] else none) <|> splitVars ts
+      -- (a bound after the variables is not read here)
+      if vars.length > 1 && vars.any (·.any fun t => (Math.relOf t).isSome) then none else
+      let r2 ← kw [w!"are"] r1
+      let ws0 := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"then", w!"for", w!"if", w!"whenever", w!"with", w!"such", w!"to", w!"from",
+            w!"of", w!"in", w!"on", w!"by"].contains w
+        | .p 45 => true
+        | _ => false
+      let r3 := r2.drop ws0.length
+      -- (`relatively prime to $n$`, `distinct from $y$`: relations to another object)
+      if (kw [w!"to"] r3).isSome || (kw [w!"from"] r3).isSome then none else
+      let (ws, ps) := collectiveWords 8 ws0
+      let isAnd (c : Chunk) : Bool := match c with | .w w => w == w!"and" | _ => false
+      let ws := ((ws.dropWhile isAnd).reverse.dropWhile isAnd).reverse
+      let together : List Clause ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([Clause.fact ·])
+      let each : List Clause ← if ws.isEmpty then some [] else
+        match vars with
+        | [v] => (seqEach v ws).map ([·])
+        | _ => vars.mapM fun v => (Math.parseFormula v).map fun m => Clause.isA m ws false
+      match each ++ together with
+      | [] => none
+      | [c] => some (c, r3)
+      | cs => some (.both cs, r3)) with
+  | some res => some res
+  | none =>
   -- [the WORDS] $X$ is at most [the WORDS] $Y$
   match (do
       let (l, r) ← namedTerm cs
@@ -1547,11 +1662,14 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   -- `such that`, the condition after `with` is the clause
   match (do
       if none_ then none else
-      let ws := r.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
+      let ws0 := r.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
+      let (ts, r1) ← mathChunk (r.drop ws0.length)
+      -- `there are distinct primes $p,q$`: a condition on all of them
+      let (ws, ps) := collectiveWords 8 ws0
       if ws.isEmpty then none else
-      let (ts, r1) ← mathChunk (r.drop ws.length)
       let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
-      let nouns : List Bind := vars.map fun v => Bind.noun (ws ++ [Chunk.m v])
+      let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([Bind.ifCond ·])
+      let nouns : List Bind := vars.map (fun v => Bind.noun (ws ++ [Chunk.m v])) ++ together
       match withConds r1 with
       | some (φ, r2) =>
         match followingProperty r2 <|> kw [w!"such", w!"that"] r2 with
@@ -1785,8 +1903,19 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
           let r ← kw [w!"if"] r0
           let (m, r') ← formula r
           let r'' ← punct 44 r'
-          some (m, r'')) with
+          some (m, (kw [w!"then"] r'').getD r'')) with
       | some (m, r) => (some m, r)
+      | none => (none, r0)
+    -- a hypothesis that is a clause about bound variables: `if $n$ is even, CLAUSE`,
+    -- `if $a$ and $b$ are relatively prime, then CLAUSE`
+    let (hypC, r0) : Option Clause × List Chunk :=
+      if hyp.isSome then (none, r0) else
+      match (do
+          let r ← kw [w!"if"] r0
+          let (h, rest) ← clause r
+          let r' ← punct 44 rest
+          some (h, (kw [w!"then"] r').getD r')) with
+      | some (h, r) => (some h, r)
       | none => (none, r0)
     -- a clause's own binder: `for $b\in B$, CLAUSE`
     let (bs, r0) : List Bind × List Chunk :=
@@ -1799,6 +1928,7 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
     let (c, r1) ← thereIs r0 <|> clause r0
     let (c, r1) := everyNPAfter c r1
     let c := match hyp with | some m => Clause.ifThen m c | none => c
+    let c := match hypC with | some h => Clause.ifClause h c | none => c
     let post := (kw [w!"by"] r1 >>= cite) <|> (kw [w!"as", w!"specified", w!"in"] r1 >>= cite)
     let (cites, r2) := match post with
       | some (l, r2) => (pre ++ [l], r2)
@@ -2243,7 +2373,12 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
         | _, some ([_], _) => some ts
         | _, _ => none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
-    let ws := r1.takeWhile (fun c => match c with
+    -- (`… be an integer and let $x_1,\ldots,x_n$ be …`, `… and $\lambda>0$`: the next binder)
+    let cut := (r1.zipIdx.find? fun (c, i) => match c, r1[i + 1]? with
+      | .w w, some (.w w') => w == w!"and" && w' == w!"let"
+      | .w w, some (.m _) => w == w!"and"
+      | _, _ => false).map (·.2)
+    let ws := (r1.take (cut.getD r1.length)).takeWhile (fun c => match c with
       | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
     -- a noun that ends in a fixed formula: `probability distribution on $\mathbb{N}_0$`
     let tail := match r1.drop ws.length with
@@ -2741,6 +2876,22 @@ def sentence (cs : List Chunk) : Option Sent :=
   -- fix $B$ [and define|set|put DEFS].
   match kw [w!"fix"] cs with
   | some r =>
+    -- `Fix a sufficiently large $R$.`, `Fix a sufficiently small $\eta>0$.`
+    (do
+      let r1 ← kw [w!"a"] r <|> kw [w!"an"] r
+      let (b, r2) ← sufficientBinder r1
+      if isEnd r2 then some (.fix b [] []) else none) <|>
+    -- `Fix an integer $k\ge3$ and $\lambda>0$.`
+    (do
+      let r1 ← kw [w!"a"] r <|> kw [w!"an"] r
+      let k ← r1.zipIdx.findSome? fun (c, i) => match c, r1[i + 1]? with
+        | .w w, some (.m _) => if w == w!"and" then some i else none
+        | _, _ => none
+      let np := r1.take k
+      if np.isEmpty || np.any (fun c => match c with | .p 44 | .p 46 => true | _ => false) then none else
+      let (bs, r2) := moreAnd 4 (r1.drop k) []
+      if bs.isEmpty || !isEnd r2 then none else
+      some (.fix (.many (.noun np :: bs)) [] [])) <|>
     -- `Fix an integer $k\ge3$.`
     (do
       let r1 ← kw [w!"a"] r <|> kw [w!"an"] r
@@ -2959,8 +3110,9 @@ where
     | f + 1, cs, acc =>
       match binder cs with
       | some (b, r) =>
+        -- (`For B, if $φ$, then CLAUSES`)
         match punct 44 r with
-        | some r' => moreBinders f r' (b :: acc)
+        | some r' => moreBinders f ((kw [w!"then"] r').getD r') (b :: acc)
         | none => some (acc.reverse, cs)
       | none => some (acc.reverse, cs)
 

@@ -95,6 +95,7 @@ def primConst : Prim → Option Name
     | .mul => ``Prelude.cmul | .div => ``Prelude.cdiv | .neg => ``Prelude.cneg
     | .re => ``Prelude.cre | .im => ``Prelude.cim | .abs => ``Prelude.cabs
     | .conj => ``Prelude.cconj | .I => ``Prelude.cI | .pow => ``Prelude.cpow | .exp => ``Prelude.cexp
+    | .sum => ``Prelude.csum | .prod => ``Prelude.cprod
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

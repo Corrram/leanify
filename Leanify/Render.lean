@@ -66,7 +66,7 @@ def Prim.tex : Prim → String
     | .ofReal => "" | .add => "+" | .sub => "-" | .mul => "\\cdot" | .div => "/" | .neg => "-"
     | .re => "\\operatorname{Re}" | .im => "\\operatorname{Im}" | .abs => "\\operatorname{abs}"
     | .conj => "\\operatorname{conj}" | .I => "\\mathrm{i}" | .pow => "\\operatorname{pow}"
-    | .exp => "\\exp"
+    | .exp => "\\exp" | .sum => "\\sum" | .prod => "\\prod"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -104,6 +104,10 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.app (.prim (.cx .sum)) a) b) (.lam ty d body) =>
+    (Tm.app (.app (.app (.prim .finSum) a) b) (.lam ty d body)).tex cs gs ls
+  | .app (.app (.app (.prim (.cx .prod)) a) b) (.lam ty d body) =>
+    (Tm.app (.app (.app (.prim .finProd) a) b) (.lam ty d body)).tex cs gs ls
   | .app (.app (.prim .series) a) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls)

@@ -77,9 +77,10 @@ inductive RealFn where
 
 /-- Complex numbers: `ofReal x` is the real number `x` as a complex number; `pow z r`
 is `z^r` for a natural number `r` (callers guard `r ∈ ℕ`); `abs z` is the modulus,
-`conj z` the conjugate, `I` the imaginary unit. -/
+`conj z` the conjugate, `I` the imaginary unit; `sum a b f` (`prod`) is `∑_{k=a}^{b} f(k)`
+over the integers between `a` and `b`, as `finSum`. -/
 inductive CxOp where
-  | ofReal | add | sub | mul | div | neg | re | im | abs | conj | I | pow | exp
+  | ofReal | add | sub | mul | div | neg | re | im | abs | conj | I | pow | exp | sum | prod
   deriving DecidableEq, Repr, Lean.ToExpr
 
 def CxOp.ty : CxOp → Ty
@@ -89,6 +90,7 @@ def CxOp.ty : CxOp → Ty
   | .re | .im | .abs => .complex ⟶ .real
   | .I => .complex
   | .pow => .complex ⟶ .real ⟶ .complex
+  | .sum | .prod => .real ⟶ .real ⟶ (.real ⟶ .complex) ⟶ .complex
 
 /-- The core prelude: standard notions of real analysis with their usual mathlib
 meaning (`Leanify.Prelude`). -/

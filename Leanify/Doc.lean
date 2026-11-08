@@ -793,6 +793,12 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `every $M_r$`, `for every fixed $l$`: no noun says what the variable ranges over
   if (wordsOf np).isEmpty then
     fail E.finding w!"a variable without a noun or a domain: say what it ranges over (every integer $n$, every $x\\in A$)"
+  -- `every such $\gamma$`: the conditions are in an earlier sentence
+  if (wordsOf np).head? == some w!"such" then
+    fail E.finding w!"`such` refers to conditions stated earlier: state them here (every $x$ with …)"
+  -- `a small $\zeta>0$`: how small is not said
+  if (wordsOf np).head? == some w!"small" || (wordsOf np).head? == some w!"large" then
+    fail E.finding w!"`small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound"
   let st ← get
   let V := st.vocab
   -- prenominal modifiers
@@ -822,7 +828,8 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | none => (acc.reverse, cs)
   -- the head: an article class, a vocabulary noun, or a variable with a signature
   -- (the article's own classes take precedence over the vocabulary's nouns)
-  let headOf (r00 : List Chunk) : M ((Ty × List Tm × Option (List MTok) × List Chunk) × List Nat) := do
+  -- (`implicit`: adjectives of numbers came before, so a variable alone is a real number)
+  let headOf (r00 : List Chunk) (implicit : Bool) : M ((Ty × List Tm × Option (List MTok) × List Chunk) × List Nat) := do
     let (nms, r0) := preN 4 r00 []
     let h : Ty × List Tm × Option (List MTok) × List Chunk ← do
       match matchWords st.nouns r0 with
@@ -855,6 +862,17 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             | _ => r0
           match r1 with
           | .m ts :: r => do
+            -- `every positive $a\in J$`, `a rational $s\in(a,b)$`: after adjectives of
+            -- numbers, a real variable (its domain, if written, says more)
+            if implicit && r1.length == r0.length && (Math.parseSig ts).isNone then
+              -- (`every positive $n$`: an index name is usually an integer; without a
+              -- domain, what it ranges over is not said)
+              let index := match ts.head? with
+                | some (.id v) => Math.indexNames.contains v
+                | _ => false
+              if index && !ts.contains (.cmd w!"in") then
+                fail E.finding w!"adjectives without a noun before an index name: say what it ranges over (every positive integer $n$)"
+              return ((.real, [], some ts, r), nms)
             let sg ← liftO (Math.parseSig ts) E.noun (((wordsOf np).intersperse [32]).flatten)
             match sg with
             | .sig (.id f) d c => do
@@ -878,13 +896,13 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     | none => rEnd
   let rec tryK : Nat → Nat → M (Nat × (Ty × List Tm × Option (List MTok) × List Chunk) × List Nat)
     | 0, k => do
-      let (h, nms) ← headOf (restAt k)
+      let (h, nms) ← headOf (restAt k) (k > 0)
       pure (k, h, nms)
     | f + 1, k =>
       if pmAll.length ≤ k then do
-        let (h, nms) ← headOf rEnd
+        let (h, nms) ← headOf rEnd (pmAll.length > 0)
         pure (pmAll.length, h, nms)
-      else tryCatch (do let (h, nms) ← headOf (restAt k); pure (k, h, nms)) fun _ => tryK f (k + 1)
+      else tryCatch (do let (h, nms) ← headOf (restAt k) (k > 0); pure (k, h, nms)) fun _ => tryK f (k + 1)
   let (k, (ty, preds, var, r1), nms) ← tryK (pmAll.length + 1) 0
   let pmGroups := pmAll.take k
   let pms ← pmGroups.mapM fun (cs, ms) => do
@@ -1055,6 +1073,7 @@ def binderInfos (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   -- (a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`)
   | .every vs d => everyIn outer vs d
   | .noun np => do pure [← nounPhrase np outer]
+  | .hyp b => binderInfos b before
   | .on _ => pure []
   | .ifCond φ => do
     -- the free variables of φ range over ℝ; φ is the domain of the last one. The
@@ -1168,6 +1187,7 @@ def clauseMaths : Clause → List MT
   | .equalityOn s => [s]
   | .equalityWhen φ => [φ]
   | .ifThen c cl => c :: clauseMaths cl
+  | .ifClause h cl => clauseMaths h ++ clauseMaths cl
   | .adjectives s adjs => s :: adjs.filterMap (·.2)
   | .notions s _ _ => [s]
   | .isA s np _ => s :: (mathsOf np).filterMap Math.parseFormula
@@ -1288,6 +1308,7 @@ def boundsOf : MT → List MT
 def usesIneq : Clause → Bool
   | .equalityOn _ | .equalityWhen _ => true
   | .ifThen _ cl => usesIneq cl
+  | .ifClause _ cl => usesIneq cl
   | _ => false
 
 /-- The free variables of the latest inequality that a clause refers to. -/
@@ -2086,11 +2107,13 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
   | .ifCond φ =>
     let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
+  | .hyp b => bindNames1 st env b
   | _ => []
 
 def bindNames (st : St) (env : List Codes) (bs : List Bind) : List Codes :=
   bs.flatMap fun b => match b with
     | .many bs => bs.flatMap (bindNames1 st env)
+    | .hyp (.many bs) => bs.flatMap (bindNames1 st env)
     | b => bindNames1 st env b
 
 /-- The formulas of a binder's domain and conditions (the ends of a sequence's indices). -/
@@ -2101,11 +2124,13 @@ def bindMaths1 : Bind → List MT
     | some ((_, name, lo, hi), bound) => [lo, hi] ++ (Math.parseFormula (name ++ bound)).toList
     | none => (Math.parseFormula ts).toList
   | .ifCond φ => [φ]
+  | .hyp b => bindMaths1 b
   | _ => []
 
 def bindMaths (bs : List Bind) : List MT :=
   bs.flatMap fun b => match b with
     | .many bs => bs.flatMap bindMaths1
+    | .hyp (.many bs) => bs.flatMap bindMaths1
     | b => bindMaths1 b
 
 /-- Make the definitions of a clause: those after it (`where`) and those inside a
@@ -2612,6 +2637,10 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let h ← prop sc none cond
     let p ← clauseTm c sc onVar lastRhs cl
     pure (.imp h p)
+  | .ifClause hyp cl => do
+    let h ← clauseTm c sc onVar lastRhs hyp
+    let p ← clauseTm c sc onVar lastRhs cl
+    pure (.imp h p)
   | .notions s names disj => do
     let st ← get
     unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
@@ -2823,6 +2852,10 @@ def rhsOf : Clause → Option MT
 
 def citesOf (cl : CClause) : List Codes := cl.cites
 
+/-- A later clause of the sentence has its own hypothesis (`If $φ$, A, and if $ψ$, B`). -/
+def laterIfC (cls : List CClause) : Bool :=
+  (cls.drop 1).any fun cl => match cl.clause with | .ifThen .. | .ifClause .. => true | _ => false
+
 /-- The claims of one sentence. `exactly one` takes the following clauses into its scope. -/
 def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) : M (List Nat) := do
   modify fun st => { st with topic := if topic == .none then st.topic else topic }
@@ -2831,14 +2864,51 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
   -- otherwise of every clause
   let st0 ← get
   let known := st0.envBinders.map (·.name) ++ (st0.fixed.filter (·.1 == c.ctx.sec)).map (·.2.name)
-  let isHyp (b : Bind) : Bool := match b with
+  -- (also about the variables of the sentence's binders before it: `For every real $x$,
+  -- if $x>0$, then …`)
+  let isHyp (known : List Codes) (b : Bind) : Bool := match b with
     | .ifCond φ =>
       let fr := ((freeIds 64 [] φ).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
       let fr := seqFree st0 [] φ fr
       !fr.isEmpty && fr.all known.contains
     | _ => false
-  let hyps := binds.filter isHyp
-  let binds := binds.filter (!isHyp ·)
+  let knownAt (k : Nat) : List Codes := known ++ bindNames st0 known (binds.take k)
+  let hyps := binds.zipIdx.filterMap fun (b, k) => if isHyp (knownAt k) b then some b else none
+  let binds := binds.zipIdx.filterMap fun (b, k) => if isHyp (knownAt k) b then none else some b
+  -- `If $n$ is an even integer,`, `If $a$ and $b$ are positive,` about variables that are
+  -- already bound (by the result, or by a binder before it): a hypothesis about them;
+  -- otherwise binders
+  let hypNoun (known : List Codes) (b : Bind) : Option Clause := match b with
+    | .noun np => match np.reverse with
+      | .m ts :: rest =>
+        -- (a sequence `x_1,\ldots,x_n` of the result: each of its terms)
+        match Grammar.seqVars ts with
+        | some (x, _, _, _) => if known.contains x then Grammar.seqEach ts rest.reverse else none
+        | none => do
+          let m ← Math.parseFormula ts
+          let v ← Elab.symKey m
+          if known.contains v then some (Clause.isA m rest.reverse false) else none
+      | _ => none
+    | .ifCond φ => some (.fact φ)
+    | _ => none
+  let asHyp (known : List Codes) (b : Bind) : Option Clause := match b with
+    | .hyp (.many bs) => do
+      let cs ← bs.mapM (hypNoun known)
+      -- (a condition alone is not a binder written as a hypothesis)
+      if cs.all (fun c => match c with | .fact _ => true | _ => false) then none else
+      some (.both cs)
+    | .hyp b => hypNoun known b
+    | _ => none
+  let (hypCls, keep) := binds.zipIdx.foldl (fun (hs, ks) (b, k) =>
+      match asHyp (known ++ bindNames st0 known (binds.take k)) b with
+      | some h => (hs ++ [h], ks)
+      | none => (hs, ks ++ [b])) (([] : List Clause), ([] : List Bind))
+  let binds := keep
+  let cls := hypCls.foldr (fun h acc =>
+    if laterIfC cls then match acc with
+      | cl :: rest => { cl with clause := Clause.ifClause h cl.clause } :: rest
+      | [] => []
+    else acc.map fun cl => { cl with clause := Clause.ifClause h cl.clause }) cls
   let laterIf := (cls.drop 1).any fun cl => match cl.clause with | .ifThen .. => true | _ => false
   let cls := hyps.foldr (fun h acc => match h with
     | .ifCond φ =>
