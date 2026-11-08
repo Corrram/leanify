@@ -12,7 +12,13 @@ are matched literally; there is no other source of meaning.
 A vocabulary is reviewed once, together with its `Model` (the Lean meaning of
 its base types and constants), and shared by every article that uses it. The
 core vocabulary `Vocab.core` covers real analysis on `[0,1]`; subject
-vocabularies extend it (`Vocab.append`). -/
+vocabularies extend it (`Vocab.append`).
+
+Notation means what the type of its operands says, as in Python, where `+` calls
+the `__add__` of its operands' class: the core reads `+`, `-`, `\cdot`, `/`, `^`,
+`\lvert\cdot\rvert`, `\le` and finite sums of real numbers, and a vocabulary that
+declares a type of its own says what they mean on it, by its `methods` (the complex
+numbers of `Leanify.Library.Complex`). -/
 
 namespace Leanify
 
@@ -63,6 +69,49 @@ structure Notion where
   doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+/-- A piece of notation that a vocabulary can give a meaning on one of its types. -/
+inductive OpKey where
+  /-- A real number as an element of the type, where an element is expected (`1+z`):
+  `ℝ → T`. -/
+  | ofReal
+  /-- `x+y`, `x-y`, `xy`, `x/y`: `T → T → T` (`x/y` is defined for `y ≠ 0`, the image of `0`). -/
+  | add | sub | mul | div
+  /-- `-x`: `T → T`. -/
+  | neg
+  /-- `x^n` for a natural number `n`: `T → ℝ → T` (defined for `n ∈ ℕ`). -/
+  | pow
+  /-- `\lvert x\rvert`: `T → ℝ`. -/
+  | abs
+  /-- `\sum_{k=a}^{b}` and `\prod_{k=a}^{b}` over the integers from `a` to `b`:
+  `ℝ → ℝ → (ℝ → T) → T`. -/
+  | sum | prod
+  /-- `x\le y`, `x<y` (`x\ge y`, `x>y` with the arguments swapped): `T → T → Prop`. -/
+  | le | lt
+  /-- A named function of one element (`\exp`, `\Re`, `\operatorname{Re}`): `T → U`. -/
+  | fn (name : Codes)
+  /-- A decoration of a variable (`\overline{z}`, `\bar z`): `T → U`. -/
+  | decor (name : Codes)
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A method: the notation `op` on elements of `ty` is the constant `const`. -/
+structure Method where
+  ty : Ty
+  op : OpKey
+  const : Nat
+  /-- Its meaning and Mathlib counterpart, for the glossary. -/
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A symbol of the vocabulary: a constant (`\mathrm{i}`), or, without one, the set of
+all elements of `ty` (`\mathbb{C}`, as a domain: `z\in\mathbb{C}`). -/
+structure Symbol where
+  sym : Codes
+  ty : Ty
+  const : Option Nat := none
+  field : Codes := []
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
 structure Vocab where
   /-- Names of the base types (for readings). -/
   types : List Codes := []
@@ -73,6 +122,9 @@ structure Vocab where
   nouns : List Noun := []
   mods : List Modifier := []
   notions : List Notion := []
+  /-- What notation means on the vocabulary's types. -/
+  methods : List Method := []
+  symbols : List Symbol := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 namespace Vocab
@@ -125,9 +177,16 @@ def append (V W : Vocab) : Vocab :=
     nouns := V.nouns ++ W.nouns.map fun n => { n with ty := shiftTy kt n.ty, pred := tm n.pred }
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
     notions := V.notions ++ W.notions.map fun n =>
-      { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) } }
+      { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
+    methods := V.methods ++ W.methods.map fun m => { m with ty := shiftTy kt m.ty, const := m.const + kc }
+    symbols := V.symbols ++ W.symbols.map fun s =>
+      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc) } }
 
 instance : Append Vocab := ⟨append⟩
+
+/-- A reading with the names of the vocabulary's types (`\mathsf{T}_{k}` is the `k`-th). -/
+def texTypes (V : Vocab) (s : String) : String :=
+  V.types.zipIdx.foldl (fun s (n, k) => s.replace s!"\\mathsf\{T}_\{{k}}" (Codes.toString n)) s
 
 /-- The entries of `V`, as the field `f`. -/
 def tag (f : Codes) (V : Vocab) : Vocab :=
@@ -135,7 +194,8 @@ def tag (f : Codes) (V : Vocab) : Vocab :=
   let t (g : Codes) : Codes := if g.isEmpty then f else f ++ [32, 40] ++ g ++ [41]
   { V with nouns := V.nouns.map (fun n => { n with field := t n.field }),
            mods := V.mods.map (fun m => { m with field := t m.field }),
-           notions := V.notions.map (fun n => { n with field := t n.field }) }
+           notions := V.notions.map (fun n => { n with field := t n.field }),
+           symbols := V.symbols.map (fun s => { s with field := t s.field }) }
 
 end Vocab
 

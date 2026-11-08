@@ -38,7 +38,6 @@ open scoped unitInterval
   | .prop => Prop
   | .fn a b => a.denote B → b.denote B
   | .base k => B k
-  | .complex => ℂ
 
 /-- A value of every type (used for ill-typed or undefined terms). -/
 def Ty.default {B : Nat → Type} (d : (k : Nat) → B k) : (t : Ty) → t.denote B
@@ -47,7 +46,6 @@ def Ty.default {B : Nat → Type} (d : (k : Nat) → B k) : (t : Ty) → t.denot
   | .prop => False
   | .fn _ b => fun _ => Ty.default d b
   | .base k => d k
-  | .complex => (0 : ℂ)
 
 /-- A typed value. -/
 abbrev Val (B : Nat → Type) := Σ t : Ty, t.denote B
@@ -203,26 +201,6 @@ def partialMulti {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (g : (Ty
     ((¬ ∀ i : Fin n, ∃ k : ℕ, p (Fin.castAdd n i) = k) → uncurryN (n + n) g p = 0)
 /-- The set `P` is finite and has `r` elements. -/
 def cardIs (P : ℝ → Prop) (r : ℝ) : Prop := {x | P x}.Finite ∧ r = ({x | P x}.ncard : ℝ)
-
-/-! Complex numbers. -/
-def cofReal (x : ℝ) : ℂ := x
-def cadd (z w : ℂ) : ℂ := z + w
-def csub (z w : ℂ) : ℂ := z - w
-def cmul (z w : ℂ) : ℂ := z * w
-noncomputable def cdiv (z w : ℂ) : ℂ := z / w
-def cneg (z : ℂ) : ℂ := -z
-def cre (z : ℂ) : ℝ := z.re
-def cim (z : ℂ) : ℝ := z.im
-noncomputable def cabs (z : ℂ) : ℝ := ‖z‖
-def cconj (z : ℂ) : ℂ := (starRingEnd ℂ) z
-def cI : ℂ := Complex.I
-/-- `z^r` for a natural number `r` (callers guard `r ∈ ℕ`). -/
-noncomputable def cpow (z : ℂ) (r : ℝ) : ℂ := z ^ ⌊r⌋₊
-noncomputable def cexp (z : ℂ) : ℂ := Complex.exp z
-/-- `∑_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`, of complex terms. -/
-noncomputable def csum (a b : ℝ) (f : ℝ → ℂ) : ℂ := Finset.sum (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
-/-- `∏_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`, of complex factors. -/
-noncomputable def cprod (a b : ℝ) (f : ℝ → ℂ) : ℂ := Finset.prod (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
 /-- `f` is integrable on `ℝⁿ` and `∫_{ℝⁿ} f = r`. -/
 def integralN {B : Nat → Type} (n : Nat) (f : (Ty.fns n).denote B) (r : ℝ) : Prop :=
   Integrable (uncurryN n f) volume ∧ ∫ p, uncurryN n f p = r
@@ -269,23 +247,6 @@ noncomputable def RealFn.denote : RealFn → ℝ → ℝ
   | .sin => Real.sin
   | .cos => Real.cos
   | .tan => Real.tan
-
-noncomputable def CxOp.denote {B : Nat → Type} : (k : CxOp) → k.ty.denote B
-  | .ofReal => Prelude.cofReal
-  | .add => Prelude.cadd
-  | .sub => Prelude.csub
-  | .mul => Prelude.cmul
-  | .div => Prelude.cdiv
-  | .neg => Prelude.cneg
-  | .re => Prelude.cre
-  | .im => Prelude.cim
-  | .abs => Prelude.cabs
-  | .conj => Prelude.cconj
-  | .I => Prelude.cI
-  | .pow => Prelude.cpow
-  | .exp => Prelude.cexp
-  | .sum => Prelude.csum
-  | .prod => Prelude.cprod
 
 noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .rpow => fun x y => x ^ y
@@ -335,7 +296,6 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .integralN n => Prelude.integralN n
   | .partialMulti n => Prelude.partialMulti n
   | .cardIs => Prelude.cardIs
-  | .cx k => k.denote
 
 /-- Numerals: `0`, `1` and `(n : ℝ)` for larger `n`. -/
 def numVal : Nat → ℝ

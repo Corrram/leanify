@@ -60,7 +60,7 @@ jobs:
           diff tests/Conventions/check.txt "$RUNNER_TEMP/conventions.check.txt"
       - name: Statement forms of research manuscripts are read as documented
         run: |
-          lake exe leanify check tests/Statements/article.tex --vocab numbers --claims > "$RUNNER_TEMP/statements.check.txt" || true
+          lake exe leanify check tests/Statements/article.tex --vocab numbers,complex --claims > "$RUNNER_TEMP/statements.check.txt" || true
           diff tests/Statements/check.txt "$RUNNER_TEMP/statements.check.txt"
       - uses: actions/setup-python@v6
         with:

@@ -74,8 +74,6 @@ def vocab : Vocab where
     noun phrase!"integer" phrase!"integers" integer "an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number)",
     noun phrase!"real number" phrase!"real numbers" (predR fun _ => tt) "a real number (`ℝ`)",
     noun phrase!"real" phrase!"reals" (predR fun _ => tt) "a real number (`ℝ`), as in `for every real $x$`",
-    { sing := phrase!"complex number", plural := phrase!"complex numbers", ty := .complex,
-      pred := close (lamT .complex (fun _ => tt) fun _ => tt), doc := "a complex number (`ℂ`)" },
     noun phrase!"nonnegative integer" phrase!"nonnegative integers" nonnegInt "`x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`)",
     noun phrase!"positive integer" phrase!"positive integers" posInt "`x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`)",
     noun phrase!"negative integer" phrase!"negative integers" negInt "`x ∈ ℤ`, `x < 0`",

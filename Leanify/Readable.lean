@@ -24,7 +24,6 @@ partial def tyExpr (M : Expr) : Ty → MetaM Expr
   | .prop => pure (mkSort Level.zero)
   | .fn a b => do mkArrow (← tyExpr M a) (← tyExpr M b)
   | .base k => whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
-  | .complex => pure (Lean.mkConst ``Complex)
 
 /-- The Lean values of the model's constants, read from its definition. -/
 partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
@@ -90,12 +89,6 @@ def primConst : Prim → Option Name
   | .binom => some ``Prelude.binom
   | .zpow => some ``Prelude.zpow
   | .cardIs => some ``Prelude.cardIs
-  | .cx k => some <| match k with
-    | .ofReal => ``Prelude.cofReal | .add => ``Prelude.cadd | .sub => ``Prelude.csub
-    | .mul => ``Prelude.cmul | .div => ``Prelude.cdiv | .neg => ``Prelude.cneg
-    | .re => ``Prelude.cre | .im => ``Prelude.cim | .abs => ``Prelude.cabs
-    | .conj => ``Prelude.cconj | .I => ``Prelude.cI | .pow => ``Prelude.cpow | .exp => ``Prelude.cexp
-    | .sum => ``Prelude.csum | .prod => ``Prelude.cprod
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do

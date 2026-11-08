@@ -416,7 +416,7 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
           out := out ++ [s!"{rel}:{l}:{c}: info: defines {gs.getD i s!"g{i}"} ({defName d i})"]
         for k in ks do
           match d.claims[k]? with
-          | some cl => out := out ++ [s!"{rel}:{l}:{c}: info: claim {k}: {cl.body.tex cs gs []}"]
+          | some cl => out := out ++ [s!"{rel}:{l}:{c}: info: claim {k}: {V.texTypes (cl.body.tex cs gs [])}"]
           | none => pure ()
   return (out, cov)
 

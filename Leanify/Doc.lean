@@ -495,9 +495,10 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       let h ← if Elab.isInfty true hi then pure none else some <$> closedBound hi sc
       pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) true true (.loc 0))))
     | .id n => do
-      -- the real numbers, the complex numbers
+      -- the real numbers, and all the elements of a vocabulary's type (`\mathbb{C}`)
       if n == w!"\\mathbb{R}" then pure (.real, none) else
-      if n == w!"\\mathbb{C}" then pure (.complex, none) else
+      if let some s := (← get).vocab.symbols.find? (fun s => s.sym == n && s.const.isNone) then
+        pure (s.ty, none) else
       match ← lookupGlob n, Elab.builtinConst n with
       | none, some (p, .fn .real .prop) => pure (.real, some p)
       | _, _ =>

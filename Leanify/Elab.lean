@@ -421,29 +421,77 @@ def implicitArgs (sc : Scope) (i : Nat) : M (List (Tm × Ty)) := do
 but a predicate applied to a local must be written as an application. -/
 def applyPred (p : Tm) (x : Tm) : Tm := .app p x
 
-def coerce (t : Tm) (src dst : Ty) : M Tm :=
+/-! ## Notation on the vocabulary's types
+
+As in Python, where `+` calls the `__add__` of its operands' class, notation means
+what the type of its operands says: real numbers are the core's, and a vocabulary
+gives notation a meaning on its own types by `methods` (`Vocab.lean`). -/
+
+/-- Whether a type is one of the vocabulary's own. -/
+def isBase : Ty → Bool
+  | .base _ => true
+  | _ => false
+
+/-- The result type of a function type applied to `n` arguments. -/
+def resultTy : Nat → Ty → Ty
+  | 0, t => t
+  | n + 1, .fn _ b => resultTy n b
+  | _, t => t
+
+/-- The method `op` of the type `t`: its constant, and the constant's type. -/
+def method (t : Ty) (op : OpKey) : M (Option (Tm × Ty)) := do
+  let V := (← get).vocab
+  pure ((V.methods.find? fun m => m.ty == t && m.op == op).map fun m =>
+    (Tm.const m.const, V.consts.getD m.const .prop))
+
+/-- The name of a type of the vocabulary, for findings. -/
+def tyName (t : Ty) : M Codes := do
+  match t with
+  | .base k => pure ((((← get).vocab.types[k]?).map (w!"$" ++ · ++ w!"$")).getD w!"this type")
+  | _ => pure w!"this type"
+
+/-- The notation `op`, for findings. -/
+def opName : OpKey → Codes
+  | .ofReal => w!"a real number" | .add => w!"$+$" | .sub | .neg => w!"$-$"
+  | .mul => w!"$\\cdot$" | .div => w!"$/$" | .pow => w!"a power"
+  | .abs => w!"$\\lvert\\cdot\\rvert$" | .sum => w!"$\\sum$" | .prod => w!"$\\prod$"
+  | .le | .lt => w!"an order ($\\le$, $<$)" | .fn n => w!"$" ++ n ++ w!"$"
+  | .decor n => w!"$" ++ n ++ w!"$"
+
+/-- `op` on elements of `t`, applied to `args`: the method's constant. -/
+def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
+  let some (c, cty) ← method t op
+    | fail E.finding (opName op ++ w!" has no meaning on " ++ (← tyName t) ++ w!" in the vocabulary")
+  pure (args.foldl .app c, resultTy args.length cty)
+
+def coerce (t : Tm) (src dst : Ty) : M Tm := do
   if src == dst then pure t
   else if src == .unit && dst == .real then pure (.ofUnit t)
   else if src == .real && dst == .unit then pure (.toUnit t)
-  -- a real number is a complex number
-  else if src == .real && dst == .complex then pure (.app (.prim (.cx .ofReal)) t)
-  else if src == .unit && dst == .complex then pure (.app (.prim (.cx .ofReal)) (.ofUnit t))
+  -- a real number as an element of a type of the vocabulary (its method `ofReal`)
+  else if (src == .real || src == .unit) && isBase dst then
+    match ← method dst .ofReal with
+    | some (c, _) => pure (.app c (if src == .unit then .ofUnit t else t))
+    | none => fail E.type
   else fail E.type
 
 def asReal (p : Tm × Ty) : M Tm := coerce p.1 p.2 .real
 
-def asComplex (p : Tm × Ty) : M Tm := coerce p.1 p.2 .complex
+/-- `a op b` with an operand of a vocabulary's type: that type's method `op`, a real
+operand being an element of the type; `a/b` is defined when `b` is not `0`. -/
+def arith (op : OpKey) (a b : Tm × Ty) : M (Tm × Ty) := do
+  let t := if isBase a.2 then a.2 else b.2
+  let x ← coerce a.1 a.2 t
+  let y ← coerce b.1 b.2 t
+  let r ← callMethod t op [x, y]
+  if op == .div then
+    let zero ← coerce (.num 0) .real t
+    return (.guard (.not (.eq y zero)) r.1, r.2)
+  return r
 
 /-- The finding for `\mathbb{F}_p` and `\mathbb{Z}/p\mathbb{Z}`. -/
 def finiteField : Codes :=
   w!"finite fields and residue rings ($\\mathbb{F}_p$, $\\mathbb{Z}/p\\mathbb{Z}$) are not read: write their elements as integers and equations between them as congruences ($a\\equiv b\\pmod p$)"
-
-/-- A complex operation applied to two complex numbers. -/
-def cx2 (k : CxOp) (a b : Tm) : Tm := .app (.app (.prim (.cx k)) a) b
-
-/-- `a/b` of complex numbers, defined for `b ≠ 0`. -/
-def cdivTm (a b : Tm) : Tm :=
-  .guard (.not (.eq b (.app (.prim (.cx .ofReal)) (.num 0)))) (cx2 .div a b)
 
 def isMeasure : Ty → Bool
   | .fn (.fn .unit .prop) .real => true
@@ -536,9 +584,6 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
     some (.lam .real .tt (.app (.prim .isNat) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{>0}" then some (.lam .real .tt (.lt (.num 0) (.loc 0)), .fn .real .prop)
   else if n == w!"\\mathbb{R}_{\\ge0}" then some (.lam .real .tt (.le (.num 0) (.loc 0)), .fn .real .prop)
-  -- the complex numbers, and the imaginary unit
-  else if n == w!"\\mathbb{C}" then some (.lam .complex .tt .tt, .fn .complex .prop)
-  else if n == w!"\\mathrm{i}" then some (.prim (.cx .I), .complex)
   else none
 
 /-- Names of indices (`n`, `k`, …): integers, in exponents and limits. -/
@@ -597,16 +642,26 @@ def isPredTy : Ty → Bool
   | _ => false
 
 def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
-  if (x.2 == .complex || y.2 == .complex) && (r == .le || r == .lt || r == .ge || r == .gt) then
-    fail E.finding w!"complex numbers are not ordered: compare real numbers, such as $|z|$ or $\\operatorname{Re} z$"
+  -- (elements of a vocabulary's type: a real number among them is one of them, and
+  -- an order is the type's method)
+  if isBase x.2 || isBase y.2 then
+    let t := if isBase x.2 then x.2 else y.2
+    let a ← coerce x.1 x.2 t
+    let b ← coerce y.1 y.2 t
+    match r with
+    | .eq => return .eq a b
+    | .ne => return .not (.eq a b)
+    | .le => return (← callMethod t .le [a, b]).1
+    | .lt => return (← callMethod t .lt [a, b]).1
+    | .ge => return (← callMethod t .le [b, a]).1
+    | .gt => return (← callMethod t .lt [b, a]).1
+    | _ => pure ()
   match r with
   | .eq =>
     if x.2 == y.2 then pure (.eq x.1 y.1)
-    else if x.2 == .complex || y.2 == .complex then pure (.eq (← asComplex x) (← asComplex y))
     else pure (.eq (← asReal x) (← asReal y))
   | .ne =>
     if x.2 == y.2 then pure (.not (.eq x.1 y.1))
-    else if x.2 == .complex || y.2 == .complex then pure (.not (.eq (← asComplex x) (← asComplex y)))
     else pure (.not (.eq (← asReal x) (← asReal y)))
   | .le => pure (.le (← asReal x) (← asReal y))
   | .lt => pure (.lt (← asReal x) (← asReal y))
@@ -863,23 +918,33 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             if a == sty then applyAll t ty doms [(s, sty)] else pure (t, ty)
           | _, _ => pure (t, ty)
         | none =>
+          -- a symbol of the vocabulary: a constant (`\mathrm{i}`), or all the elements
+          -- of a type (`\mathbb{C}`)
+          match (← get).vocab.symbols.find? (·.sym == n) with
+          | some s => match s.const with
+            | some i => pure (.const i, s.ty)
+            | none => pure (.lam s.ty .tt .tt, .fn s.ty .prop)
+          | none =>
           match builtinConst n with
           | some r => pure r
           | none =>
-            -- `\overline{z}`, `\bar z` of a complex number `z`: its conjugate
-            let conjOf : Option Codes := [w!"\\overline{", w!"\\bar{"].findSome? fun p =>
-              if n.take p.length == p && n.getLast? == some 125 then some ((n.drop p.length).dropLast) else none
-            match conjOf.bind (lookupLocal sc ·) with
-            | some (i, .complex) => pure (.app (.prim (.cx .conj)) (.loc i), .complex)
-            | _ => fail E.undefined n
-    -- (with a complex operand, complex arithmetic)
+            -- `\overline{z}`, `\bar z` of a variable of a vocabulary's type: its
+            -- method for the decoration (the conjugate of a complex number)
+            let decor : Option (Codes × Codes) := [w!"\\overline", w!"\\bar"].findSome? fun p =>
+              if n.take (p.length + 1) == p ++ [123] && n.getLast? == some 125 then
+                some (p, (n.drop (p.length + 1)).dropLast) else none
+            match decor.bind fun (p, v) => (lookupLocal sc v).map (p, ·) with
+            | some (p, i, t) =>
+              if isBase t then callMethod t (.decor p) [.loc i] else fail E.undefined n
+            | none => fail E.undefined n
+    -- (with an operand of a vocabulary's type, that type's method)
     | .add x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
-      if a.2 == .complex || b.2 == .complex then pure (cx2 .add (← asComplex a) (← asComplex b), .complex)
+      if isBase a.2 || isBase b.2 then arith .add a b
       else pure (.add (← asReal a) (← asReal b), .real)
     | .minus x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
-      if a.2 == .complex || b.2 == .complex then pure (cx2 .sub (← asComplex a) (← asComplex b), .complex)
+      if isBase a.2 || isBase b.2 then arith .sub a b
       else pure (.sub (← asReal a) (← asReal b), .real)
     | .mul x y => do
       -- `\partial^I f(x,y)`
@@ -928,7 +993,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | none => pure (D, fty)
       | none => do
       let a ← term f sc pf x; let b ← term f sc pf y
-      if a.2 == .complex || b.2 == .complex then pure (cx2 .mul (← asComplex a) (← asComplex b), .complex)
+      if isBase a.2 || isBase b.2 then arith .mul a b
       else pure (.mul (← asReal a) (← asReal b), .real)
     | .div x y | .frac x y => do
       match fracDeriv m with
@@ -937,11 +1002,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- (a quotient ring `\mathbb{Z}/p\mathbb{Z}` is not a set of real numbers)
       if let .id z := x then if z == w!"\\mathbb{Z}" then fail E.finding finiteField
       let a ← term f sc pf x; let b ← term f sc pf y
-      if a.2 == .complex || b.2 == .complex then pure (cdivTm (← asComplex a) (← asComplex b), .complex)
+      if isBase a.2 || isBase b.2 then arith .div a b
       else pure (.div (← asReal a) (← asReal b), .real)
     | .neg x => do
       let a ← term f sc pf x
-      if a.2 == .complex then pure (.app (.prim (.cx .neg)) a.1, .complex)
+      if isBase a.2 then callMethod a.2 .neg [a.1]
       else pure (.neg (← asReal a), .real)
     | .abs x => do
       let st ← get
@@ -957,8 +1022,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         -- `|A|` of a set: its number of elements
         let (a, aty) ← term f sc pf x
         if aty == .fn .real .prop then pure (cardTm a, .real)
-        -- the modulus of a complex number
-        else if aty == .complex then pure (.app (.prim (.cx .abs)) a, .real)
+        -- (of an element of a vocabulary's type: its method, the modulus of a
+        -- complex number)
+        else if isBase aty then callMethod aty .abs [a]
         else do let a ← asReal (a, aty); pure (.abs a, .real)
     | .minm [x, y] => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y)
@@ -1024,19 +1090,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let (h, hty, doms) ← head f sc (.id n)
           applyAll h hty doms [← term f sc pf a]
       | none => do
-        -- `\exp` of a complex number, and the real and imaginary parts (`\Re z`,
-        -- `\operatorname{Re}(z)`)
-        let cxFn : Option CxOp := if n == w!"\\exp" then some .exp
-          else if n == w!"\\Re" || n == w!"Re" then some .re
-          else if n == w!"\\Im" || n == w!"Im" then some .im
-          else none
-        if let some k := cxFn then
-          if (← lookupGlob n).isNone then
-            let at_ ← term f sc pf a
-            if k == .exp then
-              if at_.2 == .complex then return (.app (.prim (.cx .exp)) at_.1, .complex)
-              else return (.app (.prim (.realFn .exp)) (← asReal at_), .real)
-            else return (.app (.prim (.cx k)) (← asComplex at_), .real)
+        -- a function the article does not define, of an element of a vocabulary's
+        -- type: the type's method of that name (`\exp`, `\Re` of a complex number)
+        if (← get).vocab.methods.any (·.op == .fn n) && (← lookupGlob n).isNone then
+          let at_ ← term f sc pf a
+          if isBase at_.2 then
+            if (← method at_.2 (.fn n)).isSome then return (← callMethod at_.2 (.fn n) [at_.1])
+          let (h, hty, doms) ← head f sc (.id n)
+          return (← applyAll h hty doms [at_])
         let (h, hty, doms) ← head f sc (.id n)
         applyAll h hty doms [← term f sc pf a]
     -- `(f\circ g)(x)` is `f(g(x))`
@@ -1377,14 +1438,13 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | some (.num a), some (.num b) => do
         if b < a || b > a + 100 then fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
         if (lookupLocal sc v).isSome then fail E.shadow v
-        -- each term is the body with the index replaced by its value (complex
-        -- terms: the complex sum)
+        -- each term is the body with the index replaced by its value (terms of a
+        -- vocabulary's type: its method `+` or `\cdot`)
         let terms ← (List.range (b - a + 1)).mapM fun k =>
           term f sc pf (MT.substId v (MT.num (a + k)) 64 body)
-        if terms.any (·.2 == .complex) then
-          let ts ← terms.mapM asComplex
-          match ts with
-          | t0 :: ts => pure (ts.foldl (fun acc x => cx2 (if isSum then .add else .mul) acc x) t0, .complex)
+        if terms.any (isBase ·.2) then
+          match terms with
+          | t0 :: ts => ts.foldlM (fun acc x => arith (if isSum then .add else .mul) acc x) t0
           | [] => fail E.unsupported
         else
         let terms ← terms.mapM asReal
@@ -1399,8 +1459,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let isInt (t : Tm) : Tm := .app (.prim .isInt) t
         let sc' : Scope := (v, Ty.real) :: sc
         let bt ← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body
-        -- (complex terms: the complex finite sum or product)
-        let cx := bt.2 == .complex
+        -- (terms of a vocabulary's type: its method `\sum` or `\prod`)
+        let cx := isBase bt.2
         let b ← if cx then pure bt.1 else asReal bt
         if isInfty true hi then do
           if !isSum || cx then fail E.unsupported (if isSum then w!"\\sum" else w!"\\prod")
@@ -1411,8 +1471,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let h ← asReal (← term f sc none hi)
           let lam := Tm.lam .real (.and (isInt (.loc 0))
             (.and (.le (shift 1 0 l) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))) b
-          let p : Prim := if cx then .cx (if isSum then .sum else .prod) else if isSum then .finSum else .finProd
-          pure (.guard (.and (isInt l) (isInt h)) (.app (.app (.app (.prim p) l) h) lam), if cx then .complex else .real)
+          if cx then
+            let (s, sty) ← callMethod bt.2 (if isSum then .sum else .prod) [l, h, lam]
+            return (.guard (.and (isInt l) (isInt h)) s, sty)
+          let p : Prim := if isSum then .finSum else .finProd
+          pure (.guard (.and (isInt l) (isInt h)) (.app (.app (.app (.prim p) l) h) lam), .real)
     -- `\lim_{x\to a} e`, `\lim_{x\to\infty} e`, and `\lim_{n\to\infty} a_n` for a sequence
     -- (an index `n`, `m`, `k`, `j`, `i` runs through the natural numbers): the limit within
     -- the points where the expression is defined, when it exists
@@ -1483,22 +1546,23 @@ where
         | _ => pure false
       if isE then do
         let a ← term f sc pf e
-        if a.2 == .complex then pure (.app (.prim (.cx .exp)) a.1, .complex)
+        if isBase a.2 then callMethod a.2 (.fn w!"\\exp") [a.1]
         else pure (.app (.prim (.realFn .exp)) (← asReal a), .real)
       else
-      -- a power of a complex number: a natural exponent (`z^n` with `n ∈ ℕ`); the base is
-      -- read again below otherwise (the state is restored)
+      -- a power of an element of a vocabulary's type: its method, with a natural
+      -- exponent (`z^n` with `n ∈ ℕ`; `z^{-n}` is `1/z^n`); the base is read again
+      -- below otherwise (the state is restored)
       let st0 ← get
       let bt ← tryCatch (some <$> term f sc pf b) (fun _ => pure none)
-      if let some (z, .complex) := bt then
-        match e with
-        | .num n => return (.app (.app (.prim (.cx .pow)) z) (.num n), .complex)
-        | .neg (.num n) =>
-          return (cdivTm (.app (.prim (.cx .ofReal)) (.num 1)) (.app (.app (.prim (.cx .pow)) z) (.num n)), .complex)
-        | _ => do
-          let p ← asReal (← term f sc pf e)
-          return (.guard (.app (.prim .isNat) p) (.app (.app (.prim (.cx .pow)) z) p), .complex)
-      else
+      if let some (z, t) := bt then
+        if isBase t then
+          match e with
+          | .num n => return (← callMethod t .pow [z, .num n])
+          | .neg (.num n) => return (← arith .div (.num 1, .real) (← callMethod t .pow [z, .num n]))
+          | _ => do
+            let p ← asReal (← term f sc pf e)
+            let (r, rty) ← callMethod t .pow [z, p]
+            return (.guard (.app (.prim .isNat) p) r, rty)
       set st0
       -- a family written with a superscript (`\gamma^T`)
       let fam ← match b, e with

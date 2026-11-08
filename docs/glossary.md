@@ -52,7 +52,6 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | integer | ℝ | an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number) |
 | real number | ℝ | a real number (`ℝ`) |
 | real | ℝ | a real number (`ℝ`), as in `for every real $x$` |
-| complex number | ℂ | a complex number (`ℂ`) |
 | nonnegative integer | ℝ | `x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`) |
 | positive integer | ℝ | `x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`) |
 | negative integer | ℝ | `x ∈ ℤ`, `x < 0` |
@@ -108,4 +107,35 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | $C^a$ norm of $b$ | ℝ → (ℝ → ℝ → ℝ) → ℝ | `⨆ k ≤ m, ⨆ p, ‖iteratedFDeriv ℝ k (Function.uncurry F) p‖` (`m` a nonnegative integer) |
 | derivative of $a$ in the direction $(b,c)$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ → ℝ | `fun x y => fderiv ℝ (Function.uncurry F) (x, y) (a, b)` |
+
+## `complex`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| complex number | $\mathbb{C}$ | a complex number (Mathlib `ℂ`) |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\mathbb{C}$ | $\mathbb{C}$ | the complex numbers (Mathlib `ℂ`), as a domain |
+| $\mathrm{i}$ | $\mathbb{C}$ | the imaginary unit (Mathlib `Complex.I`) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathbb{C}$ | a real number `x` as the complex number `(x : ℂ)` |
+| $+$ | $\mathbb{C}$ | `z + w` |
+| $-$ | $\mathbb{C}$ | `z - w` |
+| $\cdot$ | $\mathbb{C}$ | `z * w` |
+| $/$ | $\mathbb{C}$ | `z / w`, for `w ≠ 0` |
+| $-$ (sign) | $\mathbb{C}$ | `-z` |
+| $x^n$ | $\mathbb{C}$ | `z ^ n`, for a natural number `n` |
+| $\lvert x\rvert$ | $\mathbb{C}$ | the modulus `‖z‖` |
+| $\overline{x}$ | $\mathbb{C}$ | the conjugate `starRingEnd ℂ z` |
+| $\bar{x}$ | $\mathbb{C}$ | the conjugate `starRingEnd ℂ z` |
+| $\Re$ | $\mathbb{C}$ | the real part `z.re` |
+| $\operatorname{Re}$ | $\mathbb{C}$ | the real part `z.re` |
+| $\Im$ | $\mathbb{C}$ | the imaginary part `z.im` |
+| $\operatorname{Im}$ | $\mathbb{C}$ | the imaginary part `z.im` |
+| $\exp$ | $\mathbb{C}$ | `Complex.exp z` (also `e^{z}`) |
+| $\sum_{k=a}^{b}$ | $\mathbb{C}$ | `∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
+| $\prod_{k=a}^{b}$ | $\mathbb{C}$ | `∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
 

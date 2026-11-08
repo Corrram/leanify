@@ -13,7 +13,6 @@ def Ty.tex : Ty → String
   | .prop => "\\mathrm{Prop}"
   | .fn a b => (match a with | .fn .. => "(" ++ a.tex ++ ")" | _ => a.tex) ++ "\\to " ++ b.tex
   | .base k => s!"\\mathsf\{T}_\{{k}}"
-  | .complex => "\\mathbb{C}"
 
 def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"] ++
   (List.range 40).map fun i => s!"v_\{{i + 1}}"
@@ -62,11 +61,6 @@ def Prim.tex : Prim → String
   | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
   | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
   | .cardIs => "\\operatorname{card}"
-  | .cx k => match k with
-    | .ofReal => "" | .add => "+" | .sub => "-" | .mul => "\\cdot" | .div => "/" | .neg => "-"
-    | .re => "\\operatorname{Re}" | .im => "\\operatorname{Im}" | .abs => "\\operatorname{abs}"
-    | .conj => "\\operatorname{conj}" | .I => "\\mathrm{i}" | .pow => "\\operatorname{pow}"
-    | .exp => "\\exp" | .sum => "\\sum" | .prod => "\\prod"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -80,11 +74,6 @@ def Tm.prec : Tm → Nat
   | .add .. | .sub .. => 6
   | .mul .. | .div .. => 7
   | .neg .. => 8
-  -- complex arithmetic, as the real
-  | .app (.app (.prim (.cx .add)) _) _ | .app (.app (.prim (.cx .sub)) _) _ => 6
-  | .app (.app (.prim (.cx .mul)) _) _ | .app (.app (.prim (.cx .div)) _) _ => 7
-  | .app (.prim (.cx .neg)) _ => 8
-  | .app (.prim (.cx .ofReal)) x => x.prec
   | _ => 9
 
 /-- A numeral or a quotient of numerals (displayed without its coercion to `[0,1]`). -/
@@ -104,10 +93,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
-  | .app (.app (.app (.prim (.cx .sum)) a) b) (.lam ty d body) =>
-    (Tm.app (.app (.app (.prim .finSum) a) b) (.lam ty d body)).tex cs gs ls
-  | .app (.app (.app (.prim (.cx .prod)) a) b) (.lam ty d body) =>
-    (Tm.app (.app (.app (.prim .finProd) a) b) (.lam ty d body)).tex cs gs ls
   | .app (.app (.prim .series) a) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls)
@@ -126,19 +111,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .limTopConv) _) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
-  -- complex arithmetic, written as the real (a real number is its own complex number)
-  | .app (.app (.prim (.cx .add)) x) y => (Tm.add x y).tex cs gs ls
-  | .app (.app (.prim (.cx .sub)) x) y => (Tm.sub x y).tex cs gs ls
-  | .app (.app (.prim (.cx .mul)) x) y => (Tm.mul x y).tex cs gs ls
-  | .app (.app (.prim (.cx .div)) x) y => (Tm.div x y).tex cs gs ls
-  | .app (.prim (.cx .neg)) x => (Tm.neg x).tex cs gs ls
-  | .app (.prim (.cx .abs)) x => (Tm.abs x).tex cs gs ls
-  | .app (.prim (.cx .ofReal)) x => x.tex cs gs ls
-  | .app (.prim (.cx .conj)) x => "\\overline{" ++ x.tex cs gs ls ++ "}"
-  | .app (.prim (.cx .re)) x => "\\operatorname{Re}(" ++ x.tex cs gs ls ++ ")"
-  | .app (.prim (.cx .im)) x => "\\operatorname{Im}(" ++ x.tex cs gs ls ++ ")"
-  | .app (.prim (.cx .exp)) x => "\\exp(" ++ x.tex cs gs ls ++ ")"
-  | .app (.app (.prim (.cx .pow)) x) e => "{" ++ wrap 9 x ++ "}^{" ++ e.tex cs gs ls ++ "}"
   | .app (.prim .factorial) x => wrap 9 x ++ "!"
   | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
@@ -171,6 +143,32 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.app (.prim .intervalIntegral) a) b) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       "\\int_{" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\,d" ++ v
+  -- a constant of the vocabulary named by an operator (a method of a type: `+` on the
+  -- complex numbers) is written as that operator: `+`, `-`, `\cdot`, `/` between its
+  -- arguments, `^` as a power, `\sum` and `\prod` as sums; `#` in its name stands for
+  -- its argument (`\lvert#\rvert`), and an empty name is its argument (a real number
+  -- as an element of the type)
+  | .app (.app (.app (.const i) a) b) (.lam ty d body) =>
+    let n := cs.getD i s!"c_{i}"
+    if n == "\\sum" || n == "\\prod" then
+      let v := varNames.getD ls.length "k"
+      n ++ "_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ cwrap 7 body (v :: ls)
+    else (Tm.app (.app (.const i) a) b).tex cs gs ls ++ "(" ++ (Tm.lam ty d body).tex cs gs ls ++ ")"
+  | .app (.app (.const i) x) y =>
+    let n := cs.getD i s!"c_{i}"
+    match n with
+    | "+" => cwrap 6 x ls ++ "+" ++ cwrap 7 y ls
+    | "-" => cwrap 6 x ls ++ "-" ++ cwrap 7 y ls
+    | "\\cdot" => cwrap 7 x ls ++ "\\," ++ cwrap 8 y ls
+    | "/" => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+    | "^" => "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
+    | _ => (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+  | .app (.const i) x =>
+    let n := cs.getD i s!"c_{i}"
+    if n.isEmpty then x.tex cs gs ls
+    else if n == "-" then "-" ++ cwrap 8 x ls
+    else if (n.splitOn "#").length > 1 then "".intercalate (n.splitOn "#" |>.intersperse (x.tex cs gs ls))
+    else n ++ "(" ++ x.tex cs gs ls ++ ")"
   -- a domain predicate applied to an argument: read it about the argument
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
@@ -301,6 +299,21 @@ where
   wrap (p : Nat) (t : Tm) : String :=
     let s := t.tex cs gs ls
     if t.prec < p then "(" ++ s ++ ")" else s
+  /-- The binding strength of a term, with the constants named by operators. -/
+  cprec (t : Tm) : Nat := match t with
+    | .app (.app (.const i) _) _ => match cs.getD i "" with
+      | "+" | "-" => 6
+      | "\\cdot" => 7
+      | _ => t.prec
+    | .app (.const i) x =>
+      let n := cs.getD i ""
+      if n == "-" then 8 else if n.isEmpty then cprec x else t.prec
+    | .guard _ e => cprec e
+    | _ => t.prec
+  /-- `t` in the names `ls`, in parentheses if it binds less than `p`. -/
+  cwrap (p : Nat) (t : Tm) (ls : List String) : String :=
+    let s := t.tex cs gs ls
+    if cprec t < p then "(" ++ s ++ ")" else s
   cases : Tm → String
     | .cases c v r => v.tex cs gs ls ++ "&" ++ c.tex cs gs ls ++ "\\\\" ++ cases r
     | _ => ""

@@ -105,7 +105,7 @@ tests/Statements/article.tex:335:1: info: claim 91: \forall x\in \mathbb{C},\ \t
 tests/Statements/article.tex:335:1: info: claim 92: \forall x\in \mathbb{C},\ \top\Rightarrow (\forall y\in \mathbb{C},\ \top\land \neg (y=0)\Rightarrow \exp(x+y)=\exp(x)\,\exp(y))
 tests/Statements/article.tex:339:1: info: claim 93: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \mathrm{i}\,\mathrm{i}\,\mathrm{i}=-\mathrm{i}
 tests/Statements/article.tex:339:1: info: claim 94: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (\sum_{y=0}^{x}{\mathrm{i}}^{y}=0)
-tests/Statements/article.tex:343:1: warning: complex numbers are not ordered: compare real numbers, such as $|z|$ or $\operatorname{Re} z$: sentence not checked
+tests/Statements/article.tex:343:1: warning: an order ($\le$, $<$) has no meaning on $\mathbb{C}$ in the vocabulary: sentence not checked
 tests/Statements/article.tex:347:1: warning: finite fields and residue rings ($\mathbb{F}_p$, $\mathbb{Z}/p\mathbb{Z}$) are not read: write their elements as integers and equations between them as congruences ($a\equiv b\pmod p$): sentence not checked
 tests/Statements/article.tex:352:1: info: defines C (C)
 tests/Statements/article.tex:355:1: info: claim 95: C(1,2)=3

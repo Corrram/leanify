@@ -118,7 +118,7 @@ def writeReport (ns jn : Name) (rel : String) (d : Doc) (claims : Array ClaimInf
       ("index", toJson k), ("sentence", toJson c.sent), ("role", toJson (roleString c.role)),
       ("cites", toJson (c.cites.map Codes.toString)), ("premises", toJson c.premises),
       ("status", toJson info.status), ("rank", toJson info.rank),
-      ("reading", toJson (c.body.tex cTex gTex [])),
+      ("reading", toJson (V.texTypes (c.body.tex cTex gTex []))),
       ("lean", toJson (← ppConst (ns ++ nm s!"claim{k}"))),
       ("meaningful", toJson (← ppConst (ns ++ nm s!"meaningful{k}"))),
       ("justification", toJson info.justification), ("module", toJson info.module),

@@ -29,6 +29,8 @@ structure Vocab where
   nouns : List Noun         -- "distribution function on $[0,1]^2$"
   mods : List Modifier      -- "Borel measurable", "with uniform marginals"
   notions : List Notion     -- "Lebesgue measure on $[0,1]$"
+  methods : List Method     -- `z+w` on the complex numbers (below)
+  symbols : List Symbol     -- `\mathrm{i}`, `\mathbb{C}`
 ```
 
 Phrases are written with `phrase!`. Words are matched literally, any formula in
@@ -58,6 +60,32 @@ full list of its phrases is in `Leanify/Library/UnitSquare.lean`.
 
 Vocabularies combine with `++` (`Vocab.core ++ UnitSquare.vocab`): the base
 types and constants of the second are renumbered after those of the first.
+
+## Notation on a vocabulary's types
+
+As in Python, where `+` calls the `__add__` of its operands' class, notation means
+what the type of its operands says. The core reads `+`, `-`, products, `/`, powers,
+`\lvert\cdot\rvert`, `\le`, `<` and finite sums of real numbers. A vocabulary that
+declares a type of its own says what that notation means on it, by *methods*: each
+method names a piece of notation (`OpKey`) and the constant it is on that type.
+
+```lean
+structure Method where
+  ty : Ty          -- the type (a base type of the vocabulary)
+  op : OpKey       -- ofReal, add, sub, mul, div, neg, pow, abs, sum, prod, le, lt,
+                   -- fn "\exp" (a named function), decor "\overline" (a decoration)
+  const : Nat      -- the constant that is this notation on the type
+```
+
+`ofReal` makes a real number an element of the type where one is expected (`1+z`),
+`z/w` is defined when `w` is not the image of `0`, and `z^n` when `n` is a natural
+number. A type without `le` has no order: `z\le w` is refused with a finding. *Symbols*
+name a constant (`\mathrm{i}`) or all the elements of a type (`\mathbb{C}`, as a
+domain). The field `complex` (`Leanify/Library/Complex.lean`, with its model
+`ComplexModel.lean`) is such a vocabulary: one base type, interpreted as Mathlib's `ℂ`,
+and fifteen constants for its notation. A constant's name says how a reading writes
+it: an operator (`+`), `#` for its argument (`\lvert #\rvert`), or nothing (a real
+number as a complex one).
 
 ## A model
 

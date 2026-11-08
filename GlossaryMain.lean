@@ -39,9 +39,21 @@ def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do
       out := out ++ ["$" ++ s ++ "$"]
   return " ".intercalate out
 
-def tyText : Ty → String
-  | .real => "ℝ" | .unit => "[0,1]" | .prop => "Prop" | .base k => s!"B{k}" | .complex => "ℂ"
-  | .fn a b => (match a with | .fn .. => "(" ++ tyText a ++ ")" | _ => tyText a) ++ " → " ++ tyText b
+/-- A type, with the names of the field's own types (`B0` without one). -/
+def tyText (ts : List Codes) : Ty → String
+  | .real => "ℝ" | .unit => "[0,1]" | .prop => "Prop"
+  | .base k => match ts[k]? with
+    | some n => "$" ++ Codes.toString n ++ "$"
+    | none => s!"B{k}"
+  | .fn a b => (match a with | .fn .. => "(" ++ tyText ts a ++ ")" | _ => tyText ts a) ++ " → " ++ tyText ts b
+
+/-- A piece of notation on a type (`$+$`). -/
+def opText : OpKey → String
+  | .ofReal => "a real number" | .add => "$+$" | .sub => "$-$" | .mul => "$\\cdot$" | .div => "$/$"
+  | .neg => "$-$ (sign)" | .pow => "$x^n$" | .abs => "$\\lvert x\\rvert$" | .sum => "$\\sum_{k=a}^{b}$"
+  | .prod => "$\\prod_{k=a}^{b}$" | .le => "$\\le$" | .lt => "$<$"
+  | .fn n => (if n.head? == some 92 then "$" ++ Codes.toString n ++ "$" else "$\\operatorname{" ++ Codes.toString n ++ "}$")
+  | .decor n => "$" ++ Codes.toString n ++ "{x}$"
 
 def cell (s : String) : String := s.replace "|" "\\|"
 
@@ -49,13 +61,19 @@ def fieldSection (name : String) (V : Vocab) : List String :=
   [s!"## `{name}`", ""] ++
   (if V.nouns.isEmpty then [] else
     ["| Noun | Of | Meaning |", "| --- | --- | --- |"] ++
-    V.nouns.map (fun n => s!"| {cell (phraseText n.sing)} | {tyText n.ty} | {cell n.doc} |") ++ [""]) ++
+    V.nouns.map (fun n => s!"| {cell (phraseText n.sing)} | {tyText V.types n.ty} | {cell n.doc} |") ++ [""]) ++
   (if V.mods.isEmpty then [] else
     ["| Adjective or phrase | Of | Meaning |", "| --- | --- | --- |"] ++
-    V.mods.map (fun m => s!"| {cell (phraseText m.phrase)} | {tyText m.ty} | {cell m.doc} |") ++ [""]) ++
+    V.mods.map (fun m => s!"| {cell (phraseText m.phrase)} | {tyText V.types m.ty} | {cell m.doc} |") ++ [""]) ++
   (if V.notions.isEmpty then [] else
     ["| Notion | Type | Meaning |", "| --- | --- | --- |"] ++
-    V.notions.map (fun n => s!"| {cell (phraseText n.name 1)} | {tyText n.ty} | {cell n.doc} |") ++ [""])
+    V.notions.map (fun n => s!"| {cell (phraseText n.name 1)} | {tyText V.types n.ty} | {cell n.doc} |") ++ [""]) ++
+  (if V.symbols.isEmpty then [] else
+    ["| Symbol | Type | Meaning |", "| --- | --- | --- |"] ++
+    V.symbols.map (fun s => s!"| ${cell (Codes.toString s.sym)}$ | {tyText V.types s.ty} | {cell s.doc} |") ++ [""]) ++
+  (if V.methods.isEmpty then [] else
+    ["| Notation | On | Meaning |", "| --- | --- | --- |"] ++
+    V.methods.map (fun m => s!"| {cell (opText m.op)} | {tyText V.types m.ty} | {cell m.doc} |") ++ [""])
 
 def main : IO Unit := do
   let lines := ["# Glossary of the vocabulary", "",

@@ -87,8 +87,10 @@ regenerates it from the vocabulary itself. A field is a Lean value
 `Leanify.Fields.all`. Fields built from the core formula language (most of them)
 need nothing else: their meaning is the meaning of the formula language, which
 `Leanify.Denote` gives in terms of Mathlib. A field with constants of its own
-(`unitsquare`) also has a model, the Lean definitions of its constants, and an
-article uses at most one such field.
+(`unitsquare`, `torus`, `complex`) also has a model, the Lean definitions of its
+constants, and an article uses at most one such field. A field can declare a type of
+its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
+`\mathbb{C}`), as `docs/vocabularies.md` explains.
 
 On the command line, `leanify check article.tex --vocab numbers,analysis` and
 `leanify init article.tex --vocab numbers,analysis` use the same fields;

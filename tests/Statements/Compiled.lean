@@ -19,7 +19,7 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-/-- The vocabulary of the article: the core and the field `numbers`. -/
-def Statements.vocabulary : Leanify.Vocab := Leanify.Fields.select ["numbers"]
+/-- The vocabulary of the article: the core and the fields `numbers` and `complex`. -/
+def Statements.vocabulary : Leanify.Vocab := Leanify.Fields.select ["numbers", "complex"]
 
-#leanify_article Statements "article.tex" "fnv1a64:a8b1a5445ed74f94" with Statements.vocabulary
+#leanify_article Statements "article.tex" "fnv1a64:d65b7f8645ce2b80" with Statements.vocabulary

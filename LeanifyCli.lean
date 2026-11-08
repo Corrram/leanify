@@ -150,12 +150,14 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let unitSquare := fs.contains "unitsquare"
   let selected := !fs.isEmpty && fs != ["unitsquare"]
   -- the Lean meanings of the constants of a field (at most one field has constants)
-  let model : Option (String × String) :=
-    if unitSquare then some ("Leanify.Library.UnitSquareModel", "Leanify.UnitSquare.model")
-    else if fs.contains "torus" then some ("Leanify.Library.TorusModel", "Leanify.Torus.model")
-    else none
-  if unitSquare && fs.contains "torus" then
-    IO.eprintln "leanify init: the fields unitsquare and torus both have constants; use one of them"
+  let models : List (String × String × String) := [
+    ("unitsquare", "Leanify.Library.UnitSquareModel", "Leanify.UnitSquare.model"),
+    ("torus", "Leanify.Library.TorusModel", "Leanify.Torus.model"),
+    ("complex", "Leanify.Library.ComplexModel", "Leanify.Complex.model")]
+  let withModel := models.filter fun (f, _) => fs.contains f
+  let model : Option (String × String) := withModel.head?.map fun (_, m, n) => (m, n)
+  if withModel.length > 1 then
+    IO.eprintln s!"leanify init: the fields {" and ".intercalate (withModel.map (·.1))} all have constants; use one of them"
     return 2
   let dir := path.parent.getD "."
   let file := (path.fileName.getD "article.tex")
