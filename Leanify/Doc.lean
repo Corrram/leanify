@@ -1222,6 +1222,8 @@ def clauseMaths : Clause → List MT
   | .noneExist c => clauseMaths c
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
+  | .stmtAt e => [e]
+  | .inst _ e hs cs => e :: clauseMathsAll hs ++ clauseMathsAll cs
   | _ => []
 
 /-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
@@ -1511,13 +1513,15 @@ def emit (c : SentCtx) (body : Tm) (cites : List Codes) : M Nat := do
     let cited ← cites.mapM citeClaims
     let allCites := (st.proofCites ++ cited.flatten).eraseDups
     let premises := (allCites ++ st.proofSteps).eraseDups
-    let id ← addClaim ⟨c.idx, body, .step c.ctx.env, cites, premises⟩
+    let refuted := st.envHyps.any (·.contra)
+    let id ← addClaim { sent := c.idx, body := body, role := .step c.ctx.env, cites := cites, premises := premises, refuted := refuted }
     modify fun st => { st with proofCites := allCites, proofSteps := st.proofSteps ++ [id], hypUsed := true }
     pure id
   | _ => do
     discard <| cites.mapM citeClaims
     modify fun st => { st with hypUsed := true }
-    addClaim ⟨c.idx, body, claimRole c, cites, []⟩
+    let refuted := st.envHyps.any (·.contra)
+    addClaim { sent := c.idx, body := body, role := claimRole c, cites := cites, premises := [], refuted := refuted }
 
 /-! ## Definition sentences -/
 
@@ -2382,7 +2386,6 @@ functions on the unit square (on the class of its definition, or on `A`), or of 
 class of such functions. -/
 def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
     (on : Option MT) : M Tm := do
-  let u := [w!"with", w!"respect", w!"to", w!"uniform", w!"convergence"]
   if ty == .real then
     if on.isSome then fail E.unsupported
     if a == [w!"positive"] then pure (.lt (.num 0) t)
@@ -2421,27 +2424,33 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
       let d := d.getD (.lam .real .tt .tt)
       let body := Tm.app (.app (.prim p) t) d
       pure (match defDom with | some dd => .guard (within .real d dd) body | none => body)
-  else if ty == .fn Ty.sq .real then
-    let p : Option SqProp := [([w!"convex"], SqProp.convex), ([w!"concave"], .concave),
-      ([w!"lower", w!"semicontinuous"] ++ u, .lowerUniform), ([w!"upper", w!"semicontinuous"] ++ u, .upperUniform),
-      ([w!"continuous"] ++ u, .contUniform)].lookup a
-    let some p := p | fail E.type
-    match on with
-    | none =>
-      let some d := defDom | fail E.unsupported
-      pure (Tm.app (.app (.prim (.sqProp p)) t) d)
-    | some m => do
-      let (d, dty) ← Elab.term 100000 sc none m
-      if dty != .fn Ty.sq .prop then fail E.type
-      let body := Tm.app (.app (.prim (.sqProp p)) t) d
-      pure (match defDom with | some dd => .guard (within Ty.sq d dd) body | none => body)
-  else if ty == .fn Ty.sq .prop then
-    if on.isSome then fail E.unsupported
-    let p : Option ClassProp := [([w!"convex"], ClassProp.convex), ([w!"compact"] ++ u, .compactUniform),
-      ([w!"closed"] ++ u, .closedUniform)].lookup a
-    let some p := p | fail E.type
-    pure (Tm.app (.prim (.classProp p)) t)
-  else fail E.type
+  else
+    -- an adjective of the vocabulary, about objects of this type
+    let st ← get
+    let found := st.vocab.adjectives.filter fun e => e.ty == ty && e.words == a
+    match found with
+    | [] => fail E.type
+    | [e] =>
+      if !e.onDomain then
+        if on.isSome then fail E.unsupported
+        pure (Tm.app e.pred t)
+      else
+        let dty : Ty := match ty with
+          | .fn x _ => .fn x .prop
+          | _ => .prop
+        let dom : Ty := match ty with
+          | .fn x _ => x
+          | _ => .prop
+        match on with
+        | none =>
+          let some d := defDom | fail E.unsupported
+          pure (Tm.app (.app e.pred t) d)
+        | some m => do
+          let (d, dt) ← Elab.term 100000 sc none m
+          if dt != dty then fail E.type
+          let body := Tm.app (.app e.pred t) d
+          pure (match defDom with | some dd => .guard (within dom d dd) body | none => body)
+    | _ => fail E.ambiguous ((a.intersperse [32]).flatten)
 
 /-! ## Claim sentences -/
 
@@ -2478,6 +2487,31 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     Clause → M Tm
   | .fact f | .holds f => prop sc none f
   | .absurd => pure (.not .tt)
+  -- (`the statement holds for $E$` is given its clauses before it is read: `expandStmt`)
+  | .stmtAt _ => fail E.unsupported
+  | .inst v e hyps stmt => do
+    let st ← get
+    let some j := sc.findIdx? (·.1 == v) | fail E.undefined v
+    let ty := ((sc[j]?).map (·.2)).getD .real
+    let same : Bool := match e with
+      | .id n => n == v
+      | _ => false
+    if same then
+      -- about the variable itself: the statement as it stands (its hypotheses hold here)
+      pure (conjAll (← clauseTms c sc onVar lastRhs stmt))
+    else
+      let (eT, ety) ← term F sc none e
+      if ety != ty then fail E.type
+      -- the statement about a new variable of the same name, which is then replaced by `E`:
+      -- the domain of the variable, the hypotheses of the result about it, and the claims
+      let sc' := (v, ty) :: sc
+      let bv : Option BindInfo := ((st.resultBinders.lookup c.target).getD []).find? fun b => b.name == v
+      let dom : List Tm := match bv.bind (fun b => b.pred) with
+        | some p => [Tm.app (shift (j + 2) 0 p) (.loc 0)]
+        | none => []
+      let hs ← clauseTms c sc' none none hyps
+      let ps ← clauseTms c sc' none none stmt
+      pure (Tm.subst eT 0 ((dom ++ hs).foldr Tm.imp (conjAll ps)))
   | .extremaOver items f noun v cond => do
     -- the class: the noun as written, or its singular
     let sing := noun.dropLast ++ (noun.getLast?.map singular).toList
@@ -2872,6 +2906,47 @@ def rhsOf : Clause → Option MT
 
 def citesOf (cl : CClause) : List Codes := cl.cites
 
+/-- Does the local `j` occur in the term? -/
+def usesLoc (j : Nat) (t : Tm) : Bool := Tm.subst (.num 0) j t != Tm.subst (.num 1) j t
+
+/-- `the statement holds for $E$`, in the proof of a result: the clauses of the statement,
+for the variable of the induction (`We argue by induction on $n$.`; without that
+sentence, `E` is the variable itself). The variable is one that the result introduces,
+and no other variable of the result may depend on it: the statement is then a statement
+about it. -/
+def stmtInst (c : SentCtx) (e : MT) : M Clause := do
+  if c.ctx.kind != .proof then fail E.prose
+  let st ← get
+  let rbs := (st.resultBinders.lookup c.target).getD []
+  let some (some stmt) := st.resultStmts.lookup c.target
+    | fail E.finding w!"`the statement` needs a statement about the variables of the result: state the claims of the result without binders of their own inside a clause, and without `the minimum` or `the maximum` as their topic"
+  if stmt.isEmpty then fail E.prose
+  let named : Option Codes := match st.inductionVar with
+    | some (env, n) => if env == c.ctx.env then some n else none
+    | none => none
+  let v ← match named, e with
+    | some n, _ => pure n
+    | none, .id n =>
+      if rbs.any (·.name == n) then pure n
+      else fail E.finding w!"the statement for a value of which variable? Say so before (We argue by induction on $n$.); the variable is one that the result introduces (Let $n$ be a positive integer. Then …)"
+    | none, _ => fail E.finding w!"the statement for a value of which variable? Say so before (We argue by induction on $n$.)"
+  let some iv := rbs.findIdx? (·.name == v)
+    | fail E.finding w!"an induction on a variable that the result does not introduce: introduce it in the result (Let $n$ be a positive integer. Then …), so that the statement is a statement about it"
+  -- (a later variable of the result whose domain uses the variable)
+  if (rbs.zipIdx.any fun (b, i) => i > iv && (match b.pred with
+      | some p => usesLoc (i - 1 - iv) p
+      | none => false)) then
+    fail E.finding w!"another variable of the result depends on the variable of the induction: the statement for another value of it is not determined; write the hypothesis out (Assume that $…$.)"
+  let hyps := (((st.resultHyps.lookup c.target).getD []).filter fun h =>
+    h.item == 0 && !h.contra && (clauseMaths h.clause).any fun m => (freeIds 64 [] m).contains v).map (·.clause)
+  pure (.inst v e hyps stmt)
+
+/-- A clause with `the statement holds for …` given its clauses. -/
+def expandStmt (c : SentCtx) : Clause → M Clause
+  | .stmtAt e => stmtInst c e
+  | .under b (.stmtAt e) => do pure (.under b (← stmtInst c e))
+  | cl => pure cl
+
 /-- A later clause of the sentence has its own hypothesis (`If $φ$, A, and if $ψ$, B`). -/
 def laterIfC (cls : List CClause) : Bool :=
   (cls.drop 1).any fun cl => match cl.clause with | .ifThen .. | .ifClause .. => true | _ => false
@@ -2879,6 +2954,8 @@ def laterIfC (cls : List CClause) : Bool :=
 /-- The claims of one sentence. `exactly one` takes the following clauses into its scope. -/
 def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) : M (List Nat) := do
   modify fun st => { st with topic := if topic == .none then st.topic else topic }
+  -- (`Hence the statement holds for $n+1$.`)
+  let cls ← cls.mapM fun cl => do pure { cl with clause := ← expandStmt c cl.clause }
   -- `If $φ$, …` about variables that are already bound (by the result or a fixed
   -- variable) is a hypothesis: of the first clause when a later clause has its own,
   -- otherwise of every clause
@@ -3195,8 +3272,17 @@ def checkHyp (c : SentCtx) (h : Clause) : M Unit := do
   | none => pure ()
 
 /-- `Assume that …`, `Suppose …`: hypotheses of the following sentences of the result or
-proof, or of the list item the sentence is in. A formula with a new variable (`Assume
-$c>0$.`, `Suppose $x\in A$.`) binds it, as `Let` does. -/
+proof, or of the list item the sentence is in. They last until the proof or the item
+ends, until a contradiction refutes them, or until another case takes their place:
+
+* an assumption after another is added to it (`Assume that $y>0$.` after `Assume that
+  $x>0$.`), and ends on its own;
+* `Assume further that …` belongs to the assumption before it: the two end together;
+* `Assume now that …` (`next`, `instead`, `conversely`) begins another case: it takes the
+  place of the latest assumption of the proof (of the item).
+
+A formula with a new variable (`Assume $c>0$.`, `Suppose $x\in A$.`) binds it, as `Let`
+does. -/
 def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Bool) (asBinder : Option Bind) :
     M (List Nat × List Nat) := do
   if c.ctx.kind == .text then fail E.prose
@@ -3206,10 +3292,16 @@ def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Boo
   match asBinder with
   | some b => if !contra && newVars b then return ← assumeIn c [b] [] else pure ()
   | none => pure ()
-  if caseLike then fail E.finding w!"a case that begins in the middle of a proof: nothing says where it ends. Write the cases as the items of a list, each with its condition as heading (\\item \\emph{$x<0$.} …)"
   let item := c.ctx.items.headD 0
-  if !additive && st.hypUsed && st.envHyps.any (fun h => h.item == item && h.env == c.ctx.env && !h.heading) then
-    fail E.finding w!"a second assumption after steps under the first: `Assume further that …` adds it to the first; cases are written as the items of a list, each with its condition as heading"
+  -- the assumptions of this proof (of this item), not the headings of its cases
+  let own (h : Hyp) : Bool := h.item == item && h.env == c.ctx.env && !h.heading
+  let latest : Option Hyp := (st.envHyps.filter own).getLast?
+  -- another case: the latest assumption ends
+  if caseLike then
+    match latest with
+    | some l => modify fun st => { st with envHyps := st.envHyps.filter fun h => !(own h && h.group == l.group) }
+    | none => pure ()
+  let group : Nat := if additive then (latest.map (·.group)).getD c.idx else c.idx
   for h in hyps do
     -- a condition with a new variable binds it (`Assume $c>0$.`, as `Let $c>0$.`)
     let cond : Option Bind := match h with
@@ -3220,9 +3312,10 @@ def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Boo
       if contra then fail E.finding w!"a hypothesis for contradiction about a variable it introduces: say that there is one (Suppose, for contradiction, that there is $c>0$ such that …)"
       discard <| assumeIn c [b] []
     | none =>
+      let h ← expandStmt c h
       checkHyp c h
       modify fun st => { st with
-        envHyps := st.envHyps ++ [({ item, contra, heading := false, env := c.ctx.env, sent := c.idx, clause := h } : Hyp)],
+        envHyps := st.envHyps ++ [({ item, contra, heading := false, env := c.ctx.env, sent := c.idx, clause := h, group } : Hyp)],
         hypUsed := false }
   pure ([], [])
 
@@ -3234,40 +3327,15 @@ def caseIn (c : SentCtx) (hyps : List Clause) : M (List Nat × List Nat) := do
   for h in hyps do
     checkHyp c h
     modify fun st => { st with
-      envHyps := st.envHyps ++ [({ item, contra := false, heading := true, env := c.ctx.env, sent := c.idx, clause := h } : Hyp)],
-      hypUsed := false }
-  pure ([], [])
-
-/-- `Assume that the statement holds for $n$.`, in the proof of a result: the hypothesis
-of an induction. `n` is a variable that the result introduces (`Let $n$ be a positive
-integer.`), and the hypothesis is the statement of the result as it stands, about this
-`n`: the following sentences of the proof, or of its list item, are made under it (they
-speak about `n+1`). A statement that binds variables of its own (`For every $n$, …`)
-has no reading for one `n`, and `for $n-1$` or `for all $m<n$` are other statements:
-they are not read. -/
-def inductionIn (c : SentCtx) (v : Codes) : M (List Nat × List Nat) := do
-  if c.ctx.kind != .proof then fail E.prose
-  let st ← get
-  unless ((st.resultBinders.lookup c.target).getD []).any (·.name == v) do
-    fail E.finding w!"the hypothesis of an induction on a variable that the result does not introduce: introduce it in the result (Let $n$ be a positive integer. Then …), so that the statement is a statement about it"
-  let some (some stmt) := st.resultStmts.lookup c.target
-    | fail E.finding w!"the hypothesis of an induction needs the statement as one about the variables of the result: introduce them with Let (Let $n$ be a positive integer. Then …) and state the claim without further `for every`"
-  if stmt.isEmpty then fail E.prose
-  let item := c.ctx.items.headD 0
-  if st.hypUsed && st.envHyps.any (fun h => h.item == item && h.env == c.ctx.env && !h.heading) then
-    fail E.finding w!"a second assumption after steps under the first: `Assume further that …` adds it to the first; cases are written as the items of a list, each with its condition as heading"
-  for h in stmt do
-    checkHyp c h
-    modify fun st => { st with
-      envHyps := st.envHyps ++ [({ item, contra := false, heading := false, env := c.ctx.env, sent := c.idx, clause := h } : Hyp)],
+      envHyps := st.envHyps ++ [({ item, contra := false, heading := true, env := c.ctx.env, sent := c.idx, clause := h, group := c.idx } : Hyp)],
       hypUsed := false }
   pure ([], [])
 
 /-- `This is a contradiction.`, `…, a contradiction.`: the claims of the sentence, and
-then the false statement, under the hypotheses made. It refutes the hypothesis made for
-contradiction, which ends here with the hypotheses made after it; without one, the
-hypotheses of the one assumption of the proof. Several assumptions, none of them for
-contradiction, leave open which one is refuted. -/
+then the false statement, under the hypotheses made. It refutes the latest hypothesis
+made for contradiction, which ends here with the hypotheses made after it; without one,
+the latest assumption of the proof (with what `Assume further` added to it). The claims
+made under what it refutes are marked: their hypotheses are not meant to hold together. -/
 def contradictionIn (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) (cites : List Codes) :
     M (List Nat × List Nat) := do
   if c.ctx.kind == .text then fail E.prose
@@ -3279,16 +3347,23 @@ def contradictionIn (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : Lis
   let from? : Option Nat := match (own.filter (·.1.contra)).getLast? with
     | some (_, k) => some k
     | none =>
-      match own with
-      | [] => none
-      | (h, k) :: rest => if rest.all (·.1.sent == h.sent) then some k else none
-  if from?.isNone && !own.isEmpty then
-    fail E.finding w!"a contradiction after several assumptions: say which one is refuted by making it for contradiction (Suppose, for contradiction, that …)"
+      match own.getLast? with
+      | some (l, _) => (own.find? fun (h, _) => h.group == l.group).map (·.2)
+      | none => none
+  -- where what it refutes begins: that hypothesis, or else the heading of the case, or
+  -- else the proof
+  let start : Nat := match from? with
+    | some k => ((st.envHyps[k]?).map (·.sent)).getD c.idx
+    | none => (((st.envHyps.filter fun h => h.env == c.ctx.env).getLast?).map (·.sent)).getD 0
   let n0 := (← get).globs.length
   let ids ← if cls.isEmpty then pure [] else claimSentence c topic binds cls
   let ids' ← claimSentence c .none [] [⟨cites, .absurd, [], []⟩]
+  let inEnv (cl : Claim) : Bool := match cl.role with
+    | .step e | .statement e => e == c.ctx.env
+    | _ => false
   modify fun st => { st with
     envHyps := match from? with | some k => st.envHyps.take k | none => st.envHyps,
+    claims := st.claims.map fun cl => if inEnv cl && start ≤ cl.sent then { cl with refuted := true } else cl,
     hypUsed := false }
   let n1 := (← get).globs.length
   pure ((List.range (n1 - n0)).map (n0 + ·), ids ++ ids')
@@ -3423,7 +3498,12 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .letters vs => do
     modify fun st => { st with letters := st.letters ++ vs.filter (!st.letters.contains ·) }
     pure ([], [])
-  | .inductionHyp v => inductionIn c v
+  | .inductionOn v => do
+    if c.ctx.kind != .proof then fail E.prose
+    unless (((← get).resultBinders.lookup c.target).getD []).any (·.name == v) do
+      fail E.finding w!"an induction on a variable that the result does not introduce: introduce it in the result (Let $n$ be a positive integer. Then …), so that the statement is a statement about it"
+    modify fun st => { st with inductionVar := some (c.ctx.env, v) }
+    pure ([], [])
   | .notation .. => fail E.unsupported
   | .meaning ws rhs noun => meaningDef ws rhs noun
   | .generic ms deps uni => do
@@ -3757,9 +3837,15 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
           let savedHyps := (s.ctx.env, st.envHyps) :: st.resultHyps.filter (·.1 != s.ctx.env)
           -- the statement, for the hypothesis of an induction in the proof: the clauses
           -- of its claims, if they are claims about the variables of the result alone
+          -- (the binders of the sentence, `For every positive integer $n$, …`, are variables
+          -- of the result; a hypothesis among them, `If $x>0$, …`, is not kept here)
+          let rec binder : Nat → Bind → Bool
+            | _, .every _ _ | _, .noun _ => true
+            | f + 1, .many bs => bs.all (binder f)
+            | _, _ => false
           let plain : Option (List Clause) := match sent with
             | .claims topic binds cls =>
-              if binds.isEmpty && topic == Topic.none && cls.all (fun c => c.binds.isEmpty && c.defs.isEmpty)
+              if binds.all (binder 4) && topic == Topic.none && cls.all (fun c => c.binds.isEmpty && c.defs.isEmpty)
               then some (cls.map (·.clause)) else none
             | _ => if cs.isEmpty then some [] else none
           let stmt : Option (List Clause) := match st.resultStmts.lookup s.ctx.env, plain with

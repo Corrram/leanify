@@ -18,9 +18,10 @@ is correct. Two questions decide whether it is:
 
 Leanify removes the second text. It reads the article's own LaTeX, in ordinary
 mathematical English, and compiles every definition and claim into a Lean
-statement over Mathlib. Lean's kernel certifies that these statements are the
-compilation of exactly that source. A printed proof is compiled sentence by
-sentence: each step is a claim that may use only the results it cites.
+statement over Mathlib. The statements are the compilation of exactly that source,
+by one fixed Lean function, and the source is pinned by its hash. A printed proof
+is compiled sentence by sentence: each step is a claim that may use only the
+results it cites.
 
 For an author, Leanify is three steps:
 
@@ -39,9 +40,28 @@ the reading of the printed sentence under the documented grammar and the
 vocabulary the article names. A proof whose sentences are all read is checked
 step by step, so a wrong or mistyped step does not go through. Sentences Leanify
 cannot read are reported, never certified; a result is only as checked as its
-mark in the margin says. The trusted base is Lean's kernel, Mathlib, and the
-Mathlib meanings of the core language (`Leanify/Denote.lean`) and of the
-vocabulary's models.
+mark in the margin says.
+
+The goal is certainty about the paper: its results are correct, and its printed
+proofs prove them, with no mathematical typo left. Certainty has four parts, and
+a change may not weaken one of them:
+
+* **The claims are true.** Every certified claim is proved in Lean and checked by
+  the kernel, from the axioms `propext`, `Classical.choice` and `Quot.sound` alone.
+* **The claims are the paper's.** The reading of a sentence is fixed by the
+  grammar and the vocabulary, it is printed (`\leanifyreadings`, the reports), and
+  it is the reading of the pinned source. The compiler is run by Lean's evaluator;
+  `leanify audit` has the kernel evaluate it too.
+* **The proofs are the paper's.** A step may use only what its sentence cites, and
+  the report says whether one fixed tactic closes it (`leanify_step`) or a longer
+  Lean argument was needed that the paper does not print.
+* **Nothing is true for an empty reason.** The hypotheses of every claim are asked
+  to hold together (`satisfiableK`), except those a proof makes in order to refute
+  them. A result is marked *derived* only if all of this holds for it.
+
+The trusted base is Lean's kernel, Mathlib, the grammar (what a sentence means),
+and the Mathlib meanings of the core language (`Leanify/Denote.lean`) and of the
+vocabulary's constants.
 
 ## Requirements
 
@@ -88,24 +108,47 @@ These hold for every change. A feature that cannot meet them is not added.
 
 ### Certification
 
-9. **Kernel-checked compilation.** `compileArticle` is a total Lean function that
-   the kernel evaluates by `Eq.refl`, stage by stage. Everything on that path must
-   reduce in the kernel:
+9. **The compiler is a Lean function that the kernel can evaluate.**
+   `compileArticle` is a total Lean function. `#leanify_article` runs it with
+   Lean's evaluator (a second per article) and records the source and the result;
+   everything that is proved is proved from that result by the kernel. `leanify
+   audit ARTICLE.tex` (`set_option leanify.kernel true`) has the kernel evaluate
+   the compiler itself, stage by stage by `Eq.refl`, and confirm the document the
+   project was built with: Lean's evaluator is then not trusted either. CI runs the
+   audit on the test articles. So that it keeps working, everything on the compile
+   path must reduce in the kernel:
    * recursion is structural, or bounded by a fuel argument;
    * no `termination_by`/well-founded recursion, `partial`, `implemented_by` or
      `extern` on the compile path;
    * recursion through a nested list (a `List Clause` inside a `Clause`) uses a
      mutual structural function, never `xs.mapM f` with `f` the function being
      defined: that silently turns the definition into well-founded recursion,
-     and every certificate then fails with
+     and the audit then fails with
      `(kernel) declaration type mismatch, 'Foo.run0'`.
-   After a change on the compile path, build the test articles (`lake build
-   Demo Notation Refuted Vocabulary Fields Calculus PDE Conventions Statements Arguments`), not only the checker.
-10. **No `native_decide`.** The certificate depends on the kernel alone.
+   After a change on the compile path, run the audit on the test articles, not
+   only the checker.
+10. **Nothing that is proved rests on evaluation.** The certificate, every
+    verified claim, every refutation and every `satisfiedK` depend on the kernel
+    and the three standard axioms alone: no `native_decide`, no `sorry`, no other
+    axiom. Only the compilation of the article is evaluated, and the audit removes
+    that.
+11. **A reading may not make a step empty.** A hypothesis of a proof (an
+    assumption, a case, the hypothesis of an induction) is a hypothesis of the
+    claims made under it, by a documented rule that says where it ends. Such a rule
+    can be applied to a text that meant something else, and a step under hypotheses
+    that contradict each other is then true whatever it says. So every claim with
+    hypotheses gets the obligation that they hold together, unless the proof
+    refutes them, and a result with an open one is not *derived*.
+12. **A field is data.** A vocabulary field is a list of phrases, symbols and
+    adjectives with their types and the names of their Lean meanings (declarations
+    of Mathlib, or definitions in a module the field names). The model of an
+    article's vocabulary is built from these names; the kernel checks their types.
+    A notion of one subject belongs to its field, not to the core language
+    (`Prim`): the core is real analysis that every article may use.
 
 ### The LaTeX package
 
-11. **The typeset article does not change.** Without options, `leanify.sty`
+13. **The typeset article does not change.** Without options, `leanify.sty`
     changes nothing on the page. It runs an external program (`lake`, or the
     checker) only with unrestricted shell escape and inside a Lean project, or
     when the option `exe` names the checker; otherwise it runs nothing. The
@@ -113,7 +156,7 @@ These hold for every change. A feature that cannot meet them is not added.
     (`\jobname.leanify.out`): what to check, build or report is decided in
     `LeanifyCli.lean`, not in TeX. Typesetting needs only `mathtools` and `amssymb`. The package is on
     CTAN; `scripts/ctan.sh` builds the upload.
-12. **Findings are LaTeX warnings at their lines**, in plain words, with the
+14. **Findings are LaTeX warnings at their lines**, in plain words, with the
     likely fix: the undefined symbol, the unknown noun, the ambiguous word, and
     the sentence that would define it.
 
@@ -125,17 +168,20 @@ These hold for every change. A feature that cannot meet them is not added.
 | `Leanify/Grammar.lean` | the sentence constructions (each with one reading) |
 | `Leanify/Elab.lean`, `Doc.lean` | the readings: formulas and clauses to core terms, the article to a document |
 | `Leanify/Syntax.lean`, `Denote.lean` | the core language and its Mathlib meaning |
-| `Leanify/Vocab.lean`, `Library/` | vocabulary fields, their models, the field registry |
-| `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the kernel commands |
-| `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/certify/init/prepare/flatten/tex`; `Leanify.version` |
-| `Leanify/Tactic.lean` | `intro_premises`, `definedness`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |
+| `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the Lean meanings of their constants, the field registry |
+| `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the commands `#leanify_article` (with the kernel audit), `#leanify_semantics`, `#leanify_certify` |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/certify/audit/init/prepare/flatten/tex`; `Leanify.version` |
+| `Leanify/Tactic.lean`, `Integers.lean` | `intro_premises`, `definedness`, `leanify_values`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |
 | `scripts/` | `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides), `leanify_diagnostics.py` |
 | `tex/leanify.sty` | the LaTeX package |
-| `tests/`, `examples/` | test articles, each compiled by the kernel in CI |
+| `tests/`, `examples/` | test articles, each compiled and audited by the kernel in CI |
 
 A change is finished when:
 
-* the checker builds and the test articles compile with the kernel;
+* the checker builds, the test articles build (`lake build Demo Means TailDependence
+  Refuted Notation Vocabulary Fields Calculus PDE Conventions Statements Arguments
+  Notions`), and after a change on the compile path the audit passes on them
+  (`lake exe leanify audit tests/Arguments/article.tex`, and so on);
 * the expected outputs that CI compares are regenerated and reviewed:
   `tests/*/check.txt`, `examples/Demo/draft.check.txt`, the readings in
   `article.leanify.json`, `docs/glossary.md` (`lake exe glossary`);

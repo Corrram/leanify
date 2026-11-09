@@ -1,6 +1,6 @@
 import Leanify.Meta
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of functions of several variables (`f:\mathbb R^2\to\mathbb R`,
 `f(x,y)\coloneqq …`, curried) and of partial derivatives (`\partial_x f`,

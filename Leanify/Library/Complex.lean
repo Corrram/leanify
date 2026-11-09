@@ -54,6 +54,13 @@ def vocab : Vocab where
   constNames := [w!"", w!"+", w!"-", w!"\\cdot", w!"/", w!"-", w!"^", w!"\\lvert #\\rvert",
     w!"\\overline{#}", w!"\\operatorname{Re}(#)", w!"\\operatorname{Im}(#)", w!"\\exp(#)",
     w!"\\mathrm{i}", w!"\\sum", w!"\\prod"]
+  constLean := [w!"Leanify.Complex.Lean.ofReal", w!"Leanify.Complex.Lean.add", w!"Leanify.Complex.Lean.sub",
+    w!"Leanify.Complex.Lean.mul", w!"Leanify.Complex.Lean.div", w!"Leanify.Complex.Lean.neg",
+    w!"Leanify.Complex.powNat", w!"Leanify.Complex.Lean.abs", w!"Leanify.Complex.Lean.conj",
+    w!"Leanify.Complex.Lean.re", w!"Leanify.Complex.Lean.im", w!"Complex.exp", w!"Complex.I",
+    w!"Leanify.Complex.finSum", w!"Leanify.Complex.finProd"]
+  typeLean := [(w!"Complex", w!"Leanify.Complex.Lean.zero")]
+  modules := [w!"Leanify.Library.ComplexModel"]
   nouns := [
     { sing := phrase!"complex number", plural := phrase!"complex numbers", ty := C,
       pred := close (lamT C (fun _ => tt) fun _ => tt), doc := "a complex number (Mathlib `ℂ`)" }]

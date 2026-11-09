@@ -7,44 +7,58 @@ hand-written formal version that could drift away from the paper.
 
 ## Stages
 
-| Stage | Command | What the kernel checks |
+| Stage | Command | What it gives |
 | --- | --- | --- |
-| compile | `#leanify_article Foo "article.tex" "fnv1a64:…" with V` | `Foo.compiled : compileArticle V Foo.source = some Foo.doc`, by `Eq.refl` on literals, stage by stage (preamble, lexing and segmentation per block, sentences in chunks, assembly). No `native_decide`. |
-| state | `#leanify_semantics Foo "article.tex" with M` | Every definition as a Lean constant (`Foo.nu`, `Foo.D`, …), every claim as a proposition (`Foo.claimK`) with its definedness condition (`Foo.meaningfulK`), each tied to the compiled document by an `rfl` theorem (`Foo.env`, `Foo.holdsK`, `Foo.welldefI`). It also states the proof obligations `Foo.obligationK`. |
-| justify | your Lean proofs `J.proofK : Foo.obligationK`, `J.definedI : Foo.wellDefinedI` | Ordinary Lean proofs. |
-| certify | `#leanify_certify Foo "article.tex" using J` | `Foo.certificate`: every justified claim holds, premises are verified and acyclic, every definition is well defined, and claims derived in the text pass the citation audit. Exports `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` and writes the reports. |
+| compile | `#leanify_article Foo "article.tex" "fnv1a64:…" with V` | `Foo.source` and `Foo.doc`: the article and its compilation by `compileArticle V`, run by Lean's evaluator in about a second. The audit has the kernel evaluate the compiler too. |
+| state | `#leanify_semantics Foo "article.tex"` | Every definition as a Lean constant (`Foo.nu`, `Foo.D`, …), every claim as a proposition (`Foo.claimK`) with its definedness condition (`Foo.meaningfulK`), each tied to the compiled document by an `rfl` theorem that the kernel checks (`Foo.env`, `Foo.holdsK`, `Foo.welldefI`). It also states the proof obligations `Foo.obligationK`, and `Foo.satisfiableK` for the hypotheses of the claims. |
+| justify | your Lean proofs `J.proofK : Foo.obligationK`, `J.definedI : Foo.wellDefinedI`, `J.satisfiedK : Foo.satisfiableK` | Ordinary Lean proofs. |
+| certify | `#leanify_certify Foo "article.tex" using J` | `Foo.certificate`, checked by the kernel: every justified claim holds, premises are verified and acyclic, every definition is well defined, and claims derived in the text pass the citation audit. Exports `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` and writes the reports. |
 
-`compileArticle` is an ordinary, total Lean function. The kernel evaluates it on
-the file's contents, so the readable statements depend on nothing but the text
-(and the reviewed vocabulary, see [vocabularies](vocabularies.md)).
+`compileArticle` is an ordinary, total Lean function of the file's contents, so
+the readable statements depend on nothing but the text (and the vocabulary, see
+[vocabularies](vocabularies.md)).
 
 The pin `"fnv1a64:…"` is the hash of the article. Lake does not track the
 `.tex` file, so an edited article must change the Lean file to be recompiled.
-`lake exe leanify prepare article.tex --lean Compiled.lean` updates the pin.
+`lake exe leanify prepare article.tex --lean Compiled.lean` updates the pin
+(`leanify certify` does it and builds).
 
-## Incremental compilation
+## What is trusted, and the audit
 
-The kernel's work is split so that an edit is checked where it happened:
+Everything that is *proved* about an article is checked by Lean's kernel, from
+the three standard axioms: the claims, the definedness of the definitions, the
+refutations, and that the readable statements `Foo.claimK` are the meaning of the
+compiled document `Foo.doc`.
 
-* **Blocks.** The body is cut at blank lines outside math and environments.
-  Each block is lexed and segmented on its own, with positions relative to the
-  block, and the kernel checks each block's stage separately.
-* **Lexing cache.** With `\usepackage[certify]{leanify}` it is written and
-  imported automatically. By hand: `leanify prepare article.tex --lean Compiled.lean
-  --cache LexCache --module Foo.LexCache` writes one Lean module per section,
-  named after its content, with the lexing certificate of each block
-  (`#leanify_lex_cache`). `#leanify_article` reuses a certificate whose key
-  (macros, mode and text) matches, and the kernel only compares literals. Lake
-  rebuilds a cache module only when its text changes, so an edit relexes only
-  its own section.
-* **Sentences** are compiled in chunks (`set_option leanify.chunk 8`), each
-  a separate kernel check, and composed by explicit proof terms.
+That `Foo.doc` is the compilation of the article is, by default, the result of
+running the compiler: `#leanify_article` evaluates `compileArticle` like any
+program. This is what makes a compile take a second. It trusts Lean's evaluator
+for that one computation, and it trusts the grammar, as every reading does: the
+grammar is what says what a sentence means, and the readings it gives are
+printed for you to read (`--claims`, `\leanifyreadings`, the reports).
 
-For the Blest article (90 blocks in 5 sections, 351 sentences, 37 definitions
-and 48 claims) the kernel-checked compilation takes about 70 s with the lexing
-cache and peaks at 2.6 GB, and stating its semantics another 30 s. After an
-edit, the cache modules of the unchanged sections are reused.
-`set_option leanify.timing "file"` records the time of every stage.
+The audit removes the evaluator:
+
+```sh
+lake exe leanify audit Note/article.tex
+```
+
+It compiles the article again with `set_option leanify.kernel true`, into the
+namespace `Note.Audit`. Every stage of the compilation (preamble, lexing and
+segmentation of each block, the sentences in chunks, assembly) is then a theorem
+`lhs = rhs` proved by `Eq.refl`, which the kernel checks by evaluating the
+compiler itself, and the stages compose to `Note.Audit.compiled`. The audit ends
+with
+
+```lean
+theorem Note.Audit.built : compileArticle Note.vocab Note.source = some Note.doc := Note.Audit.compiled
+```
+
+which the kernel accepts only if the source and the document of your build are
+the ones it computed. It takes from half a minute for a note to a few minutes
+for a long article (`set_option leanify.chunk n` sets the number of sentences
+in one kernel check, `set_option leanify.timing "file"` records the time of every
+stage). Run it before you submit, and in CI.
 
 ## Definedness
 

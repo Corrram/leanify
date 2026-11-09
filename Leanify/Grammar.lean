@@ -864,6 +864,19 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
               let (m, r') ← formula r
               -- (`If $n$ is even,`: a clause, read as a hypothesis later)
               if (kw [w!"is"] r').isSome || (kw [w!"are"] r').isSome then none else
+              -- `If $x>0$ and $y>x$,`: both conditions
+              let rec more : Nat → MT → List Chunk → Option (MT × List Chunk)
+                | 0, m, r => some (m, r)
+                | f + 1, m, r =>
+                  match kw [w!"and"] r with
+                  | some r1 =>
+                    match formula r1 with
+                    | some (m2, r2) =>
+                      if (kw [w!"is"] r2).isSome || (kw [w!"are"] r2).isSome then none
+                      else more f (.land m m2) r2
+                    | none => some (m, r)
+                  | none => some (m, r)
+              let (m, r') ← more 4 m r'
               some (.ifCond m, r'))
           | none => none
 
@@ -967,6 +980,14 @@ inductive Clause where
   /-- The false statement (`This is a contradiction.`): under hypotheses, that they
   cannot all hold. -/
   | absurd
+  /-- `the statement holds for $E$`, in the proof of a result: the statement of the
+  result, with the variable of the induction replaced by `E` (the hypothesis of an
+  induction, or its conclusion for `n+1`). -/
+  | stmtAt (e : MT)
+  /-- What `stmtAt` stands for, once the proof is known: the clauses `stmt` of the
+  statement, under the hypotheses `hyps` of the result that speak about its variable
+  `v`, with `v` replaced by `e`. The grammar does not produce it. -/
+  | inst (v : Codes) (e : MT) (hyps stmt : List Clause)
   deriving Repr, Inhabited, Lean.ToExpr
 
 /-- `$x_1,\ldots,x_n$ are ADJ`: each term `x_i` of the sequence, for the integers `i` of
@@ -1211,8 +1232,31 @@ def asLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
       | _ => none
   some (.fact m, r2)
 
+/-- `the statement|claim|assertion|result|lemma|… holds|is true for $E$` (`for some $n$`,
+`for a given $n$`), and `… for all|every|each $m<n$`: the statement of the result that
+is being proved, about `E`, or about every `m` of the binder. -/
+def stmtClause (cs : List Chunk) : Option (Clause × List Chunk) := do
+  let r ← kw [w!"the"] cs
+  let r ← [w!"statement", w!"claim", w!"assertion", w!"result", w!"lemma", w!"theorem", w!"proposition",
+    w!"corollary", w!"formula", w!"identity", w!"inequality", w!"bound"].findSome? fun n => kw [n] r
+  let r ← kw [w!"holds"] r <|> kw [w!"is", w!"true"] r <|> kw [w!"is", w!"valid"] r
+  let r ← kw [w!"for"] r
+  match kw [w!"all"] r <|> kw [w!"every"] r <|> kw [w!"each"] r with
+  | some r1 =>
+    let (ts, r2) ← mathChunk r1
+    match binderMath ts with
+    | some ([v], d) => some (.under (.every [v] d) (.stmtAt (.id v)), r2)
+    | _ => none
+  | none =>
+    let r := (kw [w!"some"] r <|> kw [w!"a", w!"given"] r <|> kw [w!"a", w!"fixed"] r).getD r
+    let (e, r2) ← formula r
+    some (.stmtAt e, r2)
+
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
 def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+  match stmtClause cs with
+  | some res => some res
+  | none =>
   match asLimit cs with
   | some res => some res
   | none =>
@@ -2111,12 +2155,14 @@ inductive Sent where
   | assumeAll (binds : List Bind) (defs : List MT)
   /-- `Assume [that] CLAUSE [and CLAUSE].`, `Suppose …`, `We assume …`, `Assume further that
   …`, `Suppose, for contradiction, that …`: hypotheses of the following sentences of the
-  result or proof (of the list item, inside one). `additive`: the words say that the
-  hypothesis is added to those made before (`further`, `moreover`, `in addition`);
-  `caseLike`: they say that another case begins (`now`, `next`, `instead`), which is not
-  read, since nothing says where a case ends; `contra`: made to be refuted (`for
-  contradiction`). `asBinder`: the single formula `$x\in A$` as a binder, when its variable
-  is new (as `Let $x\in A$.`). -/
+  result or proof (of the list item, inside one), until the proof or the item ends, a
+  contradiction refutes them, or another case takes their place. `additive`: the words
+  say that the hypothesis belongs to the one made before (`further`, `moreover`, `in
+  addition`): the two end together; `caseLike`: they say that another case begins
+  (`now`, `next`, `instead`, `conversely`): the hypothesis takes the place of the latest
+  assumption of the proof; `contra`: made to be refuted (`for contradiction`).
+  `asBinder`: the single formula `$x\in A$` as a binder, when its variable is new (as
+  `Let $x\in A$.`). -/
   | suppose (hyps : List Clause) (additive caseLike contra : Bool) (asBinder : Option Bind)
   /-- `\item \emph{[Case 1:] CLAUSE [and CLAUSE].}`: the heading of a case, a hypothesis
   of the sentences of its item. -/
@@ -2135,11 +2181,9 @@ inductive Sent where
   /-- `Throughout, $p$ and $q$ denote integers.`, `In this paper, the letter $t$ denotes
   an integer.`: wherever one of the letters is bound, it is an integer. -/
   | letters (vars : List Codes)
-  /-- `Assume that the statement holds for $n$.`, in the proof of a result: the
-  hypothesis of an induction. `$n$` is a variable of the result (`Let $n$ be …`), and
-  the hypothesis is the statement of the result, about this `n`; the sentences after it
-  speak about `n+1`. -/
-  | inductionHyp (v : Codes)
+  /-- `We argue by induction on $n$.`: organizes the proof, and names the variable
+  that `the statement holds for $E$` is about. -/
+  | inductionOn (v : Codes)
   /-- `We write $T$ for $F$` (`kind` 0), `We write $T$ if $F$` (1), `We write $T$ for
   the NAME` (2, `rhs` the words and formulas of the name): a notation of the article. -/
   | notation (kind : Nat) (rhs : List Chunk)
@@ -2835,10 +2879,13 @@ def hypClauses : Nat → List Chunk → List Clause → Option (List Clause × L
 def wAdditive : List (List Codes) :=
   [[w!"further"], [w!"furthermore"], [w!"moreover"], [w!"also"], [w!"additionally"],
    [w!"in", w!"addition"]]
-/-- Words that begin another case. -/
+/-- Words that begin another case: the hypothesis takes the place of the one before it. -/
 def wCaseLike : List (List Codes) :=
-  [[w!"now"], [w!"first"], [w!"next"], [w!"instead"], [w!"second"], [w!"secondly"],
-   [w!"conversely"], [w!"otherwise"], [w!"finally"], [w!"on", w!"the", w!"other", w!"hand"]]
+  [[w!"now"], [w!"next"], [w!"instead"], [w!"second"], [w!"secondly"], [w!"third"], [w!"thirdly"],
+   [w!"conversely"], [w!"otherwise"], [w!"finally"], [w!"lastly"], [w!"on", w!"the", w!"other", w!"hand"]]
+/-- Words that announce a first case: the hypothesis is an assumption like any other
+(the case after it takes its place). -/
+def wFirst : List (List Codes) := [[w!"first"], [w!"firstly"]]
 /-- Words that say a hypothesis is made to be refuted. -/
 def wForContradiction : List (List Codes) :=
   [[w!"for", w!"the", w!"sake", w!"of", w!"a", w!"contradiction"],
@@ -2861,41 +2908,36 @@ def supposeMods : Nat → List Chunk → Bool × Bool × Bool → (Bool × Bool 
       | none =>
         match anyKw wCaseLike cs' with
         | some r => supposeMods f r (a, true, x)
-        | none => ((a, k, x), cs)
+        | none =>
+          match anyKw wFirst cs' with
+          | some r => supposeMods f r (a, k, x)
+          | none => ((a, k, x), cs)
 
 /-- `Assume [that] CLAUSE [and CLAUSE].`, `Suppose …`, `We assume …`, `Let us assume …`,
-with the words of `supposeMods` before or after the verb. `Without loss of generality`
-and `we may assume` are not read: they claim that the hypothesis costs nothing, which
-is a step of the proof and not a hypothesis. -/
+`Without loss of generality, assume …`, `We may assume …`, with the words of
+`supposeMods` before or after the verb. -/
 def supposeSent (cs : List Chunk) : Option Sent := do
   let (fl, r) := supposeMods 3 cs (false, false, false)
   let r := optPunct 44 r
-  let r := (kw [w!"let", w!"us"] r <|> kw [w!"we"] r).getD r
+  -- (`Without loss of generality, assume …`, `We may assume …`: a hypothesis like any
+  -- other. That it costs nothing is not a sentence of the proof: the result has to
+  -- follow in Lean from the steps made under it)
+  let wlog (r : List Chunk) : List Chunk :=
+    optPunct 44 ((anyKw [[w!"without", w!"loss", w!"of", w!"generality"], [w!"without", w!"restriction"],
+      [w!"wlog"]] r).getD r)
+  let r := wlog r
+  let r := (anyKw [[w!"let", w!"us"], [w!"we", w!"may", w!"and", w!"do"], [w!"we", w!"may", w!"therefore"],
+    [w!"we", w!"may", w!"thus"], [w!"we", w!"may"], [w!"we", w!"can"], [w!"one", w!"may"], [w!"we"]] r).getD r
+  let r := wlog r
   let r ← kw [w!"assume"] r <|> kw [w!"suppose"] r
   let ((additive, caseLike, contra), r) := supposeMods 3 r fl
-  let r := optPunct 44 r
+  let r := wlog (optPunct 44 r)
   let r := (kw [w!"that"] r).getD r
   let asBinder : Option Bind := match r with
     | [.m ts, .p 46] => (binderMath ts).map fun (vs, d) => Bind.every vs d
     | _ => none
   let (hs, r1) ← hypClauses 4 r []
   if isEnd r1 then some (.suppose hs additive caseLike contra asBinder) else none
-
-/-- `Assume|Suppose [that] the statement|claim|assertion|result|lemma|… holds|is true for
-[some|a given] $n$.`: the hypothesis of an induction. -/
-def inductionSent (cs : List Chunk) : Option Sent := do
-  let r := (kw [w!"let", w!"us"] cs <|> kw [w!"we"] cs).getD cs
-  let r ← kw [w!"assume"] r <|> kw [w!"suppose"] r
-  let r := (kw [w!"that"] r).getD r
-  let r ← kw [w!"the"] r
-  let r ← anyKw [[w!"statement"], [w!"claim"], [w!"assertion"], [w!"result"], [w!"lemma"], [w!"theorem"],
-    [w!"proposition"], [w!"corollary"], [w!"formula"], [w!"identity"], [w!"inequality"], [w!"bound"]] r
-  let r ← anyKw [[w!"holds"], [w!"is", w!"true"]] r
-  let r ← kw [w!"for"] r
-  let r := (anyKw [[w!"some"], [w!"a", w!"given"], [w!"a", w!"fixed"]] r).getD r
-  match r with
-  | [.m [.id v], .p 46] => some (.inductionHyp v)
-  | _ => none
 
 /-- The words of a contradiction. -/
 def wContradiction : List (List Codes) :=
@@ -2941,11 +2983,13 @@ def stripContradiction (cs : List Chunk) : Option (List Chunk) :=
 /-- The heading of a case, after `\item`: `\emph{$x\ge0$.}`, `\emph{Case 1: $x\ge0$ and
 $y<0$.}`, `\emph{Case (b): $n$ is even.}` -/
 def caseHeading (cs : List Chunk) : Option Sent := do
-  -- the cases of an induction: `Base case: $n=1$.` is a case, `Induction step.` a
-  -- heading without a hypothesis (the hypothesis of the induction is a sentence)
+  -- the cases of an induction: `Base case: $n=1$.` and `Induction step: $n\ge2$.` are
+  -- cases, `Induction step.` a heading without a hypothesis (the hypothesis of the
+  -- induction is a sentence)
   if let some r := anyKw [[w!"induction", w!"step"], [w!"inductive", w!"step"]] cs then
-    return ← if isEnd r then some (.caseOf []) else none
-  let cs := match anyKw [[w!"base", w!"case"], [w!"induction", w!"base"], [w!"base"]] cs with
+    if isEnd r then return .caseOf []
+  let cs := match anyKw [[w!"base", w!"case"], [w!"induction", w!"base"], [w!"base"],
+      [w!"induction", w!"step"], [w!"inductive", w!"step"]] cs with
     | some (.p 58 :: r) => r
     | some r => r
     | none => cs
@@ -2991,7 +3035,7 @@ def organizeSent (cs : List Chunk) : Option Sent :=
       [w!"the", w!"proof", w!"is", w!"by", w!"induction", w!"on"], [w!"we", w!"use", w!"induction", w!"on"],
       [w!"by", w!"induction", w!"on"]] cs
     match r with
-    | .m _ :: r' => if done r' then some .organizes else none
+    | .m [.id v] :: r' => if done r' then some (.inductionOn v) else none
     | _ => none
   cases <|> contra <|> induction
 
@@ -3367,7 +3411,7 @@ where
 /-- A sentence: an assumption, a contradiction, or one of the other forms, possibly
 ending in a contradiction. -/
 def sentence (cs : List Chunk) : Option Sent :=
-  match inductionSent cs <|> supposeSent cs <|> contradictionSent cs <|> organizeSent cs with
+  match supposeSent cs <|> contradictionSent cs <|> organizeSent cs with
   | some s => some s
   | none =>
     match stripContradiction cs with

@@ -55,18 +55,6 @@ inductive SetProp where
   | closed | isOpen | bounded | connected
   deriving DecidableEq, Repr, Lean.ToExpr
 
-/-- Properties of a quantity of functions on the unit square (of a copula, say) on a
-class of them: convexity, and semicontinuity and continuity for uniform convergence. -/
-inductive SqProp where
-  | convex | concave | lowerUniform | upperUniform | contUniform
-  deriving DecidableEq, Repr, Lean.ToExpr
-
-/-- Properties of a class of functions on the unit square: convexity, and
-compactness and closedness for uniform convergence. -/
-inductive ClassProp where
-  | convex | compactUniform | closedUniform
-  deriving DecidableEq, Repr, Lean.ToExpr
-
 /-- Standard functions of a real variable, with their mathlib meaning. `\log` and
 `\tan` are applied only inside their domains (the compiler adds the condition). -/
 inductive RealFn where
@@ -98,10 +86,6 @@ inductive Prim where
   | fnProp (k : FnProp)
   /-- Further properties of a set of points of the plane. -/
   | setProp (k : SetProp)
-  /-- Properties of a quantity of functions on the unit square, on a class. -/
-  | sqProp (k : SqProp)
-  /-- Properties of a class of functions on the unit square. -/
-  | classProp (k : ClassProp)
   /-- `\exp`, `\log`, `\sin`, `\cos`, `\tan`. -/
   | realFn (k : RealFn)
   /-- The number `π`. -/
@@ -168,8 +152,6 @@ def Prim.ty : Prim → Ty
   | .compact2 | .convex2 | .symm2 => (.real ⟶ .real ⟶ .prop) ⟶ .prop
   | .continuousOn | .concaveOn | .strictMonoOn | .fnProp _ => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
   | .setProp _ => (.real ⟶ .real ⟶ .prop) ⟶ .prop
-  | .sqProp _ => (Ty.sq ⟶ .real) ⟶ (Ty.sq ⟶ .prop) ⟶ .prop
-  | .classProp _ => (Ty.sq ⟶ .prop) ⟶ .prop
   | .realFn _ => .real ⟶ .real
   | .pi => .real
   | .isInt | .isNat => .real ⟶ .prop

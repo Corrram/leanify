@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.5.0"
+version = "0.6.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -108,3 +108,10 @@ globs = ["Statements.+"]
 name = "Arguments"
 srcDir = "tests"
 globs = ["Arguments.+"]
+
+[[lean_lib]]
+# Notions of the running text and the adjectives of the unit-square field, with the
+# model that the vocabulary names (no proofs: the statements are compiled and stated).
+name = "Notions"
+srcDir = "tests"
+globs = ["Notions.+"]

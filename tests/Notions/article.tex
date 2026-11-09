@@ -5,7 +5,8 @@
 
 % A test of notions defined in the running text (docs/writing.md): `\(…\)` math,
 % a notion whose condition is not read (its subject still counts), a notion by a
-% monotone map without "the map", and four ways of using a notion in a result.
+% monotone map without "the map", four ways of using a notion in a result, and the
+% adjectives of the vocabulary's field (convex, compact with respect to uniform convergence).
 % The expected output of `leanify check --vocab unitsquare --claims` is check.txt.
 
 \begin{document}
@@ -35,6 +36,19 @@ If $C$ is an LTD copula, then $C(u,v)\ge uv$ for all $u,v\in[0,1]$.
 
 \begin{proposition}
 Every LTD copula $C$ satisfies $C(u,v)\ge uv$ for all $u,v\in[0,1]$.
+\end{proposition}
+
+\section{Properties of a class and of a quantity on it}
+
+The words for these properties belong to the vocabulary of the unit square: the article names the field, and the field names their Lean meanings.
+Define $\gamma:\CC\to\mathbb{R}$ by $\gamma(C)\coloneqq 4C(\frac12,\frac12)-1$.
+
+\begin{proposition}
+The class $\CC$ is convex, compact with respect to uniform convergence and closed with respect to uniform convergence.
+\end{proposition}
+
+\begin{proposition}
+The function $\gamma$ is convex, concave on $\CC$ and continuous with respect to uniform convergence.
 \end{proposition}
 
 \end{document}

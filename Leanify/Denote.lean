@@ -14,7 +14,6 @@ import Mathlib.Analysis.Convex.Function
 import Mathlib.Analysis.Calculus.ContDiff.Defs
 import Mathlib.Topology.Semicontinuity.Defs
 import Mathlib.Topology.EMetricSpace.Lipschitz
-import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
 import Mathlib.Topology.Connected.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Topology.Algebra.Support
@@ -59,6 +58,12 @@ structure Model where
 
 /-- The model of an empty vocabulary. -/
 def Model.empty : Model := ⟨fun _ => Unit, fun _ => (), []⟩
+
+/-- The base types of a model given as a list of types, each with an element (`Unit`
+beyond the list): what `#leanify_semantics` builds from the names of a vocabulary. -/
+def Model.baseOf (ts : List (Σ T : Type, T)) (k : Nat) : Type := (ts.getD k ⟨Unit, ()⟩).1
+
+def Model.defaultOf (ts : List (Σ T : Type, T)) (k : Nat) : Model.baseOf ts k := (ts.getD k ⟨Unit, ()⟩).2
 
 namespace Prelude
 noncomputable def leb (A : I → Prop) : ℝ := (volume {x : I | A x}).toReal
@@ -142,26 +147,6 @@ def open2 (S : ℝ → ℝ → Prop) : Prop := IsOpen {p : ℝ × ℝ | S p.1 p.
 def bounded2 (S : ℝ → ℝ → Prop) : Prop := Bornology.IsBounded {p : ℝ × ℝ | S p.1 p.2}
 def connected2 (S : ℝ → ℝ → Prop) : Prop := IsConnected {p : ℝ × ℝ | S p.1 p.2}
 
-/-! Quantities of functions on the unit square (of copulas, say), on a class of
-them, and classes of such functions. Convexity uses the pointwise vector space
-structure; "with respect to uniform convergence" uses the topology of uniform
-convergence on `[0,1]²`. -/
-/-- A function on the unit square, from the space of uniform convergence on `[0,1]²`. -/
-def ofUniform (g : UniformFun (I × I) ℝ) : I → I → ℝ := fun u v => UniformFun.toFun g (u, v)
-def convexOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop := ConvexOn ℝ {C | D C} F
-def concaveOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop := ConcaveOn ℝ {C | D C} F
-def lscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
-  LowerSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
-def uscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
-  UpperSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
-def continuousUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
-  ContinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
-def convexClass (D : (I → I → ℝ) → Prop) : Prop := Convex ℝ {C | D C}
-def compactUniform (D : (I → I → ℝ) → Prop) : Prop :=
-  IsCompact {g : UniformFun (I × I) ℝ | D (ofUniform g)}
-def closedUniform (D : (I → I → ℝ) → Prop) : Prop :=
-  IsClosed {g : UniformFun (I × I) ℝ | D (ofUniform g)}
-
 /-! Functions of several variables: a curried function of `n` real variables is a
 function on `Fin n → ℝ` (with the supremum norm and the product Lebesgue measure). -/
 
@@ -229,18 +214,6 @@ def SetProp.denote : SetProp → (ℝ → ℝ → Prop) → Prop
   | .bounded => Prelude.bounded2
   | .connected => Prelude.connected2
 
-def SqProp.denote : SqProp → ((I → I → ℝ) → ℝ) → ((I → I → ℝ) → Prop) → Prop
-  | .convex => Prelude.convexOnSq
-  | .concave => Prelude.concaveOnSq
-  | .lowerUniform => Prelude.lscUniform
-  | .upperUniform => Prelude.uscUniform
-  | .contUniform => Prelude.continuousUniform
-
-def ClassProp.denote : ClassProp → ((I → I → ℝ) → Prop) → Prop
-  | .convex => Prelude.convexClass
-  | .compactUniform => Prelude.compactUniform
-  | .closedUniform => Prelude.closedUniform
-
 noncomputable def RealFn.denote : RealFn → ℝ → ℝ
   | .exp => Real.exp
   | .log => Real.log
@@ -268,8 +241,6 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .strictMonoOn => Prelude.strictMonoOn
   | .fnProp k => k.denote
   | .setProp k => k.denote
-  | .sqProp k => k.denote
-  | .classProp k => k.denote
   | .realFn k => k.denote
   | .pi => Real.pi
   | .isInt => Prelude.isInt

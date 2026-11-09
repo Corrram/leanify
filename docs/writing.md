@@ -314,7 +314,7 @@ citations.
 | derivative | `whose derivative $1-(1+r)^{1/3}$ is positive for $r<0$` |
 | relation | `$D_{1/2}$ is supported on the graph of the tent map $u\mapsto\min\{2u,2-2u\}$` |
 | transformation | `the map $F\mapsto\widehat F$ sends $\beta-\alpha$ to $\alpha-\beta$ by \eqref{eq:reflection}` |
-| condition | `If $-1\le t\le t_*$, then \begin{equation}u(t)=\frac{144+420t+(9+65t)\sqrt{6-10t}}{500}.\end{equation}` |
+| condition | `If $-1\le t\le t_*$, then \begin{equation}u(t)=\frac{144+420t+(9+65t)\sqrt{6-10t}}{500}.\end{equation}`, `If $x>0$ and $y>x$, then $y^2>x^2$.` (several conditions joined by `and`) |
 | maximum of a quantity | `Then \begin{equation}\max_{x\in\mathcal{X}}|\alpha(x)-\beta(x)|=\Delta_0.\end{equation}` |
 | image sets | `\{\alpha(x):x\in\mathcal{X},\ \beta(x)=0\}=[-r_0,r_0]` |
 | extrema at a fixed value | `For every $n\in[-1,1]$, the maximum $\Lambda(n)$ and the minimum $\Lambda^{-1}(n)$ of $\alpha(x^\top)$ over all NOUNS $x$ with $\alpha(x)=n$ are each attained by exactly one NOUN.` |
@@ -399,31 +399,42 @@ command.
 
 A proof makes hypotheses, and every step after one is a claim under it: after
 `Assume that $x>1$.`, the step `Then $x^2>x$.` is read as `∀ x, 1 < x → x < x²`.
-`tests/Arguments/article.tex` uses each form.
+A hypothesis lasts until its proof ends (inside an item of a list: until the
+item ends), until a contradiction refutes it, or until another case takes its
+place. `tests/Arguments/article.tex` uses each form.
 
 | Sentence | Reading |
 | --- | --- |
 | `Assume that $x>1$.`, `Suppose $0<x$ and $x<y$.`, `We assume that $n$ is even.`, `Let us assume …` | hypotheses of the following sentences of the result or proof (inside an item of a list: of the item). In the statement of a result they are hypotheses of the result, and its proof starts with them |
 | `Assume $c>0$.`, `Suppose $x\in A$.` about a variable that is not bound yet | the variable, as `Let $c>0$.` |
-| `Assume further that $y>0$.` (`moreover`, `furthermore`, `in addition`, `also`) | one more hypothesis. A second assumption after steps under the first needs such a word: without it, the text does not say whether the first one still holds, and the sentence is refused with a finding |
+| a second `Assume that $y>x$.` | one more hypothesis: assumptions add up. Each can end on its own |
+| `Assume further that $y>0$.` (`moreover`, `furthermore`, `in addition`, `also`) | one more hypothesis, which belongs to the assumption before it: the two end together |
+| `Assume now that $x<0$.` (`next`, `instead`, `conversely`, `otherwise`, `secondly`, `finally`, `on the other hand`) | another case: the hypothesis takes the place of the latest assumption (with what `further` added to it). `Assume first that …` is an assumption like any other, which the next case replaces |
+| `Without loss of generality, assume that $y\le x$.`, `We may assume that …`, `We can assume …` | an assumption like any other. That it costs nothing is not a sentence of the proof: the result has to follow, in Lean, from the steps made under it |
 | `\item \emph{$x\ge0$.} …`, `\item \emph{Case 2: $x<0$ and $y>0$.} …`, `\item \textbf{Case (b): $n$ is even.} …` | the heading of a case: a hypothesis of the sentences of its item of an `enumerate`, `itemize` or `description`. It ends with the item, so the sentence after the list (`In both cases, …`) is made without it |
 | `Suppose, for contradiction, that $x\ge1$.` (`for a contradiction`, `by contradiction`, `to the contrary`) | a hypothesis made to be refuted |
-| `This is a contradiction.`, `We obtain a contradiction.`, `This is absurd.`, `This contradicts Lemma~\ref{l}.`, `Then $0\le x^2<0$, a contradiction.` (`, which is impossible.`) | the false statement under the hypotheses made (`∀ x, x² < 1 → 1 ≤ x → ⊥`), after the claims of the sentence. It ends the latest hypothesis made for contradiction, with the hypotheses made after it; if none was, the one assumption of the proof. After several assumptions, none made for contradiction, it does not say which one it refutes, and is refused |
-| `We distinguish two cases:`, `There are three cases.`, `We argue by contradiction.`, `The proof is by contradiction.`, `We argue by induction on $n$.` | a sentence that says how the proof is organized: it asserts nothing, and does not leave the proof incomplete |
-| `\item \emph{Base case: $n=1$.} …`, `\item \emph{Induction step.} …` | the cases of an induction: the base case is a case like any other, with the hypothesis `n = 1`; the heading of the step makes no hypothesis |
-| `Assume that the statement holds for $n$.` (`Suppose the claim is true for some $n$.`), in the proof of a result | the hypothesis of the induction: the statement of the result, about the `n` that the result introduces. The steps after it speak about `n+1` |
+| `This is a contradiction.`, `We obtain a contradiction.`, `This is absurd.`, `This contradicts Lemma~\ref{l}.`, `Then $0\le x^2<0$, a contradiction.` (`, which is impossible.`) | the false statement under the hypotheses made (`∀ x, x² < 1 → 1 ≤ x → ⊥`), after the claims of the sentence. It ends the latest hypothesis made for contradiction, with the hypotheses made after it; if none was, the latest assumption. The assumptions before it remain |
+| `We distinguish two cases:`, `There are three cases.`, `We argue by contradiction.`, `The proof is by contradiction.` | a sentence that says how the proof is organized: it asserts nothing, and does not leave the proof incomplete |
+| `We argue by induction on $n$.` | organizes the proof, and names the variable of the induction: a variable of the result (`Let $n$ be a positive integer.`, `For every positive integer $n$, …`) |
+| `\item \emph{Base case: $n=1$.} …`, `\item \emph{Induction step: $n\ge2$.} …`, `\item \emph{Induction step.} …` | the cases of an induction: cases like any other; the heading `Induction step.` makes no hypothesis |
+| `the statement holds for $n$` (`the claim`, `the assertion`, `the formula`, …; `is true for`), as a hypothesis (`Assume that the statement holds for $n$.`) or as a claim (`Hence the statement holds for $n+1$.`) | the statement of the result that is being proved, about the given value of the variable of the induction: for `$n-1$`, `(n - 1 ∈ ℤ ∧ 0 < n - 1) → …`, with the domain of the variable and the hypotheses of the result about it |
+| `the statement holds for all $m<n$` (`every`, `each`), in a strong induction | the statement about every such `m`: `∀ m, m < n → (m ∈ ℤ ∧ 0 < m → …)` |
 
-Three things are not read, because the text leaves the meaning open:
+**The rules can be applied to a text that meant something else.** `Assume that
+$x\ge0$. … Assume that $x<0$. …`, meant as two cases, is read as one assumption
+added to the other, and every step after the second is then made under `x ≥ 0`
+and `x < 0`: it is true whatever it says, and would pass unchecked. Leanify
+guards against this, whatever the cause. For every set of hypotheses under which
+a claim is made it states that they can hold together (`satisfiableK`: here
+`∃ x, 0 ≤ x ∧ x < 0`, which nobody can prove), and a result with a claim under
+hypotheses that are not shown to hold together is not marked *derived*
+([What a verified claim does not say](reference.md#what-a-verified-claim-does-not-say)).
+The steps of a proof by contradiction are exempt: their hypotheses are refuted,
+and that is their point. Write the second case as `Assume now that $x<0$.`, or
+both as the items of a list.
 
-* a case that begins in the running proof (`Assume now that $x<0$.`, `Next, suppose
-  …`, `Conversely, assume …`): nothing says where it ends. Write the cases as the
-  items of a list;
-* `Without loss of generality, assume …` and `We may assume …`: that the
-  hypothesis costs nothing is a step of the proof, not a hypothesis. Such a
-  sentence is prose.
-
-**Induction.** The statement is written about a variable that the result
-introduces, so that its hypothesis has a reading for one value:
+**Induction.** A proof by induction names its variable and states its hypothesis
+as a sentence:
 
 ```latex
 \begin{lemma}\label{lem:square}
@@ -437,19 +448,22 @@ We argue by induction on $n$.
 \item \emph{Induction step.} Assume that the statement holds for $n$.
 Then $(n+1)^2=n^2+2n+1\ge n+2n+1$.
 By the induction hypothesis, $(n+1)^2\ge n+1$.
+Hence the statement holds for $n+1$.
 \end{itemize}
 \end{proof}
 ```
 
-The base case is read as `∀ n, … → n = 1 → n² = 1`, and the last step as
-`∀ n, … → n ≤ n² → n + 1 ≤ (n + 1)²`: every positive integer `n` for which the
-statement holds gives it for `n+1`. The lemma rests on these steps, and its Lean
-proof is the induction itself, which the standard tactic does not do: a result
-proved by induction is *argued*. Three forms are not read. A statement that
-binds its variable itself (`For every positive integer $n$, …`) is not a
-statement about one `n`, and the finding says to introduce it with `Let`. The
-statement `for $n-1$` and `for all $m<n$` (strong induction) are other
-statements: write them out (`Assume that $(n-1)^2\ge n-1$.`).
+The base case is read as `∀ n, … → n = 1 → n² = 1`, the last sentence as
+`∀ n, … → n ≤ n² → (n + 1 ∈ ℤ ∧ 0 < n + 1 → n + 1 ≤ (n + 1)²)`: every positive
+integer `n` for which the statement holds gives it for `n+1`. The lemma rests on
+these steps. That it follows from them is the induction principle, which is a
+Lean argument and not a step of the text; the standard tactic does not apply it,
+so a result that it cannot prove otherwise is *argued*. Two forms are not read:
+`the statement holds for all smaller values` (name them: `for all $m<n$`), and
+the statement for another value when no sentence names the variable of the
+induction (the finding says so). When another variable of the result depends on
+the variable of the induction, write the hypothesis out
+(`Assume that $(n-1)^2\ge n-1$.`).
 
 A definition made under a hypothesis (`Assume $x\ne0$. Set $y\coloneqq\frac1x$.`)
 does not take the hypothesis: state the condition where the variable is bound

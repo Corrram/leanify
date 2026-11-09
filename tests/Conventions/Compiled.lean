@@ -1,7 +1,7 @@
 import Leanify.Meta
 import Leanify.Library.Fields
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of conventions about constants (`may depend on`, `uniform in`, `independent
 of`) and of the order of quantifiers they give, of multi-indices (`\partial^I f`), of

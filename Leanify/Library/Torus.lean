@@ -37,6 +37,9 @@ def vocab : Vocab where
   consts := [F2 ⟶ .prop, F2 ⟶ .prop, .real ⟶ F2 ⟶ .real, F2 ⟶ .real ⟶ .real ⟶ F2]
   constNames := [w!"\\operatorname{Smooth}_{\\mathbb{T}^2}", w!"\\operatorname{ZeroMean}",
     w!"\\operatorname{C-norm}", w!"\\operatorname{D}"]
+  constLean := [w!"Leanify.Torus.smoothT2", w!"Leanify.Torus.zeroMeanT2", w!"Leanify.Torus.cNormT2",
+    w!"Leanify.Torus.dirDerivT2"]
+  modules := [w!"Leanify.Library.TorusModel"]
   nouns := [
     smoothNoun phrase!"smooth function $v$ on $\\mathbb{T}^2$" phrase!"smooth functions $v$ on $\\mathbb{T}^2$",
     smoothNoun phrase!"smooth periodic function $v$ on $\\mathbb{R}^2$"

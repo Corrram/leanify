@@ -18,7 +18,7 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.5, 2026-11-09}
+\date{Version 0.6, 2026-11-09}
 
 \begin{document}
 \maketitle
@@ -161,10 +161,13 @@ Mark & Meaning \\
 \midrule
 $\checkmark$\,\textsf{checked} & Every sentence compiled, and the claim is verified in Lean. \\
 $\checkmark$\,\textsf{derived} & Every sentence compiled, and the proof in the text
-  derives the claim from its citations, each step by the standard tactic. \\
-$\checkmark$\,\textsf{argued} & As \textsf{derived}, but a step of the proof needed
-  a longer Lean argument than the standard tactic: the printed proof leaves out
-  more than a routine step there. \\
+  derives the claim from its citations, each step by the standard tactic, under
+  hypotheses that are shown to hold together. \\
+$\checkmark$\,\textsf{argued} & As \textsf{derived}, with a reservation that the
+  report names: a step of the proof needed a longer Lean argument than the standard
+  tactic (the printed proof leaves out more than a routine step there), or the
+  hypotheses of a claim are not shown to hold together (it may be true for an empty
+  reason). \\
 $\circ$\,\textsf{partly checked} & The result is verified in part. \\
 $\circ$\,\textsf{compiled} & The statement compiled, but is not verified yet. \\
 $\times$\,\textsf{false} & The claim is refuted in Lean. \\
@@ -178,8 +181,8 @@ than that file, a warning says that the marks may be out of date. Leave
 \opt{status} out for the version you submit.
 
 The summary of \cs{leanifyreport} also says how many steps the standard tactic
-closes, and for how many statements with hypotheses it is shown that the
-hypotheses can hold together.
+closes, and of the sets of hypotheses under which claims are made, how many are
+shown to hold together.
 
 \section{Requirements}
 

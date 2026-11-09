@@ -95,10 +95,11 @@ def findings(report, prose=False, standard=False, satisfiable=False):
         if standard and c["status"] == "text" and c.get("step") == "argument":
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is derived in the text, "
                    f"but the standard tactic does not close it: its proof {c['justification']} is a longer Lean argument")
-        # a statement whose hypotheses cannot all hold is true for an empty reason
-        if satisfiable and c.get("hypotheses") == "open":
+        # a claim whose hypotheses cannot all hold is true for an empty reason (once for each
+        # set of hypotheses: at the claim that stands for it)
+        if satisfiable and c.get("hypotheses") == "open" and c.get("hypothesesOf", c["index"]) == c["index"]:
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}): its hypotheses are not "
-                   f"shown to hold together (prove {report['justifications']}.satisfied{c['index']})")
+                   f"shown to hold together (prove {report.get('justifications', 'J')}.satisfied{c['index']})")
 
 
 def main():
@@ -110,7 +111,7 @@ def main():
     ap.add_argument("--standard", action="store_true",
                     help="warn of the claims derived in the text that the standard tactic does not close")
     ap.add_argument("--satisfiable", action="store_true",
-                    help="warn of the statements whose hypotheses are not shown to hold together")
+                    help="warn of the claims whose hypotheses are not shown to hold together")
     ap.add_argument("--strict", action="store_true",
                     help="fail on any warning: unverified claims and sentences that did not compile")
     ap.add_argument("--relative-to", type=pathlib.Path, default=pathlib.Path.cwd(),

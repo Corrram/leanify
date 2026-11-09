@@ -665,17 +665,6 @@ def lexBlock (macros : Macros) (block : Codes) (st : List Bool) : Option (List P
 /-- The paragraph break after a block (none inside an open formula). -/
 def blockBreak (st : List Bool) : List PTok := if st.isEmpty then [⟨.par, 0, false⟩] else []
 
-/-- The key of a block's lexing: the macros, the math-mode stack it starts in and
-its text determine its tokens. Equal keys name the same cached certificate (the
-kernel still compares the literals, so a collision cannot cause harm). -/
-def lexKey (macros : Macros) (st : List Bool) (block : Codes) : String :=
-  let enc (c : Codes) : String := Codes.toString c
-  let ms := String.intercalate "\u0001" (macros.map fun (n, b) => enc n ++ "\u0002" ++ enc b)
-  let s := ms ++ "\u0003" ++ String.ofList (st.map fun b => if b then '1' else '0') ++ "\u0003" ++ enc block
-  let h := s.toUTF8.foldl (fun (h : UInt64) b => (h ^^^ b.toUInt64) * 0x100000001b3) 0xcbf29ce484222325
-  let hex := String.ofList (Nat.toDigits 16 h.toNat)
-  String.ofList (List.replicate (16 - hex.length) '0') ++ hex
-
 /-- Shift token positions by a block's start offset. -/
 def PTok.shift (base : Nat) (t : PTok) : PTok := { t with pos := t.pos + base }
 

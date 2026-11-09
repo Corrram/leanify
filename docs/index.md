@@ -19,8 +19,9 @@ Lean into kernel-checked statements and proofs.</p>
 Leanify compiles an ordinary mathematical article, written in good
 mathematical English, to Lean. Every symbol must be defined in the article
 before it is used, every sentence has one fixed reading, and a proof step may
-use only the results it cites. The Lean kernel checks the compilation, every
-definition, every claim and every step of every compiled proof. There is no
+use only the results it cites. The Lean kernel checks every definition, every
+claim and every step of every compiled proof, and on request the compilation
+itself. There is no
 second, hand-written formal version that could drift away from the paper.
 
 ## From a sentence to a theorem
@@ -103,7 +104,7 @@ the diagnostics and the margin of the PDF mark it false.
 ```sh
 lake exe leanify check Note/article.tex --claims   # what Leanify reads, in a second
 lake exe leanify init Note/article.tex             # the Lean files, with a stub proof per claim
-lake build Note.Certified                            # the kernel checks the article and your proofs
+lake build Note.Certified                            # the kernel checks the statements and your proofs
 ```
 
 Or one: `leanify certify article.tex` makes the article's folder a Lean

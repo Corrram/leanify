@@ -1,6 +1,6 @@
 import Leanify.Meta
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of fields on `\mathbb R^3\times[0,1)` (vector and scalar fields, function
 spaces, compact sets, supports, norms, energies) and of the Navier–Stokes equations,

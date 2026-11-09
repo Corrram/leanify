@@ -4,8 +4,10 @@ import Leanify.Vocab
 
 Distribution functions and probability measures on `[0,1]^2`, uniform
 marginals, and (bivariate) copulas: distribution functions on `[0,1]^2` with
-uniform marginals. The meanings of the four constants are given in
-`Leanify.Library.UnitSquareModel` (`UnitSquare.model`). -/
+uniform marginals; and properties of a quantity of such functions on a class of them
+(convexity, semicontinuity and continuity for uniform convergence) and of such a class.
+Each constant names its Lean meaning, a definition of
+`Leanify.Library.UnitSquareModel`. -/
 
 namespace Leanify.UnitSquare
 
@@ -15,10 +17,48 @@ def distFnUniform : Nat := 1
 def probMeasure : Nat := 2
 def measUniform : Nat := 3
 
+/-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
+abbrev Quantity : Ty := Ty.sq ⟶ .real
+abbrev Class : Ty := Ty.sq ⟶ .prop
+
+/-- The words `with respect to uniform convergence`. -/
+def uniformly : List Codes := [w!"with", w!"respect", w!"to", w!"uniform", w!"convergence"]
+
 def vocab : Vocab where
-  consts := [Ty.sq ⟶ .prop, Ty.sq ⟶ .prop, Ty.meas2 ⟶ .prop, Ty.meas2 ⟶ .prop]
+  consts := [Ty.sq ⟶ .prop, Ty.sq ⟶ .prop, Ty.meas2 ⟶ .prop, Ty.meas2 ⟶ .prop,
+    -- properties of a quantity on a class, and of a class
+    Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop,
+    Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop,
+    Class ⟶ .prop, Class ⟶ .prop, Class ⟶ .prop]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
-    w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}"]
+    w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
+    w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
+    w!"\\operatorname{lsc\\ (uniform)}(#1)\\text{ on }#2", w!"\\operatorname{usc\\ (uniform)}(#1)\\text{ on }#2",
+    w!"\\operatorname{continuous\\ (uniform)}(#1)\\text{ on }#2",
+    w!"\\operatorname{convex}", w!"\\operatorname{compact\\ (uniform)}", w!"\\operatorname{closed\\ (uniform)}"]
+  constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
+    w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
+    w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
+    w!"Leanify.Prelude.uscUniform", w!"Leanify.Prelude.continuousUniform",
+    w!"Leanify.Prelude.convexClass", w!"Leanify.Prelude.compactUniform", w!"Leanify.Prelude.closedUniform"]
+  modules := [w!"Leanify.Library.UnitSquareModel"]
+  adjectives := [
+    { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
+      doc := "`ConvexOn ℝ` on the class, for the pointwise vector space structure" },
+    { words := [w!"concave"], ty := Quantity, pred := .const 5, onDomain := true,
+      doc := "`ConcaveOn ℝ` on the class" },
+    { words := [w!"lower", w!"semicontinuous"] ++ uniformly, ty := Quantity, pred := .const 6, onDomain := true,
+      doc := "`LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²`" },
+    { words := [w!"upper", w!"semicontinuous"] ++ uniformly, ty := Quantity, pred := .const 7, onDomain := true,
+      doc := "`UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²`" },
+    { words := [w!"continuous"] ++ uniformly, ty := Quantity, pred := .const 8, onDomain := true,
+      doc := "`ContinuousOn` for the topology of uniform convergence on `[0,1]²`" },
+    { words := [w!"convex"], ty := Class, pred := .const 9,
+      doc := "`Convex ℝ`, for the pointwise vector space structure" },
+    { words := [w!"compact"] ++ uniformly, ty := Class, pred := .const 10,
+      doc := "`IsCompact` for the topology of uniform convergence on `[0,1]²`" },
+    { words := [w!"closed"] ++ uniformly, ty := Class, pred := .const 11,
+      doc := "`IsClosed` for the topology of uniform convergence on `[0,1]²`" }]
   nouns := [
     { sing := phrase!"distribution function on $[0,1]^2$",
       plural := phrase!"distribution functions on $[0,1]^2$", ty := Ty.sq, pred := .const 0,

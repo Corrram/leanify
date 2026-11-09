@@ -30,13 +30,11 @@ of the items below as well.
    model is parametric in the space.
 4. **Anaphora to extremizers.** "For $n=-1$, this NOUN is $W$.", and the
    identification of a maximizer as `A_w^\top` or `B_b^\top`.
-5. **Hypotheses the text does not delimit.** Assumptions, cases written as the
-   items of a list, contradictions and the hypothesis of an induction are read
+5. **A definition under a hypothesis.** Assumptions, cases, contradictions and
+   inductions are read, with one rule for where a hypothesis ends
    ([Writing for Leanify](writing.md#hypotheses-assumptions-cases-contradictions)).
-   Not read: a case that begins in the running proof (`Assume now that …`),
-   `without loss of generality`, a definition under a hypothesis, the statement
-   of an induction at another value (`for $n-1$`, `for all $m<n$`), and an
-   induction on a statement that binds its variable itself.
+   A definition made under a hypothesis (`Assume $x\ne0$. Set
+   $y\coloneqq\frac1x$.`) does not take the hypothesis yet.
 6. **Parametric families defined by a construction**, such as the extremizers
    `F_\theta` of the second article (Section 3, `def:extremizers`), which
    Theorem 1.1 uses through `G(\theta)` and `P(\theta)`.
@@ -64,18 +62,20 @@ grammar.
 1. **Organizing prose.** One sentence of a proof without a reading makes the
    proof incomplete, and its result is then checked, not derived. A few
    sentences that only organize a proof are read as such (`We distinguish two
-   cases:`); most are not. The check counts the complete proofs.
-2. **The size of a step.** A derived step is proved from its premises and
-   mathlib, by a Lean proof of any length. The certificate now tries one fixed
-   tactic, `leanify_step`, on every derived step and reports the steps it
-   closes as *standard*; a result with another step is *argued*. What a careful
-   reader accepts as one step is wider than what the tactic closes (a known
-   inequality, a compactness argument in a line): a list of named standard
-   facts that a step may use without the label of an argument is open.
-3. **Statements that hold for an empty reason.** For every statement with
-   hypotheses the reports say whether its hypotheses are shown to hold together
-   (`satisfiedK`). The definitions of the article are not covered yet: a notion
-   that no object satisfies makes every statement about it true.
+   cases:`, `We argue by induction on $n$.`); most are not. The check counts the
+   complete proofs.
+2. **The size of a step.** The certificate tries one fixed tactic,
+   `leanify_step`, on every derived step and reports the steps it closes as
+   *standard*; a result with another step is *argued*. What a careful reader
+   accepts as one step is wider than what the tactic closes (a rule for real
+   powers, a known inequality, a compactness argument in a line, the induction
+   principle): a list of named standard facts that a step may use without the
+   label of an argument is open.
+3. **Statements and steps that hold for an empty reason.** For every set of
+   hypotheses under which a claim is made the reports say whether they are shown
+   to hold together (`satisfiedK`). The definitions of the article are not
+   covered yet: a notion that no object satisfies makes every statement about it
+   true.
 4. **Defaults of the grammar.** Where a limit, a sum, a set or a threshold
    states no domain, the letters `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` are
    integers and every other letter is a real number. A convention sentence
@@ -88,3 +88,11 @@ grammar.
    vocabulary an article is compiled with is named in its Lean file, and
    `\leanifyreport` prints the option `vocab` of `leanify.sty`. The two should be
    one.
+6. **The trust in the compiler.** By default the compiler is run by Lean's
+   evaluator, and `leanify audit` has the kernel evaluate it. What stays trusted
+   in both cases is the grammar: it says what a sentence means. The readings it
+   gives are printed, and a second, independent reader of the same grammar would
+   be the next step.
+7. **The core language still has `[0,1]`.** The properties of copulas moved to the
+   field `unitsquare`, whose constants name their Lean meanings. The type `[0,1]`,
+   Lebesgue measure on it and integrals over it are still in the core.

@@ -12,9 +12,11 @@ import Arguments.Article
   audits this.
 * `refuteK : meaningfulK ∧ ¬ claimK` instead records that claim `K` is false as
   stated; readers and the PDF margin then mark it.
-* `satisfiedK : satisfiableK`: the hypotheses of statement `K` can hold together (give
-  values for its variables). A statement whose hypotheses cannot all hold is true for
-  an empty reason; the report says for which statements this is shown.
+* `satisfiedK : satisfiableK`: the hypotheses of claim `K` can hold together (give
+  values for its variables: `leanify_values 1 2`). A claim whose hypotheses cannot all
+  hold is true for an empty reason, and a step of a proof under them was not checked;
+  the report says for which claims this is shown. It is asked once for each set of
+  hypotheses, and not of the steps of a proof by contradiction.
 
 `leanify_step` is the standard tactic for a whole obligation. The certificate reports
 which claims that the text derives it closes.
@@ -70,6 +72,11 @@ theorem proof5 : obligation5 := by
 theorem proof6 : obligation6 := by
   leanify_step
 
+/-- The hypotheses of claim 6 can hold together:
+`\exists x\in \mathbb{R},\ \exists y\in \mathbb{R},\ 0<x\land x<y\land 0<y+x` -/
+theorem satisfied6 : satisfiable6 := by
+  leanify_values 1 2
+
 /-- Claim 7, statement (lemma at line 41; no premises):
 `\forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)` -/
 theorem proof7 : obligation7 := by
@@ -103,10 +110,20 @@ theorem proof9 : obligation9 := by
 theorem proof10 : obligation10 := by
   leanify_step
 
+/-- The hypotheses of claim 10 can hold together:
+`\exists x\in \mathbb{R},\ 0\le x` -/
+theorem satisfied10 : satisfiable10 := by
+  leanify_values 1
+
 /-- Claim 11, proof step (proof at line 61; premises: claim 10):
 `\forall x\in \mathbb{R},\ x<0\Rightarrow \lvert x\rvert=-x` -/
 theorem proof11 : obligation11 := by
   leanify_step
+
+/-- The hypotheses of claim 11 can hold together:
+`\exists x\in \mathbb{R},\ x<0` -/
+theorem satisfied11 : satisfiable11 := by
+  leanify_values (-1)
 
 /-- Claim 12, proof step (proof at line 62; premises: claim 10, claim 11):
 `\forall x\in \mathbb{R},\ x<0\Rightarrow x<0\land 0<\lvert x\rvert` -/
@@ -163,81 +180,197 @@ theorem proof20 : obligation20 := by
 theorem proof21 : obligation21 := by
   leanify_step
 
-/-- Claim 22, statement (lemma at line 98; no premises):
-`\forall x\in \mathbb{R},\ 0\le {x}^{2}` -/
+/-- Claim 22, statement (lemma at line 99; premises: claim 23, claim 24, claim 25, claim 26):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow {x}^{2}<{y}^{2}` -/
 theorem proof22 : obligation22 := by
   leanify_step
 
-/-- Claim 23, proof step (proof at line 104; no premises):
-`\forall x\in \mathbb{R},\ 0\le x\Rightarrow {x}^{2}=x\,x\land 0\le x\,x` -/
+/-- Claim 23, proof step (proof at line 105; no premises):
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow 0<2\,x` -/
 theorem proof23 : obligation23 := by
   leanify_step
 
-/-- Claim 24, statement (lemma at line 114; no premises):
-`\forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1` -/
+/-- The hypotheses of claim 23 can hold together:
+`\exists x\in \mathbb{R},\ 0<x` -/
+theorem satisfied23 : satisfiable23 := by
+  leanify_values 1
+
+/-- Claim 24, proof step (proof at line 107; premises: claim 23):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 2\,x<y+x` -/
 theorem proof24 : obligation24 := by
   leanify_step
 
-/-- The hypotheses of claim 24 can hold together:
-`\exists x\in \mathbb{R},\ 0<x` -/
-theorem satisfied24 : satisfiable24 := by
-  leanify_values 1
-
-/-- Claim 25, proof step (proof at line 122; no premises):
-`\forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow x\le -1\land -1<0` -/
+/-- Claim 25, proof step (proof at line 107; premises: claim 23, claim 24):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y-x` -/
 theorem proof25 : obligation25 := by
   leanify_step
 
-/-- Claim 26, statement (lemma at line 133; premises: claim 27, claim 28, claim 29):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}` -/
+/-- Claim 26, proof step (proof at line 108; premises: claim 23, claim 24, claim 25):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow {y}^{2}-{x}^{2}=(y-x)\,(y+x)\land 0<(y-x)\,(y+x)` -/
 theorem proof26 : obligation26 := by
-  intro_premises
-  refine ⟨by unfold meaningful26; definedness [], ?_⟩
-  -- induction over the positive integers: the base case is claim 27, the step claim 29
-  rintro x ⟨⟨k, rfl⟩, hk⟩
-  have hk1 : 1 ≤ k := by exact_mod_cast hk
-  clear hk
-  induction k, hk1 using Int.leInduction with
-  | base =>
-    have h := c27 1 ⟨⟨1, by norm_num⟩, by norm_num⟩ rfl
-    push_cast
-    exact h.ge
-  | succ m hm ih =>
-    have hm0 : (0 : ℝ) < m := by exact_mod_cast (by omega : 0 < m)
-    simpa using c29 m ⟨⟨m, rfl⟩, hm0⟩ ih
+  leanify_step
 
-/-- The hypotheses of claim 26 can hold together:
-`\exists x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x` -/
-theorem satisfied26 : satisfiable26 := by
-  leanify_values 1
-
-/-- Claim 27, proof step (proof at line 139; no premises):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}=1` -/
+/-- Claim 27, statement (lemma at line 114; premises: claim 28, claim 29, claim 30):
+`\forall x\in \mathbb{R},\ 0\le {x}^{2}` -/
 theorem proof27 : obligation27 := by
   leanify_step
 
-/-- Claim 28, proof step (proof at line 141; premises: claim 27):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow {(x+1)}^{2}={x}^{2}+2\,x+1\land x+2\,x+1\le {x}^{2}+2\,x+1` -/
+/-- Claim 28, proof step (proof at line 120; no premises):
+`\forall x\in \mathbb{R},\ 0\le x\Rightarrow {x}^{2}=x\,x\land 0\le x\,x` -/
 theorem proof28 : obligation28 := by
   leanify_step
 
-/-- Claim 29, proof step (proof at line 142; premises: claim 27, claim 28):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\le {(x+1)}^{2}` -/
+/-- Claim 29, proof step (proof at line 122; premises: claim 28):
+`\forall x\in \mathbb{R},\ x<0\Rightarrow 0<-x` -/
 theorem proof29 : obligation29 := by
   leanify_step
 
-/-- Claim 30, statement (lemma at line 149; no premises):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}` -/
+/-- Claim 30, proof step (proof at line 122; premises: claim 28, claim 29):
+`\forall x\in \mathbb{R},\ x<0\Rightarrow {x}^{2}=-x\,-x\land 0<-x\,-x` -/
 theorem proof30 : obligation30 := by
-  intro_premises
-  refine ⟨by unfold meaningful30; definedness [], ?_⟩
-  rintro x ⟨⟨k, rfl⟩, hk⟩
-  have hk1 : (1 : ℝ) ≤ k := by exact_mod_cast (by exact_mod_cast hk : 0 < k)
-  nlinarith
+  leanify_step
 
-/-- The hypotheses of claim 30 can hold together:
-`\exists x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x` -/
-theorem satisfied30 : satisfiable30 := by
+/-- Claim 31, statement (lemma at line 128; premises: claim 32, claim 33):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 2\,x\,y\le {x}^{2}+{y}^{2}` -/
+theorem proof31 : obligation31 := by
+  leanify_step
+
+/-- Claim 32, proof step (proof at line 134; no premises):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow 0\le x-y` -/
+theorem proof32 : obligation32 := by
+  leanify_step
+
+/-- The hypotheses of claim 32 can hold together:
+`\exists x\in \mathbb{R},\ \exists y\in \mathbb{R},\ y\le x` -/
+theorem satisfied32 : satisfiable32 := by
   leanify_values 1
+
+/-- Claim 33, proof step (proof at line 134; premises: claim 32):
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow {x}^{2}+{y}^{2}-2\,x\,y=(x-y)\,(x-y)\land 0\le (x-y)\,(x-y)` -/
+theorem proof33 : obligation33 := by
+  leanify_step
+
+/-- Claim 34, statement (lemma at line 140; premises: claim 35, claim 36, claim 37):
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1` -/
+theorem proof34 : obligation34 := by
+  leanify_step
+
+/-- Claim 35, proof step (proof at line 147; no premises):
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow x\le -1\land -1<0` -/
+theorem proof35 : obligation35 := by
+  leanify_step
+
+/-- Claim 36, proof step (proof at line 148; premises: claim 35):
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow \bot` -/
+theorem proof36 : obligation36 := by
+  leanify_step
+
+/-- Claim 37, proof step (proof at line 149; premises: claim 35, claim 36):
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1` -/
+theorem proof37 : obligation37 := by
+  leanify_step
+
+/-- Claim 38, statement (lemma at line 159; premises: claim 39, claim 40, claim 41, claim 42):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}` -/
+theorem proof38 : obligation38 := by
+  leanify_step
+
+/-- The hypotheses of claim 38 can hold together:
+`\exists x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x` -/
+theorem satisfied38 : satisfiable38 := by
+  leanify_values 1
+
+/-- Claim 39, proof step (proof at line 165; no premises):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}=1` -/
+theorem proof39 : obligation39 := by
+  leanify_step
+
+/-- The hypotheses of claim 39 can hold together:
+`\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land x=1` -/
+theorem satisfied39 : satisfiable39 := by
+  leanify_values 1
+
+/-- Claim 40, proof step (proof at line 167; premises: claim 39):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow {(x+1)}^{2}={x}^{2}+2\,x+1\land x+2\,x+1\le {x}^{2}+2\,x+1` -/
+theorem proof40 : obligation40 := by
+  leanify_step
+
+/-- The hypotheses of claim 40 can hold together:
+`\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land x\le {x}^{2}` -/
+theorem satisfied40 : satisfiable40 := by
+  leanify_values 1
+
+/-- Claim 41, proof step (proof at line 168; premises: claim 39, claim 40):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\le {(x+1)}^{2}` -/
+theorem proof41 : obligation41 := by
+  leanify_step
+
+/-- Claim 42, proof step (proof at line 169; premises: claim 39, claim 40, claim 41):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\in \mathbb{Z}\land 0<x+1\Rightarrow x+1\le {(x+1)}^{2}` -/
+theorem proof42 : obligation42 := by
+  leanify_step
+
+/-- The hypotheses of claim 42 can hold together:
+`\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land x\le {x}^{2}\land x+1\in \mathbb{Z}\land 0<x+1` -/
+theorem satisfied42 : satisfiable42 := by
+  leanify_values 1
+
+/-- Claim 43, statement (lemma at line 176; premises: claim 44, claim 45, claim 46, claim 47, claim 48):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\,x\le {x}^{2}+1` -/
+theorem proof43 : obligation43 := by
+  leanify_step
+
+/-- Claim 44, proof step (proof at line 182; no premises):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow 2\,x=2` -/
+theorem proof44 : obligation44 := by
+  leanify_step
+
+/-- Claim 45, proof step (proof at line 182; premises: claim 44):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}+1=2` -/
+theorem proof45 : obligation45 := by
+  leanify_step
+
+/-- Claim 46, proof step (proof at line 184; premises: claim 44, claim 45):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1` -/
+theorem proof46 : obligation46 := by
+  leanify_step
+
+/-- The hypotheses of claim 46 can hold together:
+`\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land 2\le x\land (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)` -/
+theorem satisfied46 : satisfiable46 := by
+  leanify_values 2
+
+/-- Claim 47, proof step (proof at line 185; premises: claim 44, claim 45, claim 46):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow 2\,x\le {(x-1)}^{2}+3` -/
+theorem proof47 : obligation47 := by
+  leanify_step
+
+/-- Claim 48, proof step (proof at line 185; premises: claim 44, claim 45, claim 46, claim 47):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow {(x-1)}^{2}+3={x}^{2}-2\,x+4\land {x}^{2}-2\,x+4\le {x}^{2}+1` -/
+theorem proof48 : obligation48 := by
+  leanify_step
+
+/-- Claim 49, statement (lemma at line 193; premises: claim 50):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 1\le x` -/
+theorem proof49 : obligation49 := by
+  leanify_step
+
+/-- Claim 50, proof step (proof at line 199; no premises):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow 1\le y)\Rightarrow 1\le x` -/
+theorem proof50 : obligation50 := by
+  leanify_step
+
+/-- The hypotheses of claim 50 can hold together:
+`\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow 1\le y)` -/
+theorem satisfied50 : satisfiable50 := by
+  unfold satisfiable50
+  refine ⟨1, ⟨Leanify.Prelude.isInt_one, by norm_num⟩, fun y _ hy => ?_⟩
+  have := Leanify.Prelude.isInt.add_one_le_of_lt Leanify.Prelude.isInt_zero hy.1 hy.2
+  linarith
+
+/-- Claim 51, statement (lemma at line 209; no premises):
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1` -/
+theorem proof51 : obligation51 := by
+  leanify_step
 
 end Arguments.Proofs

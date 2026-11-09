@@ -112,13 +112,40 @@ structure Symbol where
   doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+/-- An adjective of objects of one type (`convex`, `compact with respect to uniform
+convergence`): `$X$ is ADJ [on $A$]`. `pred` is a closed predicate on `ty`; with
+`onDomain`, it also takes the domain on which the property is meant (`on $A$`, or else
+the domain of the definition of `X`): `ty → (dom → Prop) → Prop` for `ty = dom → _`. -/
+structure Adjective where
+  words : List Codes
+  ty : Ty
+  pred : Tm
+  onDomain : Bool := false
+  field : Codes := []
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
 structure Vocab where
   /-- Names of the base types (for readings). -/
   types : List Codes := []
   /-- Types of the constants (`Tm.const i`). -/
   consts : List Ty := []
-  /-- Readable names of the constants (for readings). -/
+  /-- Readable names of the constants (for readings). `#` in a name stands for the
+  argument of the constant, `#1` and `#2` for its two arguments
+  (`\operatorname{convex}(#1)\text{ on }#2`). -/
   constNames : List Codes := []
+  /-- The Lean meaning of each constant: the name of a declaration of Mathlib or of one
+  of the `modules` (`Leanify.Torus.smoothT2`, `Real.sinh`), of the type that `consts`
+  gives. `#leanify_semantics` builds the model of an article's vocabulary from these
+  names, so that a field is data: phrases, types and the names of their meanings. -/
+  constLean : List Codes := []
+  /-- The Lean meaning of each base type: the name of the type and of an element of it
+  (`Complex`, `Leanify.Complex.zero`). -/
+  typeLean : List (Codes × Codes) := []
+  /-- The Lean modules that define the meanings (imported by the article's Lean file). -/
+  modules : List Codes := []
+  /-- Adjectives of the vocabulary's objects. -/
+  adjectives : List Adjective := []
   nouns : List Noun := []
   mods : List Modifier := []
   notions : List Notion := []
@@ -171,9 +198,15 @@ def append (V W : Vocab) : Vocab :=
   let kt := V.types.length
   let kc := V.consts.length
   let tm (t : Tm) : Tm := (shiftTm kt t).shiftConst kc
+  -- (a vocabulary that does not name its meanings keeps the place of its constants)
+  let pad (xs : List Codes) (n : Nat) : List Codes := xs ++ List.replicate (n - xs.length) []
   { types := V.types ++ W.types
     consts := V.consts ++ W.consts.map (shiftTy kt)
-    constNames := V.constNames ++ W.constNames
+    constNames := pad V.constNames kc ++ W.constNames
+    constLean := pad V.constLean kc ++ W.constLean
+    typeLean := V.typeLean ++ List.replicate (kt - V.typeLean.length) ([], []) ++ W.typeLean
+    modules := V.modules ++ W.modules.filter (!V.modules.contains ·)
+    adjectives := V.adjectives ++ W.adjectives.map fun a => { a with ty := shiftTy kt a.ty, pred := tm a.pred }
     nouns := V.nouns ++ W.nouns.map fun n => { n with ty := shiftTy kt n.ty, pred := tm n.pred }
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
     notions := V.notions ++ W.notions.map fun n =>
@@ -195,6 +228,7 @@ def tag (f : Codes) (V : Vocab) : Vocab :=
   { V with nouns := V.nouns.map (fun n => { n with field := t n.field }),
            mods := V.mods.map (fun m => { m with field := t m.field }),
            notions := V.notions.map (fun n => { n with field := t n.field }),
+           adjectives := V.adjectives.map (fun a => { a with field := t a.field }),
            symbols := V.symbols.map (fun s => { s with field := t s.field }) }
 
 end Vocab

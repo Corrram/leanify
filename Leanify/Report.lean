@@ -58,15 +58,32 @@ structure ClaimInfo where
   proves its obligation, `argument` if its proof needs a Lean argument beyond it, and
   empty if that was not tried. -/
   step : String := ""
-  /-- For a statement with hypotheses: `shown` if they are proved to hold together
-  (`J.satisfiedK`), `open` if not; empty for a claim without hypotheses. -/
+  /-- For a claim with hypotheses: `shown` if they are proved to hold together
+  (`J.satisfiedK`, for the first claim `K` with these hypotheses), `open` if not; empty
+  for a claim without hypotheses and for one made under a hypothesis that the proof
+  refutes. -/
   hypotheses : String := ""
+
+/-- The claim that stands for the hypotheses of claim `k`: the first claim with the same
+hypotheses. None: the claim has no hypotheses, or the proof refutes them (a proof by
+contradiction), so that they are not meant to hold together. That the hypotheses of a
+claim can hold together is asked once, of this claim (`satisfiableK`). -/
+def Doc.hypsOf (d : Doc) (k : Nat) : Option Nat :=
+  match d.claims[k]? with
+  | some c =>
+    if c.refuted || !c.body.hasHyps then none else
+    (List.range (k + 1)).find? fun j => match d.claims[j]? with
+      | some c' => !c'.refuted && c'.body.hasHyps && c'.body.hyps == c.body.hyps
+      | none => false
+  | none => none
 
 /-- The status of each labelled result, for the margin marks of `leanify.sty`:
 `text` (every sentence of the statement compiled and every claim derived in the
-text from its citations, each step closed by the standard tactic, or not tried),
-`argued` (derived in the text, with a step whose proof needs a Lean argument beyond
-the standard tactic), `verified` (every sentence compiled, every claim
+text from its citations, each step closed by the standard tactic, or not tried, and
+under hypotheses that are shown to hold together),
+`argued` (derived in the text, with a reservation: a step whose proof needs a Lean
+argument beyond the standard tactic, or a claim whose hypotheses are not shown to hold
+together, so that it may be true for an empty reason), `verified` (every sentence compiled, every claim
 verified), `refuted` (a claim of the result is false), `partial` (some sentences
 compiled and verified), `compiled` (compiled claims not yet verified) or `none`.
 The steps of a result are its own claims and their premises in its proof. -/
@@ -86,9 +103,10 @@ def resultStatus (d : Doc) (claims : Array ClaimInfo) (env : Nat) : String := Id
     -- the result's own claims and the steps of its proof
     let steps := (ks ++ ks.flatMap fun k => (d.claims[k]?.map (·.premises)).getD []).eraseDups
     let isStep (k : Nat) : Bool := match (d.claims[k]? : Option Claim) with
-      | some ⟨_, _, Role.step _, _, _⟩ => true
+      | some ⟨_, _, Role.step _, _, _, _⟩ => true
       | _ => ks.contains k
-    return (if steps.any (fun k => isStep k && (claims.getD k {}).step == "argument") then "argued" else "text")
+    return (if steps.any (fun k => isStep k &&
+        ((claims.getD k {}).step == "argument" || (claims.getD k {}).hypotheses == "open")) then "argued" else "text")
   if someVerified then return "partial"
   return "compiled"
 
@@ -137,14 +155,14 @@ def statusTex (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc) (cl
   let count (st : String) := ((List.range d.claims.length).filter fun k => (claims.getD k {}).status == st).length
   let compiled := (d.outcomes.filter fun o => match o with | .compiled _ _ => true | _ => false).length
   -- of the claims derived in the text, those the standard tactic closes; of the
-  -- statements with hypotheses, those whose hypotheses are shown to hold together
+  -- different hypotheses under which claims are made, those shown to hold together
   let countBy (f : ClaimInfo → Bool) := ((List.range d.claims.length).filter fun k => f (claims.getD k {})).length
   let tried := countBy fun i => i.step != ""
   if tried > 0 then
     out := out ++ s!"\\leanifysteps\{{countBy fun i => i.step == "standard"}}\{{tried}}\n"
-  let withHyps := countBy fun i => i.hypotheses != ""
-  if withHyps > 0 then
-    out := out ++ s!"\\leanifyhypotheses\{{countBy fun i => i.hypotheses == "shown"}}\{{withHyps}}\n"
+  let reps := (List.range d.claims.length).filter fun k => d.hypsOf k == some k
+  if !reps.isEmpty then
+    out := out ++ s!"\\leanifyhypotheses\{{(reps.filter fun k => (claims.getD k {}).hypotheses == "shown").length}}\{{reps.length}}\n"
   out := out ++ s!"\\leanifysummary\{{d.claims.length}}\{{verified.length}}\{{count "text"}}\{{d.values.length}}\{{compiled}}\{{d.sentences.length}}\n"
   return out
 
@@ -177,7 +195,9 @@ def writeReport (ns jn : Name) (rel : String) (d : Doc) (claims : Array ClaimInf
       ("meaningful", toJson (← ppConst (ns ++ nm s!"meaningful{k}"))),
       ("justification", toJson info.justification), ("module", toJson info.module),
       ("note", toJson info.note), ("step", toJson info.step), ("hypotheses", toJson info.hypotheses),
-      -- (the Lean statement that the hypotheses can hold together, for a statement with hypotheses)
+      -- (the claim that stands for these hypotheses, and for that claim the Lean statement
+      -- that they can hold together; `refuted`: the proof refutes them)
+      ("hypothesesOf", ((d.hypsOf k).map toJson).getD Json.null), ("refuted", toJson c.refuted),
       ("satisfiable", toJson (← ppConst (ns ++ nm s!"satisfiable{k}")))]
   let mut defsJ : Array Json := #[]
   for i in [0:d.values.length] do

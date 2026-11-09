@@ -27,12 +27,19 @@ When `lake build` accepts the certificate of an article,
   compiled) is proved from exactly what it rests on: the results it cites and
   the earlier steps of its proof, plus general mathematics from mathlib.
 
-The report adds two things that a proof alone does not show: for a statement
+The report adds two things that a proof alone does not show: for a claim
 with hypotheses, whether they are shown to hold together (a statement about
-every `x` with `0<x<0` is true and says nothing), and for a step of a proof,
+every `x` with `0<x<0` is true and says nothing, and so is a step of a proof
+under a case that cannot occur), and for a step of a proof,
 whether one fixed tactic closes it or it needed a longer Lean argument that the
-article does not print
+article does not print. A result with neither reservation is marked *derived*
 ([What a verified claim does not say](reference.md#what-a-verified-claim-does-not-say)).
+
+The compiler that turns the article into Lean statements is run by Lean's
+evaluator, in about a second. `lake exe leanify audit Note/article.tex` has the
+kernel evaluate it as well, so that nothing but the kernel, mathlib and the
+grammar is trusted: run it before you submit
+([What is trusted, and the audit](pipeline.md#what-is-trusted-and-the-audit)).
 
 It does not check sentences the grammar does not read. Those are prose and are
 reported: a sentence of a theorem without a reading is a warning, because that
@@ -167,7 +174,7 @@ lake exe leanify check Note/article.tex
 ```
 
 The check runs in about a second and certifies nothing. It reads the article
-the way the kernel will:
+the way the certificate will:
 
 ```
 Note/article.tex:70:1: warning: g is not defined: sentence not checked
@@ -254,7 +261,7 @@ The four files never need to be rewritten by hand except `Proofs.lean`:
 
 | File | What it does |
 | --- | --- |
-| `Compiled.lean` | The kernel compiles `article.tex`, pinned by the hash of its contents. |
+| `Compiled.lean` | `article.tex` compiled to a Lean document, pinned by the hash of its contents. |
 | `Article.lean` | Every definition and claim as ordinary Lean: `f`, `claimK`, `meaningfulK` (every term of claim `K` is defined) and `obligationK` (its premises imply it). |
 | `Proofs.lean` | Your proofs. `init` writes a stub for each. |
 | `Certified.lean` | The certificate. It also writes `article.leanify.json` and `article.leanify.tex`. |
@@ -274,14 +281,15 @@ The theorem rests on the two steps of its proof (claims 3 and 4) and on the
 lemma that the second step cites (claim 0). `intro_premises` makes them
 hypotheses `c3`, `c4` and `c0`.
 
-A statement with hypotheses has a second stub: that its hypotheses can hold
-together.
+A claim with hypotheses has a second stub: that its hypotheses can hold
+together (one stub for each set of hypotheses: the steps of this proof are made
+under those of the theorem, so they need none of their own).
 
 ```lean
-/-- The hypotheses of claim 2 can hold together:
+/-- The hypotheses of claim 0 can hold together:
 `\exists x\in \mathbb{R},\ 0<x` -/
-theorem satisfied2 : satisfiable2 := by
-  unfold satisfiable2
+theorem satisfied0 : satisfiable0 := by
+  unfold satisfiable0
   sorry
 ```
 
@@ -492,6 +500,6 @@ verified or is refuted.
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |
 | `linarith failed`, or any proof that will not close | Check the reading (`--claims`). If the claim is false, prove `refuteK`. |
 
-For longer articles, `prepare --cache` splits the kernel's work by section
-([From the `.tex` file to the certificate](pipeline.md)). Two research articles
+[From the `.tex` file to the certificate](pipeline.md) says what each stage
+does and what is trusted. Two research articles
 compiled this way are listed on the [home page](index.md#research-articles).

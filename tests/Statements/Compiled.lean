@@ -1,7 +1,7 @@
 import Leanify.Meta
 import Leanify.Library.Fields
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of statement forms found in OpenAI's collection of AI-written manuscripts
 (github.com/openai/math): nouns whose first word is also an adjective (`prime

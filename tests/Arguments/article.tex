@@ -1,13 +1,13 @@
 \documentclass{article}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{leanify}
+\usepackage[vocab=numbers]{leanify}
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}[lemma]{Proposition}
 \title{The language of proofs: assumptions, cases, contradictions and induction}
 \begin{document}
 \maketitle
 
-A proof makes hypotheses: it assumes something, it distinguishes cases, it supposes the contrary of what it proves.
+A proof makes hypotheses: it assumes something, it distinguishes cases, it supposes the contrary of what it proves, it assumes the statement for a smaller value.
 Leanify reads each as a hypothesis of the steps that are made under it.
 
 \section{Assumptions}
@@ -90,42 +90,68 @@ Then $0\le x^2<0$, a contradiction.
 Hence $x^2\ne-1$.
 \end{proof}
 
-\section{What is not read}
+\section{Assumptions that follow one another}
 
-A second assumption after steps under the first does not say whether it is added or begins another case, and a case in the running proof does not say where it ends.
+An assumption lasts until its proof or its item ends, until a contradiction refutes it, or until another case takes its place.
+A second assumption is added to the first.
 
-\begin{lemma}\label{lem:refused}
+\begin{lemma}\label{lem:added}
+For all $x,y\in\mathbb{R}$, if $x>0$ and $y>x$, then $y^2>x^2$.
+\end{lemma}
+
+\begin{proof}
+Let $x,y\in\mathbb{R}$.
+Assume that $x>0$.
+Then $2x>0$.
+Assume that $y>x$.
+Then $y+x>0$ and $y-x>0$.
+Hence $y^2-x^2=(y-x)(y+x)>0$.
+\end{proof}
+
+The words \emph{now}, \emph{next}, \emph{instead} and \emph{conversely} begin another case: the hypothesis takes the place of the latest assumption.
+
+\begin{lemma}\label{lem:square}
 For every $x\in\mathbb{R}$, $x^2\ge0$.
 \end{lemma}
 
 \begin{proof}
 Let $x\in\mathbb{R}$.
-Assume that $x\ge0$.
+Assume first that $x\ge0$.
 Then $x^2=x\cdot x\ge0$.
-Assume that $x<0$.
 Assume now that $x<0$.
-Without loss of generality, assume that $x\ge0$.
+Then $-x>0$ and $x^2=(-x)\cdot(-x)>0$.
 \end{proof}
 
-A contradiction refutes the hypothesis made for it, or the one assumption of the proof.
-After several assumptions, none of them made for contradiction, it does not say which one it refutes.
+An assumption made without loss of generality is an assumption: that it costs nothing is shown in Lean, where the result has to follow from the steps made under it.
+
+\begin{lemma}\label{lem:wlog}
+For all $x,y\in\mathbb{R}$, $2xy\le x^2+y^2$.
+\end{lemma}
+
+\begin{proof}
+Let $x,y\in\mathbb{R}$.
+Without loss of generality, assume that $y\le x$.
+Then $x-y\ge0$ and $x^2+y^2-2xy=(x-y)(x-y)\ge0$.
+\end{proof}
+
+A contradiction refutes the hypothesis made for it, or else the latest assumption; the assumptions before it remain.
 
 \begin{lemma}\label{lem:which}
 For every $x\in\mathbb{R}$, if $x>0$, then $x+1>0$.
 \end{lemma}
 
 \begin{proof}
-We argue by contradiction.
 Let $x\in\mathbb{R}$.
 Assume that $x>0$.
-Assume further that $x+1\le0$.
+Assume that $x+1\le0$.
 Then $x\le-1<0$.
 This is a contradiction.
+Hence $x+1>0$.
 \end{proof}
 
 \section{Induction}
 
-A proof by induction states its hypothesis as a sentence: the statement of the result, about the variable that the result introduces.
+A proof by induction names its variable, and states its hypothesis as a sentence: the statement of the result, about that variable or about another value of it.
 The base case and the induction step are the items of a list, like other cases.
 
 \begin{lemma}\label{lem:induction}
@@ -140,19 +166,52 @@ We argue by induction on $n$.
 \item \emph{Induction step.} Assume that the statement holds for $n$.
 Then $(n+1)^2=n^2+2n+1\ge n+2n+1$.
 By the induction hypothesis, $(n+1)^2\ge n+1$.
+Hence the statement holds for $n+1$.
 \end{itemize}
 \end{proof}
 
-A statement that binds its variable itself is not a statement about one value of it, and the statement for $n-1$ or for all smaller values is another statement.
+The variable may be bound by the statement itself, and the hypothesis may be the statement for the value before.
 
-\begin{lemma}\label{lem:own-binder}
-For every positive integer $n$, $n^2\ge n$.
+\begin{lemma}\label{lem:before}
+For every positive integer $n$, $2n\le n^2+1$.
 \end{lemma}
 
 \begin{proof}
-Let $n$ be a positive integer.
 We argue by induction on $n$.
-Assume that the statement holds for $n$.
+\begin{itemize}
+\item \emph{Base case: $n=1$.} Then $2n=2$ and $n^2+1=2$.
+\item \emph{Induction step: $n\ge2$.} Assume that the statement holds for $n-1$.
+Then $2(n-1)\le(n-1)^2+1$.
+Hence $2n\le(n-1)^2+3$ and $(n-1)^2+3=n^2-2n+4\le n^2+1$.
+\end{itemize}
+\end{proof}
+
+In a strong induction the hypothesis is the statement for every smaller value.
+
+\begin{lemma}\label{lem:strong}
+Let $n$ be a positive integer.
+Then $n\ge1$.
+\end{lemma}
+
+\begin{proof}
+We argue by induction on $n$.
+Assume that the statement holds for all $m<n$.
+Then $n\ge1$.
+\end{proof}
+
+\section{What is not read}
+
+The statement for another value needs the variable of the induction: without the sentence that names it, only the statement for the variable itself is read.
+A contradiction needs a hypothesis.
+
+\begin{lemma}\label{lem:unnamed}
+Let $n$ be a positive integer.
+Then $n+1\ge2$.
+\end{lemma}
+
+\begin{proof}
 Assume that the statement holds for $n-1$.
+This is a contradiction.
+Assume that the statement holds for all smaller values.
 \end{proof}
 \end{document}

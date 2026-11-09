@@ -103,20 +103,29 @@ For an article that inputs other files, `init`, `prepare` and
 | --- | --- |
 | `Compiled.lean` | `#leanify_article NAME "article.tex" "fnv1a64:…"` |
 | `Article.lean` | `#leanify_semantics NAME "article.tex"` |
-| `Proofs.lean` | `namespace NAME.Proofs` with `definedI` for every definition, a stub `proofK` for every claim, each with the claim's reading, place and premises, and a stub `satisfiedK` for every statement with hypotheses |
+| `Proofs.lean` | `namespace NAME.Proofs` with `definedI` for every definition, a stub `proofK` for every claim, each with the claim's reading, place and premises, and a stub `satisfiedK` for every set of hypotheses under which claims are made |
 | `Certified.lean` | `#leanify_certify NAME "article.tex" using NAME.Proofs` |
 
 ### `leanify prepare`
 
 ```sh
-lake exe leanify prepare ARTICLE.tex --lean COMPILED.lean [--cache DIR --module PREFIX]
+lake exe leanify prepare ARTICLE.tex --lean COMPILED.lean
 ```
 
-Run it after every edit of the article. It updates the pin, the hash of the
-article in `COMPILED.lean`, so that Lake recompiles the article. With
-`--cache`, it also writes the lexing cache, one Lean module per section of the
-article, so that the kernel relexes only the sections that changed
-([Incremental compilation](pipeline.md#incremental-compilation)).
+Updates the pin, the hash of the article in `COMPILED.lean`, so that Lake
+compiles the article again after an edit. `leanify certify` and the package
+option `certify` do this themselves.
+
+### `leanify audit`
+
+```sh
+lake exe leanify audit ARTICLE.tex [--lean COMPILED.lean] [--module MODULE]
+```
+
+Has Lean's kernel evaluate the compiler on the article, and confirm the document
+the project was built with (theorem `NS.Audit.built`). It takes half a minute to
+a few minutes and changes nothing in the project
+([What is trusted, and the audit](pipeline.md#what-is-trusted-and-the-audit)).
 
 ### `leanify tex`
 
@@ -136,8 +145,8 @@ article are the same on every run, so `latexmk` sees no change and stops.
 
 | Command | Declares |
 | --- | --- |
-| `#leanify_article NS "article.tex" "fnv1a64:…" [with V]` | `NS.source`, `NS.doc` and `NS.compiled : compileArticle NS.vocab NS.source = some NS.doc`, checked by the kernel. It fails if the pin does not match the file. `with V` names the vocabulary (default: the core vocabulary). |
-| `#leanify_semantics NS "article.tex" [with M]` | For every definition `I`: a Lean definition named after its symbol and `wellDefinedI`. For every claim `K`: `claimK` (what the sentence says), `meaningfulK` (every term in it is defined) and `obligationK` (its premises imply `meaningfulK ∧ claimK`). Each is tied to the compiled document by a kernel-checked `rfl` theorem. For every statement `K` with hypotheses: `satisfiableK`, which says that its hypotheses can hold together. `with M` names the model of the vocabulary. |
+| `#leanify_article NS "article.tex" "fnv1a64:…" [with V]` | `NS.source` and `NS.doc`, the article and its compilation, run by Lean's evaluator. It fails if the pin does not match the file. `with V` names the vocabulary (default: the core vocabulary). With `set_option leanify.kernel true` (the audit) it also proves `NS.compiled : compileArticle NS.vocab NS.source = some NS.doc`, checked by the kernel alone. |
+| `#leanify_semantics NS "article.tex" [with M]` | For every definition `I`: a Lean definition named after its symbol and `wellDefinedI`. For every claim `K`: `claimK` (what the sentence says), `meaningfulK` (every term in it is defined) and `obligationK` (its premises imply `meaningfulK ∧ claimK`). Each is tied to the compiled document by a kernel-checked `rfl` theorem. For every set of hypotheses under which claims are made: `satisfiableK`, which says that they can hold together (`K` is the first claim made under them). The model of the vocabulary is built from the names of the Lean meanings of its constants; `with M` gives a model written by hand instead. |
 | `#leanify_certify NS "article.tex" using J` | `NS.certificate`, checked by the kernel, `NS.verifiedK : NS.meaningfulK ∧ NS.claimK` for every verified claim and `NS.refutedK` for every refuted one. It writes the reports below and logs a summary. |
 
 ### What `#leanify_certify` reads
@@ -149,7 +158,7 @@ In namespace `J`:
 | `J.definedI` | `NS.wellDefinedI` | for every definition, without `sorry` |
 | `J.proofK` | `NS.obligationK` | for each claim to verify |
 | `J.refuteK` | `NS.meaningfulK ∧ ¬ NS.claimK` | for a claim that is false as stated |
-| `J.satisfiedK` | `NS.satisfiableK` | optional: the hypotheses of statement `K` can hold together |
+| `J.satisfiedK` | `NS.satisfiableK` | for a result to be *derived*: the hypotheses of claim `K` can hold together |
 
 A claim is verified when it has a proof without `sorry` and every claim it rests
 on is verified. A claim the text derives (a proof step, or a result whose proof
@@ -168,11 +177,15 @@ Two things are reported next to the status of a claim, because a proof without
 
 **The hypotheses can hold.** A statement `for every x with P(x), Q(x)` is true
 if no `x` has `P`: a mistyped hypothesis (`$0<x<0$`) makes every conclusion
-provable. For a statement `∀ x, P x → ∀ y, R x y → Q x y`, `satisfiableK` is
-`∃ x, P x ∧ ∃ y, R x y`. With a proof `J.satisfiedK` of it the report says that
-the hypotheses hold together (`"hypotheses": "shown"`), otherwise that this is
-not shown (`"open"`). It is asked of statements only: the hypothesis of a proof
-by contradiction cannot hold, and that is its point.
+provable. The same holds for a step of a proof: under an assumption or a case
+that cannot occur, it is true whatever it says, and was not checked. For a claim
+`∀ x, P x → ∀ y, R x y → Q x y`, `satisfiableK` is `∃ x, P x ∧ ∃ y, R x y`. It is
+stated once for each set of hypotheses, for the first claim `K` made under them.
+With a proof `J.satisfiedK` of it the report says that the hypotheses hold
+together (`"hypotheses": "shown"`), otherwise that this is not shown (`"open"`).
+It is not asked of the claims that a proof makes under a hypothesis it refutes
+(`Suppose, for contradiction, …`, and what a contradiction ends): those
+hypotheses are not meant to hold, and that is their point.
 
 **The step is small.** A proof in the article is checked step by step, but
 nothing in Lean bounds what one step may do: a justification can be a hundred
@@ -182,9 +195,14 @@ through it. So `#leanify_certify` tries one fixed tactic,
 it closes is a `standard` step: the sentence follows from the results it cites
 by routine algebra and logic, as a reader expects of one sentence of a proof.
 Any other verified claim is an `argument`: true, proved from the cited results
-only, but by a longer Lean proof that is not in the article. A result with such
-a step has the status `argued`, not `derived`. The report counts both, and
-`leanify_diagnostics.py --standard` lists the arguments.
+only, but by a longer Lean proof that is not in the article. The report counts
+both, and `leanify_diagnostics.py --standard` lists the arguments.
+
+A result is *derived* when every sentence of it and of its proof is read, every
+claim is proved from what it cites, every step is standard, and the hypotheses of
+every claim are shown to hold together. With a step that is an argument, or with
+hypotheses that are not shown to hold together, it is *argued*: proved, with a
+reservation that the report names.
 
 ### Tactics
 
@@ -193,18 +211,20 @@ a step has the status `argued`, not `derived`. The report counts both, and
 | `intro_premises` | Unfolds `obligationK` and introduces every premise `J` as `mJ : meaningfulJ` and `cJ : claimJ`. |
 | `definedness [h₁, …]` | Proves a definedness condition (`meaningfulK`, `wellDefinedI`): divisions by nonzero terms, arguments in their domains. Give it the facts it cannot find. |
 | `leanify_values v₁ v₂ …` | Proves `satisfiableK` with these values for the variables of the statement, in the order of the text (the last value serves every further variable), if its hypotheses then follow by computation. |
-| `leanify_step` | Proves an obligation whose claim follows from its premises by routine steps: it introduces the premises and the variables and hypotheses of the claim, takes each premise at them (a lemma about every positive `x` at `x` and at `y`), splits conjunctions, and closes the goal with `assumption`, `linarith`, `positivity`, `ring`, `field_simp; ring`, `norm_num` or `simp` with the article's definitions, the two directions of an equivalence by `linarith` or `nlinarith`, `nlinarith`, `grind`, `aesop` or `tauto`. It uses no lemma of mathlib by name: a step that needs one (a rule for real powers, a named inequality) is an `argument`. It is the measure of a `standard` step, so it is fixed for a version of Leanify. |
+| `leanify_step` | Proves an obligation whose claim follows from its premises by routine steps: it introduces the premises and the variables and hypotheses of the claim, takes each premise at them (a lemma about every positive `x` at `x` and at `y`), splits conjunctions, adds what a reader uses about integers without saying so (sums, differences and products of integers are integers, and `a < b` gives `a + 1 ≤ b`), uses a hypothesis `A → B` whose `A` follows at once, and closes the goal with `assumption`, `linarith`, `positivity`, `ring`, `field_simp; ring`, `norm_num` or `simp` with the article's definitions, the two directions of an equivalence by `linarith` or `nlinarith`, `nlinarith`, `grind`, `aesop` or `tauto`. It uses no other lemma of mathlib by name: a step that needs one (a rule for real powers, a named inequality) is an `argument`. Every closer has a budget of its own, so what the tactic proves does not depend on the limits of the file it is used in. It is the measure of a `standard` step, so it is fixed for a version of Leanify. |
+| `leanify_int` | Proves that a real number is an integer: a hypothesis, a numeral, or a sum, difference, product, negative or power of integers. |
 
 ### Options
 
 | Option | Effect |
 | --- | --- |
-| `set_option leanify.chunk n` | Sentences per kernel-checked chunk of the compilation. |
+| `set_option leanify.kernel true` | The audit: `#leanify_article` proves every stage of the compilation with the kernel (`leanify audit` runs it). |
+| `set_option leanify.chunk n` | In the audit: sentences per kernel-checked chunk of the compilation. |
 | `set_option leanify.timing "file"` | Appends the time of every stage of `#leanify_article` to `file`. |
 | `set_option leanify.steps false` | `#leanify_certify` does not try `leanify_step` on the derived claims (faster; the report then leaves the step size empty). |
 
-Long articles need `set_option maxRecDepth 100000` and
-`set_option maxHeartbeats 0` before `#leanify_article`, as `init` writes them.
+`init` writes `set_option maxRecDepth 100000` and `set_option maxHeartbeats 0`
+before `#leanify_article`: the literals of a long article need them.
 
 ## The reports
 
@@ -217,8 +237,10 @@ statement, definedness condition, premises, status, justification, and for an
 unverified claim why it is not verified). The status of a claim is `text`
 (derived from its citations), `companion` (proved without a compiled proof in
 the text), `unverified` or `refuted`. A claim of status `text` has a `step`,
-`standard` or `argument`, and a statement with hypotheses has `hypotheses`,
-`shown` or `open`, and the Lean statement `satisfiable`
+`standard` or `argument`, and a claim with hypotheses has `hypotheses`,
+`shown` or `open`, and `hypothesesOf`, the claim that stands for them and has the
+Lean statement `satisfiable`; `refuted` marks a claim under a hypothesis that its
+proof refutes
 ([What a verified claim does not say](#what-a-verified-claim-does-not-say)).
 `sourceHash` pins the article, and `leanify` is the version that read it.
 
@@ -236,8 +258,8 @@ python .lake/packages/leanify/scripts/leanify_diagnostics.py article.leanify.jso
 Prints the findings of a report in editor format: a refuted claim is an error,
 an unverified claim and a sentence that did not compile are warnings. With
 `--standard`, a verified step that the standard tactic does not close is a
-warning, and with `--satisfiable` a statement whose hypotheses are not shown to
-hold together. The exit status is 1 if the article changed after it was
+warning, and with `--satisfiable` a claim whose hypotheses are not shown to
+hold together (once for each set of hypotheses). The exit status is 1 if the article changed after it was
 certified, if a claim is refuted, with `--verified` if a compiled claim is not
 verified, and with `--strict` on any warning. `--pin` updates the pin in the
 Lean file instead.
@@ -283,8 +305,10 @@ python .lake/packages/leanify/scripts/leanify_prove.py ARTICLE.tex [--proofs Pro
     [--hook CMD] [--jobs 4] [--rounds 1] [--timeout 900] [--dry-run]
 ```
 
-Fills in the stubs of `Proofs.lean` that still end in `sorry`. It needs the
-report, so build the certificate once first (`lake build NS.Certified`).
+Fills in the stubs of `Proofs.lean` that still end in `sorry`. It builds the
+article first, and adds a stub for every claim and every set of hypotheses that
+`Proofs.lean` does not mention yet (after an edit of the article; `--no-stubs`
+leaves the file as it is).
 
 * **Tactics, no model.** For every open claim it tries `leanify_step` first, the
   tactic by which the certificate measures a step: a proof by it is a `standard`
@@ -311,7 +335,8 @@ The stubs `satisfiedK` are filled in the same way: the script tries a few values
 for the variables of the statement (`leanify_values 1`, `0`, `2`, `1 2`, …) and,
 with a hook, asks it for values (`"kind": "witness"` in the JSON).
 
-Nothing is written that Lean has not accepted, and `lake build` checks every
+A candidate counts only if Lean says that its theorem is proved without `sorry`
+(`#print axioms`), so a run that stops early accepts nothing. Nothing is written that Lean has not accepted, and `lake build` checks every
 proof again, with the citation audit. Proofs are cached by the statement they
 prove (`.lake/leanify-prove/cache.json`), so after an edit only what changed is
 proved again. The exit status is 1 if a claim is still open.
@@ -336,7 +361,7 @@ statement with its reading, without Lean. It prints from
 
 | Option | Effect |
 | --- | --- |
-| `status` | The margin of every labelled result shows *derived* (every sentence compiled and derived in the text, each step by the standard tactic), *argued* (derived in the text, but a step needs a longer Lean proof), *checked* (every sentence compiled and verified), *partly checked*, *compiled* (not yet verified) or *false* (a claim is refuted), read from `\jobname.leanify.tex`. If the article is newer than that file, a warning says the marks may be out of date. |
+| `status` | The margin of every labelled result shows *derived* (every sentence compiled and derived in the text, each step by the standard tactic, under hypotheses that are shown to hold together), *argued* (derived in the text, with a reservation: a step needs a longer Lean proof, or hypotheses are not shown to hold together), *checked* (every sentence compiled and verified), *partly checked*, *compiled* (not yet verified) or *false* (a claim is refuted), read from `\jobname.leanify.tex`. If the article is newer than that file, a warning says the marks may be out of date. |
 | `check=false` | No quick check during the compile. |
 | `certify` | Before the marks are read, the certificate is built, as by [`leanify certify`](#leanify-certify). The first time, when the article has no Lean files yet, `init` writes them. Implies `status`. |
 | `vocab=unitsquare` | The vocabulary of the article, for `check` and `init`. |
@@ -370,10 +395,9 @@ second. The executable is used when it is current (newer than the project's
 `lake-manifest.json`, or in the Leanify repository newer than the compiler's
 sources); otherwise lake rebuilds and runs it. The check writes the same
 records for the same article, so the later passes of `latexmk` change nothing
-and it stops. With `certify`, `prepare` writes the lexing
-cache of the article (`LexCache/`, imported by `Compiled.lean`), so that after an
-edit the kernel relexes only the sections that changed, and nothing is rebuilt
-while the status file is newer than the article and its Lean files.
+and it stops. With `certify`, the article is compiled to Lean again in about a
+second after an edit, then its proofs are checked, and nothing is rebuilt while
+the status file is newer than the article and its Lean files.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project, as on arXiv or a journal's server, the package runs

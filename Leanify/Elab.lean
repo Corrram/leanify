@@ -77,6 +77,10 @@ structure Claim where
   role : Role
   cites : List Codes
   premises : List Nat
+  /-- Made under a hypothesis that the proof refutes (`Suppose, for contradiction, …`,
+  or the assumption that a contradiction ends): its hypotheses are not meant to hold
+  together. For every other claim they should, and the report says whether they do. -/
+  refuted : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Err where
@@ -188,6 +192,10 @@ structure Hyp where
   env : Nat
   sent : Nat
   clause : Clause
+  /-- The assumption it belongs to: the sentence that began it (`Assume further that …`
+  belongs to the assumption before it). A new case and a contradiction end an
+  assumption as a whole. -/
+  group : Nat := 0
   deriving Inhabited, Repr, Lean.ToExpr
 
 structure St where
@@ -237,11 +245,13 @@ structure St where
   letters : List Codes := []
   /-- The hypotheses of each result at its end (its proof starts with them). -/
   resultHyps : List (Nat × List Hyp) := []
-  /-- The statement of each result (by environment), for the hypothesis of an induction
-  in its proof: the clauses of its claims, or `none` if a sentence of it binds
-  variables of its own or sets a topic (the statement is then not a statement about
-  the variables of the result alone). -/
+  /-- The statement of each result (by environment), for `the statement holds for $E$`
+  in its proof: the clauses of its claims, or `none` if they are not claims about the
+  variables of the result alone (a clause with binders of its own, a topic). -/
   resultStmts : List (Nat × Option (List Clause)) := []
+  /-- The variable of the induction of a proof (`We argue by induction on $n$.`), with
+  the environment of the proof. -/
+  inductionVar : Option (Nat × Codes) := none
   /-- The sequences bound so far (`x_1,\ldots,x_n`): the name and the first and last
   index, for the definedness of their terms `x_i`. -/
   seqs : List (Codes × MT × MT) := []
@@ -1666,6 +1676,16 @@ where
           match ← lookupGlob n, builtinFn n with
           | none, some b => pure b
           | _, _ =>
+          -- a function of the vocabulary (`\sinh` of the field `hyperbolic`): a symbol
+          -- whose constant is a function
+          let gl? ← lookupGlob n
+          let symbols := (← get).vocab.symbols
+          let sym : Option (Nat × Ty) := match gl? with
+            | some _ => none
+            | none => (symbols.find? (·.sym == n)).bind fun s => match s.const, s.ty with
+              | some i, .fn _ _ => some (i, s.ty)
+              | _, _ => none
+          if let some (i, ty) := sym then return (.const i, ty, []) else
           let (i, gl) ← liftO (← lookupGlob n) E.undefined n
           pure (.glob i, gl.ty, gl.doms)
       -- `x_n` for a real function `x` of the scope (the weights of a distribution): `x(n)`

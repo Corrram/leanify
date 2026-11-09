@@ -14,4 +14,4 @@ theorem. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#leanify_semantics Statements "article.tex" with Leanify.Complex.model
+#leanify_semantics Statements "article.tex"

@@ -65,6 +65,11 @@ def fieldSection (name : String) (V : Vocab) : List String :=
   (if V.mods.isEmpty then [] else
     ["| Adjective or phrase | Of | Meaning |", "| --- | --- | --- |"] ++
     V.mods.map (fun m => s!"| {cell (phraseText m.phrase)} | {tyText V.types m.ty} | {cell m.doc} |") ++ [""]) ++
+  (if V.adjectives.isEmpty then [] else
+    ["| Adjective | Of | Meaning |", "| --- | --- | --- |"] ++
+    V.adjectives.map (fun a =>
+      let words := " ".intercalate (a.words.map Codes.toString) ++ (if a.onDomain then " [on $A$]" else "")
+      s!"| {cell words} | {tyText V.types a.ty} | {cell a.doc} |") ++ [""]) ++
   (if V.notions.isEmpty then [] else
     ["| Notion | Type | Meaning |", "| --- | --- | --- |"] ++
     V.notions.map (fun n => s!"| {cell (phraseText n.name 1)} | {tyText V.types n.ty} | {cell n.doc} |") ++ [""]) ++

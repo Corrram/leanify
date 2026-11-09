@@ -212,11 +212,12 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
       if fromText k then
         let ok ← standardStep (Lean.mkConst (ns ++ nm s!"obligation{k}"))
         steps := steps.set! k (if ok then "standard" else "argument")
-  -- the hypotheses of the statements: are they shown to hold together?
-  let mut hyps : Array String := Array.replicate d.claims.length ""
+  -- the hypotheses of the claims: are they shown to hold together? (`satisfiedK`, for the
+  -- first claim `K` made under them)
+  let mut shownAt : Array Bool := Array.replicate d.claims.length false
   for k in [0:d.claims.length] do
-    let prop := ns ++ nm s!"satisfiable{k}"
-    if env.contains prop then
+    if d.hypsOf k == some k then
+      let prop := ns ++ nm s!"satisfiable{k}"
       let n := jn ++ nm s!"satisfied{k}"
       let shown ← match env.find? n with
         | some ci =>
@@ -225,7 +226,10 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
           let axioms ← liftCoreM <| Lean.collectAxioms n
           pure (axioms.all fun a => a == ``propext || a == ``Classical.choice || a == ``Quot.sound)
         | none => pure false
-      hyps := hyps.set! k (if shown then "shown" else "open")
+      shownAt := shownAt.set! k shown
+  let hyps : Array String := (Array.range d.claims.length).map fun k => match d.hypsOf k with
+    | some j => if shownAt[j]! then "shown" else "open"
+    | none => ""
   -- the certificate
   let natE := Lean.mkConst ``Nat
   let listNat (xs : List Nat) : Expr := listExpr natE (xs.map mkNatLit)
@@ -303,10 +307,10 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   let tried := (steps.toList.filter (· != "")).length
   if tried > 0 then
     logInfo m!"of the {tried} claims derived in the text, the standard tactic closes {standard}"
-  let withHyps := (hyps.toList.filter (· != "")).length
-  if withHyps > 0 then
-    logInfo m!"of the {withHyps} statements with hypotheses, {(hyps.toList.filter (· == "shown")).length} \
-      have hypotheses shown to hold together ({jn}.satisfiedK)"
+  let reps := (List.range d.claims.length).filter fun k => d.hypsOf k == some k
+  unless reps.isEmpty do
+    logInfo m!"claims are made under {reps.length} set{if reps.length == 1 then "" else "s"} of hypotheses; {(reps.filter (shownAt[·]!)).length} \
+      of them are shown to hold together ({jn}.satisfiedK)"
   logInfo m!"{d.claims.length} claims: {count "text"} derived in the text from their citations, \
     {count "companion"} justified by companion proofs, {count "refuted"} refuted, \
     {count "unverified"} unverified; {d.values.length} definitions well defined. Axioms: {axs.toList}"

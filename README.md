@@ -8,9 +8,10 @@ Lean into kernel-checked statements and proofs.
 Leanify compiles an ordinary mathematical article, written in good
 mathematical English, to Lean. Every symbol must be defined in the article
 before it is used, every sentence has one fixed reading, and a proof step may
-use only the results it cites. The kernel checks the compilation of the file,
-the readable Lean form of every definition and claim, every justification and
-the final certificate. There is no second, hand-written formal version that
+use only the results it cites. The kernel checks the readable Lean form of
+every definition and claim, every justification and the final certificate; the
+compilation of the file takes a second, and `leanify audit` has the kernel check
+that too. There is no second, hand-written formal version that
 could drift away from the paper.
 
 ```latex
@@ -54,7 +55,7 @@ draft with four mistakes to a certificate, step by step:
 ```sh
 lake exe leanify check Note/article.tex --claims   # undefined symbols, unread statements, the reading of every claim
 lake exe leanify init Note/article.tex             # the Lean files, with a stub proof of every claim
-lake build Note.Certified                            # the kernel checks the article and your proofs
+lake build Note.Certified                            # the kernel checks the statements and your proofs
 ```
 
 The project needs Leanify in its `lakefile.toml`:
@@ -75,16 +76,17 @@ library to `lakefile.toml`:
 
 | File | Contents |
 | --- | --- |
-| `Compiled.lean` | `#leanify_article Note "article.tex" "fnv1a64:…"`: the kernel compiles the article, pinned by its hash (`leanify prepare` updates the pin after an edit) |
+| `Compiled.lean` | `#leanify_article Note "article.tex" "fnv1a64:…"`: the article compiled to a Lean document, pinned by its hash (`leanify prepare` updates the pin after an edit; `leanify audit` has the kernel evaluate the compiler) |
 | `Article.lean` | `#leanify_semantics`: every definition and claim as readable Lean (`claimK`, `meaningfulK`, `obligationK`) |
 | `Proofs.lean` | your proofs `proofK : obligationK` and `definedI : wellDefinedI`, or `refuteK : meaningfulK ∧ ¬ claimK` for a claim that is false as stated, and `satisfiedK : satisfiableK`: the hypotheses of statement `K` can hold together |
 | `Certified.lean` | `#leanify_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
 
 A proof that still uses `sorry` leaves its claim unverified, so an article can
 be certified while its proofs are written. The certificate also reports what a
-proof alone does not show: whether the hypotheses of a statement are shown to
+proof alone does not show: whether the hypotheses of every claim are shown to
 hold together, and whether each step of a printed proof is closed by one fixed
-tactic (`leanify_step`) or needed a longer Lean argument. Two scripts take a command of yours
+tactic (`leanify_step`) or needed a longer Lean argument. A result is marked
+*derived* only without either reservation. Two scripts take a command of yours
 (a model, usually): `scripts/leanify_suggest.py` proposes rewrites of the
 sentences Leanify cannot read, and keeps one only if the check then reads it;
 `scripts/leanify_prove.py` proves the open obligations, and writes a proof only
@@ -117,7 +119,7 @@ The examples are short papers in the usual style, each certified by CI:
   square roots that the standard tactic does not know, so its results are
   marked *argued*, not *derived*;
 * [`tests/Arguments`](tests/Arguments), proofs with assumptions, cases,
-  contradictions and an induction, each step closed by the standard tactic.
+  contradictions and inductions, each step closed by the standard tactic.
 
 ## Documentation
 
@@ -140,9 +142,9 @@ The examples are short papers in the usual style, each certified by CI:
 | `Leanify/Lex.lean`, `Segment.lean`, `Math.lean` | Lexing (macros, blocks), sentence segmentation, formulas |
 | `Leanify/Grammar.lean`, `Elab.lean`, `Doc.lean` | Sentence constructions and their readings, compilation of an article (`compileArticle`) |
 | `Leanify/Syntax.lean`, `Denote.lean` | The core language and its Lean denotation |
-| `Leanify/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
+| `Leanify/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, and the fields: each is data (phrases, types and the names of their Lean meanings) |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#leanify_article`, `#leanify_semantics`, `#leanify_certify` |
-| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker, with the files the article inputs), `certify` (from an article to its certificate), `init` (the Lean files of an article, and its project), `prepare` (the pin and the lexing cache), `flatten` (the article and its inputs as one file), `tex` (what `leanify.sty` runs) |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker, with the files the article inputs), `certify` (from an article to its certificate), `audit` (the kernel evaluates the compiler), `init` (the Lean files of an article, and its project), `prepare` (the pin), `flatten` (the article and its inputs as one file), `tex` (what `leanify.sty` runs) |
 | `examples/`, `tests/` | The example articles of the documentation, and the test articles (a refuted theorem, notions in the running text), certified in CI |
 | `reader/` | The web reader: the article rendered from its source with the status of every sentence |
 | `tex/leanify.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |

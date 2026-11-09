@@ -200,23 +200,36 @@ def lean_file(module, ns, items, tag, goal="obligation"):
         lines += ["  " + l for l in script.splitlines()]
         lines.append("")
         ranges.append((k, label, script, start, len(lines)))
+        # (a candidate counts only if Lean says so: its axioms, without `sorryAx`)
+        lines.append(f"#print axioms try{n}")
+        lines.append("")
     lines.append(f"end {ns}.ProveTry{tag}")
     return "\n".join(lines) + "\n", ranges
 
 
 def run_lean(root, path, timeout):
     try:
-        p = subprocess.run(["lake", "env", "lean", str(path)], cwd=root, capture_output=True, text=True,
-                           timeout=timeout, encoding="utf-8", errors="replace")
+        # (every error is reported: Lean stops after `maxErrors` of them otherwise)
+        p = subprocess.run(["lake", "env", "lean", "-DmaxErrors=1000000", str(path)], cwd=root,
+                           capture_output=True, text=True, timeout=timeout, encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         raise SystemExit(f"lean did not finish within {timeout} s; raise --timeout")
     return p.stdout + p.stderr
 
 
+AXIOMS = re.compile(r"'[^']*\.try(\d+)' (depends on axioms: \[([^\]]*)|does not depend on any axioms)", re.S)
+
+
 def verdicts(output, path, ranges):
-    """{index: [messages]} of the candidates with an error (or a sorry); the others succeeded."""
+    """{index: [messages]} of the candidates that Lean did not accept: an error or a sorry in
+    their lines, or no statement of Lean that the theorem is proved without `sorry` (so that
+    a run that stops early accepts nothing)."""
     bad = {}
     name = pathlib.Path(path).name
+    proved = {int(m.group(1)) for m in AXIOMS.finditer(output) if "sorryAx" not in (m.group(3) or "")}
+    for n in range(len(ranges)):
+        if n not in proved:
+            bad.setdefault(n, []).append("not proved")
     for line in output.splitlines():
         m = MESSAGE.match(line.strip())
         if not m or not m.group(1).replace("\\", "/").endswith(name):
@@ -367,6 +380,25 @@ def write_back(lines, blocks, proofs):
     return out
 
 
+def add_stubs(lines, report, ns):
+    """The proofs file with a stub for every claim it has no `proofK` or `refuteK` for, and
+    for every set of hypotheses it has no `satisfiedK` for (before `end NS.Proofs`)."""
+    text = "\n".join(lines)
+    new = []
+    for k, c in enumerate(report["claims"]):
+        reading = c["reading"].replace("-/", "- /").replace("/-", "/ -")
+        if not re.search(rf"^theorem (proof|refute){k} ", text, re.M):
+            new += [f"/-- Claim {k}, {c['role']}:", f"`{reading}` -/", f"theorem proof{k} : obligation{k} := by",
+                    "  intro_premises", f"  refine ⟨by unfold meaningful{k}; definedness [], ?_⟩", "  sorry", ""]
+        if c.get("hypothesesOf") == k and not re.search(rf"^theorem satisfied{k} ", text, re.M):
+            new += [f"/-- The hypotheses of claim {k} can hold together. -/",
+                    f"theorem satisfied{k} : satisfiable{k} := by", f"  unfold satisfiable{k}", "  sorry", ""]
+    if not new:
+        return lines
+    end = max((i for i, l in enumerate(lines) if l.strip() == f"end {ns}.Proofs"), default=len(lines))
+    return lines[:end] + new + lines[end:]
+
+
 def key_of(claim, report):
     prem = [report["claims"][j]["lean"] for j in claim.get("premises", [])]
     return hashlib.sha256(json.dumps([claim["lean"], claim["meaningful"], prem]).encode()).hexdigest()
@@ -377,6 +409,7 @@ def main(argv=None):
     ap.add_argument("article")
     ap.add_argument("--proofs", help="the proofs file (default: Proofs.lean next to the article)")
     ap.add_argument("--hook", help="command that proves one obligation (JSON on stdin, tactic block on stdout)")
+    ap.add_argument("--no-stubs", action="store_true", help="do not add stubs for claims and hypotheses that the proofs file lacks")
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--rounds", type=int, default=1, help="tries of the hook per obligation")
     ap.add_argument("--timeout", type=int, default=900, help="seconds for one Lean run")
@@ -387,27 +420,37 @@ def main(argv=None):
 
     article = pathlib.Path(a.article).resolve()
     report_path = article.with_suffix(".leanify.json")
-    if not report_path.exists():
-        raise SystemExit(f"{report_path} not found: build the certificate once (lake build NS.Certified)")
-    report = json.loads(report_path.read_text(encoding="utf-8"))
     source = article.read_text(encoding="utf-8").replace("\r\n", "\n")
     proofs_path = pathlib.Path(a.proofs).resolve() if a.proofs else article.parent / "Proofs.lean"
     lines = proofs_path.read_text(encoding="utf-8").splitlines()
     m = re.search(r"^import (\S+)", "\n".join(lines), re.M)
     if not m:
         raise SystemExit(f"{proofs_path}: no import of the article module")
-    module, ns = m.group(1), report["namespace"]
+    module = m.group(1)
     root = project_root(article.parent)
+    # the article as Lean, and with it the report of its present state
+    if not a.no_build:
+        subprocess.run(["lake", "build", module], cwd=root, check=False)
+    if not report_path.exists():
+        raise SystemExit(f"{report_path} not found: build the article once (lake build {module})")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    ns = report["namespace"]
     workdir = root / ".lake" / "leanify-prove"
     workdir.mkdir(parents=True, exist_ok=True)
     cache_path = workdir / "cache.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
 
+    # stubs for what the proofs file does not mention yet (after an edit of the article)
+    with_stubs = lines if a.no_stubs else add_stubs(lines, report, ns)
+    if with_stubs != lines:
+        print(f"added {sum(1 for l in with_stubs if l.startswith('theorem ')) - sum(1 for l in lines if l.startswith('theorem '))} stubs to {proofs_path.name}")
+        lines = with_stubs
+        if not a.dry_run:
+            proofs_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
     blocks = stub_blocks(lines)
     todo = sorted(k for k, blk in blocks.items() if is_open(lines, blk) and k < len(report["claims"]))
     print(f"{len(todo)} open obligation{'s' if len(todo) != 1 else ''} in {proofs_path.name}")
-    if not a.no_build:
-        subprocess.run(["lake", "build", module], cwd=root, check=False)
     # the hypotheses of the statements
     new_lines, open_witnesses = prove_witnesses(a, root, module, ns, report, source, lines, workdir)
     if new_lines != lines and not a.dry_run:

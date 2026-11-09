@@ -1,7 +1,7 @@
 import Leanify.Meta
 import Leanify.Library.Fields
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of the article's own notation (`We write …`), of its conventions (`By a
 distribution we mean …`, `Throughout, increasing means …`) and of a field of the

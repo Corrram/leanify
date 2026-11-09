@@ -20,7 +20,24 @@ noncomputable def finSum (a b : ℝ) (f : ℝ → ℂ) : ℂ :=
 noncomputable def finProd (a b : ℝ) (f : ℝ → ℂ) : ℂ :=
   Finset.prod (Finset.Icc ⌈a⌉ ⌊b⌋) fun k : ℤ => f k
 
-/-- The model of `Complex.vocab`: its base type is `ℂ`. -/
+/-! The meanings of the constants, by name (`Complex.vocab.constLean`). -/
+namespace Lean
+def zero : ℂ := 0
+abbrev ofReal (x : ℝ) : ℂ := x
+abbrev add (z w : ℂ) : ℂ := z + w
+abbrev sub (z w : ℂ) : ℂ := z - w
+abbrev mul (z w : ℂ) : ℂ := z * w
+noncomputable abbrev div (z w : ℂ) : ℂ := z / w
+abbrev neg (z : ℂ) : ℂ := -z
+noncomputable abbrev abs (z : ℂ) : ℝ := ‖z‖
+abbrev conj (z : ℂ) : ℂ := (starRingEnd ℂ) z
+abbrev re (z : ℂ) : ℝ := z.re
+abbrev im (z : ℂ) : ℝ := z.im
+end Lean
+
+/-- The model of `Complex.vocab`, written out: its base type is `ℂ`. `#leanify_semantics`
+builds the model of an article's vocabulary from the names in it (`Vocab.constLean`),
+so an article does not have to name this one. -/
 noncomputable def model : Model where
   base := fun _ => ℂ
   default := fun _ => 0

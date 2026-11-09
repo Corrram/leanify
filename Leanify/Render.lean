@@ -27,13 +27,6 @@ def FnProp.word : FnProp → String
 def SetProp.word : SetProp → String
   | .closed => "closed" | .isOpen => "open" | .bounded => "bounded" | .connected => "connected"
 
-def SqProp.word : SqProp → String
-  | .convex => "convex" | .concave => "concave" | .lowerUniform => "lsc\\ (uniform)"
-  | .upperUniform => "usc\\ (uniform)" | .contUniform => "continuous\\ (uniform)"
-
-def ClassProp.word : ClassProp → String
-  | .convex => "convex" | .compactUniform => "compact\\ (uniform)" | .closedUniform => "closed\\ (uniform)"
-
 def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
   | .leb => "\\lambda" | .borel => "\\operatorname{Borel}"
@@ -45,8 +38,6 @@ def Prim.tex : Prim → String
   | .concaveOn => "\\operatorname{concave}" | .strictMonoOn => "\\operatorname{increasing}"
   | .fnProp k => "\\operatorname{" ++ k.word ++ "}"
   | .setProp k => "\\operatorname{" ++ k.word ++ "}"
-  | .sqProp k => "\\operatorname{" ++ k.word ++ "}"
-  | .classProp k => "\\operatorname{" ++ k.word ++ "}"
   | .realFn k => match k with
     | .exp => "\\exp" | .log => "\\log" | .sin => "\\sin" | .cos => "\\cos" | .tan => "\\tan"
   | .pi => "\\pi"
@@ -146,8 +137,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim (.fnProp k)) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       Prim.tex (.fnProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }\\{" ++ v ++ ":" ++ body.tex cs gs (v :: ls) ++ "\\}"
-  | .app (.app (.prim (.sqProp k)) f) d =>
-      Prim.tex (.sqProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }" ++ d.tex cs gs ls
   | .app (.app (.app (.prim .intervalIntegral) a) b) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       "\\int_{" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\,d" ++ v
@@ -170,7 +159,10 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     | "\\cdot" => cwrap 7 x ls ++ "\\," ++ cwrap 8 y ls
     | "/" => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
     | "^" => "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
-    | _ => (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+    | _ =>
+      -- `#1` and `#2` in the name stand for the two arguments
+      if (n.splitOn "#1").length > 1 then (n.replace "#1" (x.tex cs gs ls)).replace "#2" (y.tex cs gs ls)
+      else (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
   | .app (.const i) x =>
     let n := cs.getD i s!"c_{i}"
     if n.isEmpty then x.tex cs gs ls

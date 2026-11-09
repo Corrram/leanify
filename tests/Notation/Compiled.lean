@@ -1,6 +1,6 @@
 import Leanify.Meta
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
 A test of the notation beyond the core grammar (composition, inclusion, suprema,
 finite sums, equivalent statements): `Notation.compiled : compileArticle

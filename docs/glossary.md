@@ -29,6 +29,17 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | with uniform marginals | [0,1] → [0,1] → ℝ | `F(u,1) = u`, `F(1,v) = v` |
 | with uniform marginals | ([0,1] → [0,1] → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
 
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| convex [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
+| concave [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
+| lower semicontinuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| upper semicontinuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| continuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| convex | ([0,1] → [0,1] → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
+| compact with respect to uniform convergence | ([0,1] → [0,1] → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
+| closed with respect to uniform convergence | ([0,1] → [0,1] → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+
 ## `distributions`
 
 | Noun | Of | Meaning |
@@ -138,4 +149,12 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | $\exp$ | $\mathbb{C}$ | `Complex.exp z` (also `e^{z}`) |
 | $\sum_{k=a}^{b}$ | $\mathbb{C}$ | `∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
 | $\prod_{k=a}^{b}$ | $\mathbb{C}$ | `∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
+
+## `hyperbolic`
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\sinh$ | ℝ → ℝ | the hyperbolic sine (Mathlib `Real.sinh`) |
+| $\cosh$ | ℝ → ℝ | the hyperbolic cosine (Mathlib `Real.cosh`) |
+| $\tanh$ | ℝ → ℝ | the hyperbolic tangent (Mathlib `Real.tanh`) |
 

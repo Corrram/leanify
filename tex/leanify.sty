@@ -43,7 +43,7 @@
 %% Optionally, \leanifyreport prints a one-line summary where it appears, and
 %% \leanifyreadings the readings (in an appendix, say).
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
-\ProvidesPackage{leanify}[2026/11/09 v0.5 Leanify checks, status marks and readings]
+\ProvidesPackage{leanify}[2026/11/09 v0.6 Leanify checks, status marks and readings]
 \RequirePackage{mathtools}
 \RequirePackage{amssymb}
 
@@ -99,8 +99,8 @@
 \newcommand*\leanifysteps[2]{\gdef\leanify@steps{; the standard tactic closes #1 of the #2
     claims derived in the text}}
 \newcommand*\leanify@steps{}
-\newcommand*\leanifyhypotheses[2]{\gdef\leanify@hyps{; the hypotheses of #1 of #2 statements
-    are shown to hold together}}
+\newcommand*\leanifyhypotheses[2]{\gdef\leanify@hyps{; of the #2 sets of hypotheses under
+  which claims are made, #1 are shown to hold together}}
 \newcommand*\leanify@hyps{}
 \newcommand*\leanifyreport{\textsf{Leanify}\leanify@version\ (vocabulary: \leanify@vocab):
   \leanify@summary\leanify@steps\leanify@hyps.}

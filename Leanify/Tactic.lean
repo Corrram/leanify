@@ -6,6 +6,7 @@ import Mathlib.Tactic.Tauto
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.Positivity
+import Leanify.Integers
 
 /-! # Tactics for writing justifications of compiled claims -/
 namespace Leanify
@@ -87,13 +88,86 @@ def articleDefs (ns : Name) : MetaM (Array Name) := do
       ns.isPrefixOf c && c != ns ++ `model)
   | none => pure #[]
 
+/-- Run a tactic that should close every goal, with a budget of its own (in thousands of
+heartbeats) and without a trace when it fails: the goals and the messages are as before. -/
+def closes (budget : Nat) (tac : TSyntax `tactic) : TacticM Bool := do
+  let s ← saveState
+  let log ← Core.getMessageLog
+  -- (a closer that runs out of its budget fails like any other: the exception of the
+  -- limit is caught too)
+  let ok ← tryCatchRuntimeEx
+    (withTheReader Core.Context (fun c => { c with maxHeartbeats := budget * 1000 * 1000 }) <|
+      withCurrHeartbeats do
+        evalTactic tac
+        pure ((← getUnsolvedGoals).isEmpty && !(← Core.getMessageLog).hasErrors))
+    (fun _ => pure false)
+  unless ok do
+    s.restore
+    Core.setMessageLog log
+  pure ok
+
+/-- A proof of the proposition by the tactic, with a budget of its own; none if the tactic
+does not prove it. -/
+def proveBy (budget : Nat) (prop : Expr) (tac : TSyntax `tactic) : TacticM (Option Expr) := do
+  let s ← saveState
+  let log ← Core.getMessageLog
+  let m ← Meta.mkFreshExprMVar prop
+  let ok ← tryCatchRuntimeEx
+    (withTheReader Core.Context (fun c => { c with maxHeartbeats := budget * 1000 * 1000 }) <|
+      withCurrHeartbeats do
+        let rest ← Tactic.run m.mvarId! (evalTactic tac)
+        pure (rest.isEmpty && !(← Core.getMessageLog).hasErrors))
+    (fun _ => pure false)
+  if ok then pure (some (← instantiateMVars m))
+  else
+    s.restore
+    Core.setMessageLog log
+    pure none
+
+/-- What a reader uses without saying so, added to the hypotheses: between two integers
+there is a gap of one (`a < b` gives `a + 1 ≤ b`), and a hypothesis `A → B` whose `A`
+follows at once gives `B` (the hypothesis of an induction about `n - 1`, whose `n - 1`
+is a positive integer). -/
+def saturate : TacticM Unit := do
+  let add (name : Name) (e : Expr) : TacticM Unit := do
+    let t ← withMainContext (do instantiateMVars (← Meta.inferType e))
+    let g ← (← getMainGoal).assert name t e
+    let (_, g) ← g.intro1P
+    replaceMainGoal [g]
+  let side ← `(tactic| first
+    | assumption | leanify_int | (linarith; done)
+    | (constructor <;> first | assumption | leanify_int | (linarith; done)))
+  let isIntOf (x : Expr) : Expr := mkApp (Lean.mkConst ``Leanify.Prelude.isInt) x
+  -- the gap between integers
+  let lctx ← withMainContext getLCtx
+  for d in lctx do
+    if d.isImplementationDetail then continue
+    let t ← instantiateMVars d.type
+    match t.getAppFn, t.getAppArgs with
+    | .const ``LT.lt _, #[ty, _, a, b] =>
+      if ty.isConstOf ``Real then
+        let some ha ← withMainContext (proveBy 10 (isIntOf a) (← `(tactic| leanify_int))) | continue
+        let some hb ← withMainContext (proveBy 10 (isIntOf b) (← `(tactic| leanify_int))) | continue
+        add `gap (mkApp5 (Lean.mkConst ``Leanify.Prelude.isInt.add_one_le_of_lt) a b ha hb d.toExpr)
+    | _, _ => pure ()
+  -- hypotheses whose own hypothesis holds
+  let lctx ← withMainContext getLCtx
+  for d in lctx do
+    if d.isImplementationDetail then continue
+    let t ← instantiateMVars d.type
+    if t.isArrow then
+      let a := t.bindingDomain!
+      if ← withMainContext (Meta.isProp a) then
+        let some ha ← withMainContext (proveBy 20 a side) | continue
+        add (d.userName.appendAfter "'") (mkApp d.toExpr ha)
+
 /-- The lists of `n` different terms among the given ones. -/
 def tuples (xs : Array Expr) : Nat → List (Array Expr)
   | 0 => [#[]]
   | n + 1 => (tuples xs n).flatMap fun t => (xs.toList.filter (!t.contains ·)).map t.push
 
-/-- `leanify_step` proves `obligationK` by the standard steps (see above), or fails. -/
-elab "leanify_step" : tactic => do
+/-- The steps of `leanify_step`. -/
+def stepCore : TacticM Unit := do
   let ty ← instantiateMVars (← (← getMainGoal).getType)
   let some (ns, k) := (match ty with | .const n _ => obligationIndex? n | _ => none)
     | throwError "leanify_step proves an obligation of a compiled article (obligationK)"
@@ -149,31 +223,48 @@ elab "leanify_step" : tactic => do
             n := 0
           else n := n - 1
   evalTactic (← `(tactic| try casesm* _ ∧ _))
+  saturate
+  evalTactic (← `(tactic| try casesm* _ ∧ _))
+  saturate
+  evalTactic (← `(tactic| try casesm* _ ∧ _))
   -- (every alternative closes its goal or fails: `ring1`, not `ring`, which rewrites a
   -- goal it cannot close)
   let each ← `(tactic| first
-    | assumption | linarith | positivity | ring1 | (field_simp; ring1) | (norm_num [$lems,*]; done)
+    | assumption | linarith | positivity | ring1 | leanify_int | (field_simp; ring1) | (norm_num [$lems,*]; done)
     | (simp only [$lems,*]; ring1) | (simp only [$lems,*]; field_simp; ring1)
     | (simp only [$lems,*] at *; linarith) | (simp only [$lems,*]; positivity))
-  evalTactic (← `(tactic| first
-    | (assumption; done)
-    | (linarith; done)
-    | (positivity; done)
-    | (ring1; done)
-    | (field_simp; ring1; done)
-    | (norm_num [$lems,*]; done)
-    | ((repeat' constructor) <;> ($each:tactic); done)
-    | (simp only [$lems,*] at *; field_simp; ring1; done)
-    | (simp only [$lems,*] at *; linarith; done)
-    | (simp only [$lems,*]; positivity; done)
+  -- the closers, each with a budget of its own (in thousands of heartbeats): what the
+  -- tactic proves does not depend on the limits of the file it is used in
+  let closers : List (Nat × TSyntax `tactic) := [
+    (20, ← `(tactic| assumption)),
+    (30, ← `(tactic| linarith)),
+    (30, ← `(tactic| positivity)),
+    (30, ← `(tactic| ring1)),
+    (20, ← `(tactic| leanify_int)),
+    (30, ← `(tactic| (field_simp; ring1))),
+    (30, ← `(tactic| norm_num [$lems,*])),
+    (50, ← `(tactic| (repeat' constructor) <;> ($each:tactic))),
+    (30, ← `(tactic| (simp only [$lems,*] at *; field_simp; ring1))),
+    (30, ← `(tactic| (simp only [$lems,*] at *; linarith))),
+    (30, ← `(tactic| (simp only [$lems,*]; positivity))),
     -- an equivalence: each direction from the other side
-    | (constructor <;> intro _ <;> first | (linarith; done) | (nlinarith; done) | (simp_all; done))
-    | (simp_all [$lems,*]; done)
-    | (nlinarith; done)
-    | (simp only [$lems,*] at *; nlinarith; done)
-    | (grind; done)
-    | (aesop; done)
-    | (tauto; done)))
+    (50, ← `(tactic| constructor <;> intro _ <;> first | (linarith; done) | (nlinarith; done) | (simp_all; done))),
+    (50, ← `(tactic| simp_all [$lems,*])),
+    (50, ← `(tactic| nlinarith)),
+    (50, ← `(tactic| (simp only [$lems,*] at *; nlinarith))),
+    (60, ← `(tactic| grind)),
+    (60, ← `(tactic| aesop)),
+    (30, ← `(tactic| tauto))]
+  for (budget, tac) in closers do
+    if ← closes budget tac then return
+  throwError "leanify_step: the claim does not follow from its premises by the standard steps"
+
+/-- `leanify_step` proves `obligationK` by the standard steps (see above), or fails. -/
+elab "leanify_step" : tactic => do
+  -- (the tactic has budgets of its own: its cost does not count against the limit of the
+  -- declaration it is used in)
+  let h0 ← IO.getNumHeartbeats
+  try stepCore finally IO.setNumHeartbeats h0
 
 /-! ## Values for the hypotheses of a statement
 
