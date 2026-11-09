@@ -87,7 +87,7 @@ tests/Statements/article.tex:303:1: info: claim 73: \forall x\in \mathbb{R},\ x\
 tests/Statements/article.tex:303:1: info: claim 74: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert 2\,z+x\rvert\le y\,\lvert z\rvert))
 tests/Statements/article.tex:303:1: info: claim 75: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z\rvert\le y\,{z}^{2}))
 tests/Statements/article.tex:307:1: info: claim 76: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ 1\le z\Rightarrow \lvert z+x\rvert\le y\,(x\,z)\land \lvert x\,z\rvert\le y\,(z+x)))
-tests/Statements/article.tex:313:1: info: claim 77: \lim_{x\to\infty}\frac{1}{x}=0
+tests/Statements/article.tex:313:1: info: claim 77: \lim_{x\to\infty,\ x\in \mathbb{N}}\frac{1}{x}=0
 tests/Statements/article.tex:313:1: info: claim 78: \lim_{x\to\infty}\frac{x+1}{x}=1
 tests/Statements/article.tex:313:1: info: claim 79: \lim_{x\to\infty}\frac{1}{x}=0
 tests/Statements/article.tex:317:1: info: claim 80: (\iota x\in \mathbb{R}.\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (s\in \mathbb{N}\land z\le s)\land ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land x-y<\frac{{(-1)}^{s}\,s}{s+1})\land (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow ((s\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le s))\land \neg (s+1=0))\land \frac{{(-1)}^{s}\,s}{s+1}<x+y))=1

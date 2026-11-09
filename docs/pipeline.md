@@ -77,8 +77,12 @@ A claim is *derived in the text* when it is a proof sentence, or a statement
 closed by a compiled proof. For such a claim, `#leanify_certify` audits the
 justification. Every constant it uses must come from Lean or mathlib, from
 Leanify, from the compiled article, or from helper declarations in the
-justification modules, which are audited recursively. A proof sentence
-therefore cannot be justified by a result it does not cite. Claims without a
+justification modules, which are audited recursively. It may not be the
+justification of another claim (`J.proofN`, `J.refuteN`) that is not among the
+claim's premises. A proof sentence therefore cannot be justified by a result it
+does not cite. What the audit does not bound is the length of the Lean argument
+for a step: a step that the text makes in one line may need a long Lean proof,
+with helper lemmas of its own. Claims without a
 compiled proof (cited theorems, displayed formulas) may use any Lean proof:
 typically a companion development, connected by proved bridge theorems. The
 certificate permits only the axioms `propext`, `Classical.choice` and
@@ -103,8 +107,10 @@ count.
   unverified claim is not verified). Read by the web reader and by
   `scripts/leanify_diagnostics.py`.
 * `article.leanify.tex`: the status of every labelled result, read by
-  `\usepackage[status]{leanify}` to mark results in the margin of the PDF.
-  Without the `status` option the PDF is unchanged.
+  `\usepackage[status]{leanify}` to mark results in the margin of the PDF, and
+  the formal reading of every definition and statement, which
+  `\leanifyreadings` prints with the version of Leanify. Without the `status`
+  option and that command the PDF is unchanged.
 
 ## Reading
 
@@ -127,7 +133,9 @@ definedness condition, its premises and its justification.
 The kernel checks the compilation of the file, the identity of the readable
 definitions and claims with the compiled semantics, every justification and the
 certificate. Outside the proof are: the fixed readings of the grammar's
-constructions (documented in `Leanify/Grammar.lean` and `Leanify/Doc.lean`),
+constructions (documented in `Leanify/Grammar.lean` and `Leanify/Doc.lean`; they
+are the readings of a version of Leanify, which the reports and
+`\leanifyreadings` name),
 the vocabulary and its model (a short, reviewable list), the native evaluation
 that proposes stage results (the kernel re-checks them), and the presentation
 (the PDF, KaTeX typesetting of formal readings and the HTML reader).

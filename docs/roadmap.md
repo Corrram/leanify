@@ -52,3 +52,28 @@ of the items below as well.
 Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
 that compiles and is certified.
+
+## Beyond constructions
+
+These points limit what a certificate says. None of them is a construction of the
+grammar.
+
+1. **The language of proofs.** `Assume …`, `Suppose …`, a proof by contradiction,
+   by induction or by cases (item 5 above) are not read. One such sentence makes
+   a proof incomplete, and its result is then checked, not derived. The check
+   counts the complete proofs.
+2. **The size of a step.** A derived step is proved from its premises and
+   mathlib, by a Lean proof of any length. The report does not say yet whether
+   standard tactics closed the step or a long argument did.
+3. **Statements that hold for an empty reason.** A claim whose hypotheses
+   cannot all hold is true, and a prover finds that quickly. An obligation that
+   the hypotheses of every claim can hold together would show such a reading.
+4. **Defaults of the grammar.** Where a limit, a sum, a set or a threshold
+   states no domain, the letters `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` are
+   integers and every other letter is a real number. `\leanifyreadings` prints
+   this convention, and the readings show the domain. A convention sentence of
+   the article (`Throughout, $p$ and $q$ denote integers.`) should decide instead.
+5. **Readings in the PDF name the vocabulary of the package option.** The
+   vocabulary an article is compiled with is named in its Lean file, and
+   `\leanifyreport` prints the option `vocab` of `leanify.sty`. The two should be
+   one.

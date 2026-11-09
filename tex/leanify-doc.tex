@@ -18,7 +18,7 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.3, 2026-11-06}
+\date{Version 0.4, 2026-11-09}
 
 \begin{document}
 \maketitle
@@ -74,6 +74,7 @@ exactly the sentences of its proof and the results they cite.
 \usepackage[certify]{leanify}   % and build the certificate first
 \leanifymodule{Note.Certified}  % optional: the certifying module
 \leanifyreport                  % optional: a one-line summary
+\leanifyreadings                % optional: the formal readings
 \end{lstlisting}
 
 \noindent The options are:
@@ -94,6 +95,9 @@ vocab=NAME & The vocabulary of the article: \texttt{core} (the default) or
   \texttt{unitsquare} (probability on the unit square). \\
 lean=FILE & The compiled Lean file of the article, by default
   \texttt{Compiled.lean} next to it. \\
+exe=COMMAND & The checker to run instead of the project's, for instance
+  \texttt{exe=leanify} for an executable on the \texttt{PATH}. With it the quick
+  check also runs outside a Lean project. \\
 \bottomrule
 \end{tabularx}
 
@@ -107,6 +111,12 @@ lean=FILE & The compiled Lean file of the article, by default
 \item[\cs{leanifyreport}] Prints a one-line summary of the last build where it
   appears, for instance: \emph{12 of 12 claims verified (3 derived in the text from
   their citations); 85 of 90 sentences compiled; 7 definitions well defined}.
+\item[\cs{leanifyreadings}] Prints the formal reading of every definition and of
+  every statement of the article, with its line, the version of Leanify, the
+  vocabulary and the conventions of the grammar: what Lean was asked to prove.
+  In an appendix, it lets a reader of the PDF compare each statement with its
+  reading. It prints from \texttt{\cs{jobname}.leanify.tex}, like the margin
+  marks.
 \end{description}
 
 \section{Checking as you compile}\label{sec:check}
@@ -121,17 +131,23 @@ warnings at their lines of the article,
 Package leanify Warning: g is not defined: sentence not checked on input line
 (leanify)                70.
 \end{lstlisting}
-so editors that read the LaTeX log list them with the other warnings. With
+so editors that read the LaTeX log list them with the other warnings. The
+check reads the article with the files it inputs, and a finding in such a file
+names its file and line. If some proofs have sentences that Leanify does not
+read, one warning says how many proofs are read completely: only their results
+are derived from the printed proofs. With
 \opt{certify}, the errors of the Lean build and the refuted claims are warnings
 too. The full output of Leanify is in \texttt{\cs{jobname}.leanify.log}.
 \texttt{lake} must be on the \texttt{PATH} of the compiler; the first check
 also builds the checker, which takes a few minutes once. Later compiles run the
-checker directly, without \texttt{lake}, and take a fraction of a second; if the
-article has not changed since the last run (the later passes of
-\texttt{latexmk}), nothing runs and the findings are read from the log again.
+checker directly, without \texttt{lake}, and take a fraction of a second; if
+neither the article nor a file it inputs has changed since the last run (the
+later passes of \texttt{latexmk}), nothing runs and the findings are read from
+the log again.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
-Outside a Lean project the package runs nothing and says nothing.
+Outside a Lean project the package runs nothing and says nothing, unless the
+option \opt{exe} names a checker.
 
 \section{Verification status in the margin}\label{sec:status}
 

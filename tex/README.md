@@ -1,6 +1,6 @@
 # leanify — a LaTeX article checked by Lean
 
-Version 0.3, 2026-11-06.
+Version 0.4, 2026-11-09.
 
 Leanify compiles an ordinary mathematical article, written in LaTeX, to the
 Lean proof assistant: every definition and theorem becomes a Lean statement
@@ -15,6 +15,10 @@ The LaTeX package `leanify.sty` is the typesetting side:
 * with the option `status`, it marks every labelled result in the margin with
   its verification status (*checked*, *derived*, *partly checked*,
   *compiled*, *false*);
+* `\leanifyreadings` prints the formal reading of every definition and
+  statement, so that a reader of the PDF sees what Lean was asked to prove;
+* with the option `exe=leanify`, the check runs a checker on the `PATH`,
+  outside a Lean project as well;
 * without options and without shell escape, it changes nothing in the
   typeset article, so the article compiles anywhere, e.g. on arXiv.
 

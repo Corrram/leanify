@@ -5,10 +5,14 @@ import Leanify.Library.Fields
 
 /-! The `leanify` command line.
 
-* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims]`
-  compiles the article natively and prints its diagnostics (fast; certifies
-  nothing). Projects with their own vocabulary define a three-line executable
-  calling `Leanify.checkArticle`.
+* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims] [--json]`
+  compiles the article natively, with the files it inputs, and prints its
+  diagnostics (fast; certifies nothing); `--json` prints them for tools, with every
+  sentence, its place and its text. Projects with their own vocabulary define a
+  three-line executable calling `Leanify.checkArticle`.
+* `leanify flatten ARTICLE.tex [OUT.tex]` writes the article with the files it
+  inputs in their places, as one file (the certificate pins one file).
+* `leanify --version` prints the version.
 * `leanify init ARTICLE.tex [--name NAME] [--vocab FIELDS]` writes the
   four Lean files of an article next to it (`Compiled`, `Article`, `Proofs`,
   `Certified`, in namespace `NAME`, by default the article's folder name), with a
@@ -26,7 +30,9 @@ always there. -/
 open Leanify
 
 def usage : String :=
-  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims]\n" ++
+  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims] [--json]\n" ++
+  "       leanify flatten ARTICLE.tex [OUT.tex]\n" ++
+  "       leanify --version\n" ++
   "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…]\n" ++
   "       leanify prepare ARTICLE.tex --lean COMPILED.lean [--cache DIR --module PREFIX]"
 
@@ -65,10 +71,32 @@ def updatePin (file : System.FilePath) (pin : String) : IO Bool := do
     pure (s' != s)
   | _ => throw (IO.userError s!"{file}: expected exactly one pin \"fnv1a64:…\"")
 
+/-- A certificate pins one file: say so for an article that inputs others. -/
+def noteInputs (path : System.FilePath) : IO Unit := do
+  let src ← readSource path
+  unless src.inputs.isEmpty do
+    IO.eprintln s!"{path}: note: the article inputs {String.intercalate ", " src.inputs.toList}. \
+      The certificate covers {path} alone; `leanify flatten {path} OUT.tex` writes one file with all of them."
+
+/-- `leanify flatten`: the article and the files it inputs, as one file. -/
+def flatten (path : System.FilePath) (out : Option String) : IO UInt32 := do
+  let src ← readSource path
+  let text := String.join (src.lines.toList.map fun l => Codes.toString l ++ "\n")
+  match out with
+  | some o =>
+    if (System.FilePath.mk o).normalize == path.normalize then
+      IO.eprintln "leanify flatten: the output is the article itself"
+      return 2
+    IO.FS.writeFile o text
+    IO.println s!"wrote {o} ({src.lines.size} lines, from {src.inputs.size + 1} files)"
+  | none => IO.print text
+  pure 0
+
 def startsSection (lines : List Codes) : Bool :=
   lines.any fun l => ((Codes.toString l).trimAsciiStart.toString).startsWith "\\section"
 
 def prepare (path : System.FilePath) (opts : List String) : IO UInt32 := do
+  noteInputs path
   let contents ← IO.FS.readFile path
   let pin := sourcePin contents
   if let some lean := optArg opts "--lean" then
@@ -166,6 +194,7 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   unless validModule ns do
     IO.eprintln s!"leanify init: {ns} is not a Lean module name; give one with --name NAME"
     return 2
+  noteInputs path
   let contents ← IO.FS.readFile path
   let lines ← readLines path
   let some d := compileArticle V lines
@@ -317,7 +346,11 @@ def main (args : List String) : IO UInt32 := do
       return 2
     let vocab := (vocabOf (fieldsOf opts)).toOption.getD Vocab.core
     let failed ← checkArticle vocab path (opts.contains "--prose") (opts.contains "--claims")
+      (opts.contains "--json")
     pure (if failed == 0 then 0 else 1)
+  | ["flatten", path] => flatten path none
+  | ["flatten", path, out] => flatten path (some out)
+  | ["--version"] => IO.println s!"leanify {Leanify.version}"; pure 0
   | "prepare" :: path :: opts => prepare path opts
   | "init" :: path :: opts => initArticle path opts
   | _ => IO.eprintln usage; pure 2

@@ -97,9 +97,11 @@ def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]
 /-- Commands of formulas that are another spelling of a symbol the grammar reads:
-`\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`. -/
+`\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`, `\triangleq` is `\coloneqq`. -/
 def mathAlias (n : Codes) : Option Tok :=
   if n == w!"colon" then some (.msym 58)
+  -- other spellings of `\coloneqq` (`:=` is read where the characters are lexed)
+  else if n == w!"colonequals" || n == w!"triangleq" then some (.cmd w!"coloneqq")
   else if n == w!"leqslant" || n == w!"leqq" then some (.cmd w!"le")
   else if n == w!"geqslant" || n == w!"geqq" then some (.cmd w!"ge")
   else if n == w!"lvert" || n == w!"rvert" || n == w!"vert" then some (.msym 124)
@@ -437,6 +439,13 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               | none => emit (.cmd name) rest n st
             | _ => emit (.cmd name) rest n st
           else if math then
+            -- `\vcentcolon=` is `:=`
+            if name == w!"vcentcolon" && rest.head? == some 61 then
+              emit (.cmd w!"coloneqq") (rest.drop 1) (n + 1) st
+            -- `\mathrel{:=}`, as many articles define `\defeq`
+            else if name == w!"mathrel" && rest.take 4 == w!"{:=}" then
+              emit (.cmd w!"coloneqq") (rest.drop 4) (n + 4) st
+            else
             match mathAlias name with
             | some t => emit t rest n st
             | none => emit (.cmd name) rest n st
@@ -449,6 +458,8 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
       if isLetter c then emit (.mvar c) cs 1 st
       -- digits are separate tokens, as in TeX (`\frac14`); the grammar groups numerals
       else if isDigit c then emit (.mnum (c - 48)) cs 1 st
+      -- `:=` defines, as `\coloneqq` does
+      else if c == 58 && cs.head? == some 61 then emit (.cmd w!"coloneqq") (cs.drop 1) 2 st
       else emit (.msym c) cs 1 st
     else if isWordChar c then
       let (w, rest) := takeWhile isWordChar (c :: cs)

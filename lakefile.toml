@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.2.0"
+version = "0.4.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]

@@ -76,7 +76,12 @@ rev = "main"
 | `Certified.lean` | `#leanify_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
 
 A proof that still uses `sorry` leaves its claim unverified, so an article can
-be certified while its proofs are written. Articles about probability on the
+be certified while its proofs are written. Two scripts take a command of yours
+(a model, usually): `scripts/leanify_suggest.py` proposes rewrites of the
+sentences Leanify cannot read, and keeps one only if the check then reads it;
+`scripts/leanify_prove.py` proves the open obligations, and writes a proof only
+if Lean accepts it. The check reads an article with the files it inputs
+(`\input`, `\include`, the article's own `.sty` files). Articles about probability on the
 unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)).
 
 The same source gives the two readable outputs:
@@ -86,7 +91,9 @@ The same source gives the two readable outputs:
   verification status (read from `article.leanify.tex`). Compiled with shell
   escape, the package also checks the article on every compile, with the
   findings as LaTeX warnings at their lines, and with `certify` it builds the
-  certificate first;
+  certificate first. `\leanifyreadings` prints the formal reading of every
+  definition and statement, so that a reader of the PDF sees what Lean was asked
+  to prove;
 * the web reader, `node reader/build.mjs article.tex`, which renders the
   article from its source with the status of every sentence and, for each
   claim, its formal reading, Lean statement, premises and justification.
@@ -123,12 +130,13 @@ The examples are short papers in the usual style, each certified by CI:
 | `Leanify/Syntax.lean`, `Denote.lean` | The core language and its Lean denotation |
 | `Leanify/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#leanify_article`, `#leanify_semantics`, `#leanify_certify` |
-| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache) |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker, with the files the article inputs), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache), `flatten` (the article and its inputs as one file) |
 | `examples/`, `tests/` | The example articles of the documentation, and the test articles (a refuted theorem, notions in the running text), certified in CI |
 | `reader/` | The web reader: the article rendered from its source with the status of every sentence |
 | `tex/leanify.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |
 | `docs/`, `mkdocs.yml` | The documentation site, https://corrram.github.io/leanify/ |
 | `scripts/leanify_diagnostics.py` | Findings from the certificate report, for editors and CI |
+| `scripts/leanify_suggest.py`, `scripts/leanify_prove.py` | A hook proposes rewrites of unread sentences, or proofs of open obligations; the checker and Lean decide |
 
 ## Build
 

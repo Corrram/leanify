@@ -154,6 +154,11 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     throwError "{rel} is pinned as {pin} but its contents are {now}: if the article changed \
       on purpose, update the pin to \"{now}\""
   let src ← readLines path
+  -- the certificate pins this file alone
+  let files ← readSource path
+  unless files.inputs.isEmpty do
+    logInfo m!"{rel} inputs {String.intercalate ", " files.inputs.toList}: the certificate covers {rel} \
+      alone. `leanify flatten` writes one file with all of them."
   let id (n : Name) : Term := mkIdent (ns ++ n)
   let nm (s : String) : Name := Name.mkSimple s
   let c (n : Name) : Expr := Lean.mkConst (ns ++ n)

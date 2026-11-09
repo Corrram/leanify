@@ -82,6 +82,14 @@ def Tm.isNumeral : Tm → Bool
   | .div x y => x.isNumeral && y.isNumeral
   | _ => false
 
+/-- The domain of a limit at infinity, when it is the natural numbers (the limit of a
+sequence): the reading says so, since `\lim_{n\to\infty}` and `\lim_{x\to\infty}` are
+different limits. -/
+def seqDom (D : Tm) (v : String) : String :=
+  match D with
+  | .lam _ _ (.and (.app (.prim .isNat) (.loc 0)) _) => ",\\ " ++ v ++ "\\in \\mathbb{N}"
+  | _ => ""
+
 partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .glob i => gs.getD i s!"g_{i}"
   | .loc i => ls.getD i s!"v_{i}"
@@ -105,12 +113,12 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.app (.prim .limAtConv) a) _) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
-  | .app (.app (.prim .limTop) _) (.lam _ _ body) =>
+  | .app (.app (.prim .limTop) D) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
-    "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls)
-  | .app (.app (.prim .limTopConv) _) (.lam _ _ body) =>
+    "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .limTopConv) D) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
-    "\\lim_{" ++ v ++ "\\to\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+    "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
   | .app (.prim .factorial) x => wrap 9 x ++ "!"
   | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"

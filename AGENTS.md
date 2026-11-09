@@ -106,9 +106,9 @@ These hold for every change. A feature that cannot meet them is not added.
 ### The LaTeX package
 
 11. **The typeset article does not change.** Without options, `leanify.sty`
-    changes nothing on the page. It runs an external program (`lake`) only with
-    unrestricted shell escape and inside a Lean project; otherwise it runs
-    nothing. Typesetting needs only `mathtools` and `amssymb`. The package is on
+    changes nothing on the page. It runs an external program (`lake`, or the
+    checker) only with unrestricted shell escape and inside a Lean project, or
+    when the option `exe` names the checker; otherwise it runs nothing. Typesetting needs only `mathtools` and `amssymb`. The package is on
     CTAN; `scripts/ctan.sh` builds the upload.
 12. **Findings are LaTeX warnings at their lines**, in plain words, with the
     likely fix: the undefined symbol, the unknown noun, the ambiguous word, and
@@ -124,7 +124,8 @@ These hold for every change. A feature that cannot meet them is not added.
 | `Leanify/Syntax.lean`, `Denote.lean` | the core language and its Mathlib meaning |
 | `Leanify/Vocab.lean`, `Library/` | vocabulary fields, their models, the field registry |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the kernel commands |
-| `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/init/prepare` |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/init/prepare/flatten`; `Leanify.version` |
+| `scripts/` | `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides), `leanify_diagnostics.py` |
 | `tex/leanify.sty` | the LaTeX package |
 | `tests/`, `examples/` | test articles, each compiled by the kernel in CI |
 
@@ -139,6 +140,8 @@ A change is finished when:
 * a new test article has a `lean_lib` in `lakefile.toml` and a step in
   `.github/workflows/lean.yml`;
 * `docs/writing.md` documents each new construction with an example;
+* a change of a reading or of the reports has a new `Leanify.version` (the same in
+  `lakefile.toml` and `leanify.sty`): a reading is the reading of a version;
 * a run on the regression articles shows no unintended change.
 
 Write documentation and messages in plain, short sentences. Commit locally; the

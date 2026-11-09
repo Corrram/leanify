@@ -159,6 +159,7 @@ Note/article.tex: 1 definitions, 5 claims
   results: 2 compiled, 0 failed, 1 prose (of 3)
   proofs: 5 compiled, 1 failed, 0 prose (of 6)
   all: 8 compiled, 1 failed, 41 prose (of 50)
+  complete proofs: 2 of 3 (a result is derived from a proof that is read completely)
 ```
 
 The 40 prose sentences of the text are the explanations: the abstract, the
@@ -175,6 +176,17 @@ statement unchecked.
   reading of "attains its minimum on … at …". Unread, the corollary would assert
   nothing checked. Say it as an inequality:
   `For every $x\in(0,\infty)$, $f(1)\le f(x)$.`
+
+The last line counts the proofs that are read completely. A result is derived
+from its printed proof only if every sentence of the proof is read. Here the
+proof with the typo is not.
+
+A command of yours can propose such rewrites: `scripts/leanify_suggest.py
+Note/article.tex --hook CMD` gives every sentence without a reading to `CMD` (a
+model, usually), keeps a suggestion only if the check then reads it, and shows
+it as a diff with its formal reading
+([`leanify_suggest.py`](reference.md#leanify_suggestpy)). You decide whether the
+new sentence still says what you meant.
 
 With both fixed, `--claims` prints the reading of every claim. These readings
 are what Lean will prove, so read them:
@@ -385,6 +397,9 @@ follows from what it cites, and each result from its proof.
   `\usepackage[certify]{leanify}` runs steps 4 and 5 as well: it writes the
   Lean files the first time, then updates the pin and builds the certificate
   before it reads the marks ([`leanify.sty`](reference.md#the-pdf-leanifysty)).
+  `\leanifyreadings`, in an appendix, prints the formal reading of every
+  definition and statement, with the version of Leanify: a reader of the PDF
+  sees what Lean was asked to prove.
 * **The web reader.** It renders the article from its source with a marker at
   every sentence, and shows for each one its formal reading, Lean statement,
   premises and justification:
@@ -431,6 +446,8 @@ verified or is refuted.
 | `unknown notation …` | The grammar does not read this command, and the article does not define it. Write the statement without it, or define it. |
 | `unknown noun "…"` | The statement introduces an object by a noun phrase that is not a notion of the article or of its vocabulary. Define the notion first ([Writing for Leanify](writing.md)), or use a vocabulary that has it. |
 | `Theorem … is not checked`, `Lemma … is only partly checked` | Rephrase the sentences with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
+| `the proof of … is not read completely` | The result can be checked, but it is not derived from its printed proof. Rewrite the unread sentences of the proof (`--prose` lists them), or accept a proof by other means. |
+| the article is several files | `check` reads the files it inputs. For the certificate, `lake exe leanify flatten article.tex flat.tex` writes one file. |
 | `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build. |
 | `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |

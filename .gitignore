@@ -11,3 +11,4 @@ article-reader/
 *.leanify.log
 /sandbox/
 /Claude outputs/
+*.leanify.diff

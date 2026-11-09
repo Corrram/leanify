@@ -64,6 +64,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
 | `$$…$$` | a display, like `\[…\]` |
+| `:=`, `\vcentcolon=`, `\colonequals`, `\triangleq`, `\mathrel{:=}` | the defining sign, as `\coloneqq` (so a macro `\defeq` of the article for one of them is read too) |
 | `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
 | `a\mid b`, `a\nmid b` | `a` and `b` are integers and `b=ak` for an integer `k` (and its negation, for integers); the first `\mid` of a set `\{x\in A\mid φ\}` separates the condition, and a `\mid` after it is divisibility |
 | `a\equiv b\pmod m`, `a\equiv b\ (\bmod m)`, `(\operatorname{mod} m)` | `a` and `b` are integers and `m\mid a-b` |
@@ -175,8 +176,10 @@ fields of the vocabulary and what happens when a word has several meanings.
    first. The article's own theorem environments (`\newtheorem{thm}{Theorem}`,
    `\declaretheorem`) are read by their printed names: a claim, a fact or an
    observation as a lemma, a question or a problem as a conjecture.
-2. **Write definitions with `\coloneqq`.** `f(x)\coloneqq x+\frac1x` defines
-   `f`. `f(x)=x+\frac1x` is a claim about an `f` that must already exist.
+2. **Write definitions with a defining sign.** `f(x)\coloneqq x+\frac1x` defines
+   `f`, and so does `f(x):=x+\frac1x` (or `\triangleq`, `\vcentcolon=`).
+   `f(x)=x+\frac1x` is a claim about an `f` that must already exist, except
+   after `set`, `put`, `let` or `define`.
 3. **One definition or claim per sentence.** Move side remarks into their own
    sentence. "We refer to \cite{…} for background." is a sentence of its own,
    and so is "This normalization makes $\alpha(e)=1$, …".
@@ -381,7 +384,11 @@ proof and the results cited so far in it. When every sentence of a proof
 compiles, the result it proves gets those sentences and citations as its
 premises, and the result is *derived in the text*. Sentences that only
 organize the argument ("Nonnegativity away from that set is proved rectangle by
-rectangle.") are prose and assert nothing.
+rectangle.") are prose and assert nothing. A proof with such a sentence is not
+read completely: its result can still be checked, by any Lean proof, but it is
+not derived from the printed proof. The check counts the complete proofs
+(`complete proofs: 2 of 3`) and names each proof that is not complete, so an
+article without warnings is not taken for an article whose proofs are all read.
 
 A section whose title announces a proof, `\subsection{Proof of
 Theorem~\ref{thm:main}}`, is a proof of that result up to the next sectioning
@@ -401,6 +408,20 @@ Add `--vocab unitsquare` for articles about probability on the unit square
 ([Vocabularies and models](vocabularies.md)). A sentence of a theorem, lemma or
 corollary that the grammar does not read is a warning: that part of the
 statement would not be checked.
+
+An article in several files is checked as a whole: the check reads the `.tex`
+files it inputs (`\input{sections/intro}`, `\include{…}`, `\subfile{…}`) and
+its own packages (`\usepackage{mymacros}` with `mymacros.sty` next to the
+article) where they are input, and reports each finding at its own file and
+line. A certificate pins one file: `lake exe leanify flatten article.tex
+flat.tex` writes the article with its inputs as one file.
+
+For the sentences without a reading, `scripts/leanify_suggest.py` asks a command
+of yours (a model, usually) for the sentence in one of the forms above, and
+keeps a suggestion only if the check then reads it
+([`leanify_suggest.py`](reference.md#leanify_suggestpy)). The grammar still
+fixes what the rewritten sentence means; you decide whether it still says what
+you meant.
 
 A sentence that is read but cannot be given a meaning says why and how to write
 it: `a variable without a noun or a domain: say what it ranges over (every

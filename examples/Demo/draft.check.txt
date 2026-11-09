@@ -5,3 +5,4 @@ examples/Demo/draft.tex: 1 definitions, 5 claims
   results: 2 compiled, 0 failed, 1 prose (of 3)
   proofs: 5 compiled, 1 failed, 0 prose (of 6)
   all: 8 compiled, 1 failed, 41 prose (of 50)
+  complete proofs: 2 of 3 (a result is derived from a proof that is read completely)

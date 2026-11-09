@@ -261,6 +261,7 @@
    "column": 1,
    "claims": [7]}],
  "namespace": "TailDependence",
+ "leanify": "0.4.0",
  "justifications": "TailDependence.Proofs",
  "definitions":
  [{"wellDefined": "True",

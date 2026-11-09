@@ -10,17 +10,21 @@ Everything Leanify provides, in the order a project uses it. The
 ### `leanify check`
 
 ```sh
-lake exe leanify check ARTICLE.tex [--vocab core|unitsquare] [--claims] [--prose]
+lake exe leanify check ARTICLE.tex [--vocab FIELDS] [--claims] [--prose] [--json]
 ```
 
 Compiles the article natively, in about a second, and prints findings in the
 `file:line:column: severity: message` format of editors. It certifies nothing.
+The article is read with the `.tex` files it inputs (`\input`, `\include`,
+`\subfile`) and with its own packages (a `.sty` file next to the article that it
+loads): a finding in such a file is reported at that file and line.
 
 | Finding | Severity |
 | --- | --- |
 | a sentence that did not compile: `G is not defined`, `unknown notation \sum`, a type mismatch, an unsupported construction, … | warning |
 | a theorem, lemma, proposition, corollary or definition with sentences without a reading: `Lemma l:bound is not checked: Leanify cannot read any of its 3 sentences`, or `is only partly checked: Leanify cannot read 2 of its 5 sentences (lines …)`, once per result (named by its label, or by the beginning of its statement), with the likely reason: the notation in it that neither the grammar nor the article defines, or the noun phrase it introduces an object by (`unknown noun "Markov jump process"`) | warning |
 | a definition without a reading whose symbols later sentences use | warning |
+| a proof with sentences that are not read (prose, or a construction of proofs the grammar does not have), of a result whose statement is read: `the proof of thm:bound is not read completely (Leanify cannot read 1 of its 4 sentences): thm:bound can be checked, but it is not derived from this proof` | info |
 | with `--claims`: every definition and the formal reading of every claim | info |
 | with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
 
@@ -35,9 +39,29 @@ and defining the symbol fixes them all. Remarks, examples and conjectures
 discuss rather than state, so their prose is not a gap in a statement.
 
 The last lines count the compiled, failed and prose sentences of the text, the
-results and the proofs. The exit status is 1 if a sentence failed to compile.
+results and the proofs, and the proofs that are read completely (`complete
+proofs: 2 of 3`): only those derive their result from the printed proof. Then
+come the files the article inputs, and the inputs that were not read (a drawing,
+a missing file). The exit status is 1 if a sentence failed to compile.
 `--vocab unitsquare` adds the vocabulary of probability on the unit
 square ([Vocabularies and models](vocabularies.md)).
+
+`--json` prints one JSON object instead, for tools: the findings, every sentence
+with its file, place, text and outcome, the definitions, the claims with their
+readings, the proofs, and the version of Leanify.
+
+### `leanify flatten`
+
+```sh
+lake exe leanify flatten ARTICLE.tex [OUT.tex]
+```
+
+Writes the article with the files it inputs in their places, as the check reads
+it, to `OUT.tex` (or prints it). A certificate pins one file, so an article in
+several files is certified from its flattened form.
+
+`leanify --version` prints the version. A reading is the reading of a version of
+the grammar: the reports and the PDF name it.
 
 ### `leanify init`
 
@@ -47,7 +71,9 @@ lake exe leanify init ARTICLE.tex [--name NAME] [--vocab core|unitsquare]
 
 Writes four Lean files next to the article and prints the `lean_lib` entry for
 `lakefile.toml`. `NAME`, the Lean namespace, is by default the name of the
-article's folder. An existing file is never overwritten.
+article's folder. An existing file is never overwritten. For an article that
+inputs other files, `init`, `prepare` and `#leanify_article` say that the
+certificate covers the one file alone ([`leanify flatten`](#leanify-flatten)).
 
 | File | Contents |
 | --- | --- |
@@ -90,7 +116,10 @@ A claim is verified when it has a proof without `sorry` and every claim it rests
 on is verified. A claim the text derives (a proof step, or a result whose proof
 compiled) is audited: its proof may use Lean, mathlib, Leanify, the compiled
 article and helper declarations of the justification modules, which are audited
-in turn. The certificate and every refutation may use only the axioms
+in turn. It may not use the justification (`J.proofN`, `J.refuteN`) of a claim
+that is not among its premises, directly or through a helper: its premises are
+the hypotheses of its obligation, and another result has to be cited in the
+text. The certificate and every refutation may use only the axioms
 `propext`, `Classical.choice` and `Quot.sound`.
 
 ### Tactics
@@ -120,10 +149,12 @@ well-definedness condition, justification) and every claim (reading, Lean
 statement, definedness condition, premises, status, justification, and for an
 unverified claim why it is not verified). The status of a claim is `text`
 (derived from its citations), `companion` (proved without a compiled proof in
-the text), `unverified` or `refuted`. `sourceHash` pins the article.
+the text), `unverified` or `refuted`. `sourceHash` pins the article, and
+`leanify` is the version that read it.
 
-`article.leanify.tex` holds the status of every labelled result and a
-summary, for `leanify.sty`.
+`article.leanify.tex` holds, for `leanify.sty`, the status of every labelled
+result, a summary, the version, and the formal reading of every definition and
+of every statement (`\leanifyreadings` prints them).
 
 ### `leanify_diagnostics.py`
 
@@ -137,6 +168,40 @@ an unverified claim and a sentence that did not compile are warnings. The exit
 status is 1 if the article changed after it was certified, if a claim is
 refuted, with `--verified` if a compiled claim is not verified, and with
 `--strict` on any warning. `--pin` updates the pin in the Lean file instead.
+
+### `leanify_suggest.py`
+
+```sh
+python .lake/packages/leanify/scripts/leanify_suggest.py ARTICLE.tex --hook CMD \
+    [--vocab FIELDS] [--proofs] [--jobs 4] [--rounds 2] [--apply] [--leanify EXE] [--guide FILE]
+```
+
+Suggests an edit for each sentence that Leanify cannot read. `CMD` (a model
+behind a small wrapper, usually) gets one sentence at a time as JSON on its
+standard input: the sentence, the finding, its environment, the sentences before
+and after it, the guide `docs/writing.md`, and the instructions. It prints the
+LaTeX that replaces the sentence, or nothing.
+
+A suggestion is kept only if the check then reads every sentence of it, and
+still reads every sentence it read before. A suggestion that is not kept goes
+back to `CMD` with the reason, `--rounds` times. So the hook never tells Leanify
+what a sentence means: the grammar reads the rewritten sentence as it reads any
+other, and the script prints its formal reading next to the edit:
+
+```
+draft.tex:77: corollary
+  - The function $f$ attains its minimum on $(0,\infty)$ at $1$.
+  + For every $x\in(0,\infty)$, $f(1)\le f(x)$.
+    reads as: \forall x\in \mathbb{R},\ 0<x\Rightarrow f(1)\le f(x)
+```
+
+Whether the new sentence still says what you meant is yours to judge. The script
+writes the kept suggestions as a diff, `ARTICLE.leanify.diff`, and changes the
+article only with `--apply`. The targets are the sentences of results without a
+reading and the sentences that failed, in the article and the files it inputs
+(not an undefined symbol: its fix is where the symbol should be defined);
+`--proofs` adds the sentences of proofs. The exit status is 1 if a target is left
+without a suggestion.
 
 ### `leanify_prove.py`
 
@@ -180,7 +245,15 @@ proved again. The exit status is 1 if a claim is still open.
 \usepackage[certify]{leanify}  % and builds the certificate first, so the marks are current
 \leanifymodule{Note.Certified} % optional: the module that certifies the article
 \leanifyreport                 % optional: a one-line summary, where it appears
+\leanifyreadings               % optional: the formal reading of every definition and statement
 ```
+
+`\leanifyreadings` prints what Lean was asked to prove: the reading of every
+definition and of every statement, with its line, the version of Leanify, the
+vocabulary and the conventions the grammar applies where the text states no
+domain. Put it in an appendix: a reader of the PDF can then compare each
+statement with its reading, without Lean. It prints from
+`\jobname.leanify.tex`, like the margin marks.
 
 | Option | Effect |
 | --- | --- |
@@ -189,6 +262,7 @@ proved again. The exit status is 1 if a claim is still open.
 | `certify` | Before the marks are read, `prepare` updates the pin and `lake build` builds the certificate. The first time, when the article has no Lean files yet, `init` writes them, and a warning gives the `[[lean_lib]]` entry to add to `lakefile.toml`. Implies `status`. |
 | `vocab=unitsquare` | The vocabulary of the article, for `check` and `init`. |
 | `lean=FILE` | The compiled Lean file of the article, by default `Compiled.lean` next to it. The module to build is `\leanifymodule`, or else `NS.Certified` for the namespace `NS` that this file compiles. |
+| `exe=COMMAND` | The checker to run, instead of the project's: `exe=leanify` for an executable on the `PATH`, or a path. With it the quick check also runs outside a Lean project (with shell escape), so a checker without Lean or mathlib is enough to check an article while writing (`.github/workflows/release.yml` builds that executable for Linux, macOS and Windows when a version is tagged). The certificate still needs the project. |
 
 **Checking as you compile.** When the compiler may run programs (shell escape:
 `pdflatex -shell-escape`, `latexmk -shell-escape`, or the setting of the
@@ -203,7 +277,9 @@ Package leanify Warning: g is not defined: sentence not checked on input line
 ```
 
 so editors that read the LaTeX log list them with the other warnings, and the
-summary goes to the terminal. With `certify`, the errors of the Lean build and
+summary goes to the terminal. A finding in a file the article inputs names its
+file and line. If some proofs are not read completely, one more warning says how
+many: their results can be checked, but are not derived from the printed proofs. With `certify`, the errors of the Lean build and
 the refuted claims are warnings too. The full output of Leanify is in
 `\jobname.leanify.log`. `lake` must be on the `PATH` of the compiler; the
 first check also builds the checker, which takes a few minutes once.
@@ -213,7 +289,7 @@ first check also builds the checker, which takes a few minutes once.
 included, is built): a compile then costs the check itself, a fraction of a
 second. The executable is used when it is current (newer than the project's
 `lake-manifest.json`, or in the Leanify repository newer than the compiler's
-sources); otherwise lake rebuilds and runs it. If the article has not changed
+sources); otherwise lake rebuilds and runs it. If neither the article nor a file it inputs has changed
 since the last run, as in the later passes of `latexmk` or a recompile for the
 bibliography, nothing runs: the findings are read from `\jobname.leanify.log`
 again (delete it to force a run). With `certify`, `prepare` writes the lexing
@@ -223,7 +299,7 @@ while the status file is newer than the article.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project, as on arXiv or a journal's server, the package runs
-nothing and says nothing. Without `status` the typeset article is unchanged,
+nothing and says nothing (unless the option `exe` names a checker). Without `status` the typeset article is unchanged,
 which is what you submit. Once `leanify.sty` is on CTAN, arXiv and journals have
 it; until then, upload it with the article, or leave it out: Leanify reads the
 article without it.

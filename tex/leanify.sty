@@ -21,7 +21,10 @@
 %%     its verification status, read from \jobname.leanify.tex, which
 %%     #leanify_certify writes next to the article. Without the option the
 %%     typeset article is unchanged (use it for journal submission);
-%%   * records the Lean module that certifies the article (\leanifymodule).
+%%   * records the Lean module that certifies the article (\leanifymodule);
+%%   * prints, where \leanifyreadings stands, the formal reading of every
+%%     definition and statement, with the version of Leanify and the vocabulary:
+%%     what Lean was asked to prove, for a reader of the PDF to compare.
 %%
 %% Usage, in the preamble:
 %%   \usepackage[status]{leanify}               % marks from the last build
@@ -29,12 +32,15 @@
 %% Options: status, certify (implies status), check=false (no quick check),
 %% vocab=FIELDS (the fields of the vocabulary the article uses, e.g.
 %% vocab={numbers,analysis}; see docs/vocabulary.md), lean=FILE (its
-%% compiled Lean file, default Compiled.lean next to the article).
+%% compiled Lean file, default Compiled.lean next to the article),
+%% exe=COMMAND (the checker to run, e.g. exe=leanify for one on the PATH: the
+%% quick check then runs outside a Lean project as well).
 %% Compile with shell escape (pdflatex -shell-escape, or the editor's setting)
 %% and with `lake` on the PATH. Leanify's output is in \jobname.leanify.log.
-%% Optionally, \leanifyreport prints a one-line summary where it appears.
+%% Optionally, \leanifyreport prints a one-line summary where it appears, and
+%% \leanifyreadings the readings (in an appendix, say).
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
-\ProvidesPackage{leanify}[2026/11/06 v0.3 Leanify checks and status marks]
+\ProvidesPackage{leanify}[2026/11/09 v0.4 Leanify checks, status marks and readings]
 \RequirePackage{mathtools}
 \RequirePackage{amssymb}
 
@@ -44,6 +50,7 @@
 \bool_new:N \l__leanify_certify_bool
 \str_new:N \l__leanify_vocab_str
 \str_new:N \l__leanify_lean_str
+\str_new:N \l__leanify_exeopt_str
 \keys_define:nn { leanify }
   {
     status  .bool_set:N = \l__leanify_status_bool ,
@@ -58,6 +65,7 @@
     vocab   .str_set:N  = \l__leanify_vocab_str ,
     lean    .str_set:N  = \l__leanify_lean_str ,
     lean    .initial:n  = Compiled.lean ,
+    exe     .str_set:N  = \l__leanify_exeopt_str ,
   }
 \ProcessKeyOptions [ leanify ]
 % The vocabulary the article is read with, as printed by \leanifyreport.
@@ -82,7 +90,40 @@
     their citations); #5 of #6 sentences compiled; #4
     \ifnum#4=1 definition\else definitions\fi\ well defined}}
 \newcommand*\leanify@summary{no status file (build the Lean module first)}
-\newcommand*\leanifyreport{\textsf{Leanify} (vocabulary: \leanify@vocab): \leanify@summary.}
+\newcommand*\leanifyversion[1]{\gdef\leanify@version{~#1}}
+\newcommand*\leanify@version{}
+\newcommand*\leanifyreport{\textsf{Leanify}\leanify@version\ (vocabulary: \leanify@vocab): \leanify@summary.}
+
+% The readings: what Lean was asked to prove. \leanifyreadings prints them where it
+% stands. A reading is the reading of a version of the grammar with a vocabulary,
+% so both are named, with the conventions the grammar applies where the text
+% states no domain.
+\newcommand*\leanify@readings{}
+\newcommand\leanifydefinition[3]{%
+  \g@addto@macro\leanify@readings{\leanify@printdefinition{#1}{#2}{#3}}}
+\newcommand\leanifyreading[4]{%
+  \g@addto@macro\leanify@readings{\leanify@printreading{#1}{#2}{#3}{#4}}}
+\def\leanify@cap#1#2\@nil{\MakeUppercase{#1}#2}
+\newcommand\leanify@entry[2]{%
+  \par\smallskip\noindent\hangindent=1.5em\hangafter=1 #1:\ \(#2\)\par}
+\newcommand\leanify@printdefinition[3]{%
+  \leanify@entry{Definition (line~#1)}{#2\coloneqq#3}}
+\newcommand\leanify@printreading[4]{%
+  \leanify@entry{\leanify@cap#2\@nil
+    \if\relax\detokenize{#1}\relax\else~\ref{#1}\fi\ (line~#3)}{#4}}
+\newcommand\leanifyreadings{%
+  \par\begingroup\small\raggedright
+  \noindent\textsf{Leanify}\leanify@version\ read the definitions and statements
+  of this article as follows, with the vocabulary \leanify@vocab. In a limit, a
+  sum, a set or a threshold whose variable has no stated domain, the letters
+  \(n\), \(m\), \(k\), \(j\), \(i\), \(N\), \(M\), \(K\) stand for
+  integers and every other letter for a real number; \(\mathbb{N}\) contains
+  \(0\); \(e^{x}\) is the exponential function and \(\log\) the natural
+  logarithm; a statement also asserts that every term in it is defined.
+  \ifx\leanify@readings\empty
+    \par\smallskip\noindent No readings (build the Lean module first).\par
+  \else\leanify@readings\fi
+  \endgroup}
 
 % The margin marks.
 \newcommand*\leanify@markof[1]{%
@@ -123,6 +164,7 @@
 \str_new:N \l__leanify_redirect_str
 \str_set:Nn \l__leanify_redirect_str { > }
 \seq_new:N \l__leanify_lib_seq
+\seq_new:N \l__leanify_inputs_seq
 \int_new:N \l__leanify_seen_int
 \int_new:N \l__leanify_lineno_int
 \prg_generate_conditional_variant:Nnn \regex_extract_once:NnN { NV } { T , TF }
@@ -130,6 +172,7 @@
 \cs_generate_variant:Nn \msg_warning:nnnn { nnee }
 \cs_generate_variant:Nn \msg_warning:nnn { nne }
 \cs_generate_variant:Nn \msg_warning:nnnnnn { nneeee }
+\cs_generate_variant:Nn \regex_split:nnN { nVN }
 \cs_new_protected:Npn \__leanify_summary:n #1 { \typeout { Leanify: ~ #1 } }
 \cs_generate_variant:Nn \__leanify_summary:n { e }
 \cs_generate_variant:Nn \iow_term:n { e }
@@ -149,14 +192,28 @@
   }
 \msg_new:nnn { leanify } { no-report }
   {
-    Leanify ~ gave ~ no ~ report ~ on ~ the ~ article. ~ Is ~ lake ~ on ~
-    the ~ PATH? ~ Its ~ output ~ (in ~ \c__leanify_log_str) ~ begins: ~ #1
+    Leanify ~ gave ~ no ~ report ~ on ~ the ~ article. ~ Is ~ lake ~ (or ~ the ~
+    checker ~ named ~ by ~ the ~ option ~ exe) ~ on ~ the ~ PATH? ~ Its ~ output ~
+    (in ~ \c__leanify_log_str) ~ begins: ~ #1
   }
 \msg_new:nnn { leanify } { initialized }
   {
     Leanify ~ wrote ~ the ~ Lean ~ files ~ of ~ the ~ article. ~ Add ~ the ~
     library ~ to ~ lakefile.toml ~ (once), ~ then ~ compile ~ again:
     \\ #1 \\ #2 \\ #3 \\ #4
+  }
+\msg_new:nnn { leanify } { proofs }
+  {
+    Complete ~ proofs: ~ #1 ~ of ~ #2. ~ A ~ result ~ whose ~ proof ~ has ~
+    sentences ~ that ~ Leanify ~ does ~ not ~ read ~ can ~ be ~ checked, ~ but ~
+    it ~ is ~ not ~ derived ~ from ~ its ~ printed ~ proof ~ (leanify ~ check ~
+    --prose ~ lists ~ the ~ sentences)
+  }
+\msg_new:nnn { leanify } { no-project }
+  {
+    The ~ certificate ~ needs ~ a ~ Lean ~ project ~ (a ~ lakefile ~ in ~ the ~
+    article's ~ folder ~ or ~ up ~ to ~ three ~ folders ~ above): ~ it ~ was ~
+    not ~ built
   }
 \msg_new:nnn { leanify } { build-failed }
   { The ~ certificate ~ did ~ not ~ build ~ (see ~ \c__leanify_log_str) }
@@ -206,6 +263,12 @@
 \bool_new:N \l__leanify_current_bool
 \cs_new_protected:Npn \__leanify_find_exe:
   {
+    \str_if_empty:NTF \l__leanify_exeopt_str
+      { \__leanify_find_project_exe: }
+      { \str_set_eq:NN \l__leanify_exe_str \l__leanify_exeopt_str }
+  }
+\cs_new_protected:Npn \__leanify_find_project_exe:
+  {
     \str_clear:N \l__leanify_exe_str
     \sys_if_platform_windows:TF
       { \str_set:Nn \l__leanify_ext_str { .exe } }
@@ -228,9 +291,12 @@
             \bool_set_true:N \l__leanify_current_bool
             \clist_map_inline:nn
               {
-                LeanifyCli, Leanify/Lex, Leanify/Segment, Leanify/Math, Leanify/Grammar,
-                Leanify/Elab, Leanify/Doc, Leanify/Check, Leanify/Render, Leanify/Vocab,
-                Leanify/Syntax, Leanify/Library/UnitSquare
+                LeanifyCli, Leanify/Codes, Leanify/Lex, Leanify/Segment, Leanify/Math,
+                Leanify/Grammar, Leanify/Elab, Leanify/Doc, Leanify/Check, Leanify/Render,
+                Leanify/Vocab, Leanify/Syntax, Leanify/Meta, Leanify/Report,
+                Leanify/Library/Build, Leanify/Library/Complex, Leanify/Library/Distributions,
+                Leanify/Library/Fields, Leanify/Library/Numbers, Leanify/Library/Torus,
+                Leanify/Library/UnitSquare
               }
               {
                 \file_if_exist:nT { \l__leanify_root_str / ##1 .lean }
@@ -273,7 +339,10 @@
 % as warnings at their lines, Lean errors and refutations as warnings, and the
 % summaries on the terminal.
 \regex_const:Nn \c__leanify_finding_regex
-  { \A .*? \.tex : (\d+) : \d+ : \s* (?: error | warning ) : \s* (.*) \Z }
+  { \A (.*? \.tex) : (\d+) : \d+ : \s* (?: error | warning ) : \s* (.*) \Z }
+\regex_const:Nn \c__leanify_proofs_regex
+  { \A \s* complete \s proofs : \s* (\d+) \s of \s (\d+) }
+\regex_const:Nn \c__leanify_inputs_regex { \A .*? \.tex : \s inputs : \s (.*) \Z }
 \regex_const:Nn \c__leanify_counts_regex { \A .*? \.tex : \s+ (\d+ \s definitions .*) \Z }
 \regex_const:Nn \c__leanify_all_regex { \A \s* all : \s* (.*) \Z }
 \regex_const:Nn \c__leanify_lean_error_regex { \A error : \s* (.* \.lean : \d+ : \d+ : .*) \Z }
@@ -314,9 +383,21 @@
     \regex_extract_once:NVNTF \c__leanify_finding_regex \l__leanify_line_str
       \l__leanify_match_seq
       {
-        \__leanify_finding:ee
-          { \seq_item:Nn \l__leanify_match_seq { 2 } }
-          { \seq_item:Nn \l__leanify_match_seq { 3 } }
+        % a finding in a file the article inputs names its file
+        \str_if_eq:eeTF { \seq_item:Nn \l__leanify_match_seq { 2 } } { \c__leanify_article_str }
+          {
+            \__leanify_finding:ee
+              { \seq_item:Nn \l__leanify_match_seq { 3 } }
+              { \seq_item:Nn \l__leanify_match_seq { 4 } }
+          }
+          {
+            \msg_warning:nne { leanify } { lean }
+              {
+                \seq_item:Nn \l__leanify_match_seq { 4 } \c_space_tl
+                ( \seq_item:Nn \l__leanify_match_seq { 2 } , ~ line ~
+                \seq_item:Nn \l__leanify_match_seq { 3 } )
+              }
+          }
       }
       {
         \regex_extract_once:NVNT \c__leanify_counts_regex \l__leanify_line_str
@@ -330,6 +411,22 @@
           {
             \__leanify_summary:e
               { sentences: ~ \seq_item:Nn \l__leanify_match_seq { 2 } }
+          }
+        \regex_extract_once:NVNT \c__leanify_proofs_regex \l__leanify_line_str
+          \l__leanify_match_seq
+          {
+            \__leanify_summary:e
+              {
+                complete ~ proofs: ~ \seq_item:Nn \l__leanify_match_seq { 2 } ~ of ~
+                \seq_item:Nn \l__leanify_match_seq { 3 }
+              }
+            \int_compare:nNnT
+              { \seq_item:Nn \l__leanify_match_seq { 2 } } < { \seq_item:Nn \l__leanify_match_seq { 3 } }
+              {
+                \msg_warning:nnee { leanify } { proofs }
+                  { \seq_item:Nn \l__leanify_match_seq { 2 } }
+                  { \seq_item:Nn \l__leanify_match_seq { 3 } }
+              }
           }
         \regex_extract_once:NVNT \c__leanify_lean_error_regex \l__leanify_line_str
           \l__leanify_match_seq
@@ -387,6 +484,34 @@
       }
   }
 
+% The files the article inputs, as the last run of the check listed them: the
+% article is unchanged only if none of them is newer than the log.
+\cs_new_protected:Npn \__leanify_inputs_current:
+  {
+    \ior_open:NnT \g__leanify_ior { \c__leanify_log_str }
+      {
+        \ior_str_map_inline:Nn \g__leanify_ior
+          {
+            \regex_extract_once:NnNT \c__leanify_inputs_regex {##1} \l__leanify_match_seq
+              {
+                \str_set:Nx \l__leanify_line_str { \seq_item:Nn \l__leanify_match_seq { 2 } }
+                \regex_replace_all:nnN { \r } { } \l__leanify_line_str
+                \regex_replace_all:nnN { \\ } { / } \l__leanify_line_str
+                \regex_split:nVN { , \s* } \l__leanify_line_str \l__leanify_inputs_seq
+              }
+          }
+        \ior_close:N \g__leanify_ior
+      }
+    \seq_map_inline:Nn \l__leanify_inputs_seq
+      {
+        \file_if_exist:nT {##1}
+          {
+            \file_compare_timestamp:nNnT {##1} > { \c__leanify_log_str }
+              { \bool_set_false:N \l__leanify_current_bool }
+          }
+      }
+  }
+
 % Certify: write the Lean files the first time, then update the pin and build.
 \cs_new_protected:Npn \__leanify_certify:
   {
@@ -436,7 +561,9 @@
 \cs_new_protected:Npn \__leanify_run:
   {
     \__leanify_find_root:
-    \str_if_empty:NF \l__leanify_root_str
+    % in a Lean project, or with a checker named by the option `exe`
+    \bool_lazy_or:nnT
+      { ! \str_if_empty_p:N \l__leanify_root_str } { ! \str_if_empty_p:N \l__leanify_exeopt_str }
       {
         \bool_lazy_or:nnT { \l__leanify_check_bool } { \l__leanify_certify_bool }
           {
@@ -452,6 +579,8 @@
                     \file_compare_timestamp:nNnF
                       { \c__leanify_article_str } > { \c__leanify_log_str }
                       { \bool_set_true:N \l__leanify_current_bool }
+                    \seq_clear:N \l__leanify_inputs_seq
+                    \bool_if:NT \l__leanify_current_bool { \__leanify_inputs_current: }
                   }
                 \bool_if:NT \l__leanify_certify_bool
                   {
@@ -471,7 +600,12 @@
                   }
                   {
                     \bool_if:NT \l__leanify_check_bool { \__leanify_check: }
-                    \bool_if:NT \l__leanify_certify_bool { \__leanify_certify: }
+                    \bool_if:NT \l__leanify_certify_bool
+                      {
+                        \str_if_empty:NTF \l__leanify_root_str
+                          { \msg_warning:nn { leanify } { no-project } }
+                          { \__leanify_certify: }
+                      }
                   }
               }
               { \msg_warning:nn { leanify } { no-shell } }
@@ -496,13 +630,15 @@
 \AtBeginDocument
   {
     \__leanify_run:
-    \bool_if:NT \l__leanify_status_bool
+    % the status file: its entries are stored, and typeset only by the option
+    % `status`, \leanifyreport and \leanifyreadings
+    \file_if_exist:nTF { \c__leanify_status_str }
       {
-        \file_if_exist:nTF { \c__leanify_status_str }
-          {
-            \file_input:n { \c__leanify_status_str }
-            \__leanify_if_stale:
-          }
+        \file_input:n { \c__leanify_status_str }
+        \bool_if:NT \l__leanify_status_bool { \__leanify_if_stale: }
+      }
+      {
+        \bool_if:NT \l__leanify_status_bool
           {
             \bool_if:NF \l__leanify_initialized_bool
               {
