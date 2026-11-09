@@ -14,8 +14,9 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
 * audits each claim that the text derives (a proof sentence, or a statement
   closed by a compiled proof): its justification may use only Lean's and
   Mathlib's libraries, Leanify, the compiled article and helpers that are
-  themselves audited, so a proof sentence cannot be justified by a result the
-  sentence does not cite;
+  themselves audited, and never the justification of a claim that is not among
+  its premises, so a proof sentence cannot be justified by a result the sentence
+  does not cite;
 * has the kernel check `Foo.certificate : Certificate Foo.model Foo.doc Foo.G …` and
   derives `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` from it;
 * writes `<article>.leanify.json`, the per-sentence status for readers and
@@ -29,12 +30,17 @@ def permittedRoots : List Name :=
   [`Init, `Std, `Lean, `Mathlib, `Batteries, `Aesop, `Qq, `Plausible, `ProofWidgets,
     `ImportGraph, `LeanSearchClient, `Leanify]
 
-/-- Constants from modules outside the permitted ones that `c` uses, following
-helpers defined in the justification modules. -/
-partial def auditConst (env : Environment) (permitted isLocal : Name → Bool) (c : Name) :
+/-- Constants that `c` may not use: those from modules outside the permitted ones, and
+the `forbidden` ones (the justifications of claims that `c`'s claim does not cite),
+following helpers defined in the justification modules. -/
+partial def auditConst (env : Environment) (permitted isLocal : Name → Bool) (c : Name)
+    (forbidden : Name → Bool := fun _ => false) :
     StateM (NameSet × Array (Name × Name)) Unit := do
   if (← get).1.contains c then return
   modify fun (s, b) => (s.insert c, b)
+  if forbidden c then
+    modify fun (s, b) => (s, b.push (c, (moduleOf env c).getD .anonymous))
+    return
   match moduleOf env c with
   | some m =>
     if permitted m then return
@@ -43,7 +49,7 @@ partial def auditConst (env : Environment) (permitted isLocal : Name → Bool) (
       return
   | none => pure ()
   match env.find? c with
-  | some ci => for d in ci.getUsedConstantsAsSet do auditConst env permitted isLocal d
+  | some ci => for d in ci.getUsedConstantsAsSet do auditConst env permitted isLocal d forbidden
   | none => pure ()
 
 /-- `(∀ j ∈ premisesOf d k, holds d G j) → holds d G k`, as stated in `Certificate`. -/
@@ -158,7 +164,18 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   for k in verified do
     if fromText k then
       let some n := justified[k]! | continue
-      let (_, (_, bad)) := (auditConst env permitted isLocal n).run ({}, #[])
+      -- the justifications of the other claims: a premise is a hypothesis of the
+      -- obligation, and a claim that is not a premise is not cited
+      let premises := d.claims[k]!.premises
+      let others : List (Name × Nat) := (List.range d.claims.length).flatMap fun j =>
+        if j == k || premises.contains j then []
+        else [(jn ++ nm s!"proof{j}", j), (jn ++ nm s!"refute{j}", j)]
+      let (_, (_, bad)) := (auditConst env permitted isLocal n (fun c => others.any (·.1 == c))).run ({}, #[])
+      let uncited := (bad.toList.filterMap fun (c, _) => others.lookup c).eraseDups
+      unless uncited.isEmpty do
+        let shown := String.intercalate ", " (uncited.take 5 |>.map fun j => s!"claim {j}")
+        throwError "claim {k} is derived in the text from its citations, but its justification {n} uses \
+          the justification of {shown}, which its sentence does not cite: cite it in the text"
       unless bad.isEmpty do
         let shown := bad.toList.take 5 |>.map fun (c, m) => s!"{c} (from {m})"
         throwError "claim {k} is derived in the text from its citations, but its justification {n} uses {shown}"
