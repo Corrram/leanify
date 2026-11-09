@@ -1,0 +1,43 @@
+tests/Arguments/article.tex:18:1: info: claim 0: \forall x\in \mathbb{R},\ 1<x\Rightarrow x<{x}^{2}
+tests/Arguments/article.tex:22:1: info: claim 1: \forall x\in \mathbb{R},\ 1<x\Rightarrow 0<x-1
+tests/Arguments/article.tex:22:1: info: claim 2: \forall x\in \mathbb{R},\ 1<x\Rightarrow 0<x
+tests/Arguments/article.tex:23:1: info: claim 3: \forall x\in \mathbb{R},\ 1<x\Rightarrow {x}^{2}-x=x\,(x-1)\land 0<x\,(x-1)
+tests/Arguments/article.tex:27:1: info: claim 4: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow {x}^{2}<{y}^{2}
+tests/Arguments/article.tex:33:1: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y-x
+tests/Arguments/article.tex:35:1: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y+x\Rightarrow {y}^{2}-{x}^{2}=(y-x)\,(y+x)\land 0<(y-x)\,(y+x)
+tests/Arguments/article.tex:41:1: info: claim 7: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)
+tests/Arguments/article.tex:47:1: info: claim 8: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<{y}^{2}+x)
+tests/Arguments/article.tex:53:1: info: claim 9: \forall x\in \mathbb{R},\ x\le \lvert x\rvert
+tests/Arguments/article.tex:60:23: info: claim 10: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \lvert x\rvert=x
+tests/Arguments/article.tex:61:29: info: claim 11: \forall x\in \mathbb{R},\ x<0\Rightarrow \lvert x\rvert=-x
+tests/Arguments/article.tex:62:1: info: claim 12: \forall x\in \mathbb{R},\ x<0\Rightarrow x<0\land 0<\lvert x\rvert
+tests/Arguments/article.tex:64:1: info: claim 13: \forall x\in \mathbb{R},\ x\le \lvert x\rvert
+tests/Arguments/article.tex:70:1: info: claim 14: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow x<1
+tests/Arguments/article.tex:77:1: info: claim 15: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow 1\le x\Rightarrow x\le {x}^{2}\land 1\le x
+tests/Arguments/article.tex:78:1: info: claim 16: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow 1\le x\Rightarrow \bot
+tests/Arguments/article.tex:79:1: info: claim 17: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow x<1
+tests/Arguments/article.tex:83:1: info: claim 18: \forall x\in \mathbb{R},\ \neg ({x}^{2}=-1)
+tests/Arguments/article.tex:89:1: info: claim 19: \forall x\in \mathbb{R},\ {x}^{2}=-1\Rightarrow 0\le {x}^{2}\land {x}^{2}<0
+tests/Arguments/article.tex:89:1: info: claim 20: \forall x\in \mathbb{R},\ {x}^{2}=-1\Rightarrow \bot
+tests/Arguments/article.tex:90:1: info: claim 21: \forall x\in \mathbb{R},\ \neg ({x}^{2}=-1)
+tests/Arguments/article.tex:98:1: info: claim 22: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Arguments/article.tex:102:1: info: the proof of lem:refused is not read completely (Leanify cannot read 1 of its 6 sentences): lem:refused can be checked, but it is not derived from this proof
+tests/Arguments/article.tex:104:1: info: claim 23: \forall x\in \mathbb{R},\ 0\le x\Rightarrow {x}^{2}=x\,x\land 0\le x\,x
+tests/Arguments/article.tex:105:1: warning: a second assumption after steps under the first: `Assume further that …` adds it to the first; cases are written as the items of a list, each with its condition as heading: sentence not checked
+tests/Arguments/article.tex:106:1: warning: a case that begins in the middle of a proof: nothing says where it ends. Write the cases as the items of a list, each with its condition as heading (\item \emph{$x<0$.} …): sentence not checked
+tests/Arguments/article.tex:114:1: info: claim 24: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1
+tests/Arguments/article.tex:122:1: info: claim 25: \forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow x\le -1\land -1<0
+tests/Arguments/article.tex:123:1: warning: a contradiction after several assumptions: say which one is refuted by making it for contradiction (Suppose, for contradiction, that …): sentence not checked
+tests/Arguments/article.tex:133:1: info: claim 26: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}
+tests/Arguments/article.tex:139:32: info: claim 27: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}=1
+tests/Arguments/article.tex:141:1: info: claim 28: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow {(x+1)}^{2}={x}^{2}+2\,x+1\land x+2\,x+1\le {x}^{2}+2\,x+1
+tests/Arguments/article.tex:142:1: info: claim 29: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\le {(x+1)}^{2}
+tests/Arguments/article.tex:149:1: info: claim 30: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}
+tests/Arguments/article.tex:153:1: info: the proof of lem:own-binder is not read completely (Leanify cannot read 1 of its 4 sentences): lem:own-binder can be checked, but it is not derived from this proof
+tests/Arguments/article.tex:155:1: warning: the hypothesis of an induction needs the statement as one about the variables of the result: introduce them with Let (Let $n$ be a positive integer. Then …) and state the claim without further `for every`: sentence not checked
+tests/Arguments/article.tex: 0 definitions, 31 claims
+  text: 0 compiled, 0 failed, 9 prose (of 9)
+  results: 18 compiled, 0 failed, 0 prose (of 18)
+  proofs: 42 compiled, 4 failed, 2 prose (of 48)
+  all: 60 compiled, 4 failed, 11 prose (of 75)
+  complete proofs: 6 of 9 (a result is derived from a proof that is read completely)

@@ -29,6 +29,8 @@
     return `<section class="lm-claim"><h3>Claim ${c.index} <span class="lm-role">${esc(c.role)}</span></h3>
       <p class="lm-status lm-${c.status}">${esc(c.statusText)}</p>
       ${c.note ? `<p class="lm-small">Not verified: ${esc(c.note)}.</p>` : ''}
+      ${c.step === 'standard' ? '<p class="lm-small">The standard tactic closes this step.</p>' : c.step === 'argument' ? '<p class="lm-small">The standard tactic does not close this step: its proof is a longer Lean argument.</p>' : ''}
+      ${c.hypotheses === 'shown' ? '<p class="lm-small">Its hypotheses are shown to hold together.</p>' : c.hypotheses === 'open' ? '<p class="lm-small">Its hypotheses are not shown to hold together: it could be true for an empty reason.</p>' : ''}
       <div class="lm-reading">${c.reading}</div>
       ${c.premises.length ? `<details open><summary>Uses ${c.premises.length} premise${c.premises.length > 1 ? 's' : ''}${c.cites.length ? ' (cites ' + c.cites.map(esc).join(', ') + ')' : ''}</summary><ul class="lm-premises">${c.premises.map(premise).join('')}</ul></details>`
         : `<p class="lm-small">${c.status === 'companion' ? 'Stated without a compiled proof in the text; proved in Lean from the companion development.' : 'No premises.'}</p>`}

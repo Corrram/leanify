@@ -50,7 +50,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\operatorname{sgn}(x)` | the sign of `x`: 1, −1 or 0 |
 | `\max(a,b)`, `\min(a,b)` | as `\max\{a,b\}` |
 | `\max_{x\in A} e`, `\max_{1\le k\le n} e`, `\sup_{\substack{n\ge1\\ \omega(n)\le k}} e`, `\min_{n\ge1,\ φ} e` | over the variable of the first condition, with all the conditions; a variable bounded by inequalities alone ranges over the real numbers, an index (`n`, `m`, `k`, `j`, `i`, `N`, `M`, `K`) over the integers. `e` must be defined at every such point |
-| `\#\{x\in A : φ\}`, `\#A`, `|\{x : φ\}|`, `|A|` for a set `A` | the number of elements, defined only when the set is finite |
+| `\#\{x\in A : φ\}`, `\#A`, `|\{x : φ\}|`, `|A|` for a set `A` | the number of elements, defined only when the set is finite. `\#\{1\le t\le N : φ\}` for a letter `t` that is not an index and has no convention is refused: it would count real numbers. Write `t\in\mathbb{Z}`, or state the convention (`Throughout, $t$ denotes an integer.`) |
 | `\sqrt[3]{x}` | `x^{1/3}`, for `x\ge0` |
 | `2\times3` | the product of two numbers (between sets, `\times` is the product of the sets) |
 | `A\cap B`, `A\setminus B`, `\{a,b\}`, `\emptyset` | intersection, difference, finite sets and the empty set of real numbers; `(a,b)` as a set is the open interval |
@@ -93,6 +93,7 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | `We write $\mathcal P$ for the set of probability distributions on $\mathbb{N}_0$.` | a symbol for the class of a vocabulary noun |
 | `By a distribution we mean a probability distribution on $\mathbb{N}_0$.` | a noun of the article (`Let $\nu$ be a distribution.`) |
 | `Throughout, increasing means non-decreasing.`, `In this paper, …` | the words stand for the others in the following sentences (`strictly increasing` is unchanged) |
+| `Throughout, $p$ and $q$ denote integers.`, `In this paper, the letters $s,t$ always denote integers.`, `Here and below, $d$ is an integer.` | from here on, each of the letters is an integer wherever it is bound: `For every $p\ge2$`, `If $q>2$`, `Let $p\in[1,3]$`, `\{1\le p\le5 : φ\}`, `\max_{1\le p\le3}`, `\forall p\in A`; `\lim_{q\to\infty}` is the limit of a sequence, and an exponent built from them is an integer power. Without the convention, a letter other than `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` bounded by inequalities alone is a real number |
 
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
@@ -392,9 +393,67 @@ article without warnings is not taken for an article whose proofs are all read.
 
 A section whose title announces a proof, `\subsection{Proof of
 Theorem~\ref{thm:main}}`, is a proof of that result up to the next sectioning
-command. The heading of a case, `\item \emph{$x\ge0$.}`, is prose: it is the
-case's assumption, not a claim. The steps under it are read without that
-assumption, so a step that holds only in its case is not derived.
+command.
+
+### Hypotheses: assumptions, cases, contradictions
+
+A proof makes hypotheses, and every step after one is a claim under it: after
+`Assume that $x>1$.`, the step `Then $x^2>x$.` is read as `∀ x, 1 < x → x < x²`.
+`tests/Arguments/article.tex` uses each form.
+
+| Sentence | Reading |
+| --- | --- |
+| `Assume that $x>1$.`, `Suppose $0<x$ and $x<y$.`, `We assume that $n$ is even.`, `Let us assume …` | hypotheses of the following sentences of the result or proof (inside an item of a list: of the item). In the statement of a result they are hypotheses of the result, and its proof starts with them |
+| `Assume $c>0$.`, `Suppose $x\in A$.` about a variable that is not bound yet | the variable, as `Let $c>0$.` |
+| `Assume further that $y>0$.` (`moreover`, `furthermore`, `in addition`, `also`) | one more hypothesis. A second assumption after steps under the first needs such a word: without it, the text does not say whether the first one still holds, and the sentence is refused with a finding |
+| `\item \emph{$x\ge0$.} …`, `\item \emph{Case 2: $x<0$ and $y>0$.} …`, `\item \textbf{Case (b): $n$ is even.} …` | the heading of a case: a hypothesis of the sentences of its item of an `enumerate`, `itemize` or `description`. It ends with the item, so the sentence after the list (`In both cases, …`) is made without it |
+| `Suppose, for contradiction, that $x\ge1$.` (`for a contradiction`, `by contradiction`, `to the contrary`) | a hypothesis made to be refuted |
+| `This is a contradiction.`, `We obtain a contradiction.`, `This is absurd.`, `This contradicts Lemma~\ref{l}.`, `Then $0\le x^2<0$, a contradiction.` (`, which is impossible.`) | the false statement under the hypotheses made (`∀ x, x² < 1 → 1 ≤ x → ⊥`), after the claims of the sentence. It ends the latest hypothesis made for contradiction, with the hypotheses made after it; if none was, the one assumption of the proof. After several assumptions, none made for contradiction, it does not say which one it refutes, and is refused |
+| `We distinguish two cases:`, `There are three cases.`, `We argue by contradiction.`, `The proof is by contradiction.`, `We argue by induction on $n$.` | a sentence that says how the proof is organized: it asserts nothing, and does not leave the proof incomplete |
+| `\item \emph{Base case: $n=1$.} …`, `\item \emph{Induction step.} …` | the cases of an induction: the base case is a case like any other, with the hypothesis `n = 1`; the heading of the step makes no hypothesis |
+| `Assume that the statement holds for $n$.` (`Suppose the claim is true for some $n$.`), in the proof of a result | the hypothesis of the induction: the statement of the result, about the `n` that the result introduces. The steps after it speak about `n+1` |
+
+Three things are not read, because the text leaves the meaning open:
+
+* a case that begins in the running proof (`Assume now that $x<0$.`, `Next, suppose
+  …`, `Conversely, assume …`): nothing says where it ends. Write the cases as the
+  items of a list;
+* `Without loss of generality, assume …` and `We may assume …`: that the
+  hypothesis costs nothing is a step of the proof, not a hypothesis. Such a
+  sentence is prose.
+
+**Induction.** The statement is written about a variable that the result
+introduces, so that its hypothesis has a reading for one value:
+
+```latex
+\begin{lemma}\label{lem:square}
+Let $n$ be a positive integer.
+Then $n^2\ge n$.
+\end{lemma}
+\begin{proof}
+We argue by induction on $n$.
+\begin{itemize}
+\item \emph{Base case: $n=1$.} We have $n^2=1$.
+\item \emph{Induction step.} Assume that the statement holds for $n$.
+Then $(n+1)^2=n^2+2n+1\ge n+2n+1$.
+By the induction hypothesis, $(n+1)^2\ge n+1$.
+\end{itemize}
+\end{proof}
+```
+
+The base case is read as `∀ n, … → n = 1 → n² = 1`, and the last step as
+`∀ n, … → n ≤ n² → n + 1 ≤ (n + 1)²`: every positive integer `n` for which the
+statement holds gives it for `n+1`. The lemma rests on these steps, and its Lean
+proof is the induction itself, which the standard tactic does not do: a result
+proved by induction is *argued*. Three forms are not read. A statement that
+binds its variable itself (`For every positive integer $n$, …`) is not a
+statement about one `n`, and the finding says to introduce it with `Let`. The
+statement `for $n-1$` and `for all $m<n$` (strong induction) are other
+statements: write them out (`Assume that $(n-1)^2\ge n-1$.`).
+
+A definition made under a hypothesis (`Assume $x\ne0$. Set $y\coloneqq\frac1x$.`)
+does not take the hypothesis: state the condition where the variable is bound
+(`Let $x\in\mathbb{R}\setminus\{0\}$.`).
 
 ## Checking while writing
 

@@ -18,7 +18,7 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.4, 2026-11-09}
+\date{Version 0.5, 2026-11-09}
 
 \begin{document}
 \maketitle
@@ -89,12 +89,12 @@ status & Marks every labelled result in the margin with its verification status,
 check=false & No quick check during the compile. \\
 certify & Before the marks are read, updates the pin of the article and builds
   its certificate with \texttt{lake build}. The first time, when the article has
-  no Lean files yet, writes them, and a warning gives the \texttt{[[lean\_lib]]}
-  entry to add to \texttt{lakefile.toml}. Implies \opt{status}. \\
+  no Lean files yet, writes them. Implies \opt{status}. \\
 vocab=NAME & The vocabulary of the article: \texttt{core} (the default) or
   \texttt{unitsquare} (probability on the unit square). \\
-lean=FILE & The compiled Lean file of the article, by default
-  \texttt{Compiled.lean} next to it. \\
+lean=FILE & The compiled Lean file of the article, if it is not
+  \texttt{Compiled.lean} next to it or in the folder that \texttt{leanify init}
+  made. \\
 exe=COMMAND & The checker to run instead of the project's, for instance
   \texttt{exe=leanify} for an executable on the \texttt{PATH}. With it the quick
   check also runs outside a Lean project. \\
@@ -124,8 +124,9 @@ exe=COMMAND & The checker to run instead of the project's, for instance
 When the compiler may run programs (shell escape: \texttt{pdflatex -shell-escape},
 \texttt{latexmk -shell-escape}, or the setting of the editor) and the article
 lies in a Lean project (a \texttt{lakefile.toml} or \texttt{lakefile.lean} in its
-folder or up to three folders above), every compile runs
-\texttt{lake exe leanify check} on the article. Its findings become LaTeX
+folder or up to three folders above), every compile runs one command,
+\texttt{leanify tex}, on the article. It writes its findings as records,
+\texttt{\cs{jobname}.leanify.out}, and they become LaTeX
 warnings at their lines of the article,
 \begin{lstlisting}
 Package leanify Warning: g is not defined: sentence not checked on input line
@@ -140,10 +141,9 @@ are derived from the printed proofs. With
 too. The full output of Leanify is in \texttt{\cs{jobname}.leanify.log}.
 \texttt{lake} must be on the \texttt{PATH} of the compiler; the first check
 also builds the checker, which takes a few minutes once. Later compiles run the
-checker directly, without \texttt{lake}, and take a fraction of a second; if
-neither the article nor a file it inputs has changed since the last run (the
-later passes of \texttt{latexmk}), nothing runs and the findings are read from
-the log again.
+checker directly, without \texttt{lake}, and take a fraction of a second. The
+records of an unchanged article are the same on every run, so the later passes
+of \texttt{latexmk} see no change.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project the package runs nothing and says nothing, unless the
@@ -161,7 +161,10 @@ Mark & Meaning \\
 \midrule
 $\checkmark$\,\textsf{checked} & Every sentence compiled, and the claim is verified in Lean. \\
 $\checkmark$\,\textsf{derived} & Every sentence compiled, and the proof in the text
-  derives the claim from its citations. \\
+  derives the claim from its citations, each step by the standard tactic. \\
+$\checkmark$\,\textsf{argued} & As \textsf{derived}, but a step of the proof needed
+  a longer Lean argument than the standard tactic: the printed proof leaves out
+  more than a routine step there. \\
 $\circ$\,\textsf{partly checked} & The result is verified in part. \\
 $\circ$\,\textsf{compiled} & The statement compiled, but is not verified yet. \\
 $\times$\,\textsf{false} & The claim is refuted in Lean. \\
@@ -173,6 +176,10 @@ The marks are read from \texttt{\cs{jobname}.leanify.tex}, which the Lean comman
 \texttt{\#leanify\_certify} writes next to the article. If the article is newer
 than that file, a warning says that the marks may be out of date. Leave
 \opt{status} out for the version you submit.
+
+The summary of \cs{leanifyreport} also says how many steps the standard tactic
+closes, and for how many statements with hypotheses it is shown that the
+hypotheses can hold together.
 
 \section{Requirements}
 

@@ -164,6 +164,7 @@ export function inspectorData(report, {declarationURL = () => null} = {}) {
       claims: (s.claims ?? []).map(k => {
         const c = report.claims[k];
         return {index: k, role: c.role, status: c.status, statusText: statusText[c.status], note: c.note ?? '',
+          step: c.step ?? '', hypotheses: c.hypotheses ?? '',
           reading: renderReading(c.reading), lean: c.lean, meaningful: c.meaningful,
           justification: c.justification, justificationURL: declarationURL(c.justification, c.module),
           premises: c.premises.map(j => ({claim: j, sentence: sentenceOfClaim(j), status: report.claims[j].status})),

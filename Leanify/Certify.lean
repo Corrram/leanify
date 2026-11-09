@@ -17,6 +17,12 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
   themselves audited, and never the justification of a claim that is not among
   its premises, so a proof sentence cannot be justified by a result the sentence
   does not cite;
+* tries the standard tactic `leanify_step` on the obligation of each such claim
+  and records whether it closes it (`set_option leanify.steps false` skips this):
+  a step that needs a Lean argument beyond it is larger than it looks in the text;
+* records, for each statement with hypotheses, whether `J.satisfiedK :
+  Foo.satisfiableK` shows that they can hold together: a statement whose
+  hypotheses cannot all hold is true for an empty reason;
 * has the kernel check `Foo.certificate : Certificate Foo.model Foo.doc Foo.G …` and
   derives `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` from it;
 * writes `<article>.leanify.json`, the per-sentence status for readers and
@@ -59,6 +65,26 @@ def stepType (mE docE gE : Expr) (k : Nat) : MetaM Expr := do
     let body ← mkArrow (← mkAppM ``Membership.mem #[pre, j]) (mkApp4 (Lean.mkConst ``Doc.holds) mE docE gE j)
     mkForallFVars #[j] body
   mkArrow hyp (mkApp4 (Lean.mkConst ``Doc.holds) mE docE gE (mkNatLit k))
+
+register_option leanify.steps : Bool := {
+  defValue := true
+  descr := "try the standard tactic leanify_step on every claim the text derives" }
+
+/-- Does the standard tactic prove the proposition `ty` (an obligation)? What the
+attempt logs is dropped: a failure of it is a result, not an error of the build. -/
+def standardStep (ty : Expr) : CommandElabM Bool := do
+  liftTermElabM do
+    let saved ← Core.getAndEmptyMessageLog
+    let ok ← try
+        Term.withoutErrToSorry <|
+          withTheReader Core.Context (fun c => { c with maxHeartbeats := 400000 * 1000 }) <| withCurrHeartbeats do
+            let e ← Term.elabTermEnsuringType (← `(by leanify_step)) (some ty)
+            Term.synthesizeSyntheticMVarsNoPostponing
+            let e ← instantiateMVars e
+            pure (!e.hasMVar && !e.hasSyntheticSorry && !e.hasSorry && !(← Core.getMessageLog).hasErrors)
+      catch _ => pure false
+    Core.setMessageLog saved
+    pure ok
 
 syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : command
 
@@ -179,6 +205,27 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
       unless bad.isEmpty do
         let shown := bad.toList.take 5 |>.map fun (c, m) => s!"{c} (from {m})"
         throwError "claim {k} is derived in the text from its citations, but its justification {n} uses {shown}"
+  -- the size of the steps: does the standard tactic close each claim the text derives?
+  let mut steps : Array String := Array.replicate d.claims.length ""
+  if leanify.steps.get (← getOptions) then
+    for k in verified do
+      if fromText k then
+        let ok ← standardStep (Lean.mkConst (ns ++ nm s!"obligation{k}"))
+        steps := steps.set! k (if ok then "standard" else "argument")
+  -- the hypotheses of the statements: are they shown to hold together?
+  let mut hyps : Array String := Array.replicate d.claims.length ""
+  for k in [0:d.claims.length] do
+    let prop := ns ++ nm s!"satisfiable{k}"
+    if env.contains prop then
+      let n := jn ++ nm s!"satisfied{k}"
+      let shown ← match env.find? n with
+        | some ci =>
+          unless ci.type == Lean.mkConst prop do throwError "{n} must have type {prop}"
+          -- (shown: proved without `sorry` and from the standard axioms alone)
+          let axioms ← liftCoreM <| Lean.collectAxioms n
+          pure (axioms.all fun a => a == ``propext || a == ``Classical.choice || a == ``Quot.sound)
+        | none => pure false
+      hyps := hyps.set! k (if shown then "shown" else "open")
   -- the certificate
   let natE := Lean.mkConst ``Nat
   let listNat (xs : List Nat) : Expr := listExpr natE (xs.map mkNatLit)
@@ -245,13 +292,21 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
     else if justified[k]!.isNone then "unverified" else if fromText k then "text" else "companion"
   let refutation (k : Nat) : Option Name := refuted[k]!.map fun _ => jn ++ nm s!"refute{k}"
   let infos : Array ClaimInfo := (List.range d.claims.length).toArray.map fun k =>
-    { status := status k, rank := rank[k]!,
+    { status := status k, rank := rank[k]!, step := steps[k]!, hypotheses := hyps[k]!,
       justification := ((justified[k]!.orElse fun _ => refutation k).map toString).getD "",
       module := (((justified[k]!.orElse fun _ => refutation k).bind (moduleOf env)).map toString).getD "",
       note := notes[k]! }
   let defInfos := defined.map fun n => (toString n, ((moduleOf env n).map toString).getD "")
   writeReport ns jn rel d infos defInfos verified axs.toList
   let count (st : String) := ((List.range d.claims.length).filter (status · == st)).length
+  let standard := (steps.toList.filter (· == "standard")).length
+  let tried := (steps.toList.filter (· != "")).length
+  if tried > 0 then
+    logInfo m!"of the {tried} claims derived in the text, the standard tactic closes {standard}"
+  let withHyps := (hyps.toList.filter (· != "")).length
+  if withHyps > 0 then
+    logInfo m!"of the {withHyps} statements with hypotheses, {(hyps.toList.filter (· == "shown")).length} \
+      have hypotheses shown to hold together ({jn}.satisfiedK)"
   logInfo m!"{d.claims.length} claims: {count "text"} derived in the text from their citations, \
     {count "companion"} justified by companion proofs, {count "refuted"} refuted, \
     {count "unverified"} unverified; {d.values.length} definitions well defined. Axioms: {axs.toList}"

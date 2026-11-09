@@ -175,4 +175,20 @@ theorem proof15 : obligation15 := by
   apply Real.le_sqrt_of_sq_le
   nlinarith [sq_nonneg (x - y)]
 
+/-- The hypotheses of claim 0 can hold together (take `x = y = 1`). -/
+theorem satisfied0 : satisfiable0 := by
+  leanify_values 1
+
+/-- The hypotheses of claim 5 can hold together (take `x = y = 1`). -/
+theorem satisfied5 : satisfiable5 := by
+  leanify_values 1
+
+/-- The hypotheses of claim 6 can hold together (take `x = y = 1`). -/
+theorem satisfied6 : satisfiable6 := by
+  leanify_values 1
+
+/-- The hypotheses of claim 15 can hold together (take `x = y = 1`). -/
+theorem satisfied15 : satisfiable15 := by
+  leanify_values 1
+
 end Means.Proofs

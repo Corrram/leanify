@@ -66,17 +66,25 @@ git = "https://github.com/Corrram/leanify.git"
 rev = "main"
 ```
 
-`leanify init` writes four files next to the article:
+Or start from the article alone: with the checker on the `PATH`,
+`leanify certify article.tex` makes its folder a Lean project, writes the Lean
+files, fetches mathlib and builds the certificate.
+
+`leanify init` writes four files next to the article, and adds the article's
+library to `lakefile.toml`:
 
 | File | Contents |
 | --- | --- |
 | `Compiled.lean` | `#leanify_article Note "article.tex" "fnv1a64:…"`: the kernel compiles the article, pinned by its hash (`leanify prepare` updates the pin after an edit) |
 | `Article.lean` | `#leanify_semantics`: every definition and claim as readable Lean (`claimK`, `meaningfulK`, `obligationK`) |
-| `Proofs.lean` | your proofs `proofK : obligationK` and `definedI : wellDefinedI`, or `refuteK : meaningfulK ∧ ¬ claimK` for a claim that is false as stated |
+| `Proofs.lean` | your proofs `proofK : obligationK` and `definedI : wellDefinedI`, or `refuteK : meaningfulK ∧ ¬ claimK` for a claim that is false as stated, and `satisfiedK : satisfiableK`: the hypotheses of statement `K` can hold together |
 | `Certified.lean` | `#leanify_certify`: the certificate `Note.certificate`, each verified claim `Note.verifiedK`, and the reports |
 
 A proof that still uses `sorry` leaves its claim unverified, so an article can
-be certified while its proofs are written. Two scripts take a command of yours
+be certified while its proofs are written. The certificate also reports what a
+proof alone does not show: whether the hypotheses of a statement are shown to
+hold together, and whether each step of a printed proof is closed by one fixed
+tactic (`leanify_step`) or needed a longer Lean argument. Two scripts take a command of yours
 (a model, usually): `scripts/leanify_suggest.py` proposes rewrites of the
 sentences Leanify cannot read, and keeps one only if the check then reads it;
 `scripts/leanify_prove.py` proves the open obligations, and writes a proof only
@@ -105,7 +113,11 @@ The examples are short papers in the usual style, each certified by CI:
   with its theorem refuted;
 * [`examples/Means`](examples/Means), the harmonic, geometric and arithmetic
   mean of two numbers, with symbols defined inside a theorem, in a
-  `where`-clause and in apposition.
+  `where`-clause and in apposition. Five steps of its proofs use rules for
+  square roots that the standard tactic does not know, so its results are
+  marked *argued*, not *derived*;
+* [`tests/Arguments`](tests/Arguments), proofs with assumptions, cases,
+  contradictions and an induction, each step closed by the standard tactic.
 
 ## Documentation
 
@@ -130,7 +142,7 @@ The examples are short papers in the usual style, each certified by CI:
 | `Leanify/Syntax.lean`, `Denote.lean` | The core language and its Lean denotation |
 | `Leanify/Vocab.lean`, `Library/` | Vocabularies, `phrase!`, the unit-square vocabulary and its model |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | The commands `#leanify_article`, `#leanify_semantics`, `#leanify_certify` |
-| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker, with the files the article inputs), `init` (the Lean files of an article), `prepare` (the pin and the lexing cache), `flatten` (the article and its inputs as one file) |
+| `Leanify/Check.lean`, `LeanifyCli.lean` | The command line `lake exe leanify`: `check` (the native checker, with the files the article inputs), `certify` (from an article to its certificate), `init` (the Lean files of an article, and its project), `prepare` (the pin and the lexing cache), `flatten` (the article and its inputs as one file), `tex` (what `leanify.sty` runs) |
 | `examples/`, `tests/` | The example articles of the documentation, and the test articles (a refuted theorem, notions in the running text), certified in CI |
 | `reader/` | The web reader: the article rendered from its source with the status of every sentence |
 | `tex/leanify.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |

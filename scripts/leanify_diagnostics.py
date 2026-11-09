@@ -55,7 +55,7 @@ def failed_message(message):
     return f"unknown notation {sym}" if name and name.group(1) not in GREEK else f"{sym} is not defined"
 
 
-def findings(report, prose=False):
+def findings(report, prose=False, standard=False, satisfiable=False):
     sentences = report["sentences"]
     stated = lambda s: s["environment"] not in ("text", "proof", "remark", "example", "conjecture")
     for s in sentences:
@@ -91,6 +91,14 @@ def findings(report, prose=False):
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) compiled but not verified: {why}")
         elif c["status"] == "text" and prose:
             yield (*where, "info", f"claim {c['index']} derived from its citations")
+        # a step that the standard tactic does not close is larger than it looks in the text
+        if standard and c["status"] == "text" and c.get("step") == "argument":
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is derived in the text, "
+                   f"but the standard tactic does not close it: its proof {c['justification']} is a longer Lean argument")
+        # a statement whose hypotheses cannot all hold is true for an empty reason
+        if satisfiable and c.get("hypotheses") == "open":
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}): its hypotheses are not "
+                   f"shown to hold together (prove {report['justifications']}.satisfied{c['index']})")
 
 
 def main():
@@ -99,6 +107,10 @@ def main():
     ap.add_argument("--prose", action="store_true", help="also list proof sentences the grammar does not read")
     ap.add_argument("--verified", action="store_true",
                     help="fail if a compiled claim is not verified")
+    ap.add_argument("--standard", action="store_true",
+                    help="warn of the claims derived in the text that the standard tactic does not close")
+    ap.add_argument("--satisfiable", action="store_true",
+                    help="warn of the statements whose hypotheses are not shown to hold together")
     ap.add_argument("--strict", action="store_true",
                     help="fail on any warning: unverified claims and sentences that did not compile")
     ap.add_argument("--relative-to", type=pathlib.Path, default=pathlib.Path.cwd(),
@@ -123,7 +135,7 @@ def main():
               f"(report {report.get('sourceHash')}, file {pin}); run with --pin on the Lean file "
               f"with #leanify_article, then rebuild")
         return 1
-    for line, col, severity, message in sorted(findings(report, args.prose)):
+    for line, col, severity, message in sorted(findings(report, args.prose, args.standard, args.satisfiable)):
         print(f"{shown.as_posix()}:{line}:{col}: {severity}: {message}")
         errors += severity == "error"
         warnings += severity == "warning"

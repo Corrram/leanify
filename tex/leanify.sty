@@ -12,11 +12,13 @@
 %%   * runs Leanify while the article compiles, when it can: if the compiler
 %%     may run programs (shell escape) and the article lies in a Lean project
 %%     (a lakefile in its folder or up to three folders above), every compile
-%%     runs the quick check, and its findings appear as warnings at their lines
-%%     of the article, where editors list them. With `certify`, it also updates
-%%     the pin and builds the certificate, so that the margin marks are current;
-%%     the first time, it writes the Lean files of the article. Without shell
-%%     escape, as on arXiv, nothing runs;
+%%     runs one command, `leanify tex`, which does the quick check and, with
+%%     `certify`, updates the pin and builds the certificate (the first time,
+%%     it writes the Lean files of the article). The command writes its
+%%     findings as records, \jobname.leanify.out, which this package reads
+%%     line by line: they appear as warnings at their lines of the article,
+%%     where editors list them. Without shell escape, as on arXiv, nothing
+%%     runs;
 %%   * with the option `status`, marks every labelled result in the margin with
 %%     its verification status, read from \jobname.leanify.tex, which
 %%     #leanify_certify writes next to the article. Without the option the
@@ -32,7 +34,8 @@
 %% Options: status, certify (implies status), check=false (no quick check),
 %% vocab=FIELDS (the fields of the vocabulary the article uses, e.g.
 %% vocab={numbers,analysis}; see docs/vocabulary.md), lean=FILE (its
-%% compiled Lean file, default Compiled.lean next to the article),
+%% compiled Lean file, if it is not Compiled.lean next to the article or in
+%% the folder that `leanify init` made),
 %% exe=COMMAND (the checker to run, e.g. exe=leanify for one on the PATH: the
 %% quick check then runs outside a Lean project as well).
 %% Compile with shell escape (pdflatex -shell-escape, or the editor's setting)
@@ -40,7 +43,7 @@
 %% Optionally, \leanifyreport prints a one-line summary where it appears, and
 %% \leanifyreadings the readings (in an appendix, say).
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
-\ProvidesPackage{leanify}[2026/11/09 v0.4 Leanify checks, status marks and readings]
+\ProvidesPackage{leanify}[2026/11/09 v0.5 Leanify checks, status marks and readings]
 \RequirePackage{mathtools}
 \RequirePackage{amssymb}
 
@@ -64,7 +67,6 @@
     certify .value_forbidden:n = true ,
     vocab   .str_set:N  = \l__leanify_vocab_str ,
     lean    .str_set:N  = \l__leanify_lean_str ,
-    lean    .initial:n  = Compiled.lean ,
     exe     .str_set:N  = \l__leanify_exeopt_str ,
   }
 \ProcessKeyOptions [ leanify ]
@@ -92,7 +94,16 @@
 \newcommand*\leanify@summary{no status file (build the Lean module first)}
 \newcommand*\leanifyversion[1]{\gdef\leanify@version{~#1}}
 \newcommand*\leanify@version{}
-\newcommand*\leanifyreport{\textsf{Leanify}\leanify@version\ (vocabulary: \leanify@vocab): \leanify@summary.}
+% Of the claims derived in the text, those the standard tactic closes; of the
+% statements with hypotheses, those whose hypotheses are shown to hold together.
+\newcommand*\leanifysteps[2]{\gdef\leanify@steps{; the standard tactic closes #1 of the #2
+    claims derived in the text}}
+\newcommand*\leanify@steps{}
+\newcommand*\leanifyhypotheses[2]{\gdef\leanify@hyps{; the hypotheses of #1 of #2 statements
+    are shown to hold together}}
+\newcommand*\leanify@hyps{}
+\newcommand*\leanifyreport{\textsf{Leanify}\leanify@version\ (vocabulary: \leanify@vocab):
+  \leanify@summary\leanify@steps\leanify@hyps.}
 
 % The readings: what Lean was asked to prove. \leanifyreadings prints them where it
 % stands. A reading is the reading of a version of the grammar with a vocabulary,
@@ -129,6 +140,7 @@
 \newcommand*\leanify@markof[1]{%
   \ifcsname leanify@mk@#1\endcsname\csname leanify@mk@#1\endcsname\fi}
 \newcommand*\leanify@mk@text{$\checkmark$\,derived}
+\newcommand*\leanify@mk@argued{$\checkmark$\,argued}
 \newcommand*\leanify@mk@verified{$\checkmark$\,checked}
 \newcommand*\leanify@mk@partial{$\circ$\,partly checked}
 \newcommand*\leanify@mk@compiled{$\circ$\,compiled}
@@ -143,39 +155,37 @@
   \fi}
 \def\leanify@none{none}
 
-% Running Leanify during the compile.
+% Running Leanify during the compile. The package runs one command,
+%   leanify tex "\jobname.tex" [--vocab FIELDS] [--certify] [--status] ...
+% which checks the article and, with `certify', builds its certificate. It writes
+% \jobname.leanify.out, which is read here line by line: the kind of a record on
+% one line, then each of its fields on a line of its own.
+%   W  line, message        a finding at a line of the article
+%   F  file, line, message  a finding in a file the article inputs
+%   M  message              a warning without a line
+%   S  text                 a line of the summary, for the terminal
+% What the command prints is in \jobname.leanify.log.
 \ExplSyntaxOn
 \str_new:N \l__leanify_root_str
 \str_new:N \l__leanify_job_str
 \str_new:N \l__leanify_line_str
 \str_new:N \l__leanify_first_str
-\str_new:N \l__leanify_ns_str
-\str_new:N \l__leanify_module_str
-\seq_new:N \l__leanify_match_seq
+\str_new:N \l__leanify_kind_str
+\str_new:N \l__leanify_args_str
+\seq_new:N \l__leanify_fields_seq
+\int_new:N \l__leanify_need_int
 \bool_new:N \l__leanify_report_bool
-\bool_new:N \l__leanify_built_bool
-\bool_new:N \l__leanify_initialized_bool
+\bool_new:N \l__leanify_header_bool
 \ior_new:N \g__leanify_ior
 \str_set:Nx \l__leanify_job_str { \c_sys_jobname_str }
 \str_remove_all:Nn \l__leanify_job_str { " }
 \str_const:Nx \c__leanify_article_str { \l__leanify_job_str .tex }
 \str_const:Nx \c__leanify_log_str { \l__leanify_job_str .leanify.log }
+\str_const:Nx \c__leanify_out_str { \l__leanify_job_str .leanify.out }
 \str_const:Nx \c__leanify_status_str { \l__leanify_job_str .leanify.tex }
-\str_new:N \l__leanify_redirect_str
-\str_set:Nn \l__leanify_redirect_str { > }
-\seq_new:N \l__leanify_lib_seq
-\seq_new:N \l__leanify_inputs_seq
-\int_new:N \l__leanify_seen_int
-\int_new:N \l__leanify_lineno_int
-\prg_generate_conditional_variant:Nnn \regex_extract_once:NnN { NV } { T , TF }
-\prg_generate_conditional_variant:Nnn \regex_match:Nn { NV } { T }
-\cs_generate_variant:Nn \msg_warning:nnnn { nnee }
 \cs_generate_variant:Nn \msg_warning:nnn { nne }
-\cs_generate_variant:Nn \msg_warning:nnnnnn { nneeee }
-\cs_generate_variant:Nn \regex_split:nnN { nVN }
 \cs_new_protected:Npn \__leanify_summary:n #1 { \typeout { Leanify: ~ #1 } }
 \cs_generate_variant:Nn \__leanify_summary:n { e }
-\cs_generate_variant:Nn \iow_term:n { e }
 
 % A finding at line #1 of the article. \PackageWarningNoLine keeps `on input line
 % N' on one line of the log, where editors look for it (l3msg would wrap it).
@@ -196,33 +206,6 @@
     checker ~ named ~ by ~ the ~ option ~ exe) ~ on ~ the ~ PATH? ~ Its ~ output ~
     (in ~ \c__leanify_log_str) ~ begins: ~ #1
   }
-\msg_new:nnn { leanify } { initialized }
-  {
-    Leanify ~ wrote ~ the ~ Lean ~ files ~ of ~ the ~ article. ~ Add ~ the ~
-    library ~ to ~ lakefile.toml ~ (once), ~ then ~ compile ~ again:
-    \\ #1 \\ #2 \\ #3 \\ #4
-  }
-\msg_new:nnn { leanify } { proofs }
-  {
-    Complete ~ proofs: ~ #1 ~ of ~ #2. ~ A ~ result ~ whose ~ proof ~ has ~
-    sentences ~ that ~ Leanify ~ does ~ not ~ read ~ can ~ be ~ checked, ~ but ~
-    it ~ is ~ not ~ derived ~ from ~ its ~ printed ~ proof ~ (leanify ~ check ~
-    --prose ~ lists ~ the ~ sentences)
-  }
-\msg_new:nnn { leanify } { no-project }
-  {
-    The ~ certificate ~ needs ~ a ~ Lean ~ project ~ (a ~ lakefile ~ in ~ the ~
-    article's ~ folder ~ or ~ up ~ to ~ three ~ folders ~ above): ~ it ~ was ~
-    not ~ built
-  }
-\msg_new:nnn { leanify } { build-failed }
-  { The ~ certificate ~ did ~ not ~ build ~ (see ~ \c__leanify_log_str) }
-\msg_new:nnn { leanify } { stale }
-  {
-    \c__leanify_article_str \ changed ~ after ~ its ~ certificate ~ was ~
-    built: ~ the ~ margin ~ marks ~ may ~ be ~ out ~ of ~ date. ~ Rebuild, ~ or ~
-    load ~ the ~ package ~ with ~ certify
-  }
 
 % The Lean project: the nearest folder, up to three above, with a lakefile.
 \cs_new_protected:Npn \__leanify_find_root:
@@ -239,24 +222,14 @@
       }
   }
 
-% `lake -d ROOT ARGS`, its output and errors into the log: the first command
-% of the compile starts the log, the others add to it.
-\cs_new_protected:Npn \__leanify_lake:n #1
-  {
-    \sys_shell_now:e
-      {
-        lake ~ -d ~ " \l__leanify_root_str " ~ #1 ~ \l__leanify_redirect_str ~
-        " \c__leanify_log_str " ~ 2>&1
-      }
-    \str_set:Nn \l__leanify_redirect_str { >> }
-  }
-% The checker itself, without lake. Before it runs an executable, lake checks
-% that every module of the project is built, mathlib's included, which takes
-% seconds on every compile. The executable is used directly when it is current:
-% in a project that requires Leanify, the package's executable if it is newer
-% than the project's lake-manifest.json (an update of Leanify changes the
-% manifest, and lake then rebuilds it); in the Leanify repository, its own
-% executable if it is newer than the compiler's sources. Otherwise lake runs it.
+% The checker: the command of the option `exe', or the project's. Before it runs
+% an executable, lake checks that every module of the project is built, mathlib's
+% included, which takes seconds on every compile. So the project's executable is
+% run directly when it is current: in a project that requires Leanify, the
+% package's executable if it is newer than the project's lake-manifest.json (an
+% update of Leanify changes the manifest, and lake then rebuilds it); in the
+% Leanify repository, its own executable if it is newer than the checker's
+% sources. Otherwise lake runs it.
 \str_new:N \l__leanify_exe_str
 \str_new:N \l__leanify_ext_str
 \str_new:N \l__leanify_cand_str
@@ -317,251 +290,114 @@
       }
   }
 
-% `leanify ARGS`: the executable directly when it is current, else through lake.
-\cs_new_protected:Npn \__leanify_leanify:n #1
+% `leanify tex ARTICLE ...': the executable directly, or through lake. What it
+% prints goes to the log.
+\cs_new_protected:Npn \__leanify_tex:
   {
+    \str_set:Nx \l__leanify_args_str
+      {
+        tex ~ " \c__leanify_article_str "
+        \str_if_empty:NF \l__leanify_vocab_str { ~ --vocab ~ \l__leanify_vocab_str }
+        \bool_if:NF \l__leanify_check_bool { ~ --no-check }
+        \bool_if:NT \l__leanify_certify_bool { ~ --certify }
+        \bool_if:NT \l__leanify_status_bool { ~ --status }
+        \str_if_empty:NF \l__leanify_lean_str { ~ --lean ~ " \l__leanify_lean_str " }
+        \tl_if_empty:NF \leanify@module { ~ --module ~ \leanify@module }
+      }
     \str_if_empty:NTF \l__leanify_exe_str
-      { \__leanify_lake:n { exe ~ leanify ~ #1 } }
       {
         \sys_shell_now:e
           {
-            " \l__leanify_exe_str " ~ #1 ~ \l__leanify_redirect_str ~
-            " \c__leanify_log_str " ~ 2>&1
+            lake ~ -d ~ " \l__leanify_root_str " ~ exe ~ leanify ~ \l__leanify_args_str
+            \c_space_tl > ~ " \c__leanify_log_str " ~ 2>&1
           }
-        \str_set:Nn \l__leanify_redirect_str { >> }
+      }
+      {
+        \sys_shell_now:e
+          {
+            " \l__leanify_exe_str " ~ \l__leanify_args_str
+            \c_space_tl > ~ " \c__leanify_log_str " ~ 2>&1
+          }
       }
   }
 
-\cs_new:Npn \__leanify_vocab:
-  { \str_if_empty:NF \l__leanify_vocab_str { ~ --vocab ~ \l__leanify_vocab_str } }
-
-% Read the lines that the last command added to the log: findings of the check
-% as warnings at their lines, Lean errors and refutations as warnings, and the
-% summaries on the terminal.
-\regex_const:Nn \c__leanify_finding_regex
-  { \A (.*? \.tex) : (\d+) : \d+ : \s* (?: error | warning ) : \s* (.*) \Z }
-\regex_const:Nn \c__leanify_proofs_regex
-  { \A \s* complete \s proofs : \s* (\d+) \s of \s (\d+) }
-\regex_const:Nn \c__leanify_inputs_regex { \A .*? \.tex : \s inputs : \s (.*) \Z }
-\regex_const:Nn \c__leanify_counts_regex { \A .*? \.tex : \s+ (\d+ \s definitions .*) \Z }
-\regex_const:Nn \c__leanify_all_regex { \A \s* all : \s* (.*) \Z }
-\regex_const:Nn \c__leanify_lean_error_regex { \A error : \s* (.* \.lean : \d+ : \d+ : .*) \Z }
-\regex_const:Nn \c__leanify_certified_regex
-  { \A info : \s* .*? \.lean : \d+ : \d+ : \s* (\d+ \s claims : .*?) (?: \. \s* Axioms .* )? \Z }
-\regex_const:Nn \c__leanify_false_regex
-  { \A info : \s* .*? \.lean : \d+ : \d+ : \s* (claim \s \d+ \s is \s false .*) \Z }
-\regex_const:Nn \c__leanify_built_regex { \A Build \s completed \s successfully }
-\regex_const:Nn \c__leanify_lib_regex
-  { \A (?: \[\[ lean_lib \]\] | name \s = .* | srcDir \s = .* | globs \s = .* ) \Z }
-
-\cs_new_protected:Npn \__leanify_read_log:
+% The records of \jobname.leanify.out.
+\cs_new_protected:Npn \__leanify_read_out:
   {
-    \bool_set_false:N \l__leanify_report_bool
-    \str_clear:N \l__leanify_first_str
-    \int_zero:N \l__leanify_lineno_int
-    \ior_open:NnT \g__leanify_ior { \c__leanify_log_str }
+    \bool_set_true:N \l__leanify_header_bool
+    \int_zero:N \l__leanify_need_int
+    \ior_open:NnT \g__leanify_ior { \c__leanify_out_str }
       {
         \ior_str_map_inline:Nn \g__leanify_ior
           {
-            \int_incr:N \l__leanify_lineno_int
-            \int_compare:nNnT { \l__leanify_lineno_int } > { \l__leanify_seen_int }
+            \str_set:Nn \l__leanify_line_str {##1}
+            \regex_replace_all:nnN { \r } { } \l__leanify_line_str
+            \bool_if:NTF \l__leanify_header_bool
               {
-                \str_set:Nn \l__leanify_line_str {##1}
-                \regex_replace_all:nnN { \r } { } \l__leanify_line_str
-                \str_if_empty:NF \l__leanify_line_str
-                  { \__leanify_read_line: }
+                % the first line names the version: the command ran
+                \bool_set_false:N \l__leanify_header_bool
+                \bool_set_true:N \l__leanify_report_bool
               }
+              { \__leanify_record_line: }
           }
         \ior_close:N \g__leanify_ior
       }
-    \int_set_eq:NN \l__leanify_seen_int \l__leanify_lineno_int
   }
-\cs_new_protected:Npn \__leanify_read_line:
+\cs_new_protected:Npn \__leanify_record_line:
   {
-    \str_if_empty:NT \l__leanify_first_str
-      { \str_set_eq:NN \l__leanify_first_str \l__leanify_line_str }
-    \regex_extract_once:NVNTF \c__leanify_finding_regex \l__leanify_line_str
-      \l__leanify_match_seq
+    \int_compare:nNnTF { \l__leanify_need_int } = { 0 }
       {
-        % a finding in a file the article inputs names its file
-        \str_if_eq:eeTF { \seq_item:Nn \l__leanify_match_seq { 2 } } { \c__leanify_article_str }
+        \str_set_eq:NN \l__leanify_kind_str \l__leanify_line_str
+        \seq_clear:N \l__leanify_fields_seq
+        \int_set:Nn \l__leanify_need_int
+          { \str_case:VnF \l__leanify_kind_str { {W} {2} {F} {3} {M} {1} {S} {1} } { 0 } }
+      }
+      {
+        \seq_put_right:NV \l__leanify_fields_seq \l__leanify_line_str
+        \int_decr:N \l__leanify_need_int
+        \int_compare:nNnT { \l__leanify_need_int } = { 0 } { \__leanify_record: }
+      }
+  }
+\cs_new_protected:Npn \__leanify_record:
+  {
+    \str_case:Vn \l__leanify_kind_str
+      {
+        {W}
           {
             \__leanify_finding:ee
-              { \seq_item:Nn \l__leanify_match_seq { 3 } }
-              { \seq_item:Nn \l__leanify_match_seq { 4 } }
+              { \seq_item:Nn \l__leanify_fields_seq { 1 } }
+              { \seq_item:Nn \l__leanify_fields_seq { 2 } }
           }
+        {F}
           {
             \msg_warning:nne { leanify } { lean }
               {
-                \seq_item:Nn \l__leanify_match_seq { 4 } \c_space_tl
-                ( \seq_item:Nn \l__leanify_match_seq { 2 } , ~ line ~
-                \seq_item:Nn \l__leanify_match_seq { 3 } )
+                \seq_item:Nn \l__leanify_fields_seq { 3 } \c_space_tl
+                ( \seq_item:Nn \l__leanify_fields_seq { 1 } , ~ line ~
+                \seq_item:Nn \l__leanify_fields_seq { 2 } )
               }
           }
-      }
-      {
-        \regex_extract_once:NVNT \c__leanify_counts_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          {
-            \bool_set_true:N \l__leanify_report_bool
-            \__leanify_summary:e { \seq_item:Nn \l__leanify_match_seq { 2 } }
-          }
-        \regex_extract_once:NVNT \c__leanify_all_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          {
-            \__leanify_summary:e
-              { sentences: ~ \seq_item:Nn \l__leanify_match_seq { 2 } }
-          }
-        \regex_extract_once:NVNT \c__leanify_proofs_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          {
-            \__leanify_summary:e
-              {
-                complete ~ proofs: ~ \seq_item:Nn \l__leanify_match_seq { 2 } ~ of ~
-                \seq_item:Nn \l__leanify_match_seq { 3 }
-              }
-            \int_compare:nNnT
-              { \seq_item:Nn \l__leanify_match_seq { 2 } } < { \seq_item:Nn \l__leanify_match_seq { 3 } }
-              {
-                \msg_warning:nnee { leanify } { proofs }
-                  { \seq_item:Nn \l__leanify_match_seq { 2 } }
-                  { \seq_item:Nn \l__leanify_match_seq { 3 } }
-              }
-          }
-        \regex_extract_once:NVNT \c__leanify_lean_error_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          { \msg_warning:nne { leanify } { lean } { \seq_item:Nn \l__leanify_match_seq { 2 } } }
-        \regex_extract_once:NVNT \c__leanify_false_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          { \msg_warning:nne { leanify } { lean } { \seq_item:Nn \l__leanify_match_seq { 2 } } }
-        \regex_extract_once:NVNT \c__leanify_certified_regex \l__leanify_line_str
-          \l__leanify_match_seq
-          {
-            \bool_set_true:N \l__leanify_report_bool
-            \__leanify_summary:e { \seq_item:Nn \l__leanify_match_seq { 2 } }
-          }
-        \regex_match:NVT \c__leanify_built_regex \l__leanify_line_str
-          { \bool_set_true:N \l__leanify_built_bool }
-        \regex_match:NVT \c__leanify_lib_regex \l__leanify_line_str
-          { \seq_put_right:NV \l__leanify_lib_seq \l__leanify_line_str }
+        {M} { \msg_warning:nne { leanify } { lean } { \seq_item:Nn \l__leanify_fields_seq { 1 } } }
+        {S} { \__leanify_summary:e { \seq_item:Nn \l__leanify_fields_seq { 1 } } }
       }
   }
 
-% The quick check: about a second (the first run also builds the checker).
-\cs_new_protected:Npn \__leanify_check:
+% The first line of the log, to say why there is no report.
+\cs_new_protected:Npn \__leanify_log_start:
   {
-    \__leanify_summary:e { checking ~ \c__leanify_article_str }
-    \__leanify_leanify:n
-      { check ~ " \c__leanify_article_str " \__leanify_vocab: }
-    \__leanify_read_log:
-    \bool_if:NF \l__leanify_report_bool
-      { \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str } }
-  }
-
-% The namespace of the article: \leanifymodule, or the one its Lean file
-% compiles (`#leanify_article NS "article.tex" ...`).
-\regex_const:Nn \c__leanify_ns_regex { \A \s* \#leanify_article \s+ (\S+) \s }
-\cs_new_protected:Npn \__leanify_module:
-  {
-    \str_set:Nx \l__leanify_module_str { \leanify@module }
-    \str_if_empty:NT \l__leanify_module_str
-      {
-        \str_clear:N \l__leanify_ns_str
-        \ior_open:NnT \g__leanify_ior { \l__leanify_lean_str }
-          {
-            \ior_str_map_inline:Nn \g__leanify_ior
-              {
-                \regex_extract_once:NnNT \c__leanify_ns_regex {##1} \l__leanify_match_seq
-                  {
-                    \str_set:Nx \l__leanify_ns_str { \seq_item:Nn \l__leanify_match_seq { 2 } }
-                    \ior_map_break:
-                  }
-              }
-            \ior_close:N \g__leanify_ior
-          }
-        \str_if_empty:NF \l__leanify_ns_str
-          { \str_set:Nx \l__leanify_module_str { \l__leanify_ns_str .Certified } }
-      }
-  }
-
-% The files the article inputs, as the last run of the check listed them: the
-% article is unchanged only if none of them is newer than the log.
-\cs_new_protected:Npn \__leanify_inputs_current:
-  {
+    \str_clear:N \l__leanify_first_str
     \ior_open:NnT \g__leanify_ior { \c__leanify_log_str }
       {
         \ior_str_map_inline:Nn \g__leanify_ior
-          {
-            \regex_extract_once:NnNT \c__leanify_inputs_regex {##1} \l__leanify_match_seq
-              {
-                \str_set:Nx \l__leanify_line_str { \seq_item:Nn \l__leanify_match_seq { 2 } }
-                \regex_replace_all:nnN { \r } { } \l__leanify_line_str
-                \regex_replace_all:nnN { \\ } { / } \l__leanify_line_str
-                \regex_split:nVN { , \s* } \l__leanify_line_str \l__leanify_inputs_seq
-              }
-          }
+          { \str_set:Nn \l__leanify_first_str {##1} \ior_map_break: }
         \ior_close:N \g__leanify_ior
-      }
-    \seq_map_inline:Nn \l__leanify_inputs_seq
-      {
-        \file_if_exist:nT {##1}
-          {
-            \file_compare_timestamp:nNnT {##1} > { \c__leanify_log_str }
-              { \bool_set_false:N \l__leanify_current_bool }
-          }
-      }
-  }
-
-% Certify: write the Lean files the first time, then update the pin and build.
-\cs_new_protected:Npn \__leanify_certify:
-  {
-    \file_if_exist:nTF { \l__leanify_lean_str }
-      {
-        \__leanify_module:
-        \__leanify_summary:e
-          {
-            building ~ the ~ certificate ~
-            (lake ~ build ~ \l__leanify_module_str)
-          }
-        % with the lexing cache of the article (`NS.LexCache`), when the module is
-        % the article's own `NS.Certified`
-        \str_set_eq:NN \l__leanify_cand_str \l__leanify_module_str
-        \regex_replace_once:nnNTF { \.Certified \Z } { } \l__leanify_cand_str
-          {
-            \__leanify_leanify:n
-              {
-                prepare ~ " \c__leanify_article_str " ~ --lean ~ " \l__leanify_lean_str " ~
-                --cache ~ LexCache ~ --module ~ \l__leanify_cand_str .LexCache
-              }
-          }
-          {
-            \__leanify_leanify:n
-              { prepare ~ " \c__leanify_article_str " ~ --lean ~ " \l__leanify_lean_str " }
-          }
-        \__leanify_lake:n { build ~ \l__leanify_module_str }
-        \bool_set_false:N \l__leanify_built_bool
-        \__leanify_read_log:
-        \bool_if:NF \l__leanify_built_bool
-          { \msg_warning:nn { leanify } { build-failed } }
-      }
-      {
-        \__leanify_leanify:n
-          { init ~ " \c__leanify_article_str " \__leanify_vocab: }
-        \seq_clear:N \l__leanify_lib_seq
-        \__leanify_read_log:
-        \msg_warning:nneeee { leanify } { initialized }
-          { \seq_item:Nn \l__leanify_lib_seq { 1 } }
-          { \seq_item:Nn \l__leanify_lib_seq { 2 } }
-          { \seq_item:Nn \l__leanify_lib_seq { 3 } }
-          { \seq_item:Nn \l__leanify_lib_seq { 4 } }
-        \bool_set_true:N \l__leanify_initialized_bool
       }
   }
 
 \cs_new_protected:Npn \__leanify_run:
   {
     \__leanify_find_root:
-    % in a Lean project, or with a checker named by the option `exe`
+    % in a Lean project, or with a checker named by the option `exe'
     \bool_lazy_or:nnT
       { ! \str_if_empty_p:N \l__leanify_root_str } { ! \str_if_empty_p:N \l__leanify_exeopt_str }
       {
@@ -570,59 +406,28 @@
             \sys_if_shell_unrestricted:TF
               {
                 \__leanify_find_exe:
-                % an article unchanged since the last run (the later passes of
-                % latexmk, a recompile for the bibliography): its findings are
-                % read from the log again, and nothing runs
-                \bool_set_false:N \l__leanify_current_bool
-                \file_if_exist:nT { \c__leanify_log_str }
+                \__leanify_summary:e
+                  {
+                    \bool_if:NTF \l__leanify_certify_bool { certifying } { checking }
+                    \c_space_tl \c__leanify_article_str
+                  }
+                \__leanify_tex:
+                % a command that did not run leaves no records, or those of an
+                % earlier version of the article
+                \bool_set_false:N \l__leanify_report_bool
+                \file_if_exist:nT { \c__leanify_out_str }
                   {
                     \file_compare_timestamp:nNnF
-                      { \c__leanify_article_str } > { \c__leanify_log_str }
-                      { \bool_set_true:N \l__leanify_current_bool }
-                    \seq_clear:N \l__leanify_inputs_seq
-                    \bool_if:NT \l__leanify_current_bool { \__leanify_inputs_current: }
+                      { \c__leanify_article_str } > { \c__leanify_out_str }
+                      { \__leanify_read_out: }
                   }
-                \bool_if:NT \l__leanify_certify_bool
+                \bool_if:NF \l__leanify_report_bool
                   {
-                    \file_if_exist:nTF { \c__leanify_status_str }
-                      {
-                        \file_compare_timestamp:nNnT
-                          { \c__leanify_article_str } > { \c__leanify_status_str }
-                          { \bool_set_false:N \l__leanify_current_bool }
-                      }
-                      { \bool_set_false:N \l__leanify_current_bool }
-                  }
-                \bool_if:NTF \l__leanify_current_bool
-                  {
-                    \__leanify_summary:e { \c__leanify_article_str \c_space_tl unchanged: ~ the ~ last ~ findings }
-                    \bool_if:NT \l__leanify_certify_bool { \bool_set_true:N \l__leanify_built_bool }
-                    \__leanify_read_log:
-                  }
-                  {
-                    \bool_if:NT \l__leanify_check_bool { \__leanify_check: }
-                    \bool_if:NT \l__leanify_certify_bool
-                      {
-                        \str_if_empty:NTF \l__leanify_root_str
-                          { \msg_warning:nn { leanify } { no-project } }
-                          { \__leanify_certify: }
-                      }
+                    \__leanify_log_start:
+                    \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str }
                   }
               }
               { \msg_warning:nn { leanify } { no-shell } }
-          }
-      }
-  }
-
-% The marks of a status file older than the article may be out of date.
-\cs_new_protected:Npn \__leanify_if_stale:
-  {
-    \bool_if:NF \l__leanify_built_bool
-      {
-        \file_if_exist:nT { \c__leanify_status_str }
-          {
-            \file_compare_timestamp:nNnT
-              { \c__leanify_article_str } > { \c__leanify_status_str }
-              { \msg_warning:nn { leanify } { stale } }
           }
       }
   }
@@ -631,20 +436,14 @@
   {
     \__leanify_run:
     % the status file: its entries are stored, and typeset only by the option
-    % `status`, \leanifyreport and \leanifyreadings
+    % `status', \leanifyreport and \leanifyreadings
     \file_if_exist:nTF { \c__leanify_status_str }
-      {
-        \file_input:n { \c__leanify_status_str }
-        \bool_if:NT \l__leanify_status_bool { \__leanify_if_stale: }
-      }
+      { \file_input:n { \c__leanify_status_str } }
       {
         \bool_if:NT \l__leanify_status_bool
           {
-            \bool_if:NF \l__leanify_initialized_bool
-              {
-                \PackageWarningNoLine { leanify }
-                  { No ~ status ~ file ~ \c__leanify_status_str }
-              }
+            \PackageWarningNoLine { leanify }
+              { No ~ status ~ file ~ \c__leanify_status_str }
           }
       }
   }

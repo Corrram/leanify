@@ -17,7 +17,7 @@ tests/Notation/article.tex:60:1: info: claim 13: 3<\pi
 tests/Notation/article.tex:60:1: info: claim 14: \pi<\frac{22}{7}
 tests/Notation/article.tex:64:1: info: claim 15: \forall x\in \mathbb{R},\ (0\le x\land x\le 1)\land 1\le x\land x\le 2\Leftrightarrow x=1
 tests/Notation/article.tex:64:1: info: claim 16: \forall x\in \mathbb{R},\ (0\le x\land x\le 2)\land \neg (0<x\land x<2)\Leftrightarrow x=0\lor x=2
-tests/Notation/article.tex:68:1: info: claim 17: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg \neg \top
+tests/Notation/article.tex:68:1: info: claim 17: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg \bot
 tests/Notation/article.tex:68:1: info: claim 18: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x
 tests/Notation/article.tex:72:1: info: claim 19: \forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ x<y
 tests/Notation/article.tex:73:1: info: claim 20: \forall x\in \mathbb{R},\ 1<x\Rightarrow 1<{x}^{2}

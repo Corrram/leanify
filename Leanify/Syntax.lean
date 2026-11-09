@@ -410,6 +410,20 @@ where
 /-- What a compiled claim asserts: it is meaningful, and it holds. -/
 def sound (p : Tm) : Tm := .and (defined p) p
 
+/-- A claim has hypotheses: binders with a domain, or conditions. -/
+def hasHyps : Tm → Bool
+  | .all _ b => hasHyps b
+  | .imp _ _ => true
+  | _ => false
+
+/-- That the hypotheses of a claim `∀ x, H → ∀ y, H' → C` can hold together:
+`∃ x, H ∧ ∃ y, H'`. A claim whose hypotheses cannot all hold is true for an empty
+reason, which a proof does not show. -/
+def hyps : Tm → Tm
+  | .all t b => .ex t (hyps b)
+  | .imp p q => if hasHyps q then .and p (hyps q) else p
+  | _ => .tt
+
 end Tm
 
 end Leanify

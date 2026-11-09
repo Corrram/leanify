@@ -247,6 +247,7 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .not (.ex .real (.app (.app (.prim .cardIs) (.lam _ _ b)) (.loc 0))) =>
     let v := varNames.getD (ls.length + 1) "u"
     "\\#\\{" ++ v ++ " : " ++ b.tex cs gs (v :: "" :: ls) ++ "\\}=\\infty"
+  | .not .tt => "\\bot"
   | .not p => "\\neg " ++ wrap 9 p
   | .and p q => wrap 5 p ++ "\\land " ++ wrap 4 q
   | .or p q => wrap 4 p ++ "\\lor " ++ wrap 3 q

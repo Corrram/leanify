@@ -8,10 +8,12 @@
       refine ⟨by unfold meaningful4; definedness [], ?_⟩
       sorry
 
-This script fills in the stubs that still end in `sorry`.
+This script fills in the stubs that still end in `sorry`, and the stubs `satisfiedK :
+satisfiableK` (the hypotheses of statement K can hold together), for which it tries a
+few values of the variables.
 
-* Tier 0 (no model): a fixed portfolio of tactic scripts is tried on every open
-  obligation. The candidates of all obligations go into one Lean file, which Lean
+* Tier 0 (no model): the standard tactic `leanify_step`, then a fixed portfolio of
+  tactic scripts, is tried on every open obligation. The candidates of all obligations go into one Lean file, which Lean
   elaborates once; the first candidate of each obligation that elaborates without
   an error replaces the `sorry`.
 * Tier 1 (optional, `--hook CMD`): every obligation still open is given to CMD,
@@ -44,6 +46,7 @@ import subprocess
 import sys
 
 STUB_HEAD = re.compile(r"^theorem proof(\d+) : obligation\1 := by\s*$")
+WITNESS_HEAD = re.compile(r"^theorem satisfied(\d+) : satisfiable\1 := by\s*$")
 MESSAGE = re.compile(r"^(.*?):(\d+):(\d+): (error|warning): (.*)$")
 
 
@@ -56,13 +59,13 @@ def project_root(start):
     raise SystemExit(f"{start}: no lakefile.toml or lakefile.lean in this folder or above")
 
 
-def stub_blocks(lines):
+def stub_blocks(lines, head=STUB_HEAD):
     """The claim stubs of Proofs.lean: {k: (first line, end line)} of each `theorem proofK` block
     (the end is exclusive: the next declaration, docstring, blank line or `end`)."""
     blocks = {}
     i = 0
     while i < len(lines):
-        m = STUB_HEAD.match(lines[i])
+        m = head.match(lines[i])
         if m:
             j = i + 1
             while j < len(lines) and lines[j].strip() and not lines[j].startswith(("/--", "theorem ", "end ", "lemma ", "def ")):
@@ -178,19 +181,22 @@ def candidates(k, claim, report, cached, phase):
     out = []
     if cached and phase == 0:
         out.append(("cache", cached))
+    if phase == 0:
+        # the standard tactic: a proof by it is the one the certificate calls standard
+        out.append(("leanify_step", "leanify_step"))
     for c in dict.fromkeys(closers(defs, phase)):  # keep order, drop duplicates
         out.append((c, "\n".join(pre + [c])))
     return out
 
 
-def lean_file(module, ns, items, tag):
+def lean_file(module, ns, items, tag, goal="obligation"):
     """One Lean file with a theorem per (claim, candidate); returns the text and the line range of each."""
     head = [f"import {module}", "", "set_option maxHeartbeats 400000", "", f"namespace {ns}.ProveTry{tag}", f"open {ns}", ""]
     lines = list(head)
     ranges = []
     for n, (k, label, script) in enumerate(items):
         start = len(lines) + 1
-        lines.append(f"theorem try{n} : obligation{k} := by")
+        lines.append(f"theorem try{n} : {goal}{k} := by")
         lines += ["  " + l for l in script.splitlines()]
         lines.append("")
         ranges.append((k, label, script, start, len(lines)))
@@ -224,9 +230,9 @@ def verdicts(output, path, ranges):
     return bad
 
 
-def check(root, module, ns, items, tag, timeout, workdir):
+def check(root, module, ns, items, tag, timeout, workdir, goal="obligation"):
     """Elaborate the candidates; {k: (label, script)} for the first success of each claim, and the errors."""
-    text, ranges = lean_file(module, ns, items, tag)
+    text, ranges = lean_file(module, ns, items, tag, goal)
     path = workdir / f"Candidates{tag}.lean"
     path.write_text(text, encoding="utf-8")
     out = run_lean(root, path, timeout)
@@ -240,6 +246,65 @@ def check(root, module, ns, items, tag, timeout, workdir):
         elif k not in found:
             found[k] = (label, script)
     return found, errors
+
+
+# --- the hypotheses of a statement can hold together ------------------------------------
+
+def witness_candidates(k, report):
+    """Values for the variables of `satisfiableK`, in the order of the text: the tactic
+    `leanify_values` gives them and proves the conditions by computation."""
+    return [(f"values {v}", f"leanify_values {v}")
+            for v in ("1", "0", "2", "(1 / 2)", "(-1)", "1 2", "2 1", "0 1", "1 2 3", "3 2 1", "(-1) 0 1")]
+
+
+def witness_payload(k, report, source, errors):
+    c = report["claims"][k]
+    return {
+        "claim": k, "kind": "witness", "reading": c["reading"], "lean": c.get("satisfiable", ""),
+        "sentence": sentence_text(source, report, c["sentence"]),
+        "definitions": [d["name"] for d in report.get("definitions", [])],
+        "stub": f"theorem satisfied{k} : satisfiable{k} := by\n  unfold satisfiable{k}\n  sorry",
+        "instructions": "Print only the tactic block of the proof (the lines after `:= by`), with no code fences. "
+                        "The goal says that the hypotheses of the statement can hold together: give values for its "
+                        "variables (`leanify_values 1 2` gives them in order and proves the conditions by "
+                        "computation; or `unfold satisfiableK` and `exact ⟨2, by norm_num, …⟩`).",
+        "previous_errors": errors,
+    }
+
+
+def prove_witnesses(a, root, module, ns, report, source, lines, workdir):
+    """Fill in the open stubs `satisfiedK`; returns the new lines and the stubs left open."""
+    blocks = stub_blocks(lines, WITNESS_HEAD)
+    todo = sorted(k for k, blk in blocks.items() if is_open(lines, blk) and k < len(report["claims"]))
+    if not todo:
+        return lines, []
+    print(f"{len(todo)} statement{'s' if len(todo) != 1 else ''} whose hypotheses are not shown to hold together")
+    items = [(k, label, script) for k in todo for label, script in witness_candidates(k, report)]
+    proved, errors = {}, {}
+    found, errs = check(root, module, ns, items, "W", a.timeout, workdir, "satisfiable")
+    for k, (label, script) in found.items():
+        print(f"  statement {k}: {label}")
+        proved[k] = script
+    rest = [k for k in todo if k not in proved]
+    if a.hook and rest:
+        last = {k: [m for m in errs.get(k, ("", [""]))[1][:1]] for k in rest}
+        for r in range(a.rounds):
+            if not rest:
+                break
+            with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:
+                answers = dict(zip(rest, pool.map(
+                    lambda k: ask(a.hook, witness_payload(k, report, source, last[k]), a.hook_timeout), rest)))
+            asked = [(k, "hook", s if "unfold satisfiable" in s or "leanify_values" in s
+                      else f"unfold satisfiable{k}\n" + s) for k, s in answers.items() if s]
+            if not asked:
+                break
+            ok, errs2 = check(root, module, ns, asked, f"WH{r + 1}", a.timeout, workdir, "satisfiable")
+            for k, (_, s) in ok.items():
+                print(f"  statement {k}: values from the hook")
+                proved[k] = s
+            last = {k: errs2.get(k, ("hook", ["no answer"]))[1][:3] for k in rest if k not in ok}
+            rest = [k for k in rest if k not in ok]
+    return (write_back(lines, blocks, proved) if proved else lines), rest
 
 
 # --- tier 1: the hook -------------------------------------------------------------------
@@ -341,10 +406,16 @@ def main(argv=None):
     blocks = stub_blocks(lines)
     todo = sorted(k for k, blk in blocks.items() if is_open(lines, blk) and k < len(report["claims"]))
     print(f"{len(todo)} open obligation{'s' if len(todo) != 1 else ''} in {proofs_path.name}")
-    if not todo:
-        return 0
     if not a.no_build:
         subprocess.run(["lake", "build", module], cwd=root, check=False)
+    # the hypotheses of the statements
+    new_lines, open_witnesses = prove_witnesses(a, root, module, ns, report, source, lines, workdir)
+    if new_lines != lines and not a.dry_run:
+        lines = new_lines
+        proofs_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        blocks = stub_blocks(lines)
+    if not todo:
+        return 0 if not open_witnesses else 1
 
     proved, errors = {}, {}
     for phase in (0, 1):
@@ -392,7 +463,7 @@ def main(argv=None):
     if proved:
         proofs_path.write_text("\n".join(write_back(lines, blocks, proved)) + "\n", encoding="utf-8")
         print(f"wrote {proofs_path}; now `lake build` the certificate")
-    return 0 if not open_left else 1
+    return 0 if not open_left and not open_witnesses else 1
 
 
 if __name__ == "__main__":

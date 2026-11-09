@@ -16,7 +16,12 @@ tests/Conventions/article.tex:73:1: info: defines \mathcal{B} (mathcalB)
 tests/Conventions/article.tex:77:1: info: defines \mathcal{S} (mathcalS)
 tests/Conventions/article.tex:81:1: info: claim 10: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{B}(x,z)\Rightarrow \mathcal{B}(y,z))
 tests/Conventions/article.tex:85:1: info: claim 11: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{S}(x,z)\Rightarrow \mathcal{S}(y,z))
-tests/Conventions/article.tex: 5 definitions, 12 claims
-  text: 7 compiled, 1 failed, 1 prose (of 9)
-  results: 14 compiled, 0 failed, 0 prose (of 14)
-  all: 21 compiled, 1 failed, 1 prose (of 23)
+tests/Conventions/article.tex:92:1: info: claim 12: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 2\,x\le {x}^{2}
+tests/Conventions/article.tex:93:1: info: claim 13: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2<x\Rightarrow 3\le x
+tests/Conventions/article.tex:94:1: info: claim 14: (\#\{y : y\in \mathbb{Z}\land (1\le y\land y\le 5)\land {y}^{2}\le 9\})=3
+tests/Conventions/article.tex:94:1: info: claim 15: \lim_{x\to\infty,\ x\in \mathbb{N}}\frac{1}{x}=0
+tests/Conventions/article.tex:100:1: warning: the number of elements of a set that does not say what $t$ ranges over: write $\{t\in\mathbb{Z} : …\}$, or state the convention (Throughout, $t$ denotes an integer.): sentence not checked
+tests/Conventions/article.tex: 5 definitions, 16 claims
+  text: 8 compiled, 1 failed, 3 prose (of 12)
+  results: 17 compiled, 1 failed, 0 prose (of 18)
+  all: 25 compiled, 2 failed, 3 prose (of 30)

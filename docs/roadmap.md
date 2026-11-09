@@ -30,10 +30,13 @@ of the items below as well.
    model is parametric in the space.
 4. **Anaphora to extremizers.** "For $n=-1$, this NOUN is $W$.", and the
    identification of a maximizer as `A_w^\top` or `B_b^\top`.
-5. **Case distinctions and local hypotheses in proofs.** A proof that argues case
-   by case (`\item \emph{$A\ge z$ and $B\le1+z$.}`, "On the first rectangle,
-   …") needs each case condition as a hypothesis scoped to its item or region.
-   Until then, a case heading must not be read as a claim.
+5. **Hypotheses the text does not delimit.** Assumptions, cases written as the
+   items of a list, contradictions and the hypothesis of an induction are read
+   ([Writing for Leanify](writing.md#hypotheses-assumptions-cases-contradictions)).
+   Not read: a case that begins in the running proof (`Assume now that …`),
+   `without loss of generality`, a definition under a hypothesis, the statement
+   of an induction at another value (`for $n-1$`, `for all $m<n$`), and an
+   induction on a statement that binds its variable itself.
 6. **Parametric families defined by a construction**, such as the extremizers
    `F_\theta` of the second article (Section 3, `def:extremizers`), which
    Theorem 1.1 uses through `G(\theta)` and `P(\theta)`.
@@ -58,21 +61,29 @@ that compiles and is certified.
 These points limit what a certificate says. None of them is a construction of the
 grammar.
 
-1. **The language of proofs.** `Assume …`, `Suppose …`, a proof by contradiction,
-   by induction or by cases (item 5 above) are not read. One such sentence makes
-   a proof incomplete, and its result is then checked, not derived. The check
-   counts the complete proofs.
+1. **Organizing prose.** One sentence of a proof without a reading makes the
+   proof incomplete, and its result is then checked, not derived. A few
+   sentences that only organize a proof are read as such (`We distinguish two
+   cases:`); most are not. The check counts the complete proofs.
 2. **The size of a step.** A derived step is proved from its premises and
-   mathlib, by a Lean proof of any length. The report does not say yet whether
-   standard tactics closed the step or a long argument did.
-3. **Statements that hold for an empty reason.** A claim whose hypotheses
-   cannot all hold is true, and a prover finds that quickly. An obligation that
-   the hypotheses of every claim can hold together would show such a reading.
+   mathlib, by a Lean proof of any length. The certificate now tries one fixed
+   tactic, `leanify_step`, on every derived step and reports the steps it
+   closes as *standard*; a result with another step is *argued*. What a careful
+   reader accepts as one step is wider than what the tactic closes (a known
+   inequality, a compactness argument in a line): a list of named standard
+   facts that a step may use without the label of an argument is open.
+3. **Statements that hold for an empty reason.** For every statement with
+   hypotheses the reports say whether its hypotheses are shown to hold together
+   (`satisfiedK`). The definitions of the article are not covered yet: a notion
+   that no object satisfies makes every statement about it true.
 4. **Defaults of the grammar.** Where a limit, a sum, a set or a threshold
    states no domain, the letters `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` are
-   integers and every other letter is a real number. `\leanifyreadings` prints
-   this convention, and the readings show the domain. A convention sentence of
-   the article (`Throughout, $p$ and $q$ denote integers.`) should decide instead.
+   integers and every other letter is a real number. A convention sentence
+   declares further letters to be integers (`Throughout, $p$ and $q$ denote
+   integers.`), counting the elements of a set whose letter has no stated domain
+   is refused, and `\leanifyreadings` prints the convention. Declaring an index
+   letter to be a real number, or a letter to be a prime or a positive integer,
+   is not read yet.
 5. **Readings in the PDF name the vocabulary of the package option.** The
    vocabulary an article is compiled with is named in its Lean file, and
    `\leanifyreport` prints the option `vocab` of `leanify.sty`. The two should be

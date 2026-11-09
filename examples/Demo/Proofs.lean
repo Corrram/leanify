@@ -77,4 +77,16 @@ theorem proof6 : obligation6 := by
   refine ⟨by unfold meaningful6; definedness [], fun x hx => ⟨?_, c2 x hx⟩⟩
   norm_num [f]
 
+/-- The hypotheses of claim 0 can hold together (take `x = 1`). -/
+theorem satisfied0 : satisfiable0 := by
+  leanify_values 1
+
+/-- The hypotheses of claim 2 can hold together (take `x = 1`). -/
+theorem satisfied2 : satisfiable2 := by
+  leanify_values 1
+
+/-- The hypotheses of claim 5 can hold together (take `x = 1`). -/
+theorem satisfied5 : satisfiable5 := by
+  leanify_values 1
+
 end Demo.Proofs

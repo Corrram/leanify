@@ -19,4 +19,4 @@ set_option maxHeartbeats 0
 /-- The vocabulary of the article: the core and the field `numbers`. -/
 def Conventions.vocabulary : Leanify.Vocab := Leanify.Fields.select ["numbers"]
 
-#leanify_article Conventions "article.tex" "fnv1a64:db0f5f29963f7962" with Conventions.vocabulary
+#leanify_article Conventions "article.tex" "fnv1a64:dfe6c0eced1d4b7b" with Conventions.vocabulary

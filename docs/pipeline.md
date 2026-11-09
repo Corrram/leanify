@@ -80,9 +80,14 @@ Leanify, from the compiled article, or from helper declarations in the
 justification modules, which are audited recursively. It may not be the
 justification of another claim (`J.proofN`, `J.refuteN`) that is not among the
 claim's premises. A proof sentence therefore cannot be justified by a result it
-does not cite. What the audit does not bound is the length of the Lean argument
+does not cite. The audit does not bound the length of the Lean argument
 for a step: a step that the text makes in one line may need a long Lean proof,
-with helper lemmas of its own. Claims without a
+with helper lemmas of its own. So the certificate measures it: it tries one
+fixed tactic, `leanify_step`, on every claim derived in the text, and reports
+the claim as a *standard* step if the tactic closes it and as an *argument*
+otherwise. A result with an argument among its steps is *argued*, not
+*derived*: it is proved from what the text cites, but the printed proof leaves
+out more than routine steps. Claims without a
 compiled proof (cited theorems, displayed formulas) may use any Lean proof:
 typically a companion development, connected by proved bridge theorems. The
 certificate permits only the axioms `propext`, `Classical.choice` and
@@ -97,14 +102,21 @@ meaningful, and it does not hold). `#leanify_certify` then declares
 A proof of a refuted claim can only rest on false premises, so it does not
 count.
 
+A statement can also be true for an empty reason: no object satisfies its
+hypotheses. For every statement with hypotheses, `#leanify_semantics` states
+`Foo.satisfiableK` (there are values of its variables for which the hypotheses
+hold), and the reports say whether `J.satisfiedK` proves it. It is not required
+for the certificate, and it is reported for every statement.
+
 ## Reports
 
 `#leanify_certify` writes, next to the article:
 
 * `article.leanify.json`: every sentence (position, environment, outcome),
   definition and claim (formal reading, Lean statement, premises, status
-  `text`, `companion`, `unverified` or `refuted`, justification, and why an
-  unverified claim is not verified). Read by the web reader and by
+  `text`, `companion`, `unverified` or `refuted`, justification, why an
+  unverified claim is not verified, whether a derived claim is a standard step,
+  and whether the hypotheses of a statement are shown to hold together). Read by the web reader and by
   `scripts/leanify_diagnostics.py`.
 * `article.leanify.tex`: the status of every labelled result, read by
   `\usepackage[status]{leanify}` to mark results in the margin of the PDF, and

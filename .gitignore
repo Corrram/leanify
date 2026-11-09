@@ -12,3 +12,4 @@ article-reader/
 /sandbox/
 /Claude outputs/
 *.leanify.diff
+*.leanify.out

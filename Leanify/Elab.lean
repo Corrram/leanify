@@ -176,6 +176,20 @@ structure Template where
   repl : List TItem
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+/-- A hypothesis of a result or a proof: `Assume that …`, or the heading of a case. -/
+structure Hyp where
+  /-- The list item it holds in (`0`: the whole result or proof). -/
+  item : Nat
+  /-- Made to be refuted (`Suppose, for contradiction, that …`). -/
+  contra : Bool
+  /-- The heading of a case. -/
+  heading : Bool
+  /-- The environment and the sentence that made it. -/
+  env : Nat
+  sent : Nat
+  clause : Clause
+  deriving Inhabited, Repr, Lean.ToExpr
+
 structure St where
   /-- The vocabulary of the article. -/
   vocab : Vocab := {}
@@ -213,6 +227,21 @@ structure St where
   lastMaps : List (Codes × MT) := []
   /-- Binders of the current result that later sentences of the result inherit. -/
   envBinders : List BindInfo := []
+  /-- The hypotheses of the current result or proof, in order: every later claim of
+  their scope is made under them. -/
+  envHyps : List Hyp := []
+  /-- A claim was made since the latest hypothesis. -/
+  hypUsed : Bool := false
+  /-- The letters the article declares to be integers (`Throughout, $p$ and $q$ denote
+  integers.`): wherever one of them is bound, it is an integer. -/
+  letters : List Codes := []
+  /-- The hypotheses of each result at its end (its proof starts with them). -/
+  resultHyps : List (Nat × List Hyp) := []
+  /-- The statement of each result (by environment), for the hypothesis of an induction
+  in its proof: the clauses of its claims, or `none` if a sentence of it binds
+  variables of its own or sets a topic (the statement is then not a statement about
+  the variables of the result alone). -/
+  resultStmts : List (Nat × Option (List Clause)) := []
   /-- The sequences bound so far (`x_1,\ldots,x_n`): the name and the first and last
   index, for the definedness of their terms `x_i`. -/
   seqs : List (Codes × MT × MT) := []
@@ -589,6 +618,14 @@ def builtinConst (n : Codes) : Option (Tm × Ty) :=
 /-- Names of indices (`n`, `k`, …): integers, in exponents and limits. -/
 def indexNames : List Codes := Math.indexNames
 
+/-- An index: one of the index names, or a letter the article declares to be an integer. -/
+def isIndex (st : St) (v : Codes) : Bool := indexNames.contains v || st.letters.contains v
+
+/-- `x` is an integer, for a variable named `v` that the article declares to be one
+(otherwise no condition). -/
+def declaredInt (st : St) (v : Codes) (x : Tm) : Tm :=
+  if st.letters.contains v then .app (.prim .isInt) x else .tt
+
 /-- The exponent mentions an index. -/
 def indexExp (e : MT) : Bool := (mtIds 32 e).any indexNames.contains
 
@@ -880,6 +917,18 @@ def sumAll : List Tm → Tm
   | [] => .num 0
   | t :: ts => ts.foldl (fun acc x => .add acc x) t
 
+/-- The number of elements of a set `\{1\le t\le N : φ\}` whose variable has no stated
+domain and is not an index is not read: it would count real numbers, and an article
+that counts such `t` means integers. -/
+def unstatedCount (set : MT) : M Unit := do
+  match set with
+  | .setOf (.id v) d _ =>
+    if Math.isUnstatedReals d && !(← get).letters.contains v then
+      fail E.finding (w!"the number of elements of a set that does not say what $" ++ v ++
+        w!"$ ranges over: write $\\{" ++ v ++ w!"\\in\\mathbb{Z} : …\\}$, or state the convention (Throughout, $" ++
+        v ++ w!"$ denotes an integer.)")
+  | _ => pure ()
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1020,6 +1069,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         else do let a ← asReal (← term f sc pf x); pure (.abs a, .real)
       | _ => do
         -- `|A|` of a set: its number of elements
+        unstatedCount x
         let (a, aty) ← term f sc pf x
         if aty == .fn .real .prop then pure (cardTm a, .real)
         -- (of an element of a vocabulary's type: its method, the modulus of a
@@ -1068,6 +1118,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
       if n == w!"@card" then do
+        unstatedCount a
         let (p, pty) ← term f sc pf a
         if pty == .fn .real .prop then pure (cardTm p, .real) else fail E.type
       else
@@ -1120,7 +1171,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let sc' : Scope := (v, .real) :: (w!"@N", .real) :: (w!"@e", .real) :: (w!"@L", .real) :: sc
           let pf' := pf.map fun (s, t) => (shift 4 0 s, t)
           let e ← asReal (← term f sc' pf' body)
-          let inDom := if indexNames.contains v then Tm.app (.prim .isNat) (.loc 0) else .tt
+          let inDom := if isIndex (← get) v then Tm.app (.prim .isNat) (.loc 0) else .tt
           -- (`v` is `loc 0`, `N` `loc 1`, `ε` `loc 2`, `L` `loc 3`)
           let beyond := Tm.and inDom (.le (.loc 1) (.loc 0))
           let above := Tm.lt (.sub (.loc 3) (.loc 2)) e
@@ -1199,6 +1250,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let sc' : Scope := (v, Ty.real) :: sc
         let pf' := pf.map fun (s, t) => (shift 1 0 s, t)
         let m ← member f sc' (.loc 0, .real) dom
+        -- (a letter the article declares to be an integer)
+        let m := match declaredInt (← get) v (.loc 0), m with
+          | .tt, m => m
+          | i, .tt => i
+          | i, m => .and i m
         let b ← propOf f sc' pf' (.quant isAll rest dom body)
         -- (over all real numbers, without a condition)
         pure (if isAll then .all .real (if m == .tt then b else .imp m b)
@@ -1301,7 +1357,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let pf' := pf.map fun (s, t) => (shift 3 0 s, t)
       let e ← asReal (← term f sc' pf' body)
       let a' ← if toInf then pure (Tm.num 0) else asReal (← term f sc' pf' target)
-      let inDom := if indexNames.contains v && toInf then Tm.and (.app (.prim .isNat) (.loc 0)) (Tm.defined e)
+      let inDom := if isIndex (← get) v && toInf then Tm.and (.app (.prim .isNat) (.loc 0)) (Tm.defined e)
         else Tm.defined e
       let near := if toInf then Tm.le (.loc 1) (.loc 0)
         else Tm.and (.lt (.num 0) (.abs (.sub (.loc 0) a'))) (.lt (.abs (.sub (.loc 0) a')) (.loc 1))
@@ -1424,6 +1480,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- {e(v) : v ∈ D} for a set D of real numbers: y ↦ ∃ v ∈ D, e = y
       let sc' := (v, Ty.real) :: (w!"", .real) :: sc
       let m ← member f sc' (.loc 0, .real) dom
+      let m := match declaredInt (← get) v (.loc 0) with
+        | .tt => m
+        | i => .and i m
       let a ← asReal (← term f sc' none e)
       pure (.lam .real .tt (.ex .real (.and m (.eq a (.loc 1)))), .fn .real .prop)
     | .cases rows => casesRows f sc pf rows
@@ -1483,7 +1542,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if (lookupLocal sc v).isSome then fail E.shadow v
       let sc' : Scope := (v, Ty.real) :: sc
       let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
-      let seq := indexNames.contains v
+      let seq := isIndex (← get) v
       let dom := if seq && isInfty true target then
           Tm.and (.app (.prim .isNat) (.loc 0)) (Tm.defined b) else Tm.defined b
       let D := Tm.lam .real .tt dom
@@ -1584,7 +1643,7 @@ where
         else do
           let a ← asReal (← term f sc pf b)
           let p ← asReal (← term f sc pf e)
-          powTm a p (indexExp e)
+          powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
       | .num n => do
         let a ← asReal (← term f sc pf b)
         pure (.powNat a n, .real)
@@ -1595,7 +1654,7 @@ where
       | _ => do
         let a ← asReal (← term f sc pf b)
         let p ← asReal (← term f sc pf e)
-        powTm a p (indexExp e)
+        powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
   head : Nat → Scope → MT → M (Tm × Ty × List (Option Tm))
     | 0, _, _ => fail E.unsupported
     | g + 1, sc, hd =>
@@ -2073,12 +2132,19 @@ where
     | g + 1, sc, pat, dom, conds =>
       match pat, dom with
       | .id v, d => do
+        -- (no stated domain: the real numbers)
+        let d := if Math.isUnstatedReals d then .id w!"\\mathbb{R}" else d
         let (ty, pred) ← elemDom g d
         let sc' := (v, ty) :: sc
         let cs ← conds.mapM fun c => do
           let (p, t) ← term g sc' none c
           if t == .prop then pure p else fail E.type
         let mem := match pred with | some p => [p] | none => []
+        -- (a letter the article declares to be an integer)
+        let st ← get
+        let mem := match (if ty == .real then declaredInt st v (.loc 0) else .tt) with
+          | .tt => mem
+          | i => i :: mem
         pure (.lam ty .tt (conjAll (mem ++ cs)), .fn ty .prop)
       | .tuple [.id v1, .id v2], .sup d (.num 2) => do
         let (ty, pred) ← elemDom g d

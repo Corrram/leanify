@@ -12,7 +12,7 @@ namespace Leanify
 
 /-- The version of Leanify (of the Lean package and of `leanify.sty`). A reading is
 the reading of a version: reports and the PDF name it. -/
-def version : String := "0.4.0"
+def version : String := "0.5.0"
 
 /-- The file contents as lines of code points (CRLF normalized). -/
 def readLines (path : System.FilePath) : IO (List (List Nat)) := do

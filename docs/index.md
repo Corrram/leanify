@@ -106,6 +106,9 @@ lake exe leanify init Note/article.tex             # the Lean files, with a stub
 lake build Note.Certified                            # the kernel checks the article and your proofs
 ```
 
+Or one: `leanify certify article.tex` makes the article's folder a Lean
+project, writes the Lean files and builds the certificate.
+
 The [tutorial](getting-started.md) takes a one-page note from a draft with four
 mistakes to a certificate, with the real output of every step.
 

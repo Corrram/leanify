@@ -339,6 +339,16 @@ def subParts (ts : List MTok) : Option (List (List MTok) × List MTok) :=
 integers, a limit of a sequence (`n\to\infty`) over the natural numbers. -/
 def indexNames : List Codes := [w!"n", w!"m", w!"k", w!"j", w!"i", w!"N", w!"M", w!"K"]
 
+/-- The real numbers, as the domain of a set `\{1\le t\le N : φ\}` whose variable has no
+stated domain and is not an index: written `(-\infty,\infty)`, so that the reading of
+such a set knows that the text did not say `t\in\mathbb{R}` (its number of elements is
+not read, since an article that counts such `t` means integers). -/
+def unstatedReals : MT := .ival (.neg (.id w!"\\infty")) (.id w!"\\infty") true true
+
+def isUnstatedReals : MT → Bool
+  | .ival (.neg (.id a)) (.id b) true true => a == w!"\\infty" && b == w!"\\infty"
+  | _ => false
+
 /-- The variable of an extremum and the set it ranges over, from the conditions of its
 subscript: `x\in A` (and conditions), bounds (`0\le t<1`, `t\ge0`), or conditions the
 first of which bounds the variable (`n\ge1,\ \omega(n)\le k`). A variable bounded by
@@ -834,7 +844,7 @@ where
       let (conds, r3) ← run g (.list 125 []) r2
       match conds with
       | .conj cs =>
-        some (.setOf (.id v) (.id (if indexNames.contains v then w!"\\mathbb{Z}" else w!"\\mathbb{R}")) (c :: cs), r3)
+        some (.setOf (.id v) (if indexNames.contains v then .id w!"\\mathbb{Z}" else unstatedReals) (c :: cs), r3)
       | _ => none) <|> do
       -- `{pat ∈ dom : conds}` or `{elem : v ∈ dom}`
       let (head, r1) ← run g (.additive false) ts

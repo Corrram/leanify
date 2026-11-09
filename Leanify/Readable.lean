@@ -273,6 +273,18 @@ syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " iden
     let lhs := mkApp4 (Lean.mkConst ``Doc.holds) M docE gE (mkNatLit k)
     kernelRefl (ns ++ Name.mkSimple s!"holds{k}") (mkSort Level.zero) lhs
       (mkAnd (Lean.mkConst dn) (Lean.mkConst cn))
+  -- that the hypotheses of a statement can hold together (`satisfiableK`): a statement
+  -- with hypotheses that cannot all hold is true for an empty reason
+  for k in [0:d.claims.length] do
+    let c := d.claims[k]!
+    let stated : Bool := match c.role with
+      | .statement _ | .text => true
+      | _ => false
+    if stated && c.body.hasHyps then
+      let p ← liftTermElabM do readable R [] c.body.hyps
+      liftCoreM <| addDecl <| Declaration.defnDecl
+        { name := ns ++ Name.mkSimple s!"satisfiable{k}", levelParams := [], type := mkSort Level.zero, value := p,
+          hints := ReducibilityHints.regular 0, safety := DefinitionSafety.safe }
   -- sizes, premises and proof obligations
   let natE := Lean.mkConst ``Nat
   let lenTy := natE

@@ -1,0 +1,158 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{leanify}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}[lemma]{Proposition}
+\title{The language of proofs: assumptions, cases, contradictions and induction}
+\begin{document}
+\maketitle
+
+A proof makes hypotheses: it assumes something, it distinguishes cases, it supposes the contrary of what it proves.
+Leanify reads each as a hypothesis of the steps that are made under it.
+
+\section{Assumptions}
+
+\begin{lemma}\label{lem:assume}
+Let $x\in\mathbb{R}$.
+Assume that $x>1$.
+Then $x^2>x$.
+\end{lemma}
+
+\begin{proof}
+We have $x-1>0$ and $x>0$.
+Hence $x^2-x=x(x-1)>0$.
+\end{proof}
+
+\begin{lemma}\label{lem:further}
+For every $x\in\mathbb{R}$ and every $y\in\mathbb{R}$, if $0<x<y$, then $x^2<y^2$.
+\end{lemma}
+
+\begin{proof}
+Let $x\in\mathbb{R}$ and $y\in\mathbb{R}$.
+Suppose that $0<x$ and $x<y$.
+Then $y-x>0$.
+Assume further that $y+x>0$.
+Then $y^2-x^2=(y-x)(y+x)>0$.
+\end{proof}
+
+\begin{lemma}\label{lem:parity}
+Let $n$ be an integer.
+Suppose $n$ is even.
+Then $n^2$ is even.
+\end{lemma}
+
+\begin{lemma}\label{lem:new-variable}
+Let $x\in\mathbb{R}$.
+Assume $c>0$.
+Then $x^2+c>0$.
+\end{lemma}
+
+\section{Cases}
+
+\begin{lemma}\label{lem:abs}
+For every $x\in\mathbb{R}$, $x\le\lvert x\rvert$.
+\end{lemma}
+
+\begin{proof}
+Let $x\in\mathbb{R}$.
+We distinguish two cases:
+\begin{enumerate}
+\item \emph{$x\ge0$.} Then $\lvert x\rvert=x$.
+\item \emph{Case 2: $x<0$.} Then $\lvert x\rvert=-x$.
+Hence $x<0<\lvert x\rvert$.
+\end{enumerate}
+In both cases, $x\le\lvert x\rvert$.
+\end{proof}
+
+\section{Contradictions}
+
+\begin{lemma}\label{lem:contradiction}
+For every $x\in\mathbb{R}$, if $x^2<1$, then $x<1$.
+\end{lemma}
+
+\begin{proof}
+Let $x\in\mathbb{R}$.
+Assume that $x^2<1$.
+Suppose, for contradiction, that $x\ge1$.
+Then $x^2\ge x\ge1$.
+This is a contradiction.
+Hence $x<1$.
+\end{proof}
+
+\begin{lemma}\label{lem:short}
+For every $x\in\mathbb{R}$, $x^2\ne-1$.
+\end{lemma}
+
+\begin{proof}
+Let $x\in\mathbb{R}$.
+Suppose that $x^2=-1$.
+Then $0\le x^2<0$, a contradiction.
+Hence $x^2\ne-1$.
+\end{proof}
+
+\section{What is not read}
+
+A second assumption after steps under the first does not say whether it is added or begins another case, and a case in the running proof does not say where it ends.
+
+\begin{lemma}\label{lem:refused}
+For every $x\in\mathbb{R}$, $x^2\ge0$.
+\end{lemma}
+
+\begin{proof}
+Let $x\in\mathbb{R}$.
+Assume that $x\ge0$.
+Then $x^2=x\cdot x\ge0$.
+Assume that $x<0$.
+Assume now that $x<0$.
+Without loss of generality, assume that $x\ge0$.
+\end{proof}
+
+A contradiction refutes the hypothesis made for it, or the one assumption of the proof.
+After several assumptions, none of them made for contradiction, it does not say which one it refutes.
+
+\begin{lemma}\label{lem:which}
+For every $x\in\mathbb{R}$, if $x>0$, then $x+1>0$.
+\end{lemma}
+
+\begin{proof}
+We argue by contradiction.
+Let $x\in\mathbb{R}$.
+Assume that $x>0$.
+Assume further that $x+1\le0$.
+Then $x\le-1<0$.
+This is a contradiction.
+\end{proof}
+
+\section{Induction}
+
+A proof by induction states its hypothesis as a sentence: the statement of the result, about the variable that the result introduces.
+The base case and the induction step are the items of a list, like other cases.
+
+\begin{lemma}\label{lem:induction}
+Let $n$ be a positive integer.
+Then $n^2\ge n$.
+\end{lemma}
+
+\begin{proof}
+We argue by induction on $n$.
+\begin{itemize}
+\item \emph{Base case: $n=1$.} We have $n^2=1$.
+\item \emph{Induction step.} Assume that the statement holds for $n$.
+Then $(n+1)^2=n^2+2n+1\ge n+2n+1$.
+By the induction hypothesis, $(n+1)^2\ge n+1$.
+\end{itemize}
+\end{proof}
+
+A statement that binds its variable itself is not a statement about one value of it, and the statement for $n-1$ or for all smaller values is another statement.
+
+\begin{lemma}\label{lem:own-binder}
+For every positive integer $n$, $n^2\ge n$.
+\end{lemma}
+
+\begin{proof}
+Let $n$ be a positive integer.
+We argue by induction on $n$.
+Assume that the statement holds for $n$.
+Assume that the statement holds for $n-1$.
+\end{proof}
+\end{document}
