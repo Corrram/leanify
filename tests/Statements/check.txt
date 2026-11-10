@@ -124,7 +124,8 @@ tests/Statements/article.tex:432:1: warning: Lemma noun-with-a-formula is not ch
 tests/Statements/article.tex:441:1: info: claim 97: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x<y)
 tests/Statements/article.tex:445:1: info: claim 98: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\land z\le 1\Rightarrow x\,y\,z\le 1))
 tests/Statements/article.tex:449:56: info: claim 99: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land y<1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0<z\Rightarrow 2<x+z+y))
-tests/Statements/article.tex: 7 definitions, 100 claims
-  text: 7 compiled, 1 failed, 11 prose (of 19)
-  results: 97 compiled, 15 failed, 4 prose (of 116)
-  all: 104 compiled, 16 failed, 15 prose (of 135)
+tests/Statements/article.tex:458:44: info: claim 100: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow x<1\Rightarrow {x}^{2}<x+{y}^{2}+{z}^{2}))
+tests/Statements/article.tex: 7 definitions, 101 claims
+  text: 7 compiled, 1 failed, 14 prose (of 22)
+  results: 99 compiled, 15 failed, 4 prose (of 118)
+  all: 106 compiled, 16 failed, 18 prose (of 140)

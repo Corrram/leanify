@@ -1053,11 +1053,38 @@ def subBases : Nat → MT → List Codes
   | f + 1, m =>
     (match m with | .sub (.id k) _ => [k] | _ => []) ++ (mtChildren m).flatMap (subBases f)
 
+/-- The names with a letter as subscript in a formula (`x_k`, as one name). -/
+def subKeys : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m =>
+    (match m with | .sub (.id k) (.id i) => [k ++ [95] ++ i] | _ => []) ++ (mtChildren m).flatMap (subKeys f)
+
+/-- The variables of the result or the proof that a formula uses under a name with a
+letter as subscript: after `Let $x_k>0$.`, a later `$x_k$` is that variable (a name with
+a number as subscript, `x_1`, is among the free identifiers already). Only a name that
+is bound is found: `S_s` of a family `S` stays the family at `s`. -/
+def envSubKeys (st : St) (bound : List Codes) (m : MT) : List Codes :=
+  (subKeys 64 m).eraseDups.filter fun n =>
+    !bound.contains n && (st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n))
+
+/-- The free identifiers `free` of a condition `m` (with repetitions) without the letters
+that occur in it only as the subscript of a name that the scope binds (`k` in `x_k`,
+after `Let $x_k>0$.`): such a letter is part of the name, not a variable. -/
+def dropBoundIndices (st : St) (m : MT) (free : List Codes) : List Codes :=
+  let keys := (subKeys 64 m).filter fun n =>
+    st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n)
+  free.filter fun i =>
+    let asIndex := (keys.filter fun n =>
+      i.length < n.length && n.drop (n.length - i.length - 1) == [95] ++ i).length
+    asIndex == 0 || asIndex < (free.filter (· == i)).length
+
 /-- The sequences of the scope among the free identifiers `ids` of a formula `m`: the
-term `x_1` of a sequence `x` is `x`. -/
+term `x_1` of a sequence `x` is `x`; and the variables of the scope whose name has a
+letter as subscript. -/
 def seqFree (st : St) (bound : List Codes) (m : MT) (ids : List Codes) : List Codes :=
   let seqs := (subBases 64 m).filter fun k => st.seqs.any (·.1 == k) && !bound.contains k
-  ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs
+  ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs ++
+    envSubKeys st bound m
 
 /-- Free identifiers of a formula (for `On I,`). -/
 def freeIds : Nat → List Codes → MT → List Codes
@@ -1142,7 +1169,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
     -- bound again
     let st ← get
-    let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
@@ -2195,7 +2222,7 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
     | some (x, _, _, _) => [x]
     | none => npVars [.m ts]
   | .ifCond φ =>
-    let free := ((freeIds 64 [] φ).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
   | .hyp b => bindNames1 st env b
   | _ => []
@@ -3022,7 +3049,7 @@ def stmtInst (c : SentCtx) (e : MT) (var : Option Codes := none) : M Clause := d
       | none => false)) then
     fail E.finding w!"another variable of the result depends on the variable of the induction: the statement for another value of it is not determined; write the hypothesis out (Assume that $…$.)"
   let hyps := (((st.resultHyps.lookup c.target).getD []).filter fun h =>
-    h.item == 0 && !h.contra && (clauseMaths h.clause).any fun m => (freeIds 64 [] m).contains v).map (·.clause)
+    h.item == 0 && !h.contra && (clauseMaths h.clause).any fun m => (freeIds 64 [] m ++ subKeys 64 m).contains v).map (·.clause)
   pure (.inst v e hyps stmt)
 
 /-- A clause with `the statement holds for …` given its clauses. -/
@@ -3070,7 +3097,7 @@ def defsUnderHyps (c : SentCtx) (ds : List Nat) : M Unit := do
     let envNames := st.envBinders.map (·.name)
     -- the variables of the result or proof that a hypothesis in force speaks about
     let about (h : Hyp) : List Codes :=
-      (((clauseMaths h.clause).flatMap (freeIds 64 [])).filter envNames.contains).eraseDups
+      (((clauseMaths h.clause).flatMap fun m => freeIds 64 [] m ++ subKeys 64 m).filter envNames.contains).eraseDups
     -- about parameters of the definition only
     let own := st.envHyps.filter fun h => !(about h).isEmpty && (about h).all names.contains
     -- about parameters and other variables
@@ -3146,7 +3173,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
   -- if $x>0$, then …`)
   let isHyp (known : List Codes) (b : Bind) : Bool := match b with
     | .ifCond φ =>
-      let fr := ((freeIds 64 [] φ).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
+      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
       let fr := seqFree st0 [] φ fr
       !fr.isEmpty && fr.all known.contains
     | _ => false
@@ -3597,7 +3624,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | .many bs => bs.filterMap fun b => match b with | .every _ d => some d | _ => none
         | _ => [])
       -- a variable of the result (it shadows a definition of the same name)
-      let used := (maths.flatMap (freeIds 64 [])).eraseDups.filter fun n => env.any (·.name == n)
+      let used := (maths.flatMap fun m => freeIds 64 [] m ++ subKeys 64 m).eraseDups.filter fun n => env.any (·.name == n)
       let imp := if c.ctx.kind == .text then [] else usedBinders env used
       let bis ← match bd with
         | .many bs => bindersInfos (bs.map id) imp
