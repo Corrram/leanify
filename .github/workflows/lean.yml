@@ -16,7 +16,7 @@ jobs:
           test: 'false'
           use-mathlib-cache: 'true'
       - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE Conventions Statements
+        run: lake build leanify Demo Means TailDependence Refuted Notation Vocabulary Fields Calculus PDE Conventions Statements Arguments Notions
       - name: Quick check of the example articles
         run: |
           lake exe leanify check examples/Means/article.tex --claims --prose
@@ -48,7 +48,7 @@ jobs:
           diff docs/glossary.md "$RUNNER_TEMP/glossary.md"
       - name: The fields numbers and torus, generic constants and existence are read as documented
         run: |
-          lake exe leanify check tests/Fields/article.tex --vocab numbers,torus --claims > "$RUNNER_TEMP/fields.check.txt" || true
+          lake exe leanify check tests/Fields/article.tex --vocab numbers,torus,hyperbolic --claims > "$RUNNER_TEMP/fields.check.txt" || true
           diff tests/Fields/check.txt "$RUNNER_TEMP/fields.check.txt"
       - name: Fields, norms and the Navier–Stokes equations are read as documented
         run: |
@@ -62,13 +62,43 @@ jobs:
         run: |
           lake exe leanify check tests/Statements/article.tex --vocab numbers,complex --claims > "$RUNNER_TEMP/statements.check.txt" || true
           diff tests/Statements/check.txt "$RUNNER_TEMP/statements.check.txt"
+      - name: Assumptions, cases, contradictions and inductions of proofs are read as documented
+        run: |
+          lake exe leanify check tests/Arguments/article.tex --vocab numbers --claims > "$RUNNER_TEMP/arguments.check.txt" || true
+          diff tests/Arguments/check.txt "$RUNNER_TEMP/arguments.check.txt"
+      - name: An article in several files is read with the files it inputs
+        run: |
+          lake exe leanify check tests/Inputs/article.tex --claims > "$RUNNER_TEMP/inputs.check.txt" || true
+          diff tests/Inputs/check.txt "$RUNNER_TEMP/inputs.check.txt"
+          lake exe leanify flatten tests/Inputs/article.tex "$RUNNER_TEMP/flat.tex"
+          lake exe leanify check "$RUNNER_TEMP/flat.tex" > "$RUNNER_TEMP/flat.check.txt" || true
+          grep -q "2 definitions, 5 claims" "$RUNNER_TEMP/flat.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: A suggested rewrite of an unread sentence is kept only if the check reads it
+        run: |
+          cp examples/Demo/draft.tex "$RUNNER_TEMP/draft.tex"
+          python scripts/leanify_suggest.py "$RUNNER_TEMP/draft.tex" --hook "python tests/suggest_hook.py" \
+            --leanify .lake/build/bin/leanify > "$RUNNER_TEMP/suggest.txt"
+          grep -q "kept 1 of 1 suggestions" "$RUNNER_TEMP/suggest.txt"
+          grep -q "reads as: " "$RUNNER_TEMP/suggest.txt"
       - name: Every claim of the examples is verified
         run: |
           for a in examples/Demo examples/Means tests/TailDependence; do
             python scripts/leanify_diagnostics.py $a/article.leanify.json --strict --verified
+          done
+      - name: The steps of the test proofs are closed by the standard tactic, and no statement is empty
+        run: |
+          python scripts/leanify_diagnostics.py tests/Arguments/article.leanify.json --verified --standard --satisfiable > "$RUNNER_TEMP/arguments.txt"
+          if grep -q "standard tactic does not close\|not shown to hold together" "$RUNNER_TEMP/arguments.txt"; then exit 1; fi
+          python scripts/leanify_diagnostics.py examples/Means/article.leanify.json --standard > "$RUNNER_TEMP/means.txt"
+          grep -q "proof step (claim 1) is derived in the text, but the standard tactic does not close it" "$RUNNER_TEMP/means.txt"
+      - name: The kernel evaluates the compiler on the test articles (the audit)
+        run: |
+          for a in examples/Demo examples/Means tests/TailDependence tests/Refuted tests/Notation tests/Vocabulary \
+              tests/Fields tests/Calculus tests/PDE tests/Conventions tests/Statements tests/Arguments tests/Notions; do
+            lake exe leanify audit $a/article.tex
           done
       - name: The refuted theorem is reported false, and the claims resting on it unverified
         run: |
