@@ -1,0 +1,65 @@
+name: Release the checker
+# Builds the `leanify` executable for Linux, macOS and Windows and attaches it to
+# the release of a version tag. The executable is the quick check (`leanify check`,
+# `flatten`): running it needs neither Lean nor mathlib, so an author can check an
+# article while writing with `\usepackage[exe=leanify]{leanify}` alone.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  checker:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            exe: leanify
+            name: leanify-linux-x86_64
+          - os: macos-latest
+            exe: leanify
+            name: leanify-macos-arm64
+          - os: windows-latest
+            exe: leanify.exe
+            name: leanify-windows-x86_64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: leanprover/lean-action@v1
+        with:
+          build: 'false'
+          test: 'false'
+          use-mathlib-cache: 'false'
+      - name: Build the checker
+        run: lake build leanify
+      # A project that `leanify init` of a released checker creates requires the tag
+      # `v` + the checker's version: a tag with another name would publish a checker
+      # whose new projects do not resolve.
+      - name: The tag is the version of the checker
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version="$(".lake/build/bin/${{ matrix.exe }}" --version | tr -d '\r' | awk '{print $NF}')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::the tag is $GITHUB_REF_NAME, the checker is version $version: tag v$version, or set the version in lakefile.toml and Leanify/Check.lean"
+            exit 1
+          fi
+      - name: The executable gives the findings of the guide's draft
+        shell: bash
+        run: |
+          cp ".lake/build/bin/${{ matrix.exe }}" "${{ matrix.name }}"
+          "./${{ matrix.name }}" --version
+          "./${{ matrix.name }}" check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
+          diff --strip-trailing-cr examples/Demo/draft.check.txt "$RUNNER_TEMP/draft.check.txt"
+      - name: Attach it to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+            || true
+          gh release upload "$GITHUB_REF_NAME" "${{ matrix.name }}" --clobber
