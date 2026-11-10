@@ -114,6 +114,9 @@ fixed data. -/
 def E.dependence := 12
 /-- A finding whose detail is the whole message: what was not read, and how to write it. -/
 def E.finding := 13
+/-- A noun phrase whose noun the article or its vocabulary know, with words that are not
+read. The detail is the whole message, as for a finding. -/
+def E.nounWords := 14
 
 abbrev Local := Codes × Ty
 abbrev Scope := List Local

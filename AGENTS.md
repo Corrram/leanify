@@ -165,7 +165,9 @@ These hold for every change. A feature that cannot meet them is not added.
     CTAN; `scripts/ctan.sh` builds the upload.
 14. **Findings are LaTeX warnings at their lines**, in plain words, with the
     likely fix: the undefined symbol, the unknown noun, the ambiguous word, and
-    the sentence that would define it.
+    the sentence that would define it. A finding names a cause only if it is one:
+    a noun is named only if Leanify does not read it where it stands (the checker
+    compiles `Let $x$ be a NOUN.` to find out), never because it follows `be a`.
 
 ## Working on the code
 

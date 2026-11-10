@@ -44,6 +44,9 @@ of the items below as well.
 8. **Attainment and equality cases.** "the upper bound is attained by $S_s$ and by
    no other NOUN", "with equality if and only if …", "occur only at
    $\alpha=\frac{5}{32}$".
+9. **A name with a letter as subscript, across sentences.** `Let $x_1>0$. Then
+   $x_1>0$.` is read, and after `Let $x_k>0$.` the next sentence does not find
+   `x_k`: it looks for a sequence `x` and an index `k`.
 
 Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence

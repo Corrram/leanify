@@ -184,6 +184,18 @@ def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
   | [c] => some c
   | cs => some (.conj cs)
 
+/-- The name of a letter with a subscript that is a letter or a number (`d_0`, `n_k`,
+`x_{12}`): one variable, as in `an integer $d_0$` and `$x_0\in A$` (a bound on it,
+`$d_0\ge1$`, binds the same name). -/
+def subNameOf (ts : List MTok) : Option Codes :=
+  if ts.any (fun t => (Math.relOf t).isSome || t == .cmd w!"in" || t == .sym 44) then none else
+  match Math.parseFormula ts with
+  | some (.sub (.id k) (.id i)) => some (k ++ [95] ++ i)
+  | some (.sub (.id k) (.num n)) => some (k ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)
+  | _ => none
+
+def subName (ts : List MTok) : Bool := (subNameOf ts).isSome
+
 /-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`);
 `x_1,\ldots,x_n\in A` binds the sequence `x` (`@seq lo hi A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
@@ -203,6 +215,15 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
     | _, [] => some []
     | 0, _ => none
     | f + 1, .sym 44 :: r => names0 f r
+    -- `x_0`, `x_{k}`: a name with a subscript
+    | f + 1, .id n :: .sym 95 :: r =>
+      let sub := match r with
+        | .lb :: r' => .lb :: r'.takeWhile (· != .rb) ++ [.rb]
+        | t :: _ => [t]
+        | [] => []
+      match subNameOf (.id n :: .sym 95 :: sub) with
+      | some v => (v :: ·) <$> names0 f (r.drop sub.length)
+      | none => none
     | f + 1, .id n :: r => (n :: ·) <$> names0 f r
     | f + 1, .cmd n :: r =>
       match hatName (.cmd n :: r) with
@@ -773,7 +794,8 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     | some (.w _), some (.m ts) =>
       match binderMath ts, hatName ts with
       | some ([_], _), _ | _, some (_, []) => some (.noun np, r')
-      | _, _ => none
+      -- `every integer $n_0$`
+      | _, _ => if subName ts then some (.noun np, r') else none
     | _, _ => none)
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
@@ -866,11 +888,12 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
             -- `If $C$ is an LTD copula,`: as `For an LTD copula $C$,`
             (do
               let (ts, r1) ← mathChunk r
-              let v ← match ts with | [.id v] => some v | _ => none
+              -- (`If $n_0$ is a positive integer,`: a name with a subscript)
+              let v ← match ts with | [.id _] => some ts | _ => if subName ts then some ts else none
               let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
               let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
               if ws.isEmpty || (punct 44 (r2.drop ws.length)).isNone then none
-              else some (.hyp (.noun (ws ++ [.m [.id v]])), r2.drop ws.length)) <|>
+              else some (.hyp (.noun (ws ++ [.m v])), r2.drop ws.length)) <|>
             (do
               let (m, r') ← formula r
               -- (`If $n$ is even,`: a clause, read as a hypothesis later)
@@ -2488,7 +2511,8 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
         | some (_, []), _ => some ts
         -- `Let $k\ge3$ be a [fixed] integer.`
         | _, some ([_], _) => some ts
-        | _, _ => none
+        -- `Let $n_0$ be a positive integer.`
+        | _, _ => if subName ts then some ts else none
     let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
     -- (`… be an integer and let $x_1,\ldots,x_n$ be …`, `… and $\lambda>0$`: the next binder)
     let cut := (r1.zipIdx.find? fun (c, i) => match c, r1[i + 1]? with
@@ -2981,10 +3005,10 @@ def supposeSent (cs : List Chunk) : Option Sent := do
   -- `Suppose that $n$ is a positive integer.`
   let singular : Option Bind := do
     let (ts, r1) ← mathChunk r
-    let v ← match ts with | [.id v] => some v | _ => none
+    let v ← match ts with | [.id _] => some ts | _ => if subName ts then some ts else none
     let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
     let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
-    if ws.isEmpty || !isEnd (r2.drop ws.length) then none else some (.noun (ws ++ [.m [.id v]]))
+    if ws.isEmpty || !isEnd (r2.drop ws.length) then none else some (.noun (ws ++ [.m v]))
   let asBinder := asBinder <|> (plural <|> singular).map Bind.hyp
   let (hs, r1) ← hypClauses 4 r []
   if isEnd r1 then some (.suppose hs additive caseLike contra asBinder) else none

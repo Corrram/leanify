@@ -162,7 +162,7 @@ def errMessage (e : Err) : String :=
     else if e.code == E.shadow then "variable shadows a definition"
     else if e.code == E.ambiguous then "ambiguous phrase"
     else if e.code == E.dependence then "unknown dependence"
-    else if e.code == E.finding then "not read"
+    else if e.code == E.finding || e.code == E.nounWords then "not read"
     else s!"error {e.code}"
   if d.isEmpty then what else s!"{what}: {d}"
 
@@ -207,9 +207,15 @@ def failedMessage (e : Err) : String :=
       | some (f, _) => s!"unknown notation {d}: the field {f} of the vocabulary reads it (\\usepackage[vocab={f}]\{leanify})"
       | none => s!"unknown notation {d}"
     else s!"{d} is not defined"
+  else if e.code == E.noun && !d.isEmpty then
+    -- (a field of the vocabulary that has the noun is named)
+    let ws := (e.detail.splitOn 32).filter (!·.isEmpty)
+    match Fields.all.find? (fun (_, V) => let (h, noun, rest) := Compile.knownHead V [] ws; noun && rest.isEmpty && !h.isEmpty) with
+    | some (f, _) => s!"unknown noun: {d}: the field {f} of the vocabulary has it (\\usepackage[vocab={f}]\{leanify})"
+    | none => errMessage e
   else if e.code == E.ambiguous then
     s!"{d}; say which is meant in the text (By a … we mean …)"
-  else if e.code == E.finding then d
+  else if e.code == E.finding || e.code == E.nounWords then d
   else if e.code == E.dependence then
     s!"the dependence of a constant is stated by variables ($k$, $I$) or the fixed data, not by \"{d}\"; name the variables it stands for"
   else errMessage e
@@ -445,22 +451,102 @@ def unknownNotation (d : Doc) (toks : List PTok) : List String :=
     | .cmd n => if p.math && !known (Codes.toString n) then some ("\\" ++ Codes.toString n) else none
     | _ => none).eraseDups
 
-/-- The noun phrase after `be a`/`is an` in a sentence (`Let $X$ be a Markov jump
-process with …` gives `Markov jump process`): the likely reason a sentence that
-introduces an object has no reading, when the phrase is not a notion of the
-article or its vocabulary. -/
-def nounPhrase (t : List Char) : Option String := Id.run do
-  let s := String.ofList t
-  for pre in [" be a ", " be an ", " is a ", " is an "] do
-    match s.splitOn pre with
-    | _ :: after :: _ =>
-      let ws := (after.toList.takeWhile fun c => c.isAlpha || c == ' ' || c == '-')
-      let words := (String.ofList ws).splitOn " " |>.filter (· != "")
-      let stop := ["with", "and", "such", "that", "on", "of", "in", "for", "which", "where", "if"]
-      let words := (words.takeWhile fun w => !stop.contains w).take 5
-      if !words.isEmpty then return some (String.intercalate " " words)
-    | _ => pure ()
-  return none
+/-- The noun phrases with which a sentence introduces objects: the words after `be a`,
+`is an` and `exists a` (`Let $X$ be a Markov jump process with …` gives `Markov jump
+process`), each with whether it follows `there is` or `there exists`. A formula joined to
+the next word by a hyphen belongs to the phrase (`a finite $K_r$-free graph`); any other
+formula after the first word ends it (`an integer $a>0$`). -/
+def nounPhrases (t : List Char) : List (Bool × String) := Id.run do
+  let stop := ["with", "and", "such", "that", "on", "of", "in", "for", "which", "where", "if", "or",
+    "as", "to", "from", "is", "are", "whose", "at", "by", "satisfying", "depending", "independent"]
+  -- the formula at the front of `cs`, and what follows it
+  let mathAt (cs : List Char) : Option (List Char × List Char) :=
+    match cs with
+    | '$' :: r =>
+      let m := r.takeWhile (· != '$')
+      if (r.drop m.length).isEmpty then none else some ('$' :: m ++ ['$'], r.drop (m.length + 1))
+    | '\\' :: '(' :: r => Id.run do
+      let mut m : List Char := []
+      let mut rest := r
+      for _ in [0:r.length] do
+        match rest with
+        | '\\' :: ')' :: r' => return some ('$' :: m.reverse ++ ['$'], r')
+        | c :: r' => m := c :: m; rest := r'
+        | [] => return none
+      return none
+    | _ => none
+  let mut out : List (Bool × String) := []
+  let mut rest := t
+  let mut before : List Char := []
+  for _ in [0:t.length] do
+    match rest with
+    | [] => break
+    | c :: r =>
+      let s := String.ofList (rest.take 8)
+      let pre := [" be a ", " be an ", " is a ", " is an ", " exists a ", " exists an "].find? fun (q : String) => s.startsWith q
+      match pre with
+      | some pre =>
+        let there := (String.ofList (before.take 6).reverse).toLower == " there" ||
+          (String.ofList (before.take 5).reverse).toLower == "there" || pre.startsWith " exists"
+        -- the words of the phrase, and at most one formula
+        let mut cs := rest.drop pre.length
+        let mut words : List String := []
+        let mut word : List Char := []
+        let mut done := false
+        for _ in [0:cs.length + 1] do
+          if done then break
+          match cs with
+          | c :: r' =>
+            if c.isAlpha || (c == '-' && !word.isEmpty) then
+              word := word ++ [c]; cs := r'
+            else
+              let w := String.ofList word
+              let ended := !word.isEmpty && (stop.contains w || words.length ≥ 5)
+              if !word.isEmpty && !ended then words := words ++ [w]
+              word := []
+              if ended then done := true
+              else if c == ' ' || c == '\n' then cs := r'
+              else
+                match mathAt cs with
+                | some (m, r'') =>
+                  -- (a formula belongs to the phrase if a hyphen joins it to a word, or
+                  -- if it is at its front: `a $C^1$ map`)
+                  if r''.head? == some '-' || words.isEmpty then
+                    word := m; cs := r''
+                  else done := true
+                | none => done := true
+          | [] =>
+            if !word.isEmpty && !stop.contains (String.ofList word) then words := words ++ [String.ofList word]
+            done := true
+        -- (a formula alone is no noun phrase)
+        if words.any fun w => (w.toList.reverse.takeWhile (· != '$')).any Char.isAlpha then
+          out := out ++ [(there, String.intercalate " " words)]
+        before := c :: before; rest := r
+      | none => before := c :: before; rest := r
+  return out.eraseDups
+
+/-- Whether Leanify reads a sentence that introduces an object by the noun phrase `p`
+(`Let $x$ be a P.`, or `There is a P $x$ such that $x=x$.` after `there is`), with the
+vocabulary of the article. A phrase that is read there is not what stopped a sentence:
+only a phrase that is not read as a noun phrase is named in a finding. -/
+def readsNoun (V : Vocab) (own : List (List Codes)) (there : Bool) (p : String) : Bool :=
+  let ws := (p.splitOn " ").filter (· != "")
+  -- (a notion the article defines)
+  let low := ws.map fun w => Codes.ofString w.toLower
+  let sub (n : List Codes) : Bool := !n.isEmpty && (List.range (low.length + 1 - n.length)).any fun i =>
+    (low.drop i).take n.length == n
+  if own.any sub then true else
+  let art := match p.toList.head? with
+    | some c => if "aeiouAEIOU".contains c then "an" else "a"
+    | none => "a"
+  let line := if there then s!"There is {art} {p} $x$ such that $x=x$." else s!"Let $x$ be {art} {p}."
+  let src : Source := ["\\documentclass{article}", "\\begin{document}", line, "\\end{document}"].map
+    fun l => Codes.ofString l
+  match (compileArticle V src).bind (·.outcomes.head?) with
+  | some (.compiled _ _) => true
+  -- (stopped by something else than the noun phrase)
+  | some (.failed e) => e.code != E.noun && e.code != E.nounWords
+  | _ => false
 
 /-- `a, b and c`, with at most `k` items and `…` for the rest. -/
 def fewOf (k : Nat) (xs : List String) : String :=
@@ -607,10 +693,14 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
               s!"is only partly checked: Leanify cannot read {unread.length} of its {env.length} sentences ({linesText (unread.map lineOf)})"
             else if env.length == 1 then "is not checked: Leanify cannot read its statement"
             else s!"is not checked: Leanify cannot read any of its {env.length} sentences"
-          let phrases := (unread.filterMap fun t => nounPhrase texts[t]!).eraseDups
+          -- the noun phrases of the unread sentences that are not read as nouns: one that
+          -- is read where it stands (`an integer`, `there is a constant`) is not named
+          let own := d.names.map (·.1)
+          let phrases := ((unread.flatMap fun t => nounPhrases texts[t]!).eraseDups.filter
+            fun (there, p) => !readsNoun V own there p).map (·.2) |>.eraseDups
           let phraseHint := match phrases with
             | [] => ""
-            | ps => s!"; unknown noun {fewOf 2 (ps.map fun p => s!"\"{p}\"")}"
+            | ps => s!"; not read as a noun: {fewOf 2 (ps.map fun p => s!"\"{p}\"")}"
           let hint := unknownIn unread ++ phraseHint
           let hint := if hint.isEmpty then
               "; docs/writing.md lists the forms it reads" else hint

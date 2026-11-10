@@ -491,7 +491,8 @@ verified or is refuted.
 | --- | --- |
 | `… is not defined: sentence not checked` | Define the symbol earlier, or fix the typo. |
 | `unknown notation …` | The grammar does not read this command, and the article does not define it. Write the statement without it, or define it. |
-| `unknown noun "…"` | The statement introduces an object by a noun phrase that is not a notion of the article or of its vocabulary. Define the notion first ([Writing for Leanify](writing.md)), or use a vocabulary that has it. |
+| `unknown noun: …`, `not read as a noun: "…"` | The statement introduces an object by a noun phrase that is not a notion of the article or of its vocabulary. Define the notion first ([Writing for Leanify](writing.md)), or use the field of the vocabulary that has it (the finding names the field). A noun that Leanify reads where it stands (`an integer`, `there is a constant`) is never named: if the statement has no such finding, something else in it is not read. |
+| `"positive integer" is read, but not the words after it ("with at least two divisors")` | The noun is known, and the words after it are not a modifier of the vocabulary. State them as a condition (`with $d(n)\ge2$`, `such that …`). |
 | `Theorem … is not checked`, `Lemma … is only partly checked` | Rephrase the sentences with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
 | `the proof of … is not read completely` | The result can be checked, but it is not derived from its printed proof. Rewrite the unread sentences of the proof (`--prose` lists them), or accept a proof by other means. |
 | the article is several files | `check` reads the files it inputs. For the certificate, `lake exe leanify flatten article.tex flat.tex` writes one file. |

@@ -389,13 +389,15 @@ signature `$f:A\to B$`), at most one variable (possibly with a membership
 `$C\in\CC$`), and postnominal modifiers of the vocabulary. Its meaning is the
 conjunction of the predicates of its parts. Every chunk must be read. -/
 
-/-- The name of a variable chunk: a letter, a command (`\gamma`) or `\hat x`. -/
+/-- The name of a variable chunk: a letter, a command (`\gamma`), `\hat x`, or a letter
+with a subscript that is a letter or a number (`d_0`, `n_k`: the name a bound on it
+binds, as in `$d_0\ge1$`). -/
 def varName : List MTok → Option Codes
   | [.id v] => some v
   | [.cmd c] => some ([92] ++ c)
   | ts => match Grammar.hatName ts with
     | some (v, []) => some v
-    | _ => none
+    | _ => Grammar.subNameOf ts
 
 /-- Match a vocabulary phrase at the start of `cs`. The variable slot matches a
 variable chunk (returned) or nothing. -/
@@ -447,6 +449,56 @@ def matchWords (tbl : List (List Codes × Nat)) (cs : List Chunk) : Option (Nat 
       | some i => some (i, cs.drop (k + 1))
       | none => go k
   go words.length
+
+/-- The words at the front of a phrase that the article or its vocabulary know: the
+modifiers before a noun and the noun (`finite set` in `finite set with at least two
+elements`). The result is these words, whether a noun is among them, and the words
+after them. A finding names a noun as unknown only if it is. -/
+def knownHead (V : Vocab) (own : List (List Codes × Nat)) (ws : List Codes) :
+    List Codes × Bool × List Codes :=
+  let shortest (rs : List (List Chunk)) : Option (List Chunk) :=
+    rs.foldl (fun best r => match best with
+      | some b => if r.length < b.length then some r else some b
+      | none => some r) none
+  -- (the longest noun at the front: of the article, or of the vocabulary)
+  let nounAt (cs : List Chunk) : Option (List Chunk) :=
+    shortest (((matchWords own cs).map (·.2)).toList ++ V.nouns.filterMap fun n =>
+      ((matchPhrase n.sing cs) <|> (matchPhrase n.plural cs)).bind fun (_, r) =>
+        if r.length < cs.length then some r else none)
+  let modAt (cs : List Chunk) : Option (List Chunk) :=
+    match cs with
+    | .w w :: r => if w == w!"fixed" then some r else
+      shortest (V.mods.filterMap fun m => if m.prenominal then
+          (matchPhrase m.phrase cs).bind fun (v, r) =>
+            if v.isNone && r.length < cs.length then some r else none
+        else none)
+    | _ => none
+  let rec go : Nat → List Chunk → Bool × List Chunk
+    | 0, cs => (false, cs)
+    | f + 1, cs =>
+      match nounAt cs with
+      | some r => (true, r)
+      | none =>
+        match modAt cs with
+        | some r => go f r
+        | none => (false, cs)
+  let (noun, rest) := go 6 (ws.map Chunk.w)
+  (ws.take (ws.length - rest.length), noun, wordsOf rest)
+
+/-- The finding for a phrase that was not read as a noun phrase. If its noun is known,
+the noun is not what stopped the sentence: the finding says which words were read and
+which were not. -/
+def nounFinding (V : Vocab) (own : List (List Codes × Nat)) (e : Err) : Err :=
+  let ws := (e.detail.splitOn 32).filter (!·.isEmpty)
+  let (head, noun, rest) := knownHead V own ws
+  if head.isEmpty then e
+  else if noun && rest.isEmpty then
+    ⟨E.nounWords, quoted head ++ w!" is a noun of the vocabulary, but this use of it is not read"⟩
+  else if noun then
+    ⟨E.nounWords, quoted head ++ w!" is read, but not the words after it (" ++ quoted rest ++ [41]⟩
+  else if rest.isEmpty then
+    ⟨E.nounWords, quoted head ++ w!" has no noun here: say what it qualifies (every positive integer $n$)"⟩
+  else e
 
 def conjPreds (ty : Ty) : List Tm → Option Tm
   | [] => none
@@ -4006,10 +4058,12 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
            | .error e' => e' != e
          | none => false)
       let e : Err :=
-        if e.code != E.undefined || e.detail == w!"\\subset" || e.detail == w!"\\supset" then e
+        if e.code == E.prose || e.detail == w!"\\subset" || e.detail == w!"\\supset" then e
         else if resolved w!"subset" w!"subseteq" then ⟨E.undefined, w!"\\subset"⟩
         else if resolved w!"supset" w!"supseteq" then ⟨E.undefined, w!"\\supset"⟩
         else e
+      -- A noun that the article or its vocabulary know is not what stopped the sentence.
+      let e : Err := if e.code == E.noun then nounFinding st0.vocab st0.nouns e else e
       let o : Outcome := if e.code == E.prose then .prose else .failed e
       { c with st := st0u, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
 

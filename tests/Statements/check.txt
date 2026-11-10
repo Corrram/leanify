@@ -116,7 +116,15 @@ tests/Statements/article.tex:374:1: warning: q is not defined: sentence not chec
 tests/Statements/article.tex:378:1: info: claim 96: \forall x\in \mathbb{R},\ 2<x\Rightarrow 1<x
 tests/Statements/article.tex:384:1: warning: e is not defined: sentence not checked
 tests/Statements/article.tex:388:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
-tests/Statements/article.tex: 7 definitions, 97 claims
-  text: 7 compiled, 1 failed, 6 prose (of 14)
-  results: 93 compiled, 13 failed, 1 prose (of 107)
-  all: 100 compiled, 14 failed, 7 prose (of 121)
+tests/Statements/article.tex:409:1: warning: unknown noun: copula: the field unitsquare of the vocabulary has it (\usepackage[vocab=unitsquare]{leanify}): sentence not checked
+tests/Statements/article.tex:415:1: warning: "positive integer" is read, but not the words after it ("with at least two divisors"): sentence not checked
+tests/Statements/article.tex:423:1: warning: Lemma unknown-noun is not checked: Leanify cannot read its statement; not read as a noun: "polynomial"
+tests/Statements/article.tex:427:1: warning: Lemma known-nouns is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Statements/article.tex:432:1: warning: Lemma noun-with-a-formula is not checked: Leanify cannot read its statement; not read as a noun: "finite $K_r$-free graph"
+tests/Statements/article.tex:441:1: info: claim 97: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x<y)
+tests/Statements/article.tex:445:1: info: claim 98: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\land z\le 1\Rightarrow x\,y\,z\le 1))
+tests/Statements/article.tex:449:56: info: claim 99: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land y<1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0<z\Rightarrow 2<x+z+y))
+tests/Statements/article.tex: 7 definitions, 100 claims
+  text: 7 compiled, 1 failed, 11 prose (of 19)
+  results: 97 compiled, 15 failed, 4 prose (of 116)
+  all: 104 compiled, 16 failed, 15 prose (of 135)
