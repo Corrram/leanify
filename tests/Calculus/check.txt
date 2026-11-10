@@ -1,0 +1,17 @@
+tests/Calculus/article.tex:9:1: info: defines f (f)
+tests/Calculus/article.tex:10:1: info: defines g (g)
+tests/Calculus/article.tex:11:1: info: defines h (h)
+tests/Calculus/article.tex:14:1: info: claim 0: f(1,2)=2
+tests/Calculus/article.tex:14:1: info: claim 1: g(3,1)=2
+tests/Calculus/article.tex:14:1: info: claim 2: h(1,2,3)=6
+tests/Calculus/article.tex:20:1: info: claim 3: (\tfrac{\mathrm{d}}{\mathrm{d}s}f(s,2)\big|_{s=1})=4
+tests/Calculus/article.tex:20:1: info: claim 4: (\tfrac{\mathrm{d}}{\mathrm{d}s}f(3,s)\big|_{s=1})=9
+tests/Calculus/article.tex:24:1: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}a}f(a,y)\big|_{a=x})=2\,x\,y
+tests/Calculus/article.tex:24:1: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}a}f(x,a)\big|_{a=y})={x}^{2}
+tests/Calculus/article.tex:28:1: info: claim 7: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}p}\tfrac{\mathrm{d}}{\mathrm{d}m}f(m,y)\big|_{m=p}\big|_{p=x})+(\tfrac{\mathrm{d}}{\mathrm{d}p}\tfrac{\mathrm{d}}{\mathrm{d}m}f(x,m)\big|_{m=p}\big|_{p=y})=2\,y
+tests/Calculus/article.tex:28:1: info: claim 8: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}a}\tfrac{\mathrm{d}}{\mathrm{d}w}f(a,w)\big|_{w=y}\big|_{a=x})=2\,x
+tests/Calculus/article.tex:32:1: info: claim 9: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (a\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}p}h(x,p,a)\big|_{p=y})(z)=x\,z
+tests/Calculus/article.tex: 3 definitions, 10 claims
+  text: 3 compiled, 0 failed, 0 prose (of 3)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 8 compiled, 0 failed, 0 prose (of 8)

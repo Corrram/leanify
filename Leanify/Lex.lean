@@ -83,13 +83,32 @@ def wDisplayEnvs : List Codes :=
   [w!"equation", w!"equation*", w!"align", w!"align*", w!"gather", w!"gather*", w!"multline",
    w!"multline*", w!"displaymath"]
 def wListEnvs : List Codes := [w!"enumerate", w!"itemize", w!"description"]
+/-- Environments of drawings and verbatim text, skipped to their end. -/
+def wSkipEnvs : List Codes :=
+  [w!"tikzpicture", w!"pgfpicture", w!"picture", w!"tikzcd", w!"verbatim", w!"lstlisting",
+   w!"minted", w!"comment"]
 def wDropText : List Codes :=
   [w!"emph", w!"textit", w!"textbf", w!"textup", w!"noindent", w!"centering", w!"medskip",
    w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null",
-   w!"leavevmode"]
+   w!"leavevmode", w!"sloppy", w!"fussy", w!"indent", w!"hfill", w!"vfill", w!"allowbreak",
+   w!"linebreak", w!"nolinebreak", w!"pagebreak", w!"nopagebreak", w!"goodbreak", w!"newpage",
+   w!"clearpage"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
-   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits"]
+   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]
+/-- Commands of formulas that are another spelling of a symbol the grammar reads:
+`\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`, `\triangleq` is `\coloneqq`. -/
+def mathAlias (n : Codes) : Option Tok :=
+  if n == w!"colon" then some (.msym 58)
+  -- other spellings of `\coloneqq` (`:=` is read where the characters are lexed)
+  else if n == w!"colonequals" || n == w!"triangleq" then some (.cmd w!"coloneqq")
+  else if n == w!"leqslant" || n == w!"leqq" then some (.cmd w!"le")
+  else if n == w!"geqslant" || n == w!"geqq" then some (.cmd w!"ge")
+  else if n == w!"lvert" || n == w!"rvert" || n == w!"vert" then some (.msym 124)
+  else if n == w!"lbrace" then some (.csym 123)
+  else if n == w!"rbrace" then some (.csym 125)
+  else none
+
 /-- References that print the kind of what they refer to (`\cref{l}` is `Lemma 2.1`). -/
 def wSelfRefs : List Codes := [w!"cref", w!"Cref", w!"autoref", w!"Autoref"]
 /-- Commands whose braced arguments are layout or metadata, skipped with the command kept. -/
@@ -97,7 +116,7 @@ def wSkipArgs : List Codes :=
   [w!"section", w!"subsection", w!"subsubsection", w!"section*", w!"caption", w!"includegraphics",
    w!"bibliographystyle", w!"bibliography", w!"vspace", w!"hspace", w!"thanks", w!"title",
    w!"author", w!"date", w!"address", w!"email", w!"keywords", w!"maketitle", w!"Needspace",
-   w!"texorpdfstring"]
+   w!"texorpdfstring", w!"tag", w!"tag*"]
 
 /-! ### Theorem environments
 
@@ -268,9 +287,14 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
         else lexAux macros f rest (pos + 1 + n) st out
       else lexAux macros f cs (pos + 1) st out
     else if c == 36 then
-      match st with
-      | true :: st' => lexAux macros f cs (pos + 1) st' (⟨.mclose, pos, true⟩ :: out)
-      | _ => lexAux macros f cs (pos + 1) (true :: st) (⟨.mopen, pos, true⟩ :: out)
+      match st, cs with
+      | true :: st', _ => lexAux macros f cs (pos + 1) st' (⟨.mclose, pos, true⟩ :: out)
+      -- `$$…$$` is a display, like `\[…\]`
+      | [], 36 :: ds =>
+        lexAux macros f ds (pos + 2) [false] (⟨.begin w!"displaymath", pos, false⟩ :: out)
+      | false :: st', 36 :: ds =>
+        lexAux macros f ds (pos + 2) st' (⟨.finish w!"displaymath", pos, true⟩ :: out)
+      | _, _ => lexAux macros f cs (pos + 1) (true :: st) (⟨.mopen, pos, true⟩ :: out)
     else if c == 92 then
       match cs with
       | [] => none
@@ -303,10 +327,14 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
           match macros.lookup name with
           | some body0 =>
             let (body, rest, k) := expand macros name body0 rest
-            match lexAux macros f body pos st [] with
-            | some (ts, st') => if st' == st then
-                lexAux macros f rest (pos + n + k) st (ts.reverse ++ out) else none
-            | none => none
+            -- (the body without the macro itself: `\let\old\longmapsto` and then
+            -- `\renewcommand{\longmapsto}{…\old…}` uses the original `\longmapsto`)
+            match lexAux (macros.filter (·.1 != name)) f body pos st [] with
+            -- (a macro may open or close a formula: `\newcommand{\be}{\begin{equation}}`)
+            | some (ts, st') => lexAux macros f rest (pos + n + k) st' (ts.reverse ++ out)
+            -- a body the lexer cannot read (layout code with `\makeatletter` internals) is an
+            -- unknown command
+            | none => lexAux macros f rest (pos + n + k) st (⟨.cmd name, pos, math⟩ :: out)
           | none =>
           if name == w!"begin" || name == w!"end" then
             match rest with
@@ -315,6 +343,19 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               let len := n + env0.length + 2
               let env := envAlias macros env0
               let isDisplay := wDisplayEnvs.contains env
+              -- drawings and verbatim text are not prose: skipped to their end
+              if name == w!"begin" && wSkipEnvs.contains env0 then
+                let close := w!"\\end{" ++ env0 ++ w!"}"
+                let rec find : Nat → Codes → Nat → Option (Codes × Nat)
+                  | 0, _, _ => none
+                  | _ + 1, [], _ => none
+                  | g + 1, d :: ds, k =>
+                    if (d :: ds).take close.length == close then some ((d :: ds).drop close.length, k + close.length)
+                    else find g ds (k + 1)
+                match find (r'.length + 1) (r'.drop 1) 0 with
+                | some (r'', k) => lexAux macros f r'' (pos + len + k) st out
+                | none => none
+              else
               if name == w!"begin" then
                 -- the options of a list environment are layout
                 let (r'', k) := if wListEnvs.contains env then optArg (r'.drop 1) else (r'.drop 1, 0)
@@ -325,7 +366,15 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             | _ => none
           else if name == w!"label" || name == w!"ref" || name == w!"eqref" || name == w!"cite"
               || name == w!"citep" || name == w!"citet" || wSelfRefs.contains name then
+            -- (`\ref*{l}`, `\cref*{l}`: the starred forms print the same reference)
+            let (rest, nStar) := match rest with
+              | 42 :: r => (r, 1)
+              | _ => (rest, 0)
             let (r1, n1) := optArg rest
+            -- (spaces and a line break may stand before the braces: `\cite[Lemma~2]` at the
+            -- end of a line, `{key}` on the next)
+            let sp := (r1.takeWhile fun c => c == 32 || c == 10 || c == 9).length
+            let (r1, n1) := (r1.drop sp, n1 + nStar + sp)
             match r1 with
             | 123 :: r =>
               let (arg, r') := takeWhile (· != 125) r
@@ -333,7 +382,8 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               let kind := if name == w!"label" then RefKind.label else if name == w!"ref" then .ref
                 else if name == w!"eqref" || wSelfRefs.contains name then .eqref else .cite
               emit (.ref kind arg) (r'.drop 1) (n + n1 + arg.length + 2) st
-            | _ => none
+            -- (`\label` as a name in drawing code: `\foreach \x/\label in …`)
+            | _ => emit (.cmd name) rest n st
           else if wSkipArgs.contains name then
             -- skip an optional argument and all directly following braced groups
             let rec skip : Nat → Codes → Nat → Option (Codes × Nat)
@@ -359,7 +409,10 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             | some (r, k), some l =>
               lexAux macros f r (pos + n + k) st
                 (⟨.ref .ref l, pos, math⟩ :: ⟨.begin w!"@proofsec", pos, math⟩ :: ⟨.cmd name, pos, math⟩ :: out)
-            | some (r, k), none => emit (.cmd name) r (n + k) st
+            | some (r, k), none =>
+              -- an equation tag is layout
+              if name == w!"tag" then lexAux macros f r (pos + n + k) st out
+              else emit (.cmd name) r (n + k) st
             | none, _ => none
           else if !math && wDropText.contains name then
             -- `\item \emph{$A\ge z$ and $B\le1+z$.}`: the heading of a case, not a claim
@@ -367,6 +420,35 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               emit (.cmd w!"@heading") rest n st
             else lexAux macros f rest (pos + n) st out
           else if math && wDropMath.contains name then lexAux macros f rest (pos + n) st out
+          else if math && (name == w!"text" || name == w!"textup" || name == w!"textrm" ||
+              name == w!"mbox" || name == w!"textnormal") then
+            -- `\text{for every integer }`: words, as in the running text (anything but words
+            -- and punctuation keeps the letters, as before)
+            match rest with
+            | 123 :: r =>
+              match group 100000 0 r [] with
+              | some (inner, r', k) =>
+                match lexAux macros f inner (pos + n + 1) [] [] with
+                | some (ts, []) =>
+                  if !ts.isEmpty && ts.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
+                    lexAux macros f r' (pos + n + 1 + k) st
+                      (⟨.rbrace, pos + n + k, true⟩ :: (ts.reverse.map fun p => { p with math := true }) ++
+                        ⟨.lbrace, pos + n, true⟩ :: ⟨.cmd w!"text", pos, true⟩ :: out)
+                  else emit (.cmd name) rest n st
+                | _ => emit (.cmd name) rest n st
+              | none => emit (.cmd name) rest n st
+            | _ => emit (.cmd name) rest n st
+          else if math then
+            -- `\vcentcolon=` is `:=`
+            if name == w!"vcentcolon" && rest.head? == some 61 then
+              emit (.cmd w!"coloneqq") (rest.drop 1) (n + 1) st
+            -- `\mathrel{:=}`, as many articles define `\defeq`
+            else if name == w!"mathrel" && rest.take 4 == w!"{:=}" then
+              emit (.cmd w!"coloneqq") (rest.drop 4) (n + 4) st
+            else
+            match mathAlias name with
+            | some t => emit t rest n st
+            | none => emit (.cmd name) rest n st
           else emit (.cmd name) rest n st
     else if c == 123 then
       if math then emit .lbrace cs 1 st else lexAux macros f cs (pos + 1) st out
@@ -376,6 +458,8 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
       if isLetter c then emit (.mvar c) cs 1 st
       -- digits are separate tokens, as in TeX (`\frac14`); the grammar groups numerals
       else if isDigit c then emit (.mnum (c - 48)) cs 1 st
+      -- `:=` defines, as `\coloneqq` does
+      else if c == 58 && cs.head? == some 61 then emit (.cmd w!"coloneqq") (cs.drop 1) 2 st
       else emit (.msym c) cs 1 st
     else if isWordChar c then
       let (w, rest) := takeWhile isWordChar (c :: cs)
@@ -550,12 +634,37 @@ def linesOffset (ls : List Codes) : Nat := ls.foldl (fun a l => a + l.length + 1
 
 def blankLine (l : Codes) : Bool := l.all Lex.isSpace
 
+/-- The environments that a line begins (`true`) and ends (`false`), in order: the
+names in `\begin{…}` and `\end{…}`. The line is read once, and a name is looked at
+only where a backslash stands: the kernel audit evaluates this on every line of an
+article, and its memory grows with every step. -/
+def envMarks : Codes → List (Bool × Codes)
+  | [] => []
+  | c :: cs =>
+    if c == 92 then
+      if cs.take 6 == w!"begin{" then
+        let name := (cs.drop 6).takeWhile (· != 125)
+        if ((cs.drop 6).drop name.length).head? == some 125 then (true, name) :: envMarks cs else envMarks cs
+      else if cs.take 4 == w!"end{" then
+        let name := (cs.drop 4).takeWhile (· != 125)
+        if ((cs.drop 4).drop name.length).head? == some 125 then (false, name) :: envMarks cs else envMarks cs
+      else envMarks cs
+    else envMarks cs
+
+/-- Do the lines open a drawing or verbatim environment that they do not close (a
+blank line inside it does not end the block)? More `\begin{e}` than `\end{e}`, for one
+of these environments `e`. -/
+def openSkip (ls : List Codes) : Bool :=
+  let ms := ls.flatMap envMarks
+  Lex.wSkipEnvs.any fun e =>
+    (ms.filter (· == (false, e))).length < (ms.filter (· == (true, e))).length
+
 /-- Group lines into paragraph blocks (start offset, lines); blank lines separate
-blocks. -/
+blocks, except inside a drawing or verbatim environment. -/
 def blocksOf : List Codes → Nat → Option (Nat × List Codes) → List (Nat × List Codes) → List (Nat × List Codes)
   | [], _, cur, acc => (cur.toList ++ acc).reverse
   | l :: ls, pos, cur, acc =>
-    if blankLine l then blocksOf ls (pos + l.length + 1) none (cur.toList ++ acc)
+    if blankLine l && !(cur.any fun (_, c) => openSkip c) then blocksOf ls (pos + l.length + 1) none (cur.toList ++ acc)
     else match cur with
       | none => blocksOf ls (pos + l.length + 1) (some (pos, [l])) acc
       | some (p, c) => blocksOf ls (pos + l.length + 1) (some (p, c ++ [l])) acc
@@ -567,17 +676,6 @@ def lexBlock (macros : Macros) (block : Codes) (st : List Bool) : Option (List P
 
 /-- The paragraph break after a block (none inside an open formula). -/
 def blockBreak (st : List Bool) : List PTok := if st.isEmpty then [⟨.par, 0, false⟩] else []
-
-/-- The key of a block's lexing: the macros, the math-mode stack it starts in and
-its text determine its tokens. Equal keys name the same cached certificate (the
-kernel still compares the literals, so a collision cannot cause harm). -/
-def lexKey (macros : Macros) (st : List Bool) (block : Codes) : String :=
-  let enc (c : Codes) : String := Codes.toString c
-  let ms := String.intercalate "\u0001" (macros.map fun (n, b) => enc n ++ "\u0002" ++ enc b)
-  let s := ms ++ "\u0003" ++ String.ofList (st.map fun b => if b then '1' else '0') ++ "\u0003" ++ enc block
-  let h := s.toUTF8.foldl (fun (h : UInt64) b => (h ^^^ b.toUInt64) * 0x100000001b3) 0xcbf29ce484222325
-  let hex := String.ofList (Nat.toDigits 16 h.toNat)
-  String.ofList (List.replicate (16 - hex.length) '0') ++ hex
 
 /-- Shift token positions by a block's start offset. -/
 def PTok.shift (base : Nat) (t : PTok) : PTok := { t with pos := t.pos + base }

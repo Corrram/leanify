@@ -1,0 +1,45 @@
+name: Upload the package to CTAN
+# On a version tag on main, builds leanify.zip (scripts/ctan.sh) and submits it to CTAN
+# as an update, unless CTAN already has this version of tex/leanify.sty. Run by hand,
+# it only asks CTAN to check the archive, and uploads it if asked.
+# The address of the uploader is the repository secret CTAN_EMAIL. The CTAN team
+# installs an upload by hand and confirms by mail to that address.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload to CTAN (otherwise the archive is only checked)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  ctan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: A released version is on main
+        if: github.ref_type == 'tag'
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
+            || { echo "::error::the tag $GITHUB_REF_NAME is not on main"; exit 1; }
+      - name: TeX for the documentation of the package
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-extra texlive-fonts-recommended lmodern zip unzip curl
+      - name: Check the archive, and upload it for a release
+        env:
+          CTAN_EMAIL: ${{ secrets.CTAN_EMAIL }}
+          UPLOAD: ${{ github.ref_type == 'tag' || inputs.upload == true }}
+        run: |
+          if [ "$UPLOAD" = true ]; then
+            sh scripts/ctan.sh upload
+          else
+            sh scripts/ctan.sh validate
+          fi

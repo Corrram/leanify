@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab=distributions]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation and conventions}
+
+We write $\langle a,b\rangle$ for $\frac{a+b}{2}$.
+We write $a\sim b$ if $|a-b|\le1$.
+We write $\mathbf S[h]$ for $\int_0^1 h(t)\,\mathrm{d}t$.
+We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.
+We write $\mathrm{Bin}(n,p)$ for the binomial distribution with parameters $n$ and $p$.
+We write $\delta_m$ for the point mass at $m$.
+We write $\mathcal P$ for the set of probability distributions on $\mathbb N_0$.
+By a distribution we mean a probability distribution on $\mathbb N_0$.
+Throughout, increasing means non-decreasing.
+
+\section{Results}
+
+\begin{lemma}\label{mid}
+For all $x,y\in\mathbb{R}$, $\langle x,y\rangle=\langle y,x\rangle$ and $x\sim x$.
+\end{lemma}
+
+\begin{lemma}\label{int}
+For $x\in\mathbb{R}$, set $f(x)\coloneqq x^2$. Then $\mathbf S[f]=\frac13$ and $f$ is increasing on $[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{poi}
+Let $\lambda\ge0$. Then $\mathrm{Poi}(\lambda)(0)=e^{-\lambda}$, and $\mathrm{Poi}(\lambda)$ is a probability distribution on $\mathbb N_0$.
+\end{lemma}
+
+\begin{lemma}\label{dist}
+Let $\nu$ be a distribution. Then $\nu(1)\le1$, and $\nu$ is not the point mass at $3$.
+\end{lemma}
+
+\begin{lemma}\label{class}
+Let $\nu\in\mathcal P$. Then $\nu(2)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$\delta_3(3)=1$ and $\mathrm{Bin}(2,\frac12)(1)=\frac12$.
+\end{lemma}
+
+\end{document}

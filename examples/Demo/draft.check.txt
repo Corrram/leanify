@@ -1,7 +1,9 @@
-examples/Demo/draft.tex:70:1: warning: sentence not compiled (undefined symbol: g); it asserts nothing checked
-examples/Demo/draft.tex:77:1: warning: corollary sentence without a mathematical reading: The function $f$ attains its minimum on $(0,\infty)$ at $1$.
+examples/Demo/draft.tex:70:1: warning: g is not defined: sentence not checked
+examples/Demo/draft.tex:77:1: warning: Corollary cor:min is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 examples/Demo/draft.tex: 1 definitions, 5 claims
   text: 1 compiled, 0 failed, 40 prose (of 41)
   results: 2 compiled, 0 failed, 1 prose (of 3)
   proofs: 5 compiled, 1 failed, 0 prose (of 6)
   all: 8 compiled, 1 failed, 41 prose (of 50)
+  complete proofs: 2 of 3 (a result is derived from a proof that is read completely)
+examples/Demo/draft.tex: 1 of the 5 claims follows a sentence of its result or proof that is not read: its reading may lack a hypothesis, or keep one that has ended (--claims names it)

@@ -22,6 +22,14 @@ structure Context where
   /-- For a proof: the label of the result it proves. -/
   proves : Codes := []
   sec : Nat := 0
+  /-- The items of lists that the sentence is in, the innermost first (each `\item`
+  of the article has a number of its own): the heading of a case, `\item
+  \emph{$x\ge0$.}`, is a hypothesis of the sentences of its item. -/
+  items : List Nat := []
+  /-- A result whose heading cites its source (`\begin{lemma}[{\cite[Theorem 2]{b}}]`): a
+  result quoted from the literature. If the article gives no proof of it, it is an
+  assumption of the article, and the reports name it as one. -/
+  quoted : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Sentence where
@@ -48,6 +56,36 @@ def endsAfter : List PTok → Bool
     | .word (c :: _) => isUpper c
     | .par | .begin _ | .finish _ | .cmd _ | .mopen => true
     | _ => false
+
+/-- Abbreviations whose period does not end a sentence (`cf.`, `resp.`, `Thm.`). -/
+def wAbbrevs : List Codes :=
+  [w!"cf", w!"resp", w!"vs", w!"viz", w!"approx", w!"al", w!"Thm", w!"Lem", w!"Prop", w!"Cor",
+   w!"Def", w!"Rem", w!"Ex", w!"Eq", w!"Eqs", w!"Fig", w!"Sec", w!"Ch", w!"Ref", w!"Refs", w!"No"]
+
+/-- Is the period after these tokens (latest first) that of an abbreviation? The
+second period of `i.e.` and `e.g.` is one too. -/
+def abbrevBefore : List PTok → Bool
+  | ⟨.word w, _, false⟩ :: rest =>
+    wAbbrevs.contains w ||
+      (match w, rest with
+        | [101], ⟨.punct 46, _, false⟩ :: ⟨.word [105], _, false⟩ :: _ => true
+        | [103], ⟨.punct 46, _, false⟩ :: ⟨.word [101], _, false⟩ :: _ => true
+        | _, _ => false)
+  | _ => false
+
+/-- Does the current sentence (latest token first) end with `the following are
+equivalent:`? Its list then belongs to it. -/
+def tfaeIntro : List PTok → Bool
+  | ⟨.punct 58, _, false⟩ :: ⟨.word e, _, _⟩ :: ⟨.word a, _, _⟩ :: ⟨.word f, _, _⟩ :: _ =>
+    e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following")
+  | _ => false
+
+/-- `… with the following property.`, `… such that the following holds.` (reversed): the next
+sentence states the property, and belongs to this one. -/
+def followingIntro : List PTok → Bool
+  | ⟨.word p, _, false⟩ :: ⟨.word f, _, false⟩ :: ⟨.word t, _, false⟩ :: _ =>
+    t == w!"the" && f == w!"following" && (p == w!"property" || p == w!"holds")
+  | _ => false
 
 /-- Index of the token closing the current display environment `e`. -/
 def displayEnd (e : Codes) : List PTok → Nat → Option Nat
@@ -78,6 +116,13 @@ structure St where
   lastResult : Codes := []
   sec : Nat := 0
   skipDepth : Nat := 0
+  /-- Inside the list of a sentence `… the following are equivalent:`: its items
+  belong to the sentence. -/
+  tfae : Bool := false
+  /-- The open list items, the innermost first (`0`: a list before its first item),
+  and the number of items so far. -/
+  items : List Nat := []
+  itemCount : Nat := 0
   deriving Inhabited, Lean.ToExpr
 
 /-- The label of a proof that is a section (`\subsection{Proof of Theorem~\ref{l}}`):
@@ -93,7 +138,7 @@ def flush (s : St) : St :=
     let toks := c.reverse
     let start := (toks.headD default).pos
     let stop := (c.headD default).pos + 1
-    { s with out := ⟨s.ctx, toks, start, stop⟩ :: s.out, cur := [] }
+    { s with out := ⟨{ s.ctx with items := s.items.filter (· != 0) }, toks, start, stop⟩ :: s.out, cur := [] }
 
 def labelOf : List PTok → Codes × List PTok
   | t :: ts =>
@@ -123,10 +168,11 @@ def go : Nat → List PTok → St → St
       if wSkipEnvs.contains e then go f ts { flush s with skipDepth := 1 }
       else if wResults.contains e then
         let s := flush s
-        let (_, rest) := skipTitle ts
+        let (title, rest) := skipTitle ts
         let (lab, rest) := labelOf rest
         let n := s.envCount + 1
-        let c : Context := ⟨.result e, n, lab, [], s.sec⟩
+        let quoted := title.any fun p => match p.tok with | .ref .cite _ => true | _ => false
+        let c : Context := { kind := .result e, env := n, label := lab, sec := s.sec, quoted }
         go f rest { s with ctx := c, envCount := n, lastResult := lab }
       else if e == w!"@proofsec" then
         let s := flush s
@@ -134,14 +180,14 @@ def go : Nat → List PTok → St → St
           | ⟨.ref .ref l, _, _⟩ :: r => (l, r)
           | r => (s.lastResult, r)
         let n := s.envCount + 1
-        let c : Context := ⟨.proof, n, secProofLabel, target, s.sec⟩
+        let c : Context := { kind := .proof, env := n, label := secProofLabel, proves := target, sec := s.sec }
         go f rest { s with ctx := c, envCount := n }
       else if e == w!"proof" then
         let s := flush s
         let (title, rest) := skipTitle ts
         let target := match proofTarget title with | [] => s.lastResult | l => l
         let n := s.envCount + 1
-        let c : Context := ⟨.proof, n, [], target, s.sec⟩
+        let c : Context := { kind := .proof, env := n, proves := target, sec := s.sec }
         go f rest { s with ctx := c, envCount := n }
       else if Lex.wDisplayEnvs.contains e then
         -- the display joins the current sentence; a final period ends it
@@ -154,27 +200,41 @@ def go : Nat → List PTok → St → St
             | .finish _ | .rbrace | .csym 92 | .ref .label _ => false | _ => true)
           let ends : Bool := match last with | some p => p.tok == .msym 46 | none => false
           let s := { s with cur := closer :: (body.reverse ++ (t :: s.cur)) }
-          if ends then go f rest (flush s) else go f rest s
+          if ends && !s.tfae then go f rest (flush s) else go f rest s
         | none => go f ts { s with cur := t :: s.cur }
+      else if Lex.wListEnvs.contains e && tfaeIntro s.cur then
+        go f ts { s with cur := t :: s.cur, tfae := true }
+      -- a list: its items are numbered, for the cases of a proof
+      else if Lex.wListEnvs.contains e then go f ts { flush s with items := 0 :: s.items }
       else go f ts (flush s)
     | .finish e =>
-      if wResults.contains e || e == w!"proof" then
-        let c : Context := ⟨.text, 0, [], [], s.sec⟩
-        go f ts { flush s with ctx := c }
+      if s.tfae && Lex.wListEnvs.contains e then
+        go f ts { flush { s with cur := t :: s.cur } with tfae := false }
+      else if wResults.contains e || e == w!"proof" then
+        let c : Context := { sec := s.sec }
+        go f ts { flush s with ctx := c, items := [] }
+      else if Lex.wListEnvs.contains e then go f ts { flush s with items := s.items.drop 1 }
       else go f ts (flush s)
-    | .par => go f ts (flush s)
+    | .par => if s.tfae then go f ts s else go f ts (flush s)
     | .cmd n =>
       if n == w!"section" || n == w!"section*" then
-        let c : Context := ⟨.text, 0, [], [], s.sec + 1⟩
+        let c : Context := { sec := s.sec + 1 }
         go f ts { flush s with sec := s.sec + 1, ctx := c }
       else if s.secProof && (n == w!"subsection" || n == w!"subsubsection" || n == w!"paragraph" || n == w!"appendix") then
-        let c : Context := ⟨.text, 0, [], [], s.sec⟩
+        let c : Context := { sec := s.sec }
         go f ts { flush s with ctx := c }
-      else if n == w!"subsection" || n == w!"subsubsection" || n == w!"item" || n == w!"appendix" then
+      else if s.tfae && n == w!"item" then go f ts { s with cur := t :: s.cur }
+      else if n == w!"item" then
+        let s := flush s
+        -- (an item of a list the segmenter knows: only its end is seen)
+        if s.items.isEmpty then go f ts s
+        else go f ts { s with items := (s.itemCount + 1) :: s.items.drop 1, itemCount := s.itemCount + 1 }
+      else if n == w!"subsection" || n == w!"subsubsection" || n == w!"appendix" then
         go f ts (flush s)
       else go f ts { s with cur := t :: s.cur }
     | .punct 46 =>
-      if !t.math && endsAfter ts then go f ts (flush { s with cur := t :: s.cur })
+      if !t.math && !s.tfae && endsAfter ts && !abbrevBefore s.cur && !followingIntro s.cur then
+        go f ts (flush { s with cur := t :: s.cur })
       else go f ts { s with cur := t :: s.cur }
     | _ => go f ts { s with cur := t :: s.cur }
 

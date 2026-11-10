@@ -1,0 +1,59 @@
+tests/Square/article.tex:22:1: info: defines \mathcal{C} (copulas)
+tests/Square/article.tex:23:1: info: defines Leb (Leb)
+tests/Square/article.tex:24:1: info: defines M (M)
+tests/Square/article.tex:24:1: info: defines W (W)
+tests/Square/article.tex:24:1: info: defines \Pi (Pi)
+tests/Square/article.tex:25:1: info: defines S (S)
+tests/Square/article.tex:26:1: info: defines \operatorname{PQD} (positivelyQuadrantDependent)
+tests/Square/article.tex:27:1: info: defines \operatorname{LTD} (leftTailDecreasing)
+tests/Square/article.tex:27:1: info: \operatorname{LTD} is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in \mathbb{R},\ 0<z\land z\le 1\Rightarrow (\forall s\in \mathbb{R},\ 0<s\land s\le 1\Rightarrow z\le s\Rightarrow ((0\le s\land s\le 1)\land \neg (s=0))\land (0\le z\land z\le 1)\land \neg (z=0)))
+tests/Square/article.tex:32:1: info: defines \rho (rho)
+tests/Square/article.tex:32:1: info: \rho is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \operatorname{Int}((z\in [0,1]\mapsto x(z,y))))\land \operatorname{Int}((y\in [0,1]\mapsto \int_0^1 x(z,y)\,dz))
+tests/Square/article.tex:33:1: info: defines \beta (beta)
+tests/Square/article.tex:33:1: info: \beta is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\neg (2=0)\land 0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land \neg (2=0)\land 0\le \frac{1}{2}\land \frac{1}{2}\le 1
+tests/Square/article.tex:34:1: info: defines \phi (phi)
+tests/Square/article.tex:34:1: info: \phi is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \operatorname{Int}((y\in [0,1]\mapsto x(y,y)))
+tests/Square/article.tex:35:1: info: defines \delta (delta)
+tests/Square/article.tex:35:1: info: \delta is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ 0\le 1-y\land 1-y\le 1)\land \operatorname{Int}((y\in [0,1]\mapsto x(y,\langle 1-y\rangle_{[0,1]})))
+tests/Square/article.tex:36:1: info: defines \gamma (gamma)
+tests/Square/article.tex:36:1: info: \gamma is well defined if: \forall x\in [0,1]\to [0,1],\ \operatorname{Borel}(x)\Rightarrow (\forall y\in [0,1]\to [0,1]\to \mathrm{Prop},\ \operatorname{Meas}(y)\Rightarrow \operatorname{Meas}((z\in [0,1]\mapsto y(z,x(z)))))
+tests/Square/article.tex:37:1: info: defines \text{supported on the graph} (supportedOnTheGraph)
+tests/Square/article.tex:37:1: info: \text{supported on the graph} is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1]\to [0,1],\ \operatorname{Borel}(y)\Rightarrow (\forall z\in [0,1],\ \forall s\in [0,1],\ \operatorname{Meas}((t\in [0,1]\mapsto t\le z\land y(t)\le s))))
+tests/Square/article.tex:42:1: info: claim 0: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow \operatorname{PQD}(x)
+tests/Square/article.tex:42:1: info: claim 0 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow \mathcal{C}(x)
+tests/Square/article.tex:46:1: info: claim 1: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow -1\le \rho(x)\land \rho(x)\le 1
+tests/Square/article.tex:46:1: info: claim 1 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \mathcal{C}(x)\land (-1\le \rho(x)\Rightarrow \mathcal{C}(x))
+tests/Square/article.tex:46:1: info: claim 2: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \beta(x)\le 1
+tests/Square/article.tex:46:1: info: claim 2 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \mathcal{C}(x)
+tests/Square/article.tex:50:22: info: claim 3: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ W(y,z)\le x(y,z)\land x(y,z)\le M(y,z))
+tests/Square/article.tex:54:1: info: claim 4: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ x(y,\langle 1-y\rangle_{[0,1]})\le \frac{1}{2})
+tests/Square/article.tex:54:1: info: claim 4 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ (0\le 1-y\land 1-y\le 1)\land \neg (2=0))
+tests/Square/article.tex:54:1: info: claim 5: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ x(\langle \frac{y}{2}\rangle_{[0,1]},y)\le y)
+tests/Square/article.tex:54:1: info: claim 5 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \neg (2=0)\land 0\le \frac{y}{2}\land \frac{y}{2}\le 1)
+tests/Square/article.tex:58:1: info: claim 6: \operatorname{convex}(\mathcal{C})\land \operatorname{compact\ (uniform)}(\mathcal{C})
+tests/Square/article.tex:58:76: info: claim 7: \operatorname{continuous\ (uniform)}(\rho)\text{ on }\mathcal{C}
+tests/Square/article.tex:62:1: info: claim 8: \forall x\in [0,1],\ \mathcal{C}(S(x))
+tests/Square/article.tex:62:1: info: claim 9: \forall x\in [0,1],\ \phi(S(x))\le 1
+tests/Square/article.tex:62:1: info: claim 9 is meaningful if: \forall x\in [0,1],\ \mathcal{C}(S(x))
+tests/Square/article.tex:62:64: info: claim 10: \rho(M)=1
+tests/Square/article.tex:62:64: info: claim 10 is meaningful if: \mathcal{C}(M)
+tests/Square/article.tex:62:64: info: claim 11: \rho(W)=-1
+tests/Square/article.tex:62:64: info: claim 11 is meaningful if: \mathcal{C}(W)
+tests/Square/article.tex:62:64: info: claim 12: \rho(\Pi)=0
+tests/Square/article.tex:62:64: info: claim 12 is meaningful if: \mathcal{C}(\Pi)
+tests/Square/article.tex:66:1: info: claim 13: (\forall x\in [0,1],\ -1\le 2\,x-1\land 2\,x-1\le 1)\land (\forall x\in [0,1],\ \forall y\in [0,1],\ x<y\Rightarrow 2\,x-1<2\,y-1)\land (\forall x\in \mathbb{R},\ -1\le x\land x\le 1\Rightarrow (\exists y\in [0,1],\ 2\,y-1=x))
+tests/Square/article.tex:70:1: info: claim 14: \forall x\in [0,1],\ \int_0^1 M(x,y)\,dy=x-\frac{{x}^{2}}{2}
+tests/Square/article.tex:70:1: info: claim 14 is meaningful if: \forall x\in [0,1],\ \operatorname{Int}((y\in [0,1]\mapsto M(x,y)))\land \neg (2=0)
+tests/Square/article.tex:70:1: info: claim 15: \forall x\in [0,1],\ (\sup\{y\in \mathbb{R} : \exists t\in \mathbb{R},\ (0\le t\land t\le 1)\land \Pi(x,\langle t\rangle_{[0,1]})=y\})=x
+tests/Square/article.tex:70:1: info: claim 15 is meaningful if: \forall x\in [0,1],\ (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ 0\le t\land t\le 1\Rightarrow 0\le t\land t\le 1)\land ((\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ (0\le t\land t\le 1)\land \Pi(x,\langle t\rangle_{[0,1]})=z)\Rightarrow z\le y)\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ 0\le a\land a\le 1\Rightarrow 0\le a\land a\le 1)))\land (\exists y\in \mathbb{R},\ ((\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ (0\le t\land t\le 1)\land \Pi(x,\langle t\rangle_{[0,1]})=z)\Rightarrow z\le y)\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ (\exists a\in \mathbb{R},\ (0\le a\land a\le 1)\land \Pi(x,\langle a\rangle_{[0,1]})=s)\Rightarrow s\le z)\Rightarrow y\le z))\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ (\exists a\in \mathbb{R},\ (0\le a\land a\le 1)\land \Pi(x,\langle a\rangle_{[0,1]})=s)\Rightarrow s\le z)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ (\exists b\in \mathbb{R},\ (0\le b\land b\le 1)\land \Pi(x,\langle b\rangle_{[0,1]})=t)\Rightarrow t\le s)\Rightarrow z\le s)\Rightarrow z=y))
+tests/Square/article.tex:74:1: info: claim 16: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ 0\le y\land y\le 2\Rightarrow x+y\le 3
+tests/Square/article.tex:74:1: info: claim 17: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ 0\le y\land y\le 2\Rightarrow 0\le \frac{y}{2}\land \frac{y}{2}\le 1
+tests/Square/article.tex:74:1: info: claim 17 is meaningful if: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ 0\le y\land y\le 2\Rightarrow \neg (2=0)\land (0\le \frac{y}{2}\Rightarrow \neg (2=0))
+tests/Square/article.tex:78:1: info: claim 18: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \int_{0}^{y}x(\langle z\rangle_{[0,1]},\langle z\rangle_{[0,1]})\,dz\le y)
+tests/Square/article.tex:78:1: info: claim 18 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ (\forall z\in \mathbb{R},\ 0\le z\land z\le y\lor y\le z\land z\le 0\Rightarrow (0\le z\land z\le 1)\land 0\le z\land z\le 1)\land \operatorname{Int}((z\in \mathbb{R}\,[0\le z\land z\le y\lor y\le z\land z\le 0]\mapsto x(\langle z\rangle_{[0,1]},\langle z\rangle_{[0,1]})))(0)(y))
+tests/Square/article.tex:78:1: info: claim 19: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \int_0^1 \int_0^1 x(s,z)\,ds\,dz\le 1)
+tests/Square/article.tex:78:1: info: claim 19 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ (\forall z\in [0,1],\ \operatorname{Int}((s\in [0,1]\mapsto x(s,z))))\land \operatorname{Int}((z\in [0,1]\mapsto \int_0^1 x(s,z)\,ds)))
+tests/Square/article.tex: 14 definitions, 20 claims
+  text: 12 compiled, 0 failed, 4 prose (of 16)
+  results: 13 compiled, 0 failed, 0 prose (of 13)
+  all: 25 compiled, 0 failed, 4 prose (of 29)

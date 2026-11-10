@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.2.0"
+version = "0.7.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -23,6 +23,11 @@ globs = ["Leanify.*"]
 name = "leanify"
 root = "LeanifyCli"
 
+[[lean_exe]]
+# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
+name = "glossary"
+root = "GlossaryMain"
+
 [[lean_lib]]
 # A short paper on the harmonic, geometric and arithmetic mean: definitions inside a
 # result, in a claim and after it.
@@ -43,8 +48,92 @@ srcDir = "examples"
 globs = ["Demo.+"]
 
 [[lean_lib]]
+# Notation beyond the core grammar, compiled by the kernel (a test of the compiler).
+name = "Notation"
+srcDir = "tests"
+globs = ["Notation.+"]
+
+[[lean_lib]]
 # The demonstration article with a false theorem, refuted in Lean (a test of the
 # `refuted` status and of claims that cite it).
 name = "Refuted"
 srcDir = "tests"
 globs = ["Refuted.+"]
+
+[[lean_lib]]
+# The article's notation and conventions, and a field of the vocabulary
+# (distributions on the natural numbers), compiled by the kernel.
+name = "Vocabulary"
+srcDir = "tests"
+globs = ["Vocabulary.+"]
+
+[[lean_lib]]
+# The fields numbers and torus, generic constants and existence statements,
+# compiled by the kernel.
+name = "Fields"
+srcDir = "tests"
+globs = ["Fields.+"]
+
+[[lean_lib]]
+# Functions of several variables and partial derivatives, compiled by the kernel.
+name = "Calculus"
+srcDir = "tests"
+globs = ["Calculus.+"]
+
+[[lean_lib]]
+# Fields, function spaces, norms and the Navier–Stokes equations, compiled by the kernel.
+name = "PDE"
+srcDir = "tests"
+globs = ["PDE.+"]
+
+[[lean_lib]]
+# Conventions about constants and their dependence, multi-indices, quantities set for
+# every value of a parameter, and classes of functions and of families, compiled by
+# the kernel.
+name = "Conventions"
+srcDir = "tests"
+globs = ["Conventions.+"]
+
+[[lean_lib]]
+# Statement forms found in OpenAI's collection of AI-written manuscripts, compiled by
+# the kernel.
+name = "Statements"
+srcDir = "tests"
+globs = ["Statements.+"]
+
+[[lean_lib]]
+# Notions that an article uses without defining them (declared in its preamble, or
+# introduced by a sentence) and results that it quotes from the literature, compiled by
+# the kernel and certified: the quoted results are the axioms of the certificate.
+name = "Undefined"
+srcDir = "tests"
+globs = ["Undefined.+"]
+
+[[lean_lib]]
+# Claims that follow a sentence which is not read (a hypothesis that is missing, a case
+# or a supposition that has ended): verified as read, named and counted apart.
+name = "Context"
+srcDir = "tests"
+globs = ["Context.+"]
+
+[[lean_lib]]
+# The language of proofs: assumptions, cases written as the items of a list,
+# contradictions and induction, compiled by the kernel and certified, each step by the
+# standard tactic.
+name = "Arguments"
+srcDir = "tests"
+globs = ["Arguments.+"]
+
+[[lean_lib]]
+# Notions of the running text and the adjectives of the unit-square field, with the
+# model that the vocabulary names (no proofs: the statements are compiled and stated).
+name = "Notions"
+srcDir = "tests"
+globs = ["Notions.+"]
+
+[[lean_lib]]
+# The type `[0,1]` of the field unitsquare: points, integrals, Lebesgue measure and the
+# law of a pair (no proofs: the statements are compiled and stated).
+name = "Square"
+srcDir = "tests"
+globs = ["Square.+"]

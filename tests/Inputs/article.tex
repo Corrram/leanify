@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{leanify}
+% the article's own package: its macros are read with the article
+\usepackage{notation}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}[lemma]{Proposition}
+\title{An article in several files}
+\begin{document}
+\maketitle
+
+\section{Definitions}
+The quick check reads the files an article inputs where they are input, and reports a finding at its own file and line.
+\input{sections/definitions}
+
+\section{Results}
+% a file named in a comment is not read: \input{sections/unused}
+\include{sections/result}
+\subfile{sections/remainder} The words after an input continue its paragraph.
+
+\input{figure.tikz}
+\end{document}

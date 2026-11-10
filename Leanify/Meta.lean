@@ -1,16 +1,27 @@
 import Leanify.Check
 
-/-! # Reading the article file and certifying its compilation
+/-! # Reading the article file and compiling it
 
-`#leanify_article Foo "article.tex"` reads the article at elaboration time,
-evaluates the compiler natively to *propose* each stage's result, and adds those
-results as literals together with theorems `lhs = rhs` proved by `Eq.refl`.
-Such a theorem is checked only by Lean's kernel, which evaluates the compiler
-itself. The stages compose to
+`#leanify_article Foo "article.tex" "fnv1a64:…"` reads the article at elaboration
+time, runs the compiler `compileArticle` on it and records the source and the result
+as the literals `Foo.source` and `Foo.doc`. The compiler is an ordinary Lean function,
+run by Lean's own evaluator: this takes about a second.
+
+What is proved about an article is proved from `Foo.doc` by the kernel
+(`#leanify_semantics`, `#leanify_certify`): every claim holds as Lean states it. That
+`Foo.doc` is what `compileArticle` gives for `Foo.source` is, by default, the result of
+that evaluation, as for any program. The audit removes Lean's evaluator from what is
+trusted: with `set_option leanify.kernel true` (`leanify audit ARTICLE.tex` runs it),
+every stage of the compilation is also added as a theorem `lhs = rhs` proved by
+`Eq.refl`, which only Lean's kernel checks, by evaluating the compiler itself, and the
+stages compose to
 `Foo.compiled : compileArticle Foo.vocab Foo.source = some Foo.doc`.
-No `native_decide` or other trusted evaluation is used.
+`Foo.vocab` is the vocabulary that the command is given, with the notions that the
+preamble of the article declares (`Foo.declared`; in the audit,
+`Foo.declaredNotions` says that these are the notions of `Foo.source`).
+The audit takes minutes and is meant for CI and for a final check, not for writing.
 
-The assembly (the compilation of the sentences) is certified in chunks of
+In the audit, the assembly (the compilation of the sentences) is certified in chunks of
 sentences: `Foo.run{i} : compileAll Foo.envs Foo.cstate{i} Foo.sents{i} = Foo.cstate{i+1}`.
 Each chunk is an independent kernel computation. -/
 namespace Leanify
@@ -105,8 +116,9 @@ partial def chainT (xs : List Term) : CommandElabM Term := do
   | x :: rest => do let r ← chainT rest; `($x ++ $r)
 
 /-- `#leanify_article Foo "article.tex" "fnv1a64:…" with V` compiles the article
-with the vocabulary `V` (default `Leanify.Vocab.core`), records each stage's
-result as a literal and proves every stage with Lean's kernel, then proves
+with the vocabulary `V` (default `Leanify.Vocab.core`) and records the source and
+the compiled document as `Foo.source` and `Foo.doc`. With `set_option leanify.kernel
+true` it also proves every stage with Lean's kernel, and then
 `Foo.compiled : compileArticle Foo.vocab Foo.source = some Foo.doc`. The pin is
 the hash of the article's contents (see `sourcePin`): Lake does not track the
 article file, so a changed article must change this Lean file to be recompiled. -/
@@ -131,12 +143,17 @@ register_option leanify.stages : Nat := {
   defValue := 100
   descr := "debugging: stop #leanify_article after this many stages" }
 
+/-- The audit: the kernel evaluates the compiler as well. -/
+register_option leanify.kernel : Bool := {
+  defValue := false
+  descr := "audit: prove every stage of an article's compilation with Lean's kernel (slow)" }
+
 /-- Sentences per kernel-checked chunk of the assembly. -/
 register_option leanify.chunk : Nat := {
   defValue := 8
   descr := "number of sentences in each kernel-checked chunk of an article's compilation" }
 
-/-- The certificates of `#leanify_article`, stage by stage. All proofs are
+/-- `#leanify_article`; in the audit, the certificates stage by stage. All proofs are
 built as explicit terms: the kernel evaluates the compiler only in the `rfl`
 stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
 `envsEq`, `run{i}`, `finished`), each on literals. -/
@@ -154,13 +171,44 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     throwError "{rel} is pinned as {pin} but its contents are {now}: if the article changed \
       on purpose, update the pin to \"{now}\""
   let src ← readLines path
+  -- the notions that the article uses without defining them, from its preamble
+  let (declared, unread) := Declared.ofPreamble (src.take ((src.findIdx? isBeginDocument).getD src.length))
+  unless unread.isEmpty do
+    logWarning m!"{rel}: notions: {String.intercalate ", " (unread.map Codes.toString)} not read: an entry is \
+      a noun in words of letters, with its plural in parentheses if it is irregular"
+  let V := V.declare declared
+  -- the certificate pins this file alone
+  let files ← readSource path
+  unless files.inputs.isEmpty do
+    logInfo m!"{rel} inputs {String.intercalate ", " files.inputs.toList}: the certificate covers {rel} \
+      alone. `leanify flatten` writes one file with all of them."
   let id (n : Name) : Term := mkIdent (ns ++ n)
   let nm (s : String) : Name := Name.mkSimple s
   let c (n : Name) : Expr := Lean.mkConst (ns ++ n)
   let stages := leanify.stages.get (← getOptions)
   defineExpr (ns ++ `sourceHash) (Lean.mkConst ``String) (.lit (.strVal pin))
-  defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
+  -- the vocabulary: the one given, with the notions that the article declares
+  -- (compiled as well: the later commands evaluate `Foo.vocab`)
+  let compiled (n : Name) (ty val : Expr) : CommandElabM Unit :=
+    liftCoreM <| addAndCompile <| Declaration.defnDecl
+      { name := n, levelParams := [], type := ty, value := val,
+        hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
+  if declared.isEmpty then
+    defineLiteral (ns ++ `declared) declared
+    defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
+  else
+    compiled (ns ++ `declared) (toTypeExpr (List Declared)) (toExpr declared)
+    compiled (ns ++ `vocab) (Lean.mkConst ``Vocab)
+      (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
   defineLiteral (ns ++ `source) src
+  -- by default, the compiler is run by Lean's evaluator, and that is all
+  unless leanify.kernel.get (← getOptions) do
+    let some d := compileArticle V src
+      | throwError "{rel} could not be read (no \\begin\{document}, or unbalanced math)"
+    defineLiteral (ns ++ `doc) d
+    defineExpr (ns ++ `kernelChecked) (Lean.mkConst ``Bool) (Lean.mkConst ``Bool.false)
+    return
+  defineExpr (ns ++ `kernelChecked) (Lean.mkConst ``Bool) (Lean.mkConst ``Bool.true)
   let some k := src.findIdx? isBeginDocument | throwError "the article has no \\begin\{document}"
   let some ms := macrosOf (joinLines (src.take k)) | throwError "the preamble macros could not be read"
   let bs := blocksOf (src.drop (k + 1)) (linesOffset (src.take (k + 1))) none []
@@ -181,6 +229,10 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   timed "preamble" do
     kernelEq (ns ++ `preamble) (← `(macrosOf (joinLines (List.take $(id `bodyLine) $(id `source)))))
       (← `(some $(id `macros)))
+  -- (the notions of `Foo.vocab` are those that the preamble of the source declares)
+  timed "declared notions" do
+    kernelEq (ns ++ `declaredNotions)
+      (← `((Declared.ofPreamble (List.take $(id `bodyLine) $(id `source))).1)) (← `($(id `declared)))
   timed "paragraphs" do
     kernelEq (ns ++ `paragraphs)
       (← `(blocksOf (List.drop ($(id `bodyLine) + 1) $(id `source))
@@ -194,41 +246,18 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   defineLiteral (ns ++ nm "mode0") mode
   defineExpr (ns ++ nm "seg0") segTy (toExpr seg)
   let mut sss : Array (List Sentence) := #[]
-  let mut cached := 0
   for i in [0:bs.length] do
     let text := joinLines bs[i]!.2
     defineLiteral (ns ++ nm s!"b{i}") text
     timed s!"joining block {i}" do
       kernelEq (ns ++ nm s!"join{i}") (← `(joinLines $(id (nm s!"l{i}")))) (← `($(id (nm s!"b{i}"))))
     let some (t, m') := lexBlock ms text mode | throwError "block {i} could not be lexed"
-    -- a certificate for the same macros, mode and text, from a cache module
-    let cacheNs := `Leanify.LexCache ++ nm ("l" ++ lexKey ms mode text)
-    let useCache := (← getEnv).contains (cacheNs ++ `lex)
-    if useCache then
-      cached := cached + 1
-      let tyT := mkApp (Lean.mkConst ``List [Level.zero]) (Lean.mkConst ``PTok)
-      let tyM := mkApp (Lean.mkConst ``List [Level.zero]) (Lean.mkConst ``Bool)
-      defineExpr (ns ++ nm s!"t{i}") tyT (Lean.mkConst (cacheNs ++ `t))
-      defineExpr (ns ++ nm s!"mode{i+1}") tyM (Lean.mkConst (cacheNs ++ `next))
-      -- the cached statement is about the cache's literals: the kernel compares them with the article's
-      timed s!"lexing block {i} (cached)" do
-        let lhs ← `(lexBlock $(id `macros) $(id (nm s!"b{i}")) $(id (nm s!"mode{i}")))
-        let rhs ← `(some ($(id (nm s!"t{i}")), $(id (nm s!"mode{i+1}"))))
-        let (l, ty) ← elabClosed lhs
-        let (r, _) ← elabClosed rhs
-        let u := Level.succ Level.zero
-        let eqTy := mkApp3 (Lean.mkConst ``Eq [u]) ty l r
-        let hm ← liftTermElabM <| mkEqRefl (c `macros)
-        let _ := hm
-        liftCoreM <| addDecl <| Declaration.thmDecl
-          { name := ns ++ nm s!"lex{i}", levelParams := [], type := eqTy, value := Lean.mkConst (cacheNs ++ `lex) }
-    else
-      defineLiteral (ns ++ nm s!"t{i}") t
-      defineLiteral (ns ++ nm s!"mode{i+1}") m'
-      timed s!"lexing block {i}" do
-        kernelEq (ns ++ nm s!"lex{i}")
-          (← `(lexBlock $(id `macros) $(id (nm s!"b{i}")) $(id (nm s!"mode{i}"))))
-          (← `(some ($(id (nm s!"t{i}")), $(id (nm s!"mode{i+1}")))))
+    defineLiteral (ns ++ nm s!"t{i}") t
+    defineLiteral (ns ++ nm s!"mode{i+1}") m'
+    timed s!"lexing block {i}" do
+      kernelEq (ns ++ nm s!"lex{i}")
+        (← `(lexBlock $(id `macros) $(id (nm s!"b{i}")) $(id (nm s!"mode{i}"))))
+        (← `(some ($(id (nm s!"t{i}")), $(id (nm s!"mode{i+1}")))))
     let (ss, seg') := segBlock bs[i]!.1 (t ++ blockBreak m') seg
     defineLiteral (ns ++ nm s!"ss{i}") ss
     defineExpr (ns ++ nm s!"seg{i+1}") segTy (toExpr seg')
@@ -241,7 +270,6 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     mode := m'
     seg := seg'
   let n := bs.length
-  if cached > 0 then logInfo m!"{cached} of {n} blocks lexed from the cache"
   -- the chain of blocks, from the last one
   let appendFn ← liftTermElabM do
     let e ← Term.elabTerm (← `(fun (a b : List Sentence) => a ++ b)) none
@@ -340,46 +368,12 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
       $(id `segFinished) $(id `assembled))
   elabCommand fin
 
-/-! ## The lexing cache
-
-`#leanify_lex_cache "macros" "mode" "text"` certifies the lexing of one block,
-independently of any article, as `Leanify.LexCache.l<key>.lex`. Cache modules
-consisting of such commands are written by `leanify prepare`, grouped by
-section and named after their content. `#leanify_article` uses a cached
-certificate for a block with the same key: the kernel then only compares the
-article's literals with the cache's. Lake rebuilds a cache module only when its
-text changes, so editing one section relexes only that section. -/
-
-/-- Macros as a single string: `name␂body` pairs separated by `␁` (as in `lexKey`). -/
-def encodeMacros (ms : Macros) : String :=
-  String.intercalate "\u0001" (ms.map fun (n, b) => Codes.toString n ++ "\u0002" ++ Codes.toString b)
-
-def decodeMacros (s : String) : Macros :=
-  if s.isEmpty then [] else
-  (s.splitOn "\u0001").map fun p => match p.splitOn "\u0002" with
-    | [n, b] => (Codes.ofString n, Codes.ofString b)
-    | _ => ([], [])
-
+/-- Obsolete: a lexing certificate of an earlier version, which cached a part of the
+kernel's work. It does nothing now, so that old cache modules still build; `leanify
+prepare` removes their import, and the files can be deleted. -/
 syntax (name := leanifyLexCache) "#leanify_lex_cache " str str str : command
 
-@[command_elab leanifyLexCache] def elabLeanifyLexCache : CommandElab := fun stx => do
-  let some msS := stx[1].isStrLit? | throwUnsupportedSyntax
-  let some modeS := stx[2].isStrLit? | throwUnsupportedSyntax
-  let some text := stx[3].isStrLit? | throwUnsupportedSyntax
-  let ms := decodeMacros msS
-  let mode := modeS.toList.map (· == '1')
-  let b := Codes.ofString text
-  let cns := `Leanify.LexCache ++ Name.mkSimple ("l" ++ lexKey ms mode b)
-  if (← getEnv).contains (cns ++ `lex) then return
-  let some (t, m') := lexBlock ms b mode | throwError "the block could not be lexed"
-  defineLiteral (cns ++ `macros) ms
-  defineLiteral (cns ++ `mode) mode
-  defineLiteral (cns ++ `b) b
-  defineLiteral (cns ++ `t) t
-  defineLiteral (cns ++ `next) m'
-  let id (n : Name) : Term := mkIdent (cns ++ n)
-  kernelEq (cns ++ `lex) (← `(lexBlock $(id `macros) $(id `b) $(id `mode)))
-    (← `(some ($(id `t), $(id `next))))
+@[command_elab leanifyLexCache] def elabLeanifyLexCache : CommandElab := fun _ => pure ()
 
 /-- `#leanify_check "article.tex" with V` compiles the article natively and
 reports the sentences without a reading, as warnings. It certifies nothing; it
@@ -394,6 +388,7 @@ syntax (name := leanifyCheck) "#leanify_check " str (" with " ident)? : command
   let V ← liftCoreM <| evalVocab vocabName
   let path ← liftCoreM (resolvePath rel)
   let lines ← readLines path
+  let V := V.forArticle lines
   match compileArticle V lines with
   | none => throwError "{rel} could not be read (no \\begin\{document}, or unbalanced math)"
   | some d =>

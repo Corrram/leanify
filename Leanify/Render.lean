@@ -9,12 +9,12 @@ namespace Leanify
 
 def Ty.tex : Ty → String
   | .real => "\\mathbb{R}"
-  | .unit => "[0,1]"
   | .prop => "\\mathrm{Prop}"
   | .fn a b => (match a with | .fn .. => "(" ++ a.tex ++ ")" | _ => a.tex) ++ "\\to " ++ b.tex
   | .base k => s!"\\mathsf\{T}_\{{k}}"
 
-def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"]
+def varNames : List String := ["x", "y", "z", "s", "t", "a", "b", "p", "q", "w", "k", "m"] ++
+  (List.range 40).map fun i => s!"v_\{{i + 1}}"
 
 def FnProp.word : FnProp → String
   | .convex => "convex" | .strictConvex => "strictly\\ convex" | .strictConcave => "strictly\\ concave"
@@ -26,26 +26,29 @@ def FnProp.word : FnProp → String
 def SetProp.word : SetProp → String
   | .closed => "closed" | .isOpen => "open" | .bounded => "bounded" | .connected => "connected"
 
-def SqProp.word : SqProp → String
-  | .convex => "convex" | .concave => "concave" | .lowerUniform => "lsc\\ (uniform)"
-  | .upperUniform => "usc\\ (uniform)" | .contUniform => "continuous\\ (uniform)"
-
-def ClassProp.word : ClassProp → String
-  | .convex => "convex" | .compactUniform => "compact\\ (uniform)" | .closedUniform => "closed\\ (uniform)"
-
 def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
-  | .leb => "\\lambda" | .borel => "\\operatorname{Borel}"
-  | .measurableSet1 | .measurableSet2 => "\\operatorname{Meas}"
-  | .integrable => "\\operatorname{Int}" | .hasDerivWithin => "\\operatorname{HasDeriv}"
+  | .hasDerivWithin => "\\operatorname{HasDeriv}"
   | .intervalIntegral => "\\int" | .intervalIntegrable => "\\operatorname{Int}"
   | .compact2 => "\\operatorname{compact}" | .convex2 => "\\operatorname{convex}"
   | .symm2 => "\\operatorname{symmetric}" | .continuousOn => "\\operatorname{continuous}"
   | .concaveOn => "\\operatorname{concave}" | .strictMonoOn => "\\operatorname{increasing}"
   | .fnProp k => "\\operatorname{" ++ k.word ++ "}"
   | .setProp k => "\\operatorname{" ++ k.word ++ "}"
-  | .sqProp k => "\\operatorname{" ++ k.word ++ "}"
-  | .classProp k => "\\operatorname{" ++ k.word ++ "}"
+  | .realFn k => match k with
+    | .exp => "\\exp" | .log => "\\log" | .sin => "\\sin" | .cos => "\\cos" | .tan => "\\tan"
+  | .pi => "\\pi"
+  | .isInt => "\\mathbb{Z}" | .isNat => "\\mathbb{N}"
+  | .floor => "\\operatorname{floor}" | .ceil => "\\operatorname{ceil}"
+  | .finSum => "\\sum" | .finProd => "\\prod" | .series => "\\sum"
+  | .seriesConv => "\\operatorname{converges}" | .limAt | .limTop => "\\lim"
+  | .limAtConv | .limTopConv => "\\operatorname{exists}"
+  | .factorial => "\\operatorname{factorial}" | .binom => "\\binom" | .zpow => "\\operatorname{pow}"
+  | .smoothN _ => "\\operatorname{smooth}" | .compactSuppIn _ => "\\operatorname{compactSupportIn}"
+  | .supportIn _ => "\\operatorname{supportIn}" | .isCompactN _ => "\\operatorname{compact}"
+  | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
+  | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
+  | .cardIs => "\\operatorname{card}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
@@ -61,23 +64,63 @@ def Tm.prec : Tm → Nat
   | .neg .. => 8
   | _ => 9
 
-/-- A numeral or a quotient of numerals (displayed without its coercion to `[0,1]`). -/
+/-- A numeral or a quotient of numerals (displayed without its coercion to an interval
+type, `[0,1]`). -/
 def Tm.isNumeral : Tm → Bool
   | .num _ => true
   | .div x y => x.isNumeral && y.isNumeral
   | _ => false
+
+/-- The domain of a limit at infinity, when it is the natural numbers (the limit of a
+sequence): the reading says so, since `\lim_{n\to\infty}` and `\lim_{x\to\infty}` are
+different limits. -/
+def seqDom (D : Tm) (v : String) : String :=
+  match D with
+  | .lam _ _ (.and (.app (.prim .isNat) (.loc 0)) _) => ",\\ " ++ v ++ "\\in \\mathbb{N}"
+  | _ => ""
 
 partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .glob i => gs.getD i s!"g_{i}"
   | .loc i => ls.getD i s!"v_{i}"
   | .prim p => p.tex
   | .const i => cs.getD i s!"c_{i}"
+  | .app (.app (.app (.prim .finSum) a) b) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .series) a) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .seriesConv) a) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ converges}"
+  | .app (.app (.app (.prim .limAt) a) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.app (.prim .limAtConv) a) _) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  | .app (.app (.prim .limTop) D) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls)
+  | .app (.app (.prim .limTopConv) D) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "x"
+    "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  | .app (.prim .factorial) x => wrap 9 x ++ "!"
+  | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+  | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+  | .app (.app (.prim .zpow) x) y => "{" ++ wrap 9 x ++ "}^{" ++ y.tex cs gs ls ++ "}"
+  | .app (.prim .isInt) x => x.tex cs gs ls ++ "\\in \\mathbb{Z}"
+  | .app (.prim .isNat) x => x.tex cs gs ls ++ "\\in \\mathbb{N}"
+  | .app (.prim .floor) x => "\\lfloor " ++ x.tex cs gs ls ++ "\\rfloor"
+  | .app (.prim .ceil) x => "\\lceil " ++ x.tex cs gs ls ++ "\\rceil"
   | .app (.app (.prim .rpow) x) y => "{" ++ wrap 9 x ++ "}^{" ++ y.tex cs gs ls ++ "}"
   | .app (.app (.prim .min) x) y => "\\min\\{" ++ x.tex cs gs ls ++ "," ++ y.tex cs gs ls ++ "\\}"
   | .app (.app (.prim .max) x) y => "\\max\\{" ++ x.tex cs gs ls ++ "," ++ y.tex cs gs ls ++ "\\}"
   | .app (.app (.app (.app (.prim .hasDerivWithin) f) s) x) d =>
       "(" ++ f.tex cs gs ls ++ ")'(" ++ x.tex cs gs ls ++ ")=" ++ d.tex cs gs ls ++ "\\text{ within }" ++ s.tex cs gs ls
-  | .app (.prim .leb) s => "\\lambda\\bigl(" ++ s.tex cs gs ls ++ "\\bigr)"
   -- a property of a function on a domain: `continuous(f) on {x : …}`
   | .app (.app (.prim .continuousOn) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
@@ -91,14 +134,87 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim (.fnProp k)) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       Prim.tex (.fnProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }\\{" ++ v ++ ":" ++ body.tex cs gs (v :: ls) ++ "\\}"
-  | .app (.app (.prim (.sqProp k)) f) d =>
-      Prim.tex (.sqProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }" ++ d.tex cs gs ls
   | .app (.app (.app (.prim .intervalIntegral) a) b) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       "\\int_{" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\,d" ++ v
+  -- a constant of the vocabulary named by an operator (a method of a type: `+` on the
+  -- complex numbers) is written as that operator: `+`, `-`, `\cdot`, `/` between its
+  -- arguments, `^` as a power, `\sum` and `\prod` as sums; `#` in its name stands for
+  -- its argument (`\lvert#\rvert`), and an empty name is its argument (a real number
+  -- as an element of the type)
+  | .app (.app (.app (.const i) a) b) (.lam ty d body) =>
+    let n := cs.getD i s!"c_{i}"
+    if n == "\\sum" || n == "\\prod" then
+      let v := varNames.getD ls.length "k"
+      n ++ "_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ cwrap 7 body (v :: ls)
+    else (Tm.app (.app (.const i) a) b).tex cs gs ls ++ "(" ++ (Tm.lam ty d body).tex cs gs ls ++ ")"
+  | .app (.app (.const i) x) y =>
+    let n := cs.getD i s!"c_{i}"
+    match n with
+    | "+" => cwrap 6 x ls ++ "+" ++ cwrap 7 y ls
+    | "-" => cwrap 6 x ls ++ "-" ++ cwrap 7 y ls
+    | "\\cdot" => cwrap 7 x ls ++ "\\," ++ cwrap 8 y ls
+    | "/" => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
+    | "^" => "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
+    | _ =>
+      -- `#1` and `#2` in the name stand for the two arguments
+      if (n.splitOn "#1").length > 1 then (n.replace "#1" (x.tex cs gs ls)).replace "#2" (y.tex cs gs ls)
+      else (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+  | .app (.const i) x =>
+    let n := cs.getD i s!"c_{i}"
+    -- an integral of the vocabulary (`\int_0^1`), of a function: over its variable
+    let integral : Option String := match x with
+      | .lam _ _ body =>
+        if n.startsWith "\\int" then
+          let v := varNames.getD ls.length "v"
+          let s := body.tex cs gs (v :: ls)
+          some (n ++ " " ++ (if body.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,d" ++ v)
+        else none
+      | _ => none
+    if let some s := integral then s
+    else if n.isEmpty then x.tex cs gs ls
+    -- (a numeral as an element of a type is written alone)
+    else if n.startsWith "\\langle #\\rangle" && x.isNumeral then x.tex cs gs ls
+    else if n == "-" then "-" ++ cwrap 8 x ls
+    else if (n.splitOn "#").length > 1 then "".intercalate (n.splitOn "#" |>.intersperse (x.tex cs gs ls))
+    else n ++ "(" ++ x.tex cs gs ls ++ ")"
   -- a domain predicate applied to an argument: read it about the argument
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
+  -- a function of several variables: `f(x,y)` (definedness guards are not shown)
+  -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
+  | .app (.app f x) y =>
+    let rec mspine : Nat → Tm → List Tm → Option (Nat × Tm × List Tm)
+      | 0, _, _ => none
+      | k + 1, .app g a, acc => mspine k g (a :: acc)
+      | k + 1, .guard _ e, acc => mspine k e acc
+      | _ + 1, .the _ (.app (.app (.prim (.partialMulti n)) F) (.loc 0)), acc => some (n, F, acc)
+      | _ + 1, _, _ => none
+    let multi : Option String := match mspine 32 f [x, y] with
+      | some (n, F, args) =>
+        if n < args.length then
+          let v := varNames.getD ls.length "v"
+          some ("\\partial^{(" ++ ",".intercalate ((args.take n).map (·.tex cs gs ls)) ++ ")}" ++
+            F.tex cs gs (v :: ls) ++ "(" ++ ",".intercalate ((args.drop n).map (·.tex cs gs ls)) ++ ")")
+        else none
+      | none => none
+    match multi with
+    | some s => s
+    | none =>
+    let rec spine : Nat → Tm → List Tm → Option (Nat × List Tm)
+      | 0, _, _ => none
+      | k + 1, .app g a, acc => spine k g (a :: acc)
+      | k + 1, .guard _ e, acc => spine k e acc
+      | _ + 1, .glob i, acc => some (i, acc)
+      | _ + 1, .loc i, acc => some (1000000 + i, acc)
+      | _ + 1, _, _ => none
+    match spine 16 f [x, y] with
+    | some (i, args) =>
+      let n := if i ≥ 1000000 then ls.getD (i - 1000000) "?" else gs.getD i s!"g_{i}"
+      if n.startsWith "^" || n == "\\widehat" then
+        (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+      else n ++ "(" ++ ",".intercalate (args.map (·.tex cs gs ls)) ++ ")"
+    | none => (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
   | .app (.glob i) x =>
     let n := gs.getD i s!"g_{i}"
     if n.startsWith "^" then "{" ++ wrap 9 x ++ "}" ++ n
@@ -112,11 +228,9 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let dom := match d with | .tt => "" | d => "\\,[" ++ d.tex cs gs (v :: ls) ++ "]"
     "(" ++ v ++ "\\in " ++ t.tex ++ dom ++ "\\mapsto " ++ b.tex cs gs (v :: ls) ++ ")"
   | .num n => toString n
-  | .ofUnit x => x.tex cs gs ls
-  | .toUnit x => if x.isNumeral then x.tex cs gs ls else "\\langle " ++ x.tex cs gs ls ++ "\\rangle_{[0,1]}"
-  | .add x y => wrap 6 x ++ "+" ++ wrap 7 y
-  | .sub x y => wrap 6 x ++ "-" ++ wrap 7 y
-  | .mul x y => wrap 7 x ++ "\\," ++ wrap 8 y
+  | .add x y => wrap 6 x ++ "+" ++ wrapR 7 y
+  | .sub x y => wrap 6 x ++ "-" ++ wrapR 7 y
+  | .mul x y => wrap 7 x ++ "\\," ++ wrapR 8 y
   | .div x y => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .neg x => "-" ++ wrap 8 x
   | .abs x => "\\lvert " ++ x.tex cs gs ls ++ "\\rvert"
@@ -128,6 +242,11 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .lt x y => wrap 1 x ++ "<" ++ wrap 1 y
   | .le x y => wrap 1 x ++ "\\le " ++ wrap 1 y
   | .tt => "\\top"
+  -- an infinite set: it has no number of elements
+  | .not (.ex .real (.app (.app (.prim .cardIs) (.lam _ _ b)) (.loc 0))) =>
+    let v := varNames.getD (ls.length + 1) "u"
+    "\\#\\{" ++ v ++ " : " ++ b.tex cs gs (v :: "" :: ls) ++ "\\}=\\infty"
+  | .not .tt => "\\bot"
   | .not p => "\\neg " ++ wrap 9 p
   | .and p q => wrap 5 p ++ "\\land " ++ wrap 4 q
   | .or p q => wrap 4 p ++ "\\lor " ++ wrap 3 q
@@ -137,10 +256,47 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     "\\forall " ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
   | .ex t b => let v := varNames.getD ls.length "v"
     "\\exists " ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
-  | .integral b => let v := varNames.getD ls.length "v"
-    let s := b.tex cs gs (v :: ls)
-    "\\int_0^1 " ++ (if b.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,d" ++ v
   | .guard _ e => e.tex cs gs ls
+  -- the least upper (greatest lower) bound of a set, as `\sup` and `\inf` compile
+  | .the .real (.and (.all .real (.imp p (.le (.loc 0) (.loc 1))))
+      (.all .real (.imp (.all .real (.imp _ (.le (.loc 0) (.loc 1)))) (.le (.loc 1) (.loc 0))))) =>
+    let v := varNames.getD ls.length "v"
+    "\\sup\\{" ++ v ++ "\\in \\mathbb{R} : " ++ p.tex cs gs (v :: "\\_" :: ls) ++ "\\}"
+  | .the .real (.and (.all .real (.imp p (.le (.loc 1) (.loc 0))))
+      (.all .real (.imp (.all .real (.imp _ (.le (.loc 1) (.loc 0)))) (.le (.loc 0) (.loc 1))))) =>
+    let v := varNames.getD ls.length "v"
+    "\\inf\\{" ++ v ++ "\\in \\mathbb{R} : " ++ p.tex cs gs (v :: "\\_" :: ls) ++ "\\}"
+  -- a (partial) derivative: `\frac{d}{ds} f(s,y)|_{s=x}`
+  | .the .real (.app (.app (.app (.app (.prim .hasDerivWithin) (.lam _ _ body)) (.lam _ _ .tt)) x) (.loc 0)) =>
+    let z := varNames.getD ls.length "z"
+    let v := varNames.getD (ls.length + 1) "v"
+    "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
+      "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}"
+  -- the partial derivatives of every order of `f`
+  | .the _ (.app (.app (.prim (.partialMulti _)) f) (.loc 0)) =>
+    let v := varNames.getD ls.length "v"
+    "\\partial^{\\bullet}" ++ f.tex cs gs (v :: ls)
+  -- a norm or an integral over `ℝⁿ`
+  | .the .real (.app (.app (.prim p) f) (.loc 0)) =>
+    let v := varNames.getD ls.length "v"
+    let fs := f.tex cs gs (v :: ls)
+    match p with
+    | .l2NormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^2}"
+    | .supNormN _ => "\\lVert " ++ fs ++ "\\rVert_{L^\\infty}"
+    | .integralN n => "\\int_{\\mathbb{R}^{" ++ toString n ++ "}} " ++ fs
+    -- the number of elements of a set
+    | .cardIs => match f with
+      | .lam _ _ b =>
+        let u := varNames.getD (ls.length + 1) "u"
+        "\\#\\{" ++ u ++ " : " ++ b.tex cs gs (u :: v :: ls) ++ "\\}"
+      | _ => "\\#" ++ fs
+    | _ => "\\iota " ++ v ++ "\\in \\mathbb{R}.\\ " ++ (Tm.app (.app (.prim p) f) (.loc 0)).tex cs gs (v :: ls)
+  -- a derivative within a domain (one-sided at an end point)
+  | .the .real (.app (.app (.app (.app (.prim .hasDerivWithin) (.lam _ _ body)) dom) x) (.loc 0)) =>
+    let z := varNames.getD ls.length "z"
+    let v := varNames.getD (ls.length + 1) "v"
+    "\\tfrac{\\mathrm{d}}{\\mathrm{d}" ++ v ++ "}" ++ body.tex cs gs (v :: z :: ls) ++
+      "\\big|_{" ++ v ++ "=" ++ x.tex cs gs (z :: ls) ++ "}^{" ++ (Tm.app dom (.loc 0)).tex cs gs (v :: z :: ls) ++ "}"
   | .the t b => let v := varNames.getD ls.length "v"
     "\\iota " ++ v ++ "\\in " ++ t.tex ++ ".\\ " ++ b.tex cs gs (v :: ls)
 where
@@ -148,6 +304,27 @@ where
   wrap (p : Nat) (t : Tm) : String :=
     let s := t.tex cs gs ls
     if t.prec < p then "(" ++ s ++ ")" else s
+  /-- The right operand of a sum, a difference or a product: a negative term is put in
+  parentheses, so that `x\,(-y)` is not printed as `x\,-y`, which reads as a difference. -/
+  wrapR (p : Nat) (t : Tm) : String :=
+    match t with
+    | .neg _ => "(" ++ t.tex cs gs ls ++ ")"
+    | _ => wrap p t
+  /-- The binding strength of a term, with the constants named by operators. -/
+  cprec (t : Tm) : Nat := match t with
+    | .app (.app (.const i) _) _ => match cs.getD i "" with
+      | "+" | "-" => 6
+      | "\\cdot" => 7
+      | _ => t.prec
+    | .app (.const i) x =>
+      let n := cs.getD i ""
+      if n == "-" then 8 else if n.isEmpty then cprec x else t.prec
+    | .guard _ e => cprec e
+    | _ => t.prec
+  /-- `t` in the names `ls`, in parentheses if it binds less than `p`. -/
+  cwrap (p : Nat) (t : Tm) (ls : List String) : String :=
+    let s := t.tex cs gs ls
+    if cprec t < p then "(" ++ s ++ ")" else s
   cases : Tm → String
     | .cases c v r => v.tex cs gs ls ++ "&" ++ c.tex cs gs ls ++ "\\\\" ++ cases r
     | _ => ""

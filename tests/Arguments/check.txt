@@ -1,0 +1,77 @@
+tests/Arguments/article.tex:18:1: info: claim 0: \forall x\in \mathbb{R},\ 1<x\Rightarrow x<{x}^{2}
+tests/Arguments/article.tex:22:1: info: claim 1: \forall x\in \mathbb{R},\ 1<x\Rightarrow 0<x-1
+tests/Arguments/article.tex:22:1: info: claim 2: \forall x\in \mathbb{R},\ 1<x\Rightarrow 0<x
+tests/Arguments/article.tex:23:1: info: claim 3: \forall x\in \mathbb{R},\ 1<x\Rightarrow {x}^{2}-x=x\,(x-1)\land 0<x\,(x-1)
+tests/Arguments/article.tex:27:1: info: claim 4: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow {x}^{2}<{y}^{2}
+tests/Arguments/article.tex:33:1: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y-x
+tests/Arguments/article.tex:35:1: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y+x\Rightarrow {y}^{2}-{x}^{2}=(y-x)\,(y+x)\land 0<(y-x)\,(y+x)
+tests/Arguments/article.tex:41:1: info: claim 7: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)
+tests/Arguments/article.tex:47:1: info: claim 8: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<{y}^{2}+x)
+tests/Arguments/article.tex:53:1: info: claim 9: \forall x\in \mathbb{R},\ x\le \lvert x\rvert
+tests/Arguments/article.tex:60:23: info: claim 10: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \lvert x\rvert=x
+tests/Arguments/article.tex:61:29: info: claim 11: \forall x\in \mathbb{R},\ x<0\Rightarrow \lvert x\rvert=-x
+tests/Arguments/article.tex:62:1: info: claim 12: \forall x\in \mathbb{R},\ x<0\Rightarrow x<0\land 0<\lvert x\rvert
+tests/Arguments/article.tex:64:1: info: claim 13: \forall x\in \mathbb{R},\ x\le \lvert x\rvert
+tests/Arguments/article.tex:70:1: info: claim 14: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow x<1
+tests/Arguments/article.tex:77:1: info: claim 15: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow 1\le x\Rightarrow x\le {x}^{2}\land 1\le x
+tests/Arguments/article.tex:78:1: info: claim 16: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow 1\le x\Rightarrow \bot
+tests/Arguments/article.tex:79:1: info: claim 17: \forall x\in \mathbb{R},\ {x}^{2}<1\Rightarrow x<1
+tests/Arguments/article.tex:83:1: info: claim 18: \forall x\in \mathbb{R},\ \neg ({x}^{2}=-1)
+tests/Arguments/article.tex:89:1: info: claim 19: \forall x\in \mathbb{R},\ {x}^{2}=-1\Rightarrow 0\le {x}^{2}\land {x}^{2}<0
+tests/Arguments/article.tex:89:1: info: claim 20: \forall x\in \mathbb{R},\ {x}^{2}=-1\Rightarrow \bot
+tests/Arguments/article.tex:90:1: info: claim 21: \forall x\in \mathbb{R},\ \neg ({x}^{2}=-1)
+tests/Arguments/article.tex:99:1: info: claim 22: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow {x}^{2}<{y}^{2}
+tests/Arguments/article.tex:105:1: info: claim 23: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<2\,x
+tests/Arguments/article.tex:107:1: info: claim 24: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y+x
+tests/Arguments/article.tex:107:1: info: claim 25: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow 0<y-x
+tests/Arguments/article.tex:108:1: info: claim 26: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\Rightarrow x<y\Rightarrow {y}^{2}-{x}^{2}=(y-x)\,(y+x)\land 0<(y-x)\,(y+x)
+tests/Arguments/article.tex:114:1: info: claim 27: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Arguments/article.tex:120:1: info: claim 28: \forall x\in \mathbb{R},\ 0\le x\Rightarrow {x}^{2}=x\,x\land 0\le x\,x
+tests/Arguments/article.tex:122:1: info: claim 29: \forall x\in \mathbb{R},\ x<0\Rightarrow 0<-x
+tests/Arguments/article.tex:122:1: info: claim 30: \forall x\in \mathbb{R},\ x<0\Rightarrow {x}^{2}=-x\,(-x)\land 0<-x\,(-x)
+tests/Arguments/article.tex:128:1: info: claim 31: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 2\,x\,y\le {x}^{2}+{y}^{2}
+tests/Arguments/article.tex:134:1: info: claim 32: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow 0\le x-y
+tests/Arguments/article.tex:134:1: info: claim 33: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow {x}^{2}+{y}^{2}-2\,x\,y=(x-y)\,(x-y)\land 0\le (x-y)\,(x-y)
+tests/Arguments/article.tex:140:1: info: claim 34: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1
+tests/Arguments/article.tex:147:1: info: claim 35: \forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow x\le -1\land -1<0
+tests/Arguments/article.tex:148:1: info: claim 36: \forall x\in \mathbb{R},\ 0<x\Rightarrow x+1\le 0\Rightarrow \bot
+tests/Arguments/article.tex:149:1: info: claim 37: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x+1
+tests/Arguments/article.tex:159:1: info: claim 38: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}
+tests/Arguments/article.tex:165:32: info: claim 39: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}=1
+tests/Arguments/article.tex:167:1: info: claim 40: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow {(x+1)}^{2}={x}^{2}+2\,x+1\land x+2\,x+1\le {x}^{2}+2\,x+1
+tests/Arguments/article.tex:168:1: info: claim 41: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\le {(x+1)}^{2}
+tests/Arguments/article.tex:169:1: info: claim 42: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le {x}^{2}\Rightarrow x+1\in \mathbb{Z}\land 0<x+1\Rightarrow x+1\le {(x+1)}^{2}
+tests/Arguments/article.tex:176:1: info: claim 43: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\,x\le {x}^{2}+1
+tests/Arguments/article.tex:182:32: info: claim 44: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow 2\,x=2
+tests/Arguments/article.tex:182:32: info: claim 45: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x=1\Rightarrow {x}^{2}+1=2
+tests/Arguments/article.tex:184:1: info: claim 46: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1
+tests/Arguments/article.tex:185:1: info: claim 47: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow 2\,x\le {(x-1)}^{2}+3
+tests/Arguments/article.tex:185:1: info: claim 48: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow {(x-1)}^{2}+3={x}^{2}-2\,x+4\land {x}^{2}-2\,x+4\le {x}^{2}+1
+tests/Arguments/article.tex:193:1: info: claim 49: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 1\le x
+tests/Arguments/article.tex:199:1: info: claim 50: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow 1\le y)\Rightarrow 1\le x
+tests/Arguments/article.tex:206:1: info: claim 51: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x+1\le 2\,x
+tests/Arguments/article.tex:212:1: info: claim 52: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow y+1\le 2\,y)\Rightarrow x+1\le 2\,x
+tests/Arguments/article.tex:221:1: info: claim 53: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
+tests/Arguments/article.tex:226:1: info: claim 54: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))
+tests/Arguments/article.tex:234:1: info: defines y (y)
+tests/Arguments/article.tex:234:1: info: y is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:235:1: info: claim 55: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
+tests/Arguments/article.tex:235:1: info: claim 55 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:239:1: info: claim 56: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=x\,(\frac{1}{x})
+tests/Arguments/article.tex:239:1: info: claim 56 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)\land \neg (x=0)
+tests/Arguments/article.tex:240:1: info: claim 57: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
+tests/Arguments/article.tex:240:1: info: claim 57 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:248:1: info: defines w (w)
+tests/Arguments/article.tex:248:1: info: w is well defined if: \forall x\in \mathbb{R},\ (\exists y\in \mathbb{R},\ \neg (x\,y=0))\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:249:1: info: claim 58: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow x\,w(x)=1
+tests/Arguments/article.tex:249:1: info: claim 58 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow (\exists s\in \mathbb{R},\ \neg (x\,s=0))
+tests/Arguments/article.tex:259:1: info: claim 59: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1
+tests/Arguments/article.tex:263:1: warning: the statement for a value of which variable? Say so before (We argue by induction on $n$.): sentence not checked
+tests/Arguments/article.tex:264:1: warning: a contradiction without a hypothesis: say what is assumed (Suppose, for contradiction, that …): sentence not checked
+tests/Arguments/article.tex:265:1: warning: smaller values of which variable? Say so before (We argue by induction on $n$.), or name it (for all smaller values of $n$): sentence not checked
+tests/Arguments/article.tex: 2 definitions, 60 claims
+  text: 0 compiled, 0 failed, 18 prose (of 18)
+  results: 38 compiled, 0 failed, 0 prose (of 38)
+  proofs: 68 compiled, 3 failed, 0 prose (of 71)
+  all: 106 compiled, 3 failed, 18 prose (of 127)
+  complete proofs: 14 of 15 (a result is derived from a proof that is read completely)

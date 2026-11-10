@@ -10,6 +10,19 @@ namespace Leanify
 
 inductive Rel where
   | eq | lt | le | gt | ge | mem | defeq | ne
+  /-- `A\subseteq B` and `A\supseteq B`. -/
+  | subset | supset
+  /-- `x\notin A`. -/
+  | nmem
+  /-- `a\ll b`: in a binder, `a/b` sufficiently small; in a claim, `|a|\le Cb` for an implied
+  constant `C`. `a\gg b`: `b\ll a`. -/
+  | ll | gg
+  /-- `a\asymp b`: `a\ll b` and `b\ll a`. -/
+  | asymp
+  /-- `a\mid b`, `a\nmid b`: divisibility of integers. -/
+  | dvd | ndvd
+  /-- `a\equiv b`: a congruence, read only with its modulus (`\pmod m`). -/
+  | equiv
   deriving DecidableEq, Repr, Lean.ToExpr
 
 inductive MT where
@@ -44,6 +57,19 @@ inductive MT where
   /-- `\max\{e : …\}`, `\max_{x\in A} e` (and `\min`): the largest (smallest)
   element of a set of numbers. -/
   | extr (isMax : Bool) (set : MT)
+  /-- `\sup S` and `\inf S` (`\sup\{e : …\}`, `\sup_{x\in A} e`): the least upper
+  (greatest lower) bound of a set of numbers. -/
+  | bound (isSup : Bool) (set : MT)
+  /-- `\sum_{v=lo}^{hi} body` and `\prod_{v=lo}^{hi} body`. -/
+  | bigop (isSum : Bool) (v : Codes) (lo hi body : MT)
+  /-- Connectives between formulas: `\neg`, `\land`, `\lor`, `\Rightarrow`, `\iff`. -/
+  | lnot (x : MT) | land (x y : MT) | lor (x y : MT) | limp (x y : MT) | liff (x y : MT)
+  /-- `\forall x,y\in A: φ` and `\exists x\in A: φ`. -/
+  | quant (isAll : Bool) (vars : List Codes) (dom body : MT)
+  /-- A finite set of numbers `\{a,b\}`. -/
+  | finset (xs : List MT)
+  /-- `\lim_{v\to target} body`. -/
+  | limit (v : Codes) (target body : MT)
   deriving Repr, Inhabited, Lean.ToExpr
 
 /-- Math tokens after removing typesetting. -/
@@ -61,12 +87,112 @@ inductive MTok where
   | begin (e : Codes) | finish (e : Codes)
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+namespace MT
+
+/-- Replace the variable `v` by `k` (for the terms of a sum with numeral bounds).
+Binders of `v` (an integral or image over `v`, a sum over `v`) are left alone. -/
+def substId (v : Codes) (k : MT) : Nat → MT → MT
+  | 0, m => m
+  | f + 1, m =>
+    let go := substId v k f
+    match m with
+    | .id n => if n == v then k else .id n
+    | .num n => .num n
+    | .sub b i => .sub (go b) (go i)
+    | .sup b e => .sup (go b) (go e)
+    | .hat x => .hat (go x)
+    | .app g args => .app (go g) (args.map go)
+    | .add x y => .add (go x) (go y)
+    | .minus x y => .minus (go x) (go y)
+    | .mul x y => .mul (go x) (go y)
+    | .div x y => .div (go x) (go y)
+    | .neg x => .neg (go x)
+    | .abs x => .abs (go x)
+    | .frac x y => .frac (go x) (go y)
+    | .minm xs => .minm (xs.map go)
+    | .maxm xs => .maxm (xs.map go)
+    | .int lo hi body w => .int (go lo) (go hi) (if w == v then body else go body) w
+    | .tuple xs => .tuple (xs.map go)
+    | .interval a b => .interval (go a) (go b)
+    | .ival a b l r => .ival (go a) (go b) l r
+    | .setOf pat dom conds => .setOf pat (go dom) conds
+    | .setCond pat conds => .setCond pat conds
+    | .image e w dom => .image (if w == v then e else go e) w (go dom)
+    | .mapsto pat body => .mapsto pat body
+    | .chain x rest => .chain (go x) (rest.map fun (r, y) => (r, go y))
+    | .cases rows => .cases (rows.map fun (a, b) => (go a, go b))
+    | .sig n d c => .sig n d c
+    | .conj xs => .conj (xs.map go)
+    | .equiv x y => .equiv (go x) (go y)
+    | .text w => .text w
+    | .extr b st => .extr b (go st)
+    | .bound b st => .bound b (go st)
+    | .bigop b w lo hi body => .bigop b w (go lo) (go hi) (if w == v then body else go body)
+    | .lnot x => .lnot (go x)
+    | .land x y => .land (go x) (go y)
+    | .lor x y => .lor (go x) (go y)
+    | .limp x y => .limp (go x) (go y)
+    | .liff x y => .liff (go x) (go y)
+    | .quant b vs dom body => .quant b vs (go dom) (if vs.contains v then body else go body)
+    | .finset xs => .finset (xs.map go)
+    | .limit w t body => .limit w (go t) (if w == v then body else go body)
+
+end MT
+
 namespace Math
+
+/-- The named functions of one argument: LaTeX's operator names (`\sin`, `\cosh`,
+`\arctan`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
+with or without parentheses (`\cosh x`, `\sin^2 x`). This is syntax: what a name means is
+said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field of the
+vocabulary (`\cosh` in `hyperbolic`), and a name without a meaning is reported. -/
+def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im",
+  w!"sinh", w!"cosh", w!"tanh", w!"coth", w!"cot", w!"sec", w!"csc",
+  w!"arcsin", w!"arccos", w!"arctan"]
+
+def isReals : MT → Bool
+  | .id n => n == w!"\\mathbb{R}"
+  | _ => false
+
+def isNats : MT → Bool
+  | .id n => n == w!"\\mathbb{N}"
+  | _ => false
+
+/-- `\mathbb{N}_0`: the natural numbers with `0`. -/
+def natsSub : List MTok → Option (Codes × List MTok)
+  | .digit 0 :: rest => some (w!"\\mathbb{N}_0", rest)
+  | .lb :: .digit 0 :: .rb :: rest => some (w!"\\mathbb{N}_0", rest)
+  | _ => none
+
+/-- The subscript of a ray of real numbers: `\mathbb{R}_+`, `_{>0}`, `_{\ge0}`. -/
+def realsSub : List MTok → Option (Codes × List MTok)
+  | .sym 43 :: rest => some (w!"\\mathbb{R}_{\\ge0}", rest)
+  | .lb :: .sym 62 :: .digit 0 :: .rb :: rest => some (w!"\\mathbb{R}_{>0}", rest)
+  | .lb :: .cmd c :: .digit 0 :: .rb :: rest =>
+    if c == w!"ge" || c == w!"geq" then some (w!"\\mathbb{R}_{\\ge0}", rest) else none
+  | _ => none
+
+/-- Connectives between formulas, from the loosest. -/
+def wIff : List Codes := [w!"iff", w!"Leftrightarrow", w!"Longleftrightarrow"]
+def wImp : List Codes := [w!"Rightarrow", w!"implies", w!"Longrightarrow"]
+def wOr : List Codes := [w!"lor", w!"vee"]
+def wAnd : List Codes := [w!"land", w!"wedge"]
+def wConnectives : List Codes := wIff ++ wImp ++ wOr ++ wAnd ++ [w!"neg", w!"lnot", w!"forall", w!"exists"]
 
 def wFonts : List Codes := [w!"mathcal", w!"mathbb", w!"mathbf", w!"mathrm", w!"operatorname", w!"mathit"]
 
 /-- Accents that make a new symbol (`\overline{\rho}` is not `\rho`). -/
-def decorations : List Codes := [w!"overline", w!"bar", w!"tilde", w!"underline", w!"check"]
+def decorations : List Codes := [w!"overline", w!"bar", w!"tilde", w!"underline", w!"check",
+  w!"widetilde", w!"dot", w!"ddot", w!"breve", w!"acute", w!"grave", w!"vec", w!"mathring",
+  w!"widecheck", w!"overrightarrow"]
+
+/-- Commands that name a variable: the Greek letters and `\ell`. -/
+def greekNames : List Codes :=
+  [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta",
+   w!"theta", w!"vartheta", w!"iota", w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"pi",
+   w!"varpi", w!"rho", w!"varrho", w!"sigma", w!"varsigma", w!"tau", w!"upsilon", w!"phi",
+   w!"varphi", w!"chi", w!"psi", w!"omega", w!"Gamma", w!"Delta", w!"Theta", w!"Lambda", w!"Xi",
+   w!"Pi", w!"Sigma", w!"Upsilon", w!"Phi", w!"Psi", w!"Omega", w!"ell"]
 
 /-- Join font commands with their letters; `\mathrm{d}` is a differential. -/
 def simplify : Nat → List PTok → Option (List MTok)
@@ -81,8 +207,9 @@ def simplify : Nat → List PTok → Option (List MTok)
     | .rbrace => (MTok.rb :: ·) <$> simplify f ts
     | .csym 123 => (MTok.setl :: ·) <$> simplify f ts
     | .csym 125 => (MTok.setr :: ·) <$> simplify f ts
-    | .csym 124 => (MTok.sym 124 :: ·) <$> simplify f ts
+    | .csym 124 => (MTok.cmd w!"Vert" :: ·) <$> simplify f ts
     | .csym 92 => (MTok.row :: ·) <$> simplify f ts
+    | .csym 35 => (MTok.cmd [35] :: ·) <$> simplify f ts
     | .begin e => (MTok.begin e :: ·) <$> simplify f ts
     | .finish e => (MTok.finish e :: ·) <$> simplify f ts
     | .ref _ _ => simplify f ts
@@ -93,7 +220,11 @@ def simplify : Nat → List PTok → Option (List MTok)
         | ⟨.lbrace, _, _⟩ :: rest =>
           let inner := rest.takeWhile (fun p => p.tok != .rbrace)
           let word := inner.filterMap (fun p => match p.tok with | .mvar c => some c | _ => none)
-          if word.length != inner.length then none
+          -- (`\text{for every integer }`: its words, one by one)
+          let words := inner.filterMap (fun p => match p.tok with | .word w => some w | _ => none)
+          if !words.isEmpty && inner.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
+            ((words.map MTok.text) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
+          else if word.length != inner.length then none
           else (MTok.text word :: ·) <$> simplify f (rest.drop (inner.length + 1))
         | _ => none
       else if wFonts.contains n then
@@ -104,12 +235,15 @@ def simplify : Nat → List PTok → Option (List MTok)
           match rest.drop letters.length with
           | ⟨.rbrace, _, _⟩ :: rest' =>
             if n == w!"mathrm" && word == w!"d" then (MTok.diff :: ·) <$> simplify f rest'
+            -- `\mathrm{i}`: the imaginary unit
+            else if n == w!"mathrm" && word == w!"i" then (MTok.id w!"\\mathrm{i}" :: ·) <$> simplify f rest'
             else if n == w!"mathrm" || n == w!"operatorname" then (MTok.id word :: ·) <$> simplify f rest'
             else (MTok.id ([92] ++ n ++ [123] ++ word ++ [125]) :: ·) <$> simplify f rest'
           | _ => none
         -- `\mathbb R`: a single letter without braces
         | ⟨.mvar c, _, _⟩ :: rest =>
-          if n == w!"mathrm" || n == w!"operatorname" then (MTok.id [c] :: ·) <$> simplify f rest
+          if n == w!"mathrm" && c == 105 then (MTok.id w!"\\mathrm{i}" :: ·) <$> simplify f rest
+          else if n == w!"mathrm" || n == w!"operatorname" then (MTok.id [c] :: ·) <$> simplify f rest
           else (MTok.id ([92] ++ n ++ [123, c, 125]) :: ·) <$> simplify f rest
         | _ => none
       else if n == w!"tfrac" || n == w!"dfrac" then (MTok.cmd w!"frac" :: ·) <$> simplify f ts
@@ -142,28 +276,151 @@ def relOf : MTok → Option Rel
     else if n == w!"in" then some .mem
     else if n == w!"coloneqq" then some .defeq
     else if n == w!"neq" || n == w!"ne" then some .ne
+    else if n == w!"notin" then some .nmem
+    else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
+    else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
+    else if n == w!"ll" then some .ll
+    else if n == w!"gg" then some .gg
+    else if n == w!"asymp" then some .asymp
+    else if n == w!"mid" || n == w!"divides" then some .dvd
+    else if n == w!"nmid" then some .ndvd
+    else if n == w!"equiv" then some .equiv
     else none
   | _ => none
+
+/-- The tokens up to the next `\|` (`\Vert`) outside brackets, and the rest after it. -/
+def untilVert : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    if d == 0 && t == .cmd w!"Vert" then some (acc.reverse, ts) else
+    match t with
+    | .lb | .setl | .sym 40 | .sym 91 | .begin _ => untilVert f (d + 1) (t :: acc) ts
+    | .rb | .setr | .sym 41 | .sym 93 | .finish _ => untilVert f (d - 1) (t :: acc) ts
+    | _ => untilVert f d (t :: acc) ts
+
+/-- The tokens up to the `}` that closes a group whose `{` was read, and the tokens after it. -/
+def untilClose : Nat → Nat → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    match t with
+    | .rb => if d == 0 then some (acc.reverse, ts) else untilClose f (d - 1) (t :: acc) ts
+    | .lb => untilClose f (d + 1) (t :: acc) ts
+    | _ => untilClose f d (t :: acc) ts
+
+/-- `ts` split at `sep` outside brackets. -/
+def splitOuter (sep : MTok) : Nat → Int → List MTok → List MTok → List (List MTok) → List (List MTok)
+  | 0, _, cur, _, acc => (cur.reverse :: acc).reverse
+  | _ + 1, _, cur, [], acc => (cur.reverse :: acc).reverse
+  | f + 1, d, cur, t :: ts, acc =>
+    if d == 0 && t == sep then splitOuter sep f d [] ts (cur.reverse :: acc) else
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    splitOuter sep f d' (t :: cur) ts acc
+
+/-- The conditions in the subscript of `\max_{…}`, `\sup_{…}` (the tokens after `_`): one
+formula, formulas separated by commas, or the rows of a `\substack`; and the tokens after
+the subscript. -/
+def subParts (ts : List MTok) : Option (List (List MTok) × List MTok) :=
+  match ts with
+  | .lb :: rest => do
+    let (inner, after) ← untilClose (rest.length + 1) 0 [] rest
+    let parts := match inner with
+      | .cmd s :: .lb :: body =>
+        if s == w!"substack" then
+          match body.reverse with
+          | .rb :: b => splitOuter .row (b.length + 1) 0 [] b.reverse []
+          | _ => [inner]
+        else splitOuter (.sym 44) (inner.length + 1) 0 [] inner []
+      | _ => splitOuter (.sym 44) (inner.length + 1) 0 [] inner []
+    let parts := parts.filter (!·.isEmpty)
+    if parts.isEmpty then none else some (parts, after)
+  | t :: after => some ([[t]], after)
+  | [] => none
+
+/-- Names of indices: an extremum over an index bounded by inequalities ranges over the
+integers, a limit of a sequence (`n\to\infty`) over the natural numbers. -/
+def indexNames : List Codes := [w!"n", w!"m", w!"k", w!"j", w!"i", w!"N", w!"M", w!"K"]
+
+/-- The real numbers, as the domain of a set `\{1\le t\le N : φ\}` whose variable has no
+stated domain and is not an index: written `(-\infty,\infty)`, so that the reading of
+such a set knows that the text did not say `t\in\mathbb{R}` (its number of elements is
+not read, since an article that counts such `t` means integers). -/
+def unstatedReals : MT := .ival (.neg (.id w!"\\infty")) (.id w!"\\infty") true true
+
+def isUnstatedReals : MT → Bool
+  | .ival (.neg (.id a)) (.id b) true true => a == w!"\\infty" && b == w!"\\infty"
+  | _ => false
+
+/-- The variable of an extremum and the set it ranges over, from the conditions of its
+subscript: `x\in A` (and conditions), bounds (`0\le t<1`, `t\ge0`), or conditions the
+first of which bounds the variable (`n\ge1,\ \omega(n)\le k`). A variable bounded by
+inequalities alone ranges over the real numbers (`\mathbb{R}`), an index over the
+integers. -/
+def extrRange (conds : List MT) : Option (Codes × MT) :=
+  let ival (lo : MT) (r1 : Rel) (hi : MT) (r2 : Rel) : Option MT :=
+    if (r1 == .lt || r1 == .le) && (r2 == .lt || r2 == .le) then some (.ival lo hi (r1 == .lt) (r2 == .lt))
+    else none
+  let inf := MT.id w!"\\infty"
+  let bounds : Option (Codes × MT) := match conds with
+    | [.chain lo [(r1, .id v), (r2, hi)]] => (ival lo r1 hi r2).map (v, ·)
+    | [.chain (.id v) [(.ge, lo)]] => some (v, .ival lo inf false true)
+    | [.chain (.id v) [(.gt, lo)]] => some (v, .ival lo inf true true)
+    | [.chain (.id v) [(.le, hi)]] => some (v, .ival (.neg inf) hi true false)
+    | [.chain (.id v) [(.lt, hi)]] => some (v, .ival (.neg inf) hi true true)
+    | _ => none
+  match conds, bounds with
+  | [.chain (.id v) [(.mem, dom)]], _ => some (v, dom)
+  | .chain (.id v) [(.mem, dom)] :: rest, _ => some (v, .setOf (.id v) dom rest)
+  | _, some (v, d) => if indexNames.contains v then some (v, .setOf (.id v) (.id w!"\\mathbb{Z}") conds) else some (v, d)
+  | c :: _, none =>
+    let v? := match c with
+      | .chain (.id v) _ => some v
+      | .chain _ ((_, .id v) :: _ :: _) => some v
+      | _ => none
+    v?.map fun v => (v, .setOf (.id v) (.id (if indexNames.contains v then w!"\\mathbb{Z}" else w!"\\mathbb{R}")) conds)
+  | [], _ => none
 
 /-- Tokens that may begin an implicit product factor. -/
 def startsFactor : MTok → Bool
   | .id _ | .digit _ | .lb | .setl => true
   | .sym 40 => true
-  | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"widehat"
+  | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"sup" ||
+      n == w!"limsup" || n == w!"liminf" || n == w!"lVert" ||
+      n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"lim" || n == w!"binom" ||
+      n == w!"tbinom" || n == w!"dbinom" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
-        n != w!"cup" && n != w!"cap" &&
-        n != w!"approx" && n != w!"ldots")
+        n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
+        n != w!"approx" && n != w!"ldots" && n != w!"rVert" && n != w!"pmod" && n != w!"cdots" &&
+        n != w!"dots")
   | _ => false
 
 /-- Heads that may be applied to a parenthesized argument list. -/
 def appHead : MT → Bool
+  -- `n!` and `\binom{n}{k}` are values, not functions (`k!\,(n-k)!` is a product)
+  | .app (.id (64 :: _)) _ => false
   | .id _ | .sub _ _ | .hat _ | .app _ _ => true
   -- `f'(x)`, `R_b^-(z)`
   | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43]
   -- the inverse function `f^{-1}`
   | .sup (.id _) (.neg (.num 1)) => true
   | _ => false
+
+/-- The integrand and the variable of `e\,dx` written with a plain `d`. In
+`\int\int e\,dx\,dy` the inner integral has read all of `e\,dx\,dy` and taken the last
+variable: that variable is the outer integral's, and the inner one takes the one before. -/
+def plainDiff : Nat → MT → Option (MT × Codes)
+  | 0, _ => none
+  | _ + 1, .mul (.mul b (.id [100])) (.id v) => some (b, v)
+  | _ + 1, .mul (.id [100]) (.id v) => some (.num 1, v)
+  | g + 1, .int lo hi b v => do
+    let (b', v') ← plainDiff g b
+    some (.int lo hi b' v', v)
+  | _, _ => none
 
 inductive Mode where
   | top              -- relations, chains, mapsto
@@ -218,10 +475,16 @@ def run : Nat → Mode → List MTok → R
     match ts with
     -- `f'`: the derivative, written as the superscript `'`
     | .sym 39 :: rest => run f (.postfix bar (.sup x (.id [39]))) rest
+    -- `n!`
+    | .sym 33 :: rest => run f (.postfix bar (.app (.id w!"@factorial") [x])) rest
     | .sym 94 :: rest => do
       let (e, rest') ← run f .group rest
       run f (.postfix bar (.sup x e)) rest'
-    | .sym 95 :: rest => do
+    | .sym 95 :: rest =>
+      -- `\mathbb{R}_+`, `\mathbb{R}_{>0}`, `\mathbb{R}_{\ge0}`
+      match (if isReals x then realsSub rest else if isNats x then natsSub rest else none) with
+      | some (name, rest') => run f (.postfix bar (.id name)) rest'
+      | none => do
       let (i, rest') ← run f .group rest
       -- `T^0_q` is `T_q^0`, as typeset, and `\widehat S_s` is the hat of `S_s`
       let x' := match x with
@@ -274,6 +537,12 @@ def run : Nat → Mode → List MTok → R
     | .setl :: rest =>
       setBuilder f rest <|>
       (do
+        -- a finite set `\{0,2\}`
+        let (m, r1) ← run f (.list 125 []) rest
+        match m with
+        | .conj xs => if xs.length ≥ 2 then some (.finset xs, r1) else none
+        | _ => none) <|>
+      (do
         -- braces as parentheses: `4\int_0^1\{C(u,u)+C(u,1-u)\}\de u`
         let (x, r1) ← run f .top rest
         let r2 ← expect .setr r1
@@ -286,11 +555,126 @@ def run : Nat → Mode → List MTok → R
       else if n == w!"widehat" || n == w!"hat" then do
         let (a, r1) ← run f .group rest
         some (.hat a, r1)
-      else if n == w!"sqrt" then do
+      else if n == w!"sqrt" then
+        match rest with
+        | .sym 91 :: r => do
+          -- `\sqrt[3]{x}`
+          let (k, r1) ← run f (.additive false) r
+          let r2 ← expect (.sym 93) r1
+          let (a, r3) ← run f .group r2
+          some (.sup a (.frac (.num 1) k), r3)
+        | _ => do
+          let (a, r1) ← run f .group rest
+          some (.sup a (.frac (.num 1) (.num 2)), r1)
+      else if wFunctions.contains n then do
+        -- `\exp(x)`, `\log x`, `\sin^2 x` (the square of `\sin x`)
+        let (pow, r1) ← match rest with
+          | .sym 94 :: r => do let (e, r') ← run f .group r; some (some e, r')
+          | r => some (none, r)
+        let (arg, r2) ← match r1 with
+          | .sym 40 :: r => do
+            let (m, r') ← run f (.list 41 []) r
+            match m with
+            | .conj [x] => some (x, r')
+            | _ => none
+          | r => do
+            let (x0, r') ← run f (.atom false) r
+            run f (.postfix false x0) r'
+        let name := if n == w!"ln" then w!"log" else n
+        let app := MT.app (.id ([92] ++ name)) [arg]
+        some (match pow with | some e => .sup app e | none => app, r2)
+
+      else if n == w!"sum" || n == w!"prod" then
+        match rest with
+        | .sym 95 :: r => do
+          -- `\sum_{j=1}^{3} e`
+          let (b, r1) ← run f .group r
+          let r2 ← expect (.sym 94) r1
+          let (hi, r3) ← run f .group r2
+          match b with
+          | .chain (.id v) [(.eq, lo)] => do
+            let (body, r4) ← run f (.product false) r3
+            some (.bigop (n == w!"sum") v lo hi body, r4)
+          | _ => none
+        | _ => none
+      else if n == w!"sup" || n == w!"inf" then
+        let isSup := n == w!"sup"
+        match rest with
+        | .setl :: r =>
+          (do
+            let (m, r') ← run f (.list 125 []) r
+            match m with
+            | .conj xs => some (if isSup then .maxm xs else .minm xs, r')
+            | _ => none) <|>
+          (do
+            let (st, r') ← setBuilder f r
+            some (.bound isSup st, r'))
+        | .sym 95 :: r => do
+          -- `\sup_{x\in A} e`, `\sup_{0\le t<1} e`, `\sup_{t\ge0} e`, `\sup_{\substack{n\ge1\\ φ}} e`
+          let (parts, r1) ← subParts r
+          let conds ← parts.mapM fun p => do
+            let (m, rest) ← run f .top p
+            if rest.isEmpty then some m else none
+          let (v, dom) ← extrRange conds
+          let (body, r2) ← run f (.product false) r1
+          some (.bound isSup (.image body v dom), r2)
+        | _ => do
+          -- `\sup A` for a named set
+          let (a, r1) ← run f (.atom false) rest
+          some (.bound isSup a, r1)
+      else if n == w!"lim" then
+        match rest with
+        | .sym 95 :: .lb :: .id v :: .cmd t :: r => do
+          -- `\lim_{n\to\infty} a_n`, `\lim_{x\to0} f(x)`
+          if t != w!"to" then none else
+          let (target, r1) ← run f (.additive false) r
+          let r2 ← expect .rb r1
+          let (body, r3) ← run f (.product false) r2
+          some (.limit v target body, r3)
+        | _ => none
+      else if n == w!"binom" || n == w!"tbinom" || n == w!"dbinom" then do
         let (a, r1) ← run f .group rest
-        some (.sup a (.frac (.num 1) (.num 2)), r1)
+        let (b, r2) ← run f .group r1
+        some (.app (.id w!"@binom") [a, b], r2)
+      else if n == w!"lVert" then do
+        -- `\lVert x\rVert`: a norm (its space in the subscript after it)
+        let (x, r1) ← run f (.additive false) rest
+        let r2 ← expect (.cmd w!"rVert") r1
+        some (.app (.id w!"@norm") [x], r2)
+      else if n == w!"Vert" then do
+        -- `\|x\|`: a norm, as `\lVert x\rVert`
+        let (inner, r1) ← untilVert (rest.length + 1) 0 [] rest
+        let (x, r2) ← run f (.additive false) inner
+        if !r2.isEmpty then none
+        some (.app (.id w!"@norm") [x], r1)
+      else if n == w!"limsup" || n == w!"liminf" then
+        match rest with
+        | .sym 95 :: .lb :: .id v :: .cmd a :: r => do
+          -- `\limsup_{t\uparrow1} e`: from below (`\uparrow`), above (`\downarrow`) or both (`\to`)
+          let dir ← if a == w!"uparrow" then some w!"-" else if a == w!"downarrow" then some w!"+"
+            else if a == w!"to" then some w!"" else none
+          let (target, r1) ← run f (.additive false) r
+          let r2 ← expect .rb r1
+          let (body, r3) ← run f (.product false) r2
+          some (.app (.id (w!"@" ++ n ++ dir)) [.id v, target, body], r3)
+        | _ => none
+      else if n == [35] then do
+        -- `\#\{…\}`, `\#A`: the number of elements of a set
+        let (x, r1) ← run f (.atom false) rest
+        some (.app (.id w!"@card") [x], r1)
+      else if n == w!"lfloor" || n == w!"lceil" then do
+        -- `\lfloor x\rfloor`, `\lceil x\rceil`
+        let (x, r1) ← run f (.additive false) rest
+        let r2 ← expect (.cmd (if n == w!"lfloor" then w!"rfloor" else w!"rceil")) r1
+        some (.app (.id (if n == w!"lfloor" then w!"@floor" else w!"@ceil")) [x], r2)
       else if n == w!"min" || n == w!"max" then
         match rest with
+        | .sym 40 :: r => do
+          -- `\max(a,b)`
+          let (m, r') ← run f (.list 41 []) r
+          match m with
+          | .conj xs => if xs.length < 2 then none else some (if n == w!"min" then .minm xs else .maxm xs, r')
+          | _ => none
         | .setl :: r =>
           (do
             let (m, r') ← run f (.list 125 []) r
@@ -301,24 +685,29 @@ def run : Nat → Mode → List MTok → R
             let (st, r') ← setBuilder f r
             some (.extr (n == w!"max") st, r'))
         | .sym 95 :: r => do
-          -- `\max_{x\in A} e`
-          let (b, r1) ← run f .group r
-          match b with
-          | .chain (.id v) [(.mem, dom)] => do
-            let (body, r2) ← run f (.product false) r1
-            some (.extr (n == w!"max") (.image body v dom), r2)
-          | _ => none
+          -- `\max_{x\in A} e`, `\max_{1\le a<b} e`, `\min_{\substack{…}} e`
+          let (parts, r1) ← subParts r
+          let conds ← parts.mapM fun p => do
+            let (m, rest) ← run f .top p
+            if rest.isEmpty then some m else none
+          let (v, dom) ← extrRange conds
+          let (body, r2) ← run f (.product false) r1
+          some (.extr (n == w!"max") (.image body v dom), r2)
         | _ => none
       else if n == w!"int" then
         match rest with
         | .sym 95 :: r => do
           let (lo, r1) ← run f .group r
-          let r2 ← expect (.sym 94) r1
-          let (hi, r3) ← run f .group r2
-          integralBody f lo hi r3
+          match r1 with
+          | .sym 94 :: r2 => do
+            let (hi, r3) ← run f .group r2
+            integralBody f lo hi r3
+          -- `\int_{\mathbb{R}^3} e\,dx`: over a domain (`hi` is the marker `@over`)
+          | _ => integralBody f lo (.id w!"@over") r1
         | _ => none
       else if (relOf (.cmd n)).isSome || n == w!"mapsto" || n == w!"to" || n == w!"qquad" || n == w!"quad" ||
-          n == w!"approx" || n == w!"ldots" then none
+          n == w!"approx" || n == w!"ldots" || wConnectives.contains n || n == w!"rfloor" ||
+          n == w!"rceil" then none
       else some (.id ([92] ++ n), rest)
     | .begin e :: rest =>
       if e == w!"cases" then run f (.casesRows []) rest else none
@@ -379,7 +768,14 @@ where
         match relOf t with
         | some r => do
           let (y, rest') ← run g (.additive false) rest
-          chainRest g x ((r, y) :: acc) rest'
+          -- `a\equiv b\pmod m`: the modulus belongs to the congruence
+          match rest' with
+          | .cmd pm :: r2 =>
+            if pm == w!"pmod" then do
+              let (m, r3) ← run g .group r2
+              chainRest g x ((r, .app (.id w!"@mod") [y, m]) :: acc) r3
+            else chainRest g x ((r, y) :: acc) rest'
+          | _ => chainRest g x ((r, y) :: acc) rest'
         | none =>
           -- `\approx 0.4002`: a numerical illustration, which asserts nothing
           if t == .cmd w!"approx" then
@@ -403,6 +799,10 @@ where
       | .cmd [99, 117, 112] :: rest => do
         let (y, rest') ← run g (.product bar) rest
         addRest g bar (.app (.id w!"\\cup") [x, y]) rest'
+      -- `A\setminus B`
+      | .cmd [115, 101, 116, 109, 105, 110, 117, 115] :: rest => do
+        let (y, rest') ← run g (.product bar) rest
+        addRest g bar (.app (.id w!"\\setminus") [x, y]) rest'
       | _ => some (x, ts)
   mulRest : Nat → Bool → MT → List MTok → R
     | 0, _, _, _ => none
@@ -418,6 +818,14 @@ where
       | .cmd [116, 105, 109, 101, 115] :: rest => do
         let (y, rest') ← run g (.factor bar) rest
         mulRest g bar (.app (.id w!"\\times") [x, y]) rest'
+      -- `A\cap B`
+      | .cmd [99, 97, 112] :: rest => do
+        let (y, rest') ← run g (.factor bar) rest
+        mulRest g bar (.app (.id w!"\\cap") [x, y]) rest'
+      -- `f\circ g`
+      | .cmd [99, 105, 114, 99] :: rest => do
+        let (y, rest') ← run g (.factor bar) rest
+        mulRest g bar (.app (.id w!"\\circ") [x, y]) rest'
       | t :: _ =>
         if startsFactor t || (t == .sym 124 && !bar) then
           match run g (.atom bar) ts with
@@ -433,10 +841,28 @@ where
       let (body, r1) ← run g (.product false) ts
       match r1 with
       | .diff :: .id v :: r2 => some (.int lo hi body v, r2)
-      | _ => none
+      | _ =>
+        -- `\int_0^1 x\,dx`: a plain `d` before the variable at the end
+        match plainDiff 8 body with
+        | some (b, v) => some (.int lo hi b v, r1)
+        | none => none
   setBuilder : Nat → List MTok → R
     | 0, _ => none
-    | g + 1, ts => do
+    | g + 1, ts => (do
+      -- `{1\le n\le N : conds}`: a variable bounded by inequalities, an index among the
+      -- integers, any other among the real numbers
+      let (c, r1) ← run g .top ts
+      let r2 ← expect (.sym 58) r1
+      let ineq (r : Rel) : Bool := r == .lt || r == .le || r == .gt || r == .ge
+      let v ← match c with
+        | .chain _ [(r1, .id v), (r2, _)] => if ineq r1 && ineq r2 then some v else none
+        | .chain (.id v) [(r, _)] => if ineq r then some v else none
+        | _ => none
+      let (conds, r3) ← run g (.list 125 []) r2
+      match conds with
+      | .conj cs =>
+        some (.setOf (.id v) (if indexNames.contains v then .id w!"\\mathbb{Z}" else unstatedReals) (c :: cs), r3)
+      | _ => none) <|> do
       -- `{pat ∈ dom : conds}` or `{elem : v ∈ dom}`
       let (head, r1) ← run g (.additive false) ts
       match r1 with
@@ -497,10 +923,304 @@ def stripEnv : List MTok → List MTok
     else .begin e :: ts
   | ts => ts
 
-def parseFormula (ts : List MTok) : Option MT :=
+/-- Split at the first token with `isOp` outside brackets and braces. -/
+def splitTop1 (isOp : MTok → Bool) : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, _, [] => none
+  | f + 1, d, acc, t :: ts =>
+    if d == 0 && isOp t then some (acc.reverse, ts) else
+    match t with
+    | .lb | .setl | .sym 40 | .sym 91 | .begin _ => splitTop1 isOp f (d + 1) (t :: acc) ts
+    | .rb | .setr | .sym 41 | .sym 93 | .finish _ => splitTop1 isOp f (d - 1) (t :: acc) ts
+    | _ => splitTop1 isOp f d (t :: acc) ts
+
+def isCmdIn (ops : List Codes) : MTok → Bool
+  | .cmd n => ops.contains n
+  | _ => false
+
+/-- The parts between top-level commas (`C_{j,I},b_{j,I}`). -/
+def commaParts : Nat → Int → List MTok → List MTok → List (List MTok) → List (List MTok)
+  | 0, _, cur, _, acc => (cur.reverse :: acc).reverse
+  | _ + 1, _, cur, [], acc => (cur.reverse :: acc).reverse
+  | f + 1, d, cur, t :: ts, acc =>
+    if d == 0 && t == .sym 44 then commaParts f d [] ts (cur.reverse :: acc) else
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    commaParts f d' (t :: cur) ts acc
+
+/-- The name of a quantified variable, with its subscript (`C`, `C_m`, `C_{j,I}`; as
+`Elab.symKey` names it). -/
+def quantVarKey : List MTok → Option Codes
+  | [.id k] => some k
+  | [.id k, .sym 95, .id i] => some (k ++ [95] ++ i)
+  | .id k :: .sym 95 :: .digit d :: ds => do
+    let ns ← ds.mapM fun t => match t with | .digit e => some e | _ => none
+    some (k ++ [95] ++ (d :: ns).flatMap fun e => (Nat.toDigits 10 e).map Char.toNat)
+  | .id k :: .sym 95 :: .lb :: rest => do
+    let inner ← match rest.reverse with | .rb :: r => some r.reverse | _ => none
+    match inner with
+    | [.id i] => some (k ++ [95] ++ i)
+    | _ =>
+      let parts := (commaParts (inner.length + 1) 0 [] inner []).filter (!·.isEmpty)
+      let ns ← parts.mapM fun p => match p with | [.id n] => some n | _ => none
+      if ns.length < 2 then none
+      some (k ++ [95, 123] ++ (ns.intersperse [44]).flatten ++ [125])
+  | _ => none
+
+/-- The variables of a quantifier, `x,y\in`: their names and the tokens after `\in`. -/
+def quantVars : List MTok → Option (List Codes × List MTok)
+  | .id v :: .sym 44 :: rest => do let (vs, r) ← quantVars rest; some (v :: vs, r)
+  | .id v :: .cmd i :: rest => if i == w!"in" then some ([v], rest) else none
+  | _ => none
+
+/-- The whole token list as one chain (or term). -/
+def wholeTop (ts : List MTok) : Option MT :=
   match run (8 * ts.length + 64) .top ts with
   | some (x, []) => some x
   | _ => none
+
+/-- A formula with connectives and quantifiers: `\forall x\in A: φ`, `φ\Rightarrow ψ`,
+`φ\iff ψ`, `φ\lor ψ`, `φ\land ψ`, `\neg φ`; its atoms are chains. A quantifier's
+domain ends at the first `:` or `,`, and its body extends to the end. -/
+def logic : Nat → List MTok → Option MT
+  | 0, _ => none
+  | f + 1, ts =>
+    let quant : Option MT := match ts with
+      | .cmd q :: rest =>
+        if q == w!"forall" || q == w!"exists" then do
+          (do
+            let (vs, r) ← quantVars rest
+            -- the domain ends at `:`, `,` or the next quantifier
+            let isQ (t : MTok) := t == .cmd w!"exists" || t == .cmd w!"forall"
+            let (dts, bts) ← splitTop1 (fun t => t == .sym 58 || t == .sym 44 || isQ t) (r.length + 1) 0 [] r
+            let bts := match r.drop dts.length with
+              | t :: _ => if isQ t then t :: bts else bts
+              | [] => bts
+            let dom ← match run (8 * dts.length + 64) (.additive false) dts with
+              | some (x, []) => some x
+              | _ => none
+            let body ← logic f bts
+            some (.quant (q == w!"forall") vs dom body)) <|>
+          (do
+            -- `\exists C_{j,I},b_{j,I}: φ`: real numbers (the variables may have subscripts)
+            let (vts, bts) ← splitTop1 (fun t => t == .sym 58) (rest.length + 1) 0 [] rest
+            let parts := (commaParts (vts.length + 1) 0 [] vts []).filter (!·.isEmpty)
+            let vs ← parts.mapM quantVarKey
+            if vs.isEmpty then none
+            let body ← logic f bts
+            some (.quant (q == w!"forall") vs (.id w!"\\mathbb{R}") body))
+        else none
+      | _ => none
+    match quant with
+    | some m => some m
+    | none =>
+    let split (ops : List Codes) := splitTop1 (isCmdIn ops) (ts.length + 1) 0 [] ts
+    match split wIff with
+    | some (a, b) => do some (.liff (← logic f a) (← logic f b))
+    | none =>
+    match split wImp with
+    | some (a, b) => do some (.limp (← logic f a) (← logic f b))
+    | none =>
+    match split wOr with
+    | some (a, b) => do some (.lor (← logic f a) (← logic f b))
+    | none =>
+    match split wAnd with
+    | some (a, b) => do some (.land (← logic f a) (← logic f b))
+    | none =>
+    match ts with
+    | .cmd n :: rest => if n == w!"neg" || n == w!"lnot" then (logic f rest).map .lnot else wholeTop ts
+    | _ => wholeTop ts
+
+/-- Spellings of number theory: `\mid` separates a set-builder (`\{n\mid n>0\}`) and is
+divisibility elsewhere; a modulus `(\bmod m)`, `(\operatorname{mod} m)` or `\pmod m`
+is `\pmod{m}`. `sets` has an entry for each set brace open: whether its separator is
+still to come (the separator is the first `\mid` or `:` of a set). -/
+def modToks : Nat → List Bool → List MTok → List MTok
+  | 0, _, ts => ts
+  | _ + 1, _, [] => []
+  | f + 1, sets, t :: ts =>
+    match t, sets with
+    | .setl, _ => .setl :: modToks f (true :: sets) ts
+    | .setr, _ :: r => .setr :: modToks f r ts
+    | .cmd m, true :: r =>
+      if m == w!"mid" then .sym 58 :: modToks f (false :: r) ts else .cmd m :: modToks f sets ts
+    -- after the separator `:`, `\mid` is divisibility (`\{m : m\mid 6\}`)
+    | .sym 58, true :: r => .sym 58 :: modToks f (false :: r) ts
+    | .sym 40, _ =>
+      -- `(\bmod m)`: the modulus up to the matching parenthesis
+      match ts with
+      | .cmd b :: rest | .id b :: rest =>
+        if b == w!"bmod" || b == w!"mod" then
+          let inner := rest.takeWhile (· != .sym 41)
+          if inner.isEmpty || inner.length == rest.length then .sym 40 :: modToks f sets ts
+          else .cmd w!"pmod" :: .lb :: inner ++ .rb :: modToks f sets (rest.drop (inner.length + 1))
+        else .sym 40 :: modToks f sets ts
+      | _ => .sym 40 :: modToks f sets ts
+    | .cmd pm, _ =>
+      if pm == w!"pmod" then
+        match ts with
+        | .lb :: _ => .cmd pm :: modToks f sets ts
+        | u :: rest => .cmd pm :: .lb :: u :: .rb :: modToks f sets rest
+        | [] => [.cmd pm]
+      else .cmd pm :: modToks f sets ts
+    | _, _ => t :: modToks f sets ts
+
+/-- `\nabla\cdot` is the divergence (`\operatorname{div}`): without the `\cdot`,
+`\nabla u` would be the gradient. -/
+def divergenceToks : List MTok → List MTok
+  | .cmd n :: .cmd c :: rest =>
+    if n == w!"nabla" && c == w!"cdot" then .id w!"div" :: divergenceToks rest
+    else .cmd n :: divergenceToks (.cmd c :: rest)
+  | t :: rest => t :: divergenceToks rest
+  | [] => []
+
+/-! ### Ellipses
+
+`x_1+\cdots+x_n` is the sum over the integers `i` from `1` to `n` of the term that the first
+and the last term are instances of; `a_1<\cdots<a_m` says that each term is less than the
+next. The terms must differ in one place only, the index (`x_1` and `x_n`; `\frac1{n_1}` and
+`\frac1{n_k}`; `x_0` and `x_{N-1}`). -/
+
+/-- Is `t` an ellipsis (`\cdots`, `\dots`, `\ldots`)? -/
+def isDots (t : MTok) : Bool := t == .cmd w!"cdots" || t == .cmd w!"dots" || t == .cmd w!"ldots"
+
+/-- The items of a formula: single tokens, and braced groups (a group of one token is
+that token). -/
+def items : Nat → List MTok → List (List MTok)
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .lb :: ts =>
+    match untilClose (ts.length + 1) 0 [] ts with
+    | some (inner, after) => (if inner.length == 1 then inner else .lb :: inner ++ [.rb]) :: items f after
+    | none => [.lb] :: items f ts
+  | f + 1, t :: ts => [t] :: items f ts
+
+/-- The inside of a braced group, or the tokens. -/
+def unbrace (ts : List MTok) : List MTok :=
+  match ts with
+  | .lb :: r => match r.reverse with
+    | .rb :: r' => r'.reverse
+    | _ => ts
+  | _ => ts
+
+/-- The term that the item lists are instances of, item by item: the template, with the
+index `v` where they differ, and the pairs of what stands there. -/
+def antiUnifyItems (v : Codes) : Nat → List (List MTok × List MTok) →
+    Option (List MTok × List (List MTok × List MTok))
+  | 0, _ => none
+  | _ + 1, [] => some ([], [])
+  | f + 1, (p, q) :: rest => do
+    let (t, ds) ← antiUnifyItems v f rest
+    if p == q then some (p ++ t, ds) else
+    match p, q with
+    | .lb :: _, .lb :: _ =>
+      let ia := items (p.length + 1) (unbrace p)
+      let ib := items (q.length + 1) (unbrace q)
+      if ia.length != ib.length then some ([.lb, .id v, .rb] ++ t, (p, q) :: ds) else do
+      let (t', ds') ← antiUnifyItems v f (ia.zip ib)
+      some ([.lb] ++ t' ++ [.rb] ++ t, ds' ++ ds)
+    | _, _ => some ([.lb, .id v, .rb] ++ t, (p, q) :: ds)
+
+/-- The term that `a` and `b` are instances of: the template, with the index `v` where they
+differ, and the pairs of what stands there in `a` and in `b`. -/
+def antiUnify (v : Codes) (a b : List MTok) : Option (List MTok × List (List MTok × List MTok)) :=
+  let ia := items (a.length + 1) a
+  let ib := items (b.length + 1) b
+  if ia.length != ib.length then some ([.lb, .id v, .rb], [(a, b)])
+  else antiUnifyItems v (2 * (a.length + b.length) + 4) (ia.zip ib)
+
+/-- The template and the bounds of `a ⋯ b`, with a fresh index. -/
+def instances (all a b : List MTok) : Option (Codes × List MTok × List MTok × List MTok) := do
+  let ids := all.filterMap fun t => match t with | .id c => some c | _ => none
+  let v ← [w!"i", w!"j", w!"l", w!"r", w!"s", w!"t"].find? (!ids.contains ·)
+  let (tmpl, ds) ← antiUnify v a b
+  let (lo, hi) ← ds.head?
+  let lo := unbrace lo
+  let hi := unbrace hi
+  if lo.isEmpty || hi.isEmpty || !ds.all (fun (p, q) => unbrace p == lo && unbrace q == hi) then none else
+  some (v, tmpl, lo, hi)
+
+/-- The depth of brackets before each token. -/
+def depths (ts : List MTok) : List Int :=
+  (ts.foldl (fun (acc : List Int × Int) t =>
+    let d := acc.2
+    let d' := match t with
+      | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+      | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+      | _ => d
+    (d :: acc.1, d')) ([], 0)).1.reverse
+
+/-- `X+\cdots+Y` (and `X\cdot\cdots\cdot Y`) as `\sum_{i=lo}^{hi}(T)` (`\prod`): the first such
+ellipsis outside brackets. -/
+def sumEllipsis (ts : List MTok) : Option (List MTok) := do
+  let ds := depths ts
+  let n := ts.length
+  let at_ (k : Nat) : MTok := ts.getD k (.sym 0)
+  let k ← (List.range n).find? fun k =>
+    ds.getD k 1 == 0 && isDots (at_ (k + 1)) &&
+      ((at_ k == .sym 43 && at_ (k + 2) == .sym 43) || (at_ k == .cmd w!"cdot" && at_ (k + 2) == .cmd w!"cdot"))
+  let isSum := at_ k == .sym 43
+  let boundary (t : MTok) : Bool :=
+    t == .sym 43 || t == .sym 45 || t == .sym 44 || (relOf t).isSome || t == .cmd w!"quad" ||
+      t == .cmd w!"qquad" || isCmdIn wConnectives t || (!isSum && t == .cmd w!"cdot")
+  let start := ((List.range k).filter fun j => ds.getD j 1 == 0 && boundary (at_ j)).getLast?.map (· + 1) |>.getD 0
+  let stop := ((List.range n).find? fun j => k + 2 < j && ds.getD j 1 == 0 && boundary (at_ j)).getD n
+  let a := (ts.take k).drop start
+  let b := (ts.take stop).drop (k + 3)
+  let (v, tmpl, lo, hi) ← instances ts a b
+  let op := if isSum then w!"sum" else w!"prod"
+  some (ts.take start ++ [.cmd op, .sym 95, .lb, .id v, .sym 61] ++ lo ++ [.rb, .sym 94, .lb] ++ hi ++
+    [.rb, .sym 40] ++ tmpl ++ [.sym 41] ++ ts.drop stop)
+
+/-- All the sums and products with an ellipsis. -/
+def sumEllipses : Nat → List MTok → List MTok
+  | 0, ts => ts
+  | f + 1, ts => match sumEllipsis ts with
+    | some ts' => sumEllipses f ts'
+    | none => ts
+
+/-- `L X r\cdots r Y R` (`a_1<\cdots<a_m`, `2\le n_1<\cdots<n_k`): the tokens before and
+after the ellipsis and its relation. -/
+def chainEllipsis (ts : List MTok) : Option (List MTok × MTok × List MTok) := do
+  let ds := depths ts
+  let at_ (k : Nat) : MTok := ts.getD k (.sym 0)
+  let k ← (List.range ts.length).find? fun k =>
+    ds.getD k 1 == 0 && isDots (at_ (k + 1)) && (relOf (at_ k)).isSome && at_ (k + 2) == at_ k
+  some (ts.take k, at_ k, ts.drop (k + 3))
+
+def parseFormula (ts : List MTok) : Option MT :=
+  let ts := modToks (ts.length + 1) [] (divergenceToks ts)
+  let ts := sumEllipses 8 ts
+  let plain (ts : List MTok) : Option MT :=
+    match run (8 * ts.length + 64) .top ts with
+    | some (x, []) => some x
+    | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
+  match chainEllipsis ts with
+  | some (left, r, right) => do
+    -- `X` ends the left part, `Y` begins the right one (each up to a relation)
+    let lds := depths left
+    let rds := depths right
+    let isRel (t : MTok) : Bool := (relOf t).isSome
+    let xs := ((List.range left.length).filter fun j => lds.getD j 1 == 0 && isRel (left.getD j (.sym 0))).getLast?.map (· + 1) |>.getD 0
+    let ye := ((List.range right.length).find? fun j => rds.getD j 1 == 0 && isRel (right.getD j (.sym 0))).getD right.length
+    let x := left.drop xs
+    let y := right.take ye
+    let (v, tmpl, lo, hi) ← instances ts x y
+    let next := tmpl.flatMap fun t => if t == .id v then [.lb, .id v, .sym 43, .digit 1, .rb] else [t]
+    let rel ← relOf r
+    let e ← plain tmpl
+    let e1 ← plain next
+    let lo ← plain lo
+    let hi ← plain hi
+    -- each term and the next: for every integer `i` with `lo ≤ i < hi`
+    let step := MT.quant true [v] (.setOf (.id v) (.id w!"\\mathbb{Z}") [.chain lo [(.le, .id v), (.lt, hi)]])
+      (.chain e [(rel, e1)])
+    let before ← if xs == 0 then some [] else (plain left).map ([·])
+    let after ← if ye == right.length then some [] else (plain right).map ([·])
+    some (.conj (before ++ [step] ++ after))
+  | none => plain ts
 
 def joinRows : List MT → Option (List MT)
   | [] => some []
@@ -523,7 +1243,11 @@ def pmAs (upper : Bool) : List MTok → List MTok :=
 /-- Parse the content of a display or inline formula. A formula with `\pm` or `\mp` stands for two formulas,
 the upper and the lower signs: `x_\pm(c)\coloneqq c\pm1` defines `x_+` and `x_-`. -/
 def parseDisplay (ts : List MTok) : Option MT := do
-  let ts := stripEnv ts
+  let ts := modToks (ts.length + 1) [] (stripEnv ts)
+  -- the punctuation that ends a display (`u(\cdot,0)=0,\tag{1.1}`)
+  let ts := match ts.reverse with
+    | .sym 44 :: r | .sym 46 :: r | .sym 59 :: r => r.reverse
+    | _ => ts
   let parts := splitTop (ts.length + 1) [] ts 0 []
   let parts := parts.filter (!·.isEmpty)
   let parts := if ts.any (fun t => t == .cmd w!"pm" || t == .cmd w!"mp") then

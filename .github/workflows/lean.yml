@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# The checks themselves are in scripts/ci.sh, which reads what to check from the
+# repository (the libraries of lakefile.toml, every check.txt, every compiled article).
+# A new test or a changed option needs no change of this file.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,39 +18,23 @@ jobs:
           build: 'true'
           test: 'false'
           use-mathlib-cache: 'true'
-      - name: Build the checker and certify the example articles
-        run: lake build leanify Demo Means TailDependence Refuted
-      - name: Quick check of the example articles
-        run: |
-          lake exe leanify check examples/Means/article.tex --claims --prose
-                    lake exe leanify check tests/TailDependence/article.tex --vocab unitsquare --claims --prose
-      - name: The draft of the getting-started guide gives the findings the guide shows
-        run: |
-          lake exe leanify check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
-          diff examples/Demo/draft.check.txt "$RUNNER_TEMP/draft.check.txt"
-      - name: Notions defined in the running text are read as documented
-        run: |
-          lake exe leanify check tests/Notions/article.tex --vocab unitsquare --claims > "$RUNNER_TEMP/notions.check.txt"
-          diff tests/Notions/check.txt "$RUNNER_TEMP/notions.check.txt"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Every claim of the examples is verified
-        run: |
-          for a in examples/Demo examples/Means tests/TailDependence; do
-            python scripts/leanify_diagnostics.py $a/article.leanify.json --strict --verified
-          done
-      - name: The refuted theorem is reported false, and the claims resting on it unverified
-        run: |
-          if python scripts/leanify_diagnostics.py tests/Refuted/article.leanify.json > "$RUNNER_TEMP/refuted.txt"; then exit 1; fi
-          grep -q "error: statement (claim 2) is false as stated" "$RUNNER_TEMP/refuted.txt"
-          grep -q "(claim 5) compiled but not verified: it rests on claim 2, which is refuted" "$RUNNER_TEMP/refuted.txt"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Build the checker and certify the articles
+        run: bash scripts/ci.sh build
+      - name: The articles are read as their expected outputs say
+        run: bash scripts/ci.sh checks
+      - name: The proofs are verified, standard, and not empty
+        run: bash scripts/ci.sh proofs
+      - name: The kernel evaluates the compiler on the articles (the audit)
+        run: bash scripts/ci.sh audit
       - name: Reader tests
-        run: npm test
+        run: bash scripts/ci.sh reader
       - name: Reports and dependency pins are up to date
-        run: git diff --exit-code -- lean-toolchain lakefile.toml lake-manifest.json examples tests
+        run: bash scripts/ci.sh clean

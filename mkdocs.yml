@@ -22,9 +22,11 @@ nav:
   - Guide:
       - Writing for Leanify: writing.md
       - Vocabularies and models: vocabularies.md
+      - Words with several meanings: vocabulary.md
   - Reference:
       - Commands and files: reference.md
       - From the .tex file to the certificate: pipeline.md
+      - Glossary of the vocabulary: glossary.md
   - Status and roadmap: roadmap.md
 
 theme:

@@ -1,10 +1,13 @@
-tests/Notions/article.tex:15:1: info: defines \mathcal{C} (copulas)
-tests/Notions/article.tex:16:230: info: defines \operatorname{LTD} (leftTailDecreasing)
-tests/Notions/article.tex:25:1: info: claim 0: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y)(z))
-tests/Notions/article.tex:29:27: info: claim 1: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y)(z))
-tests/Notions/article.tex:33:1: info: claim 2: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y)(z))
-tests/Notions/article.tex:37:1: info: claim 3: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y)(z))
-tests/Notions/article.tex: 2 definitions, 4 claims
-  text: 2 compiled, 0 failed, 2 prose (of 4)
-  results: 5 compiled, 0 failed, 0 prose (of 5)
-  all: 7 compiled, 0 failed, 2 prose (of 9)
+tests/Notions/article.tex:16:1: info: defines \mathcal{C} (copulas)
+tests/Notions/article.tex:17:230: info: defines \operatorname{LTD} (leftTailDecreasing)
+tests/Notions/article.tex:26:1: info: claim 0: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y,z))
+tests/Notions/article.tex:30:27: info: claim 1: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y,z))
+tests/Notions/article.tex:34:1: info: claim 2: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y,z))
+tests/Notions/article.tex:38:1: info: claim 3: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\land \operatorname{LTD}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ y\,z\le x(y,z))
+tests/Notions/article.tex:44:1: info: defines \gamma (gamma)
+tests/Notions/article.tex:47:1: info: claim 4: \operatorname{convex}(\mathcal{C})\land \operatorname{compact\ (uniform)}(\mathcal{C})\land \operatorname{closed\ (uniform)}(\mathcal{C})
+tests/Notions/article.tex:51:1: info: claim 5: \operatorname{convex}(\gamma)\text{ on }\mathcal{C}\land \operatorname{concave}(\gamma)\text{ on }\mathcal{C}\land \operatorname{continuous\ (uniform)}(\gamma)\text{ on }\mathcal{C}
+tests/Notions/article.tex: 3 definitions, 6 claims
+  text: 3 compiled, 0 failed, 3 prose (of 6)
+  results: 7 compiled, 0 failed, 0 prose (of 7)
+  all: 10 compiled, 0 failed, 3 prose (of 13)

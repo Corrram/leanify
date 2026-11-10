@@ -1,0 +1,21 @@
+tests/Vocabulary/article.tex:12:1: info: defines \mathrm{Poi} (mathrmPoi)
+tests/Vocabulary/article.tex:13:1: info: defines \mathrm{Bin} (mathrmBin)
+tests/Vocabulary/article.tex:14:1: info: defines \delta (delta)
+tests/Vocabulary/article.tex:15:1: info: defines \mathcal{P} (mathcalP)
+tests/Vocabulary/article.tex:16:1: info: defines \operatorname{distribution} (distribution)
+tests/Vocabulary/article.tex:22:1: info: claim 0: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \frac{x+y}{2}=\frac{y+x}{2}
+tests/Vocabulary/article.tex:22:1: info: claim 1: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \lvert x-x\rvert\le 1
+tests/Vocabulary/article.tex:26:1: info: defines f (f)
+tests/Vocabulary/article.tex:26:48: info: claim 2: \int_{0}^{1}f(x)\,dx=\frac{1}{3}
+tests/Vocabulary/article.tex:26:48: info: claim 3: \operatorname{nondecreasing}(f)\text{ on }\{x:0\le x\land x\le 1\}
+tests/Vocabulary/article.tex:30:20: info: claim 4: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \mathrm{Poi}(x)(0)=\exp(-x)
+tests/Vocabulary/article.tex:30:20: info: claim 5: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \mathrm{Poi}(x)(z))\land (\neg z\in \mathbb{N}\Rightarrow \mathrm{Poi}(x)(z)=0))\land \sum_{z=0}^{\infty}\mathrm{Poi}(x)(z)\text{ converges}\land \sum_{z=0}^{\infty}\mathrm{Poi}(x)(z)=1
+tests/Vocabulary/article.tex:34:30: info: claim 6: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{distribution}(x)\Rightarrow x(1)\le 1
+tests/Vocabulary/article.tex:34:30: info: claim 7: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{distribution}(x)\Rightarrow \neg (\forall y\in \mathbb{R},\ x(y)=(s\in \mathbb{R}\mapsto \begin{cases}1&s\in \mathbb{N}\land s=3\\\end{cases})(y))
+tests/Vocabulary/article.tex:38:25: info: claim 8: \forall x\in \mathbb{R}\to \mathbb{R},\ \mathcal{P}(x)\Rightarrow 0\le x(2)
+tests/Vocabulary/article.tex:42:1: info: claim 9: \delta(3)(3)=1
+tests/Vocabulary/article.tex:42:1: info: claim 10: \mathrm{Bin}(2)(\frac{1}{2})(1)=\frac{1}{2}
+tests/Vocabulary/article.tex: 6 definitions, 11 claims
+  text: 9 compiled, 0 failed, 0 prose (of 9)
+  results: 10 compiled, 0 failed, 0 prose (of 10)
+  all: 19 compiled, 0 failed, 0 prose (of 19)

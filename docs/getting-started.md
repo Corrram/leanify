@@ -27,6 +27,20 @@ When `lake build` accepts the certificate of an article,
   compiled) is proved from exactly what it rests on: the results it cites and
   the earlier steps of its proof, plus general mathematics from mathlib.
 
+The report adds two things that a proof alone does not show: for a claim
+with hypotheses, whether they are shown to hold together (a statement about
+every `x` with `0<x<0` is true and says nothing, and so is a step of a proof
+under a case that cannot occur), and for a step of a proof,
+whether one fixed tactic closes it or it needed a longer Lean argument that the
+article does not print. A result with neither reservation is marked *derived*
+([What a verified claim does not say](reference.md#what-a-verified-claim-does-not-say)).
+
+The compiler that turns the article into Lean statements is run by Lean's
+evaluator, in about a second. `lake exe leanify audit Note/article.tex` has the
+kernel evaluate it as well, so that nothing but the kernel, mathlib and the
+grammar is trusted: run it before you submit
+([What is trusted, and the audit](pipeline.md#what-is-trusted-and-the-audit)).
+
 It does not check sentences the grammar does not read. Those are prose and are
 reported: a sentence of a theorem without a reading is a warning, because that
 part of the statement is not checked. Words the article does not define (a
@@ -53,7 +67,7 @@ name = "mynote"
 [[require]]
 name = "leanify"
 git = "https://github.com/Corrram/leanify.git"
-rev = "main"   # or a commit, for a reproducible build
+rev = "main"   # or a tag (`v0.7.0`) or a commit, for a reproducible build
 ```
 
 Then fetch Leanify and mathlib, with mathlib's compiled files:
@@ -63,6 +77,19 @@ lake update
 ```
 
 The first `lake exe leanify` builds the checker (a few minutes, once).
+
+**The short way.** With the checker on your `PATH` (the releases have it for
+Linux, macOS and Windows), a folder with the article is enough:
+
+```sh
+leanify certify article.tex
+```
+
+makes the folder a Lean project, writes the Lean files of step 4, fetches
+Leanify and mathlib, and builds the certificate of step 5. The project requires the
+Leanify that the checker was built from: its release, or, for a checker that runs
+from a checkout of Leanify, that checkout, whose mathlib it then uses (the first
+certificate takes seconds). This guide takes the steps one at a time.
 
 ## 2. Write the article
 
@@ -149,19 +176,23 @@ lake exe leanify check Note/article.tex
 ```
 
 The check runs in about a second and certifies nothing. It reads the article
-the way the kernel will:
+the way the certificate will:
 
 ```
-Note/article.tex:70:1: warning: sentence not compiled (undefined symbol: g); it asserts nothing checked
-Note/article.tex:77:1: warning: corollary sentence without a mathematical reading: The function $f$ attains its minimum on $(0,\infty)$ at $1$.
+Note/article.tex:70:1: warning: g is not defined: sentence not checked
+Note/article.tex:77:1: warning: Corollary cor:min is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 Note/article.tex: 1 definitions, 5 claims
   text: 1 compiled, 0 failed, 40 prose (of 41)
   results: 2 compiled, 0 failed, 1 prose (of 3)
   proofs: 5 compiled, 1 failed, 0 prose (of 6)
   all: 8 compiled, 1 failed, 41 prose (of 50)
+  complete proofs: 2 of 3 (a result is derived from a proof that is read completely)
+Note/article.tex: 1 of the 5 claims follows a sentence of its result or proof that is not read: its reading may lack a hypothesis, or keep one that has ended (--claims names it)
 ```
 
-The 40 prose sentences of the text are the explanations: the abstract, the
+The last line is about the step in the proof of the corollary: the statement
+of the corollary is not read, so the step is read without what the statement
+says. The 40 prose sentences of the text are the explanations: the abstract, the
 introduction, the remarks between the results, the last section and the
 references. The check
 counts them and says nothing else about them, because they assert nothing that
@@ -175,6 +206,17 @@ statement unchecked.
   reading of "attains its minimum on … at …". Unread, the corollary would assert
   nothing checked. Say it as an inequality:
   `For every $x\in(0,\infty)$, $f(1)\le f(x)$.`
+
+The last line counts the proofs that are read completely. A result is derived
+from its printed proof only if every sentence of the proof is read. Here the
+proof with the typo is not.
+
+A command of yours can propose such rewrites: `scripts/leanify_suggest.py
+Note/article.tex --hook CMD` gives every sentence without a reading to `CMD` (a
+model, usually), keeps a suggestion only if the check then reads it, and shows
+it as a diff with its formal reading
+([`leanify_suggest.py`](reference.md#leanify_suggestpy)). You decide whether the
+new sentence still says what you meant.
 
 With both fixed, `--claims` prints the reading of every claim. These readings
 are what Lean will prove, so read them:
@@ -208,21 +250,23 @@ wrote Note/Proofs.lean
 wrote Note/Certified.lean
 
 1 definitions and 7 claims.
-Add the library to lakefile.toml (once):
+Added the library Note to /home/you/mynote/lakefile.toml. Build the certificate with `lake build Note.Certified`.
+```
 
+`init` adds the library of the article to `lakefile.toml`:
+
+```toml
 [[lean_lib]]
 name = "Note"
 srcDir = "."
 globs = ["Note.+"]
-
-then build the certificate with `lake build Note.Certified`.
 ```
 
 The four files never need to be rewritten by hand except `Proofs.lean`:
 
 | File | What it does |
 | --- | --- |
-| `Compiled.lean` | The kernel compiles `article.tex`, pinned by the hash of its contents. |
+| `Compiled.lean` | `article.tex` compiled to a Lean document, pinned by the hash of its contents. |
 | `Article.lean` | Every definition and claim as ordinary Lean: `f`, `claimK`, `meaningfulK` (every term of claim `K` is defined) and `obligationK` (its premises imply it). |
 | `Proofs.lean` | Your proofs. `init` writes a stub for each. |
 | `Certified.lean` | The certificate. It also writes `article.leanify.json` and `article.leanify.tex`. |
@@ -241,6 +285,21 @@ theorem proof2 : obligation2 := by
 The theorem rests on the two steps of its proof (claims 3 and 4) and on the
 lemma that the second step cites (claim 0). `intro_premises` makes them
 hypotheses `c3`, `c4` and `c0`.
+
+A claim with hypotheses has a second stub: that its hypotheses can hold
+together (one stub for each set of hypotheses: the steps of this proof are made
+under those of the theorem, so they need none of their own).
+
+```lean
+/-- The hypotheses of claim 0 can hold together:
+`\exists x\in \mathbb{R},\ 0<x` -/
+theorem satisfied0 : satisfiable0 := by
+  unfold satisfiable0
+  sorry
+```
+
+Here one positive number is enough: `leanify_values 1` in place of the two
+lines gives the value `1` to `x` and proves `0<1`.
 
 ## 5. Build: the definitions must make sense
 
@@ -294,7 +353,9 @@ python .lake/packages/leanify/scripts/leanify_prove.py Note/article.tex
 ```
 
 An obligation it cannot prove, such as the false theorem's below, keeps its
-`sorry`. Here is how the proofs look by hand. A proof step follows from what it rests on:
+`sorry`. It first tries the tactic `leanify_step` on each: the certificate
+reports the steps that this one tactic closes as *standard*, which is what one
+sentence of a proof should be. Here is how the proofs look by hand. A proof step follows from what it rests on:
 
 ```lean
 theorem proof4 : obligation4 := by
@@ -378,13 +439,17 @@ follows from what it cites, and each result from its proof.
 
 * **The PDF.** `\usepackage[status]{leanify}` puts the status of every
   labelled result in the margin (from `article.leanify.tex`):
-  derived, checked, partly checked, compiled, or false. Without the option the
+  derived, argued (derived, but a step is a longer Lean argument), checked,
+  partly checked, compiled, or false. Without the option the
   typeset article is unchanged, which is what you submit. Compiled with shell
   escape (`pdflatex -shell-escape`), the package also runs the quick check
   every time, and its findings appear as LaTeX warnings at their lines.
   `\usepackage[certify]{leanify}` runs steps 4 and 5 as well: it writes the
   Lean files the first time, then updates the pin and builds the certificate
   before it reads the marks ([`leanify.sty`](reference.md#the-pdf-leanifysty)).
+  `\leanifyreadings`, in an appendix, prints the formal reading of every
+  definition and statement, with the version of Leanify: a reader of the PDF
+  sees what Lean was asked to prove.
 * **The web reader.** It renders the article from its source with a marker at
   every sentence, and shows for each one its formal reading, Lean statement,
   premises and justification:
@@ -427,13 +492,21 @@ verified or is refuted.
 
 | You see | Do this |
 | --- | --- |
-| `sentence not compiled (undefined symbol: …)` | Define the symbol earlier, or fix the typo. |
-| `… sentence without a mathematical reading` | Rephrase with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
-| `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build. |
-| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
+| `… is not defined: sentence not checked` | Define the symbol earlier, or fix the typo. |
+| `unknown notation …` | The grammar does not read this command, and the article does not define it. Write the statement without it, or define it. |
+| `unknown noun: …`, `not read as a noun: "…"` | The statement introduces an object by a noun phrase that is not a notion of the article or of its vocabulary. Define the notion first ([Writing for Leanify](writing.md)), or use the field of the vocabulary that has it (the finding names the field). A noun that Leanify reads where it stands (`an integer`, `there is a constant`) is never named: if the statement has no such finding, something else in it is not read. |
+| `nouns without a reading: polynomial, …` (last line of the check) | The article uses nouns of a subject that the vocabulary does not have. Name them in the preamble, `\usepackage[notions={polynomial}]{leanify}`: each is then a kind of object of which nothing is known, and results about it can be quoted from the literature ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)). |
+| `"positive integer" is read, but not the words after it ("with at least two divisors")` | The noun is known, and the words after it are not a modifier of the vocabulary. State them as a condition (`with $d(n)\ge2$`, `such that …`). |
+| `Theorem … is not checked`, `Lemma … is only partly checked` | Rephrase the sentences with a construction from [Writing for Leanify](writing.md). In a proof, prose is fine: it asserts nothing. |
+| `the proof of … is not read completely` | The result can be checked, but it is not derived from its printed proof. Rewrite the unread sentences of the proof (`--prose` lists them), or accept a proof by other means. |
+| the article is several files | `check` reads the files it inputs. For the certificate, `lake exe leanify flatten article.tex flat.tex` writes one file. |
+| `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build; or `leanify certify article.tex`, which does both. |
+| a result is *argued*, not *derived* | A step of its proof is verified, but not by the standard tactic: the sentence skips more than a routine step. Add the intermediate step to the printed proof, or accept the longer Lean proof. |
+| `hypotheses: not shown to hold together` | Prove `satisfiedK` with values for the variables (`leanify_values 1 2`, or `exact ⟨1, by norm_num⟩` after `unfold satisfiableK`). If no values exist, the statement is true for an empty reason: fix its hypotheses. |
+| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses (also inside `∃ z, …`, a hypothesis about another variable), numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |
 | `linarith failed`, or any proof that will not close | Check the reading (`--claims`). If the claim is false, prove `refuteK`. |
 
-For longer articles, `prepare --cache` splits the kernel's work by section
-([From the `.tex` file to the certificate](pipeline.md)). Two research articles
+[From the `.tex` file to the certificate](pipeline.md) says what each stage
+does and what is trusted. Two research articles
 compiled this way are listed on the [home page](index.md#research-articles).

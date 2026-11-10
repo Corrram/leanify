@@ -4,10 +4,11 @@ import Leanify.Tactic
 
 /-! # Readable Lean statements for compiled definitions and claims
 
-`#leanify_semantics Foo "article.tex" with M` names every article definition as
+`#leanify_semantics Foo "article.tex"` names every article definition as
 a Lean constant whose value is its denotation written as ordinary Lean, and
-states every claim as a proposition `Foo.claimK`. `M` is the model of the
-vocabulary the article was compiled with (default `Leanify.Model.empty`).
+states every claim as a proposition `Foo.claimK`. The model of the vocabulary the
+article was compiled with is built from the names of the Lean meanings of its constants
+(`Vocab.constLean`); `with M` gives a model written by hand instead.
 Each is tied to the compiled document by a theorem proved with `Eq.refl`, so the
 kernel checks that the readable form *is* the semantics of the article's text:
 `Foo.env` (the definitions), `Foo.holdsK` (claim `K` holds iff `Foo.claimK`),
@@ -16,14 +17,21 @@ translator is untrusted. -/
 namespace Leanify
 open Lean Elab Term Meta Command
 
-/-- The Lean type of a term type: `ℝ`, `I`, `Prop`, function types, and the base
-types of the model `M`. -/
+/-- The Lean type of a term type: `ℝ`, `Prop`, function types, and the base types of the
+model `M`, as the model names them (the type of the points of a set, `↥unitInterval`,
+stays that type: it is not unfolded into a subtype). -/
 partial def tyExpr (M : Expr) : Ty → MetaM Expr
   | .real => pure (Lean.mkConst ``Real)
-  | .unit => pure (mkApp2 (Lean.mkConst ``Set.Elem [Level.zero]) (Lean.mkConst ``Real) (Lean.mkConst ``unitInterval))
   | .prop => pure (mkSort Level.zero)
   | .fn a b => do mkArrow (← tyExpr M a) (← tyExpr M b)
-  | .base k => whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
+  | .base k => withCanUnfoldPred (fun _ ci => pure (ci.name != ``Set.Elem)) do
+      let e ← whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
+      -- (the type of a notion that the article does not define: `Foo.Notion.Graph.1`)
+      match e with
+      | .proj n i s => pure (.proj n i (← whnf s))
+      | _ =>
+        if e.isAppOfArity ``Sigma.fst 3 then pure (mkAppN e.getAppFn (e.getAppArgs.set! 2 (← whnf e.getAppArgs[2]!)))
+        else pure e
 
 /-- The Lean values of the model's constants, read from its definition. -/
 partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
@@ -33,15 +41,34 @@ partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
     if e.isAppOfArity ``List.cons 3 then
       let hd ← whnf (e.getArg! 1)
       let v := if hd.isAppOfArity ``Sigma.mk 4 then hd.getArg! 3 else mkProj ``Sigma 1 hd
+      -- (a meaning that is an abbreviation, `abbrev add (z w : ℂ) := z + w`, is written
+      -- out: the readable statement then says `z + w`)
+      let v ← match v.headBeta with
+        | .const n ls =>
+          if ← isReducible n then
+            match (← getEnv).find? n with
+            | some (.defnInfo d) => pure (d.value.instantiateLevelParams d.levelParams ls)
+            | _ => pure v
+          else pure v
+        | _ => pure v
+      -- (a proof that Lean moved out of such a meaning, `…._proof_1`, is written back:
+      -- `Set.projIcc 0 1 zero_le_one`)
+      let env ← getEnv
+      let v := v.replace fun e => match e with
+        | .const n ls => match n with
+          | .str _ last =>
+            if last.startsWith "_proof_" then
+              match env.find? n with
+              | some (.thmInfo d) => some (d.value.instantiateLevelParams d.levelParams ls)
+              | _ => none
+            else none
+          | _ => none
+        | _ => none
       go (e.getArg! 2) (acc.push v.headBeta) (fuel - 1)
     else return acc
   go (mkApp (Lean.mkConst ``Model.consts) M) #[] 100000
 
 def primConst : Prim → Option Name
-  | .leb => some ``Prelude.leb
-  | .measurableSet1 => some ``Prelude.measurableSet1
-  | .measurableSet2 => some ``Prelude.measurableSet2
-  | .integrable => some ``Prelude.integrable
   | .hasDerivWithin => some ``Prelude.hasDerivWithin
   | .intervalIntegral => some ``Prelude.intervalIntegral
   | .intervalIntegrable => some ``Prelude.intervalIntegrable
@@ -62,13 +89,26 @@ def primConst : Prim → Option Name
   | .setProp k => some <| match k with
     | .closed => ``Prelude.closed2 | .isOpen => ``Prelude.open2
     | .bounded => ``Prelude.bounded2 | .connected => ``Prelude.connected2
-  | .sqProp k => some <| match k with
-    | .convex => ``Prelude.convexOnSq | .concave => ``Prelude.concaveOnSq
-    | .lowerUniform => ``Prelude.lscUniform | .upperUniform => ``Prelude.uscUniform
-    | .contUniform => ``Prelude.continuousUniform
-  | .classProp k => some <| match k with
-    | .convex => ``Prelude.convexClass | .compactUniform => ``Prelude.compactUniform
-    | .closedUniform => ``Prelude.closedUniform
+  | .realFn k => some <| match k with
+    | .exp => ``Real.exp | .log => ``Real.log | .sin => ``Real.sin | .cos => ``Real.cos
+    | .tan => ``Real.tan
+  | .pi => some ``Real.pi
+  | .isInt => some ``Prelude.isInt
+  | .isNat => some ``Prelude.isNat
+  | .floor => some ``Prelude.floor
+  | .ceil => some ``Prelude.ceil
+  | .finSum => some ``Prelude.finSum
+  | .finProd => some ``Prelude.finProd
+  | .series => some ``Prelude.series
+  | .seriesConv => some ``Prelude.seriesConv
+  | .limAt => some ``Prelude.limAt
+  | .limAtConv => some ``Prelude.limAtConv
+  | .limTop => some ``Prelude.limTop
+  | .limTopConv => some ``Prelude.limTopConv
+  | .factorial => some ``Prelude.factorial
+  | .binom => some ``Prelude.binom
+  | .zpow => some ``Prelude.zpow
+  | .cardIs => some ``Prelude.cardIs
   | _ => none
 
 def realLit (n : Nat) : TermElabM Expr := do
@@ -96,7 +136,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
   | .app (.app (.prim .rpow) x) y => do mkAppM ``HPow.hPow #[← readable R ls x, ← readable R ls y]
   | .app (.app (.prim .min) x) y => do mkAppM ``Min.min #[← readable R ls x, ← readable R ls y]
   | .app (.app (.prim .max) x) y => do mkAppM ``Max.max #[← readable R ls x, ← readable R ls y]
-  | .app (.prim .borel) x => do mkAppM ``Measurable #[← readable R ls x]
   | .app (.prim p) x => do
     match primConst p with
     | some n => pure (mkApp (Lean.mkConst n) (← readable R ls x))
@@ -109,13 +148,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
     withLocalDeclD `x (← tyExpr R.model t) fun v => do
       mkLambdaFVars #[v] (← readable R (v :: ls) b)
   | .num n => realLit n
-  | .ofUnit x => do mkAppM ``Subtype.val #[← readable R ls x]
-  | .toUnit x => do
-    let x' ← readable R ls x
-    let stx ← `(Set.projIcc (0 : ℝ) 1 zero_le_one $(← exprToSyntax x'))
-    let e ← Term.elabTerm stx none
-    Term.synthesizeSyntheticMVarsNoPostponing
-    instantiateMVars e
   | .add x y => do mkAppM ``HAdd.hAdd #[← readable R ls x, ← readable R ls y]
   | .sub x y => do mkAppM ``HSub.hSub #[← readable R ls x, ← readable R ls y]
   | .mul x y => do mkAppM ``HMul.hMul #[← readable R ls x, ← readable R ls y]
@@ -155,13 +187,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
     withLocalDeclD `x (← tyExpr R.model t) fun v => do
       let body ← mkLambdaFVars #[v] (← readable R (v :: ls) b)
       mkAppM ``Exists #[body]
-  | .integral b => do
-    withLocalDeclD `x (← tyExpr R.model .unit) fun v => do
-      let f ← mkLambdaFVars #[v] (← readable R (v :: ls) b)
-      let stx ← `(MeasureTheory.integral MeasureTheory.MeasureSpace.volume $(← exprToSyntax f))
-      let e ← Term.elabTerm stx none
-      Term.synthesizeSyntheticMVarsNoPostponing
-      instantiateMVars e
   | .guard _ e => readable R ls e
   | .the t b => do
     let T ← tyExpr R.model t
@@ -181,19 +206,99 @@ def nativeDoc (ns : Name) (rel : String) : CommandElabM Doc := do
   | some d => pure d
   | none => throwError "the article could not be compiled"
 
+/-- A Lean name from its text (`Leanify.Torus.smoothT2`). -/
+def nameOfCodes (c : Codes) : Name :=
+  ((Codes.toString c).splitOn ".").foldl (fun n s => Name.mkStr n s) Name.anonymous
+
+/-- The model of a vocabulary, from the names of the Lean meanings of its base types and
+constants (`Vocab.typeLean`, `Vocab.constLean`): the declarations it names must be
+there (the article's Lean file imports `Vocab.modules`), and each constant must have the
+type the vocabulary gives it, which the kernel checks when the model is added. -/
+def modelOfVocab (ns : Name) (V : Vocab) (d : Doc) : CommandElabM Expr := do
+  let env ← getEnv
+  let lean (what : String) (c : Codes) : CommandElabM Expr := do
+    if c.isEmpty then
+      throwError "the vocabulary of {ns} does not name the Lean meaning of {what}: give its model (#leanify_semantics … with M)"
+    let n := nameOfCodes c
+    unless env.contains n do
+      throwError "the Lean meaning {n} of {what} is not there: import the module that defines it \
+        ({", ".intercalate (V.modules.map Codes.toString)})"
+    pure (Lean.mkConst n)
+  -- a notion that the article does not define: an opaque constant `ns.Notion.Name`, of
+  -- which Lean knows the type and nothing else
+  let notion (name : String) (ty val : Expr) : CommandElabM Expr := do
+    let n := ns ++ `Notion ++ Name.mkSimple name
+    if (← getEnv).contains n then throwError "the notions of {ns} have two with the Lean name {n}"
+    liftCoreM <| addDecl <| Declaration.opaqueDecl
+      { name := n, levelParams := [], type := ty, value := val, isUnsafe := false, all := [n] }
+    pure (Lean.mkConst n)
+  let clean (c : Codes) : String := String.ofList ((Codes.toString c).toList.filter Char.isAlphanum)
+  -- the base types, each with an element
+  let typeTy := mkSort (Level.succ Level.zero)
+  let sigTy := mkApp2 (Lean.mkConst ``Sigma [Level.succ Level.zero, Level.zero]) typeTy
+    (.lam `T typeTy (.bvar 0) .default)
+  let mut ts : Array Expr := #[]
+  for k in [0:V.types.length] do
+    let (t, dflt) := V.typeLean.getD k ([], [])
+    let what := s!"its type {Codes.toString (V.types.getD k [])}"
+    if Vocab.isDeclaredName t then
+      -- (a type with an element: the types of the core language are not empty)
+      ts := ts.push (← notion (clean t) sigTy
+        (mkApp4 (Lean.mkConst ``Sigma.mk [Level.succ Level.zero, Level.zero]) typeTy
+          (.lam `T typeTy (.bvar 0) .default) (Lean.mkConst ``Unit) (Lean.mkConst ``Unit.unit)))
+    else
+      ts := ts.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.succ Level.zero, Level.zero]) typeTy
+        (.lam `T typeTy (.bvar 0) .default) (← lean what t) (← lean (what ++ " (an element of it)") dflt))
+  -- (a list of types with an element each: in the universe above them)
+  let u1 := Level.succ Level.zero
+  let tsE := ts.toList.foldr (fun x acc => mkApp3 (Lean.mkConst ``List.cons [u1]) sigTy x acc)
+    (mkApp (Lean.mkConst ``List.nil [u1]) sigTy)
+  let baseE := mkApp (Lean.mkConst ``Model.baseOf) tsE
+  let defaultE := mkApp (Lean.mkConst ``Model.defaultOf) tsE
+  let valTy := mkApp (Lean.mkConst ``Val) baseE
+  -- a constant without a meaning: of its type, with the value that every type has
+  let opaqueConst (name : String) (ty : Ty) : CommandElabM Expr :=
+    notion name (mkApp2 (Lean.mkConst ``Ty.denote) baseE (toExpr ty))
+      (mkApp3 (Lean.mkConst ``Ty.default) baseE defaultE (toExpr ty))
+  let mut cs : Array Expr := #[]
+  for i in [0:V.consts.length] do
+    let l := V.constLean.getD i []
+    let c ← if Vocab.isDeclaredName l then opaqueConst (clean l) V.consts[i]!
+      else lean s!"its constant {i} ({Codes.toString (V.constNames.getD i [])})" l
+    cs := cs.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.zero, Level.zero]) (Lean.mkConst ``Ty)
+      (mkApp (Lean.mkConst ``Ty.denote) baseE) (toExpr (V.consts[i]!)) c)
+  -- the quantities that the article introduces without defining them (`Let $\chi(G)$
+  -- denote the chromatic number of a graph $G$.`): the constants after the vocabulary's
+  for i in undefinedDefs V d do
+    let g := d.globs[i]!
+    unless d.values[i]? == some (.const cs.size) do
+      throwError "the undefined quantities of {ns} are not numbered in their order"
+    let c ← opaqueConst (defName d i) g.ty
+    cs := cs.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.zero, Level.zero]) (Lean.mkConst ``Ty)
+      (mkApp (Lean.mkConst ``Ty.denote) baseE) (toExpr g.ty) c)
+  pure (mkApp3 (Lean.mkConst ``Model.mk) baseE defaultE (listExpr valTy cs.toList))
+
 syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " ident)? : command
 
 @[command_elab leanifySemantics] def elabLeanifySemantics : CommandElab := fun stx => do
   let ns := stx[1].getId
   let some rel := stx[2].isStrLit? | throwUnsupportedSyntax
-  let modelName ← match withClause stx[3] with
-    | some v => liftCoreM <| realizeGlobalConstNoOverloadWithInfo v
-    | none => pure ``Model.empty
   checkFresh ns rel
   let d ← nativeDoc ns rel
-  liftCoreM <| addDecl <| Declaration.defnDecl
-    { name := ns ++ `model, levelParams := [], type := Lean.mkConst ``Model, value := Lean.mkConst modelName,
-      hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
+  -- the model of the vocabulary: the one given, or the one its constants name
+  let modelE ← match withClause stx[3] with
+    | some v => do pure (Lean.mkConst (← liftCoreM <| realizeGlobalConstNoOverloadWithInfo v))
+    | none => do
+      let V ← liftCoreM <| articleVocab ns
+      if V.consts.isEmpty && V.types.isEmpty && (undefinedDefs V d).isEmpty then pure (Lean.mkConst ``Model.empty)
+      else modelOfVocab ns V d
+  try
+    liftCoreM <| addDecl <| Declaration.defnDecl
+      { name := ns ++ `model, levelParams := [], type := Lean.mkConst ``Model, value := modelE,
+        hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
+  catch e =>
+    throwError "the model of the vocabulary of {ns} is not well typed: a constant's Lean meaning does not \
+      have the type the vocabulary gives it.\n{e.toMessageData}"
   let M := Lean.mkConst (ns ++ `model)
   let consts ← liftTermElabM <| modelConsts M
   -- definitions as readable constants
@@ -253,6 +358,16 @@ syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " iden
     let lhs := mkApp4 (Lean.mkConst ``Doc.holds) M docE gE (mkNatLit k)
     kernelRefl (ns ++ Name.mkSimple s!"holds{k}") (mkSort Level.zero) lhs
       (mkAnd (Lean.mkConst dn) (Lean.mkConst cn))
+  -- that the hypotheses of a claim can hold together (`satisfiableK`): a claim with
+  -- hypotheses that cannot all hold is true for an empty reason. Asked once for each set
+  -- of hypotheses, of the first claim made under it, and not of a claim under a
+  -- hypothesis that the proof refutes
+  for k in [0:d.claims.length] do
+    if d.hypsOf k == some k then
+      let p ← liftTermElabM do readable R [] (d.claims[k]!).body.hyps
+      liftCoreM <| addDecl <| Declaration.defnDecl
+        { name := ns ++ Name.mkSimple s!"satisfiable{k}", levelParams := [], type := mkSort Level.zero, value := p,
+          hints := ReducibilityHints.regular 0, safety := DefinitionSafety.safe }
   -- sizes, premises and proof obligations
   let natE := Lean.mkConst ``Nat
   let lenTy := natE
@@ -288,6 +403,12 @@ syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " iden
         rw [$(id s!"holds{k}"):ident]
         exact h $args*)
     elabCommand thm
+  -- the statements that the article quotes from the literature and does not prove:
+  -- its assumptions, each an axiom that the certificate names
+  for k in d.quotedClaims do
+    liftCoreM <| addDecl <| Declaration.axiomDecl
+      { name := ns ++ `Quoted ++ Name.mkSimple s!"claim{k}", levelParams := [],
+        type := Lean.mkConst (ns ++ Name.mkSimple s!"obligation{k}"), isUnsafe := false }
   -- the report before verification, and the sentences that did not compile
   writeReport ns .anonymous rel d #[] #[] [] []
   logUncompiled rel d

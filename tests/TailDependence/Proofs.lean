@@ -12,6 +12,7 @@ import TailDependence.Article
   audits this.
 * `refuteK : meaningfulK ∧ ¬ claimK` instead records that claim `K` is false as
   stated; readers and the PDF margin then mark it.
+* `satisfiedK : satisfiableK`: the hypotheses of claim `K` can hold together.
 
 A proof that still uses `sorry` leaves its claim unverified, and `lake build`
 certifies the others. -/
@@ -134,4 +135,45 @@ theorem proof4 : obligation4 := by
   intro_premises
   exact ⟨by unfold meaningful4; definedness [], fun C hCR u v => c7 C hCR u v⟩
 
+/-! ## The hypotheses can be met
+
+The independence copula `Π(u,v) = uv`, the distribution function of Lebesgue measure on
+the square, is a copula, and it is left-tail decreasing and right-tail increasing (the
+two maps are constant). So no step of the proofs above holds for an empty reason. -/
+
+/-- The independence copula `Π(u,v) = uv`. -/
+def indep : I → I → ℝ := fun u v => (u : ℝ) * v
+
+theorem indep_copula : copulas indep := by
+  refine ⟨⟨(MeasureTheory.volume : MeasureTheory.Measure I).prod MeasureTheory.volume, inferInstance, fun u v => ?_⟩, fun u => ?_, fun v => ?_⟩
+  · rw [MeasureTheory.Measure.prod_prod, unitInterval.volume_Iic, unitInterval.volume_Iic,
+      ENNReal.toReal_mul, ENNReal.toReal_ofReal u.2.1, ENNReal.toReal_ofReal v.2.1]
+    rfl
+  · simp [indep]
+  · simp [indep]
+
+theorem coe_projIcc {x : ℝ} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
+    ((Set.projIcc (0 : ℝ) 1 zero_le_one x : I) : ℝ) = x := by
+  rw [Set.projIcc_of_mem zero_le_one ⟨h0, h1⟩]
+
+theorem indep_ltd : leftTailDecreasing indep := by
+  intro v a ha b hb _
+  simp only [indep, coe_projIcc ha.1.le ha.2, coe_projIcc hb.1.le hb.2]
+  rw [mul_div_cancel_left₀ _ hb.1.ne', mul_div_cancel_left₀ _ ha.1.ne']
+
+theorem indep_rti : rightTailIncreasing indep := by
+  intro v a ha b hb _
+  simp only [indep, coe_projIcc ha.1 ha.2.le, coe_projIcc hb.1 hb.2.le]
+  have h1 : (1 - a - (v : ℝ) + a * v) / (1 - a) = 1 - v := by
+    rw [div_eq_iff (by linarith)]; ring
+  have h2 : (1 - b - (v : ℝ) + b * v) / (1 - b) = 1 - v := by
+    rw [div_eq_iff (by linarith)]; ring
+  rw [h1, h2]
+
+theorem satisfied0 : satisfiable0 := ⟨indep, indep_copula, indep_ltd⟩
+theorem satisfied1 : satisfiable1 := ⟨indep, ⟨indep_copula, indep_ltd⟩, 0, 0, rfl⟩
+theorem satisfied2 : satisfiable2 := ⟨indep, ⟨indep_copula, indep_ltd⟩, 1, 1, by norm_num⟩
+theorem satisfied4 : satisfiable4 := ⟨indep, indep_copula, indep_rti⟩
+theorem satisfied5 : satisfiable5 := ⟨indep, ⟨indep_copula, indep_rti⟩, 1, 1, rfl⟩
+theorem satisfied6 : satisfiable6 := ⟨indep, ⟨indep_copula, indep_rti⟩, 0, 0, by norm_num⟩
 end TailDependence.Proofs

@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers,torus,hyperbolic,trigonometry}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Conventions}
+
+Throughout, $C$ and $C_m$ denote positive constants.
+We write $N\varphi$ for the derivative of $\varphi$ in the direction $(\sqrt2-1,1)$.
+We write $\|F\|_{C_y^m}$ for the $C^m$ norm of $F$.
+We write $(a,b)_{\gcd}$ for the greatest common divisor of $a$ and $b$.
+
+\section{Numbers}
+
+\begin{lemma}\label{primes}
+$7$ is prime and $9$ is a perfect square, and $9$ is not prime.
+\end{lemma}
+
+\begin{lemma}\label{even}
+Let $n$ be an even integer. Then $n^2$ is even.
+\end{lemma}
+
+\begin{lemma}\label{gcd}
+$(12,18)_{\gcd}=6$ and $\sqrt2$ is irrational.
+\end{lemma}
+
+\begin{lemma}\label{constants}
+For every positive integer $m$ there is $c>0$ such that $c\,n^m\le n^{m+1}$ for every positive integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{natural}
+Let $n$ be a natural number. Then $n\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{small}
+For $0<h\ll\lambda\ll1$, $h<\lambda<1$.
+\end{lemma}
+
+\section{The torus}
+
+\begin{lemma}\label{inverse}
+Let $F$ be a smooth function on $\mathbb T^2$ of zero Haar mean. Then there is exactly one smooth function $\varphi$ on $\mathbb T^2$ of zero Haar mean with $N\varphi=F$. Moreover, $\|\varphi\|_{C_y^m}\le C_m\|F\|_{C_y^{m+4}}$ for every integer $m\ge0$ and every smooth function $\varphi$ on $\mathbb T^2$ of zero Haar mean with $N\varphi=F$.
+\end{lemma}
+
+\section{Hyperbolic functions}
+
+The field \emph{hyperbolic} is data alone: three symbols, their type, and the names of their Mathlib meanings.
+An article may name several fields with constants of their own.
+
+\begin{lemma}\label{hyperbolic}
+For every $x\in\mathbb{R}$, $\cosh(x)^2-\sinh(x)^2=1$ and $\tanh(x)<1$.
+\end{lemma}
+
+A named function applies to what follows it, with or without parentheses.
+
+\begin{lemma}\label{hyperbolic-juxtaposed}
+For every $x\in\mathbb{R}$, $\cosh x\ge1$ and $2\sinh x\cosh x=\sinh(2x)$ and $\cosh^2 x-\sinh^2 x=1$.
+\end{lemma}
+
+A function of a field may have a domain: the inverse sine is defined on $[-1,1]$, and a claim about it outside is not meaningful, whatever value Mathlib's function has there.
+
+\begin{lemma}\label{inverse-sine}
+For every $x\in[-1,1]$, $\arcsin x+\arccos x=\frac{\pi}{2}$.
+Moreover, $\arctan 1=\frac{\pi}{4}$ and $\arcsin 2\le2$.
+\end{lemma}
+
+\end{document}

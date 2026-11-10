@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+A test of claims that follow a sentence which Leanify does not read. A claim is read
+with the variables and hypotheses of the sentences of its result or proof that are read.
+If a sentence before it is not read, the claim as read may not be the claim of the text.
+The reports name every such claim, and a verified one is counted apart.
+
+\section{A hypothesis that is not read}
+
+The second sentence of the lemma is not read, so the claim lacks whatever it assumes. The
+step of the proof is read without it as well.
+
+\begin{lemma}\label{missing}
+Let $x$ be a real number. Suppose moreover that the number is as large as the discussion requires. Then $x^2\ge0$.
+\end{lemma}
+\begin{proof}
+We have $x^2\ge0$.
+\end{proof}
+
+\section{A case that has ended}
+
+The third sentence of the proof turns to the other case and is not read. The last step is
+therefore read under the hypothesis of the first case.
+
+\begin{lemma}\label{cases}
+For every real number $x$, $x\cdot x\ge0$.
+\end{lemma}
+\begin{proof}
+Assume that $x\ge0$. Then $x\cdot x\ge0$. The other case is symmetric and we treat it now. Then $(-x)\cdot(-x)\ge0$.
+\end{proof}
+
+\section{A supposition that has ended}
+
+The sentence that ends the argument by contradiction is not read. The conclusion of the
+proof is read under the supposition, where it holds for an empty reason.
+
+\begin{lemma}\label{contra}
+For every real number $y$, $y^2+1>0$.
+\end{lemma}
+\begin{proof}
+Suppose, for contradiction, that $y^2+1\le0$. Then $y^2\le-1$. But a square cannot be negative, which is absurd here. Hence $y^2+1>0$.
+\end{proof}
+
+\section{A proof that is read completely}
+
+No claim of this lemma and its proof follows an unread sentence.
+
+\begin{lemma}\label{complete}
+For every real number $x$, $x\cdot x\ge0$.
+\end{lemma}
+\begin{proof}
+Assume that $x\ge0$. Then $x\cdot x\ge0$. Assume now that $x<0$. Then $x\cdot x\ge0$.
+\end{proof}
+
+\end{document}

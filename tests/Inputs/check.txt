@@ -1,0 +1,17 @@
+tests/Inputs/sections/definitions.tex:2:1: info: defines sq (sq)
+tests/Inputs/sections/definitions.tex:3:1: info: defines r (r)
+tests/Inputs/sections/result.tex:2:1: info: claim 0: \forall x\in \mathbb{R},\ 1\le r(x)
+tests/Inputs/sections/result.tex:7:1: info: claim 1: \forall x\in \mathbb{R},\ 0\le sq(x)
+tests/Inputs/sections/result.tex:8:1: info: claim 2: \forall x\in \mathbb{R},\ r(x)=sq(x)+1\land 1\le sq(x)+1
+tests/Inputs/sections/result.tex:12:1: info: claim 3: \forall x\in \mathbb{R},\ r(0)\le r(x)
+tests/Inputs/sections/result.tex:16:1: info: the proof of prop:minimum is not read completely (Leanify cannot read 1 of its 2 sentences): prop:minimum can be checked, but it is not derived from this proof
+tests/Inputs/sections/result.tex:17:1: warning: t is not defined: sentence not checked
+tests/Inputs/sections/remainder.tex:4:1: info: claim 4: \forall x\in \mathbb{R},\ r(-x)=r(x)
+tests/Inputs/article.tex: 2 definitions, 5 claims
+  text: 2 compiled, 0 failed, 4 prose (of 6)
+  results: 3 compiled, 0 failed, 0 prose (of 3)
+  proofs: 3 compiled, 1 failed, 1 prose (of 5)
+  all: 8 compiled, 1 failed, 5 prose (of 14)
+  complete proofs: 1 of 2 (a result is derived from a proof that is read completely)
+tests/Inputs/article.tex: inputs: tests/Inputs/notation.sty, tests/Inputs/sections/definitions.tex, tests/Inputs/sections/result.tex, tests/Inputs/sections/remainder.tex
+tests/Inputs/article.tex: not read: figure.tikz (input, but not a .tex file of the article)

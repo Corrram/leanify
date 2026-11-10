@@ -18,9 +18,10 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.3, 2026-11-06}
+\date{Version 0.7, 2026-11-10}
 
 \begin{document}
+\emergencystretch=2em
 \maketitle
 
 \begin{abstract}
@@ -74,6 +75,7 @@ exactly the sentences of its proof and the results they cite.
 \usepackage[certify]{leanify}   % and build the certificate first
 \leanifymodule{Note.Certified}  % optional: the certifying module
 \leanifyreport                  % optional: a one-line summary
+\leanifyreadings                % optional: the formal readings
 \end{lstlisting}
 
 \noindent The options are:
@@ -88,12 +90,22 @@ status & Marks every labelled result in the margin with its verification status,
 check=false & No quick check during the compile. \\
 certify & Before the marks are read, updates the pin of the article and builds
   its certificate with \texttt{lake build}. The first time, when the article has
-  no Lean files yet, writes them, and a warning gives the \texttt{[[lean\_lib]]}
-  entry to add to \texttt{lakefile.toml}. Implies \opt{status}. \\
-vocab=NAME & The vocabulary of the article: \texttt{core} (the default) or
-  \texttt{unitsquare} (probability on the unit square). \\
-lean=FILE & The compiled Lean file of the article, by default
-  \texttt{Compiled.lean} next to it. \\
+  no Lean files yet, writes them. Implies \opt{status}. \\
+vocab=FIELDS & The fields of the article's vocabulary, for instance
+  \texttt{vocab=unitsquare} (probability on the unit square, with $[0,1]$ as a type
+  of its own) or \texttt{vocab=\{numbers,hyperbolic\}}. The core vocabulary (real
+  numbers, integers, their signs) is always there. \\
+lean=FILE & The compiled Lean file of the article, if it is not
+  \texttt{Compiled.lean} next to it or in the folder that \texttt{leanify init}
+  made. \\
+exe=COMMAND & The checker to run instead of the project's, for instance
+  \texttt{exe=leanify} for an executable on the \texttt{PATH}. With it the quick
+  check also runs outside a Lean project. \\
+notions=NOUNS & The nouns that the article uses without defining them, for
+  instance \texttt{notions=\{graph, finite graph, vertex (vertices)\}}
+  (Section~\ref{sec:notions}). Nothing is printed for them. \\
+quantities=WORDS & Words that name a real number in the names of quantities that
+  the article does not define, for instance \texttt{quantities=\{degree\}}. \\
 \bottomrule
 \end{tabularx}
 
@@ -107,6 +119,12 @@ lean=FILE & The compiled Lean file of the article, by default
 \item[\cs{leanifyreport}] Prints a one-line summary of the last build where it
   appears, for instance: \emph{12 of 12 claims verified (3 derived in the text from
   their citations); 85 of 90 sentences compiled; 7 definitions well defined}.
+\item[\cs{leanifyreadings}] Prints the formal reading of every definition and of
+  every statement of the article, with its line, the version of Leanify, the
+  vocabulary and the conventions of the grammar: what Lean was asked to prove.
+  In an appendix, it lets a reader of the PDF compare each statement with its
+  reading. It prints from \texttt{\cs{jobname}.leanify.tex}, like the margin
+  marks.
 \end{description}
 
 \section{Checking as you compile}\label{sec:check}
@@ -114,21 +132,52 @@ lean=FILE & The compiled Lean file of the article, by default
 When the compiler may run programs (shell escape: \texttt{pdflatex -shell-escape},
 \texttt{latexmk -shell-escape}, or the setting of the editor) and the article
 lies in a Lean project (a \texttt{lakefile.toml} or \texttt{lakefile.lean} in its
-folder or up to three folders above), every compile runs
-\texttt{lake exe leanify check} on the article. Its findings become LaTeX
+folder or up to three folders above), every compile runs one command,
+\texttt{leanify tex}, on the article. It writes its findings as records,
+\texttt{\cs{jobname}.leanify.out}, and they become LaTeX
 warnings at their lines of the article,
 \begin{lstlisting}
-Package leanify Warning: sentence not compiled (undefined symbol: g); it
-(leanify)                asserts nothing checked on input line 70.
+Package leanify Warning: g is not defined: sentence not checked on input line
+(leanify)                70.
 \end{lstlisting}
-so editors that read the LaTeX log list them with the other warnings. With
+so editors that read the LaTeX log list them with the other warnings. The
+check reads the article with the files it inputs, and a finding in such a file
+names its file and line. If some proofs have sentences that Leanify does not
+read, one warning says how many proofs are read completely: only their results
+are derived from the printed proofs. With
 \opt{certify}, the errors of the Lean build and the refuted claims are warnings
 too. The full output of Leanify is in \texttt{\cs{jobname}.leanify.log}.
 \texttt{lake} must be on the \texttt{PATH} of the compiler; the first check
-also builds the checker, which takes a few minutes once.
+also builds the checker, which takes a few minutes once. Later compiles run the
+checker directly, without \texttt{lake}, and take a fraction of a second. The
+records of an unchanged article are the same on every run, so the later passes
+of \texttt{latexmk} see no change.
 
 Without shell escape nothing runs, and in a Lean project a warning says so.
-Outside a Lean project the package runs nothing and says nothing.
+Outside a Lean project the package runs nothing and says nothing, unless the
+option \opt{exe} names a checker.
+
+\section{Notions that the article does not define}\label{sec:notions}
+
+An article on graphs does not define a graph. If the vocabulary has no field for
+its subject, the article names the nouns that it uses without a definition:
+\begin{lstlisting}
+\usepackage[notions={graph, finite graph, vertex (vertices)},
+            quantities={degree}]{leanify}
+\end{lstlisting}
+A noun is then a kind of object of which nothing is known, and an entry that ends
+with a noun (\texttt{finite graph}) is an adjective of it. An irregular plural is
+given in parentheses. A sentence such as \emph{Let $\chi(G)$ denote the chromatic
+number of a graph $G$.} introduces a symbol for a quantity that the article does
+not define. What Lean proves about these notions is proved whatever they mean.
+
+A result whose heading cites its source and that the article does not prove, as in
+\verb|\begin{lemma}[\cite{diestel}]|, is \emph{quoted from the literature}. The
+article assumes it: it is an axiom of the certificate, and every verified claim
+records the quoted results on which it rests. The summary of \cs{leanifyreport}
+names what is not defined in the article and how many statements are quoted. A
+kind of object is assumed to have an element, so a sentence that says only that
+such an object exists is not read as a claim.
 
 \section{Verification status in the margin}\label{sec:status}
 
@@ -142,7 +191,15 @@ Mark & Meaning \\
 \midrule
 $\checkmark$\,\textsf{checked} & Every sentence compiled, and the claim is verified in Lean. \\
 $\checkmark$\,\textsf{derived} & Every sentence compiled, and the proof in the text
-  derives the claim from its citations. \\
+  derives the claim from its citations, each step by the standard tactic, under
+  hypotheses that are shown to hold together. \\
+$\checkmark$\,\textsf{argued} & As \textsf{derived}, with a reservation that the
+  report names: a step of the proof needed a longer Lean argument than the standard
+  tactic (the printed proof leaves out more than a routine step there), or the
+  hypotheses of a claim are not shown to hold together (it may be true for an empty
+  reason). \\
+$\circ$\,\textsf{quoted} & The result cites its source and has no proof in the
+  article. It is assumed, and the certificate names it among its axioms. \\
 $\circ$\,\textsf{partly checked} & The result is verified in part. \\
 $\circ$\,\textsf{compiled} & The statement compiled, but is not verified yet. \\
 $\times$\,\textsf{false} & The claim is refuted in Lean. \\
@@ -154,6 +211,13 @@ The marks are read from \texttt{\cs{jobname}.leanify.tex}, which the Lean comman
 \texttt{\#leanify\_certify} writes next to the article. If the article is newer
 than that file, a warning says that the marks may be out of date. Leave
 \opt{status} out for the version you submit.
+
+The summary of \cs{leanifyreport} also says how many steps the standard tactic
+closes, and of the sets of hypotheses under which claims are made, how many are
+shown to hold together. A verified claim that follows a sentence of its result or
+proof which is not read is counted apart, as \emph{verified as read}: its reading
+has the hypotheses of the sentences that are read, and may lack one or keep one
+that the text has ended.
 
 \section{Requirements}
 

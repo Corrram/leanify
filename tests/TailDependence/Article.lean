@@ -12,4 +12,4 @@ compiled document by a kernel-checked `rfl` theorem. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#leanify_semantics TailDependence "article.tex" with Leanify.UnitSquare.model
+#leanify_semantics TailDependence "article.tex"

@@ -1,10 +1,10 @@
 import Leanify.Meta
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
-`Demo.compiled : compileArticle Demo.vocab Demo.source = some Demo.doc` is checked
-by the kernel from the contents of `article.tex`. The last string pins those contents:
-after editing the article, run
+`Demo.doc` is the compilation of `Demo.source`, the contents of `article.tex`, by
+`compileArticle Demo.vocab` (`leanify audit` has the kernel evaluate it). The last
+string pins those contents: after editing the article, run
 
     lake exe leanify prepare examples/Demo/article.tex --lean examples/Demo/Compiled.lean
 

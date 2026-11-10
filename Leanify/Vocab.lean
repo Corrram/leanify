@@ -6,13 +6,19 @@ import Leanify.Syntax
 A vocabulary supplies the meanings that an article does not define itself:
 base types, constants, nouns (`probability measure $\gamma$ on $[0,1]^2$`),
 modifiers (`with uniform marginals`) and named notions (`Lebesgue measure on
-$[0,1]$`). Each entry pairs a fixed phrase with a closed core term. The phrases
+$[0,1]$`), and intervals that are types (`[0,1]`). Each entry pairs a fixed phrase with a closed core term. The phrases
 are matched literally; there is no other source of meaning.
 
 A vocabulary is reviewed once, together with its `Model` (the Lean meaning of
 its base types and constants), and shared by every article that uses it. The
-core vocabulary `Vocab.core` covers real analysis on `[0,1]`; subject
-vocabularies extend it (`Vocab.append`). -/
+core vocabulary `Vocab.core` (`Leanify.Library.Core`) has the words about numbers that
+every article may use; subject vocabularies extend it (`Vocab.append`).
+
+Notation means what the type of its operands says, as in Python, where `+` calls
+the `__add__` of its operands' class: the core reads `+`, `-`, `\cdot`, `/`, `^`,
+`\lvert\cdot\rvert`, `\le` and finite sums of real numbers, and a vocabulary that
+declares a type of its own says what they mean on it, by its `methods` (the complex
+numbers of `Leanify.Library.Complex`). -/
 
 namespace Leanify
 
@@ -22,6 +28,8 @@ inductive PItem where
   | w (word : Codes)
   | m (toks : List MTok)
   | v
+  /-- A formula with arguments (`$C^v$`): the fixed pieces between them. -/
+  | f (segs : List (List MTok))
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 abbrev Phrase := List PItem
@@ -32,6 +40,10 @@ structure Noun where
   plural : Phrase
   ty : Ty
   pred : Tm
+  /-- The field of the vocabulary the noun belongs to (empty: the core). -/
+  field : Codes := []
+  /-- Its meaning and Mathlib counterpart, for the glossary. -/
+  doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives
@@ -41,13 +53,111 @@ structure Modifier where
   prenominal : Bool
   ty : Ty
   pred : Tm
+  field : Codes := []
+  doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
-/-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. -/
+/-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. A notion
+with variables in its phrase (`Poisson distribution with mean $v$`) is a function of
+them, in order; `doms` are their domains (as for an article's definitions). -/
 structure Notion where
   name : Phrase
   value : Tm
   ty : Ty
+  doms : List (Option Tm) := []
+  field : Codes := []
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A piece of notation that a vocabulary can give a meaning on one of its types. -/
+inductive OpKey where
+  /-- A real number as an element of the type, where an element is expected (`1+z`):
+  `ℝ → T`. -/
+  | ofReal
+  /-- `x+y`, `x-y`, `xy`, `x/y`: `T → T → T` (`x/y` is defined for `y ≠ 0`, the image of `0`). -/
+  | add | sub | mul | div
+  /-- `-x`: `T → T`. -/
+  | neg
+  /-- `x^n` for a natural number `n`: `T → ℝ → T` (defined for `n ∈ ℕ`). -/
+  | pow
+  /-- `\lvert x\rvert`: `T → ℝ`. -/
+  | abs
+  /-- `\sum_{k=a}^{b}` and `\prod_{k=a}^{b}` over the integers from `a` to `b`:
+  `ℝ → ℝ → (ℝ → T) → T`. -/
+  | sum | prod
+  /-- `x\le y`, `x<y` (`x\ge y`, `x>y` with the arguments swapped): `T → T → Prop`. -/
+  | le | lt
+  /-- A named function of one element (`\exp`, `\Re`, `\operatorname{Re}`): `T → U`. -/
+  | fn (name : Codes)
+  /-- A decoration of a variable (`\overline{z}`, `\bar z`): `T → U`. -/
+  | decor (name : Codes)
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A method: the notation `op` on elements of `ty` is the constant `const`. -/
+structure Method where
+  ty : Ty
+  op : OpKey
+  const : Nat
+  /-- Its meaning and Mathlib counterpart, for the glossary. -/
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- A symbol of the vocabulary: a constant (`\mathrm{i}`), or, without one, the set of
+all elements of `ty` (`\mathbb{C}`, as a domain: `z\in\mathbb{C}`). A symbol that is a
+function may have a domain (`\arcsin` on `[-1,1]`): `doms` are the domains of its
+arguments, closed predicates, as for a definition of an article. The Lean function may
+have values outside (`Real.arcsin` has): an article cannot use them, because an
+argument outside the domain makes its claim meaningless. -/
+structure Symbol where
+  sym : Codes
+  ty : Ty
+  const : Option Nat := none
+  doms : List (Option Tm) := []
+  field : Codes := []
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- An adjective of objects of one type (`convex`, `compact with respect to uniform
+convergence`): `$X$ is ADJ [on $A$]`. `pred` is a closed predicate on `ty`; with
+`onDomain`, it also takes the domain on which the property is meant (`on $A$`, or else
+the domain of the definition of `X`): `ty → (dom → Prop) → Prop` for `ty = dom → _`. -/
+structure Adjective where
+  words : List Codes
+  ty : Ty
+  pred : Tm
+  onDomain : Bool := false
+  field : Codes := []
+  doc : String := ""
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+/-- An interval of real numbers that the vocabulary makes a type of its own (`[0,1]` in
+the field `unitsquare`). An article that names the field reads a variable in the
+interval (`$u\in[0,1]$`) as an element of the type, a function on it
+(`$C:[0,1]^2\to\mathbb{R}$`) as a function of such elements, with no values outside,
+and `\int_{lo}^{hi}` as the integral over the type. Without such a field, the interval
+is a set of real numbers like any other, and the integral is the core's.
+
+Every part is a constant of the vocabulary, with a Lean meaning that it names:
+
+* `val : T → ℝ`, the number that an element is (used wherever a number is expected);
+* `point : ℝ → T`, a number of the interval as an element (it is defined only for numbers of
+  the interval: the compiler adds the condition);
+* `integral : (T → ℝ) → ℝ`, defined for the functions with `integrable : (T → ℝ) → Prop`;
+* `measurable1 : (T → Prop) → Prop` and `measurable2 : (T → T → Prop) → Prop`, the
+  measurable sets of the interval and of its square (a set function is applied to
+  these only);
+* `lebesgue : (T → Prop) → ℝ`, the Lebesgue measure of a measurable set. -/
+structure IntervalType where
+  lo : Nat
+  hi : Nat
+  ty : Ty
+  val : Nat
+  point : Nat
+  integral : Nat
+  integrable : Nat
+  measurable1 : Nat
+  measurable2 : Nat
+  lebesgue : Nat
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Vocab where
@@ -55,11 +165,33 @@ structure Vocab where
   types : List Codes := []
   /-- Types of the constants (`Tm.const i`). -/
   consts : List Ty := []
-  /-- Readable names of the constants (for readings). -/
+  /-- Readable names of the constants (for readings). `#` in a name stands for the
+  argument of the constant, `#1` and `#2` for its two arguments
+  (`\operatorname{convex}(#1)\text{ on }#2`). An empty name shows the argument alone (a
+  number as an element of a type, an element as a number); a name `\langle#\rangle…`
+  shows a numeral alone; a name that begins with `\int` is written as an integral of
+  the function it is applied to. -/
   constNames : List Codes := []
+  /-- The Lean meaning of each constant: the name of a declaration of Mathlib or of one
+  of the `modules` (`Leanify.Torus.smoothT2`, `Real.sinh`), of the type that `consts`
+  gives. `#leanify_semantics` builds the model of an article's vocabulary from these
+  names, so that a field is data: phrases, types and the names of their meanings. -/
+  constLean : List Codes := []
+  /-- The Lean meaning of each base type: the name of the type and of an element of it
+  (`Complex`, `Leanify.Complex.zero`). -/
+  typeLean : List (Codes × Codes) := []
+  /-- The Lean modules that define the meanings (imported by the article's Lean file). -/
+  modules : List Codes := []
+  /-- Adjectives of the vocabulary's objects. -/
+  adjectives : List Adjective := []
   nouns : List Noun := []
   mods : List Modifier := []
   notions : List Notion := []
+  /-- What notation means on the vocabulary's types. -/
+  methods : List Method := []
+  symbols : List Symbol := []
+  /-- The intervals that are types of the vocabulary. -/
+  intervals : List IntervalType := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 namespace Vocab
@@ -78,8 +210,6 @@ def shiftTm (k : Nat) : Tm → Tm
   | .the t b => .the (shiftTy k t) (shiftTm k b)
   | .undef t => .undef (shiftTy k t)
   | .app f x => .app (shiftTm k f) (shiftTm k x)
-  | .ofUnit x => .ofUnit (shiftTm k x)
-  | .toUnit x => .toUnit (shiftTm k x)
   | .add x y => .add (shiftTm k x) (shiftTm k y)
   | .sub x y => .sub (shiftTm k x) (shiftTm k y)
   | .mul x y => .mul (shiftTm k x) (shiftTm k y)
@@ -96,7 +226,6 @@ def shiftTm (k : Nat) : Tm → Tm
   | .or p q => .or (shiftTm k p) (shiftTm k q)
   | .imp p q => .imp (shiftTm k p) (shiftTm k q)
   | .iff p q => .iff (shiftTm k p) (shiftTm k q)
-  | .integral b => .integral (shiftTm k b)
   | .guard p e => .guard (shiftTm k p) (shiftTm k e)
   | t => t
 
@@ -106,14 +235,236 @@ def append (V W : Vocab) : Vocab :=
   let kt := V.types.length
   let kc := V.consts.length
   let tm (t : Tm) : Tm := (shiftTm kt t).shiftConst kc
+  -- (a vocabulary that does not name its meanings keeps the place of its constants)
+  let pad (xs : List Codes) (n : Nat) : List Codes := xs ++ List.replicate (n - xs.length) []
   { types := V.types ++ W.types
     consts := V.consts ++ W.consts.map (shiftTy kt)
-    constNames := V.constNames ++ W.constNames
+    constNames := pad V.constNames kc ++ W.constNames
+    constLean := pad V.constLean kc ++ W.constLean
+    typeLean := V.typeLean ++ List.replicate (kt - V.typeLean.length) ([], []) ++ W.typeLean
+    modules := V.modules ++ W.modules.filter (!V.modules.contains ·)
+    adjectives := V.adjectives ++ W.adjectives.map fun a => { a with ty := shiftTy kt a.ty, pred := tm a.pred }
     nouns := V.nouns ++ W.nouns.map fun n => { n with ty := shiftTy kt n.ty, pred := tm n.pred }
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
-    notions := V.notions ++ W.notions.map fun n => { n with ty := shiftTy kt n.ty, value := tm n.value } }
+    notions := V.notions ++ W.notions.map fun n =>
+      { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
+    methods := V.methods ++ W.methods.map fun m => { m with ty := shiftTy kt m.ty, const := m.const + kc }
+    symbols := V.symbols ++ W.symbols.map fun s =>
+      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc), doms := s.doms.map (·.map tm) }
+    intervals := V.intervals ++ W.intervals.map fun i =>
+      { i with ty := shiftTy kt i.ty, val := i.val + kc, point := i.point + kc, integral := i.integral + kc,
+               integrable := i.integrable + kc, measurable1 := i.measurable1 + kc,
+               measurable2 := i.measurable2 + kc, lebesgue := i.lebesgue + kc } }
 
 instance : Append Vocab := ⟨append⟩
+
+/-- A reading with the names of the vocabulary's types (`\mathsf{T}_{k}` is the `k`-th). -/
+def texTypes (V : Vocab) (s : String) : String :=
+  V.types.zipIdx.foldl (fun s (n, k) => s.replace s!"\\mathsf\{T}_\{{k}}" (Codes.toString n)) s
+
+/-- The entries of `V`, as the field `f`. -/
+def tag (f : Codes) (V : Vocab) : Vocab :=
+  -- an entry's own sense (`natural number`, `with 0`) is kept after the field
+  let t (g : Codes) : Codes := if g.isEmpty then f else f ++ [32, 40] ++ g ++ [41]
+  { V with nouns := V.nouns.map (fun n => { n with field := t n.field }),
+           mods := V.mods.map (fun m => { m with field := t m.field }),
+           notions := V.notions.map (fun n => { n with field := t n.field }),
+           adjectives := V.adjectives.map (fun a => { a with field := t a.field }),
+           symbols := V.symbols.map (fun s => { s with field := t s.field }) }
+
+end Vocab
+
+/-! ## Notions that an article uses and does not define
+
+An article may use a noun that neither it nor its vocabulary defines (*graph*, *matroid*).
+It names such nouns in its preamble, as an option of the package:
+`\usepackage[notions={graph, finite graph, vertex (vertices)}]{leanify}`. Nothing is
+printed for this in the article. A noun of the list is a kind of object of its own: a base
+type without a Lean meaning. An entry that ends with a noun (`finite graph`, `admissible
+integer`) is an adjective of that noun: a predicate without a meaning. Statements about
+them are read as about any other noun, and what is proved about them is proved for
+whatever they mean, because Lean knows nothing of them (`#leanify_semantics` declares them
+as `opaque` constants). The reports list them as not defined here. -/
+
+/-- A noun or an adjective that the article uses without defining it. -/
+structure Declared where
+  words : List Codes
+  /-- The plural, if the article gives it (`vertex (vertices)`); else by rule. -/
+  plural : List Codes := []
+  /-- A word for a real number (`degree`, `distance`: the option `quantities`), not a kind of
+  object of its own. -/
+  number : Bool := false
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+namespace Declared
+
+private def trim (c : Codes) : Codes :=
+  ((c.dropWhile (· == 32)).reverse.dropWhile (· == 32)).reverse
+
+/-- Lower-case words of letters; `none` for anything else. -/
+private def wordsOf (c : Codes) : Option (List Codes) :=
+  let ws := ((c.splitOn 32).filter (!·.isEmpty)).map fun w => w.map fun x => if 65 ≤ x && x ≤ 90 then x + 32 else x
+  if ws.isEmpty || ws.any (fun w => w.any fun x => !(97 ≤ x && x ≤ 122)) then none else some ws
+
+/-- The parts of a list at the commas outside braces and parentheses. -/
+private def splitTop : Nat → Codes → Codes → List Codes → List Codes
+  | _, [], cur, acc => (cur.reverse :: acc).reverse
+  | d, c :: cs, cur, acc =>
+    if c == 44 && d == 0 then splitTop d cs [] (cur.reverse :: acc)
+    else splitTop (if c == 123 || c == 40 then d + 1 else if c == 125 || c == 41 then d - 1 else d) cs (c :: cur) acc
+
+/-- The text of an optional argument up to its closing bracket, and what follows. -/
+private def bracket : Nat → Codes → Codes → Option (Codes × Codes)
+  | _, [], _ => none
+  | d, c :: cs, acc =>
+    if c == 93 && d == 0 then some (acc.reverse, cs)
+    else bracket (if c == 123 then d + 1 else if c == 125 then d - 1 else d) cs (c :: acc)
+
+/-- A line without its comment. -/
+private def uncomment : Codes → Codes
+  | [] => []
+  | 92 :: c :: cs => 92 :: c :: uncomment cs
+  | 37 :: _ => []
+  | c :: cs => c :: uncomment cs
+
+/-- The options of `\usepackage[OPTIONS]{leanify}` in the text of a preamble. -/
+private def packageOptions : Nat → Codes → Option Codes
+  | 0, _ => none
+  | _, [] => none
+  | f + 1, c :: cs =>
+    if c == 92 && cs.take 10 == w!"usepackage" then
+      match (cs.drop 10).dropWhile (· == 32) with
+      | 91 :: r =>
+        match bracket 0 r [] with
+        | some (opts, r') =>
+          match r'.dropWhile (· == 32) with
+          | 123 :: r'' =>
+            let names := ((r''.takeWhile (· != 125)).splitOn 44).map trim
+            if names.contains w!"leanify" then some opts else packageOptions f cs
+          | _ => packageOptions f cs
+        | none => packageOptions f cs
+      | _ => packageOptions f cs
+    else packageOptions f cs
+
+/-- The entries of the option `key` (`notions`, `quantities`) of `leanify.sty` in the preamble
+of an article (its lines before `\begin{document}`), as the article writes them. -/
+def entriesOf (preamble : List Codes) (key : Codes := w!"notions") : List Codes :=
+  let text := (preamble.map uncomment).intersperse [32] |>.flatten
+  match packageOptions (text.length + 1) text with
+  | none => []
+  | some opts =>
+    (splitTop 0 opts [] []).flatMap fun o =>
+      let o := trim o
+      if trim (o.takeWhile (· != 61)) != key then [] else
+      let v := trim ((o.dropWhile (· != 61)).drop 1)
+      let v := match v with
+        | 123 :: r => (match r.reverse with | 125 :: r' => r'.reverse | _ => v)
+        | _ => v
+      ((splitTop 0 v [] []).map trim).filter (!·.isEmpty)
+
+/-- An entry `words` or `words (plural words)`. -/
+def ofEntry (e : Codes) : Option Declared := do
+  let e := trim e
+  let ws ← wordsOf (e.takeWhile (· != 40))
+  match (e.dropWhile (· != 40)).drop 1 with
+  | [] => some { words := ws }
+  | r => do
+    let pl ← wordsOf (r.takeWhile (· != 41))
+    some { words := ws, plural := pl }
+
+/-- The notions an article declares, and the entries of its list that are not read (an
+entry is words of letters, with an optional plural in parentheses). -/
+def ofPreamble (preamble : List Codes) : List Declared × List Codes :=
+  let es := entriesOf preamble
+  -- (`quantities={degree, distance}`: words for real numbers that the article does not define)
+  let ns := entriesOf preamble w!"quantities"
+  (es.filterMap ofEntry ++ ns.filterMap (fun e => (ofEntry e).map fun d => { d with number := true }),
+   (es ++ ns).filter fun e => (ofEntry e).isNone)
+
+/-- The plural of a noun by rule (`graph`: `graphs`, `family`: `families`, `class`: `classes`). -/
+def pluralOf (d : Declared) : List Codes :=
+  if !d.plural.isEmpty then d.plural else
+  match d.words.reverse with
+  | [] => []
+  | w :: rest =>
+    let vowel (x : Nat) : Bool := [97, 101, 105, 111, 117].contains x
+    let w' := match w.reverse with
+      | 121 :: c :: r => if vowel c then w ++ [115] else (c :: r).reverse ++ w!"ies"
+      | 115 :: _ | 120 :: _ | 122 :: _ => w ++ w!"es"
+      | 104 :: 99 :: _ | 104 :: 115 :: _ => w ++ w!"es"
+      | _ => w ++ [115]
+    (w' :: rest).reverse
+
+/-- `finite field` as `FiniteField`. -/
+def ident (ws : List Codes) : Codes :=
+  (ws.map fun w => match w with | c :: r => (if 97 ≤ c && c ≤ 122 then c - 32 else c) :: r | [] => []).flatten
+
+end Declared
+
+namespace Vocab
+
+/-- The field of the notions that an article declares. -/
+def articleField : Codes := w!"article"
+
+/-- The Lean meaning of a declared notion is none: the name `@Name` asks
+`#leanify_semantics` for an opaque constant of the article. -/
+def isDeclaredName (c : Codes) : Bool := c.head? == some 64
+
+/-- `V` with one more notion. A phrase that ends with a noun of `V` (the longest such
+ending) is an adjective of that noun; any other phrase is a noun with a type of its own.
+A phrase that `V` has already is not added. -/
+def declareOne (V : Vocab) (d : Declared) : Vocab :=
+  let ph (ws : List Codes) : Phrase := ws.map PItem.w
+  if V.nouns.any (fun n => n.sing == ph d.words) then V else
+  -- a word for a real number: a noun of real numbers that says nothing about them
+  if d.number then
+    { V with nouns := V.nouns ++ [{
+        sing := ph d.words, plural := ph d.pluralOf, ty := Ty.real,
+        pred := Tm.lam .real .tt .tt, field := articleField, doc := "a real number, not defined in the article" }] }
+  else
+  -- the noun at the end, the longest first
+  let ending : Option (List Codes × Noun) :=
+    (List.range d.words.length).drop 1 |>.findSome? fun p =>
+      (V.nouns.find? fun n => n.sing == ph (d.words.drop p)).map fun n => (d.words.take p, n)
+  match ending with
+  | some (adj, n) =>
+    if V.mods.any (fun m => m.prenominal && m.phrase == ph adj && m.ty == n.ty) then V else
+    let c := V.consts.length
+    let pad (xs : List Codes) : List Codes := xs ++ List.replicate (c - xs.length) []
+    let nounName := (n.sing.filterMap fun p => match p with | .w w => some w | _ => none)
+    { V with
+      consts := V.consts ++ [.fn n.ty .prop]
+      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ (adj.intersperse [92, 32]).flatten ++ w!"}(#)"]
+      constLean := pad V.constLean ++ [[64] ++ Declared.ident (adj ++ nounName)]
+      mods := V.mods ++ [{
+        phrase := ph adj, prenominal := true, ty := n.ty, pred := Tm.const c,
+        field := articleField, doc := "not defined in the article" }] }
+  | none =>
+    let k := V.types.length
+    let name := Declared.ident d.words
+    { V with
+      types := V.types ++ [w!"\\mathrm{" ++ name ++ w!"}"]
+      typeLean := V.typeLean ++ List.replicate (k - V.typeLean.length) ([], []) ++ [([64] ++ name, [])]
+      nouns := V.nouns ++ [{
+        sing := ph d.words, plural := ph d.pluralOf, ty := Ty.base k,
+        pred := Tm.lam (.base k) .tt .tt, field := articleField, doc := "not defined in the article" }] }
+
+/-- `V` with the notions that an article declares. -/
+def declare (V : Vocab) (ds : List Declared) : Vocab := ds.foldl declareOne V
+
+/-- The vocabulary an article is read with: `V` and the notions of its preamble. -/
+def forArticle (V : Vocab) (src : List Codes) : Vocab :=
+  let k := (src.findIdx? fun l => l.take 16 == w!"\\begin{document}").getD src.length
+  V.declare (Declared.ofPreamble (src.take k)).1
+
+/-- The nouns and adjectives that the article declares (`graph`, `finite graph`). -/
+def declaredPhrases (V : Vocab) : List Codes :=
+  let text (p : Phrase) : Codes := ((p.filterMap fun i => match i with | .w w => some w | _ => none).intersperse [32]).flatten
+  let nounOfTy (t : Ty) : Codes := ((V.nouns.find? fun n => n.ty == t && n.field == articleField).map (text ·.sing)).getD
+    (((V.nouns.find? fun n => n.ty == t).map (text ·.sing)).getD [])
+  (V.nouns.filter (·.field == articleField)).map (fun n =>
+      text n.sing ++ (if n.ty == .real then w!" (a number)" else [])) ++
+    (V.mods.filter (·.field == articleField)).map fun m => text m.phrase ++ [32] ++ nounOfTy m.ty
 
 end Vocab
 
@@ -139,7 +490,16 @@ def phraseOf (s : String) : Except String Phrase := do
         let rest := ts.drop (body.length + 1)
         match Math.simplify (body.length + 1) body with
         | some [.id [118]] => go f rest (.v :: acc)
-        | some ms => go f rest (.m ms :: acc)
+        | some ms =>
+          if ms.contains (.id [118]) then
+            -- split at the arguments `v`
+            let segs := ms.foldl (fun (acc : List (List MTok)) t =>
+              if t == .id [118] then [] :: acc
+              else match acc with
+                | cur :: more => (cur ++ [t]) :: more
+                | [] => [[t]]) [[]]
+            go f rest (.f segs.reverse :: acc)
+          else go f rest (.m ms :: acc)
         | none => throw s!"cannot read the formula in phrase {s}"
       | .punct 39 => go f ts acc
       | _ => throw s!"unexpected token in phrase {s}"
@@ -153,21 +513,5 @@ elab_rules : term
     match phraseOf s.getString with
     | .ok p => pure (toExpr p)
     | .error e => throwError e
-
-/-! ## The core vocabulary
-
-Real analysis on `[0,1]`: functions and maps with a signature, Borel
-measurability and Lebesgue measure. -/
-
-namespace Vocab
-
-def core : Vocab where
-  mods := [
-    { phrase := phrase!"Borel measurable", prenominal := true, ty := Ty.self,
-      pred := .lam Ty.self .tt (.app (.prim .borel) (.loc 0)) }]
-  notions := [
-    { name := phrase!"Lebesgue measure on $[0,1]$", value := .prim .leb, ty := Ty.set1 ⟶ .real }]
-
-end Vocab
 
 end Leanify

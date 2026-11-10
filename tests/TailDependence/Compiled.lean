@@ -1,11 +1,11 @@
 import Leanify.Meta
 import Leanify.Library.UnitSquare
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
-`TailDependence.compiled : compileArticle TailDependence.vocab TailDependence.source = some TailDependence.doc` is checked
-by the kernel from the contents of `article.tex`. The last string pins those contents:
-after editing the article, run
+`TailDependence.doc` is the compilation of `TailDependence.source`, the contents of `article.tex`, by
+`compileArticle TailDependence.vocab` (`leanify audit` has the kernel evaluate it). The last
+string pins those contents: after editing the article, run
 
     lake exe leanify prepare tests/TailDependence/article.tex --lean tests/TailDependence/Compiled.lean
 

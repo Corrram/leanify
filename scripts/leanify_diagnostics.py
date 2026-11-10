@@ -4,7 +4,7 @@
 `#leanify_certify` writes `<article>.leanify.json` next to the article. This script
 prints one line per finding in the format editors understand:
 
-    article.tex:694:1: warning: sentence not compiled (undefined symbol: \\Delta); it asserts nothing checked
+    article.tex:694:1: warning: \\Delta is not defined: sentence not checked
     article.tex:458:1: warning: statement (claim 12) compiled but not verified: add J.proof12
 
 Use it in CI or as a VS Code task (see `editors/vscode/tasks.json`). Exit status
@@ -40,17 +40,44 @@ def update_pin(lean_file, pin):
     return new != text
 
 
-def findings(report, prose=False):
+GREEK = set("""alpha beta gamma delta epsilon varepsilon zeta eta theta vartheta iota kappa lambda
+mu nu xi pi varpi rho varrho sigma varsigma tau upsilon phi varphi chi psi omega Gamma Delta Theta
+Lambda Xi Pi Sigma Upsilon Phi Psi Omega ell""".split())
+
+
+def failed_message(message):
+    """What stopped a sentence, as `leanify check` says it."""
+    m = re.match(r"undefined symbol: (.+)\Z", message)
+    if not m:
+        return message
+    sym = m.group(1)
+    name = re.match(r"\\([A-Za-z]+)", sym)
+    return f"unknown notation {sym}" if name and name.group(1) not in GREEK else f"{sym} is not defined"
+
+
+def findings(report, prose=False, standard=False, satisfiable=False):
     sentences = report["sentences"]
+    stated = lambda s: s["environment"] not in ("text", "proof", "remark", "example", "conjecture")
     for s in sentences:
         where = (s["line"], s["column"])
         if s["outcome"] == "failed":
-            yield (*where, "warning", f"sentence not compiled ({s['message']}); it asserts nothing checked")
-        elif s["outcome"] == "prose" and s["environment"] not in ("text", "proof"):
-            yield (*where, "warning", f"sentence of a {s['environment']} not read by the grammar; "
-                   "this part of the statement is not checked")
+            yield (*where, "warning", f"{failed_message(s['message'])}: sentence not checked")
+        elif s["outcome"] == "prose" and stated(s):
+            env = [t for t in sentences if t["env"] == s["env"]]
+            unread = [t for t in env if t["outcome"] == "prose"]
+            if unread[0] is not s:
+                continue
+            name = s["environment"].capitalize() + (f" {s['label']}" if s["label"] else f" at line {env[0]['line']}")
+            if all(t["outcome"] != "compiled" for t in env):
+                what = ("is not checked: Leanify cannot read its statement" if len(env) == 1
+                        else f"is not checked: Leanify cannot read any of its {len(env)} sentences")
+            else:
+                lines = sorted({t["line"] for t in unread})
+                what = (f"is only partly checked: Leanify cannot read {len(unread)} of its {len(env)} sentences "
+                        f"(line{'s' if len(lines) > 1 else ''} {', '.join(map(str, lines))})")
+            yield (*where, "warning", f"{name} {what}")
         elif s["outcome"] == "prose" and prose and s["environment"] == "proof":
-            yield (*where, "info", "proof sentence not read by the grammar; it makes no checked claim")
+            yield (*where, "info", "proof sentence not read")
     for c in report["claims"]:
         s = sentences[c["sentence"]]
         where = (s["line"], s["column"])
@@ -62,8 +89,31 @@ def findings(report, prose=False):
             why = c.get("note") or (f"add {report['justifications']}.proof{c['index']}" if certified
                                     else "the article is not certified yet (build the module with #leanify_certify)")
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) compiled but not verified: {why}")
+        elif c["status"] == "quoted" and prose:
+            yield (*where, "info", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is quoted from the literature: "
+                   f"the article assumes it")
         elif c["status"] == "text" and prose:
-            yield (*where, "info", f"claim {c['index']} derived from its citations")
+            rests = c.get("rests") or []
+            given = f", given the quoted claim{'s' if len(rests) > 1 else ''} {', '.join(map(str, rests))}" if rests else ""
+            yield (*where, "info", f"claim {c['index']} derived from its citations{given}")
+        # a verified claim after a sentence of its result or proof that is not read: it is
+        # verified as read, with the hypotheses of the sentences that are read
+        if c["status"] in ("text", "companion") and c.get("after"):
+            lines = sorted({sentences[t]["line"] for t in c["after"]})
+            n = len(c["after"])
+            what = "a sentence" if n == 1 else f"{n} sentences"
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is verified as read, after "
+                   f"{what} that Leanify does not read (line{'s' if len(lines) > 1 else ''} "
+                   f"{', '.join(map(str, lines))}): its reading may lack a hypothesis, or keep one that has ended")
+        # a step that the standard tactic does not close is larger than it looks in the text
+        if standard and c["status"] == "text" and c.get("step") == "argument":
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is derived in the text, "
+                   f"but the standard tactic does not close it: its proof {c['justification']} is a longer Lean argument")
+        # a claim whose hypotheses cannot all hold is true for an empty reason (once for each
+        # set of hypotheses: at the claim that stands for it)
+        if satisfiable and c.get("hypotheses") == "open" and c.get("hypothesesOf", c["index"]) == c["index"]:
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}): its hypotheses are not "
+                   f"shown to hold together (prove {report.get('justifications', 'J')}.satisfied{c['index']})")
 
 
 def main():
@@ -72,6 +122,10 @@ def main():
     ap.add_argument("--prose", action="store_true", help="also list proof sentences the grammar does not read")
     ap.add_argument("--verified", action="store_true",
                     help="fail if a compiled claim is not verified")
+    ap.add_argument("--standard", action="store_true",
+                    help="warn of the claims derived in the text that the standard tactic does not close")
+    ap.add_argument("--satisfiable", action="store_true",
+                    help="warn of the claims whose hypotheses are not shown to hold together")
     ap.add_argument("--strict", action="store_true",
                     help="fail on any warning: unverified claims and sentences that did not compile")
     ap.add_argument("--relative-to", type=pathlib.Path, default=pathlib.Path.cwd(),
@@ -96,15 +150,19 @@ def main():
               f"(report {report.get('sourceHash')}, file {pin}); run with --pin on the Lean file "
               f"with #leanify_article, then rebuild")
         return 1
-    for line, col, severity, message in sorted(findings(report, args.prose)):
+    for line, col, severity, message in sorted(findings(report, args.prose, args.standard, args.satisfiable)):
         print(f"{shown.as_posix()}:{line}:{col}: {severity}: {message}")
         errors += severity == "error"
         warnings += severity == "warning"
     claims = report["claims"]
     count = lambda st: sum(c["status"] == st for c in claims)
+    after = sum(c["status"] in ("text", "companion") and bool(c.get("after")) for c in claims)
     print(f"{shown.as_posix()}: {len(report['sentences'])} sentences, {len(claims)} claims "
           f"({count('text')} derived from citations, {count('companion')} by companion proofs, "
-          f"{count('refuted')} refuted, {count('unverified')} unverified), {len(report['definitions'])} definitions; "
+          + (f"{count('quoted')} quoted from the literature, " if count('quoted') else "") +
+          f"{count('refuted')} refuted, {count('unverified')} unverified"
+          + (f"; {after} of the verified after a sentence that is not read" if after else "") +
+          f"), {len(report['definitions'])} definitions; "
           f"{errors} errors, {warnings} warnings", file=sys.stderr)
     unverified = count('unverified')
     return 1 if errors or (args.strict and warnings) or (args.verified and unverified) else 0

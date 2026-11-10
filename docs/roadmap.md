@@ -30,25 +30,73 @@ of the items below as well.
    model is parametric in the space.
 4. **Anaphora to extremizers.** "For $n=-1$, this NOUN is $W$.", and the
    identification of a maximizer as `A_w^\top` or `B_b^\top`.
-5. **Case distinctions and local hypotheses in proofs.** A proof that argues case
-   by case (`\item \emph{$A\ge z$ and $B\le1+z$.}`, "On the first rectangle,
-   …") needs each case condition as a hypothesis scoped to its item or region.
-   Until then, a case heading must not be read as a claim.
-6. **Parametric families defined by a construction**, such as the extremizers
+5. **Parametric families defined by a construction**, such as the extremizers
    `F_\theta` of the second article (Section 3, `def:extremizers`), which
    Theorem 1.1 uses through `G(\theta)` and `P(\theta)`.
-7. **Markov kernels.** A notion such as "We call a NOUN $F$ \emph{NAME} if its
+6. **Markov kernels.** A notion such as "We call a NOUN $F$ \emph{NAME} if its
    Markov kernel can be chosen such that, for every $v\in(0,1)$, the map
    $t\mapsto K_F(t,[0,v])$ is non-increasing." is a notion in the running text,
    which the grammar reads, but its condition needs the kernel `K_F` in the
    vocabulary, as a kernel determined up to null sets, with "can be chosen such
    that" read as an existential over its versions.
-8. **Partial derivatives.** `\partial_1F(u,v)` in a definition, with its
+7. **Partial derivatives.** `\partial_1F(u,v)` in a definition, with its
    definedness condition (the partial derivative exists almost everywhere).
-9. **Attainment and equality cases.** "the upper bound is attained by $S_s$ and by
+8. **Attainment and equality cases.** "the upper bound is attained by $S_s$ and by
    no other NOUN", "with equality if and only if …", "occur only at
    $\alpha=\frac{5}{32}$".
+
+9. **More of the notions that an article does not define.** The list of the preamble
+   and the sentence `Let $\chi(G)$ denote the chromatic number of a graph $G$.` are
+   read. Not yet: a noun that is a kind of another (`a tree is a graph`), an adjective
+   with a hyphen or a formula (`$K_r$-free`), a relation between two objects (`$H$ is a
+   subgraph of $G$`), notation of the subject (`\otimes`, `\dim`), the kind of a
+   quantity from its domain (`$d(G)\in\mathbb N$`), and a sentence that names the
+   source of a notion (`a matroid in the sense of \cite{oxley}`).
 
 Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
 that compiles and is certified.
+
+## Beyond constructions
+
+These points limit what a certificate says. None of them is a construction of the
+grammar.
+
+1. **Organizing prose.** One sentence of a proof without a reading makes the
+   proof incomplete, and its result is then checked, not derived. A few
+   sentences that only organize a proof are read as such (`We distinguish two
+   cases:`, `We argue by induction on $n$.`); most are not. The check counts the
+   complete proofs. A claim after an unread sentence is read without what the
+   sentence says, and the reports name and count these claims. What is open is to
+   read more of the sentences that end a hypothesis (`In the other case, …`, `which
+   is absurd`), and a way for an author to say that a sentence is only a remark.
+2. **The size of a step.** The certificate tries one fixed tactic,
+   `leanify_step`, on every derived step and reports the steps it closes as
+   *standard*; a result with another step is *argued*. What a careful reader
+   accepts as one step is wider than what the tactic closes (a rule for real
+   powers, a known inequality, a compactness argument in a line, the induction
+   principle): a list of named standard facts that a step may use without the
+   label of an argument is open.
+3. **Statements and steps that hold for an empty reason.** For every set of
+   hypotheses under which a claim is made the reports say whether they are shown
+   to hold together (`satisfiedK`). The definitions of the article are not
+   covered yet: a notion that no object satisfies makes every statement about it
+   true.
+4. **Defaults of the grammar.** Where a limit, a sum, a set or a threshold
+   states no domain, the letters `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` are
+   integers and every other letter is a real number. A convention sentence
+   declares further letters to be integers (`Throughout, $p$ and $q$ denote
+   integers.`), counting the elements of a set whose letter has no stated domain
+   is refused, and `\leanifyreadings` prints the convention. Declaring an index
+   letter to be a real number, or a letter to be a prime or a positive integer,
+   is not read yet.
+5. **Readings in the PDF name the vocabulary of the package option.** The
+   vocabulary an article is compiled with is named in its Lean file, and
+   `\leanifyreport` prints the option `vocab` of `leanify.sty`. The two should be
+   one.
+6. **The trust in the compiler.** By default the compiler is run by Lean's
+   evaluator, and `leanify audit` has the kernel evaluate it. What stays trusted
+   in both cases is the grammar: it says what a sentence means. The readings it
+   gives are printed, and a second, independent reader of the same grammar would
+   be the next step.
+

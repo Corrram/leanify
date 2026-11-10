@@ -10,3 +10,12 @@ article-reader/
 /docs/demo/
 *.leanify.log
 /sandbox/
+/Claude outputs/
+*.leanify.diff
+*.leanify.out
+# the reports of the test articles that are stated but not certified (written by
+# `#leanify_semantics`; the reports of the certified articles are committed)
+/tests/Fields/article.leanify.*
+/tests/Notions/article.leanify.*
+/tests/Square/article.leanify.*
+/tests/Statements/article.leanify.*

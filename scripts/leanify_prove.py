@@ -8,10 +8,12 @@
       refine ⟨by unfold meaningful4; definedness [], ?_⟩
       sorry
 
-This script fills in the stubs that still end in `sorry`.
+This script fills in the stubs that still end in `sorry`, and the stubs `satisfiedK :
+satisfiableK` (the hypotheses of statement K can hold together), for which it tries a
+few values of the variables.
 
-* Tier 0 (no model): a fixed portfolio of tactic scripts is tried on every open
-  obligation. The candidates of all obligations go into one Lean file, which Lean
+* Tier 0 (no model): the standard tactic `leanify_step`, then a fixed portfolio of
+  tactic scripts, is tried on every open obligation. The candidates of all obligations go into one Lean file, which Lean
   elaborates once; the first candidate of each obligation that elaborates without
   an error replaces the `sorry`.
 * Tier 1 (optional, `--hook CMD`): every obligation still open is given to CMD,
@@ -44,6 +46,7 @@ import subprocess
 import sys
 
 STUB_HEAD = re.compile(r"^theorem proof(\d+) : obligation\1 := by\s*$")
+WITNESS_HEAD = re.compile(r"^theorem satisfied(\d+) : satisfiable\1 := by\s*$")
 MESSAGE = re.compile(r"^(.*?):(\d+):(\d+): (error|warning): (.*)$")
 
 
@@ -56,13 +59,13 @@ def project_root(start):
     raise SystemExit(f"{start}: no lakefile.toml or lakefile.lean in this folder or above")
 
 
-def stub_blocks(lines):
+def stub_blocks(lines, head=STUB_HEAD):
     """The claim stubs of Proofs.lean: {k: (first line, end line)} of each `theorem proofK` block
     (the end is exclusive: the next declaration, docstring, blank line or `end`)."""
     blocks = {}
     i = 0
     while i < len(lines):
-        m = STUB_HEAD.match(lines[i])
+        m = head.match(lines[i])
         if m:
             j = i + 1
             while j < len(lines) and lines[j].strip() and not lines[j].startswith(("/--", "theorem ", "end ", "lemma ", "def ")):
@@ -178,39 +181,55 @@ def candidates(k, claim, report, cached, phase):
     out = []
     if cached and phase == 0:
         out.append(("cache", cached))
+    if phase == 0:
+        # the standard tactic: a proof by it is the one the certificate calls standard
+        out.append(("leanify_step", "leanify_step"))
     for c in dict.fromkeys(closers(defs, phase)):  # keep order, drop duplicates
         out.append((c, "\n".join(pre + [c])))
     return out
 
 
-def lean_file(module, ns, items, tag):
+def lean_file(module, ns, items, tag, goal="obligation"):
     """One Lean file with a theorem per (claim, candidate); returns the text and the line range of each."""
     head = [f"import {module}", "", "set_option maxHeartbeats 400000", "", f"namespace {ns}.ProveTry{tag}", f"open {ns}", ""]
     lines = list(head)
     ranges = []
     for n, (k, label, script) in enumerate(items):
         start = len(lines) + 1
-        lines.append(f"theorem try{n} : obligation{k} := by")
+        lines.append(f"theorem try{n} : {goal}{k} := by")
         lines += ["  " + l for l in script.splitlines()]
         lines.append("")
         ranges.append((k, label, script, start, len(lines)))
+        # (a candidate counts only if Lean says so: its axioms, without `sorryAx`)
+        lines.append(f"#print axioms try{n}")
+        lines.append("")
     lines.append(f"end {ns}.ProveTry{tag}")
     return "\n".join(lines) + "\n", ranges
 
 
 def run_lean(root, path, timeout):
     try:
-        p = subprocess.run(["lake", "env", "lean", str(path)], cwd=root, capture_output=True, text=True,
-                           timeout=timeout, encoding="utf-8", errors="replace")
+        # (every error is reported: Lean stops after `maxErrors` of them otherwise)
+        p = subprocess.run(["lake", "env", "lean", "-DmaxErrors=1000000", str(path)], cwd=root,
+                           capture_output=True, text=True, timeout=timeout, encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         raise SystemExit(f"lean did not finish within {timeout} s; raise --timeout")
     return p.stdout + p.stderr
 
 
+AXIOMS = re.compile(r"'[^']*\.try(\d+)' (depends on axioms: \[([^\]]*)|does not depend on any axioms)", re.S)
+
+
 def verdicts(output, path, ranges):
-    """{index: [messages]} of the candidates with an error (or a sorry); the others succeeded."""
+    """{index: [messages]} of the candidates that Lean did not accept: an error or a sorry in
+    their lines, or no statement of Lean that the theorem is proved without `sorry` (so that
+    a run that stops early accepts nothing)."""
     bad = {}
     name = pathlib.Path(path).name
+    proved = {int(m.group(1)) for m in AXIOMS.finditer(output) if "sorryAx" not in (m.group(3) or "")}
+    for n in range(len(ranges)):
+        if n not in proved:
+            bad.setdefault(n, []).append("not proved")
     for line in output.splitlines():
         m = MESSAGE.match(line.strip())
         if not m or not m.group(1).replace("\\", "/").endswith(name):
@@ -224,9 +243,9 @@ def verdicts(output, path, ranges):
     return bad
 
 
-def check(root, module, ns, items, tag, timeout, workdir):
+def check(root, module, ns, items, tag, timeout, workdir, goal="obligation"):
     """Elaborate the candidates; {k: (label, script)} for the first success of each claim, and the errors."""
-    text, ranges = lean_file(module, ns, items, tag)
+    text, ranges = lean_file(module, ns, items, tag, goal)
     path = workdir / f"Candidates{tag}.lean"
     path.write_text(text, encoding="utf-8")
     out = run_lean(root, path, timeout)
@@ -240,6 +259,65 @@ def check(root, module, ns, items, tag, timeout, workdir):
         elif k not in found:
             found[k] = (label, script)
     return found, errors
+
+
+# --- the hypotheses of a statement can hold together ------------------------------------
+
+def witness_candidates(k, report):
+    """Values for the variables of `satisfiableK`, in the order of the text: the tactic
+    `leanify_values` gives them and proves the conditions by computation."""
+    return [(f"values {v}", f"leanify_values {v}")
+            for v in ("1", "0", "2", "(1 / 2)", "(-1)", "1 2", "2 1", "0 1", "1 2 3", "3 2 1", "(-1) 0 1")]
+
+
+def witness_payload(k, report, source, errors):
+    c = report["claims"][k]
+    return {
+        "claim": k, "kind": "witness", "reading": c["reading"], "lean": c.get("satisfiable", ""),
+        "sentence": sentence_text(source, report, c["sentence"]),
+        "definitions": [d["name"] for d in report.get("definitions", [])],
+        "stub": f"theorem satisfied{k} : satisfiable{k} := by\n  unfold satisfiable{k}\n  sorry",
+        "instructions": "Print only the tactic block of the proof (the lines after `:= by`), with no code fences. "
+                        "The goal says that the hypotheses of the statement can hold together: give values for its "
+                        "variables (`leanify_values 1 2` gives them in order and proves the conditions by "
+                        "computation; or `unfold satisfiableK` and `exact ⟨2, by norm_num, …⟩`).",
+        "previous_errors": errors,
+    }
+
+
+def prove_witnesses(a, root, module, ns, report, source, lines, workdir):
+    """Fill in the open stubs `satisfiedK`; returns the new lines and the stubs left open."""
+    blocks = stub_blocks(lines, WITNESS_HEAD)
+    todo = sorted(k for k, blk in blocks.items() if is_open(lines, blk) and k < len(report["claims"]))
+    if not todo:
+        return lines, []
+    print(f"{len(todo)} statement{'s' if len(todo) != 1 else ''} whose hypotheses are not shown to hold together")
+    items = [(k, label, script) for k in todo for label, script in witness_candidates(k, report)]
+    proved, errors = {}, {}
+    found, errs = check(root, module, ns, items, "W", a.timeout, workdir, "satisfiable")
+    for k, (label, script) in found.items():
+        print(f"  statement {k}: {label}")
+        proved[k] = script
+    rest = [k for k in todo if k not in proved]
+    if a.hook and rest:
+        last = {k: [m for m in errs.get(k, ("", [""]))[1][:1]] for k in rest}
+        for r in range(a.rounds):
+            if not rest:
+                break
+            with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:
+                answers = dict(zip(rest, pool.map(
+                    lambda k: ask(a.hook, witness_payload(k, report, source, last[k]), a.hook_timeout), rest)))
+            asked = [(k, "hook", s if "unfold satisfiable" in s or "leanify_values" in s
+                      else f"unfold satisfiable{k}\n" + s) for k, s in answers.items() if s]
+            if not asked:
+                break
+            ok, errs2 = check(root, module, ns, asked, f"WH{r + 1}", a.timeout, workdir, "satisfiable")
+            for k, (_, s) in ok.items():
+                print(f"  statement {k}: values from the hook")
+                proved[k] = s
+            last = {k: errs2.get(k, ("hook", ["no answer"]))[1][:3] for k in rest if k not in ok}
+            rest = [k for k in rest if k not in ok]
+    return (write_back(lines, blocks, proved) if proved else lines), rest
 
 
 # --- tier 1: the hook -------------------------------------------------------------------
@@ -302,6 +380,32 @@ def write_back(lines, blocks, proofs):
     return out
 
 
+def add_stubs(lines, report, ns):
+    """The proofs file with a stub for every definition it has no `definedI` for, every claim
+    it has no `proofK` or `refuteK` for, and every set of hypotheses it has no `satisfiedK`
+    for (before `end NS.Proofs`)."""
+    text = "\n".join(lines)
+    new = []
+    # (a definition the article has gained: the stub that `leanify init` writes)
+    for d in report.get("definitions", []):
+        i = d["index"]
+        if not re.search(rf"^theorem defined{i} ", text, re.M):
+            new += [f"/-- Definition {i}: `{d.get('name', i)}` is well defined. -/",
+                    f"theorem defined{i} : wellDefined{i} := by", f"  unfold wellDefined{i}", "  definedness []", ""]
+    for k, c in enumerate(report["claims"]):
+        reading = c["reading"].replace("-/", "- /").replace("/-", "/ -")
+        if not re.search(rf"^theorem (proof|refute){k} ", text, re.M):
+            new += [f"/-- Claim {k}, {c['role']}:", f"`{reading}` -/", f"theorem proof{k} : obligation{k} := by",
+                    "  intro_premises", f"  refine ⟨by unfold meaningful{k}; definedness [], ?_⟩", "  sorry", ""]
+        if c.get("hypothesesOf") == k and not re.search(rf"^theorem satisfied{k} ", text, re.M):
+            new += [f"/-- The hypotheses of claim {k} can hold together. -/",
+                    f"theorem satisfied{k} : satisfiable{k} := by", f"  unfold satisfiable{k}", "  sorry", ""]
+    if not new:
+        return lines
+    end = max((i for i, l in enumerate(lines) if l.strip() == f"end {ns}.Proofs"), default=len(lines))
+    return lines[:end] + new + lines[end:]
+
+
 def key_of(claim, report):
     prem = [report["claims"][j]["lean"] for j in claim.get("premises", [])]
     return hashlib.sha256(json.dumps([claim["lean"], claim["meaningful"], prem]).encode()).hexdigest()
@@ -312,6 +416,7 @@ def main(argv=None):
     ap.add_argument("article")
     ap.add_argument("--proofs", help="the proofs file (default: Proofs.lean next to the article)")
     ap.add_argument("--hook", help="command that proves one obligation (JSON on stdin, tactic block on stdout)")
+    ap.add_argument("--no-stubs", action="store_true", help="do not add stubs for claims and hypotheses that the proofs file lacks")
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--rounds", type=int, default=1, help="tries of the hook per obligation")
     ap.add_argument("--timeout", type=int, default=900, help="seconds for one Lean run")
@@ -322,29 +427,45 @@ def main(argv=None):
 
     article = pathlib.Path(a.article).resolve()
     report_path = article.with_suffix(".leanify.json")
-    if not report_path.exists():
-        raise SystemExit(f"{report_path} not found: build the certificate once (lake build NS.Certified)")
-    report = json.loads(report_path.read_text(encoding="utf-8"))
     source = article.read_text(encoding="utf-8").replace("\r\n", "\n")
     proofs_path = pathlib.Path(a.proofs).resolve() if a.proofs else article.parent / "Proofs.lean"
     lines = proofs_path.read_text(encoding="utf-8").splitlines()
     m = re.search(r"^import (\S+)", "\n".join(lines), re.M)
     if not m:
         raise SystemExit(f"{proofs_path}: no import of the article module")
-    module, ns = m.group(1), report["namespace"]
+    module = m.group(1)
     root = project_root(article.parent)
+    # the article as Lean, and with it the report of its present state
+    if not a.no_build:
+        subprocess.run(["lake", "build", module], cwd=root, check=False)
+    if not report_path.exists():
+        raise SystemExit(f"{report_path} not found: build the article once (lake build {module})")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    ns = report["namespace"]
     workdir = root / ".lake" / "leanify-prove"
     workdir.mkdir(parents=True, exist_ok=True)
     cache_path = workdir / "cache.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
 
+    # stubs for what the proofs file does not mention yet (after an edit of the article)
+    with_stubs = lines if a.no_stubs else add_stubs(lines, report, ns)
+    if with_stubs != lines:
+        print(f"added {sum(1 for l in with_stubs if l.startswith('theorem ')) - sum(1 for l in lines if l.startswith('theorem '))} stubs to {proofs_path.name}")
+        lines = with_stubs
+        if not a.dry_run:
+            proofs_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
     blocks = stub_blocks(lines)
     todo = sorted(k for k, blk in blocks.items() if is_open(lines, blk) and k < len(report["claims"]))
     print(f"{len(todo)} open obligation{'s' if len(todo) != 1 else ''} in {proofs_path.name}")
+    # the hypotheses of the statements
+    new_lines, open_witnesses = prove_witnesses(a, root, module, ns, report, source, lines, workdir)
+    if new_lines != lines and not a.dry_run:
+        lines = new_lines
+        proofs_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        blocks = stub_blocks(lines)
     if not todo:
-        return 0
-    if not a.no_build:
-        subprocess.run(["lake", "build", module], cwd=root, check=False)
+        return 0 if not open_witnesses else 1
 
     proved, errors = {}, {}
     for phase in (0, 1):
@@ -392,7 +513,7 @@ def main(argv=None):
     if proved:
         proofs_path.write_text("\n".join(write_back(lines, blocks, proved)) + "\n", encoding="utf-8")
         print(f"wrote {proofs_path}; now `lake build` the certificate")
-    return 0 if not open_left else 1
+    return 0 if not open_left and not open_witnesses else 1
 
 
 if __name__ == "__main__":

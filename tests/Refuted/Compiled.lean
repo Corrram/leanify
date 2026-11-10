@@ -1,10 +1,10 @@
 import Leanify.Meta
 
-/-! # `article.tex`, compiled by the kernel
+/-! # `article.tex`, compiled
 
-`Refuted.compiled : compileArticle Refuted.vocab Refuted.source = some Refuted.doc` is checked
-by the kernel from the contents of `article.tex`. The last string pins those contents:
-after editing the article, run
+`Refuted.doc` is the compilation of `Refuted.source`, the contents of `article.tex`, by
+`compileArticle Refuted.vocab` (`leanify audit` has the kernel evaluate it). The last
+string pins those contents: after editing the article, run
 
     lake exe leanify prepare tests/Refuted/article.tex --lean tests/Refuted/Compiled.lean
 

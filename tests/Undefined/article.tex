@@ -1,0 +1,90 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm}
+% The nouns that the article uses and does not define, and the words that name numbers.
+% Nothing is printed for them.
+\usepackage[notions={graph, finite graph, connected graph, vertex (vertices)},
+  quantities={degree, distance}]{leanify}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\begin{document}
+
+A test of notions that an article uses without defining them. The preamble names the
+nouns \emph{graph} and \emph{vertex}, the adjectives \emph{finite} and \emph{connected} of
+graphs, and the words \emph{degree} and \emph{distance} for numbers. A graph is then a kind of object of its
+own, of which Lean knows nothing, and what is proved about graphs is proved whatever a
+graph is.
+
+\section{Quantities}
+
+A sentence that introduces a symbol for a named quantity declares the quantity. Its name
+says what kind of object it is: a number, or an object of a noun.
+
+Let $\chi(G)$ denote the chromatic number of a graph $G$.
+Let $\omega(G)$ denote the clique number of a graph $G$.
+We write $\Delta(G)$ for the maximum degree of a graph $G$.
+We denote by $d(G,H)$ the edit distance of graphs $G$ and $H$.
+Let $L(G)$ denote the line graph of a graph $G$.
+
+A name that does not say the kind is not read, and the finding says how to say it.
+
+Let $\alpha(G)$ denote the independence ratio of a graph $G$.
+
+\section{Results quoted from the literature}
+
+A result whose heading cites its source and that the article does not prove is an
+assumption of the article. The certificate names it among its axioms.
+
+\begin{lemma}[{\cite[Section~5.1]{diestel}}]\label{clique}
+For every finite graph $G$, $\omega(G)\le\chi(G)$.
+\end{lemma}
+
+\begin{lemma}[Greedy colouring, \cite{diestel}]\label{greedy}
+For every finite graph $G$, $\chi(G)\le\Delta(G)+1$.
+\end{lemma}
+
+\section{What the article proves}
+
+A step that uses only what it cites is checked, whatever a graph is.
+
+\begin{theorem}\label{main}
+Let $G$ be a finite connected graph. Then $\omega(G)\le\Delta(G)+1$.
+\end{theorem}
+\begin{proof}
+By Lemma~\ref{clique}, $\omega(G)\le\chi(G)$. By Lemma~\ref{greedy}, $\chi(G)\le\Delta(G)+1$.
+Hence $\omega(G)\le\Delta(G)+1$.
+\end{proof}
+
+A statement about an object of a declared noun, and about several.
+
+\begin{lemma}\label{line}
+For every graph $G$, $\chi(L(G))\ge\omega(L(G))-\omega(L(G))+\chi(L(G))$.
+\end{lemma}
+
+\begin{lemma}\label{distance}
+For all graphs $G$ and $H$, $d(G,H)+1>d(G,H)$.
+\end{lemma}
+
+\section{What is not declared}
+
+A noun that the preamble does not name is not read, and the check names it as one that
+the article could declare.
+
+\begin{lemma}\label{undeclared}
+Let $T$ be a tree. Then $1\le2$.
+\end{lemma}
+
+\section{What is assumed of a kind of object}
+
+A kind of object that the article does not define is assumed to have an element. A
+sentence that says only that such an object exists is therefore not a claim, and the
+finding says so. With a condition it is a claim like any other.
+
+\begin{lemma}\label{exists}
+There is a graph $G$. For every graph $G$ there is a vertex $v$.
+There is a graph $G$ such that $\chi(G)\le\chi(G)$.
+\end{lemma}
+
+\begin{thebibliography}{1}
+\bibitem{diestel} R. Diestel, \emph{Graph Theory}, 5th ed., Springer, 2017.
+\end{thebibliography}
+\end{document}
