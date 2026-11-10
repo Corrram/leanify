@@ -224,6 +224,29 @@ def lineCol (lines : List (List Nat)) (off : Nat) : Nat × Nat := Id.run do
     ln := ln + 1
   return (ln, 1)
 
+/-- The offset at which every line starts, and the offset after the last line. -/
+def lineStarts (lines : List (List Nat)) : Array Nat := Id.run do
+  let mut acc : Array Nat := #[]
+  let mut o := 0
+  for l in lines do
+    acc := acc.push o
+    o := o + l.length + 1
+  return acc.push o
+
+/-- `lineCol` from the starts of the lines: the reports ask for the line of every
+sentence, and an article has thousands of them. -/
+def lineColAt (starts : Array Nat) (off : Nat) : Nat × Nat := Id.run do
+  let n := starts.size - 1
+  if n == 0 || off ≥ starts[n]! then return (n + 1, 1)
+  -- (invariant: `starts[lo] ≤ off < starts[hi]`)
+  let mut lo := 0
+  let mut hi := n
+  for _ in [0:64] do
+    if lo + 1 ≥ hi then break
+    let mid := (lo + hi) / 2
+    if starts[mid]! ≤ off then lo := mid else hi := mid
+  return (lo + 1, off - starts[lo]! + 1)
+
 def kindString : EnvKind → String
   | .text => "text"
   | .result n => Codes.toString n
@@ -352,13 +375,16 @@ def mentions (t : List Char) (m : String) : Bool :=
 /-- For every sentence that fails on an undefined symbol defined by an earlier
 sentence that was not read: that sentence. -/
 def rootsOf (d : Doc) (texts : Array (List Char)) : List (Nat × Nat) := Id.run do
+  -- (as arrays: the reports index the sentences of an article, of which there are thousands)
+  let S := d.sentences.toArray
+  let O := d.outcomes.toArray
   let mut acc : List (Nat × Nat) := []
   for s in [0:d.sentences.length] do
-    if let some (.failed e) := d.outcomes[s]? then
+    if let some (.failed e) := O[s]? then
       if e.code == E.undefined then
         let m := Codes.toString e.detail
-        let (ctx, _, _) := d.sentences[s]!
-        let unread (r : Nat) : Bool := match d.outcomes[r]? with
+        let (ctx, _, _) := S[s]!
+        let unread (r : Nat) : Bool := match O[r]? with
           | some (.compiled _ _) => false | _ => true
         -- `Let $e\in[\eta_-(x),1]$.` binds `e` for the sentences after it
         let binding (t : List Char) : Bool :=
@@ -368,7 +394,7 @@ def rootsOf (d : Doc) (texts : Array (List Char)) : List (Nat × Nat) := Id.run 
         let defining := (List.range s).filter fun r => unread r && (definesSym texts[r]! m || binding texts[r]!)
         let statement := if ctx.kind == .proof && !ctx.proves.isEmpty then
             (List.range s).filter fun r =>
-              let (rc, _, _) := d.sentences[r]!
+              let (rc, _, _) := S[r]!
               (match rc.kind with | .result _ => true | _ => false) && rc.label == ctx.proves &&
                 unread r && mentions texts[r]! m
           else []
@@ -381,9 +407,10 @@ def rootsOf (d : Doc) (texts : Array (List Char)) : List (Nat × Nat) := Id.run 
 /-- For every undefined symbol, the sentences (in order) that fail because of it,
 other than those traced to the sentence that defines it. -/
 def undefinedUses (d : Doc) (rooted : List Nat) : List (String × List Nat) := Id.run do
+  let O := d.outcomes.toArray
   let mut acc : List (String × List Nat) := []
   for s in [0:d.sentences.length] do
-    if let some (.failed e) := d.outcomes[s]? then
+    if let some (.failed e) := O[s]? then
       if e.code == E.undefined && !rooted.contains s then
         let m := errMessage e
         acc := if acc.any (·.1 == m) then acc.map (fun (k, ss) => if k == m then (k, ss ++ [s]) else (k, ss))
@@ -470,68 +497,77 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
   let mut cov : Coverage := {}
   let cs := V.constNames.map Codes.toString
   let gs := d.globNames
-  let all := joinLines lines
-  let texts : Array (List Char) := (d.sentences.map fun (_, a, b) =>
-    (Codes.toString ((all.drop a).take (b - a))).toList).toArray
+  let all := (joinLines lines).toArray
+  let starts := lineStarts lines
+  let S := d.sentences.toArray
+  let O := d.outcomes.toArray
+  let texts : Array (List Char) := S.map fun (_, a, b) =>
+    (Codes.toString (all.extract a b).toList).toList
   let toks := sentenceToks lines
   let roots := rootsOf d texts
   let undef := undefinedUses d (roots.map (·.1))
   -- the line of a sentence, as a finding names it (with its file, in an input file)
   let lineOf (s : Nat) : String :=
-    let (file, l) := origin (lineCol lines (d.sentences[s]!).2.1).1
+    let (file, l) := origin (lineColAt starts (S[s]!).2.1).1
     if file == rel then toString l else s!"{file}:{l}"
   let excerpt (s : Nat) : String :=
-    let (_, a, b) := d.sentences[s]!
-    let text := Codes.toString (all.drop a |>.take (min 90 (b - a)))
+    let (_, a, b) := S[s]!
+    let text := Codes.toString (all.extract a (a + min 90 (b - a))).toList
     let text := text.replace "\n" " "
     if b - a > 90 then text ++ "…" else text
   let unknownIn (ss : List Nat) : String :=
     match (ss.flatMap fun s => unknownNotation d (toks[s]?.getD [])).eraseDups with
     | [] => ""
-    | ns => s!"; unknown notation {fewOf 4 ns}"
+    | ns =>
+      -- (an inclusion sign that the article has not explained: the finding says how to)
+      let (signs, others) := ns.partition fun n => n == "\\subset" || n == "\\supset"
+      let sign := match signs with
+        | [] => ""
+        | n :: _ => s!"; {failedMessage ⟨E.undefined, n.toList.map Char.toNat⟩}"
+      sign ++ (if others.isEmpty then "" else s!"; unknown notation {fewOf 4 others}")
   -- the symbols a sentence that was not read leaves undefined, and where
   let consequences (s : Nat) : String :=
     let deps := (roots.filter (·.2 == s)).map (·.1)
     if deps.isEmpty then "" else
-      let syms := (deps.filterMap fun t => match (d.outcomes[t]? : Option Outcome) with
+      let syms := (deps.filterMap fun t => match (O[t]? : Option Outcome) with
         | some (Outcome.failed e) => some (Codes.toString e.detail) | _ => none).eraseDups
       s!"; {andList syms} {if syms.length == 1 then "is" else "are"} then undefined at {linesText (deps.map lineOf)}"
   -- a sentence of a statement without a reading leaves the statement partly
   -- unchecked: always reported, once per statement
   let stated (ctx : Context) : Bool := match ctx.kind with
     | .result n => !wDiscussion.contains n | _ => false
-  let isProse (s : Nat) : Bool := d.outcomes[s]?.getD .prose == .prose
+  let isProse (s : Nat) : Bool := O[s]?.getD .prose == .prose
   -- a proof with sentences that are not read, and not reported either (prose, or a
   -- construction of proofs the grammar does not have): its result can be checked, but
   -- it is not derived from the printed proof
-  let quiet (t : Nat) : Bool := match d.outcomes[t]? with
+  let quiet (t : Nat) : Bool := match O[t]? with
     | some (.compiled _ _) => false
     | some (.failed e) => e.code == E.unsupported
     | _ => true
   let derived (p : ProofInfo) : Bool := p.complete && !p.steps.isEmpty
   cov := { cov with proofs := d.proofs.length, complete := (d.proofs.filter derived).length }
   for s in [0:d.sentences.length] do
-    let (pctx, pa, _) := d.sentences[s]!
-    if pctx.kind == .proof && (List.range s).all (fun t => (d.sentences[t]!).1.env != pctx.env) then
+    let (pctx, pa, _) := S[s]!
+    if pctx.kind == .proof && (List.range s).all (fun t => (S[t]!).1.env != pctx.env) then
       if let some p := d.proofs.find? (·.env == pctx.env) then
-        let sents := (List.range d.sentences.length).filter fun t => (d.sentences[t]!).1.env == p.env
+        let sents := (List.range d.sentences.length).filter fun t => (S[t]!).1.env == p.env
         let unread := sents.filter quiet
         -- (only for a result whose statement is read: the others are reported themselves)
         let stated := !p.proves.isEmpty && (List.range d.sentences.length).any fun t =>
-          let (rc, _, _) := d.sentences[t]!
+          let (rc, _, _) := S[t]!
           (match rc.kind with | .result _ => true | _ => false) && rc.label == p.proves &&
-            (match d.outcomes[t]? with | some (.compiled _ _) => true | _ => false)
+            (match O[t]? with | some (.compiled _ _) => true | _ => false)
         if !derived p && !unread.isEmpty && stated then
-          let (pl, pc) := lineCol lines pa
+          let (pl, pc) := lineColAt starts pa
           let (pfile, pl) := origin pl
           let name := Codes.toString p.proves
           out := out ++ [s!"{pfile}:{pl}:{pc}: info: the proof of {name} is not read completely \
             (Leanify cannot read {unread.length} of its {sents.length} sentences): {name} can be checked, \
             but it is not derived from this proof"]
-    let (ctx, a, _) := d.sentences[s]!
-    let (l, c) := lineCol lines a
+    let (ctx, a, _) := S[s]!
+    let (l, c) := lineColAt starts a
     let (rel, l) := origin l
-    let o := d.outcomes[s]?.getD .prose
+    let o := O[s]?.getD .prose
     cov := cov.add (resultKind ctx.kind) o
     match o with
     | .failed e =>
@@ -555,17 +591,17 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
       let defining := ctx.kind == .text && defSigns.any fun d => (String.ofList texts[s]!).contains d
       let more := consequences s
       if stated ctx then
-        let env := (List.range d.sentences.length).filter fun t => (d.sentences[t]!).1.env == ctx.env
+        let env := (List.range d.sentences.length).filter fun t => (S[t]!).1.env == ctx.env
         let unread := env.filter isProse
         if unread.head? == some s then
           let first := env.headD s
           -- a result without a label is named by the beginning of its statement
           let name := capitalize (kindString ctx.kind) ++
             (if !ctx.label.isEmpty then s!" {Codes.toString ctx.label}" else
-              let (_, a0, b0) := d.sentences[first]!
-              let t := (Codes.toString ((all.drop a0).take (min 32 (b0 - a0)))).replace "\n" " "
+              let (_, a0, b0) := S[first]!
+              let t := (Codes.toString (all.extract a0 (a0 + min 32 (b0 - a0))).toList).replace "\n" " "
               s!" \"{t}{if b0 - a0 > 32 then "…" else ""}\"")
-          let read := env.filter fun t => match d.outcomes[t]? with
+          let read := env.filter fun t => match O[t]? with
             | some (.compiled _ _) => true | _ => false
           let what := if !read.isEmpty then
               s!"is only partly checked: Leanify cannot read {unread.length} of its {env.length} sentences ({linesText (unread.map lineOf)})"
@@ -607,9 +643,10 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
 
 /-- The end of a sentence in the text: its span ends one code point into its last
 token, which may be the closing of a display (`\end{equation}`, `\]`, `$$`). -/
-def sentenceEnd (all : List Nat) (stop : Nat) : Nat :=
+def sentenceEnd (all : Array Nat) (stop : Nat) : Nat :=
   if stop == 0 then 0 else
-  match all.drop (stop - 1) with
+  -- (a closing command and its argument are short)
+  match (all.extract (stop - 1) (stop + 200)).toList with
   | 92 :: r =>
     let name := r.takeWhile Lex.isLetter
     if name.isEmpty then stop + 1
@@ -643,19 +680,22 @@ text and its outcome, the definitions, the claims with their readings, and the p
 def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : List String)
     (cov : Coverage) : Json := Id.run do
   let lines := src.lines.toList
-  let all := joinLines lines
+  let all := (joinLines lines).toArray
+  let starts := lineStarts lines
+  let S := d.sentences.toArray
+  let O := d.outcomes.toArray
   let origin (l : Nat) : String × Nat := src.origin[l - 1]?.getD (path, l)
   let cs := V.constNames.map Codes.toString
   let gs := d.globNames
   let mut sents : Array Json := #[]
   for s in [0:d.sentences.length] do
-    let (ctx, a, b) := d.sentences[s]!
+    let (ctx, a, b) := S[s]!
     let b := sentenceEnd all b
-    let (l1, c1) := lineCol lines a
-    let (l2, c2) := lineCol lines b
+    let (l1, c1) := lineColAt starts a
+    let (l2, c2) := lineColAt starts b
     let (f1, l1) := origin l1
     let (f2, l2) := origin l2
-    let o : List (String × Json) := match d.outcomes[s]? with
+    let o : List (String × Json) := match O[s]? with
       | some (.failed e) => [("outcome", toJson "failed"), ("message", toJson (failedMessage e))]
       | some (.compiled ds ks) =>
         [("outcome", toJson "compiled"), ("definitions", toJson ds), ("claims", toJson ks)]
@@ -665,7 +705,7 @@ def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : L
       ("endFile", toJson f2), ("endLine", toJson l2), ("endColumn", toJson c2),
       ("environment", toJson (kindString ctx.kind)), ("env", toJson ctx.env),
       ("label", toJson (Codes.toString ctx.label)), ("proves", toJson (Codes.toString ctx.proves)),
-      ("text", toJson (Codes.toString ((all.drop a).take (b - a))))]
+      ("text", toJson (Codes.toString (all.extract a b).toList))]
     sents := sents.push (Json.mkObj (base ++ o))
   let roleOf (r : Role) : String := match r with
     | .definition => "definition" | .statement _ => "statement" | .step _ => "proof step" | .text => "text"

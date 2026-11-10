@@ -3992,6 +3992,24 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
         | _ => .compiled ds cs
       { st, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := ps }
     | .error e =>
+      -- An inclusion sign that no convention of the article resolves: if the sentence is
+      -- read, or stops elsewhere, with `\subseteq` in its place, the sign is what stopped
+      -- it, whatever name it stopped at first (`\supp u\subset K`: not `supp`).
+      let resolved (sign to : Codes) : Bool :=
+        s.toks.any (fun p => p.math && p.tok == .cmd sign) &&
+        (let s' := { s with toks := s.toks.map fun p =>
+            if p.math && p.tok == .cmd sign then { p with tok := .cmd to } else p }
+         match Grammar.parseSentence s' with
+         | some sent' =>
+           match ((Compile.sentence sc sent').run.run st0).1 with
+           | .ok _ => true
+           | .error e' => e' != e
+         | none => false)
+      let e : Err :=
+        if e.code != E.undefined || e.detail == w!"\\subset" || e.detail == w!"\\supset" then e
+        else if resolved w!"subset" w!"subseteq" then ⟨E.undefined, w!"\\subset"⟩
+        else if resolved w!"supset" w!"supseteq" then ⟨E.undefined, w!"\\supset"⟩
+        else e
       let o : Outcome := if e.code == E.prose then .prose else .failed e
       { c with st := st0u, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
 

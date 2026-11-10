@@ -12,6 +12,28 @@ A test of fields on $\mathbb R^3\times[0,1)$: vector and scalar fields, function
 spaces, compact sets, supports, norms, energies, and the Navier--Stokes equations,
 in the words of Theorem~1.1 of the Navier--Stokes blowup paper.
 
+Before the article says what $\subset$ means, an inclusion written with it is refused,
+and the finding names the sign, whatever name stands before it in the formula.
+
+\begin{lemma}\label{refused}
+For every $\nu>0$ there exist a force
+$f\in C_c^\infty(\mathbb R^3\times(0,\infty);\mathbb R^3)$, a compact set
+$K\subset\mathbb R^3$, and smooth velocity and pressure fields
+$u,p$ on $\mathbb R^3\times[0,1)$ satisfying
+\[
+  \partial_tu+(u\cdot\nabla)u-\nu\Delta u+\nabla p=f,
+  \qquad \nabla\cdot u=0,
+  \qquad u(\cdot,0)=0,
+\]
+such that $\supp u(\cdot,t)\cup\supp p(\cdot,t)\subset K$ for every $0\leq t<1$.
+\end{lemma}
+
+\begin{lemma}\label{refused-too}
+There exist a compact set $K\subset\mathbb R^3$ and smooth velocity and pressure fields
+$u,p$ on $\mathbb R^3\times[0,1)$ such that
+$\supp u(\cdot,t)\cup\supp p(\cdot,t)\subset K$ for every $0\leq t<1$.
+\end{lemma}
+
 We write $A\subset B$ if $A\subseteq B$.
 
 \begin{lemma}\label{sets}

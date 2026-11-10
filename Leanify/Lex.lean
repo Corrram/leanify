@@ -634,18 +634,30 @@ def linesOffset (ls : List Codes) : Nat := ls.foldl (fun a l => a + l.length + 1
 
 def blankLine (l : Codes) : Bool := l.all Lex.isSpace
 
-/-- The number of occurrences of `pat` in `l`. -/
-def countSub (pat : Codes) : Codes → Nat
-  | [] => 0
-  | c :: cs => (if (c :: cs).take pat.length == pat then 1 else 0) + countSub pat cs
+/-- The environments that a line begins (`true`) and ends (`false`), in order: the
+names in `\begin{…}` and `\end{…}`. The line is read once, and a name is looked at
+only where a backslash stands: the kernel audit evaluates this on every line of an
+article, and its memory grows with every step. -/
+def envMarks : Codes → List (Bool × Codes)
+  | [] => []
+  | c :: cs =>
+    if c == 92 then
+      if cs.take 6 == w!"begin{" then
+        let name := (cs.drop 6).takeWhile (· != 125)
+        if ((cs.drop 6).drop name.length).head? == some 125 then (true, name) :: envMarks cs else envMarks cs
+      else if cs.take 4 == w!"end{" then
+        let name := (cs.drop 4).takeWhile (· != 125)
+        if ((cs.drop 4).drop name.length).head? == some 125 then (false, name) :: envMarks cs else envMarks cs
+      else envMarks cs
+    else envMarks cs
 
 /-- Do the lines open a drawing or verbatim environment that they do not close (a
-blank line inside it does not end the block)? -/
+blank line inside it does not end the block)? More `\begin{e}` than `\end{e}`, for one
+of these environments `e`. -/
 def openSkip (ls : List Codes) : Bool :=
+  let ms := ls.flatMap envMarks
   Lex.wSkipEnvs.any fun e =>
-    let b := ls.foldl (fun n l => n + countSub (w!"\\begin{" ++ e ++ w!"}") l) 0
-    let d := ls.foldl (fun n l => n + countSub (w!"\\end{" ++ e ++ w!"}") l) 0
-    d < b
+    (ms.filter (· == (false, e))).length < (ms.filter (· == (true, e))).length
 
 /-- Group lines into paragraph blocks (start offset, lines); blank lines separate
 blocks, except inside a drawing or verbatim environment. -/
