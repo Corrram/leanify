@@ -43,7 +43,9 @@ elab "intro_premises" : tactic => do
 /-- `definedness [t₁, …]` proves a definedness condition (`meaningfulK`, `wellDefinedI`):
 a tree of `∧`, `→` and `∀` whose leaves are hypotheses, numeric side conditions,
 signs that `positivity` proves, or the given facts, and whose impossible branches (contradictory case
-conditions) are closed by `linarith` or `tauto`. -/
+conditions) are closed by `linarith` or `tauto`. A hypothesis `∃ z, φ` (what a hypothesis
+about another variable says about the variables of a definition) is opened, and a leaf
+that follows from the hypotheses by rewriting is closed by `simp_all`. -/
 elab "definedness" " [" ts:term,* "]" : tactic => do
   let leaf ← ts.getElems.foldlM (fun acc t => do
     let accS ← `(Lean.Parser.Tactic.tacticSeq| $acc:tactic)
@@ -51,7 +53,7 @@ elab "definedness" " [" ts:term,* "]" : tactic => do
   let step ← `(tactic| first
     | $leaf:tactic
     | (norm_num; done)
-    | (intro _; try casesm* _ ∧ _)
+    | (intro _; try casesm* _ ∧ _, ∃ _, _)
     | refine ⟨?_, ?_⟩
     | (linarith; done)
     | (positivity; done)
@@ -59,7 +61,9 @@ elab "definedness" " [" ts:term,* "]" : tactic => do
     | (exfalso; tauto; done)
     -- uncovered cases: the negated case conditions contradict the domain
     | (exfalso; (try simp only [not_and_or, not_le, not_lt, ← ne_eq, ne_iff_lt_or_gt] at *);
-        (casesm* _ ∨ _) <;> linarith))
+        (casesm* _ ∨ _) <;> linarith)
+    -- a hypothesis about another variable (`∃ z, x z ≠ 0` for `x ≠ 0`)
+    | (simp_all; done))
   let stepS ← `(Lean.Parser.Tactic.tacticSeq| $step:tactic)
   evalTactic (← `(tactic| repeat' $stepS))
 

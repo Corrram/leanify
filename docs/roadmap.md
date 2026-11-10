@@ -30,23 +30,18 @@ of the items below as well.
    model is parametric in the space.
 4. **Anaphora to extremizers.** "For $n=-1$, this NOUN is $W$.", and the
    identification of a maximizer as `A_w^\top` or `B_b^\top`.
-5. **A definition whose hypothesis speaks about other variables.** A definition made
-   under hypotheses takes those about its own variables
-   ([Writing for Leanify](writing.md#hypotheses-assumptions-cases-contradictions)).
-   One that also speaks about a variable the definition does not use (`Assume
-   $xz\ne0$. Set $y\coloneqq\frac1x$.`) is not taken.
-6. **Parametric families defined by a construction**, such as the extremizers
+5. **Parametric families defined by a construction**, such as the extremizers
    `F_\theta` of the second article (Section 3, `def:extremizers`), which
    Theorem 1.1 uses through `G(\theta)` and `P(\theta)`.
-7. **Markov kernels.** A notion such as "We call a NOUN $F$ \emph{NAME} if its
+6. **Markov kernels.** A notion such as "We call a NOUN $F$ \emph{NAME} if its
    Markov kernel can be chosen such that, for every $v\in(0,1)$, the map
    $t\mapsto K_F(t,[0,v])$ is non-increasing." is a notion in the running text,
    which the grammar reads, but its condition needs the kernel `K_F` in the
    vocabulary, as a kernel determined up to null sets, with "can be chosen such
    that" read as an existential over its versions.
-8. **Partial derivatives.** `\partial_1F(u,v)` in a definition, with its
+7. **Partial derivatives.** `\partial_1F(u,v)` in a definition, with its
    definedness condition (the partial derivative exists almost everywhere).
-9. **Attainment and equality cases.** "the upper bound is attained by $S_s$ and by
+8. **Attainment and equality cases.** "the upper bound is attained by $S_s$ and by
    no other NOUN", "with equality if and only if …", "occur only at
    $\alpha=\frac{5}{32}$".
 
@@ -93,7 +88,4 @@ grammar.
    in both cases is the grammar: it says what a sentence means. The readings it
    gives are printed, and a second, independent reader of the same grammar would
    be the next step.
-7. **Inverse functions and other partial functions of a field.** A symbol of a field
-   is a total function (`\sinh`). A function with a domain (`\arcsin` on `[-1,1]`)
-   needs the domain in the field's data, as an article's own definitions have it.
 

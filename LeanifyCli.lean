@@ -224,12 +224,26 @@ def leanifyRequire (opts : List String) : IO (String × String) := do
     catch _ => pure none
   let app ← try some <$> (do IO.FS.realPath (← IO.appPath)) catch _ => pure none
   let root? := app.bind fun a => a.parent.bind (·.parent) |>.bind (·.parent) |>.bind (·.parent)
-  -- (a released checker: built from the tag of its version)
-  let release := byRev s!"v{Leanify.version}" "the release of this checker; --leanify REV names another revision"
-  let some root := root? | return release
+  -- A released checker was built from the tag of its version (the release workflow
+  -- refuses a tag that is not `v` and the version). If the tag cannot be seen on the
+  -- remote, the project is made all the same, and the message says what to do.
+  let tag := s!"v{Leanify.version}"
+  let release : IO (String × String) := do
+    let seen ← try
+        let out ← IO.Process.output { cmd := "git", args := #["ls-remote", "--tags", repo, tag] }
+        pure (if out.exitCode == 0 then some (out.stdout.trimAscii.toString != "") else none)
+      catch _ => pure none
+    pure (byRev tag (match seen with
+      | some false => s!"the release of this checker; the tag {tag} is not on the remote, so `lake update` \
+          will not find it: name a revision that is (--leanify REV, for instance a commit or main)"
+      | _ => "the release of this checker; --leanify REV names another revision"))
+  let some root := root? | return ← release
   let lakefile := root / "lakefile.toml"
-  unless (← lakefile.pathExists) && ((← IO.FS.readFile lakefile).splitOn "name = \"leanify\"").length > 1 do
-    return release
+  -- (one after the other: the file is read only if it is there)
+  let text ← if ← lakefile.pathExists then IO.FS.readFile lakefile else pure ""
+  let isLeanify : Bool := (text.splitOn "name = \"leanify\"").length > 1
+  unless isLeanify do
+    return ← release
   let head ← git root #["rev-parse", "HEAD"]
   let changes ← git root #["status", "--porcelain", "--untracked-files=no"]
   let remote ← match head with

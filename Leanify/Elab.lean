@@ -1753,12 +1753,13 @@ where
           -- whose constant is a function
           let gl? ← lookupGlob n
           let symbols := (← get).vocab.symbols
-          let sym : Option (Nat × Ty) := match gl? with
+          let sym : Option (Nat × Symbol) := match gl? with
             | some _ => none
             | none => (symbols.find? (·.sym == n)).bind fun s => match s.const, s.ty with
-              | some i, .fn _ _ => some (i, s.ty)
+              | some i, .fn _ _ => some (i, s)
               | _, _ => none
-          if let some (i, ty) := sym then return (.const i, ty, []) else
+          -- (with the domains of its arguments: `\arcsin` on `[-1,1]`)
+          if let some (i, s) := sym then return (.const i, s.ty, s.doms) else
           let (i, gl) ← liftO (← lookupGlob n) E.undefined n
           -- (a function with implicit parameters, `f(t)\coloneqq\frac tc` among the
           -- variables of a result, takes them from the scope)

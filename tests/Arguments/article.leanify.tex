@@ -19,8 +19,10 @@
 \leanifystatus{lem:several}{verified}
 \leanifystatus{lem:supposed}{verified}
 \leanifystatus{lem:inverse}{text}
+\leanifystatus{lem:inverse-product}{verified}
 \leanifystatus{lem:unnamed}{verified}
 \leanifydefinition{234}{y}{(x\in \mathbb{R}\,[\neg (x=0)]\mapsto \frac{1}{x})}
+\leanifydefinition{248}{w}{(x\in \mathbb{R}\,[\exists y\in \mathbb{R},\ \neg (x\,y=0)]\mapsto \frac{1}{x})}
 \leanifyreading{lem:assume}{lemma}{18}{\forall x\in \mathbb{R},\ 1<x\Rightarrow x<{x}^{2}}
 \leanifyreading{lem:further}{lemma}{27}{\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow {x}^{2}<{y}^{2}}
 \leanifyreading{lem:parity}{lemma}{41}{\forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)}
@@ -39,7 +41,8 @@
 \leanifyreading{lem:several}{lemma}{221}{\forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)}
 \leanifyreading{lem:supposed}{lemma}{226}{\forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))}
 \leanifyreading{lem:inverse}{lemma}{235}{\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1}
-\leanifyreading{lem:unnamed}{lemma}{250}{\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1}
+\leanifyreading{lem:inverse-product}{lemma}{249}{\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow x\,w(x)=1}
+\leanifyreading{lem:unnamed}{lemma}{259}{\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1}
 \leanifysteps{54}{54}
-\leanifyhypotheses{20}{20}
-\leanifysummary{59}{59}{54}{1}{102}{122}
+\leanifyhypotheses{21}{21}
+\leanifysummary{60}{60}{54}{2}{106}{127}

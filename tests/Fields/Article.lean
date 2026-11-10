@@ -2,6 +2,9 @@ import Fields.Compiled
 import Leanify.Readable
 import Leanify.Library.TorusModel
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+import Mathlib.Analysis.Complex.Trigonometric
 
 /-! # The definitions and claims of `article.tex` as Lean
 

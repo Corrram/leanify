@@ -1872,7 +1872,9 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     -- A variable whose domain uses the variables before it (`x\in[0,n]`) needs them all,
     -- in their order: the definition takes them too, so that the domain is a condition on
     -- its own parameters.
-    let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
+    -- (a domain names its own variable by `loc 0` and the variables before it by the
+    -- locals above: `Let $a$ and $c$ be real numbers with $c>0$` does not use `a`)
+    let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 1 p != p
     let lastDep := ((bs.zipIdx.filter fun (b, _) =>
       (used.contains b.name || argNames.contains b.name) && dependent b).map (·.2)).getLast?
     let imp := (bs.zipIdx.filter fun (b, i) =>
@@ -2927,6 +2929,18 @@ def citesOf (cl : CClause) : List Codes := cl.cites
 /-- Does the local `j` occur in the term? -/
 def usesLoc (j : Nat) (t : Tm) : Bool := Tm.subst (.num 0) j t != Tm.subst (.num 1) j t
 
+/-- `t`, written in another scope: its local `k` becomes the term `targets[k]` of that
+scope, all at once (`targets` covers the scope of `t`). `none` if `t` uses a local that
+has no target. -/
+def relocate (targets : List (Option Tm)) (t : Tm) : Option Tm :=
+  let n := targets.length
+  -- at step `k` the locals `k, …, n-1` of `t` are `0, …, n-1-k`, and what has been put
+  -- in lies above them: it comes down by one with each later step
+  targets.zipIdx.foldl (fun acc (tgt, k) => acc.bind fun t =>
+    match tgt with
+    | some s => some (Tm.subst (shift (n - 1 - k) 0 s) 0 t)
+    | none => if usesLoc 0 t then none else some (Tm.subst (.num 0) 0 t)) (some t)
+
 /-- `the statement holds for $E$`, in the proof of a result: the clauses of the statement,
 for the variable of the induction (`We argue by induction on $n$.`; without that
 sentence, `E` is the variable itself). The variable is one that the result introduces,
@@ -2980,12 +2994,19 @@ def expandStmt (c : SentCtx) : Clause → M Clause
   | cl => pure cl
 
 /-- A definition made under hypotheses (`Assume that $x\ne0$. Set $y\coloneqq\frac1x$.`)
-takes the hypotheses that speak only about its own variables: they become part of the
-domain of its last parameter. So the definition is well defined if its formula is
-meaningful under them (`∀ x, x ≠ 0 → x ≠ 0`), and each use of it asks that they hold.
-A hypothesis about a variable that the definition does not use is not taken (`Assume that
-$xz\ne0$.` says nothing to `\frac1x` alone): state it about the variables of the
-definition. -/
+is made for the values of its variables for which the hypotheses can hold: that becomes
+part of the domain of its last parameter. So the definition is well defined if its formula
+is meaningful there (`∀ x, x ≠ 0 → x ≠ 0`), and each use of it asks for it.
+
+* A hypothesis that speaks only about the variables of the definition is taken as it is.
+* A hypothesis that also speaks about other variables of the result or proof (`Assume
+  that $xz\ne0$.` says something about `x` and about `z`, and `\frac1x` uses `x` alone)
+  is taken as what it says about the definition's variables: that there are such other
+  variables, in their domains and with the hypotheses about them alone (`∃ z, xz ≠ 0`).
+  The definition does not become a function of `z`.
+
+A hypothesis that is left out only makes the domain larger: the definition then has to
+be meaningful on more values, never on fewer. -/
 def defsUnderHyps (c : SentCtx) (ds : List Nat) : M Unit := do
   if c.ctx.kind == .text then return
   for i in ds do
@@ -2995,15 +3016,51 @@ def defsUnderHyps (c : SentCtx) (ds : List Nat) : M Unit := do
     let some v := st.values[i]? | continue
     let names := all.map (·.name)
     let envNames := st.envBinders.map (·.name)
-    -- the hypotheses in force about variables of the result or proof, all of them
-    -- parameters of the definition
+    -- the variables of the result or proof that a hypothesis in force speaks about
     let about (h : Hyp) : List Codes :=
       (((clauseMaths h.clause).flatMap (freeIds 64 [])).filter envNames.contains).eraseDups
-    let hs := st.envHyps.filter fun h => !(about h).isEmpty && (about h).all names.contains
-    if hs.isEmpty then continue
+    -- about parameters of the definition only
+    let own := st.envHyps.filter fun h => !(about h).isEmpty && (about h).all names.contains
+    -- about parameters and other variables
+    let mixed := st.envHyps.filter fun h => (about h).any names.contains && !(about h).all names.contains
+    -- the other variables, and those that their domains use (`c\in[0,n]` brings `n`)
+    let bs := st.envBinders
+    let needs (b : BindInfo) (j : Nat) : List Codes := match b.pred with
+      | some p => (List.range j).filterMap fun m =>
+          if usesLoc (m + 1) p then (bs[j - 1 - m]?).map (·.name) else none
+      | none => []
+    let rec close : Nat → List Codes → List Codes
+      | 0, e => e
+      | f + 1, e =>
+        let more := (((bs.zipIdx.filter fun (b, _) => e.contains b.name).flatMap fun (b, j) => needs b j).filter
+          fun n => !names.contains n && !e.contains n).eraseDups
+        if more.isEmpty then e else close f (e ++ more)
+    let others := close bs.length ((mixed.flatMap about).filter fun n => !names.contains n).eraseDups
+    let otherBinds := bs.filter fun b => others.contains b.name
+    -- about those other variables alone
+    let side := if mixed.isEmpty then [] else
+      st.envHyps.filter fun h => !(about h).isEmpty && (about h).all others.contains
+    if own.isEmpty && mixed.isEmpty then continue
     let sc := scopeOf all
-    let ps ← hs.mapM fun h => clauseTm c sc none none h.clause
-    let hyp := Elab.conjAll ps
+    let ps ← own.mapM fun h => clauseTm c sc none none h.clause
+    -- `∃ z, …`: the other variables, their domains, and the hypotheses
+    let proj : List Tm ← if mixed.isEmpty then pure [] else do
+      let inner := all ++ otherBinds
+      let scE := scopeOf inner
+      let qs ← (side ++ mixed).mapM fun h => clauseTm c scE none none h.clause
+      -- where a variable is in the scope of the `∃`s
+      let place (n : Codes) : Option Tm :=
+        (inner.findIdx? (·.name == n)).map fun q => Tm.loc (inner.length - 1 - q)
+      -- the domain of each, written there (it was written where the variable and the
+      -- variables before it are bound)
+      let doms := bs.zipIdx.filterMap fun (b, j) =>
+        if !others.contains b.name then none else do
+          let p ← b.pred
+          let self ← place b.name
+          let p' ← relocate ((List.range (j + 1)).map fun m => (bs[j - m]?).bind fun b' => place b'.name) p
+          some (Tm.app p' self)
+      pure [otherBinds.foldr (fun b acc => Tm.ex b.ty acc) (Elab.conjAll (doms ++ qs))]
+    let hyp := Elab.conjAll (ps ++ proj)
     -- the domain of the last parameter, in the value and among the domains of the arguments
     let rec under : Nat → Tm → Tm
       | 0, t => t

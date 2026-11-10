@@ -86,7 +86,10 @@ are one version:
 * otherwise it requires the checkout by its path, and uses its packages
   (`packagesDir`): mathlib is neither fetched nor built again, and the first
   certificate takes seconds. For a project that others build, name a revision;
-* a released checker (not in a checkout) requires the tag of its version (`v0.7.0`);
+* a released checker (not in a checkout) requires the tag of its version (`v0.7.0`).
+  The release workflow builds a checker only for the tag of its own version, so the
+  tag exists for every released checker; if it is not on the remote (a checker built
+  by hand outside a checkout), the message says so and names `--leanify REV`;
 * `--leanify REV` or `--leanify PATH` names the revision or the folder.
 
 ### `leanify init`

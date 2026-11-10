@@ -54,16 +54,24 @@ tests/Arguments/article.tex:212:1: info: claim 52: \forall x\in \mathbb{R},\ x\i
 tests/Arguments/article.tex:221:1: info: claim 53: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
 tests/Arguments/article.tex:226:1: info: claim 54: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))
 tests/Arguments/article.tex:234:1: info: defines y (y)
+tests/Arguments/article.tex:234:1: info: y is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
 tests/Arguments/article.tex:235:1: info: claim 55: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
+tests/Arguments/article.tex:235:1: info: claim 55 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
 tests/Arguments/article.tex:239:1: info: claim 56: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=x\,(\frac{1}{x})
+tests/Arguments/article.tex:239:1: info: claim 56 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)\land \neg (x=0)
 tests/Arguments/article.tex:240:1: info: claim 57: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
-tests/Arguments/article.tex:250:1: info: claim 58: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1
-tests/Arguments/article.tex:254:1: warning: the statement for a value of which variable? Say so before (We argue by induction on $n$.): sentence not checked
-tests/Arguments/article.tex:255:1: warning: a contradiction without a hypothesis: say what is assumed (Suppose, for contradiction, that …): sentence not checked
-tests/Arguments/article.tex:256:1: warning: smaller values of which variable? Say so before (We argue by induction on $n$.), or name it (for all smaller values of $n$): sentence not checked
-tests/Arguments/article.tex: 1 definitions, 59 claims
-  text: 0 compiled, 0 failed, 17 prose (of 17)
-  results: 34 compiled, 0 failed, 0 prose (of 34)
+tests/Arguments/article.tex:240:1: info: claim 57 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:248:1: info: defines w (w)
+tests/Arguments/article.tex:248:1: info: w is well defined if: \forall x\in \mathbb{R},\ (\exists y\in \mathbb{R},\ \neg (x\,y=0))\Rightarrow \neg (x=0)
+tests/Arguments/article.tex:249:1: info: claim 58: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow x\,w(x)=1
+tests/Arguments/article.tex:249:1: info: claim 58 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow (\exists s\in \mathbb{R},\ \neg (x\,s=0))
+tests/Arguments/article.tex:259:1: info: claim 59: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1
+tests/Arguments/article.tex:263:1: warning: the statement for a value of which variable? Say so before (We argue by induction on $n$.): sentence not checked
+tests/Arguments/article.tex:264:1: warning: a contradiction without a hypothesis: say what is assumed (Suppose, for contradiction, that …): sentence not checked
+tests/Arguments/article.tex:265:1: warning: smaller values of which variable? Say so before (We argue by induction on $n$.), or name it (for all smaller values of $n$): sentence not checked
+tests/Arguments/article.tex: 2 definitions, 60 claims
+  text: 0 compiled, 0 failed, 18 prose (of 18)
+  results: 38 compiled, 0 failed, 0 prose (of 38)
   proofs: 68 compiled, 3 failed, 0 prose (of 71)
-  all: 102 compiled, 3 failed, 17 prose (of 122)
+  all: 106 compiled, 3 failed, 18 prose (of 127)
   complete proofs: 14 of 15 (a result is derived from a proof that is read completely)

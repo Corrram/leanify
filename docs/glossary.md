@@ -161,3 +161,12 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | $\cosh$ | ℝ → ℝ | the hyperbolic cosine (Mathlib `Real.cosh`) |
 | $\tanh$ | ℝ → ℝ | the hyperbolic tangent (Mathlib `Real.tanh`) |
 
+## `trigonometry`
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\arcsin$ | ℝ → ℝ | the inverse sine, on `[-1,1]` (Mathlib `Real.arcsin`) |
+| $\arccos$ | ℝ → ℝ | the inverse cosine, on `[-1,1]` (Mathlib `Real.arccos`) |
+| $\arctan$ | ℝ → ℝ | the inverse tangent (Mathlib `Real.arctan`) |
+| $\cot$ | ℝ → ℝ | the cotangent, where the sine is not zero (Mathlib `Real.cot`) |
+

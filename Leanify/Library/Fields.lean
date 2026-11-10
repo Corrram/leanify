@@ -4,6 +4,7 @@ import Leanify.Library.Numbers
 import Leanify.Library.Torus
 import Leanify.Library.Complex
 import Leanify.Library.Hyperbolic
+import Leanify.Library.Trigonometry
 
 /-! # The fields of the vocabulary
 
@@ -24,7 +25,8 @@ def all : List (String × Vocab) := [
   ("numbers", Numbers.vocab),
   ("torus", Torus.vocab),
   ("complex", Complex.vocab),
-  ("hyperbolic", Hyperbolic.vocab)]
+  ("hyperbolic", Hyperbolic.vocab),
+  ("trigonometry", Trigonometry.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)

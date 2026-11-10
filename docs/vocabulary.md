@@ -98,8 +98,10 @@ regenerates it from the vocabulary itself. A field is a Lean value
 `Leanify.Fields.all`. Fields built from the core formula language (most of them)
 need nothing else: their meaning is the meaning of the formula language, which
 `Leanify.Denote` gives in terms of Mathlib. A field with constants of its own
-(`unitsquare`, `torus`, `complex`, `hyperbolic`) names the Lean meaning of each:
-a declaration of Mathlib (`Real.sinh`), or a definition written for the field.
+(`unitsquare`, `torus`, `complex`, `hyperbolic`, `trigonometry`) names the Lean
+meaning of each: a declaration of Mathlib (`Real.sinh`), or a definition written for
+the field. A function of a field may have a domain (`\arcsin` on `[-1,1]`, in
+`trigonometry`): a claim that uses it is meaningful only on the domain.
 The field `unitsquare` also makes `[0,1]` a type of its own, with its integral and
 Lebesgue measure; without it, `[0,1]` is a set of real numbers like any interval.
 An article may use several such fields. A field can declare a type of

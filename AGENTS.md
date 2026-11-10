@@ -206,7 +206,10 @@ And when:
   `check.args` (nothing else names it);
 * `docs/writing.md` documents each new construction with an example;
 * a change of a reading or of the reports has a new `Leanify.version` (the same in
-  `lakefile.toml` and `leanify.sty`): a reading is the reading of a version;
+  `lakefile.toml` and `leanify.sty`): a reading is the reading of a version. A
+  version is released by its tag `v` + version (`v0.7.0`), which the maintainer
+  creates: the project of a released checker requires that tag, and the release
+  workflow refuses a tag with another name;
 * the Lean statements of the articles that do not use what changed are the same as
   before (rule 12).
 

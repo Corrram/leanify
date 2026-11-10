@@ -422,14 +422,28 @@ theorem proof56 : obligation56 := by
 theorem proof57 : obligation57 := by
   leanify_step
 
-/-- Claim 58, statement:
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1` -/
-theorem proof58 : obligation58 := by
-  leanify_step
-
 /-- Definition 0: `y` is well defined. -/
 theorem defined0 : wellDefined0 := by
   unfold wellDefined0
   definedness []
+
+/-- Definition 1: `w` is well defined. -/
+theorem defined1 : wellDefined1 := by
+  unfold wellDefined1
+  definedness []
+
+/-- Claim 58, statement:
+`\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x\,y=0)\Rightarrow x\,w(x)=1` -/
+theorem proof58 : obligation58 := by
+  leanify_step
+
+/-- The hypotheses of claim 58 can hold together. -/
+theorem satisfied58 : satisfiable58 := by
+  leanify_values 1
+
+/-- Claim 59, statement:
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1` -/
+theorem proof59 : obligation59 := by
+  leanify_step
 
 end Arguments.Proofs

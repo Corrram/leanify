@@ -62,7 +62,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\int_0^1 x\,dx` | as `\int_0^1 x\,\mathrm{d}x` |
 | `\int_a^b e\,dx`, `\int_1^2\frac1x\,dx`, `\int_0^x t^2\,dt` | the oriented integral of a function of a real variable. It is meaningful when `e` is defined between `a` and `b` and integrable there (so `\int_1^2\frac1x\,dx` is, and `\int_{-1}^1\frac1x\,dx` is not). With the field `unitsquare`, `\int_0^1` is the integral over the type `[0,1]` |
 | `\int_0^1\int_0^1 e\,ds\,dt` | iterated integrals: the innermost integral takes the first differential |
-| `\cosh x`, `\sin^2 x`, `\arctan x` | a named function (LaTeX's operator names) applies to what follows it, with or without parentheses. What the name means is said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field (`\cosh` in `hyperbolic`); a name without a meaning is reported, with the field that reads it |
+| `\cosh x`, `\sin^2 x`, `\arctan x` | a named function (LaTeX's operator names) applies to what follows it, with or without parentheses. What the name means is said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field (`\cosh` in `hyperbolic`, `\arcsin` with its domain `[-1,1]` in `trigonometry`); a name without a meaning is reported, with the field that reads it |
 | `\mathbb{N}`, `\mathbb{N}_0`, `\mathbb{Z}` | the natural numbers (with 0, as in mathlib; write `n\ge1` for the positive ones) and the integers, as real numbers |
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
@@ -477,10 +477,13 @@ Its domain is what the text says about those variables:
 * the domains of the variables (`Let $x>0$.`);
 * the hypotheses in force that speak only about them: after `Assume that
   $x\ne0$.`, the definition is well defined if `∀ x, x ≠ 0 → x ≠ 0`, and each use
-  of `y` asks that `x ≠ 0` (`leanify check --defined` prints both). A hypothesis
-  that also speaks about a variable the definition does not use (`Assume that
-  $xz\ne0$.` for `\frac1x`) is not taken: state it about the variables of the
-  definition;
+  of `y` asks that `x ≠ 0` (`leanify check --defined` prints both);
+* what a hypothesis that also speaks about other variables says about them: after
+  `Let $x$ and $z$ be real numbers. Assume that $xz\ne0$.`, `Set
+  $w\coloneqq\frac1x$.` defines `w(x)` for the `x` for which there is such a `z`.
+  It is well defined if `∀ x, (∃ z, x z ≠ 0) → x ≠ 0`, and a use of `w` asks that
+  there is a `z` with `x z ≠ 0`, which the hypothesis gives. The other variable
+  comes with its own domain and with the hypotheses about it alone;
 * a variable whose domain uses the variables before it brings them along: after
   `Let $n\ge1$ and $x\in[0,n]$.`, `Set $r\coloneqq\frac1{x+1}$.` defines `r(n,x)`
   for `x ∈ [0,n]`, although its formula does not mention `n`.

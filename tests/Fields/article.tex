@@ -1,6 +1,6 @@
 \documentclass{article}
 \usepackage{amsmath,amssymb}
-\usepackage[vocab={numbers,torus}]{leanify}
+\usepackage[vocab={numbers,torus,hyperbolic,trigonometry}]{leanify}
 \newtheorem{lemma}{Lemma}
 \begin{document}
 
@@ -56,6 +56,13 @@ A named function applies to what follows it, with or without parentheses.
 
 \begin{lemma}\label{hyperbolic-juxtaposed}
 For every $x\in\mathbb{R}$, $\cosh x\ge1$ and $2\sinh x\cosh x=\sinh(2x)$ and $\cosh^2 x-\sinh^2 x=1$.
+\end{lemma}
+
+A function of a field may have a domain: the inverse sine is defined on $[-1,1]$, and a claim about it outside is not meaningful, whatever value Mathlib's function has there.
+
+\begin{lemma}\label{inverse-sine}
+For every $x\in[-1,1]$, $\arcsin x+\arccos x=\frac{\pi}{2}$.
+Moreover, $\arctan 1=\frac{\pi}{4}$ and $\arcsin 2\le2$.
 \end{lemma}
 
 \end{document}

@@ -498,7 +498,7 @@ verified or is refuted.
 | `the article changed after …` or a stale pin | `lake exe leanify prepare article.tex --lean Compiled.lean`, then build; or `leanify certify article.tex`, which does both. |
 | a result is *argued*, not *derived* | A step of its proof is verified, but not by the standard tactic: the sentence skips more than a routine step. Add the intermediate step to the printed proof, or accept the longer Lean proof. |
 | `hypotheses: not shown to hold together` | Prove `satisfiedK` with values for the variables (`leanify_values 1 2`, or `exact ⟨1, by norm_num⟩` after `unfold satisfiableK`). If no values exist, the statement is true for an empty reason: fix its hypotheses. |
-| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses, numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
+| `unsolved goals` in `definedI` or `meaningfulK` | A term is not defined everywhere it is used. Restrict the domain, or give `definedness [h₁, …]` the facts it needs. It finds hypotheses (also inside `∃ z, …`, a hypothesis about another variable), numeric side conditions and signs that `positivity` proves, but not facts about your definitions, such as `A x y ≠ 0` for a mean `A`. |
 | `claim K is derived in the text from its citations, but its justification … uses …` | The proof uses a result the sentence does not cite. Cite it in the text. |
 | `linarith failed`, or any proof that will not close | Check the reading (`--claims`). If the claim is false, prove `refuteK`. |
 

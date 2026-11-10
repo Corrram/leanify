@@ -103,11 +103,16 @@ structure Method where
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A symbol of the vocabulary: a constant (`\mathrm{i}`), or, without one, the set of
-all elements of `ty` (`\mathbb{C}`, as a domain: `z\in\mathbb{C}`). -/
+all elements of `ty` (`\mathbb{C}`, as a domain: `z\in\mathbb{C}`). A symbol that is a
+function may have a domain (`\arcsin` on `[-1,1]`): `doms` are the domains of its
+arguments, closed predicates, as for a definition of an article. The Lean function may
+have values outside (`Real.arcsin` has): an article cannot use them, because an
+argument outside the domain makes its claim meaningless. -/
 structure Symbol where
   sym : Codes
   ty : Ty
   const : Option Nat := none
+  doms : List (Option Tm) := []
   field : Codes := []
   doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
@@ -245,7 +250,7 @@ def append (V W : Vocab) : Vocab :=
       { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
     methods := V.methods ++ W.methods.map fun m => { m with ty := shiftTy kt m.ty, const := m.const + kc }
     symbols := V.symbols ++ W.symbols.map fun s =>
-      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc) }
+      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc), doms := s.doms.map (·.map tm) }
     intervals := V.intervals ++ W.intervals.map fun i =>
       { i with ty := shiftTy kt i.ty, val := i.val + kc, point := i.point + kc, integral := i.integral + kc,
                integrable := i.integrable + kc, measurable1 := i.measurable1 + kc,

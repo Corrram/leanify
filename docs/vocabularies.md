@@ -62,6 +62,23 @@ applies to what follows it, `\cosh x`, is syntax: it holds for LaTeX's operator 
 whatever field gives one its meaning.) Nothing else was written for the field: no
 constructor of the core language, no denotation, no model.
 
+A function of a field may have a domain. The field `trigonometry`
+(`Leanify/Library/Trigonometry.lean`) gives `\arcsin`, `\arccos`, `\arctan` and
+`\cot` their Mathlib meanings, and says where the article may use them:
+
+```lean
+def unitBall : Tm := predR fun x => and (le (neg (num 1)) x) (le x (num 1))
+
+    { sym := w!"\\arcsin", ty := .real ⟶ .real, const := some 0, doms := [some unitBall] }
+```
+
+`doms` are the domains of the arguments, in order (`none`: no condition), as an
+article's own definitions have them. Mathlib's `Real.arcsin` is a function on all of
+`ℝ` (`Real.arcsin 2 = π/2`). With the domain, a claim about `\arcsin x` is meaningful
+only if `-1 ≤ x ≤ 1`: `$\arcsin 2\le2$` is read, and its condition `-1 ≤ 2 ∧ 2 ≤ 1`
+cannot be proved, so the article is not certified on a value that the mathematics does
+not have.
+
 Phrases are written with `phrase!`. Words are matched literally, any formula in
 the phrase is matched token for token, and `$v$` marks the variable the phrase
 binds:
@@ -90,7 +107,7 @@ full list of its phrases is in `Leanify/Library/UnitSquare.lean`.
 Vocabularies combine with `++` (`Vocab.core ++ UnitSquare.vocab`): the base
 types and constants of the second are renumbered after those of the first. An
 article may name several fields with constants and types of their own
-(`--vocab numbers,torus,hyperbolic`).
+(`--vocab numbers,torus,hyperbolic,trigonometry`).
 
 An *adjective* is a property of objects of one type that a sentence states with
 `$X$ is ADJ [on $A$]`: the unit square's field has `convex`, `concave` and
