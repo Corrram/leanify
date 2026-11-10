@@ -418,7 +418,7 @@
    "endColumn": 137,
    "column": 1}],
  "namespace": "Demo",
- "leanify": "0.6.0",
+ "leanify": "0.7.0",
  "justifications": "Demo.Proofs",
  "definitions":
  [{"wellDefined": "∀ (x : ℝ), 0 < x → ¬x = 0",

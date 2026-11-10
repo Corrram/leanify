@@ -1,0 +1,80 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[vocab=unitsquare]{leanify}
+\newtheorem{proposition}{Proposition}
+\newcommand{\CC}{\mathcal{C}}
+\title{The unit interval as a type: points, integrals and measures of the field \emph{unitsquare}}
+% A test of the type `[0,1]` that the field `unitsquare` declares: variables in `[0,1]`,
+% functions on the square, numbers used as points (`C(\frac12,\frac12)`, `C(t,1-t)`),
+% the integral `\int_0^1` and iterated integrals, Lebesgue measure, Borel measurable maps
+% and the law of a pair. The expected output of
+% `leanify check --vocab unitsquare --claims --defined` is check.txt: the readings, and
+% what each claim and definition needs in order to be meaningful.
+\begin{document}
+\maketitle
+
+An article that names the field \emph{unitsquare} reads $[0,1]$ as a type of its own: a variable in $[0,1]$ is a point of it, and a function on $[0,1]^2$ has no values outside the square.
+A number used as a point, such as $1-t$, has to lie in $[0,1]$, and the integral $\int_0^1$ is the integral over the type.
+Other intervals are sets of real numbers.
+
+\section{Notions}
+
+Let $\CC$ denote the class of bivariate copulas.
+Lebesgue measure on $[0,1]$ is denoted by $\mathrm{Leb}$.
+For $u,v\in[0,1]$, set $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq\max\{u+v-1,0\}$ and $\Pi(u,v)\coloneqq uv$.
+For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq\min\{u,v,1-s\}+\max\{u+v+s-2,0\}$.
+We call a copula $C$ \emph{positively quadrant dependent} (\emph{PQD}) if $C(u,v)\ge uv$ for all $u,v\in[0,1]$.
+A copula $C$ is called \emph{left-tail decreasing} (\emph{LTD}) if, for every $v\in[0,1]$, the map
+\begin{equation}\label{eq:ltd}
+u\longmapsto\frac{C(u,v)}{u},\qquad u\in(0,1],
+\end{equation}
+is non-increasing.
+Define $\rho:\CC\to\mathbb{R}$ by $\rho(C)\coloneqq 12\int_0^1\int_0^1 C(u,v)\,du\,dv-3$.
+Define $\beta:\CC\to\mathbb{R}$ by $\beta(C)\coloneqq 4C(\frac12,\frac12)-1$.
+Define $\phi:\CC\to\mathbb{R}$ by $\phi(C)\coloneqq 6\int_0^1 C(t,t)\,dt-2$.
+Define $\delta:\CC\to\mathbb{R}$ by $\delta(C)\coloneqq \int_0^1 C(t,1-t)\,dt$.
+For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma_T$ denote the law of $(X,T(X))$ for $X$ uniformly distributed on $[0,1]$.
+We say that a copula $F$ is \emph{supported on the graph} of a Borel measurable $f:[0,1]\to[0,1]$ if $F(u,v)=\mathrm{Leb}(\{x\in[0,1] : x\le u,\ f(x)\le v\})$ for all $u,v\in[0,1]$.
+
+\section{Results}
+
+\begin{proposition}\label{p1}
+Every LTD copula is PQD.
+\end{proposition}
+
+\begin{proposition}\label{p2}
+For every copula $C$, $-1\le\rho(C)\le 1$ and $\beta(C)\le 1$.
+\end{proposition}
+
+\begin{proposition}\label{p3}
+Let $C$ be a copula. Then $W(u,v)\le C(u,v)\le M(u,v)$ for all $u,v\in[0,1]$.
+\end{proposition}
+
+\begin{proposition}\label{p4}
+For every copula $C$ and every $u\in[0,1]$, $C(u,1-u)\le\frac12$ and $C(\frac u2,u)\le u$.
+\end{proposition}
+
+\begin{proposition}\label{p5}
+The class $\CC$ is convex and compact with respect to uniform convergence. The function $\rho$ is continuous with respect to uniform convergence.
+\end{proposition}
+
+\begin{proposition}\label{p6}
+For every $s\in[0,1]$, $S_s$ is a copula and $\phi(S_s)\le 1$. Moreover, $\rho(M)=1$, $\rho(W)=-1$ and $\rho(\Pi)=0$.
+\end{proposition}
+
+\begin{proposition}\label{p7}
+$t\mapsto2t-1$ increases bijectively from $[0,1]$ onto $[-1,1]$.
+\end{proposition}
+
+\begin{proposition}\label{p8}
+For every $u\in[0,1]$, $\int_0^1 M(u,t)\,dt=u-\frac{u^2}{2}$ and $\sup_{t\in[0,1]}\Pi(u,t)=u$.
+\end{proposition}
+
+\begin{proposition}\label{p9}
+For every $x\in[0,1]$ and every $y\in[0,2]$, $x+y\le 3$ and $\frac{y}{2}\in[0,1]$.
+\end{proposition}
+
+\begin{proposition}\label{p10}
+For every copula $C$ and every $u\in[0,1]$, $\int_0^u C(t,t)\,dt\le u$ and $\int_0^1\int_0^1 C(s,t)\,\mathrm{d}s\,\mathrm{d}t\le 1$.
+\end{proposition}
+\end{document}

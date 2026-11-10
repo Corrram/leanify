@@ -6,9 +6,9 @@ Every symbol that an article introduces is a *global definition*: its value is
 the denotation of the article's own defining formula. Two further sources of
 meaning exist, both fixed before the article is read:
 
-* the core prelude (`Prim`): real powers, `min`/`max`, Lebesgue measure on
-  `[0,1]`, Borel measurability, measurable sets, integrability on `[0,1]` and
-  derivatives, with their usual mathlib meaning;
+* the core prelude (`Prim`): real powers, `min`/`max`, derivatives, integrals over
+  intervals, sums, limits and the standard functions, with their usual mathlib
+  meaning;
 * the vocabulary of the article (`Vocab`, `Model`): base types and constants
   supplied by a downstream library, each with a Lean meaning that is reviewed
   once and shared by every article that uses the vocabulary.
@@ -25,7 +25,7 @@ given in `Leanify.Denote`. -/
 namespace Leanify
 
 inductive Ty where
-  | real | unit | prop
+  | real | prop
   | fn (a b : Ty)
   /-- The `k`-th base type declared by the vocabulary. -/
   | base (k : Nat)
@@ -33,14 +33,6 @@ inductive Ty where
 
 infixr:60 " ⟶ " => Ty.fn
 
-/-- Subsets of the unit square, read as two-place predicates. -/
-abbrev Ty.set2 : Ty := .unit ⟶ .unit ⟶ .prop
-abbrev Ty.set1 : Ty := .unit ⟶ .prop
-/-- Set functions on the unit square (laws of random pairs). -/
-abbrev Ty.meas2 : Ty := Ty.set2 ⟶ .real
-/-- Functions on the unit square, such as distribution functions. -/
-abbrev Ty.sq : Ty := .unit ⟶ .unit ⟶ .real
-abbrev Ty.self : Ty := .unit ⟶ .unit
 abbrev Ty.rfun : Ty := .real ⟶ .real
 
 /-- Standard properties of a real function on a domain (`Leanify.Prelude`). -/
@@ -65,13 +57,6 @@ inductive RealFn where
 meaning (`Leanify.Prelude`). -/
 inductive Prim where
   | rpow | min | max
-  /-- Lebesgue measure of a subset of `[0,1]`. -/
-  | leb
-  /-- Borel measurability of a map `[0,1] → [0,1]`. -/
-  | borel
-  | measurableSet1 | measurableSet2
-  /-- Lebesgue integrability on `[0,1]`. -/
-  | integrable
   /-- `hasDerivWithin f S x d`: `f` has derivative `d` at `x` within `S`. -/
   | hasDerivWithin
   /-- `intervalIntegral a b f`: the oriented integral `∫_a^b f`. -/
@@ -141,11 +126,6 @@ def Ty.setN : Nat → Ty
 
 def Prim.ty : Prim → Ty
   | .rpow | .min | .max => .real ⟶ .real ⟶ .real
-  | .leb => Ty.set1 ⟶ .real
-  | .borel => Ty.self ⟶ .prop
-  | .measurableSet1 => Ty.set1 ⟶ .prop
-  | .measurableSet2 => Ty.set2 ⟶ .prop
-  | .integrable => (.unit ⟶ .real) ⟶ .prop
   | .hasDerivWithin => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .real ⟶ .real ⟶ .prop
   | .intervalIntegral => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
   | .intervalIntegrable => Ty.rfun ⟶ .real ⟶ .real ⟶ .prop
@@ -184,9 +164,6 @@ inductive Tm where
   variable) is its declared domain, used only for definedness. -/
   | lam (t : Ty) (dom body : Tm)
   | num (n : Nat)
-  | ofUnit (x : Tm)
-  /-- A real number used as a point of `[0,1]`; defined only inside `[0,1]`. -/
-  | toUnit (x : Tm)
   | add (x y : Tm) | sub (x y : Tm) | mul (x y : Tm) | div (x y : Tm)
   | neg (x : Tm) | abs (x : Tm)
   | powNat (x : Tm) (n : Nat)
@@ -197,8 +174,6 @@ inductive Tm where
   | tt
   | not (p : Tm) | and (p q : Tm) | or (p q : Tm) | imp (p q : Tm) | iff (p q : Tm)
   | all (t : Ty) (body : Tm) | ex (t : Ty) (body : Tm)
-  /-- Integral over `[0,1]` of a body in one new local of type `[0,1]`. -/
-  | integral (body : Tm)
   /-- Semantically transparent; contributes the condition to definedness. -/
   | guard (c e : Tm)
   /-- The definite description `the x : t such that body`. It is defined only
@@ -222,14 +197,6 @@ def typeOf (cs gs : List Ty) (ls : List Ty) : Tm → Option Ty
     | some b => some (.fn t b)
     | none => none
   | .num _ => some .real
-  | .ofUnit x =>
-    match typeOf cs gs ls x with
-    | some .unit => some .real
-    | _ => none
-  | .toUnit x =>
-    match typeOf cs gs ls x with
-    | some .real => some .unit
-    | _ => none
   | .add x y | .sub x y | .mul x y | .div x y =>
     match typeOf cs gs ls x, typeOf cs gs ls y with
     | some .real, some .real => some .real
@@ -242,7 +209,6 @@ def typeOf (cs gs : List Ty) (ls : List Ty) : Tm → Option Ty
   | .undef t => some t
   | .eq _ _ | .lt _ _ | .le _ _ | .tt | .not _ | .and _ _ | .or _ _ | .imp _ _ | .iff _ _
   | .all _ _ | .ex _ _ => some .prop
-  | .integral _ => some .real
   | .guard _ e => typeOf cs gs ls e
   | .the t _ => some t
 
@@ -253,8 +219,6 @@ def shift (k : Nat) : Nat → Tm → Tm
   | c, .loc i => if i < c then .loc i else .loc (i + k)
   | c, .app f x => .app (shift k c f) (shift k c x)
   | c, .lam t d b => .lam t (shift k (c + 1) d) (shift k (c + 1) b)
-  | c, .ofUnit x => .ofUnit (shift k c x)
-  | c, .toUnit x => .toUnit (shift k c x)
   | c, .add x y => .add (shift k c x) (shift k c y)
   | c, .sub x y => .sub (shift k c x) (shift k c y)
   | c, .mul x y => .mul (shift k c x) (shift k c y)
@@ -273,7 +237,6 @@ def shift (k : Nat) : Nat → Tm → Tm
   | c, .iff p q => .iff (shift k c p) (shift k c q)
   | c, .all t b => .all t (shift k (c + 1) b)
   | c, .ex t b => .ex t (shift k (c + 1) b)
-  | c, .integral b => .integral (shift k (c + 1) b)
   | c, .guard p e => .guard (shift k c p) (shift k c e)
   | c, .the t b => .the t (shift k (c + 1) b)
   | _, t => t
@@ -285,8 +248,6 @@ def subst (s : Tm) : Nat → Tm → Tm
   | j, .loc i => if i < j then .loc i else if i == j then shift j 0 s else .loc (i - 1)
   | j, .app f x => .app (subst s j f) (subst s j x)
   | j, .lam t d b => .lam t (subst s (j + 1) d) (subst s (j + 1) b)
-  | j, .ofUnit x => .ofUnit (subst s j x)
-  | j, .toUnit x => .toUnit (subst s j x)
   | j, .add x y => .add (subst s j x) (subst s j y)
   | j, .sub x y => .sub (subst s j x) (subst s j y)
   | j, .mul x y => .mul (subst s j x) (subst s j y)
@@ -305,7 +266,6 @@ def subst (s : Tm) : Nat → Tm → Tm
   | j, .iff p q => .iff (subst s j p) (subst s j q)
   | j, .all t b => .all t (subst s (j + 1) b)
   | j, .ex t b => .ex t (subst s (j + 1) b)
-  | j, .integral b => .integral (subst s (j + 1) b)
   | j, .guard p e => .guard (subst s j p) (subst s j e)
   | j, .the t b => .the t (subst s (j + 1) b)
   | _, t => t
@@ -315,8 +275,6 @@ def shiftConst (k : Nat) : Tm → Tm
   | .const i => .const (i + k)
   | .app f x => .app (shiftConst k f) (shiftConst k x)
   | .lam t d b => .lam t (shiftConst k d) (shiftConst k b)
-  | .ofUnit x => .ofUnit (shiftConst k x)
-  | .toUnit x => .toUnit (shiftConst k x)
   | .add x y => .add (shiftConst k x) (shiftConst k y)
   | .sub x y => .sub (shiftConst k x) (shiftConst k y)
   | .mul x y => .mul (shiftConst k x) (shiftConst k y)
@@ -335,7 +293,6 @@ def shiftConst (k : Nat) : Tm → Tm
   | .iff p q => .iff (shiftConst k p) (shiftConst k q)
   | .all t b => .all t (shiftConst k b)
   | .ex t b => .ex t (shiftConst k b)
-  | .integral b => .integral (shiftConst k b)
   | .guard p e => .guard (shiftConst k p) (shiftConst k e)
   | .the t b => .the t (shiftConst k b)
   | t => t
@@ -360,14 +317,19 @@ def mkAll (t : Ty) : Tm → Tm
 def existsUnique (t : Ty) (body : Tm) : Tm :=
   .ex t (.and body (.all t (.imp (shift 1 1 body) (.eq (.loc 0) (.loc 1)))))
 
+/-- The conjuncts of a conjunction. -/
+def conjuncts : Tm → List Tm
+  | .and p q => conjuncts p ++ conjuncts q
+  | .tt => []
+  | p => [p]
+
 /-- The syntactic definedness condition of a term (left-to-right, as for TCCs). -/
 def defined : Tm → Tm
   | .glob _ | .loc _ | .prim _ | .const _ | .num _ | .tt => .tt
   | .undef _ => .not .tt
   | .app f x => mkAnd (defined f) (defined x)
   | .lam t dom body => mkAll t (mkImp dom (defined body))
-  | .ofUnit x | .neg x | .abs x | .powNat x _ | .not x => defined x
-  | .toUnit x => mkAnd (defined x) (.and (.le (.num 0) x) (.le x (.num 1)))
+  | .neg x | .abs x | .powNat x _ | .not x => defined x
   | .add x y | .sub x y | .mul x y | .eq x y | .lt x y | .le x y | .iff x y =>
       mkAnd (defined x) (defined y)
   | .div x y => mkAnd (defined x) (mkAnd (defined y) (.not (.eq y (.num 0))))
@@ -377,10 +339,13 @@ def defined : Tm → Tm
   | .and p q | .imp p q => mkAnd (defined p) (mkImp p (defined q))
   | .or p q => mkAnd (defined p) (mkImp (.not p) (defined q))
   | .all t body | .ex t body => mkAll t (defined body)
-  | .integral body => mkAnd (mkAll .unit (defined body))
-      (.app (.prim .integrable) (.lam .unit .tt body))
-  -- a guard's condition must hold (e.g. an argument lies in the function's domain)
-  | .guard c e => mkAnd (defined c) (mkAnd c (defined e))
+  -- a guard's condition must hold (e.g. an argument lies in the function's domain); what
+  -- the guarded term needs beyond what the condition needs is asked too (a condition
+  -- about the argument `a` already asks that `a` is defined: it is not asked twice)
+  | .guard c e =>
+    let dc := defined c
+    let de := defined e
+    if (conjuncts de).all (conjuncts dc).contains then mkAnd dc c else mkAnd dc (mkAnd c de)
   -- a description denotes only if exactly one object satisfies it
   | .the t body => mkAnd (mkAll t (defined body)) (existsUnique t body)
 where

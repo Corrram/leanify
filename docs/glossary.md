@@ -7,38 +7,58 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 
 ## `core`
 
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| real number | ℝ | a real number (`ℝ`) |
+| real | ℝ | a real number (`ℝ`), as in `for every real $x$` |
+| integer | ℝ | an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number) |
+| nonnegative integer | ℝ | `x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`) |
+| positive integer | ℝ | `x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`) |
+| negative integer | ℝ | `x ∈ ℤ`, `x < 0` |
+| natural number | ℝ | with 0, as in Mathlib (`ℕ`) |
+| natural number | ℝ | without 0 (`ℕ+`) |
+| rational number | ℝ | `x ∈ ℚ` (Mathlib `Set.range ((↑) : ℚ → ℝ)`) |
+| irrational number | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
+
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
-| borel measurable | [0,1] → [0,1] | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
-
-| Notion | Type | Meaning |
-| --- | --- | --- |
-| lebesgue measure on $[0,1]$ | ([0,1] → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| rational | ℝ | `x ∈ ℚ` |
+| irrational | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
+| nonzero | ℝ | `x ≠ 0` |
+| positive | ℝ | `x > 0` |
+| negative | ℝ | `x < 0` |
+| nonnegative | ℝ | `x ≥ 0` |
+| nonpositive | ℝ | `x ≤ 0` |
 
 ## `unitsquare`
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| distribution function on $[0,1]^2$ | [0,1] → [0,1] → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
-| probability measure $x$ on $[0,1]^2$ | ([0,1] → [0,1] → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
-| bivariate copula | [0,1] → [0,1] → ℝ | a distribution function on `[0,1]²` with uniform marginals |
-| copula | [0,1] → [0,1] → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
+| probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
+| bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
-| with uniform marginals | [0,1] → [0,1] → ℝ | `F(u,1) = u`, `F(1,v) = v` |
-| with uniform marginals | ([0,1] → [0,1] → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
+| borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
+| with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
 
 | Adjective | Of | Meaning |
 | --- | --- | --- |
-| convex [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
-| concave [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
-| lower semicontinuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
-| upper semicontinuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
-| continuous with respect to uniform convergence [on $A$] | ([0,1] → [0,1] → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
-| convex | ([0,1] → [0,1] → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
-| compact with respect to uniform convergence | ([0,1] → [0,1] → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
-| closed with respect to uniform convergence | ([0,1] → [0,1] → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+| convex [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
+| concave [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
+| lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
+| compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
+| closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 
 ## `distributions`
 
@@ -60,19 +80,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| integer | ℝ | an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number) |
-| real number | ℝ | a real number (`ℝ`) |
-| real | ℝ | a real number (`ℝ`), as in `for every real $x$` |
-| nonnegative integer | ℝ | `x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`) |
-| positive integer | ℝ | `x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`) |
-| negative integer | ℝ | `x ∈ ℤ`, `x < 0` |
-| natural number | ℝ | with 0, as in Mathlib (`ℕ`) |
-| natural number | ℝ | without 0 (`ℕ+`) |
 | prime number | ℝ | a prime (Mathlib `Nat.Prime`) |
 | prime | ℝ | a prime (Mathlib `Nat.Prime`) |
 | composite number | ℝ | an integer `≥ 2` that is not prime |
-| rational number | ℝ | `x ∈ ℚ` (Mathlib `Set.range ((↑) : ℚ → ℝ)`) |
-| irrational number | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
 | perfect square | ℝ | `x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`) |
 
 | Adjective or phrase | Of | Meaning |
@@ -81,13 +91,6 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | odd | ℝ | `x = 2k+1` for an integer `k` (Mathlib `Odd`) |
 | prime | ℝ | prime (Mathlib `Nat.Prime`) |
 | composite | ℝ | an integer `≥ 2` that is not prime |
-| rational | ℝ | `x ∈ ℚ` |
-| irrational | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
-| nonzero | ℝ | `x ≠ 0` |
-| positive | ℝ | `x > 0` |
-| negative | ℝ | `x < 0` |
-| nonnegative | ℝ | `x ≥ 0` |
-| nonpositive | ℝ | `x ≤ 0` |
 | squarefree | ℝ | an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`) |
 
 | Notion | Type | Meaning |

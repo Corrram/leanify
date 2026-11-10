@@ -1,20 +1,26 @@
 tests/Notation/article.tex:9:1: info: defines f (f)
+tests/Notation/article.tex:9:1: info: f is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (x=0)
 tests/Notation/article.tex:10:1: info: defines g (g)
 tests/Notation/article.tex:13:1: info: claim 0: \forall x\in \mathbb{R},\ 2\le f(g(x))
+tests/Notation/article.tex:13:1: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ 0<g(x)
 tests/Notation/article.tex:17:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow 0\le x\land x\le 1
 tests/Notation/article.tex:21:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow 0\le x\land x\le 1
 tests/Notation/article.tex:25:1: info: claim 3: (\sup\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ (0<s\land s<1)\land {s}^{2}=x\})=1
+tests/Notation/article.tex:25:1: info: claim 3 is meaningful if: \exists x\in \mathbb{R},\ ((\forall y\in \mathbb{R},\ (\exists s\in \mathbb{R},\ (0<s\land s<1)\land {s}^{2}=y)\Rightarrow y\le x)\land (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ (0<t\land t<1)\land {t}^{2}=z)\Rightarrow z\le y)\Rightarrow x\le y))\land (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ (0<t\land t<1)\land {t}^{2}=z)\Rightarrow z\le y)\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ (\exists a\in \mathbb{R},\ (0<a\land a<1)\land {a}^{2}=s)\Rightarrow s\le z)\Rightarrow y\le z)\Rightarrow y=x)
 tests/Notation/article.tex:29:1: info: claim 4: (\inf\{x\in \mathbb{R} : \exists s\in \mathbb{R},\ 0<s\land f(s)=x\})=2
+tests/Notation/article.tex:29:1: info: claim 4 is meaningful if: (\forall x\in \mathbb{R},\ (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ 0<s\Rightarrow 0<s)\land ((\forall y\in \mathbb{R},\ (\exists s\in \mathbb{R},\ 0<s\land f(s)=y)\Rightarrow x\le y)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ 0<t\Rightarrow 0<t)))\land (\exists x\in \mathbb{R},\ ((\forall y\in \mathbb{R},\ (\exists s\in \mathbb{R},\ 0<s\land f(s)=y)\Rightarrow x\le y)\land (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ 0<t\land f(t)=z)\Rightarrow y\le z)\Rightarrow y\le x))\land (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ (\exists t\in \mathbb{R},\ 0<t\land f(t)=z)\Rightarrow y\le z)\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ (\exists a\in \mathbb{R},\ 0<a\land f(a)=s)\Rightarrow z\le s)\Rightarrow z\le y)\Rightarrow y=x))
 tests/Notation/article.tex:33:1: info: claim 5: 1+2+3+4=10
 tests/Notation/article.tex:37:1: info: claim 6: \forall x\in \mathbb{R},\ (x+1)\,(x+2)={x}^{2}+3\,x+2
 tests/Notation/article.tex:42:1: info: claim 7: \forall x\in \mathbb{R},\ {x}^{2}=1\Leftrightarrow \lvert x\rvert=1
 tests/Notation/article.tex:42:1: info: claim 8: \forall x\in \mathbb{R},\ \lvert x\rvert=1\Leftrightarrow (x-1)\,(x+1)=0
 tests/Notation/article.tex:51:1: info: claim 9: \forall x\in \mathbb{R},\ 0<x\Rightarrow \log(x)\le x-1
+tests/Notation/article.tex:51:1: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x
 tests/Notation/article.tex:52:1: info: claim 10: \forall x\in \mathbb{R},\ {\cos(x)}^{2}+{\sin(x)}^{2}=1
 tests/Notation/article.tex:56:1: info: claim 11: \forall x\in \mathbb{R},\ 1+x\le \exp(x)
 tests/Notation/article.tex:56:1: info: claim 12: \forall x\in \mathbb{R},\ 0<\exp(x)
 tests/Notation/article.tex:60:1: info: claim 13: 3<\pi
 tests/Notation/article.tex:60:1: info: claim 14: \pi<\frac{22}{7}
+tests/Notation/article.tex:60:1: info: claim 14 is meaningful if: \neg (7=0)
 tests/Notation/article.tex:64:1: info: claim 15: \forall x\in \mathbb{R},\ (0\le x\land x\le 1)\land 1\le x\land x\le 2\Leftrightarrow x=1
 tests/Notation/article.tex:64:1: info: claim 16: \forall x\in \mathbb{R},\ (0\le x\land x\le 2)\land \neg (0<x\land x<2)\Leftrightarrow x=0\lor x=2
 tests/Notation/article.tex:68:1: info: claim 17: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg \bot
@@ -24,30 +30,64 @@ tests/Notation/article.tex:73:1: info: claim 20: \forall x\in \mathbb{R},\ 1<x\R
 tests/Notation/article.tex:73:1: info: claim 21: \forall x\in \mathbb{R},\ \neg (x<x)
 tests/Notation/article.tex:77:1: info: claim 22: \forall x\in \mathbb{R},\ \max\{x,-x\}=\lvert x\rvert
 tests/Notation/article.tex:77:1: info: claim 23: \forall x\in \mathbb{R},\ \begin{cases}1&0<x\\-1&x<0\\\end{cases}\,x=\lvert x\rvert
+tests/Notation/article.tex:77:1: info: claim 23 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow y<0\Rightarrow -1=1
 tests/Notation/article.tex:77:82: info: claim 24: {8}^{\frac{1}{3}}=2
+tests/Notation/article.tex:77:82: info: claim 24 is meaningful if: 0\le 8\land \neg (3=0)
 tests/Notation/article.tex:77:82: info: claim 25: 2\,3=6
-tests/Notation/article.tex:77:82: info: claim 26: \int_0^1 x\,dx=\frac{1}{2}
+tests/Notation/article.tex:77:82: info: claim 26: \int_{0}^{1}x\,dx=\frac{1}{2}
+tests/Notation/article.tex:77:82: info: claim 26 is meaningful if: \operatorname{Int}((x\in \mathbb{R}\,[0\le x\land x\le 1]\mapsto x))(0)(1)\land \neg (2=0)
 tests/Notation/article.tex:81:1: info: claim 27: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \frac{1}{x}\,x=1
+tests/Notation/article.tex:81:1: info: claim 27 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
 tests/Notation/article.tex:82:1: info: claim 28: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow 0<\frac{1}{{x}^{2}}
+tests/Notation/article.tex:82:1: info: claim 28 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg ({x}^{2}=0)
 tests/Notation/article.tex:86:1: info: claim 29: \forall x\in \mathbb{R},\ \lfloor x\rfloor\le x\land x<\lfloor x\rfloor+1
 tests/Notation/article.tex:86:1: info: claim 30: \forall x\in \mathbb{R},\ x\le \lceil x\rceil
 tests/Notation/article.tex:87:1: info: claim 31: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \frac{1}{x}\le 1
+tests/Notation/article.tex:87:1: info: claim 31 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \neg (x=0)
 tests/Notation/article.tex:88:1: info: claim 32: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow x\in \mathbb{Z}
 tests/Notation/article.tex:92:1: info: claim 33: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow \sum_{y=1}^{x}y=\frac{x\,(x+1)}{2}
+tests/Notation/article.tex:92:1: info: claim 33 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (1\in \mathbb{Z}\land x\in \mathbb{Z})\land \neg (2=0)
 tests/Notation/article.tex:93:1: info: claim 34: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow \prod_{y=1}^{x}y=x!
+tests/Notation/article.tex:93:1: info: claim 34 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{N}\land 1\le x\Rightarrow (1\in \mathbb{Z}\land x\in \mathbb{Z})\land x\in \mathbb{N}
 tests/Notation/article.tex:97:1: info: claim 35: \sum_{x=0}^{\infty}\frac{1}{{2}^{x}}=2
+tests/Notation/article.tex:97:1: info: claim 35 is meaningful if: (0\in \mathbb{Z}\Rightarrow (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (x\in \mathbb{Z}\land (\neg (2=0)\lor 0\le x))\land \neg ({2}^{x}=0)))\land (0\in \mathbb{Z}\land \sum_{x=0}^{\infty}\frac{1}{{2}^{x}}\text{ converges})\land (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (x\in \mathbb{Z}\land (\neg (2=0)\lor 0\le x))\land \neg ({2}^{x}=0))
 tests/Notation/article.tex:97:1: info: claim 36: \sum_{x=1}^{\infty}\frac{{(-1)}^{x+1}}{x}=\log(2)
+tests/Notation/article.tex:97:1: info: claim 36 is meaningful if: ((1\in \mathbb{Z}\Rightarrow (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (x+1\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le x+1))\land \neg (x=0)))\land (1\in \mathbb{Z}\land \sum_{x=1}^{\infty}\frac{{(-1)}^{x+1}}{x}\text{ converges})\land (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (x+1\in \mathbb{Z}\land (\neg (-1=0)\lor 0\le x+1))\land \neg (x=0)))\land 0<2
 tests/Notation/article.tex:101:1: info: claim 37: \lim_{x\to\infty,\ x\in \mathbb{N}}\frac{1}{x}=0
+tests/Notation/article.tex:101:1: info: claim 37 is meaningful if: (\forall x\in \mathbb{R},\ x\in \mathbb{N}\land \neg (x=0)\Rightarrow \neg (x=0))\land \lim_{x\to\infty,\ x\in \mathbb{N}}\frac{1}{x}\text{ exists}
 tests/Notation/article.tex:101:1: info: claim 38: \lim_{x\to 0}\frac{\sin(x)}{x}=1
+tests/Notation/article.tex:101:1: info: claim 38 is meaningful if: (\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0))\land \lim_{x\to 0}\frac{\sin(x)}{x}\text{ exists}
 tests/Notation/article.tex:101:1: info: claim 39: \lim_{x\to\infty}\exp(-x)=0
+tests/Notation/article.tex:101:1: info: claim 39 is meaningful if: \lim_{x\to\infty}\exp(-x)\text{ exists}
 tests/Notation/article.tex:105:1: info: claim 40: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{N}\land y\le x\Rightarrow \binom{x}{y}=\frac{x!}{y!\,(x-y)!})
+tests/Notation/article.tex:105:1: info: claim 40 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{N}\land y\le x\Rightarrow (y\in \mathbb{N}\land x\in \mathbb{N})\land x\in \mathbb{N}\land (y\in \mathbb{N}\land x-y\in \mathbb{N})\land \neg (y!\,(x-y)!=0))
 tests/Notation/article.tex:111:1: info: defines c_1 (c1)
 tests/Notation/article.tex:111:1: info: defines c_2 (c2)
 tests/Notation/article.tex:111:1: info: defines c_3 (c3)
 tests/Notation/article.tex:112:1: info: defines q (q)
 tests/Notation/article.tex:115:1: info: claim 41: c_3=9
 tests/Notation/article.tex:115:1: info: claim 42: q(1)=3
-tests/Notation/article.tex: 6 definitions, 43 claims
-  text: 4 compiled, 0 failed, 2 prose (of 6)
-  results: 30 compiled, 0 failed, 0 prose (of 30)
-  all: 34 compiled, 0 failed, 2 prose (of 36)
+tests/Notation/article.tex:124:1: info: claim 43: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 2\,x\,y\le {x}^{2}+{y}^{2}
+tests/Notation/article.tex:125:1: info: claim 44: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow 0\le {y}^{x})
+tests/Notation/article.tex:125:1: info: claim 44 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow x\in \mathbb{Z}\land (\neg (y=0)\lor 0\le x))
+tests/Notation/article.tex:126:1: info: claim 45: \neg (\exists x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\land {x}^{2}=2)
+tests/Notation/article.tex:126:1: info: claim 45 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\Rightarrow \neg (s=0)\Rightarrow \neg (s=0))
+tests/Notation/article.tex:130:1: info: claim 46: \int_{1}^{2}\frac{1}{x}\,dx=\log(2)
+tests/Notation/article.tex:130:1: info: claim 46 is meaningful if: ((\forall x\in \mathbb{R},\ 1\le x\land x\le 2\Rightarrow \neg (x=0))\land \operatorname{Int}((x\in \mathbb{R}\,[1\le x\land x\le 2]\mapsto \frac{1}{x}))(1)(2))\land 0<2
+tests/Notation/article.tex:131:1: info: claim 47: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ x<y\Rightarrow \int_{x}^{y}z\,dz=\frac{{y}^{2}-{x}^{2}}{2})
+tests/Notation/article.tex:131:1: info: claim 47 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ x<y\Rightarrow \operatorname{Int}((z\in \mathbb{R}\,[x\le z\land z\le y\lor y\le z\land z\le x]\mapsto z))(x)(y)\land \neg (2=0))
+tests/Notation/article.tex:132:1: info: claim 48: \int_{0}^{1}\int_{0}^{1}y\,x\,dy\,dx=\frac{1}{4}
+tests/Notation/article.tex:132:1: info: claim 48 is meaningful if: ((\forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \operatorname{Int}((y\in \mathbb{R}\,[0\le y\land y\le 1]\mapsto y\,x))(0)(1))\land \operatorname{Int}((x\in \mathbb{R}\,[0\le x\land x\le 1]\mapsto \int_{0}^{1}y\,x\,dy))(0)(1))\land \neg (4=0)
+tests/Notation/article.tex:139:1: info: defines r (r)
+tests/Notation/article.tex:139:1: info: r is well defined if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow \neg (y+1=0))
+tests/Notation/article.tex:140:1: info: claim 49: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow r(x)(y)\le 1)
+tests/Notation/article.tex:140:1: info: claim 49 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (0\le y\land y\le x)\land 1\le x)
+tests/Notation/article.tex:141:1: info: claim 50: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow r(x)(y)\le 1+z))
+tests/Notation/article.tex:141:1: info: claim 50 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow (0\le y\land y\le x)\land 1\le x))
+tests/Notation/article.tex:145:1: info: defines \kappa (kappa)
+tests/Notation/article.tex:148:1: info: claim 51: \kappa(1)(\frac{1}{2})=\frac{1}{2}
+tests/Notation/article.tex:148:1: info: claim 51 is meaningful if: (\neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land (0<1\land 1<2)\land \neg (2=0))\land \neg (2=0)
+tests/Notation/article.tex: 8 definitions, 52 claims
+  text: 5 compiled, 0 failed, 6 prose (of 11)
+  results: 41 compiled, 0 failed, 0 prose (of 41)
+  all: 46 compiled, 0 failed, 6 prose (of 52)

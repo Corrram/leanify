@@ -17,14 +17,15 @@ translator is untrusted. -/
 namespace Leanify
 open Lean Elab Term Meta Command
 
-/-- The Lean type of a term type: `ℝ`, `I`, `Prop`, function types, and the base
-types of the model `M`. -/
+/-- The Lean type of a term type: `ℝ`, `Prop`, function types, and the base types of the
+model `M`, as the model names them (the type of the points of a set, `↥unitInterval`,
+stays that type: it is not unfolded into a subtype). -/
 partial def tyExpr (M : Expr) : Ty → MetaM Expr
   | .real => pure (Lean.mkConst ``Real)
-  | .unit => pure (mkApp2 (Lean.mkConst ``Set.Elem [Level.zero]) (Lean.mkConst ``Real) (Lean.mkConst ``unitInterval))
   | .prop => pure (mkSort Level.zero)
   | .fn a b => do mkArrow (← tyExpr M a) (← tyExpr M b)
-  | .base k => whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
+  | .base k => withCanUnfoldPred (fun _ ci => pure (ci.name != ``Set.Elem)) do
+      whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
 
 /-- The Lean values of the model's constants, read from its definition. -/
 partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
@@ -44,15 +45,24 @@ partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
             | _ => pure v
           else pure v
         | _ => pure v
+      -- (a proof that Lean moved out of such a meaning, `…._proof_1`, is written back:
+      -- `Set.projIcc 0 1 zero_le_one`)
+      let env ← getEnv
+      let v := v.replace fun e => match e with
+        | .const n ls => match n with
+          | .str _ last =>
+            if last.startsWith "_proof_" then
+              match env.find? n with
+              | some (.thmInfo d) => some (d.value.instantiateLevelParams d.levelParams ls)
+              | _ => none
+            else none
+          | _ => none
+        | _ => none
       go (e.getArg! 2) (acc.push v.headBeta) (fuel - 1)
     else return acc
   go (mkApp (Lean.mkConst ``Model.consts) M) #[] 100000
 
 def primConst : Prim → Option Name
-  | .leb => some ``Prelude.leb
-  | .measurableSet1 => some ``Prelude.measurableSet1
-  | .measurableSet2 => some ``Prelude.measurableSet2
-  | .integrable => some ``Prelude.integrable
   | .hasDerivWithin => some ``Prelude.hasDerivWithin
   | .intervalIntegral => some ``Prelude.intervalIntegral
   | .intervalIntegrable => some ``Prelude.intervalIntegrable
@@ -120,7 +130,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
   | .app (.app (.prim .rpow) x) y => do mkAppM ``HPow.hPow #[← readable R ls x, ← readable R ls y]
   | .app (.app (.prim .min) x) y => do mkAppM ``Min.min #[← readable R ls x, ← readable R ls y]
   | .app (.app (.prim .max) x) y => do mkAppM ``Max.max #[← readable R ls x, ← readable R ls y]
-  | .app (.prim .borel) x => do mkAppM ``Measurable #[← readable R ls x]
   | .app (.prim p) x => do
     match primConst p with
     | some n => pure (mkApp (Lean.mkConst n) (← readable R ls x))
@@ -133,13 +142,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
     withLocalDeclD `x (← tyExpr R.model t) fun v => do
       mkLambdaFVars #[v] (← readable R (v :: ls) b)
   | .num n => realLit n
-  | .ofUnit x => do mkAppM ``Subtype.val #[← readable R ls x]
-  | .toUnit x => do
-    let x' ← readable R ls x
-    let stx ← `(Set.projIcc (0 : ℝ) 1 zero_le_one $(← exprToSyntax x'))
-    let e ← Term.elabTerm stx none
-    Term.synthesizeSyntheticMVarsNoPostponing
-    instantiateMVars e
   | .add x y => do mkAppM ``HAdd.hAdd #[← readable R ls x, ← readable R ls y]
   | .sub x y => do mkAppM ``HSub.hSub #[← readable R ls x, ← readable R ls y]
   | .mul x y => do mkAppM ``HMul.hMul #[← readable R ls x, ← readable R ls y]
@@ -179,13 +181,6 @@ partial def readable (R : RCtx) (ls : List Expr) : Tm → TermElabM Expr
     withLocalDeclD `x (← tyExpr R.model t) fun v => do
       let body ← mkLambdaFVars #[v] (← readable R (v :: ls) b)
       mkAppM ``Exists #[body]
-  | .integral b => do
-    withLocalDeclD `x (← tyExpr R.model .unit) fun v => do
-      let f ← mkLambdaFVars #[v] (← readable R (v :: ls) b)
-      let stx ← `(MeasureTheory.integral MeasureTheory.MeasureSpace.volume $(← exprToSyntax f))
-      let e ← Term.elabTerm stx none
-      Term.synthesizeSyntheticMVarsNoPostponing
-      instantiateMVars e
   | .guard _ e => readable R ls e
   | .the t b => do
     let T ← tyExpr R.model t

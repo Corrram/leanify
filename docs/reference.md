@@ -10,7 +10,7 @@ Everything Leanify provides, in the order a project uses it. The
 ### `leanify check`
 
 ```sh
-lake exe leanify check ARTICLE.tex [--vocab FIELDS] [--claims] [--prose] [--json]
+lake exe leanify check ARTICLE.tex [--vocab FIELDS] [--claims] [--defined] [--prose] [--json]
 ```
 
 Compiles the article natively, in about a second, and prints findings in the
@@ -26,6 +26,7 @@ loads): a finding in such a file is reported at that file and line.
 | a definition without a reading whose symbols later sentences use | warning |
 | a proof with sentences that are not read (prose, or a construction of proofs the grammar does not have), of a result whose statement is read: `the proof of thm:bound is not read completely (Leanify cannot read 1 of its 4 sentences): thm:bound can be checked, but it is not derived from this proof` | info |
 | with `--claims`: every definition and the formal reading of every claim | info |
+| with `--defined`: also what each claim and definition needs in order to be meaningful (`claim 4 is meaningful if: …`, `y is well defined if: \forall x\in\mathbb{R},\ \neg(x=0)\Rightarrow\neg(x=0)`): nonzero denominators, arguments inside the domains of the functions they are given to, integrable integrands. These are the statements `meaningfulK` and `wellDefinedI` of the Lean files | info |
 | with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
 
 An undefined symbol is reported once. If the sentence that defines it was not
@@ -66,7 +67,7 @@ the grammar: the reports and the PDF name it.
 ### `leanify certify`
 
 ```sh
-leanify certify ARTICLE.tex [--vocab FIELDS] [--name NAME]
+leanify certify ARTICLE.tex [--vocab FIELDS] [--name NAME] [--leanify REV|PATH]
 ```
 
 Everything from an article to its certificate, in one command: the Lean files of
@@ -75,10 +76,23 @@ has none yet (`lake update`, which downloads its compiled files), the pin
 ([`prepare`](#leanify-prepare)), and `lake build NAME.Certified`, whose output
 it shows. Run it again after an edit of the article or of `Proofs.lean`.
 
+In a folder that is no Lean project yet, the new project requires **the Leanify that
+this checker was built from**, so that the Lean files and the library that reads them
+are one version:
+
+* the checker runs from a checkout of Leanify (`…/leanify/.lake/build/bin/leanify`)
+  whose commit is on the remote and that has no local changes: the project requires
+  that commit (`rev = "…"`), a lakefile that others can build;
+* otherwise it requires the checkout by its path, and uses its packages
+  (`packagesDir`): mathlib is neither fetched nor built again, and the first
+  certificate takes seconds. For a project that others build, name a revision;
+* a released checker (not in a checkout) requires the tag of its version (`v0.7.0`);
+* `--leanify REV` or `--leanify PATH` names the revision or the folder.
+
 ### `leanify init`
 
 ```sh
-lake exe leanify init ARTICLE.tex [--name NAME] [--vocab FIELDS]
+lake exe leanify init ARTICLE.tex [--name NAME] [--vocab FIELDS] [--leanify REV|PATH]
 ```
 
 Writes the four Lean files of the article. `NAME`, the Lean namespace, is by
@@ -92,7 +106,8 @@ overwritten.
   a `lakefile.lean`, the entry is printed for you to add.
 * **Anywhere else**, the article's folder becomes a Lean project: `init` writes
   `lean-toolchain` (the Lean version of the checker), a `lakefile.toml` that
-  requires Leanify, and the Lean files in the folder `NAME/`. So an author needs
+  requires the Leanify of the checker ([`certify`](#leanify-certify) says which),
+  and the Lean files in the folder `NAME/`. So an author needs
   no knowledge of Lake to start: a folder with `article.tex` is enough.
 
 For an article that inputs other files, `init`, `prepare` and

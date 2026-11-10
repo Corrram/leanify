@@ -67,7 +67,9 @@ therefore has a syntactic definedness condition, `Tm.defined`, in the style of
 TCCs. A claim means `defined ∧ claim`. The condition includes:
 
 * nonzero denominators and nonnegative bases of real powers;
-* points in `[0,1]`, and arguments in the domain a definition states;
+* numbers used as points of an interval type (`C(\frac12,1-u)` in `[0,1]`, with the
+  field `unitsquare`), and arguments in the domain a definition states: the domains
+  of its variables and the hypotheses it was made under;
 * integrability of integrands and measurability of measured sets;
 * coverage of `cases`, and agreement where two conditions overlap;
 * the body of a map `v ↦ e` at the points of the domain it is used on;
@@ -76,7 +78,9 @@ TCCs. A claim means `defined ∧ claim`. The condition includes:
 * disjoint parameter domains of a family defined twice (`κ_w`, then `κ_b`);
 * exactly one solution of a definite description ("the $b$ with $e_b=e$").
 
-So `1/0 = 0` cannot make a claim true for a conventional reason.
+So `1/0 = 0` cannot make a claim true for a conventional reason. `leanify check
+--defined` prints the condition of every claim and definition. A condition is asked
+once: a guard about an argument already asks that the argument is defined.
 
 ## Justifications and the citation audit
 

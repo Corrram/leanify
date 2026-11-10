@@ -52,7 +52,7 @@ most general; all of them are printed.
    `Let $f:\mathbb R\to\mathbb R$ …`) decides.
 
 4. **The fields the article names.** The vocabulary is divided into fields
-   (`numbers`, `analysis`, `distributions`, …); within a field every phrase has at
+   (`numbers`, `unitsquare`, `distributions`, …); within a field every phrase has at
    most one meaning. The article names the fields it uses in its preamble,
    `\usepackage[vocab={numbers,analysis}]{leanify}`, and `\leanifyreport` prints
    them with the verification summary (`Leanify (vocabulary: core, numbers,
@@ -79,6 +79,17 @@ alone, whatever the fields:
   the convention (`By a natural number we mean a non-negative integer.`). The
   symbol $\mathbb{N}$ includes 0, as in Mathlib; $\mathbb{N}_0$ says so explicitly.
 
+## The core vocabulary
+
+Every article is read with the core vocabulary, whatever fields it names: *real
+number*, *integer*, *positive*, *negative* and *nonnegative integer*, *rational* and
+*irrational number*, and the adjectives *positive*, *negative*, *nonnegative*,
+*nonpositive*, *nonzero*, *rational*, *irrational* of a real number. So
+`Let $x$ and $y$ be positive real numbers.` needs no field. The words of number
+theory (*prime*, *even*, *squarefree*, the greatest common divisor) are the field
+`numbers`. A symbol or noun that a field would read is reported with the field's
+name: `unknown notation \cosh: the field hyperbolic of the vocabulary reads it`.
+
 ## Fields
 
 `docs/glossary.md` lists the fields and their entries; `lake exe glossary`
@@ -89,6 +100,8 @@ need nothing else: their meaning is the meaning of the formula language, which
 `Leanify.Denote` gives in terms of Mathlib. A field with constants of its own
 (`unitsquare`, `torus`, `complex`, `hyperbolic`) names the Lean meaning of each:
 a declaration of Mathlib (`Real.sinh`), or a definition written for the field.
+The field `unitsquare` also makes `[0,1]` a type of its own, with its integral and
+Lebesgue measure; without it, `[0,1]` is a set of real numbers like any interval.
 An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.

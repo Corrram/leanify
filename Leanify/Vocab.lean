@@ -6,13 +6,13 @@ import Leanify.Syntax
 A vocabulary supplies the meanings that an article does not define itself:
 base types, constants, nouns (`probability measure $\gamma$ on $[0,1]^2$`),
 modifiers (`with uniform marginals`) and named notions (`Lebesgue measure on
-$[0,1]$`). Each entry pairs a fixed phrase with a closed core term. The phrases
+$[0,1]$`), and intervals that are types (`[0,1]`). Each entry pairs a fixed phrase with a closed core term. The phrases
 are matched literally; there is no other source of meaning.
 
 A vocabulary is reviewed once, together with its `Model` (the Lean meaning of
 its base types and constants), and shared by every article that uses it. The
-core vocabulary `Vocab.core` covers real analysis on `[0,1]`; subject
-vocabularies extend it (`Vocab.append`).
+core vocabulary `Vocab.core` (`Leanify.Library.Core`) has the words about numbers that
+every article may use; subject vocabularies extend it (`Vocab.append`).
 
 Notation means what the type of its operands says, as in Python, where `+` calls
 the `__add__` of its operands' class: the core reads `+`, `-`, `\cdot`, `/`, `^`,
@@ -125,6 +125,36 @@ structure Adjective where
   doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
+/-- An interval of real numbers that the vocabulary makes a type of its own (`[0,1]` in
+the field `unitsquare`). An article that names the field reads a variable in the
+interval (`$u\in[0,1]$`) as an element of the type, a function on it
+(`$C:[0,1]^2\to\mathbb{R}$`) as a function of such elements, with no values outside,
+and `\int_{lo}^{hi}` as the integral over the type. Without such a field, the interval
+is a set of real numbers like any other, and the integral is the core's.
+
+Every part is a constant of the vocabulary, with a Lean meaning that it names:
+
+* `val : T → ℝ`, the number that an element is (used wherever a number is expected);
+* `point : ℝ → T`, a number of the interval as an element (it is defined only for numbers of
+  the interval: the compiler adds the condition);
+* `integral : (T → ℝ) → ℝ`, defined for the functions with `integrable : (T → ℝ) → Prop`;
+* `measurable1 : (T → Prop) → Prop` and `measurable2 : (T → T → Prop) → Prop`, the
+  measurable sets of the interval and of its square (a set function is applied to
+  these only);
+* `lebesgue : (T → Prop) → ℝ`, the Lebesgue measure of a measurable set. -/
+structure IntervalType where
+  lo : Nat
+  hi : Nat
+  ty : Ty
+  val : Nat
+  point : Nat
+  integral : Nat
+  integrable : Nat
+  measurable1 : Nat
+  measurable2 : Nat
+  lebesgue : Nat
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
 structure Vocab where
   /-- Names of the base types (for readings). -/
   types : List Codes := []
@@ -132,7 +162,10 @@ structure Vocab where
   consts : List Ty := []
   /-- Readable names of the constants (for readings). `#` in a name stands for the
   argument of the constant, `#1` and `#2` for its two arguments
-  (`\operatorname{convex}(#1)\text{ on }#2`). -/
+  (`\operatorname{convex}(#1)\text{ on }#2`). An empty name shows the argument alone (a
+  number as an element of a type, an element as a number); a name `\langle#\rangle…`
+  shows a numeral alone; a name that begins with `\int` is written as an integral of
+  the function it is applied to. -/
   constNames : List Codes := []
   /-- The Lean meaning of each constant: the name of a declaration of Mathlib or of one
   of the `modules` (`Leanify.Torus.smoothT2`, `Real.sinh`), of the type that `consts`
@@ -152,6 +185,8 @@ structure Vocab where
   /-- What notation means on the vocabulary's types. -/
   methods : List Method := []
   symbols : List Symbol := []
+  /-- The intervals that are types of the vocabulary. -/
+  intervals : List IntervalType := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 namespace Vocab
@@ -170,8 +205,6 @@ def shiftTm (k : Nat) : Tm → Tm
   | .the t b => .the (shiftTy k t) (shiftTm k b)
   | .undef t => .undef (shiftTy k t)
   | .app f x => .app (shiftTm k f) (shiftTm k x)
-  | .ofUnit x => .ofUnit (shiftTm k x)
-  | .toUnit x => .toUnit (shiftTm k x)
   | .add x y => .add (shiftTm k x) (shiftTm k y)
   | .sub x y => .sub (shiftTm k x) (shiftTm k y)
   | .mul x y => .mul (shiftTm k x) (shiftTm k y)
@@ -188,7 +221,6 @@ def shiftTm (k : Nat) : Tm → Tm
   | .or p q => .or (shiftTm k p) (shiftTm k q)
   | .imp p q => .imp (shiftTm k p) (shiftTm k q)
   | .iff p q => .iff (shiftTm k p) (shiftTm k q)
-  | .integral b => .integral (shiftTm k b)
   | .guard p e => .guard (shiftTm k p) (shiftTm k e)
   | t => t
 
@@ -213,7 +245,11 @@ def append (V W : Vocab) : Vocab :=
       { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
     methods := V.methods ++ W.methods.map fun m => { m with ty := shiftTy kt m.ty, const := m.const + kc }
     symbols := V.symbols ++ W.symbols.map fun s =>
-      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc) } }
+      { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc) }
+    intervals := V.intervals ++ W.intervals.map fun i =>
+      { i with ty := shiftTy kt i.ty, val := i.val + kc, point := i.point + kc, integral := i.integral + kc,
+               integrable := i.integrable + kc, measurable1 := i.measurable1 + kc,
+               measurable2 := i.measurable2 + kc, lebesgue := i.lebesgue + kc } }
 
 instance : Append Vocab := ⟨append⟩
 
@@ -278,23 +314,5 @@ elab_rules : term
     match phraseOf s.getString with
     | .ok p => pure (toExpr p)
     | .error e => throwError e
-
-/-! ## The core vocabulary
-
-Real analysis on `[0,1]`: functions and maps with a signature, Borel
-measurability and Lebesgue measure. -/
-
-namespace Vocab
-
-def core : Vocab where
-  mods := [
-    { phrase := phrase!"Borel measurable", prenominal := true, ty := Ty.self,
-      pred := .lam Ty.self .tt (.app (.prim .borel) (.loc 0)),
-      doc := "a Borel measurable map of `[0,1]` (Mathlib `Measurable`)" }]
-  notions := [
-    { name := phrase!"Lebesgue measure on $[0,1]$", value := .prim .leb, ty := Ty.set1 ⟶ .real,
-      doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" }]
-
-end Vocab
 
 end Leanify

@@ -372,14 +372,6 @@ def constTm : MT → Option Tm
   | .frac (.num a) (.num b) => some (.div (.num a) (.num b))
   | _ => none
 
-def isUnitSquare : Option MT → Bool
-  | some (.sup (.interval (.num 0) (.num 1)) (.num 2)) => true
-  | _ => false
-
-def isUnitInterval : Option MT → Bool
-  | some (.interval (.num 0) (.num 1)) => true
-  | _ => false
-
 def isPair : Option MT → Option (MT × MT)
   | some (.tuple [a, b]) => some (a, b)
   | _ => none
@@ -477,8 +469,9 @@ def closedBound (m : MT) (sc : Scope := []) : M Tm := do
 /-- The type and predicate of a domain formula (`[0,1]`, `[-1,1]`, `\CC`). The ends
 of an interval may use the binders `sc` before it; the predicate is a term in `sc`. -/
 def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm) := do
-  if isZeroOne d && !calculus then pure (.unit, none)
-  else match d with
+  -- an interval that is a type of the article's vocabulary (`[0,1]` in `unitsquare`)
+  if let some iv ← (if calculus then pure none else Elab.intervalType d) then return (iv.ty, none)
+  match d with
     | .interval lo hi => do
       let l ← closedBound lo sc
       let h ← closedBound hi sc
@@ -951,7 +944,9 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     let (p, pty) ← Elab.term 100000 ([(name, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer) none φ
     if pty != .prop then fail E.type
     pure (Tm.lam ty .tt p)
-  let all := (preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).eraseDups
+  -- (a noun that says nothing beyond its type, `real number`, adds no condition)
+  let all := ((preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).filter
+    (· != Tm.lam ty .tt .tt)).eraseDups
   pure ⟨name, ty, conjPreds ty all⟩
 
 /-- Read a noun phrase (without its determiner). A plural noun with a sequence
@@ -1874,16 +1869,29 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let st ← get
     let ids := freeIds 64 argNames rhs
     let used := ids ++ implicitVars st ids
-    let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
+    -- A variable whose domain uses the variables before it (`x\in[0,n]`) needs them all,
+    -- in their order: the definition takes them too, so that the domain is a condition on
+    -- its own parameters.
+    let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
+    let lastDep := ((bs.zipIdx.filter fun (b, _) =>
+      (used.contains b.name || argNames.contains b.name) && dependent b).map (·.2)).getLast?
+    let imp := (bs.zipIdx.filter fun (b, i) =>
+      !argNames.contains b.name && (used.contains b.name || lastDep.any (i < ·))).map (·.1)
     let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
       | some b => b
       | none => ⟨n, .real, none⟩
     let all := imp ++ argInfo
+    match lastDep with
+    | some l =>
+      if (all.take (l + 1)).map (·.name) != (bs.take (l + 1)).map (·.name) then
+        fail E.finding (w!"the domain of a variable of this definition depends on a variable before it, and the arguments of " ++ key ++ w!" are not in that order: define it without arguments (Set $" ++ key ++ w!"\\coloneqq …$), or state the variables with it")
+    | none => pure ()
     let (v, vty) ← term F (scopeOf all) none rhs
     let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
     let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
     let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
     if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+    if !all.isEmpty then modify fun st => { st with telescopes := st.telescopes ++ [(i, all)] }
     match c.ctx.kind with
     | .text => pure ()
     | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
@@ -2047,22 +2055,27 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
   let sc : Scope := [(b.name, b.ty)]
   let (val, vty) ← match np with
     -- the law of $(X, f(X))$ for $X$ uniformly distributed on $[0,1]$
+    -- (the interval is a type of the article's vocabulary, with its Lebesgue measure)
     | [.w t, .w l, .w o, .m pair, .w fr, .m [.id x], .w u, .w d, .w on, .m zo] =>
-      if [t, l, o, fr, u, d, on] == [w!"the", w!"law", w!"of", w!"for", w!"uniformly", w!"distributed", w!"on"]
-          && isUnitInterval (Math.parseFormula zo) then do
+      let iv? ← match Math.parseFormula zo with
+        | some zm => Elab.intervalType zm
+        | none => pure none
+      match iv? with
+      | none => fail E.noun
+      | some iv =>
+      if [t, l, o, fr, u, d, on] == [w!"the", w!"law", w!"of", w!"for", w!"uniformly", w!"distributed", w!"on"] then do
         match Math.parseFormula pair with
         | some (.tuple [e1, e2]) => do
-          -- λ A. Leb {x : A(e1(x), e2(x))}, with A a measurable subset of [0,1]^2
-          let sc' := (x, Ty.unit) :: (w!"", Ty.set2) :: sc
-          let a ← coerce (← term F sc' none e1).1 .unit .unit
+          -- λ A. Leb {x : A(e1(x), e2(x))}, with A a measurable subset of the square
+          let set2 : Ty := .fn iv.ty (.fn iv.ty .prop)
+          let sc' := (x, iv.ty) :: (w!"", set2) :: sc
           let t1 ← term F sc' none e1
           let t2 ← term F sc' none e2
-          let a1 ← coerce t1.1 t1.2 .unit
-          let a2 ← coerce t2.1 t2.2 .unit
-          let _ := a
-          let set := Tm.lam .unit .tt (.app (.app (.loc 1) a1) a2)
-          let body := Tm.guard (.app (.prim .measurableSet1) set) (.app (.prim .leb) set)
-          pure (Tm.lam Ty.set2 (.app (.prim .measurableSet2) (.loc 0)) body, Ty.meas2)
+          let a1 ← coerce t1.1 t1.2 iv.ty
+          let a2 ← coerce t2.1 t2.2 iv.ty
+          let set := Tm.lam iv.ty .tt (.app (.app (.loc 1) a1) a2)
+          let body := Tm.guard (.app (.const iv.measurable1) set) (.app (.const iv.lebesgue) set)
+          pure (Tm.lam set2 (.app (.const iv.measurable2) (.loc 0)) body, .fn set2 .real)
         | _ => fail E.unsupported
       else fail E.noun
     | .w t :: rest =>
@@ -2488,7 +2501,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .fact f | .holds f => prop sc none f
   | .absurd => pure (.not .tt)
   -- (`the statement holds for $E$` is given its clauses before it is read: `expandStmt`)
-  | .stmtAt _ => fail E.unsupported
+  | .stmtAt _ | .stmtBelow _ => fail E.unsupported
   | .inst v e hyps stmt => do
     let st ← get
     let some j := sc.findIdx? (·.1 == v) | fail E.undefined v
@@ -2581,7 +2594,10 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let into := Tm.all aty (Tm.mkImp (holdsAt apred (.loc 0)) (holdsAt bpred fx))
     let fxx : Tm := .app (shift 2 0 fn) (.loc 1)
     let fyy : Tm := .app (shift 2 0 fn) (.loc 0)
-    let ltA : Tm := if aty == .unit then .lt (.ofUnit (.loc 1)) (.ofUnit (.loc 0)) else .lt (.loc 1) (.loc 0)
+    -- (of an interval type: the order of the numbers)
+    let ltA : Tm ← if (← Elab.intervalOf aty).isSome then
+        pure (Tm.lt (← coerce (.loc 1) aty .real) (← coerce (.loc 0) aty .real))
+      else pure (Tm.lt (.loc 1) (.loc 0))
     let mono := Tm.all aty (.all aty (Tm.mkImp (holdsAt apred (.loc 1)) (Tm.mkImp (holdsAt apred (.loc 0))
       (.imp ltA (.lt fxx fyy)))))
     let onto := Tm.all .real (Tm.mkImp (holdsAt bpred (.loc 0)) (.ex aty (Tm.mkAnd (holdsAt apred (.loc 0))
@@ -2867,7 +2883,9 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         let fn := onDomain b.pred fn
         let fxx : Tm := .app (shift 2 0 fn) (.loc 1)
         let fyy : Tm := .app (shift 2 0 fn) (.loc 0)
-        let ltA : Tm := if b.ty == .unit then .lt (.ofUnit (.loc 1)) (.ofUnit (.loc 0)) else .lt (.loc 1) (.loc 0)
+        let ltA : Tm ← if (← Elab.intervalOf b.ty).isSome then
+            pure (Tm.lt (← coerce (.loc 1) b.ty .real) (← coerce (.loc 0) b.ty .real))
+          else pure (Tm.lt (.loc 1) (.loc 0))
         parts := parts ++ [Tm.all b.ty (.all b.ty (Tm.mkImp (holdsAt b.pred (.loc 1))
           (Tm.mkImp (holdsAt b.pred (.loc 0)) (.imp ltA (.lt fxx fyy)))))]
         infos := infos ++ [(v, body)]
@@ -2914,14 +2932,14 @@ for the variable of the induction (`We argue by induction on $n$.`; without that
 sentence, `E` is the variable itself). The variable is one that the result introduces,
 and no other variable of the result may depend on it: the statement is then a statement
 about it. -/
-def stmtInst (c : SentCtx) (e : MT) : M Clause := do
+def stmtInst (c : SentCtx) (e : MT) (var : Option Codes := none) : M Clause := do
   if c.ctx.kind != .proof then fail E.prose
   let st ← get
   let rbs := (st.resultBinders.lookup c.target).getD []
   let some (some stmt) := st.resultStmts.lookup c.target
     | fail E.finding w!"`the statement` needs a statement about the variables of the result: state the claims of the result without binders of their own inside a clause, and without `the minimum` or `the maximum` as their topic"
   if stmt.isEmpty then fail E.prose
-  let named : Option Codes := match st.inductionVar with
+  let named : Option Codes := var <|> match st.inductionVar with
     | some (env, n) => if env == c.ctx.env then some n else none
     | none => none
   let v ← match named, e with
@@ -2945,7 +2963,61 @@ def stmtInst (c : SentCtx) (e : MT) : M Clause := do
 def expandStmt (c : SentCtx) : Clause → M Clause
   | .stmtAt e => stmtInst c e
   | .under b (.stmtAt e) => do pure (.under b (← stmtInst c e))
+  -- `for all smaller values`: for every `m<n`, with a name `m` that no article uses
+  | .stmtBelow named => do
+    let st ← get
+    let ind : Option Codes := match st.inductionVar with
+      | some (env, n) => if env == c.ctx.env then some n else none
+      | none => none
+    let n ← match ind, named with
+      | some n, some v => if v == n then pure n else
+          fail E.finding (w!"the induction is on " ++ n ++ w!": the statement for smaller values of another variable is not its hypothesis; write it out (Assume that $…$ for all $m<" ++ n ++ w!"$.)")
+      | some n, none => pure n
+      | none, some v => pure v
+      | none, none => fail E.finding w!"smaller values of which variable? Say so before (We argue by induction on $n$.), or name it (for all smaller values of $n$)"
+    let m := n ++ w!"@below"
+    pure (.under (.every [m] (.ival (.neg (.id w!"\\infty")) (.id n) true true)) (← stmtInst c (.id m) (some n)))
   | cl => pure cl
+
+/-- A definition made under hypotheses (`Assume that $x\ne0$. Set $y\coloneqq\frac1x$.`)
+takes the hypotheses that speak only about its own variables: they become part of the
+domain of its last parameter. So the definition is well defined if its formula is
+meaningful under them (`∀ x, x ≠ 0 → x ≠ 0`), and each use of it asks that they hold.
+A hypothesis about a variable that the definition does not use is not taken (`Assume that
+$xz\ne0$.` says nothing to `\frac1x` alone): state it about the variables of the
+definition. -/
+def defsUnderHyps (c : SentCtx) (ds : List Nat) : M Unit := do
+  if c.ctx.kind == .text then return
+  for i in ds do
+    let st ← get
+    let some all := st.telescopes.lookup i | continue
+    let some g := st.globs[i]? | continue
+    let some v := st.values[i]? | continue
+    let names := all.map (·.name)
+    let envNames := st.envBinders.map (·.name)
+    -- the hypotheses in force about variables of the result or proof, all of them
+    -- parameters of the definition
+    let about (h : Hyp) : List Codes :=
+      (((clauseMaths h.clause).flatMap (freeIds 64 [])).filter envNames.contains).eraseDups
+    let hs := st.envHyps.filter fun h => !(about h).isEmpty && (about h).all names.contains
+    if hs.isEmpty then continue
+    let sc := scopeOf all
+    let ps ← hs.mapM fun h => clauseTm c sc none none h.clause
+    let hyp := Elab.conjAll ps
+    -- the domain of the last parameter, in the value and among the domains of the arguments
+    let rec under : Nat → Tm → Tm
+      | 0, t => t
+      | 1, .lam t d b => .lam t (Tm.mkAnd d hyp) b
+      | k + 1, .lam t d b => .lam t d (under k b)
+      | _, t => t
+    let some last := all.getLast? | continue
+    let dom : Tm := match last.pred with
+      | some p => .lam last.ty .tt (.and (.app (shift 1 0 p) (.loc 0)) (shift 1 1 hyp))
+      | none => .lam last.ty .tt (shift 1 1 hyp)
+    let doms := g.doms.take (all.length - 1) ++ [some dom] ++ g.doms.drop all.length
+    set { st with
+      globs := st.globs.set i { g with doms := doms },
+      values := st.values.set i (under all.length v) }
 
 /-- A later clause of the sentence has its own hypothesis (`If $φ$, A, and if $ψ$, B`). -/
 def laterIfC (cls : List CClause) : Bool :=
@@ -3812,6 +3884,8 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
             set st
             Compile.sentence sc sent
         | _ => Compile.sentence sc sent
+      -- a definition made under hypotheses takes those about its variables
+      Compile.defsUnderHyps sc ds
       match sent with
       | .claims _ _ _ | .claimsContra _ _ _ =>
         -- labels of displays in the sentence, and of the enclosing result, name its claims

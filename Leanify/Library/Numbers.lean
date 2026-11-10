@@ -1,23 +1,17 @@
-import Leanify.Library.Build
+import Leanify.Library.Core
 
 /-! # Vocabulary: numbers
 
-Integers, primes, divisibility and rational numbers, as properties of real numbers
-(Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`). Every meaning is a
+Primes, divisibility, parity and the arithmetic of integers, as properties of real
+numbers (Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`). Every meaning is a
 term of the core language, so the field has no constants and no model.
 
-*Natural number* has two meanings in this field (with and without 0), so Leanify
-does not read it alone: an article says *nonnegative integer* or *positive
-integer*, or states its convention (`By a natural number we mean a nonnegative
-integer.`). -/
+The words every article may use (*integer*, *real number*, *positive*, *rational
+number*) are in the core vocabulary (`Leanify.Library.Core`), which is always there. -/
 
 namespace Leanify.Numbers
-open Build
+open Build Core
 
-def integer : Tm := predR isInt
-def nonnegInt : Tm := predR fun x => and (isInt x) (le (num 0) x)
-def posInt : Tm := predR fun x => and (isInt x) (lt (num 0) x)
-def negInt : Tm := predR fun x => and (isInt x) (lt x (num 0))
 
 /-- `p` is a prime number: an integer `p ≥ 2` whose only factorizations into
 nonnegative integers are trivial. -/
@@ -30,9 +24,6 @@ def prime : Tm := predR isPrime
 def composite : Tm := predR fun x => and (and (isInt x) (le (num 2) x)) (not (isPrime x))
 def even : Tm := predR fun x => exInt fun k => eq x (mul (num 2) k)
 def odd : Tm := predR fun x => exInt fun k => eq x (add (mul (num 2) k) (num 1))
-def rational : Tm := predR fun x => exInt fun p => exInt fun q => and (ne q (num 0)) (eq x (div p q))
-def irrational : Tm := predR fun x => not (exInt fun p => exInt fun q => and (ne q (num 0)) (eq x (div p q)))
-def nonzero : Tm := predR fun x => ne x (num 0)
 def perfectSquare : Tm := predR fun x => exInt fun k => eq x (mul k k)
 def squarefree : Tm := predR fun x =>
   and (isInt x) (allInt fun k => imp (divides (mul k k) x) (eq (mul k k) (num 1)))
@@ -62,43 +53,17 @@ def absoluteValue : Tm := close <| lamR fun x => abs x
 def intDom : Option Tm := some integer
 def posIntDom : Option Tm := some posInt
 
-/-- A noun with the usual plural (`s`). -/
-def noun (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
-  { sing, plural, ty := .real, pred, doc }
-
-def adj (p : Phrase) (pred : Tm) (doc : String) : Modifier :=
-  { phrase := p, prenominal := true, ty := .real, pred, doc }
-
 def vocab : Vocab where
   nouns := [
-    noun phrase!"integer" phrase!"integers" integer "an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number)",
-    noun phrase!"real number" phrase!"real numbers" (predR fun _ => tt) "a real number (`ℝ`)",
-    noun phrase!"real" phrase!"reals" (predR fun _ => tt) "a real number (`ℝ`), as in `for every real $x$`",
-    noun phrase!"nonnegative integer" phrase!"nonnegative integers" nonnegInt "`x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`)",
-    noun phrase!"positive integer" phrase!"positive integers" posInt "`x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`)",
-    noun phrase!"negative integer" phrase!"negative integers" negInt "`x ∈ ℤ`, `x < 0`",
-    { noun phrase!"natural number" phrase!"natural numbers" nonnegInt "with 0, as in Mathlib (`ℕ`)" with
-      field := w!"with 0" },
-    { noun phrase!"natural number" phrase!"natural numbers" posInt "without 0 (`ℕ+`)" with
-      field := w!"without 0" },
     noun phrase!"prime number" phrase!"prime numbers" prime "a prime (Mathlib `Nat.Prime`)",
     noun phrase!"prime" phrase!"primes" prime "a prime (Mathlib `Nat.Prime`)",
     noun phrase!"composite number" phrase!"composite numbers" composite "an integer `≥ 2` that is not prime",
-    noun phrase!"rational number" phrase!"rational numbers" rational "`x ∈ ℚ` (Mathlib `Set.range ((↑) : ℚ → ℝ)`)",
-    noun phrase!"irrational number" phrase!"irrational numbers" irrational "`x ∉ ℚ` (Mathlib `Irrational`)",
     noun phrase!"perfect square" phrase!"perfect squares" perfectSquare "`x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`)"]
   mods := [
     adj phrase!"even" even "`x = 2k` for an integer `k` (Mathlib `Even`)",
     adj phrase!"odd" odd "`x = 2k+1` for an integer `k` (Mathlib `Odd`)",
     adj phrase!"prime" prime "prime (Mathlib `Nat.Prime`)",
     adj phrase!"composite" composite "an integer `≥ 2` that is not prime",
-    adj phrase!"rational" rational "`x ∈ ℚ`",
-    adj phrase!"irrational" irrational "`x ∉ ℚ` (Mathlib `Irrational`)",
-    adj phrase!"nonzero" nonzero "`x ≠ 0`",
-    adj phrase!"positive" (predR fun x => lt (num 0) x) "`x > 0`",
-    adj phrase!"negative" (predR fun x => lt x (num 0)) "`x < 0`",
-    adj phrase!"nonnegative" (predR fun x => le (num 0) x) "`x ≥ 0`",
-    adj phrase!"nonpositive" (predR fun x => le x (num 0)) "`x ≤ 0`",
     adj phrase!"squarefree" squarefree "an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`)"]
   notions := [
     { name := phrase!"greatest common divisor of $v$ and $v$", value := gcd, ty := .real ⟶ .real ⟶ .real,

@@ -41,7 +41,7 @@ def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do
 
 /-- A type, with the names of the field's own types (`B0` without one). -/
 def tyText (ts : List Codes) : Ty → String
-  | .real => "ℝ" | .unit => "[0,1]" | .prop => "Prop"
+  | .real => "ℝ" | .prop => "Prop"
   | .base k => match ts[k]? with
     | some n => "$" ++ Codes.toString n ++ "$"
     | none => s!"B{k}"

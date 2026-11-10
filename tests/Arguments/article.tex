@@ -199,6 +199,47 @@ Assume that the statement holds for all $m<n$.
 Then $n\ge1$.
 \end{proof}
 
+In words, the hypothesis of a strong induction is the statement for all smaller values.
+
+\begin{lemma}\label{lem:smaller}
+Let $n$ be a positive integer.
+Then $2n\ge n+1$.
+\end{lemma}
+
+\begin{proof}
+We argue by induction on $n$.
+Assume that the statement holds for all smaller values.
+Then $2n\ge n+1$.
+\end{proof}
+
+\section{Variables and definitions under hypotheses}
+
+One sentence introduces several variables, and an assumption about new variables introduces them as \emph{Let} does.
+
+\begin{lemma}\label{lem:several}
+Let $x$ and $y$ be positive real numbers.
+Then $xy>0$.
+\end{lemma}
+
+\begin{lemma}\label{lem:supposed}
+Suppose that $a$, $b$ and $c$ are positive real numbers.
+Then $ab+c>0$.
+\end{lemma}
+
+A definition made under a hypothesis takes the hypotheses about its variables: it is defined where they hold, and each use of it asks for them.
+
+\begin{lemma}\label{lem:inverse}
+Let $x$ be a real number.
+Assume that $x\ne0$.
+Set $y\coloneqq\frac1x$.
+Then $xy=1$.
+\end{lemma}
+
+\begin{proof}
+We have $xy=x\cdot\frac1x$.
+Hence $xy=1$.
+\end{proof}
+
 \section{What is not read}
 
 The statement for another value needs the variable of the induction: without the sentence that names it, only the statement for the variable itself is read.

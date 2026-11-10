@@ -5,7 +5,7 @@ import Leanify.Library.Fields
 
 /-! The `leanify` command line.
 
-* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims] [--json]`
+* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims] [--defined] [--json]`
   compiles the article natively, with the files it inputs, and prints its
   diagnostics (fast; certifies nothing); `--json` prints them for tools, with every
   sentence, its place and its text. Projects with their own vocabulary define a
@@ -37,12 +37,12 @@ always there. -/
 open Leanify
 
 def usage : String :=
-  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims] [--json]\n" ++
-  "       leanify certify ARTICLE.tex [--vocab FIELD,FIELD,…] [--name NAME]\n" ++
+  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims] [--defined] [--json]\n" ++
+  "       leanify certify ARTICLE.tex [--vocab FIELD,FIELD,…] [--name NAME] [--leanify REV|PATH]\n" ++
   "       leanify tex ARTICLE.tex [--vocab FIELD,FIELD,…] [--certify] [--status] (for leanify.sty)\n" ++
   "       leanify flatten ARTICLE.tex [OUT.tex]\n" ++
   "       leanify --version\n" ++
-  "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…]\n" ++
+  "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…] [--leanify REV|PATH]\n" ++
   "       leanify prepare ARTICLE.tex --lean COMPILED.lean\n" ++
   "       leanify audit ARTICLE.tex"
 
@@ -185,6 +185,61 @@ def namespaceOf (compiled : System.FilePath) : IO (Option String) := do
     if l.startsWith "#leanify_article " then
       return ((l.drop 17).toString.splitOn " ").head?
   return none
+
+/-- The Leanify that a new project requires: the one this checker was built from, so that
+the Lean files it writes and the library that reads them are one version.
+
+* `--leanify PATH` or `--leanify REV`: that folder, or that revision of the repository.
+* The checker runs from a checkout of Leanify (`…/.lake/build/bin/leanify`): the commit
+  of the checkout if it has no changes and is on the remote (a lakefile that others can
+  use, and that always builds the same); otherwise the checkout itself, by its path.
+* Otherwise (a released checker) the tag of its version, `v0.7.0`.
+
+A checkout that is required by its path shares its packages with the project
+(`packagesDir`): mathlib is then neither fetched nor built a second time.
+
+Returns the lines of the lakefile before its libraries (after the name) and a line that
+says which Leanify it is. -/
+def leanifyRequire (opts : List String) : IO (String × String) := do
+  let repo := "https://github.com/Corrram/leanify.git"
+  let byRev (rev why : String) : String × String :=
+    (s!"\n[[require]]\nname = \"leanify\"\ngit = \"{repo}\"\nrev = \"{rev}\"\n", s!"Leanify at {rev} of {repo} ({why})")
+  let byPath (p : System.FilePath) (why : String) : IO (String × String) := do
+    -- (as a TOML string: forward slashes, without the `\\?\` prefix of a Windows path)
+    let slash (q : System.FilePath) : String :=
+      let t := q.toString.replace "\\" "/"
+      if t.startsWith "//?/" then (t.drop 4).toString else t
+    let packages := p / ".lake" / "packages"
+    let shared ← (packages / "mathlib").pathExists
+    pure ((if shared then s!"# the packages of the Leanify checkout (mathlib is there already)\npackagesDir = \"{slash packages}\"\n" else "") ++
+        s!"\n[[require]]\nname = \"leanify\"\npath = \"{slash p}\"\n",
+      s!"Leanify in {p} ({why}; for a project that others build, name a revision: --leanify REV)")
+  if let some x := optArg opts "--leanify" then
+    if ← (System.FilePath.mk x).isDir then return ← byPath (← IO.FS.realPath x) "given"
+    return byRev x "given"
+  let git (root : System.FilePath) (args : Array String) : IO (Option String) := do
+    try
+      let out ← IO.Process.output { cmd := "git", args := #["-C", root.toString] ++ args }
+      pure (if out.exitCode == 0 then some out.stdout.trimAscii.toString else none)
+    catch _ => pure none
+  let app ← try some <$> (do IO.FS.realPath (← IO.appPath)) catch _ => pure none
+  let root? := app.bind fun a => a.parent.bind (·.parent) |>.bind (·.parent) |>.bind (·.parent)
+  -- (a released checker: built from the tag of its version)
+  let release := byRev s!"v{Leanify.version}" "the release of this checker; --leanify REV names another revision"
+  let some root := root? | return release
+  let lakefile := root / "lakefile.toml"
+  unless (← lakefile.pathExists) && ((← IO.FS.readFile lakefile).splitOn "name = \"leanify\"").length > 1 do
+    return release
+  let head ← git root #["rev-parse", "HEAD"]
+  let changes ← git root #["status", "--porcelain", "--untracked-files=no"]
+  let remote ← match head with
+    | some h => git root #["branch", "-r", "--contains", h]
+    | none => pure none
+  match head, changes, remote with
+  | some h, some "", some r =>
+    if r.isEmpty then return ← byPath root "the checkout of this checker; its commit is not on the remote"
+    return byRev h "the commit of this checker"
+  | _, _, _ => return ← byPath root "the checkout of this checker"
 
 def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let fs := fieldsOf opts
@@ -368,10 +423,11 @@ margin marks of `leanify.sty`). -/
     -- a project of its own, in the article's folder
     let toolchain := s!"leanprover/lean4:v{Lean.versionString}\n"
     writeNew (dir / "lean-toolchain") toolchain
-    writeNew (dir / "lakefile.toml") (s!"name = \"{ns.toLower}\"\n\n" ++
-      "[[require]]\nname = \"leanify\"\ngit = \"https://github.com/Corrram/leanify.git\"\nrev = \"main\"\n\n" ++ entry ".")
-    IO.println s!"Made a Lean project in {absDir}. `leanify certify {path}` fetches Leanify and mathlib \
-      (once) and builds the certificate; or run `lake update` and `lake build {ns}.Certified` there."
+    let (require, which) ← leanifyRequire opts
+    writeNew (dir / "lakefile.toml") (s!"name = \"{ns.toLower}\"\n" ++ require ++ "\n" ++ entry ".")
+    IO.println s!"Made a Lean project in {absDir}. It requires {which}."
+    IO.println s!"`leanify certify {path}` builds the certificate (the first time, it fetches what \
+      the project requires); or run `lake update` and `lake build {ns}.Certified` there."
     return 0
   -- the library's source directory: the folders between the project and the namespace's own
   let some root := root? | return 0
@@ -605,14 +661,25 @@ def certifyCommand (path : System.FilePath) (opts : List String) : IO UInt32 := 
     | IO.eprintln s!"leanify certify: the Lean files of {path} were not found (--lean FILE names its compiled file)"; return 1
   let some ns ← namespaceOf compiled
     | IO.eprintln s!"leanify certify: {compiled} has no #leanify_article command"; return 1
-  let inTerminal (cmd : String) (args : Array String) : IO UInt32 := do
+  let inTerminal (cmd : String) (args : Array String) (env : Array (String × Option String) := #[]) : IO UInt32 := do
     IO.println s!"$ {cmd} {" ".intercalate args.toList}   (in {root})"
     try
-      let child ← IO.Process.spawn { cmd, args, cwd := some root }
+      let child ← IO.Process.spawn { cmd, args, cwd := some root, env }
       child.wait
     catch e => IO.eprintln s!"{cmd} could not be run: {e}. Install Lean (https://lean-lang.org/install)."; pure 1
-  unless ← (root / ".lake" / "packages").pathExists do
-    let code ← inTerminal "lake" #["update"]
+  unless (← (root / ".lake" / "packages").pathExists) || (← (root / "lake-manifest.json").pathExists) do
+    -- (a project that shares the packages of a Leanify checkout in which mathlib is built
+    -- does not fetch mathlib's build again)
+    let lakefile := root / "lakefile.toml"
+    let text ← if ← lakefile.pathExists then IO.FS.readFile lakefile else pure ""
+    let shared : Option String := (text.splitOn "\n").findSome? fun l =>
+      match l.splitOn "packagesDir = \"" with
+      | [_, r] => (r.splitOn "\"").head?
+      | _ => none
+    let built ← match shared with
+      | some d => (System.FilePath.mk d / "mathlib" / ".lake" / "build").pathExists
+      | none => pure false
+    let code ← inTerminal "lake" #["update"] (if built then #[("MATHLIB_NO_CACHE_ON_UPDATE", some "1")] else #[])
     if code != 0 then return code
   discard <| prepare path ["--lean", compiled.toString]
   let module := (optArg opts "--module").getD (ns ++ ".Certified")
@@ -683,7 +750,7 @@ def main (args : List String) : IO UInt32 := do
       return 2
     let vocab := (vocabOf (fieldsOf opts)).toOption.getD Vocab.core
     let failed ← checkArticle vocab path (opts.contains "--prose") (opts.contains "--claims")
-      (opts.contains "--json")
+      (opts.contains "--json") (opts.contains "--defined")
     pure (if failed == 0 then 0 else 1)
   | "tex" :: path :: opts => texCommand path opts
   | "certify" :: path :: opts => certifyCommand path opts

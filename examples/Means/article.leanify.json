@@ -259,7 +259,7 @@
    "column": 1,
    "claims": [15]}],
  "namespace": "Means",
- "leanify": "0.6.0",
+ "leanify": "0.7.0",
  "justifications": "Means.Proofs",
  "definitions":
  [{"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → (0 ≤ x ∧ ¬2 = 0) ∧ 0 ≤ x_2 ∧ ¬2 = 0",
@@ -298,8 +298,7 @@
    "key": "H",
    "justification": "Means.Proofs.defined3",
    "index": 3},
-  {"wellDefined":
-   "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → ¬2 = 0 ∧ 0 ≤ (x ^ 2 + x_2 ^ 2) / 2 ∧ ¬2 = 0 ∧ ¬2 = 0",
+  {"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → ¬2 = 0 ∧ 0 ≤ (x ^ 2 + x_2 ^ 2) / 2",
    "symbol": "Q",
    "sentence": 20,
    "name": "Q",

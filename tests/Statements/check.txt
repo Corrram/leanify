@@ -1,11 +1,11 @@
 tests/Statements/article.tex:14:28: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow 2\le x
 tests/Statements/article.tex:18:26: info: claim 1: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\Rightarrow 3\le x
-tests/Statements/article.tex:22:1: info: claim 2: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
+tests/Statements/article.tex:22:1: info: claim 2: \forall x\in \mathbb{R},\ 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
 tests/Statements/article.tex:26:1: info: claim 3: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow x\le {x}^{2}
-tests/Statements/article.tex:30:1: info: claim 4: \forall x\in \mathbb{R},\ \top\land 0<x\Rightarrow 0<{x}^{2}
-tests/Statements/article.tex:34:1: info: claim 5: \exists x\in \mathbb{R},\ 0<x\land (\forall y\in [0,1],\ y\le x)
+tests/Statements/article.tex:30:1: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Statements/article.tex:34:1: info: claim 5: \exists x\in \mathbb{R},\ 0<x\land (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow y\le x)
 tests/Statements/article.tex:40:1: info: claim 6: \exists x\in \mathbb{R},\ 0<x\land (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow y\le x\,{y}^{2})
-tests/Statements/article.tex:47:1: info: claim 7: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\Rightarrow y\le s\Rightarrow s\le \lvert z\rvert\Rightarrow {s}^{-x}\le \lvert \frac{z}{s}\rvert)))
+tests/Statements/article.tex:47:1: info: claim 7: \forall x\in \mathbb{R},\ 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\Rightarrow y\le s\Rightarrow s\le \lvert z\rvert\Rightarrow {s}^{-x}\le \lvert \frac{z}{s}\rvert)))
 tests/Statements/article.tex:55:1: info: claim 8: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<{y}^{2}+x)
 tests/Statements/article.tex:64:1: info: claim 9: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land x\le y)\land y\le x+1)
 tests/Statements/article.tex:68:1: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land x\le y)\land y\le x+1)
@@ -16,8 +16,8 @@ tests/Statements/article.tex:84:1: info: claim 14: \forall x\in \mathbb{R},\ 0<x
 tests/Statements/article.tex:88:1: info: claim 15: \exists x\in \mathbb{R},\ 0<x\land (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land 2\le z)\land (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land z\le s\Rightarrow x\,\log(s)\le y\,s)))
 tests/Statements/article.tex:98:1: info: claim 16: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow 2\le x+y)
 tests/Statements/article.tex:102:1: info: claim 17: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow 1\le x\,y)
-tests/Statements/article.tex:106:1: info: claim 18: \forall x\in \mathbb{R},\ \top\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ \top\land 0\le y\Rightarrow 0<x+y)
-tests/Statements/article.tex:110:32: info: claim 19: \forall x\in \mathbb{R},\ \top\Rightarrow 0\le {x}^{2}
+tests/Statements/article.tex:106:1: info: claim 18: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow 0<x+y)
+tests/Statements/article.tex:110:32: info: claim 19: \forall x\in \mathbb{R},\ 0\le {x}^{2}
 tests/Statements/article.tex:116:1: info: claim 20: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow x\in \mathbb{Z}\land x\,y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x\,y=x\,z))
 tests/Statements/article.tex:116:1: info: claim 21: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow 2\in \mathbb{Z}\land 7\in \mathbb{Z}\land \neg (2\in \mathbb{Z}\land 7\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land 7=2\,z)))
 tests/Statements/article.tex:120:1: info: claim 22: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow {x}^{2}\in \mathbb{Z}\land x\in \mathbb{Z}\land 2\in \mathbb{Z}\land {x}^{2}-x\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-x=2\,y)
@@ -60,7 +60,7 @@ tests/Statements/article.tex:214:69: info: claim 52: \forall x\in \mathbb{R},\ x
 tests/Statements/article.tex:214:130: info: claim 53: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow \top)\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 1\le z\land z\le x\Rightarrow (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow \neg (z=s)\Rightarrow \neg (y(z)=y(s))))\Rightarrow \neg (y(1)=y(2)))
 tests/Statements/article.tex:218:24: info: claim 54: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)
 tests/Statements/article.tex:218:60: info: claim 55: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land y=2\,s+1)\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x+y=2\,s))
-tests/Statements/article.tex:218:128: info: claim 56: \forall x\in \mathbb{R},\ \top\Rightarrow 0<x\Rightarrow 0<{x}^{2}
+tests/Statements/article.tex:218:128: info: claim 56: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
 tests/Statements/article.tex:222:28: info: claim 57: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s)\Rightarrow 2\le x
 tests/Statements/article.tex:226:1: info: claim 58: \forall x\in \mathbb{R},\ 0<x\land 0\le x\land x\le 2\Rightarrow x\le 2
 tests/Statements/article.tex:226:42: info: claim 59: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow 0<{x}^{2}
@@ -70,7 +70,7 @@ tests/Statements/article.tex:234:41: info: claim 61: \forall x\in \mathbb{R},\ x
 tests/Statements/article.tex:238:31: info: claim 62: \exists x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow y<{y}^{2}
 tests/Statements/article.tex:242:1: warning: `small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound: sentence not checked; \zeta is then undefined at line 242
 tests/Statements/article.tex:246:28: info: claim 63: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow y\le {x}^{2})
-tests/Statements/article.tex:252:1: info: claim 64: \forall x\in \mathbb{R},\ \top\land 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
+tests/Statements/article.tex:252:1: info: claim 64: \forall x\in \mathbb{R},\ 2<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x\le y)
 tests/Statements/article.tex:256:1: info: claim 65: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ z\in \mathbb{Z}\land y\le z\Rightarrow 1\le x\,z)
 tests/Statements/article.tex:260:1: info: claim 66: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\exists z\in \mathbb{R},\ y\le x\land x\le z))
 tests/Statements/article.tex:264:1: warning: Q is chosen after x, but its name says it depends only on \nu: list every variable it may depend on, or move the binder of x after the constant: sentence not checked
@@ -101,8 +101,8 @@ tests/Statements/article.tex:331:1: info: claim 87: \forall x\in \mathbb{C},\ x\
 tests/Statements/article.tex:331:1: info: claim 88: \forall x\in \mathbb{C},\ x+\overline{x}=2\,\operatorname{Re}(x)
 tests/Statements/article.tex:331:88: info: claim 89: {\mathrm{i}}^{2}=-1
 tests/Statements/article.tex:331:88: info: claim 90: \lvert 3+4\,\mathrm{i}\rvert=5
-tests/Statements/article.tex:335:1: info: claim 91: \forall x\in \mathbb{C},\ \top\Rightarrow (\forall y\in \mathbb{C},\ \top\land \neg (y=0)\Rightarrow \lvert \frac{x}{y}\rvert=\frac{\lvert x\rvert}{\lvert y\rvert})
-tests/Statements/article.tex:335:1: info: claim 92: \forall x\in \mathbb{C},\ \top\Rightarrow (\forall y\in \mathbb{C},\ \top\land \neg (y=0)\Rightarrow \exp(x+y)=\exp(x)\,\exp(y))
+tests/Statements/article.tex:335:1: info: claim 91: \forall x\in \mathbb{C},\ \forall y\in \mathbb{C},\ \neg (y=0)\Rightarrow \lvert \frac{x}{y}\rvert=\frac{\lvert x\rvert}{\lvert y\rvert}
+tests/Statements/article.tex:335:1: info: claim 92: \forall x\in \mathbb{C},\ \forall y\in \mathbb{C},\ \neg (y=0)\Rightarrow \exp(x+y)=\exp(x)\,\exp(y)
 tests/Statements/article.tex:339:1: info: claim 93: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \mathrm{i}\,\mathrm{i}\,\mathrm{i}=-\mathrm{i}
 tests/Statements/article.tex:339:1: info: claim 94: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (\sum_{y=0}^{x}{\mathrm{i}}^{y}=0)
 tests/Statements/article.tex:343:1: warning: an order ($\le$, $<$) has no meaning on $\mathbb{C}$ in the vocabulary: sentence not checked

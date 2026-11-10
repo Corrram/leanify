@@ -718,6 +718,22 @@ def splitVars (ts : List MTok) : Option (List (List MTok)) := do
       | _ => true) then none
   else some (names.map (· ++ suffix))
 
+/-- The variables of `$x$ and $y$`, `$x$, $y$ and $z$` (each formula the name of one
+variable), joined as `x,y,z`; any other formula is returned as it is. -/
+def joinedVars (cs : List Chunk) : Option (List MTok × List Chunk) := do
+  let (ts, r) ← mathChunk cs
+  let isName (n : List MTok) : Bool := !n.isEmpty && n.all fun t => match t with
+    | .id _ | .digit _ | .sym 95 | .lb | .rb => true
+    | .cmd c => Math.greekNames.contains c
+    | _ => false
+  let rec go : Nat → List MTok → List Chunk → List MTok × List Chunk
+    | 0, acc, r => (acc, r)
+    | f + 1, acc, r =>
+      match (punct 44 r >>= kw [w!"and"]) <|> kw [w!"and"] r <|> punct 44 r with
+      | some (.m b :: r2) => if isName b then go f (acc ++ [.sym 44] ++ b) r2 else (acc, r)
+      | _ => (acc, r)
+  if isName ts then some (go 8 ts r) else some (ts, r)
+
 /-- One binder after `for every|each|all`: a smallness chain, `$x\in A$` (with
 conditions), or `NP $x$` (`For every LTD copula $C$`, as `For an LTD copula $C$`). -/
 def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
@@ -843,12 +859,7 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
             -- `If $a,b$ are positive integers,`, `If $a$ and $b$ are …`,
             -- `If $a_1,\ldots,a_k$ are nonnegative integers with $φ$,`
             (do
-              let (ts, r1) ← mathChunk r
-              let (ts, r1) := match kw [w!"and"] r1 with
-                | some (.m [b] :: r2) => match ts with
-                  | [a] => ([a, .sym 44, b], r2)
-                  | _ => (ts, r1)
-                | _ => (ts, r1)
+              let (ts, r1) ← joinedVars r
               let r2 ← kw [w!"are"] r1
               let (b, r3) ← pluralNoun ts r2
               if (punct 44 r3).isNone then none else some (.hyp b, r3)) <|>
@@ -984,6 +995,10 @@ inductive Clause where
   result, with the variable of the induction replaced by `E` (the hypothesis of an
   induction, or its conclusion for `n+1`). -/
   | stmtAt (e : MT)
+  /-- `the statement holds for all smaller values [of $n$]`, `… for all integers less than
+  $n$`: the statement for every value of the variable of the induction below it (`v`: the
+  variable, if the sentence names it). -/
+  | stmtBelow (v : Option Codes)
   /-- What `stmtAt` stands for, once the proof is known: the clauses `stmt` of the
   statement, under the hypotheses `hyps` of the result that speak about its variable
   `v`, with `v` replaced by `e`. The grammar does not produce it. -/
@@ -1233,8 +1248,9 @@ def asLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
   some (.fact m, r2)
 
 /-- `the statement|claim|assertion|result|lemma|… holds|is true for $E$` (`for some $n$`,
-`for a given $n$`), and `… for all|every|each $m<n$`: the statement of the result that
-is being proved, about `E`, or about every `m` of the binder. -/
+`for a given $n$`), `… for all|every|each $m<n$`, and `… for all smaller values`: the
+statement of the result that is being proved, about `E`, about every `m` of the binder,
+or about every value of the variable of the induction below it. -/
 def stmtClause (cs : List Chunk) : Option (Clause × List Chunk) := do
   let r ← kw [w!"the"] cs
   let r ← [w!"statement", w!"claim", w!"assertion", w!"result", w!"lemma", w!"theorem", w!"proposition",
@@ -1243,6 +1259,30 @@ def stmtClause (cs : List Chunk) : Option (Clause × List Chunk) := do
   let r ← kw [w!"for"] r
   match kw [w!"all"] r <|> kw [w!"every"] r <|> kw [w!"each"] r with
   | some r1 =>
+    -- `for all smaller values [of $n$]`, `for all [positive] integers less than $n$`
+    let kinds : List Codes := [w!"value", w!"values", w!"integer", w!"integers", w!"number", w!"numbers",
+      w!"index", w!"indices", w!"case", w!"cases"]
+    let signs : List Codes := [w!"positive", w!"nonnegative", w!"non-negative", w!"natural"]
+    let var (r : List Chunk) : Option (Codes × List Chunk) := match r with
+      | .m [.id v] :: r' => some (v, r')
+      | _ => none
+    let below : Option (Clause × List Chunk) :=
+      (do
+        let r2 ← kw [w!"smaller"] r1
+        let r2 := (signs.findSome? fun w => kw [w] r2).getD r2
+        let r3 ← kinds.findSome? fun w => kw [w] r2
+        match kw [w!"of"] r3 >>= var with
+        | some (v, r4) => some (.stmtBelow (some v), r4)
+        | none => some (.stmtBelow none, r3)) <|>
+      (do
+        let r2 := (signs.findSome? fun w => kw [w] r1).getD r1
+        let r3 ← kinds.findSome? fun w => kw [w] r2
+        let r4 ← kw [w!"less", w!"than"] r3 <|> kw [w!"smaller", w!"than"] r3 <|> kw [w!"below"] r3
+        let (v, r5) ← var r4
+        some (.stmtBelow (some v), r5))
+    match below with
+    | some res => some res
+    | none =>
     let (ts, r2) ← mathChunk r1
     match binderMath ts with
     | some ([v], d) => some (.under (.every [v] d) (.stmtAt (.id v)), r2)
@@ -1490,12 +1530,7 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
   -- relatively prime`: each variable has the adjectives (or is of the noun), and the
   -- collective properties hold together
   match (do
-      let (ts, r1) ← mathChunk cs
-      let (ts, r1) := match kw [w!"and"] r1 with
-        | some (.m [b] :: r2) => match ts with
-          | [a] => ([a, .sym 44, b], r2)
-          | _ => (ts, r1)
-        | _ => (ts, r1)
+      let (ts, r1) ← joinedVars cs
       let vars ← ((seqBound ts).bind fun (l, b) => if b.isEmpty then some [l] else none) <|> splitVars ts
       -- (a bound after the variables is not read here)
       if vars.length > 1 && vars.any (·.any fun t => (Math.relOf t).isSome) then none else
@@ -2438,9 +2473,10 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let m ← Math.parseFormula ts
     if (kw [w!"be"] r).isSome then none else
     if isCondition m then some (.ifCond m, r) else none) <|>
-  -- `$a,b$ be positive integers`, `$x_1,\ldots,x_n$ be real numbers [with $φ$]`
+  -- `$a,b$ be positive integers`, `$a$ and $b$ be positive integers`,
+  -- `$x_1,\ldots,x_n$ be real numbers [with $φ$]`
   (do
-    let (ts, r) ← mathChunk cs
+    let (ts, r) ← joinedVars cs
     let r1 ← kw [w!"be"] r
     pluralNoun ts r1) <|>
   (do
@@ -2936,6 +2972,20 @@ def supposeSent (cs : List Chunk) : Option Sent := do
   let asBinder : Option Bind := match r with
     | [.m ts, .p 46] => (binderMath ts).map fun (vs, d) => Bind.every vs d
     | _ => none
+  -- `Suppose that $a$ and $b$ are positive integers.`: of new variables, as `Let`
+  let plural : Option Bind := do
+    let (ts, r1) ← joinedVars r
+    let r2 ← kw [w!"are"] r1
+    let (b, r3) ← pluralNoun ts r2
+    if isEnd r3 then some b else none
+  -- `Suppose that $n$ is a positive integer.`
+  let singular : Option Bind := do
+    let (ts, r1) ← mathChunk r
+    let v ← match ts with | [.id v] => some v | _ => none
+    let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
+    let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+    if ws.isEmpty || !isEnd (r2.drop ws.length) then none else some (.noun (ws ++ [.m [.id v]]))
+  let asBinder := asBinder <|> (plural <|> singular).map Bind.hyp
   let (hs, r1) ← hypClauses 4 r []
   if isEnd r1 then some (.suppose hs additive caseLike contra asBinder) else none
 

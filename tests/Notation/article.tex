@@ -114,4 +114,38 @@ For $x\in\mathbb{R}$, set $q(x)\mathrel{:=}x^2+c_1$.
 \begin{lemma}\label{lem:defining-signs}
 $c_3=9$ and $q(1)=3$.
 \end{lemma}
+
+\section{The words and the integrals of the core}
+
+The words about numbers that every article uses need no field: \emph{real number}, \emph{integer}, \emph{positive}, \emph{rational number}.
+An integral $\int_a^b$ is the oriented integral of a function of a real variable; it is meaningful when the function is integrable between $a$ and $b$.
+
+\begin{lemma}\label{lem:core-words}
+For all real numbers $x$ and $y$, $x^2+y^2\ge2xy$.
+Moreover, for every positive integer $n$ and every nonnegative real number $a$, $a^n\ge0$.
+There is no rational number $q$ such that $q^2=2$.
+\end{lemma}
+
+\begin{lemma}\label{lem:integrals}
+We have $\int_1^2\frac1x\,dx=\log 2$.
+Moreover, for every $a>0$ and every $b>a$, $\int_a^b x\,dx=\frac{b^2-a^2}{2}$.
+Finally, $\int_0^1\int_0^1 st\,ds\,dt=\frac14$.
+\end{lemma}
+
+A variable whose domain uses the variables before it brings them along: a quantity defined with it depends on them too.
+
+\begin{lemma}\label{lem:dependent-domain}
+Let $n\ge1$ and $x\in[0,n]$.
+Set $r\coloneqq\frac{1}{x+1}$.
+Then $r\le1$.
+Moreover, for every $t\in(0,1)$, $r\le1+t$.
+\end{lemma}
+
+The same holds for a family: the domain of its argument may use its index.
+For $c\in(0,2)$ and $t\in[0,c]$, let $\kappa_c(t)\coloneqq c-t$.
+
+\begin{lemma}\label{lem:dependent-family}
+We have $\kappa_1(\frac12)=\frac12$.
+\end{lemma}
+
 \end{document}

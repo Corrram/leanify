@@ -68,8 +68,9 @@ rev = "main"
 ```
 
 Or start from the article alone: with the checker on the `PATH`,
-`leanify certify article.tex` makes its folder a Lean project, writes the Lean
-files, fetches mathlib and builds the certificate.
+`leanify certify article.tex` makes its folder a Lean project that requires the
+Leanify of the checker, writes the Lean files, fetches mathlib and builds the
+certificate.
 
 `leanify init` writes four files next to the article, and adds the article's
 library to `lakefile.toml`:
@@ -119,7 +120,12 @@ The examples are short papers in the usual style, each certified by CI:
   square roots that the standard tactic does not know, so its results are
   marked *argued*, not *derived*;
 * [`tests/Arguments`](tests/Arguments), proofs with assumptions, cases,
-  contradictions and inductions, each step closed by the standard tactic.
+  contradictions and inductions, each step closed by the standard tactic;
+* [`tests/TailDependence`](tests/TailDependence), two notions of positive
+  dependence of copulas, with the field `unitsquare`; the independence copula shows
+  that the hypotheses of its proofs can be met.
+
+`bash scripts/ci.sh` runs every check of the repository, as CI does.
 
 ## Documentation
 

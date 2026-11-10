@@ -30,11 +30,11 @@ of the items below as well.
    model is parametric in the space.
 4. **Anaphora to extremizers.** "For $n=-1$, this NOUN is $W$.", and the
    identification of a maximizer as `A_w^\top` or `B_b^\top`.
-5. **A definition under a hypothesis.** Assumptions, cases, contradictions and
-   inductions are read, with one rule for where a hypothesis ends
+5. **A definition whose hypothesis speaks about other variables.** A definition made
+   under hypotheses takes those about its own variables
    ([Writing for Leanify](writing.md#hypotheses-assumptions-cases-contradictions)).
-   A definition made under a hypothesis (`Assume $x\ne0$. Set
-   $y\coloneqq\frac1x$.`) does not take the hypothesis yet.
+   One that also speaks about a variable the definition does not use (`Assume
+   $xz\ne0$. Set $y\coloneqq\frac1x$.`) is not taken.
 6. **Parametric families defined by a construction**, such as the extremizers
    `F_\theta` of the second article (Section 3, `def:extremizers`), which
    Theorem 1.1 uses through `G(\theta)` and `P(\theta)`.
@@ -93,6 +93,7 @@ grammar.
    in both cases is the grammar: it says what a sentence means. The readings it
    gives are printed, and a second, independent reader of the same grammar would
    be the next step.
-7. **The core language still has `[0,1]`.** The properties of copulas moved to the
-   field `unitsquare`, whose constants name their Lean meanings. The type `[0,1]`,
-   Lebesgue measure on it and integrals over it are still in the core.
+7. **Inverse functions and other partial functions of a field.** A symbol of a field
+   is a total function (`\sinh`). A function with a domain (`\arcsin` on `[-1,1]`)
+   needs the domain in the field's data, as an article's own definitions have it.
+

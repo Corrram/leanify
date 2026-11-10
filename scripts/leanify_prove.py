@@ -381,10 +381,17 @@ def write_back(lines, blocks, proofs):
 
 
 def add_stubs(lines, report, ns):
-    """The proofs file with a stub for every claim it has no `proofK` or `refuteK` for, and
-    for every set of hypotheses it has no `satisfiedK` for (before `end NS.Proofs`)."""
+    """The proofs file with a stub for every definition it has no `definedI` for, every claim
+    it has no `proofK` or `refuteK` for, and every set of hypotheses it has no `satisfiedK`
+    for (before `end NS.Proofs`)."""
     text = "\n".join(lines)
     new = []
+    # (a definition the article has gained: the stub that `leanify init` writes)
+    for d in report.get("definitions", []):
+        i = d["index"]
+        if not re.search(rf"^theorem defined{i} ", text, re.M):
+            new += [f"/-- Definition {i}: `{d.get('name', i)}` is well defined. -/",
+                    f"theorem defined{i} : wellDefined{i} := by", f"  unfold wellDefined{i}", "  definedness []", ""]
     for k, c in enumerate(report["claims"]):
         reading = c["reading"].replace("-/", "- /").replace("/-", "/ -")
         if not re.search(rf"^theorem (proof|refute){k} ", text, re.M):

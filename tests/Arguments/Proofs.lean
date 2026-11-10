@@ -368,9 +368,68 @@ theorem satisfied50 : satisfiable50 := by
   have := Leanify.Prelude.isInt.add_one_le_of_lt Leanify.Prelude.isInt_zero hy.1 hy.2
   linarith
 
-/-- Claim 51, statement (lemma at line 209; no premises):
-`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1` -/
+/-- Claim 51, statement:
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x+1\le 2\,x` -/
 theorem proof51 : obligation51 := by
   leanify_step
+
+/-- Claim 52, proof step:
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow y+1\le 2\,y)\Rightarrow x+1\le 2\,x` -/
+theorem proof52 : obligation52 := by
+  leanify_step
+
+/-- The hypotheses of claim 52 can hold together. -/
+theorem satisfied52 : satisfiable52 := by
+  unfold satisfiable52
+  refine ⟨1, ⟨Leanify.Prelude.isInt_one, by norm_num⟩, fun y _ hy => ?_⟩
+  have := Leanify.Prelude.isInt.add_one_le_of_lt Leanify.Prelude.isInt_zero hy.1 hy.2
+  linarith
+
+/-- Claim 53, statement:
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)` -/
+theorem proof53 : obligation53 := by
+  leanify_step
+
+/-- The hypotheses of claim 53 can hold together. -/
+theorem satisfied53 : satisfiable53 := by
+  leanify_values 1
+
+/-- Claim 54, statement:
+`\forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))` -/
+theorem proof54 : obligation54 := by
+  leanify_step
+
+/-- The hypotheses of claim 54 can hold together. -/
+theorem satisfied54 : satisfiable54 := by
+  leanify_values 1
+
+/-- Claim 55, statement:
+`\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1` -/
+theorem proof55 : obligation55 := by
+  leanify_step
+
+/-- The hypotheses of claim 55 can hold together. -/
+theorem satisfied55 : satisfiable55 := by
+  leanify_values 1
+
+/-- Claim 56, proof step:
+`\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=x\,(\frac{1}{x})` -/
+theorem proof56 : obligation56 := by
+  leanify_step
+
+/-- Claim 57, proof step:
+`\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1` -/
+theorem proof57 : obligation57 := by
+  leanify_step
+
+/-- Claim 58, statement:
+`\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1` -/
+theorem proof58 : obligation58 := by
+  leanify_step
+
+/-- Definition 0: `y` is well defined. -/
+theorem defined0 : wellDefined0 := by
+  unfold wellDefined0
+  definedness []
 
 end Arguments.Proofs

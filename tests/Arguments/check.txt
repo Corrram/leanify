@@ -49,13 +49,21 @@ tests/Arguments/article.tex:185:1: info: claim 47: \forall x\in \mathbb{R},\ x\i
 tests/Arguments/article.tex:185:1: info: claim 48: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x\Rightarrow (x-1\in \mathbb{Z}\land 0<x-1\Rightarrow 2\,(x-1)\le {(x-1)}^{2}+1)\Rightarrow {(x-1)}^{2}+3={x}^{2}-2\,x+4\land {x}^{2}-2\,x+4\le {x}^{2}+1
 tests/Arguments/article.tex:193:1: info: claim 49: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 1\le x
 tests/Arguments/article.tex:199:1: info: claim 50: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow 1\le y)\Rightarrow 1\le x
-tests/Arguments/article.tex:209:1: info: claim 51: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1
-tests/Arguments/article.tex:213:1: info: the proof of lem:unnamed is not read completely (Leanify cannot read 1 of its 3 sentences): lem:unnamed can be checked, but it is not derived from this proof
-tests/Arguments/article.tex:213:1: warning: the statement for a value of which variable? Say so before (We argue by induction on $n$.): sentence not checked
-tests/Arguments/article.tex:214:1: warning: a contradiction without a hypothesis: say what is assumed (Suppose, for contradiction, that …): sentence not checked
-tests/Arguments/article.tex: 0 definitions, 52 claims
-  text: 0 compiled, 0 failed, 14 prose (of 14)
-  results: 24 compiled, 0 failed, 0 prose (of 24)
-  proofs: 63 compiled, 2 failed, 1 prose (of 66)
-  all: 87 compiled, 2 failed, 15 prose (of 104)
-  complete proofs: 12 of 13 (a result is derived from a proof that is read completely)
+tests/Arguments/article.tex:206:1: info: claim 51: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x+1\le 2\,x
+tests/Arguments/article.tex:212:1: info: claim 52: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow y\in \mathbb{Z}\land 0<y\Rightarrow y+1\le 2\,y)\Rightarrow x+1\le 2\,x
+tests/Arguments/article.tex:221:1: info: claim 53: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
+tests/Arguments/article.tex:226:1: info: claim 54: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))
+tests/Arguments/article.tex:234:1: info: defines y (y)
+tests/Arguments/article.tex:235:1: info: claim 55: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
+tests/Arguments/article.tex:239:1: info: claim 56: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=x\,(\frac{1}{x})
+tests/Arguments/article.tex:240:1: info: claim 57: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
+tests/Arguments/article.tex:250:1: info: claim 58: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow 2\le x+1
+tests/Arguments/article.tex:254:1: warning: the statement for a value of which variable? Say so before (We argue by induction on $n$.): sentence not checked
+tests/Arguments/article.tex:255:1: warning: a contradiction without a hypothesis: say what is assumed (Suppose, for contradiction, that …): sentence not checked
+tests/Arguments/article.tex:256:1: warning: smaller values of which variable? Say so before (We argue by induction on $n$.), or name it (for all smaller values of $n$): sentence not checked
+tests/Arguments/article.tex: 1 definitions, 59 claims
+  text: 0 compiled, 0 failed, 17 prose (of 17)
+  results: 34 compiled, 0 failed, 0 prose (of 34)
+  proofs: 68 compiled, 3 failed, 0 prose (of 71)
+  all: 102 compiled, 3 failed, 17 prose (of 122)
+  complete proofs: 14 of 15 (a result is derived from a proof that is read completely)

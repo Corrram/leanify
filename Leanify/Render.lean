@@ -9,7 +9,6 @@ namespace Leanify
 
 def Ty.tex : Ty → String
   | .real => "\\mathbb{R}"
-  | .unit => "[0,1]"
   | .prop => "\\mathrm{Prop}"
   | .fn a b => (match a with | .fn .. => "(" ++ a.tex ++ ")" | _ => a.tex) ++ "\\to " ++ b.tex
   | .base k => s!"\\mathsf\{T}_\{{k}}"
@@ -29,9 +28,7 @@ def SetProp.word : SetProp → String
 
 def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
-  | .leb => "\\lambda" | .borel => "\\operatorname{Borel}"
-  | .measurableSet1 | .measurableSet2 => "\\operatorname{Meas}"
-  | .integrable => "\\operatorname{Int}" | .hasDerivWithin => "\\operatorname{HasDeriv}"
+  | .hasDerivWithin => "\\operatorname{HasDeriv}"
   | .intervalIntegral => "\\int" | .intervalIntegrable => "\\operatorname{Int}"
   | .compact2 => "\\operatorname{compact}" | .convex2 => "\\operatorname{convex}"
   | .symm2 => "\\operatorname{symmetric}" | .continuousOn => "\\operatorname{continuous}"
@@ -67,7 +64,8 @@ def Tm.prec : Tm → Nat
   | .neg .. => 8
   | _ => 9
 
-/-- A numeral or a quotient of numerals (displayed without its coercion to `[0,1]`). -/
+/-- A numeral or a quotient of numerals (displayed without its coercion to an interval
+type, `[0,1]`). -/
 def Tm.isNumeral : Tm → Bool
   | .num _ => true
   | .div x y => x.isNumeral && y.isNumeral
@@ -123,7 +121,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .max) x) y => "\\max\\{" ++ x.tex cs gs ls ++ "," ++ y.tex cs gs ls ++ "\\}"
   | .app (.app (.app (.app (.prim .hasDerivWithin) f) s) x) d =>
       "(" ++ f.tex cs gs ls ++ ")'(" ++ x.tex cs gs ls ++ ")=" ++ d.tex cs gs ls ++ "\\text{ within }" ++ s.tex cs gs ls
-  | .app (.prim .leb) s => "\\lambda\\bigl(" ++ s.tex cs gs ls ++ "\\bigr)"
   -- a property of a function on a domain: `continuous(f) on {x : …}`
   | .app (.app (.prim .continuousOn) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
@@ -165,7 +162,19 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
       else (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
   | .app (.const i) x =>
     let n := cs.getD i s!"c_{i}"
-    if n.isEmpty then x.tex cs gs ls
+    -- an integral of the vocabulary (`\int_0^1`), of a function: over its variable
+    let integral : Option String := match x with
+      | .lam _ _ body =>
+        if n.startsWith "\\int" then
+          let v := varNames.getD ls.length "v"
+          let s := body.tex cs gs (v :: ls)
+          some (n ++ " " ++ (if body.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,d" ++ v)
+        else none
+      | _ => none
+    if let some s := integral then s
+    else if n.isEmpty then x.tex cs gs ls
+    -- (a numeral as an element of a type is written alone)
+    else if n.startsWith "\\langle #\\rangle" && x.isNumeral then x.tex cs gs ls
     else if n == "-" then "-" ++ cwrap 8 x ls
     else if (n.splitOn "#").length > 1 then "".intercalate (n.splitOn "#" |>.intersperse (x.tex cs gs ls))
     else n ++ "(" ++ x.tex cs gs ls ++ ")"
@@ -219,8 +228,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let dom := match d with | .tt => "" | d => "\\,[" ++ d.tex cs gs (v :: ls) ++ "]"
     "(" ++ v ++ "\\in " ++ t.tex ++ dom ++ "\\mapsto " ++ b.tex cs gs (v :: ls) ++ ")"
   | .num n => toString n
-  | .ofUnit x => x.tex cs gs ls
-  | .toUnit x => if x.isNumeral then x.tex cs gs ls else "\\langle " ++ x.tex cs gs ls ++ "\\rangle_{[0,1]}"
   | .add x y => wrap 6 x ++ "+" ++ wrap 7 y
   | .sub x y => wrap 6 x ++ "-" ++ wrap 7 y
   | .mul x y => wrap 7 x ++ "\\," ++ wrap 8 y
@@ -249,9 +256,6 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     "\\forall " ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
   | .ex t b => let v := varNames.getD ls.length "v"
     "\\exists " ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
-  | .integral b => let v := varNames.getD ls.length "v"
-    let s := b.tex cs gs (v :: ls)
-    "\\int_0^1 " ++ (if b.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,d" ++ v
   | .guard _ e => e.tex cs gs ls
   -- the least upper (greatest lower) bound of a set, as `\sup` and `\inf` compile
   | .the .real (.and (.all .real (.imp p (.le (.loc 0) (.loc 1))))

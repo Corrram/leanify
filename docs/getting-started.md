@@ -67,7 +67,7 @@ name = "mynote"
 [[require]]
 name = "leanify"
 git = "https://github.com/Corrram/leanify.git"
-rev = "main"   # or a commit, for a reproducible build
+rev = "main"   # or a tag (`v0.7.0`) or a commit, for a reproducible build
 ```
 
 Then fetch Leanify and mathlib, with mathlib's compiled files:
@@ -86,8 +86,10 @@ leanify certify article.tex
 ```
 
 makes the folder a Lean project, writes the Lean files of step 4, fetches
-Leanify and mathlib, and builds the certificate of step 5. This guide takes the
-steps one at a time.
+Leanify and mathlib, and builds the certificate of step 5. The project requires the
+Leanify that the checker was built from: its release, or, for a checker that runs
+from a checkout of Leanify, that checkout, whose mathlib it then uses (the first
+certificate takes seconds). This guide takes the steps one at a time.
 
 ## 2. Write the article
 

@@ -60,6 +60,9 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\forall x,y\in A: φ`, `\exists x\in A: φ` | quantifiers over real numbers in `A` (the domain ends at the first `:` or `,`; the body extends to the end of the formula) |
 | `\neg`, `\land`/`\wedge`, `\lor`/`\vee`, `\Rightarrow`/`\implies`, `\iff`/`\Leftrightarrow` | the connectives, binding in this order (`\neg` the tightest) |
 | `\int_0^1 x\,dx` | as `\int_0^1 x\,\mathrm{d}x` |
+| `\int_a^b e\,dx`, `\int_1^2\frac1x\,dx`, `\int_0^x t^2\,dt` | the oriented integral of a function of a real variable. It is meaningful when `e` is defined between `a` and `b` and integrable there (so `\int_1^2\frac1x\,dx` is, and `\int_{-1}^1\frac1x\,dx` is not). With the field `unitsquare`, `\int_0^1` is the integral over the type `[0,1]` |
+| `\int_0^1\int_0^1 e\,ds\,dt` | iterated integrals: the innermost integral takes the first differential |
+| `\cosh x`, `\sin^2 x`, `\arctan x` | a named function (LaTeX's operator names) applies to what follows it, with or without parentheses. What the name means is said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field (`\cosh` in `hyperbolic`); a name without a meaning is reported, with the field that reads it |
 | `\mathbb{N}`, `\mathbb{N}_0`, `\mathbb{Z}` | the natural numbers (with 0, as in mathlib; write `n\ge1` for the positive ones) and the integers, as real numbers |
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
@@ -419,6 +422,8 @@ place. `tests/Arguments/article.tex` uses each form.
 | `\item \emph{Base case: $n=1$.} …`, `\item \emph{Induction step: $n\ge2$.} …`, `\item \emph{Induction step.} …` | the cases of an induction: cases like any other; the heading `Induction step.` makes no hypothesis |
 | `the statement holds for $n$` (`the claim`, `the assertion`, `the formula`, …; `is true for`), as a hypothesis (`Assume that the statement holds for $n$.`) or as a claim (`Hence the statement holds for $n+1$.`) | the statement of the result that is being proved, about the given value of the variable of the induction: for `$n-1$`, `(n - 1 ∈ ℤ ∧ 0 < n - 1) → …`, with the domain of the variable and the hypotheses of the result about it |
 | `the statement holds for all $m<n$` (`every`, `each`), in a strong induction | the statement about every such `m`: `∀ m, m < n → (m ∈ ℤ ∧ 0 < m → …)` |
+| `the statement holds for all smaller values` (`for every smaller integer`, `for all smaller values of $n$`, `for all positive integers less than $n$`) | the same, in words: the statement about every value of the variable of the induction below it |
+| `Let $x$ and $y$ be positive real numbers.`, `Let $a$, $b$ and $c$ be integers.`, `Suppose that $a$ and $b$ are positive real numbers.`, `Suppose that $n$ is a positive integer.` | several variables of one kind; an assumption about variables that are not bound yet introduces them, as `Let` does |
 
 **The rules can be applied to a text that meant something else.** `Assume that
 $x\ge0$. … Assume that $x<0$. …`, meant as two cases, is read as one assumption
@@ -458,16 +463,27 @@ The base case is read as `∀ n, … → n = 1 → n² = 1`, the last sentence a
 integer `n` for which the statement holds gives it for `n+1`. The lemma rests on
 these steps. That it follows from them is the induction principle, which is a
 Lean argument and not a step of the text; the standard tactic does not apply it,
-so a result that it cannot prove otherwise is *argued*. Two forms are not read:
-`the statement holds for all smaller values` (name them: `for all $m<n$`), and
-the statement for another value when no sentence names the variable of the
-induction (the finding says so). When another variable of the result depends on
-the variable of the induction, write the hypothesis out
+so a result that it cannot prove otherwise is *argued*. The statement for another
+value is not read when no sentence names the variable of the induction (the finding
+says so; `for all smaller values of $n$` names it itself). When another variable of
+the result depends on the variable of the induction, write the hypothesis out
 (`Assume that $(n-1)^2\ge n-1$.`).
 
-A definition made under a hypothesis (`Assume $x\ne0$. Set $y\coloneqq\frac1x$.`)
-does not take the hypothesis: state the condition where the variable is bound
-(`Let $x\in\mathbb{R}\setminus\{0\}$.`).
+**A definition under a hypothesis.** A definition made among the variables of a
+result or proof is a function of the variables it uses: after `Let $x$ be a real
+number.`, `Set $y\coloneqq\frac1x$.` defines `y(x)`, and each use of `y` is `y(x)`.
+Its domain is what the text says about those variables:
+
+* the domains of the variables (`Let $x>0$.`);
+* the hypotheses in force that speak only about them: after `Assume that
+  $x\ne0$.`, the definition is well defined if `∀ x, x ≠ 0 → x ≠ 0`, and each use
+  of `y` asks that `x ≠ 0` (`leanify check --defined` prints both). A hypothesis
+  that also speaks about a variable the definition does not use (`Assume that
+  $xz\ne0$.` for `\frac1x`) is not taken: state it about the variables of the
+  definition;
+* a variable whose domain uses the variables before it brings them along: after
+  `Let $n\ge1$ and $x\in[0,n]$.`, `Set $r\coloneqq\frac1{x+1}$.` defines `r(n,x)`
+  for `x ∈ [0,n]`, although its formula does not mention `n`.
 
 ## Checking while writing
 

@@ -1,6 +1,5 @@
 import Leanify.Syntax
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Algebra.Order.Archimedean.Real.Basic
@@ -28,12 +27,10 @@ definitions and `L` those of the bound variables. -/
 
 namespace Leanify
 open MeasureTheory
-open scoped unitInterval
 
 /-- The meaning of a type, given the meanings `B` of the vocabulary's base types. -/
 @[reducible] def Ty.denote (B : Nat → Type) : Ty → Type
   | .real => ℝ
-  | .unit => I
   | .prop => Prop
   | .fn a b => a.denote B → b.denote B
   | .base k => B k
@@ -41,7 +38,6 @@ open scoped unitInterval
 /-- A value of every type (used for ill-typed or undefined terms). -/
 def Ty.default {B : Nat → Type} (d : (k : Nat) → B k) : (t : Ty) → t.denote B
   | .real => (0 : ℝ)
-  | .unit => (0 : I)
   | .prop => False
   | .fn _ b => fun _ => Ty.default d b
   | .base k => d k
@@ -66,10 +62,6 @@ def Model.baseOf (ts : List (Σ T : Type, T)) (k : Nat) : Type := (ts.getD k ⟨
 def Model.defaultOf (ts : List (Σ T : Type, T)) (k : Nat) : Model.baseOf ts k := (ts.getD k ⟨Unit, ()⟩).2
 
 namespace Prelude
-noncomputable def leb (A : I → Prop) : ℝ := (volume {x : I | A x}).toReal
-def measurableSet1 (A : I → Prop) : Prop := MeasurableSet {x : I | A x}
-def measurableSet2 (A : I → I → Prop) : Prop := MeasurableSet {p : I × I | A p.1 p.2}
-def integrable (f : I → ℝ) : Prop := Integrable f
 def hasDerivWithin (f : ℝ → ℝ) (S : ℝ → Prop) (x d : ℝ) : Prop :=
   HasDerivWithinAt f d {y | S y} x
 noncomputable def intervalIntegral (a b : ℝ) (f : ℝ → ℝ) : ℝ := ∫ t in a..b, f t
@@ -225,11 +217,6 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .rpow => fun x y => x ^ y
   | .min => fun x y => Min.min x y
   | .max => fun x y => Max.max x y
-  | .leb => Prelude.leb
-  | .borel => fun T => Measurable T
-  | .measurableSet1 => Prelude.measurableSet1
-  | .measurableSet2 => Prelude.measurableSet2
-  | .integrable => Prelude.integrable
   | .hasDerivWithin => Prelude.hasDerivWithin
   | .intervalIntegral => Prelude.intervalIntegral
   | .intervalIntegrable => Prelude.intervalIntegrable
@@ -317,14 +304,6 @@ noncomputable def denote (M : Model) (G : List (Val M.base)) : List (Val M.base)
     | some b => some ⟨.fn t b, fun x => Val.cast M.default b (denote M G (⟨t, x⟩ :: L) body)⟩
     | none => none
   | _, .num n => some ⟨.real, numVal n⟩
-  | L, .ofUnit x =>
-    match denote M G L x with
-    | some ⟨.unit, u⟩ => some ⟨.real, (u : ℝ)⟩
-    | _ => none
-  | L, .toUnit x =>
-    match denote M G L x with
-    | some ⟨.real, r⟩ => some ⟨.unit, Set.projIcc 0 1 zero_le_one r⟩
-    | _ => none
   | L, .add x y => real2 (denote M G L x) (denote M G L y) (· + ·)
   | L, .sub x y => real2 (denote M G L x) (denote M G L y) (· - ·)
   | L, .mul x y => real2 (denote M G L x) (denote M G L y) (· * ·)
@@ -364,8 +343,6 @@ noncomputable def denote (M : Model) (G : List (Val M.base)) : List (Val M.base)
   | L, .iff p q => prop2 (denote M G L p) (denote M G L q) (· ↔ ·)
   | L, .all t body => some ⟨.prop, ∀ x : t.denote M.base, Val.prop (denote M G (⟨t, x⟩ :: L) body)⟩
   | L, .ex t body => some ⟨.prop, ∃ x : t.denote M.base, Val.prop (denote M G (⟨t, x⟩ :: L) body)⟩
-  | L, .integral body =>
-    some ⟨.real, ∫ x : I, Val.cast M.default .real (denote M G (⟨.unit, x⟩ :: L) body)⟩
   | L, .guard _ e => denote M G L e
   | L, .the t body =>
     some ⟨t, @Classical.epsilon (t.denote M.base) ⟨Ty.default M.default t⟩

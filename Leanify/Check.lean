@@ -1,4 +1,5 @@
 import Leanify.Render
+import Leanify.Library.Fields
 
 /-! # Checking an article quickly
 
@@ -12,7 +13,7 @@ namespace Leanify
 
 /-- The version of Leanify (of the Lean package and of `leanify.sty`). A reading is
 the reading of a version: reports and the PDF name it. -/
-def version : String := "0.6.0"
+def version : String := "0.7.0"
 
 /-- The file contents as lines of code points (CRLF normalized). -/
 def readLines (path : System.FilePath) : IO (List (List Nat)) := do
@@ -200,7 +201,12 @@ def failedMessage (e : Err) : String :=
   if e.code == E.undefined && !d.isEmpty then
     if d == "\\subset" || d == "\\supset" then
       s!"{d} is ambiguous (inclusion or strict inclusion): write \\subseteq or \\subsetneq, or state the convention (We write $A\\subset B$ if $A\\subseteq B$.)"
-    else if isNotation d then s!"unknown notation {d}" else s!"{d} is not defined"
+    else if isNotation d then
+      -- (a field of the vocabulary that reads the symbol is named)
+      match Fields.all.find? (fun (_, V) => V.symbols.any (·.sym == e.detail)) with
+      | some (f, _) => s!"unknown notation {d}: the field {f} of the vocabulary reads it (\\usepackage[vocab={f}]\{leanify})"
+      | none => s!"unknown notation {d}"
+    else s!"{d} is not defined"
   else if e.code == E.ambiguous then
     s!"{d}; say which is meant in the text (By a … we mean …)"
   else if e.code == E.finding then d
@@ -455,9 +461,10 @@ sentence with `\coloneqq` that has no reading is reported wherever it is.
 Sentences of remarks, examples and conjectures without a reading are not
 reported. `prose` also lists the sentences of proofs (and of remarks) without a
 reading, and the proof sentences whose construction is not supported; `claims`
-prints the reading of every claim. -/
+prints the reading of every claim, and `defined` what each claim and definition needs
+in order to be meaningful (nonzero denominators, arguments inside domains). -/
 def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
-    (prose claims : Bool) (origin : Nat → String × Nat := fun l => (rel, l)) :
+    (prose claims : Bool) (origin : Nat → String × Nat := fun l => (rel, l)) (defined : Bool := false) :
     List String × Coverage := Id.run do
   let mut out : List String := []
   let mut cov : Coverage := {}
@@ -583,9 +590,18 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
       if claims then
         for i in ds do
           out := out ++ [s!"{rel}:{l}:{c}: info: defines {gs.getD i s!"g{i}"} ({defName d i})"]
+          -- (`--defined`: what the definition needs in order to be well defined)
+          if defined then
+            match d.values[i]? with
+            | some v => if v.defined != .tt then
+                out := out ++ [s!"{rel}:{l}:{c}: info: {gs.getD i s!"g{i}"} is well defined if: {V.texTypes (v.defined.tex cs gs [])}"]
+            | none => pure ()
         for k in ks do
           match d.claims[k]? with
-          | some cl => out := out ++ [s!"{rel}:{l}:{c}: info: claim {k}: {V.texTypes (cl.body.tex cs gs [])}"]
+          | some cl =>
+            out := out ++ [s!"{rel}:{l}:{c}: info: claim {k}: {V.texTypes (cl.body.tex cs gs [])}"]
+            if defined && cl.body.defined != .tt then
+              out := out ++ [s!"{rel}:{l}:{c}: info: claim {k} is meaningful if: {V.texTypes (cl.body.defined.tex cs gs [])}"]
           | none => pure ()
   return (out, cov)
 
@@ -676,7 +692,7 @@ def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : L
 diagnostics (as JSON with `json`). Returns the number of sentences that failed to
 compile. -/
 def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := false)
-    (json : Bool := false) : IO Nat := do
+    (json : Bool := false) (defined : Bool := false) : IO Nat := do
   let src ← readSource path
   let lines := src.lines.toList
   match compileArticle V lines with
@@ -685,7 +701,7 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
     pure 1
   | some d =>
     let origin (l : Nat) : String × Nat := src.origin[l - 1]?.getD (path.toString, l)
-    let (out, cov) := diagnostics V path.toString lines d prose claims origin
+    let (out, cov) := diagnostics V path.toString lines d prose (claims || defined) origin defined
     if json then IO.println (checkJson V path.toString src d out cov).compress
     else
       for l in out do IO.println l

@@ -19,4 +19,4 @@ set_option maxHeartbeats 0
 `hyperbolic`. -/
 def Fields.vocabulary : Leanify.Vocab := Leanify.Fields.select ["numbers", "torus", "hyperbolic"]
 
-#leanify_article Fields "article.tex" "fnv1a64:ac381cdeb716e307" with Fields.vocabulary
+#leanify_article Fields "article.tex" "fnv1a64:cd928930adac14fb" with Fields.vocabulary

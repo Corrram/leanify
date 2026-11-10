@@ -18,7 +18,7 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.6, 2026-11-09}
+\date{Version 0.7, 2026-11-10}
 
 \begin{document}
 \maketitle
@@ -90,8 +90,10 @@ check=false & No quick check during the compile. \\
 certify & Before the marks are read, updates the pin of the article and builds
   its certificate with \texttt{lake build}. The first time, when the article has
   no Lean files yet, writes them. Implies \opt{status}. \\
-vocab=NAME & The vocabulary of the article: \texttt{core} (the default) or
-  \texttt{unitsquare} (probability on the unit square). \\
+vocab=FIELDS & The fields of the article's vocabulary, for instance
+  \texttt{vocab=unitsquare} (probability on the unit square, with $[0,1]$ as a type
+  of its own) or \texttt{vocab=\{numbers,hyperbolic\}}. The core vocabulary (real
+  numbers, integers, their signs) is always there. \\
 lean=FILE & The compiled Lean file of the article, if it is not
   \texttt{Compiled.lean} next to it or in the folder that \texttt{leanify init}
   made. \\

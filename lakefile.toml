@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.6.0"
+version = "0.7.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -115,3 +115,10 @@ globs = ["Arguments.+"]
 name = "Notions"
 srcDir = "tests"
 globs = ["Notions.+"]
+
+[[lean_lib]]
+# The type `[0,1]` of the field unitsquare: points, integrals, Lebesgue measure and the
+# law of a pair (no proofs: the statements are compiled and stated).
+name = "Square"
+srcDir = "tests"
+globs = ["Square.+"]

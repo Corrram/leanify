@@ -144,7 +144,14 @@ These hold for every change. A feature that cannot meet them is not added.
     of Mathlib, or definitions in a module the field names). The model of an
     article's vocabulary is built from these names; the kernel checks their types.
     A notion of one subject belongs to its field, not to the core language
-    (`Prim`): the core is real analysis that every article may use.
+    (`Prim`): the core is real analysis that every article may use. A type of one
+    subject is a base type of its field too: `[0,1]` as a type of its own, with its
+    integral and its Lebesgue measure, is data of the field `unitsquare`
+    (`Vocab.intervals`), and without that field `[0,1]` is a set of real numbers
+    like any interval. A change of the core or of a field may not change the Lean
+    statements of the articles that do not use what changed: compare them
+    (`tests/Square` states an article of that field; its `check.txt` has the
+    readings and what each needs in order to be meaningful).
 
 ### The LaTeX package
 
@@ -168,31 +175,40 @@ These hold for every change. A feature that cannot meet them is not added.
 | `Leanify/Grammar.lean` | the sentence constructions (each with one reading) |
 | `Leanify/Elab.lean`, `Doc.lean` | the readings: formulas and clauses to core terms, the article to a document |
 | `Leanify/Syntax.lean`, `Denote.lean` | the core language and its Mathlib meaning |
-| `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the Lean meanings of their constants, the field registry |
+| `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the core vocabulary (`Library/Core.lean`), the Lean meanings of the fields' constants, the field registry |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the commands `#leanify_article` (with the kernel audit), `#leanify_semantics`, `#leanify_certify` |
 | `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/certify/audit/init/prepare/flatten/tex`; `Leanify.version` |
 | `Leanify/Tactic.lean`, `Integers.lean` | `intro_premises`, `definedness`, `leanify_values`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |
-| `scripts/` | `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides), `leanify_diagnostics.py` |
+| `scripts/` | `ci.sh` (the checks of the repository, which CI runs), `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides), `leanify_diagnostics.py` |
 | `tex/leanify.sty` | the LaTeX package |
 | `tests/`, `examples/` | test articles, each compiled and audited by the kernel in CI |
 
-A change is finished when:
+A change is finished when `bash scripts/ci.sh` passes. It is what CI runs
+(`.github/workflows/lean.yml` only calls it), and it reads what to check from the
+repository:
 
-* the checker builds, the test articles build (`lake build Demo Means TailDependence
-  Refuted Notation Vocabulary Fields Calculus PDE Conventions Statements Arguments
-  Notions`), and after a change on the compile path the audit passes on them
-  (`lake exe leanify audit tests/Arguments/article.tex`, and so on);
-* the expected outputs that CI compares are regenerated and reviewed:
-  `tests/*/check.txt`, `examples/Demo/draft.check.txt`, the readings in
-  `article.leanify.json`, `docs/glossary.md` (`lake exe glossary`);
+* every `[[lean_lib]]` of `lakefile.toml` builds (the checker, and the certificates
+  of the test articles);
+* every `check.txt` is the output of `leanify check` on the article next to it, with
+  the options in `check.args` (`bash scripts/ci.sh update` regenerates them and
+  `docs/glossary.md`: review the diff);
+* the proofs of the test articles are as their steps say (verified, standard, no
+  empty hypotheses), and the kernel audit passes on every article with a
+  `Compiled.lean`: after a change on the compile path, look at this part;
+* the build leaves the committed reports (`article.leanify.json`) and pins as they
+  are.
+
+And when:
+
 * an edited test article has its pin updated
   (`lake exe leanify prepare ARTICLE.tex --lean Compiled.lean`);
-* a new test article has a `lean_lib` in `lakefile.toml` and a step in
-  `.github/workflows/lean.yml`;
+* a new test article has a `lean_lib` in `lakefile.toml`, and a `check.txt` with its
+  `check.args` (nothing else names it);
 * `docs/writing.md` documents each new construction with an example;
 * a change of a reading or of the reports has a new `Leanify.version` (the same in
   `lakefile.toml` and `leanify.sty`): a reading is the reading of a version;
-* a run on the regression articles shows no unintended change.
+* the Lean statements of the articles that do not use what changed are the same as
+  before (rule 12).
 
 Write documentation and messages in plain, short sentences. Commit locally; the
 maintainer pushes.

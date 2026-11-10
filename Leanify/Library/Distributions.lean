@@ -1,4 +1,4 @@
-import Leanify.Vocab
+import Leanify.Library.Core
 
 /-! # Vocabulary: probability distributions on ℕ₀
 

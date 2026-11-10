@@ -141,8 +141,14 @@ end MT
 
 namespace Math
 
-/-- Standard functions of a real variable (`\ln` is `\log`). -/
-def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im"]
+/-- The named functions of one argument: LaTeX's operator names (`\sin`, `\cosh`,
+`\arctan`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
+with or without parentheses (`\cosh x`, `\sin^2 x`). This is syntax: what a name means is
+said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field of the
+vocabulary (`\cosh` in `hyperbolic`), and a name without a meaning is reported. -/
+def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im",
+  w!"sinh", w!"cosh", w!"tanh", w!"coth", w!"cot", w!"sec", w!"csc",
+  w!"arcsin", w!"arccos", w!"arctan"]
 
 def isReals : MT → Bool
   | .id n => n == w!"\\mathbb{R}"
@@ -403,6 +409,18 @@ def appHead : MT → Bool
   -- the inverse function `f^{-1}`
   | .sup (.id _) (.neg (.num 1)) => true
   | _ => false
+
+/-- The integrand and the variable of `e\,dx` written with a plain `d`. In
+`\int\int e\,dx\,dy` the inner integral has read all of `e\,dx\,dy` and taken the last
+variable: that variable is the outer integral's, and the inner one takes the one before. -/
+def plainDiff : Nat → MT → Option (MT × Codes)
+  | 0, _ => none
+  | _ + 1, .mul (.mul b (.id [100])) (.id v) => some (b, v)
+  | _ + 1, .mul (.id [100]) (.id v) => some (.num 1, v)
+  | g + 1, .int lo hi b v => do
+    let (b', v') ← plainDiff g b
+    some (.int lo hi b' v', v)
+  | _, _ => none
 
 inductive Mode where
   | top              -- relations, chains, mapsto
@@ -825,10 +843,9 @@ where
       | .diff :: .id v :: r2 => some (.int lo hi body v, r2)
       | _ =>
         -- `\int_0^1 x\,dx`: a plain `d` before the variable at the end
-        match body with
-        | .mul (.mul b (.id [100])) (.id v) => some (.int lo hi b v, r1)
-        | .mul (.id [100]) (.id v) => some (.int lo hi (.num 1) v, r1)
-        | _ => none
+        match plainDiff 8 body with
+        | some (b, v) => some (.int lo hi b v, r1)
+        | none => none
   setBuilder : Nat → List MTok → R
     | 0, _ => none
     | g + 1, ts => (do
