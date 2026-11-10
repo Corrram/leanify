@@ -385,7 +385,13 @@ What this gives, and what it does not:
   `Foo.Quoted.claimK`, the axioms of the certificate are these and the standard three,
   and every verified claim records which quoted results it rests on.
 * A kind of object is assumed to have an element, as every type of the core language
-  has. That the hypotheses of a statement about undefined notions can hold together is
+  has. A sentence that says only that such an object exists (`There is a graph $G$.`,
+  `For every graph $G$ there is a vertex $v$.`) would be verified by this assumption, so it is not read as a claim, and the finding
+  says so. With a condition (`There is a graph $G$ such that …`) it is a claim like any
+  other, and a proof of it may use the assumed element (`Foo.Notion.Graph.2`). So do not
+  declare a noun whose existence is what the article shows (*counterexample*,
+  *solution*).
+* That the hypotheses of a statement about undefined notions can hold together is
   not shown, and the result is marked *argued*.
 * A quoted result is not checked. A false one makes everything provable. The article
   is correct *if* the results it quotes are, which is what a referee assumes as well.

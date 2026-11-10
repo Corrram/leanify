@@ -821,7 +821,8 @@ def nounCandidates (V : Vocab) (cov : Coverage) (k : Nat := 12) : List String :=
     "same", "other", "new", "arbitrary", "suitable", "deterministic", "satisfying", "containing",
     "evaluated", "displayed", "selected", "defined", "bounded", "unbounded", "nonempty", "empty",
     "strong", "weak", "definable", "measurable", "computable", "periodic", "countable", "nonnegative",
-    "nonzero", "trivial", "nontrivial", "large", "small", "general", "special", "active"]
+    "nonzero", "trivial", "nontrivial", "large", "small", "general", "special", "active",
+    "attaining", "having", "lying", "acting", "dividing", "analogous", "possible", "generic", "good"]
   let isAdjective (w : String) : Bool := adjectives.contains w ||
     Fields.all.any fun (_, W) => W.mods.any fun m => m.phrase == [PItem.w (Codes.ofString w)]
   let ok (p : String) : Bool := !p.isEmpty && p.all (fun c => c.isAlpha || c == ' ') &&
@@ -920,7 +921,7 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
       -- what the article uses without defining it, and what it could declare so
       match notDefinedHere V d with
       | [] => pure ()
-      | ns => IO.println s!"{path}: not defined here: {String.intercalate ", " ns}"
+      | ns => IO.println s!"{path}: not defined here (a kind of object among them is assumed to have an element): {String.intercalate ", " ns}"
       -- the results quoted from the literature, which the article assumes
       match (quotedResults d) with
       | [] => pure ()

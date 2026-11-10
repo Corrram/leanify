@@ -1579,9 +1579,30 @@ def addLabels (ls : List Codes) (claims : List Nat) (isDef : Bool) : M Unit := d
       | some cs => { st with labels := st.labels.map fun (k, v) => if k == l then (k, cs ++ claims) else (k, v) }
       | none => { st with labels := st.labels ++ [(l, claims)] }
 
-/-- Record a claim of the current sentence (with premises for proof steps). -/
+/-- A proposition that says nothing: `⊤`, and conjunctions of it. -/
+def saysNothing : Tm → Bool
+  | .tt => true
+  | .and p q => saysNothing p && saysNothing q
+  | _ => false
+
+/-- A proposition that says only that objects of declared kinds exist, whatever is
+given: `∃ x ∈ K, ⊤` after quantifiers and hypotheses. It holds as soon as the kinds
+have elements. -/
+def existsOnly (declared : Nat → Bool) : Tm → Bool
+  | .all _ b => existsOnly declared b
+  | .imp _ q => existsOnly declared q
+  | .ex (.base k) b => declared k && (saysNothing b || existsOnly declared b)
+  | _ => false
+
+/-- Record a claim of the current sentence (with premises for proof steps). A sentence
+that says only that an object of a noun exists which the article does not define
+(`There is a graph $G$.`, `For every graph $G$ there is a tree $T$.`) is not a claim:
+such a kind is assumed to have an element, so the sentence would be verified by the
+assumption. -/
 def emit (c : SentCtx) (body : Tm) (cites : List Codes) : M Nat := do
   let st ← get
+  if existsOnly (fun k => st.vocab.typeLean[k]?.any fun (n, _) => Vocab.isDeclaredName n) body then
+    fail E.finding w!"that such an object exists is not checked: a noun that the article does not define is assumed to have an element"
   match c.ctx.kind with
   | .proof => do
     let cited ← cites.mapM citeClaims

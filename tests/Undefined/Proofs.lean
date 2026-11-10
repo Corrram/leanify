@@ -101,4 +101,14 @@ theorem proof7 : obligation7 := by
 theorem proof8 : obligation8 := by
   leanify_step
 
+/-- Claim 9, statement (lemma at line 84; no premises):
+`\exists x\in \mathrm{Graph},\ \chi(x)\le \chi(x)`
+
+A graph must be given, and nothing is known of a graph. What a proof can use is the
+element that every kind of object is assumed to have. -/
+theorem proof9 : obligation9 := by
+  refine ⟨trivial, ?_⟩
+  unfold claim9
+  exact ⟨Notion.Graph.2, le_refl _⟩
+
 end Undefined.Proofs
