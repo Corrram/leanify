@@ -351,6 +351,49 @@ with that `e`, which otherwise is the exponential. Words before a formula name i
 without a preposition: `the arithmetic mean $\frac{a+b}{2}$ is at least …` compares the
 mean, `the probability of an exit at $-1$ is at least …` is not read.
 
+### Notions that the article does not define
+
+An article on graphs does not define *graph*. If the vocabulary has no field for its
+subject, the article can still be read: it names the nouns it uses without a
+definition in its preamble, and Leanify treats each as a kind of object of which nothing
+is known. Nothing is printed for this, and the text stays as it is.
+
+```latex
+\usepackage[notions={graph, finite graph, connected graph, vertex (vertices)},
+            quantities={degree, distance}]{leanify}
+```
+
+| Write | Reading |
+| --- | --- |
+| `notions={graph}` | *graph* is a noun with a type of its own (`\mathrm{Graph}` in the readings): `Let $G$ be a graph.`, `for all graphs $G$ and $H$`. The plural is formed by rule (`graphs`, `families`, `classes`); an irregular one is given in parentheses, `vertex (vertices)` |
+| `notions={finite graph}` | an entry that ends with a noun is an adjective of that noun: a property of graphs of which nothing is known (`\operatorname{finite}(G)`). It also applies to a noun of the vocabulary (`admissible integer`) |
+| `quantities={degree}` | a word that names a real number, for the names of quantities below |
+| `Let $\chi(G)$ denote the chromatic number of a graph $G$.`, `We write $\Delta(G)$ for the maximum degree of a graph $G$.`, `We denote by $d(G,H)$ the edit distance of graphs $G$ and $H$.`, `Let $L(G)$ denote the line graph of a graph $G$.`, `Let $\kappa$ denote the Catalan constant.` | a symbol for a quantity that the article does not define (in the running text, and only if the sentence has no other reading). Its arguments are the variables of the noun phrases. Its name says the kind of its values: a `number`, `constant`, `value` or `quantity` is a real number, a name that ends with a word of `quantities` is one too, and a name that ends with a noun (`line graph`) is an object of that noun. No property of the values is assumed. A name that does not say the kind (`the independence ratio`) is not read |
+| `\begin{lemma}[{\cite[Theorem~5.2.4]{diestel}}]`, `\begin{theorem}[Brooks, \cite{brooks}]` | a result whose heading cites its source and that the article does not prove is *quoted from the literature*: the article assumes it. A result with a proof in the article is proved there, whatever its heading |
+
+What this gives, and what it does not:
+
+* A statement about graphs is read like any other, and its reading fixes its
+  quantifiers and hypotheses. What *graph* means is not fixed: the reports list the
+  notions as **not defined here**.
+* What is proved about them is proved for whatever they mean. In Lean each is an
+  `opaque` constant (`Foo.Notion.Graph`, `Foo.Notion.chi`), of which the kernel knows the
+  type and nothing else, so a step that uses only what it cites is checked, and a step
+  that needs what a graph is cannot be proved.
+* Such a step needs a fact from the literature. Quote it as a result with its source in
+  the heading. The certificate then holds *given the quoted results*: each is an axiom
+  `Foo.Quoted.claimK`, the axioms of the certificate are these and the standard three,
+  and every verified claim records which quoted results it rests on.
+* A kind of object is assumed to have an element, as every type of the core language
+  has. That the hypotheses of a statement about undefined notions can hold together is
+  not shown, and the result is marked *argued*.
+* A quoted result is not checked. A false one makes everything provable. The article
+  is correct *if* the results it quotes are, which is what a referee assumes as well.
+
+`leanify check` ends with the nouns that stopped the reading (`nouns without a reading:
+polynomial, …`): the candidates for the list. `--notions "graph, finite graph"` tries
+entries without editing the article.
+
 ### Standard notions
 
 A claim `$X$ is ADJ, ADJ [on $A$] and ADJ` (also `The function|map|set|number

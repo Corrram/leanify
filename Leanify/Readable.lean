@@ -25,7 +25,13 @@ partial def tyExpr (M : Expr) : Ty → MetaM Expr
   | .prop => pure (mkSort Level.zero)
   | .fn a b => do mkArrow (← tyExpr M a) (← tyExpr M b)
   | .base k => withCanUnfoldPred (fun _ ci => pure (ci.name != ``Set.Elem)) do
-      whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
+      let e ← whnf (mkApp (mkApp (Lean.mkConst ``Model.base) M) (mkNatLit k))
+      -- (the type of a notion that the article does not define: `Foo.Notion.Graph.1`)
+      match e with
+      | .proj n i s => pure (.proj n i (← whnf s))
+      | _ =>
+        if e.isAppOfArity ``Sigma.fst 3 then pure (mkAppN e.getAppFn (e.getAppArgs.set! 2 (← whnf e.getAppArgs[2]!)))
+        else pure e
 
 /-- The Lean values of the model's constants, read from its definition. -/
 partial def modelConsts (M : Expr) : MetaM (Array Expr) := do
@@ -208,7 +214,7 @@ def nameOfCodes (c : Codes) : Name :=
 constants (`Vocab.typeLean`, `Vocab.constLean`): the declarations it names must be
 there (the article's Lean file imports `Vocab.modules`), and each constant must have the
 type the vocabulary gives it, which the kernel checks when the model is added. -/
-def modelOfVocab (ns : Name) (V : Vocab) : CommandElabM Expr := do
+def modelOfVocab (ns : Name) (V : Vocab) (d : Doc) : CommandElabM Expr := do
   let env ← getEnv
   let lean (what : String) (c : Codes) : CommandElabM Expr := do
     if c.isEmpty then
@@ -218,16 +224,31 @@ def modelOfVocab (ns : Name) (V : Vocab) : CommandElabM Expr := do
       throwError "the Lean meaning {n} of {what} is not there: import the module that defines it \
         ({", ".intercalate (V.modules.map Codes.toString)})"
     pure (Lean.mkConst n)
+  -- a notion that the article does not define: an opaque constant `ns.Notion.Name`, of
+  -- which Lean knows the type and nothing else
+  let notion (name : String) (ty val : Expr) : CommandElabM Expr := do
+    let n := ns ++ `Notion ++ Name.mkSimple name
+    if (← getEnv).contains n then throwError "the notions of {ns} have two with the Lean name {n}"
+    liftCoreM <| addDecl <| Declaration.opaqueDecl
+      { name := n, levelParams := [], type := ty, value := val, isUnsafe := false, all := [n] }
+    pure (Lean.mkConst n)
+  let clean (c : Codes) : String := String.ofList ((Codes.toString c).toList.filter Char.isAlphanum)
   -- the base types, each with an element
   let typeTy := mkSort (Level.succ Level.zero)
   let sigTy := mkApp2 (Lean.mkConst ``Sigma [Level.succ Level.zero, Level.zero]) typeTy
     (.lam `T typeTy (.bvar 0) .default)
   let mut ts : Array Expr := #[]
   for k in [0:V.types.length] do
-    let (t, d) := V.typeLean.getD k ([], [])
+    let (t, dflt) := V.typeLean.getD k ([], [])
     let what := s!"its type {Codes.toString (V.types.getD k [])}"
-    ts := ts.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.succ Level.zero, Level.zero]) typeTy
-      (.lam `T typeTy (.bvar 0) .default) (← lean what t) (← lean (what ++ " (an element of it)") d))
+    if Vocab.isDeclaredName t then
+      -- (a type with an element: the types of the core language are not empty)
+      ts := ts.push (← notion (clean t) sigTy
+        (mkApp4 (Lean.mkConst ``Sigma.mk [Level.succ Level.zero, Level.zero]) typeTy
+          (.lam `T typeTy (.bvar 0) .default) (Lean.mkConst ``Unit) (Lean.mkConst ``Unit.unit)))
+    else
+      ts := ts.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.succ Level.zero, Level.zero]) typeTy
+        (.lam `T typeTy (.bvar 0) .default) (← lean what t) (← lean (what ++ " (an element of it)") dflt))
   -- (a list of types with an element each: in the universe above them)
   let u1 := Level.succ Level.zero
   let tsE := ts.toList.foldr (fun x acc => mkApp3 (Lean.mkConst ``List.cons [u1]) sigTy x acc)
@@ -235,11 +256,26 @@ def modelOfVocab (ns : Name) (V : Vocab) : CommandElabM Expr := do
   let baseE := mkApp (Lean.mkConst ``Model.baseOf) tsE
   let defaultE := mkApp (Lean.mkConst ``Model.defaultOf) tsE
   let valTy := mkApp (Lean.mkConst ``Val) baseE
+  -- a constant without a meaning: of its type, with the value that every type has
+  let opaqueConst (name : String) (ty : Ty) : CommandElabM Expr :=
+    notion name (mkApp2 (Lean.mkConst ``Ty.denote) baseE (toExpr ty))
+      (mkApp3 (Lean.mkConst ``Ty.default) baseE defaultE (toExpr ty))
   let mut cs : Array Expr := #[]
   for i in [0:V.consts.length] do
-    let c ← lean s!"its constant {i} ({Codes.toString (V.constNames.getD i [])})" (V.constLean.getD i [])
+    let l := V.constLean.getD i []
+    let c ← if Vocab.isDeclaredName l then opaqueConst (clean l) V.consts[i]!
+      else lean s!"its constant {i} ({Codes.toString (V.constNames.getD i [])})" l
     cs := cs.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.zero, Level.zero]) (Lean.mkConst ``Ty)
       (mkApp (Lean.mkConst ``Ty.denote) baseE) (toExpr (V.consts[i]!)) c)
+  -- the quantities that the article introduces without defining them (`Let $\chi(G)$
+  -- denote the chromatic number of a graph $G$.`): the constants after the vocabulary's
+  for i in undefinedDefs V d do
+    let g := d.globs[i]!
+    unless d.values[i]? == some (.const cs.size) do
+      throwError "the undefined quantities of {ns} are not numbered in their order"
+    let c ← opaqueConst (defName d i) g.ty
+    cs := cs.push (mkApp4 (Lean.mkConst ``Sigma.mk [Level.zero, Level.zero]) (Lean.mkConst ``Ty)
+      (mkApp (Lean.mkConst ``Ty.denote) baseE) (toExpr g.ty) c)
   pure (mkApp3 (Lean.mkConst ``Model.mk) baseE defaultE (listExpr valTy cs.toList))
 
 syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " ident)? : command
@@ -254,7 +290,8 @@ syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " iden
     | some v => do pure (Lean.mkConst (← liftCoreM <| realizeGlobalConstNoOverloadWithInfo v))
     | none => do
       let V ← liftCoreM <| articleVocab ns
-      if V.consts.isEmpty && V.types.isEmpty then pure (Lean.mkConst ``Model.empty) else modelOfVocab ns V
+      if V.consts.isEmpty && V.types.isEmpty && (undefinedDefs V d).isEmpty then pure (Lean.mkConst ``Model.empty)
+      else modelOfVocab ns V d
   try
     liftCoreM <| addDecl <| Declaration.defnDecl
       { name := ns ++ `model, levelParams := [], type := Lean.mkConst ``Model, value := modelE,
@@ -366,6 +403,12 @@ syntax (name := leanifySemantics) "#leanify_semantics " ident str (" with " iden
         rw [$(id s!"holds{k}"):ident]
         exact h $args*)
     elabCommand thm
+  -- the statements that the article quotes from the literature and does not prove:
+  -- its assumptions, each an axiom that the certificate names
+  for k in d.quotedClaims do
+    liftCoreM <| addDecl <| Declaration.axiomDecl
+      { name := ns ++ `Quoted ++ Name.mkSimple s!"claim{k}", levelParams := [],
+        type := Lean.mkConst (ns ++ Name.mkSimple s!"obligation{k}"), isUnsafe := false }
   -- the report before verification, and the sentences that did not compile
   writeReport ns .anonymous rel d #[] #[] [] []
   logUncompiled rel d

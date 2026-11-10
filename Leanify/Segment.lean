@@ -26,6 +26,10 @@ structure Context where
   of the article has a number of its own): the heading of a case, `\item
   \emph{$x\ge0$.}`, is a hypothesis of the sentences of its item. -/
   items : List Nat := []
+  /-- A result whose heading cites its source (`\begin{lemma}[{\cite[Theorem 2]{b}}]`): a
+  result quoted from the literature. If the article gives no proof of it, it is an
+  assumption of the article, and the reports name it as one. -/
+  quoted : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Sentence where
@@ -164,10 +168,11 @@ def go : Nat → List PTok → St → St
       if wSkipEnvs.contains e then go f ts { flush s with skipDepth := 1 }
       else if wResults.contains e then
         let s := flush s
-        let (_, rest) := skipTitle ts
+        let (title, rest) := skipTitle ts
         let (lab, rest) := labelOf rest
         let n := s.envCount + 1
-        let c : Context := { kind := .result e, env := n, label := lab, sec := s.sec }
+        let quoted := title.any fun p => match p.tok with | .ref .cite _ => true | _ => false
+        let c : Context := { kind := .result e, env := n, label := lab, sec := s.sec, quoted }
         go f rest { s with ctx := c, envCount := n, lastResult := lab }
       else if e == w!"@proofsec" then
         let s := flush s

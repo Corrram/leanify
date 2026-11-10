@@ -74,7 +74,10 @@ These hold for every change. A feature that cannot meet them is not added.
    comes, in this order, from the article's own definitions and convention
    sentences, the longest matching phrase, the declared type, and the fields of
    the vocabulary the article names (printed by `\leanifyreport`). Otherwise
-   Leanify refuses. See `docs/vocabulary.md`.
+   Leanify refuses. See `docs/vocabulary.md`. The option `notions` of the package
+   is no exception: it gives a noun *no* meaning (a type of which Lean knows
+   nothing), every report lists these nouns as not defined, and the article reads
+   as before.
 2. **Never guess.** Every construction has exactly one documented reading. A
    sentence is read completely or it is prose; a partial match is never
    accepted. A word with several meanings, or a symbol such as `\subset`, is
@@ -168,6 +171,12 @@ These hold for every change. A feature that cannot meet them is not added.
     the sentence that would define it. A finding names a cause only if it is one:
     a noun is named only if Leanify does not read it where it stands (the checker
     compiles `Let $x$ be a NOUN.` to find out), never because it follows `be a`.
+
+15. **Nothing is assumed silently.** What an article uses without defining it is an
+    `opaque` constant, and what it quotes without proving it is an axiom
+    `Foo.Quoted.claimK` that the certificate prints and the reports count. A claim
+    that rests on a quoted result says so. There is no other way for an
+    unproved statement to count.
 
 ## Working on the code
 

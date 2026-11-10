@@ -23,6 +23,10 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
 * records, for each statement with hypotheses, whether `J.satisfiedK :
   Foo.satisfiableK` shows that they can hold together: a statement whose
   hypotheses cannot all hold is true for an empty reason;
+* takes the statements that the article quotes from the literature without a proof
+  (`Doc.quotedClaims`) as its assumptions: the axiom `Foo.Quoted.claimK` stands for the
+  proof of each, the certificate may depend on these axioms and on no other beside the
+  standard three, and the report says which verified claims rest on which of them;
 * has the kernel check `Foo.certificate : Certificate Foo.model Foo.doc Foo.G …` and
   derives `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` from it;
 * writes `<article>.leanify.json`, the per-sentence status for readers and
@@ -110,6 +114,12 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
         throwError "definition {i} ({defName d i}): its well-definedness proof {n} uses sorry"
       defined := defined.push n
     | none => throwError "definition {i} ({defName d i}) has no well-definedness proof {n}"
+  -- a statement that the article quotes from the literature and does not prove is an
+  -- assumption: the axiom `Foo.Quoted.claimK` of `#leanify_semantics` stands for its
+  -- proof, unless the justifications prove it after all
+  let quotedAxiom (k : Nat) : Option Name :=
+    let n := ns ++ `Quoted ++ nm s!"claim{k}"
+    if d.quotedClaims.contains k && env.contains n then some n else none
   let mut justified : Array (Option Name) := #[]
   let mut notes : Array String := Array.replicate d.claims.length ""
   for k in [0:d.claims.length] do
@@ -119,10 +129,15 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
       unless ci.type == Lean.mkConst (ns ++ nm s!"obligation{k}") do
         throwError "{n} must have type {ns ++ nm s!"obligation{k}"}"
       if ← usesSorry n then
-        notes := notes.set! k s!"its proof {n} uses sorry"
-        justified := justified.push none
+        match quotedAxiom k with
+        | some ax => justified := justified.push (some ax)
+        | none =>
+          notes := notes.set! k s!"its proof {n} uses sorry"
+          justified := justified.push none
       else justified := justified.push (some n)
-    | none => justified := justified.push none
+    | none => justified := justified.push (quotedAxiom k)
+  let isQuoted (js : Array (Option Name)) (k : Nat) : Bool :=
+    (quotedAxiom k).isSome && js[k]! == quotedAxiom k
   -- refutations: the claim is meaningful and false
   let mut refuted : Array (Option Name) := #[]
   for k in [0:d.claims.length] do
@@ -188,14 +203,14 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
     | .step _ => true
     | _ => !d.claims[k]!.premises.isEmpty
   for k in verified do
-    if fromText k then
+    if fromText k && !isQuoted justified k then
       let some n := justified[k]! | continue
       -- the justifications of the other claims: a premise is a hypothesis of the
       -- obligation, and a claim that is not a premise is not cited
       let premises := d.claims[k]!.premises
       let others : List (Name × Nat) := (List.range d.claims.length).flatMap fun j =>
         if j == k || premises.contains j then []
-        else [(jn ++ nm s!"proof{j}", j), (jn ++ nm s!"refute{j}", j)]
+        else [(jn ++ nm s!"proof{j}", j), (jn ++ nm s!"refute{j}", j), (ns ++ `Quoted ++ nm s!"claim{j}", j)]
       let (_, (_, bad)) := (auditConst env permitted isLocal n (fun c => others.any (·.1 == c))).run ({}, #[])
       let uncited := (bad.toList.filterMap fun (c, _) => others.lookup c).eraseDups
       unless uncited.isEmpty do
@@ -209,7 +224,7 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   let mut steps : Array String := Array.replicate d.claims.length ""
   if leanify.steps.get (← getOptions) then
     for k in verified do
-      if fromText k then
+      if fromText k && !isQuoted justified k then
         let ok ← standardStep (Lean.mkConst (ns ++ nm s!"obligation{k}"))
         steps := steps.set! k (if ok then "standard" else "argument")
   -- the hypotheses of the claims: are they shown to hold together? (`satisfiedK`, for the
@@ -285,23 +300,35 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   -- axioms
   let axs ← liftCoreM <| Lean.collectAxioms (ns ++ `certificate)
   let standard := [``propext, ``Classical.choice, ``Quot.sound]
-  let extra := axs.toList.filter (!standard.contains ·)
+  -- (the statements quoted from the literature are the assumptions of the article: they
+  -- are axioms of the certificate, and the only ones beside the standard three)
+  let quotedAxioms := (List.range d.claims.length).filterMap fun k =>
+    if isQuoted justified k then quotedAxiom k else none
+  let extra := axs.toList.filter fun a => !standard.contains a && !quotedAxioms.contains a
   unless extra.isEmpty do throwError "the certificate depends on nonstandard axioms {extra}"
   for r in refuted.toList.filterMap id do
     let extra := (← liftCoreM <| Lean.collectAxioms r).toList.filter (!standard.contains ·)
     unless extra.isEmpty do throwError "the refutation {r} depends on nonstandard axioms {extra}"
+  -- the quoted statements that each verified claim rests on: its own, and those of its premises
+  let mut rests : Array (List Nat) := Array.replicate d.claims.length []
+  for k in (verified.toArray.qsort fun a b => rank[a]! < rank[b]!) do
+    let own := if isQuoted justified k then [k] else []
+    rests := rests.set! k (own ++ d.claims[k]!.premises.flatMap fun j => rests[j]!).eraseDups
   -- report
   let status (k : Nat) : String :=
     if refuted[k]!.isSome then "refuted"
-    else if justified[k]!.isNone then "unverified" else if fromText k then "text" else "companion"
+    else if justified[k]!.isNone then "unverified"
+    else if isQuoted justified k then "quoted" else if fromText k then "text" else "companion"
   let refutation (k : Nat) : Option Name := refuted[k]!.map fun _ => jn ++ nm s!"refute{k}"
   let infos : Array ClaimInfo := (List.range d.claims.length).toArray.map fun k =>
     { status := status k, rank := rank[k]!, step := steps[k]!, hypotheses := hyps[k]!,
+      rests := if isQuoted justified k then [] else rests[k]!,
       justification := ((justified[k]!.orElse fun _ => refutation k).map toString).getD "",
       module := (((justified[k]!.orElse fun _ => refutation k).bind (moduleOf env)).map toString).getD "",
       note := notes[k]! }
   let defInfos := defined.map fun n => (toString n, ((moduleOf env n).map toString).getD "")
-  writeReport ns jn rel d infos defInfos verified axs.toList
+  -- (in the reports, the verified claims are those that are proved: not the quoted ones)
+  writeReport ns jn rel d infos defInfos (verified.filter fun k => !isQuoted justified k) axs.toList
   let count (st : String) := ((List.range d.claims.length).filter (status · == st)).length
   let standard := (steps.toList.filter (· == "standard")).length
   let tried := (steps.toList.filter (· != "")).length
@@ -311,8 +338,12 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   unless reps.isEmpty do
     logInfo m!"claims are made under {reps.length} set{if reps.length == 1 then "" else "s"} of hypotheses; {(reps.filter (shownAt[·]!)).length} \
       of them are shown to hold together ({jn}.satisfiedK)"
+  let quoted := count "quoted"
+  let resting := ((List.range d.claims.length).filter fun k => status k != "quoted" && !rests[k]!.isEmpty).length
+  let quotedText := if quoted == 0 then "" else
+    s!" {quoted} quoted from the literature and assumed ({resting} of the verified claims rest on them),"
   logInfo m!"{d.claims.length} claims: {count "text"} derived in the text from their citations, \
-    {count "companion"} justified by companion proofs, {count "refuted"} refuted, \
+    {count "companion"} justified by companion proofs,{quotedText} {count "refuted"} refuted, \
     {count "unverified"} unverified; {d.values.length} definitions well defined. Axioms: {axs.toList}"
 
 end Leanify

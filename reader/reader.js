@@ -31,6 +31,7 @@
       ${c.note ? `<p class="lm-small">Not verified: ${esc(c.note)}.</p>` : ''}
       ${c.step === 'standard' ? '<p class="lm-small">The standard tactic closes this step.</p>' : c.step === 'argument' ? '<p class="lm-small">The standard tactic does not close this step: its proof is a longer Lean argument.</p>' : ''}
       ${c.hypotheses === 'shown' ? '<p class="lm-small">Its hypotheses are shown to hold together.</p>' : c.hypotheses === 'open' ? '<p class="lm-small">Its hypotheses are not shown to hold together: it could be true for an empty reason.</p>' : ''}
+      ${c.status === 'quoted' ? '<p class="lm-small">The article quotes this statement from the literature and does not prove it: it is an assumption of the certificate.</p>' : (c.rests ?? []).length ? `<p class="lm-small">Rests on ${c.rests.length} statement${c.rests.length > 1 ? 's' : ''} quoted from the literature (claim${c.rests.length > 1 ? 's' : ''} ${c.rests.join(', ')}).</p>` : ''}
       <div class="lm-reading">${c.reading}</div>
       ${c.premises.length ? `<details open><summary>Uses ${c.premises.length} premise${c.premises.length > 1 ? 's' : ''}${c.cites.length ? ' (cites ' + c.cites.map(esc).join(', ') + ')' : ''}</summary><ul class="lm-premises">${c.premises.map(premise).join('')}</ul></details>`
         : `<p class="lm-small">${c.status === 'companion' ? 'Stated without a compiled proof in the text; proved in Lean from the companion development.' : 'No premises.'}</p>`}

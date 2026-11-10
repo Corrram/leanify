@@ -102,6 +102,14 @@ srcDir = "tests"
 globs = ["Statements.+"]
 
 [[lean_lib]]
+# Notions that an article uses without defining them (declared in its preamble, or
+# introduced by a sentence) and results that it quotes from the literature, compiled by
+# the kernel and certified: the quoted results are the axioms of the certificate.
+name = "Undefined"
+srcDir = "tests"
+globs = ["Undefined.+"]
+
+[[lean_lib]]
 # The language of proofs: assumptions, cases written as the items of a list,
 # contradictions and induction, compiled by the kernel and certified, each step by the
 # standard tactic.

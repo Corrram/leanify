@@ -3392,6 +3392,63 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         pure (id :: ids)
   go 16 cls none
 
+/-- The number of quantities that the article has introduced without defining them:
+the definitions whose value is a constant after those of the vocabulary. -/
+def undefinedCount (st : St) : Nat :=
+  (st.values.filter fun v => match v with
+    | .const j => st.vocab.consts.length ≤ j
+    | _ => false).length
+
+/-- `Let $\chi(G)$ denote the chromatic number of a graph $G$.`: the symbol `\chi` for a
+quantity that neither the article nor its vocabulary defines. Its arguments are the
+variables of the noun phrases, in the order of the left side, and its values are of the
+kind that its name says: a `number` (`constant`, `value`, `quantity`) is a real number, and
+a name that ends with a noun (`complement graph`) is an object of that noun's type. No
+property of the values is assumed. The symbol is a definition of the article whose
+value is a constant without a meaning (`#leanify_semantics` declares it `opaque`): what
+is proved about it holds whatever it is. -/
+def undefinedDef (c : SentCtx) (lhs : MT) (words : List Codes) (args : List (List Chunk)) :
+    M (List Nat × List Nat) := do
+  if c.ctx.kind != .text then fail E.prose
+  let st ← get
+  let V := st.vocab
+  -- the kind of its values: the last word before an `of` of the name
+  let head := words.takeWhile (· != w!"of")
+  let resTy ← match head.getLast? with
+    | none => fail E.unsupported
+    | some w =>
+      if [w!"number", w!"constant", w!"value", w!"quantity"].contains w then pure Ty.real else
+      let cs : List Chunk := head.map Chunk.w
+      -- the noun at its end, the longest first
+      let noun := (List.range head.length).findSome? fun p =>
+        V.nouns.findSome? fun n => match matchPhrase n.sing (cs.drop p) with
+          | some (none, []) => some n.ty
+          | _ => none
+      match noun with
+      | some t => pure t
+      | none => fail E.finding (quoted head ++ w!" does not say what kind of object it is: the name of a quantity that the article does not define ends with a word for a number (the chromatic number of a graph $G$), with a noun of the article (the line graph of a graph $G$), or with a word that the preamble declares, as a noun (\\usepackage[notions={" ++ (head.getLast?.getD []) ++ w!"}]{leanify}) or as the name of a number (\\usepackage[quantities={" ++ (head.getLast?.getD []) ++ w!"}]{leanify})")
+  -- the left side: a symbol, or a symbol applied to the variables of the arguments
+  let (key, vars) ← match lhs with
+    | .app h as => do
+      let some k := Elab.symKey h | fail E.unsupported
+      let vs ← as.mapM fun a => match Elab.symKey a with
+        | some v => pure v
+        | none => fail E.unsupported
+      pure (k, vs)
+    | m => do
+      let some k := Elab.symKey m | fail E.unsupported
+      pure (k, [])
+  let bs ← args.mapM fun np => nounPhrase np
+  if vars.eraseDups.length != vars.length || vars.length != bs.length ||
+      !(vars.all fun v => bs.any (·.name == v)) then
+    fail E.finding (w!"the arguments of " ++ key ++ w!" are the variables of the noun phrases after its name, each once (Let $\\chi(G)$ denote the chromatic number of a graph $G$.)")
+  let ordered := vars.filterMap fun v => bs.find? (·.name == v)
+  if (← lookupGlob key).isSome then fail E.redefined key
+  let j := V.consts.length + undefinedCount st
+  let i ← addGlob ⟨key, tyWrap (ordered.map (·.ty)) resTy, ordered.map (·.pred), false⟩ (.const j)
+  modify fun st => { st with named := st.named ++ [(words, i)] }
+  pure ([i], [])
+
 /-- The definition of `L` (`j(n)`) by a description: the least (greatest) number that the
 noun phrase and the clause describe, defined only when there is one; or how many numbers
 they describe, defined only when finitely many. The variables of `L` range as the
@@ -3703,6 +3760,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .claimsContra topic binds cls => contradictionIn c topic binds cls []
   -- (it organizes a proof; elsewhere it is prose)
   | .organizes => if c.ctx.kind == .proof then pure ([], []) else fail E.prose
+  | .undefined lhs words args => undefinedDef c lhs words args
   | .letters vs => do
     modify fun st => { st with letters := st.letters ++ vs.filter (!st.letters.contains ·) }
     pure ([], [])
@@ -4005,12 +4063,18 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- the symbols this sentence introduces, if it is not read
   let unread : List Codes := introducedSymbols s.toks
   let st0u := { st0 with unreadIds := (st0.unreadIds ++ unread.filter (!st0.unreadIds.contains ·)) }
-  match Grammar.parseSentence s with
+  -- a symbol for a quantity that the article does not define (`Let $\chi(G)$ denote the
+  -- chromatic number of a graph $G$.`), if the sentence has no other reading
+  let undefinedAlt : Option Grammar.Sent := match s.ctx.kind with
+    | .text => Grammar.undefinedOf s
+    | _ => none
+  match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some sent =>
     let sc : SentCtx := ⟨s.ctx, (envs.lookup s.ctx.proves).getD 0, c.idx⟩
     let labelled : M (List Nat × List Nat) := do
-      let (ds, cs) ← match sent with
+      let before ← get
+      let primary : M (List Nat × List Nat) := match sent with
         | .notation k rhs => Compile.notationDef toks0 k rhs
         -- `We write $L$ for the WORDS`: a notation for an operation of the vocabulary, or
         -- else a description
@@ -4020,6 +4084,15 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
             set st
             Compile.sentence sc sent
         | _ => Compile.sentence sc sent
+      -- (if no reading of the sentence compiles: the quantity it names, undefined)
+      let (ds, cs) ← tryCatch primary fun e =>
+        match undefinedAlt, sent with
+        | _, .undefined .. => throw e
+        | some alt, _ => do
+          set before
+          -- (a finding about the quantity says more than the reading that failed)
+          tryCatch (Compile.sentence sc alt) fun e' => throw (if e'.code == E.finding then e' else e)
+        | none, _ => throw e
       -- a definition made under hypotheses takes those about its variables
       Compile.defsUnderHyps sc ds
       match sent with

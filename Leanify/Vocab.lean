@@ -274,6 +274,200 @@ def tag (f : Codes) (V : Vocab) : Vocab :=
 
 end Vocab
 
+/-! ## Notions that an article uses and does not define
+
+An article may use a noun that neither it nor its vocabulary defines (*graph*, *matroid*).
+It names such nouns in its preamble, as an option of the package:
+`\usepackage[notions={graph, finite graph, vertex (vertices)}]{leanify}`. Nothing is
+printed for this in the article. A noun of the list is a kind of object of its own: a base
+type without a Lean meaning. An entry that ends with a noun (`finite graph`, `admissible
+integer`) is an adjective of that noun: a predicate without a meaning. Statements about
+them are read as about any other noun, and what is proved about them is proved for
+whatever they mean, because Lean knows nothing of them (`#leanify_semantics` declares them
+as `opaque` constants). The reports list them as not defined here. -/
+
+/-- A noun or an adjective that the article uses without defining it. -/
+structure Declared where
+  words : List Codes
+  /-- The plural, if the article gives it (`vertex (vertices)`); else by rule. -/
+  plural : List Codes := []
+  /-- A word for a real number (`degree`, `distance`: the option `quantities`), not a kind of
+  object of its own. -/
+  number : Bool := false
+  deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
+
+namespace Declared
+
+private def trim (c : Codes) : Codes :=
+  ((c.dropWhile (· == 32)).reverse.dropWhile (· == 32)).reverse
+
+/-- Lower-case words of letters; `none` for anything else. -/
+private def wordsOf (c : Codes) : Option (List Codes) :=
+  let ws := ((c.splitOn 32).filter (!·.isEmpty)).map fun w => w.map fun x => if 65 ≤ x && x ≤ 90 then x + 32 else x
+  if ws.isEmpty || ws.any (fun w => w.any fun x => !(97 ≤ x && x ≤ 122)) then none else some ws
+
+/-- The parts of a list at the commas outside braces and parentheses. -/
+private def splitTop : Nat → Codes → Codes → List Codes → List Codes
+  | _, [], cur, acc => (cur.reverse :: acc).reverse
+  | d, c :: cs, cur, acc =>
+    if c == 44 && d == 0 then splitTop d cs [] (cur.reverse :: acc)
+    else splitTop (if c == 123 || c == 40 then d + 1 else if c == 125 || c == 41 then d - 1 else d) cs (c :: cur) acc
+
+/-- The text of an optional argument up to its closing bracket, and what follows. -/
+private def bracket : Nat → Codes → Codes → Option (Codes × Codes)
+  | _, [], _ => none
+  | d, c :: cs, acc =>
+    if c == 93 && d == 0 then some (acc.reverse, cs)
+    else bracket (if c == 123 then d + 1 else if c == 125 then d - 1 else d) cs (c :: acc)
+
+/-- A line without its comment. -/
+private def uncomment : Codes → Codes
+  | [] => []
+  | 92 :: c :: cs => 92 :: c :: uncomment cs
+  | 37 :: _ => []
+  | c :: cs => c :: uncomment cs
+
+/-- The options of `\usepackage[OPTIONS]{leanify}` in the text of a preamble. -/
+private def packageOptions : Nat → Codes → Option Codes
+  | 0, _ => none
+  | _, [] => none
+  | f + 1, c :: cs =>
+    if c == 92 && cs.take 10 == w!"usepackage" then
+      match (cs.drop 10).dropWhile (· == 32) with
+      | 91 :: r =>
+        match bracket 0 r [] with
+        | some (opts, r') =>
+          match r'.dropWhile (· == 32) with
+          | 123 :: r'' =>
+            let names := ((r''.takeWhile (· != 125)).splitOn 44).map trim
+            if names.contains w!"leanify" then some opts else packageOptions f cs
+          | _ => packageOptions f cs
+        | none => packageOptions f cs
+      | _ => packageOptions f cs
+    else packageOptions f cs
+
+/-- The entries of the option `key` (`notions`, `quantities`) of `leanify.sty` in the preamble
+of an article (its lines before `\begin{document}`), as the article writes them. -/
+def entriesOf (preamble : List Codes) (key : Codes := w!"notions") : List Codes :=
+  let text := (preamble.map uncomment).intersperse [32] |>.flatten
+  match packageOptions (text.length + 1) text with
+  | none => []
+  | some opts =>
+    (splitTop 0 opts [] []).flatMap fun o =>
+      let o := trim o
+      if trim (o.takeWhile (· != 61)) != key then [] else
+      let v := trim ((o.dropWhile (· != 61)).drop 1)
+      let v := match v with
+        | 123 :: r => (match r.reverse with | 125 :: r' => r'.reverse | _ => v)
+        | _ => v
+      ((splitTop 0 v [] []).map trim).filter (!·.isEmpty)
+
+/-- An entry `words` or `words (plural words)`. -/
+def ofEntry (e : Codes) : Option Declared := do
+  let e := trim e
+  let ws ← wordsOf (e.takeWhile (· != 40))
+  match (e.dropWhile (· != 40)).drop 1 with
+  | [] => some { words := ws }
+  | r => do
+    let pl ← wordsOf (r.takeWhile (· != 41))
+    some { words := ws, plural := pl }
+
+/-- The notions an article declares, and the entries of its list that are not read (an
+entry is words of letters, with an optional plural in parentheses). -/
+def ofPreamble (preamble : List Codes) : List Declared × List Codes :=
+  let es := entriesOf preamble
+  -- (`quantities={degree, distance}`: words for real numbers that the article does not define)
+  let ns := entriesOf preamble w!"quantities"
+  (es.filterMap ofEntry ++ ns.filterMap (fun e => (ofEntry e).map fun d => { d with number := true }),
+   (es ++ ns).filter fun e => (ofEntry e).isNone)
+
+/-- The plural of a noun by rule (`graph`: `graphs`, `family`: `families`, `class`: `classes`). -/
+def pluralOf (d : Declared) : List Codes :=
+  if !d.plural.isEmpty then d.plural else
+  match d.words.reverse with
+  | [] => []
+  | w :: rest =>
+    let vowel (x : Nat) : Bool := [97, 101, 105, 111, 117].contains x
+    let w' := match w.reverse with
+      | 121 :: c :: r => if vowel c then w ++ [115] else (c :: r).reverse ++ w!"ies"
+      | 115 :: _ | 120 :: _ | 122 :: _ => w ++ w!"es"
+      | 104 :: 99 :: _ | 104 :: 115 :: _ => w ++ w!"es"
+      | _ => w ++ [115]
+    (w' :: rest).reverse
+
+/-- `finite field` as `FiniteField`. -/
+def ident (ws : List Codes) : Codes :=
+  (ws.map fun w => match w with | c :: r => (if 97 ≤ c && c ≤ 122 then c - 32 else c) :: r | [] => []).flatten
+
+end Declared
+
+namespace Vocab
+
+/-- The field of the notions that an article declares. -/
+def articleField : Codes := w!"article"
+
+/-- The Lean meaning of a declared notion is none: the name `@Name` asks
+`#leanify_semantics` for an opaque constant of the article. -/
+def isDeclaredName (c : Codes) : Bool := c.head? == some 64
+
+/-- `V` with one more notion. A phrase that ends with a noun of `V` (the longest such
+ending) is an adjective of that noun; any other phrase is a noun with a type of its own.
+A phrase that `V` has already is not added. -/
+def declareOne (V : Vocab) (d : Declared) : Vocab :=
+  let ph (ws : List Codes) : Phrase := ws.map PItem.w
+  if V.nouns.any (fun n => n.sing == ph d.words) then V else
+  -- a word for a real number: a noun of real numbers that says nothing about them
+  if d.number then
+    { V with nouns := V.nouns ++ [{
+        sing := ph d.words, plural := ph d.pluralOf, ty := Ty.real,
+        pred := Tm.lam .real .tt .tt, field := articleField, doc := "a real number, not defined in the article" }] }
+  else
+  -- the noun at the end, the longest first
+  let ending : Option (List Codes × Noun) :=
+    (List.range d.words.length).drop 1 |>.findSome? fun p =>
+      (V.nouns.find? fun n => n.sing == ph (d.words.drop p)).map fun n => (d.words.take p, n)
+  match ending with
+  | some (adj, n) =>
+    if V.mods.any (fun m => m.prenominal && m.phrase == ph adj && m.ty == n.ty) then V else
+    let c := V.consts.length
+    let pad (xs : List Codes) : List Codes := xs ++ List.replicate (c - xs.length) []
+    let nounName := (n.sing.filterMap fun p => match p with | .w w => some w | _ => none)
+    { V with
+      consts := V.consts ++ [.fn n.ty .prop]
+      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ (adj.intersperse [92, 32]).flatten ++ w!"}(#)"]
+      constLean := pad V.constLean ++ [[64] ++ Declared.ident (adj ++ nounName)]
+      mods := V.mods ++ [{
+        phrase := ph adj, prenominal := true, ty := n.ty, pred := Tm.const c,
+        field := articleField, doc := "not defined in the article" }] }
+  | none =>
+    let k := V.types.length
+    let name := Declared.ident d.words
+    { V with
+      types := V.types ++ [w!"\\mathrm{" ++ name ++ w!"}"]
+      typeLean := V.typeLean ++ List.replicate (k - V.typeLean.length) ([], []) ++ [([64] ++ name, [])]
+      nouns := V.nouns ++ [{
+        sing := ph d.words, plural := ph d.pluralOf, ty := Ty.base k,
+        pred := Tm.lam (.base k) .tt .tt, field := articleField, doc := "not defined in the article" }] }
+
+/-- `V` with the notions that an article declares. -/
+def declare (V : Vocab) (ds : List Declared) : Vocab := ds.foldl declareOne V
+
+/-- The vocabulary an article is read with: `V` and the notions of its preamble. -/
+def forArticle (V : Vocab) (src : List Codes) : Vocab :=
+  let k := (src.findIdx? fun l => l.take 16 == w!"\\begin{document}").getD src.length
+  V.declare (Declared.ofPreamble (src.take k)).1
+
+/-- The nouns and adjectives that the article declares (`graph`, `finite graph`). -/
+def declaredPhrases (V : Vocab) : List Codes :=
+  let text (p : Phrase) : Codes := ((p.filterMap fun i => match i with | .w w => some w | _ => none).intersperse [32]).flatten
+  let nounOfTy (t : Ty) : Codes := ((V.nouns.find? fun n => n.ty == t && n.field == articleField).map (text ·.sing)).getD
+    (((V.nouns.find? fun n => n.ty == t).map (text ·.sing)).getD [])
+  (V.nouns.filter (·.field == articleField)).map (fun n =>
+      text n.sing ++ (if n.ty == .real then w!" (a number)" else [])) ++
+    (V.mods.filter (·.field == articleField)).map fun m => text m.phrase ++ [32] ++ nounOfTy m.ty
+
+end Vocab
+
 /-! ## Writing phrases
 
 `phrase!"probability measure $v$ on $[0,1]^2$"` is the phrase literal: words are

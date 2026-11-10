@@ -2239,6 +2239,11 @@ inductive Sent where
   /-- `Throughout, $p$ and $q$ denote integers.`, `In this paper, the letter $t$ denotes
   an integer.`: wherever one of the letters is bound, it is an integer. -/
   | letters (vars : List Codes)
+  /-- `Let $\chi(G)$ denote the chromatic number of a graph $G$.`, `We write $L$ for the
+  WORDS [of NPs]`: a symbol for a quantity that neither the article nor its vocabulary
+  defines. `words` name it (`chromatic number`), `args` are the noun phrases of its
+  arguments. It is read so only if the sentence has no other reading. -/
+  | undefined (lhs : MT) (words : List Codes) (args : List (List Chunk))
   /-- `We argue by induction on $n$.`: organizes the proof, and names the variable
   that `the statement holds for $E$` is about. -/
   | inductionOn (v : Codes)
@@ -3494,6 +3499,67 @@ def sentence (cs : List Chunk) : Option Sent :=
       | some (.claims topic binds cls) => some (.claimsContra topic binds cls)
       | _ => none
     | none => sentenceCore cs
+
+/-- `[We] let $L$ denote|be the WORDS [of NP [and|of NP]]`, `[we] write $L$ for the WORDS …`,
+`[we] denote by $L$ the WORDS …`: a symbol for a quantity that the article does not
+define (`Sent.undefined`). Each noun phrase of an argument ends with its variable
+(`a graph $G$`); the words before the first of them name the quantity. -/
+def undefinedSent (cs : List Chunk) : Option Sent := do
+  let cs := (kw [w!"we"] cs).getD cs
+  let (lhs, r) ←
+    (do
+      let r ← kw [w!"let"] cs
+      let (s, r1) ← formula r
+      let r2 ← kw [w!"denote"] r1 <|> kw [w!"be"] r1
+      some (s, r2)) <|>
+    (do
+      let r ← kw [w!"write"] cs
+      let (s, r1) ← formula r
+      let r2 ← kw [w!"for"] r1
+      some (s, r2)) <|>
+    (do
+      let r ← kw [w!"denote", w!"by"] cs
+      let (s, r1) ← formula r
+      some (s, r1))
+  let r ← kw [w!"the"] r
+  -- the noun phrases of the arguments: `[a|an|the] WORDS $x$`, joined by `and`, `of` or commas
+  let rec argsOf : Nat → List Chunk → List (List Chunk) → Option (List (List Chunk))
+    | 0, _, _ => none
+    | f + 1, cs, acc =>
+      let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
+      let ws := cs.takeWhile fun c => match c with | .w w => w != w!"of" && w != w!"and" | _ => false
+      -- (`graphs $G$ and $H$`: the noun of the phrase before)
+      let noun : List Chunk := if !ws.isEmpty then ws else
+        match acc.head? with
+        | some np => np.dropLast
+        | none => []
+      match cs.drop ws.length with
+      | .m ts :: rest =>
+        if noun.isEmpty then none else
+        let acc := (noun ++ [.m ts]) :: acc
+        if isEnd rest then some acc.reverse else
+        match (punct 44 rest >>= kw [w!"and"]) <|> kw [w!"and"] rest <|> kw [w!"of"] rest <|> punct 44 rest with
+        | some rest' => argsOf f rest' acc
+        | none => none
+      | _ => none
+  -- the words of the name: up to an `of` after which the rest is the arguments (the last
+  -- such `of`: `the number of vertices of a graph $G$`), or up to the end
+  let ws := r.takeWhile fun c => match c with | .w _ => true | _ => false
+  let words := ws.filterMap fun c => match c with | .w w => some w | _ => none
+  if words.isEmpty then none else
+  if isEnd (r.drop ws.length) then
+    if words.contains w!"of" then none else some (.undefined lhs words [])
+  else
+    let cuts := ((List.range words.length).filter fun i => words[i]? == some w!"of" && i > 0).reverse
+    cuts.findSome? fun i =>
+      (argsOf (r.length + 1) (r.drop (i + 1)) []).map fun args => .undefined lhs (words.take i) args
+
+/-- The reading of a sentence as the introduction of a quantity that the article does not
+define, if it has the words of one (it begins with `let`, `we`, `write` or `denote`). -/
+def undefinedOf (s : Sentence) : Option Sent :=
+  let first := s.toks.findSome? fun p => match p.tok with | .word w => some (lower w) | _ => none
+  if !(first.any fun w => [w!"let", w!"we", w!"write", w!"denote"].contains w) then none else
+  (chunks (s.toks.length + 1) s.toks []).bind undefinedSent
 
 def parseSentence (s : Sentence) : Option Sent := do
   match s.toks with

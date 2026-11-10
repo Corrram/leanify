@@ -113,3 +113,23 @@ test('the legend has a box per status that occurs, with its count, under one for
   assert.deepEqual([...legend.matchAll(/data-filter="(\w+)".*?lm-count">(\d+)</g)].map(m => [m[1], Number(m[2])]),
     [['text', 2], ['definition', 1], ['prose', 1]]);
 });
+
+test('a statement quoted from the literature is an assumption, and a verified claim may rest on it', () => {
+  const r = report();
+  r.claims[1].status = 'quoted';
+  r.claims[1].justification = 'Note.Quoted.claim1';
+  r.claims[0].rests = [1];
+  r.verified = r.verified.filter(k => k !== 1);
+  r.axioms = [...r.axioms, 'Note.Quoted.claim1'];
+  validateReport(r, source);
+  assert.equal(sentenceStatus(r, r.sentences[2]), 'quoted');
+  assert.equal(sentenceStatus(r, r.sentences[1]), 'text');
+  assert.deepEqual(inspectorData(r)[1].claims[0].rests, [1]);
+  const html = renderCompiledReader({title: 'Note', source, report: r, assets: {styles: [], script: 'reader.js'}});
+  assert.match(html, /1 is quoted from the literature and assumed \(1 of the verified claims rest on it\)/);
+  assert.match(html, /data-filter="quoted"/);
+  // an axiom that is not a quoted claim of the report is refused
+  const bad = report();
+  bad.axioms = [...bad.axioms, 'Note.Quoted.claim1'];
+  assert.throws(() => validateReport(bad, source), /nonstandard axiom/);
+});

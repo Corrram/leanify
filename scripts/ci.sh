@@ -99,6 +99,16 @@ proofs() {
     fail "examples/Means: the step that is not standard is not reported"
   endgroup
 
+  group "Quoted results are assumptions, and the claims resting on them say so"
+  $PYTHON scripts/leanify_diagnostics.py tests/Undefined/article.leanify.json --prose --verified > "$TMP/undefined.txt"
+  grep -q "statement (claim 0) is quoted from the literature: the article assumes it" "$TMP/undefined.txt" ||
+    fail "tests/Undefined: the quoted statement"
+  grep -q "claim 5 derived from its citations, given the quoted claims 0, 1" "$TMP/undefined.txt" ||
+    fail "tests/Undefined: the claim that rests on the quoted statements"
+  grep -q '"Undefined.Quoted.claim0"' tests/Undefined/article.leanify.json ||
+    fail "tests/Undefined: the quoted statement is not among the axioms of the report"
+  endgroup
+
   group "The refuted theorem is reported false, and the claims resting on it unverified"
   if $PYTHON scripts/leanify_diagnostics.py tests/Refuted/article.leanify.json > "$TMP/refuted.txt"; then
     fail "tests/Refuted: no error reported"; fi

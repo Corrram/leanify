@@ -129,3 +129,4 @@ tests/Statements/article.tex: 7 definitions, 101 claims
   text: 7 compiled, 1 failed, 14 prose (of 22)
   results: 99 compiled, 15 failed, 4 prose (of 118)
   all: 106 compiled, 16 failed, 18 prose (of 140)
+tests/Statements/article.tex: nouns without a reading: polynomial (to use a noun without defining it: \usepackage[notions={…}]{leanify}, docs/writing.md)

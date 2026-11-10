@@ -89,8 +89,13 @@ def findings(report, prose=False, standard=False, satisfiable=False):
             why = c.get("note") or (f"add {report['justifications']}.proof{c['index']}" if certified
                                     else "the article is not certified yet (build the module with #leanify_certify)")
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) compiled but not verified: {why}")
+        elif c["status"] == "quoted" and prose:
+            yield (*where, "info", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is quoted from the literature: "
+                   f"the article assumes it")
         elif c["status"] == "text" and prose:
-            yield (*where, "info", f"claim {c['index']} derived from its citations")
+            rests = c.get("rests") or []
+            given = f", given the quoted claim{'s' if len(rests) > 1 else ''} {', '.join(map(str, rests))}" if rests else ""
+            yield (*where, "info", f"claim {c['index']} derived from its citations{given}")
         # a step that the standard tactic does not close is larger than it looks in the text
         if standard and c["status"] == "text" and c.get("step") == "argument":
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is derived in the text, "
@@ -144,6 +149,7 @@ def main():
     count = lambda st: sum(c["status"] == st for c in claims)
     print(f"{shown.as_posix()}: {len(report['sentences'])} sentences, {len(claims)} claims "
           f"({count('text')} derived from citations, {count('companion')} by companion proofs, "
+          + (f"{count('quoted')} quoted from the literature, " if count('quoted') else "") +
           f"{count('refuted')} refuted, {count('unverified')} unverified), {len(report['definitions'])} definitions; "
           f"{errors} errors, {warnings} warnings", file=sys.stderr)
     unverified = count('unverified')

@@ -33,7 +33,10 @@
 %%   \usepackage[certify, vocab=unitsquare]{leanify}  % build on every compile
 %% Options: status, certify (implies status), check=false (no quick check),
 %% vocab=FIELDS (the fields of the vocabulary the article uses, e.g.
-%% vocab={numbers,analysis}; see docs/vocabulary.md), lean=FILE (its
+%% vocab={numbers,analysis}; see docs/vocabulary.md), notions={graph, finite graph}
+%% (nouns the article uses without defining them) and quantities={degree} (words
+%% that name numbers): Leanify reads both from the source, nothing is printed for
+%% them, and \leanifyreport lists them (docs/writing.md), lean=FILE (its
 %% compiled Lean file, if it is not Compiled.lean next to the article or in
 %% the folder that `leanify init` made),
 %% exe=COMMAND (the checker to run, e.g. exe=leanify for one on the PATH: the
@@ -52,6 +55,12 @@
 \bool_new:N \l__leanify_check_bool
 \bool_new:N \l__leanify_certify_bool
 \str_new:N \l__leanify_vocab_str
+% The nouns and the words for numbers that the article uses without defining them
+% (notions={graph, finite graph}, quantities={degree}). Leanify reads them from the
+% source of the article; nothing is printed for them where they are declared, and
+% \leanifyreport lists them.
+\tl_new:N \l__leanify_notions_tl
+\tl_new:N \l__leanify_quantities_tl
 \str_new:N \l__leanify_lean_str
 \str_new:N \l__leanify_exeopt_str
 \keys_define:nn { leanify }
@@ -66,6 +75,8 @@
       } ,
     certify .value_forbidden:n = true ,
     vocab   .str_set:N  = \l__leanify_vocab_str ,
+    notions    .tl_set:N = \l__leanify_notions_tl ,
+    quantities .tl_set:N = \l__leanify_quantities_tl ,
     lean    .str_set:N  = \l__leanify_lean_str ,
     exe     .str_set:N  = \l__leanify_exeopt_str ,
   }
@@ -102,8 +113,18 @@
 \newcommand*\leanifyhypotheses[2]{\gdef\leanify@hyps{; of the #2 sets of hypotheses under
   which claims are made, #1 are shown to hold together}}
 \newcommand*\leanify@hyps{}
+% The statements quoted from the literature (a result whose heading cites its source and
+% that the article does not prove): the assumptions of the article, and the verified
+% claims that rest on them. What the article uses without defining it.
+\newcommand*\leanifyquoted[2]{\gdef\leanify@quoted{; #1 \ifnum#1=1 statement is\else
+    statements are\fi\ quoted from the literature and assumed, and #2 of the verified
+    claims rest on \ifnum#1=1 it\else them\fi}}
+\newcommand*\leanify@quoted{}
+\newcommand*\leanifynotdefined[1]{\gdef\leanify@notdefined{; not defined in this article
+    or in the vocabulary: #1}}
+\newcommand*\leanify@notdefined{}
 \newcommand*\leanifyreport{\textsf{Leanify}\leanify@version\ (vocabulary: \leanify@vocab):
-  \leanify@summary\leanify@steps\leanify@hyps.}
+  \leanify@summary\leanify@steps\leanify@hyps\leanify@quoted\leanify@notdefined.}
 
 % The readings: what Lean was asked to prove. \leanifyreadings prints them where it
 % stands. A reading is the reading of a version of the grammar with a vocabulary,
@@ -144,6 +165,7 @@
 \newcommand*\leanify@mk@verified{$\checkmark$\,checked}
 \newcommand*\leanify@mk@partial{$\circ$\,partly checked}
 \newcommand*\leanify@mk@compiled{$\circ$\,compiled}
+\newcommand*\leanify@mk@quoted{$\circ$\,quoted}
 \newcommand*\leanify@mk@refuted{$\times$\,false}
 \newcommand*\leanify@mark[1]{%
   \ifcsname leanify@st@#1\endcsname

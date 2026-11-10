@@ -258,11 +258,13 @@
    "definitions": [4],
    "column": 1,
    "claims": [15]}],
+ "notDefined": [],
  "namespace": "Means",
  "leanify": "0.7.0",
  "justifications": "Means.Proofs",
  "definitions":
  [{"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → (0 ≤ x ∧ ¬2 = 0) ∧ 0 ≤ x_2 ∧ ¬2 = 0",
+   "undefined": false,
    "symbol": "d",
    "sentence": 9,
    "name": "d",
@@ -272,6 +274,7 @@
    "justification": "Means.Proofs.defined0",
    "index": 0},
   {"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x : ℝ), 0 < x → ¬2 = 0",
+   "undefined": false,
    "symbol": "A",
    "sentence": 12,
    "name": "A",
@@ -281,6 +284,7 @@
    "justification": "Means.Proofs.defined1",
    "index": 1},
   {"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → 0 ≤ x * x_2 ∧ ¬2 = 0",
+   "undefined": false,
    "symbol": "G",
    "sentence": 12,
    "name": "GDef",
@@ -290,6 +294,7 @@
    "justification": "Means.Proofs.defined2",
    "index": 2},
   {"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → ¬x + x_2 = 0",
+   "undefined": false,
    "symbol": "H",
    "sentence": 12,
    "name": "H",
@@ -299,6 +304,7 @@
    "justification": "Means.Proofs.defined3",
    "index": 3},
   {"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → ¬2 = 0 ∧ 0 ≤ (x ^ 2 + x_2 ^ 2) / 2",
+   "undefined": false,
    "symbol": "Q",
    "sentence": 20,
    "name": "Q",
@@ -313,6 +319,7 @@
    "sentence": 9,
    "satisfiable": "∃ x, 0 < x ∧ ∃ x, 0 < x",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}}=\\frac{{d(x)(y)}^{2}}{2})",
@@ -334,6 +341,7 @@
    "sentence": 10,
    "satisfiable": "∃ x, 0 < x",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading": "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow {{x}^{\\frac{1}{2}}}^{2}=x",
    "rank": 0,
@@ -352,6 +360,7 @@
    "sentence": 10,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading": "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow {{x}^{\\frac{1}{2}}}^{2}=x",
    "rank": 1,
@@ -370,6 +379,7 @@
    "sentence": 10,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow {x}^{\\frac{1}{2}}\\,{y}^{\\frac{1}{2}}={(x\\,y)}^{\\frac{1}{2}})",
@@ -391,6 +401,7 @@
    "sentence": 11,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{{d(x)(y)}^{2}}{2}=\\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}\\land \\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}=\\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}})",
@@ -412,6 +423,7 @@
    "sentence": 13,
    "satisfiable": "",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)\\le G(x)(y)\\land G(x)(y)\\le A(x)(y))",
@@ -432,6 +444,7 @@
    "sentence": 14,
    "satisfiable": "",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x)(y)=A(x)(y)\\Leftrightarrow x=y))",
@@ -451,6 +464,7 @@
    "sentence": 15,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow A(x)(y)-G(x)(y)=\\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2}\\land 0\\le \\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2})",
@@ -472,6 +486,7 @@
    "sentence": 16,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x)(y)\\le A(x)(y))",
@@ -491,6 +506,7 @@
    "sentence": 16,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x)(y)=A(x)(y)\\Leftrightarrow {x}^{\\frac{1}{2}}={y}^{\\frac{1}{2}}))",
@@ -512,6 +528,7 @@
    "sentence": 17,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow ({x}^{\\frac{1}{2}}={y}^{\\frac{1}{2}}\\Leftrightarrow x=y))",
@@ -531,6 +548,7 @@
    "sentence": 18,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)=\\frac{{G(x)(y)}^{2}}{A(x)(y)})",
@@ -551,6 +569,7 @@
    "sentence": 19,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x)(y)\\le A(x)(y))",
@@ -570,6 +589,7 @@
    "sentence": 19,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow 0<G(x)(y))",
@@ -589,6 +609,7 @@
    "sentence": 19,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)=G(x)(y)\\,(\\frac{G(x)(y)}{A(x)(y)})\\land G(x)(y)\\,(\\frac{G(x)(y)}{A(x)(y)})\\le G(x)(y))",
@@ -610,6 +631,7 @@
    "sentence": 20,
    "satisfiable": "",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}\\le Q(x)(y))",

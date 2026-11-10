@@ -67,6 +67,12 @@ most general; all of them are printed.
 Words Leanify does not know are prose: the sentence is reported as not read, and
 nothing about it is certified.
 
+One declaration is not in the printed text: the list of the nouns that an article uses
+*without* a meaning (`\usepackage[notions={graph}]{leanify}`,
+[Writing for Leanify](writing.md#notions-that-the-article-does-not-define)). It gives a
+word no meaning, so it cannot change what a sentence means. It says that the word is
+left undefined, and `\leanifyreport` and every report list these words.
+
 ## Words that are ambiguous in every field
 
 Some words are ambiguous even within one field, and Leanify does not read them

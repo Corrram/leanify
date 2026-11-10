@@ -265,6 +265,9 @@ structure Coverage where
   /-- The proofs, and those of them that are read completely. -/
   proofs : Nat := 0
   complete : Nat := 0
+  /-- The noun phrases that stopped a sentence or a result (each as often as it did):
+  the candidates for the notions of the article that it does not define. -/
+  nouns : List String := []
 
 def Coverage.add (c : Coverage) (kind : String) (outcome : Outcome) : Coverage :=
   let (a, b, p) := match outcome with
@@ -657,6 +660,7 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
     cov := cov.add (resultKind ctx.kind) o
     match o with
     | .failed e =>
+      if e.code == E.noun && !e.detail.isEmpty then cov := { cov with nouns := Codes.toString e.detail :: cov.nouns }
       if roots.any (·.1 == s) then pure () else
       let m := failedMessage e
       let more := consequences s
@@ -698,6 +702,7 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
           let own := d.names.map (·.1)
           let phrases := ((unread.flatMap fun t => nounPhrases texts[t]!).eraseDups.filter
             fun (there, p) => !readsNoun V own there p).map (·.2) |>.eraseDups
+          cov := { cov with nouns := phrases.reverse ++ cov.nouns }
           let phraseHint := match phrases with
             | [] => ""
             | ps => s!"; not read as a noun: {fewOf 2 (ps.map fun p => s!"\"{p}\"")}"
@@ -715,7 +720,13 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
     | .compiled ds ks =>
       if claims then
         for i in ds do
-          out := out ++ [s!"{rel}:{l}:{c}: info: defines {gs.getD i s!"g{i}"} ({defName d i})"]
+          -- a symbol for a quantity that the article does not define is a name, not a
+          -- definition
+          let named : Bool := match d.values[i]? with
+            | some (.const j) => decide (V.consts.length ≤ j)
+            | _ => false
+          let verb := if named then "names, without a definition," else "defines"
+          out := out ++ [s!"{rel}:{l}:{c}: info: {verb} {gs.getD i s!"g{i}"} ({defName d i})"]
           -- (`--defined`: what the definition needs in order to be well defined)
           if defined then
             match d.values[i]? with
@@ -763,6 +774,67 @@ def findingJson (f : String) : Json :=
       ("column", toJson ((parts.getD (n - 1) "").toNat?.getD 0)), ("severity", toJson sev),
       ("message", toJson msg)]
   | none => Json.mkObj [("message", toJson f)]
+
+/-- The definitions of an article that are quantities it does not define (`Let $\chi(G)$
+denote the chromatic number of a graph $G$.`): their value is a constant after those of the
+vocabulary `V` that the article was compiled with. -/
+def undefinedDefs (V : Vocab) (d : Doc) : List Nat :=
+  (List.range d.values.length).filter fun i => match d.values[i]? with
+    | some (.const j) => V.consts.length ≤ j
+    | _ => false
+
+/-- What an article uses without defining it: the nouns and adjectives its preamble
+declares, and the symbols it introduces for quantities that it does not define, each
+with its name. -/
+def notDefinedHere (V : Vocab) (d : Doc) (tex : Bool := false) : List String :=
+  V.declaredPhrases.map Codes.toString ++ (undefinedDefs V d).map fun i =>
+    let sym := d.globNames.getD i s!"g{i}"
+    let sym := if tex then s!"${sym}$" else sym
+    match d.names.find? (·.2 == i) with
+    | some (ws, _) => s!"{sym} ({String.intercalate " " (ws.map Codes.toString)})"
+    | none => sym
+
+/-- The results that the article quotes from the literature and does not prove (their
+heading cites a source, and no proof of the article proves them), by label or by line:
+the article assumes them. -/
+def quotedResults (d : Doc) : List String :=
+  let envs := (d.sentences.filterMap fun (ctx, _, _) =>
+    match ctx.kind with
+    | .result n =>
+      if ctx.quoted && !(d.proofs.any fun p => p.proves == ctx.label) then
+        some (ctx.env, s!"{Codes.toString n} {if ctx.label.isEmpty then s!"{ctx.env}" else Codes.toString ctx.label}")
+      else none
+    | _ => none).eraseDups
+  envs.map (·.2)
+
+/-- The nouns that stopped the reading and that the article could declare: words of
+letters that no field of the vocabulary has, the most frequent first (at most `k`). A
+phrase that ends with an adjective (`there is a unique $x$`, `let $S$ be a finite
+$G$-set`: the noun is the formula) is not one, nor is one with a preposition. This is a
+proposal to the author, who decides. -/
+def nounCandidates (V : Vocab) (cov : Coverage) (k : Nat := 12) : List String :=
+  let stop := ["of", "and", "or", "the", "a", "an", "with", "for", "in", "on", "to", "from", "by", "as", "at",
+    "is", "are", "its", "this", "that", "such", "each", "every", "all", "whose", "which",
+    "their", "over", "under", "between", "within", "after", "before", "toward", "towards", "above",
+    "below", "whenever", "here", "there", "about", "into", "onto", "than", "not", "also"]
+  let adjectives := ["finite", "infinite", "unique", "absolute", "fixed", "given", "certain", "single",
+    "same", "other", "new", "arbitrary", "suitable", "deterministic", "satisfying", "containing",
+    "evaluated", "displayed", "selected", "defined", "bounded", "unbounded", "nonempty", "empty",
+    "strong", "weak", "definable", "measurable", "computable", "periodic", "countable", "nonnegative",
+    "nonzero", "trivial", "nontrivial", "large", "small", "general", "special", "active"]
+  let isAdjective (w : String) : Bool := adjectives.contains w ||
+    Fields.all.any fun (_, W) => W.mods.any fun m => m.phrase == [PItem.w (Codes.ofString w)]
+  let ok (p : String) : Bool := !p.isEmpty && p.all (fun c => c.isAlpha || c == ' ') &&
+    (p.splitOn " ").length ≤ 4 && !((p.splitOn " ").any stop.contains) &&
+    !(isAdjective ((p.splitOn " ").getLastD "")) &&
+    !(Fields.all.any fun (_, W) =>
+      let ws := (p.splitOn " ").map fun w => Codes.ofString w.toLower
+      let (h, noun, rest) := Compile.knownHead W [] ws
+      noun && rest.isEmpty && !h.isEmpty) &&
+    !(V.declaredPhrases.contains (Codes.ofString p.toLower))
+  let ps := (cov.nouns.map String.toLower).filter ok
+  let counted := ps.eraseDups.map fun p => (p, (ps.filter (· == p)).length)
+  ((counted.toArray.qsort fun a b => a.2 > b.2 || (a.2 == b.2 && a.1 < b.1)).toList.take k).map (·.1)
 
 open Lean (Json toJson) in
 /-- The check as JSON, for tools: the findings, every sentence with its place, its
@@ -816,15 +888,24 @@ def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : L
     ("skipped", toJson src.skipped), ("findings", Json.arr (out.map findingJson).toArray),
     ("sentences", Json.arr sents), ("definitions", Json.arr defs.toArray),
     ("claims", Json.arr claims.toArray), ("proofs", Json.arr proofs.toArray),
-    ("coverage", Json.mkObj (rows ++ [("proofsTotal", toJson cov.proofs), ("proofsComplete", toJson cov.complete)]))]
+    ("coverage", Json.mkObj (rows ++ [("proofsTotal", toJson cov.proofs), ("proofsComplete", toJson cov.complete)])),
+    ("notDefined", toJson (notDefinedHere V d)), ("nounCandidates", toJson (nounCandidates V cov 1000))]
 
 /-- Compile the article at `path` natively, with the files it inputs, and print its
 diagnostics (as JSON with `json`). Returns the number of sentences that failed to
 compile. -/
 def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := false)
-    (json : Bool := false) (defined : Bool := false) : IO Nat := do
+    (json : Bool := false) (defined : Bool := false) (extra : List Declared := []) : IO Nat := do
   let src ← readSource path
   let lines := src.lines.toList
+  -- the notions that the article declares in its preamble (and those of `--notions`)
+  let V := (V.forArticle lines).declare extra
+  let k := (lines.findIdx? isBeginDocument).getD lines.length
+  let bad := (Declared.ofPreamble (lines.take k)).2
+  unless bad.isEmpty || json do
+    let l := ((lines.take k).findIdx? fun l => (Codes.toString l).contains "notions" || (Codes.toString l).contains "quantities").getD 0
+    let (file, l) := src.origin[l]?.getD (path.toString, l + 1)
+    IO.println s!"{file}:{l}:1: warning: notions: {String.intercalate ", " (bad.map fun e => s!"\"{Codes.toString e}\"")} not read: an entry is a noun in words of letters, with its plural in parentheses if it is irregular (notions=\{graph, finite graph, vertex (vertices)}, quantities=\{degree})"
   match compileArticle V lines with
   | none =>
     IO.eprintln s!"{path}: error: the article could not be read (no \\begin\{document}, or unbalanced math)"
@@ -836,6 +917,17 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
     else
       for l in out do IO.println l
       IO.println s!"{path}: {d.globs.length} definitions, {d.claims.length} claims\n{cov.render}"
+      -- what the article uses without defining it, and what it could declare so
+      match notDefinedHere V d with
+      | [] => pure ()
+      | ns => IO.println s!"{path}: not defined here: {String.intercalate ", " ns}"
+      -- the results quoted from the literature, which the article assumes
+      match (quotedResults d) with
+      | [] => pure ()
+      | ls => IO.println s!"{path}: quoted from the literature and not proved here (assumed): {String.intercalate ", " ls}"
+      match nounCandidates V cov with
+      | [] => pure ()
+      | ns => IO.println s!"{path}: nouns without a reading: {String.intercalate ", " ns} (to use a noun without defining it: \\usepackage[notions=\{…}]\{leanify}, docs/writing.md)"
       -- the files read with the article (`leanify.sty` checks them for changes)
       unless src.inputs.isEmpty do
         IO.println s!"{path}: inputs: {String.intercalate ", " src.inputs.toList}"

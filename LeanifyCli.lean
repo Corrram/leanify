@@ -5,7 +5,7 @@ import Leanify.Library.Fields
 
 /-! The `leanify` command line.
 
-* `leanify check ARTICLE.tex [--vocab FIELDS] [--prose] [--claims] [--defined] [--json]`
+* `leanify check ARTICLE.tex [--vocab FIELDS] [--notions NOUNS] [--quantities WORDS] [--prose] [--claims] [--defined] [--json]`
   compiles the article natively, with the files it inputs, and prints its
   diagnostics (fast; certifies nothing); `--json` prints them for tools, with every
   sentence, its place and its text. Projects with their own vocabulary define a
@@ -37,7 +37,7 @@ always there. -/
 open Leanify
 
 def usage : String :=
-  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--prose] [--claims] [--defined] [--json]\n" ++
+  "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--notions NOUN,NOUN,…] [--quantities WORD,…] [--prose] [--claims] [--defined] [--json]\n" ++
   "       leanify certify ARTICLE.tex [--vocab FIELD,FIELD,…] [--name NAME] [--leanify REV|PATH]\n" ++
   "       leanify tex ARTICLE.tex [--vocab FIELD,FIELD,…] [--certify] [--status] (for leanify.sty)\n" ++
   "       leanify flatten ARTICLE.tex [OUT.tex]\n" ++
@@ -294,6 +294,7 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   noteInputs path
   let contents ← IO.FS.readFile path
   let lines ← readLines path
+  let V := V.forArticle lines
   let some d := compileArticle V lines
     | IO.eprintln s!"{path}: error: the article could not be read (no \\begin\{document}, or unbalanced math)"; pure 1
   let pin := sourcePin contents
@@ -361,8 +362,15 @@ theorem defined{i} : wellDefined{i} := by
       | .text => s!"line {l}"
     let ps := if c.premises.isEmpty then "no premises"
       else "premises: " ++ String.intercalate ", " (c.premises.map fun j => s!"claim {j}")
+    -- (a statement quoted from the literature is assumed: there is nothing to prove)
+    if d.quotedClaims.contains k then
+      s!"/- Claim {k}, {roleString c.role} ({place}), is quoted from the literature: the article
+assumes it (`Quoted.claim{k}`), and the certificate names it among its axioms. A theorem
+`proof{k} : obligation{k}` here would prove it instead.
+`{commentSafe (V.texTypes (c.body.tex cs gs []))}` -/
+" else
     s!"/-- Claim {k}, {roleString c.role} ({place}; {ps}):
-`{commentSafe (c.body.tex cs gs [])}` -/
+`{commentSafe (V.texTypes (c.body.tex cs gs []))}` -/
 theorem proof{k} : obligation{k} := by
   intro_premises
   refine ⟨by unfold meaningful{k}; definedness [], ?_⟩
@@ -371,7 +379,7 @@ theorem proof{k} : obligation{k} := by
     -- the first claim under these hypotheses: that they can hold together
     if d.hypsOf k == some k then s!"
 /-- The hypotheses of claim {k} can hold together:
-`{commentSafe (c.body.hyps.tex cs gs [])}` -/
+`{commentSafe (V.texTypes (c.body.hyps.tex cs gs []))}` -/
 theorem satisfied{k} : satisfiable{k} := by
   unfold satisfiable{k}
   sorry
@@ -511,6 +519,7 @@ def splitFinding (f : String) : Option (String × Nat × String × String) :=
 def checkRecs (V : Vocab) (path : System.FilePath) : IO (Array Rec) := do
   let src ← readSource path
   let lines := src.lines.toList
+  let V := V.forArticle lines
   match compileArticle V lines with
   | none => pure #[.warn "Leanify could not read the article (no \\begin{document}, or unbalanced math)"]
   | some d =>
@@ -763,8 +772,13 @@ def main (args : List String) : IO UInt32 := do
       IO.eprintln s!"leanify check: {e}"
       return 2
     let vocab := (vocabOf (fieldsOf opts)).toOption.getD Vocab.core
+    -- (`--notions "graph, finite graph"`: as the option `notions` of the package, to try it)
+    let extra := (((optArg opts "--notions").getD "").splitOn ",").filterMap (fun e =>
+      Declared.ofEntry (Codes.ofString e)) ++
+      (((optArg opts "--quantities").getD "").splitOn ",").filterMap fun e =>
+        (Declared.ofEntry (Codes.ofString e)).map fun d => { d with number := true }
     let failed ← checkArticle vocab path (opts.contains "--prose") (opts.contains "--claims")
-      (opts.contains "--json") (opts.contains "--defined")
+      (opts.contains "--json") (opts.contains "--defined") extra
     pure (if failed == 0 then 0 else 1)
   | "tex" :: path :: opts => texCommand path opts
   | "certify" :: path :: opts => certifyCommand path opts

@@ -10,7 +10,7 @@ Everything Leanify provides, in the order a project uses it. The
 ### `leanify check`
 
 ```sh
-lake exe leanify check ARTICLE.tex [--vocab FIELDS] [--claims] [--defined] [--prose] [--json]
+lake exe leanify check ARTICLE.tex [--vocab FIELDS] [--notions NOUNS] [--quantities WORDS] [--claims] [--defined] [--prose] [--json]
 ```
 
 Compiles the article natively, in about a second, and prints findings in the
@@ -42,6 +42,14 @@ discuss rather than state, so their prose is not a gap in a statement.
 The last lines count the compiled, failed and prose sentences of the text, the
 results and the proofs, and the proofs that are read completely (`complete
 proofs: 2 of 3`): only those derive their result from the printed proof. Then
+come, if there are any: what the article uses without defining it (`not defined
+here: graph, finite graph, \chi (chromatic number)`), the results it quotes from
+the literature without a proof (`quoted from the literature and not proved here
+(assumed): lemma clique`), and the nouns that stopped the reading and that the
+article could declare (`nouns without a reading: polynomial, …`;
+[Writing for Leanify](writing.md#notions-that-the-article-does-not-define)).
+`--notions "graph, finite graph"` and `--quantities "degree"` read the article as
+if its preamble declared these, to try a list. Then
 come the files the article inputs, and the inputs that were not read (a drawing,
 a missing file). The exit status is 1 if a sentence failed to compile.
 `--vocab unitsquare` adds the vocabulary of probability on the unit
@@ -254,7 +262,13 @@ well-definedness condition, justification) and every claim (reading, Lean
 statement, definedness condition, premises, status, justification, and for an
 unverified claim why it is not verified). The status of a claim is `text`
 (derived from its citations), `companion` (proved without a compiled proof in
-the text), `unverified` or `refuted`. A claim of status `text` has a `step`,
+the text), `quoted` (a statement that the article quotes from the literature and
+does not prove: an assumption, the axiom `Foo.Quoted.claimK`), `unverified` or
+`refuted`. `rests` lists the quoted claims that a verified claim rests on.
+`notDefined` lists what the article uses without defining it
+([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)),
+and a definition that is such a quantity has `undefined`. `axioms` are the standard
+three and the quoted claims. A claim of status `text` has a `step`,
 `standard` or `argument`, and a claim with hypotheses has `hypotheses`,
 `shown` or `open`, and `hypothesesOf`, the claim that stands for them and has the
 Lean statement `satisfiable`; `refuted` marks a claim under a hypothesis that its
@@ -383,6 +397,7 @@ statement with its reading, without Lean. It prints from
 | `check=false` | No quick check during the compile. |
 | `certify` | Before the marks are read, the certificate is built, as by [`leanify certify`](#leanify-certify). The first time, when the article has no Lean files yet, `init` writes them. Implies `status`. |
 | `vocab=unitsquare` | The vocabulary of the article, for `check` and `init`. |
+| `notions={graph, finite graph}`, `quantities={degree}` | The nouns that the article uses without defining them, and the words that name numbers ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)). Leanify reads them from the source of the article. Nothing is printed where they are declared; `\leanifyreport` lists them, with the number of results quoted from the literature, and a quoted result has the margin mark *quoted*. |
 | `lean=FILE` | The compiled Lean file of the article, by default `Compiled.lean` next to it, or `NAME/Compiled.lean` as `init` writes it in a folder of its own. The module to build is `\leanifymodule`, or else `NS.Certified` for the namespace `NS` that this file compiles. |
 | `exe=COMMAND` | The checker to run, instead of the project's: `exe=leanify` for an executable on the `PATH`, or a path. With it the quick check also runs outside a Lean project (with shell escape), so a checker without Lean or mathlib is enough to check an article while writing (`.github/workflows/release.yml` builds that executable for Linux, macOS and Windows when a version is tagged). The certificate still needs the project. |
 

@@ -45,6 +45,14 @@ of the items below as well.
    no other NOUN", "with equality if and only if …", "occur only at
    $\alpha=\frac{5}{32}$".
 
+9. **More of the notions that an article does not define.** The list of the preamble
+   and the sentence `Let $\chi(G)$ denote the chromatic number of a graph $G$.` are
+   read. Not yet: a noun that is a kind of another (`a tree is a graph`), an adjective
+   with a hyphen or a formula (`$K_r$-free`), a relation between two objects (`$H$ is a
+   subgraph of $G$`), notation of the subject (`\otimes`, `\dim`), the kind of a
+   quantity from its domain (`$d(G)\in\mathbb N$`), and a sentence that names the
+   source of a notion (`a matroid in the sense of \cite{oxley}`).
+
 Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
 that compiles and is certified.

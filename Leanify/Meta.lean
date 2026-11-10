@@ -16,6 +16,9 @@ every stage of the compilation is also added as a theorem `lhs = rhs` proved by
 `Eq.refl`, which only Lean's kernel checks, by evaluating the compiler itself, and the
 stages compose to
 `Foo.compiled : compileArticle Foo.vocab Foo.source = some Foo.doc`.
+`Foo.vocab` is the vocabulary that the command is given, with the notions that the
+preamble of the article declares (`Foo.declared`; in the audit,
+`Foo.declaredNotions` says that these are the notions of `Foo.source`).
 The audit takes minutes and is meant for CI and for a final check, not for writing.
 
 In the audit, the assembly (the compilation of the sentences) is certified in chunks of
@@ -168,6 +171,12 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     throwError "{rel} is pinned as {pin} but its contents are {now}: if the article changed \
       on purpose, update the pin to \"{now}\""
   let src ← readLines path
+  -- the notions that the article uses without defining them, from its preamble
+  let (declared, unread) := Declared.ofPreamble (src.take ((src.findIdx? isBeginDocument).getD src.length))
+  unless unread.isEmpty do
+    logWarning m!"{rel}: notions: {String.intercalate ", " (unread.map Codes.toString)} not read: an entry is \
+      a noun in words of letters, with its plural in parentheses if it is irregular"
+  let V := V.declare declared
   -- the certificate pins this file alone
   let files ← readSource path
   unless files.inputs.isEmpty do
@@ -178,7 +187,19 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   let c (n : Name) : Expr := Lean.mkConst (ns ++ n)
   let stages := leanify.stages.get (← getOptions)
   defineExpr (ns ++ `sourceHash) (Lean.mkConst ``String) (.lit (.strVal pin))
-  defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
+  -- the vocabulary: the one given, with the notions that the article declares
+  -- (compiled as well: the later commands evaluate `Foo.vocab`)
+  let compiled (n : Name) (ty val : Expr) : CommandElabM Unit :=
+    liftCoreM <| addAndCompile <| Declaration.defnDecl
+      { name := n, levelParams := [], type := ty, value := val,
+        hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
+  if declared.isEmpty then
+    defineLiteral (ns ++ `declared) declared
+    defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
+  else
+    compiled (ns ++ `declared) (toTypeExpr (List Declared)) (toExpr declared)
+    compiled (ns ++ `vocab) (Lean.mkConst ``Vocab)
+      (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
   defineLiteral (ns ++ `source) src
   -- by default, the compiler is run by Lean's evaluator, and that is all
   unless leanify.kernel.get (← getOptions) do
@@ -208,6 +229,10 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   timed "preamble" do
     kernelEq (ns ++ `preamble) (← `(macrosOf (joinLines (List.take $(id `bodyLine) $(id `source)))))
       (← `(some $(id `macros)))
+  -- (the notions of `Foo.vocab` are those that the preamble of the source declares)
+  timed "declared notions" do
+    kernelEq (ns ++ `declaredNotions)
+      (← `((Declared.ofPreamble (List.take $(id `bodyLine) $(id `source))).1)) (← `($(id `declared)))
   timed "paragraphs" do
     kernelEq (ns ++ `paragraphs)
       (← `(blocksOf (List.drop ($(id `bodyLine) + 1) $(id `source))
@@ -363,6 +388,7 @@ syntax (name := leanifyCheck) "#leanify_check " str (" with " ident)? : command
   let V ← liftCoreM <| evalVocab vocabName
   let path ← liftCoreM (resolvePath rel)
   let lines ← readLines path
+  let V := V.forArticle lines
   match compileArticle V lines with
   | none => throwError "{rel} could not be read (no \\begin\{document}, or unbalanced math)"
   | some d =>

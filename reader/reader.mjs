@@ -9,14 +9,16 @@ import {parseArticle, renderArticle} from './article.mjs';
 
 export const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const standardAxioms = new Set(['propext', 'Classical.choice', 'Quot.sound']);
-const claimStatuses = new Set(['text', 'companion', 'unverified', 'refuted']);
+const claimStatuses = new Set(['text', 'companion', 'quoted', 'unverified', 'refuted']);
 const isVerified = status => status === 'text' || status === 'companion';
 
 export const statusText = {
   text: 'Derived from its citations',
   companion: 'Checked by the companion development',
   definition: 'Definition, well defined',
+  notion: 'A quantity that the article uses and does not define',
   binder: 'Binds a variable',
+  quoted: 'Quoted from the literature: assumed, not proved here',
   unverified: 'Compiled, not yet verified',
   refuted: 'False as stated: refuted in Lean',
   failed: 'Not compiled',
@@ -35,7 +37,9 @@ export function validateReport(report, source) {
     throw new Error('Invalid Leanify report');
   if (report.sourceHash !== sourcePin(source))
     throw new Error('The article changed after its report was written: update the pin of #leanify_article and rebuild');
-  if (!Array.isArray(report.axioms) || report.axioms.some(a => !standardAxioms.has(a)))
+  // (beside the standard axioms: the statements the article quotes from the literature)
+  const quotedAxiom = a => { const m = /\.Quoted\.claim(\d+)$/.exec(a); return !!m && report.claims[+m[1]]?.status === 'quoted'; };
+  if (!Array.isArray(report.axioms) || report.axioms.some(a => !standardAxioms.has(a) && !quotedAxiom(a)))
     throw new Error('The certificate uses a nonstandard axiom');
   const length = [...source.replace(/\r\n/g, '\n')].length;
   report.sentences.forEach((s, i) => {
@@ -46,7 +50,7 @@ export function validateReport(report, source) {
   report.claims.forEach((c, k) => {
     if (c.index !== k || !claimStatuses.has(c.status) || !report.sentences[c.sentence]) throw new Error(`Invalid claim ${k}`);
     if (c.premises.some(j => !report.claims[j])) throw new Error(`Claim ${k} has an unknown premise`);
-    if (isVerified(c.status) && c.premises.some(j => !isVerified(report.claims[j].status)))
+    if (isVerified(c.status) && c.premises.some(j => !isVerified(report.claims[j].status) && report.claims[j].status !== 'quoted'))
       throw new Error(`Claim ${k} is verified from an unverified premise`);
   });
   const verified = new Set(report.verified);
@@ -61,10 +65,13 @@ export function sentenceStatus(report, s) {
   const statuses = (s.claims ?? []).map(k => report.claims[k].status);
   if (statuses.includes('refuted')) return 'refuted';
   if (statuses.includes('unverified')) return 'unverified';
+  if (statuses.includes('quoted')) return 'quoted';
   if (statuses.includes('companion')) return 'companion';
   if (statuses.includes('text')) return 'text';
   // `fix $b\in B$.`, `Let $w\in A$.`: no definition and no claim
   if (!(s.definitions ?? []).length && !(s.claims ?? []).length) return 'binder';
+  // `Let $\chi(G)$ denote the chromatic number of a graph $G$.`: a quantity the article does not define
+  if ((s.definitions ?? []).every(i => report.definitions[i]?.undefined)) return 'notion';
   return 'definition';
 }
 
@@ -164,7 +171,7 @@ export function inspectorData(report, {declarationURL = () => null} = {}) {
       claims: (s.claims ?? []).map(k => {
         const c = report.claims[k];
         return {index: k, role: c.role, status: c.status, statusText: statusText[c.status], note: c.note ?? '',
-          step: c.step ?? '', hypotheses: c.hypotheses ?? '',
+          step: c.step ?? '', hypotheses: c.hypotheses ?? '', rests: c.rests ?? [],
           reading: renderReading(c.reading), lean: c.lean, meaningful: c.meaningful,
           justification: c.justification, justificationURL: declarationURL(c.justification, c.module),
           premises: c.premises.map(j => ({claim: j, sentence: sentenceOfClaim(j), status: report.claims[j].status})),
@@ -190,6 +197,7 @@ export function coverage(report) {
     failed: count(s => s.outcome === 'failed'),
     proseMath: count(s => s.outcome === 'prose' && s.environment !== 'text'),
     claims: report.claims.length, text: claims('text'), companion: claims('companion'), unverified: claims('unverified'),
+    quoted: claims('quoted'), resting: report.claims.filter(c => c.status !== 'quoted' && (c.rests ?? []).length).length,
     refuted: claims('refuted'),
     definitions: report.definitions.length,
   };
@@ -235,7 +243,7 @@ export function renderCompiledReader({title, source, bibliography, report, confi
   }
   const total = [...counts.values()].reduce((a, b) => a + b, 0);
   const legend = `<legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All markers <span class="lm-count">${total}</span></label></legend>` +
-    ['text', 'companion', 'definition', 'binder', 'unverified', 'refuted', 'failed', 'prose'].filter(st => counts.has(st)).map(st =>
+    ['text', 'companion', 'quoted', 'definition', 'notion', 'binder', 'unverified', 'refuted', 'failed', 'prose'].filter(st => counts.has(st)).map(st =>
     `<label class="lm-filter"><input type="checkbox" data-filter="${st}" checked><span class="lm-dot lm-${st}" aria-hidden="true"></span>${escape(statusText[st])} <span class="lm-count">${counts.get(st)}</span></label>`).join('');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escape(title)} · Leanify</title>
@@ -247,7 +255,7 @@ ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+
 <div class="lm-layout"><main id="lm-article" tabindex="-1">
 <section class="lm-summary" id="lm-summary"><p class="lm-kicker">Single source · compiled by the Lean kernel</p>
 <p>${intro}</p>
-<p>${n(c.sentences, 'sentence')}. ${c.compiled} compiled into ${n(c.claims, 'claim')} and ${n(c.definitions, 'definition')}. Of the claims, <strong>${c.text} ${c.text === 1 ? 'is' : 'are'} derived from the results they cite</strong>, ${c.companion} ${c.companion === 1 ? 'is' : 'are'} checked by the companion Lean development, ${c.refuted ? `<strong>${c.refuted} ${c.refuted === 1 ? 'is' : 'are'} false as stated</strong>, ` : ''}and ${c.unverified} ${c.unverified === 1 ? 'is' : 'are'} unverified. ${n(c.failed, 'sentence')} failed to compile, and ${n(c.proseMath, 'sentence')} in results and proofs ${c.proseMath === 1 ? 'is' : 'are'} prose the grammar does not read yet.</p>
+<p>${n(c.sentences, 'sentence')}. ${c.compiled} compiled into ${n(c.claims, 'claim')} and ${n(c.definitions, 'definition')}. Of the claims, <strong>${c.text} ${c.text === 1 ? 'is' : 'are'} derived from the results they cite</strong>, ${c.companion} ${c.companion === 1 ? 'is' : 'are'} checked by the companion Lean development, ${c.quoted ? `${c.quoted} ${c.quoted === 1 ? 'is' : 'are'} quoted from the literature and assumed (${c.resting} of the verified claims rest on ${c.quoted === 1 ? 'it' : 'them'}), ` : ''}${c.refuted ? `<strong>${c.refuted} ${c.refuted === 1 ? 'is' : 'are'} false as stated</strong>, ` : ''}and ${c.unverified} ${c.unverified === 1 ? 'is' : 'are'} unverified. ${n(c.failed, 'sentence')} failed to compile, and ${n(c.proseMath, 'sentence')} in results and proofs ${c.proseMath === 1 ? 'is' : 'are'} prose the grammar does not read yet.</p>
 ${proved.length ? `<p class="lm-proved">Results whose proof is compiled sentence by sentence: ${proved.join(' · ')}</p>` : ''}
 <fieldset class="lm-legend">${legend}</fieldset></section>
 ${body}</main>

@@ -30,6 +30,15 @@ the three standard axioms: the claims, the definedness of the definitions, the
 refutations, and that the readable statements `Foo.claimK` are the meaning of the
 compiled document `Foo.doc`.
 
+An article may use notions that it does not define and quote results that it does not
+prove ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)). The
+notions are `opaque` constants of Lean, so nothing is assumed about them beyond their
+types (and that each kind of object has an element). The quoted results are axioms
+`Foo.Quoted.claimK`, stated by `#leanify_semantics` from the compiled document. They are
+the only axioms beside the standard three that `#leanify_certify` accepts, the build
+prints them, and the reports say which claims rest on them. Whether a quoted result
+holds, and whether its reading is what its source proves, is for the reader to check.
+
 That `Foo.doc` is the compilation of the article is, by default, the result of
 running the compiler: `#leanify_article` evaluates `compileArticle` like any
 program. This is what makes a compile take a second. It trusts Lean's evaluator

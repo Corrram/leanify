@@ -260,11 +260,13 @@
    "definitions": [],
    "column": 1,
    "claims": [7]}],
+ "notDefined": [],
  "namespace": "TailDependence",
  "leanify": "0.7.0",
  "justifications": "TailDependence.Proofs",
  "definitions":
  [{"wellDefined": "True",
+   "undefined": false,
    "symbol": "\\mathcal{C}",
    "sentence": 6,
    "name": "copulas",
@@ -274,6 +276,7 @@
    "justification": "TailDependence.Proofs.defined0",
    "index": 0},
   {"wellDefined": "True",
+   "undefined": false,
    "symbol": "\\operatorname{PQD}",
    "sentence": 8,
    "name": "positivelyQuadrantDependent",
@@ -284,6 +287,7 @@
    "index": 1},
   {"wellDefined":
    "∀ (x : I → I → ℝ),\n  copulas x →\n    ∀ (x : I) (x : ℝ),\n      0 < x ∧ x ≤ 1 →\n        ∀ (x_2 : ℝ), 0 < x_2 ∧ x_2 ≤ 1 → x ≤ x_2 → ((0 ≤ x_2 ∧ x_2 ≤ 1) ∧ ¬x_2 = 0) ∧ (0 ≤ x ∧ x ≤ 1) ∧ ¬x = 0",
+   "undefined": false,
    "symbol": "\\operatorname{LTD}",
    "sentence": 9,
    "name": "leftTailDecreasing",
@@ -295,6 +299,7 @@
    "index": 2},
   {"wellDefined":
    "∀ (x : I → I → ℝ),\n  copulas x →\n    ∀ (x : I) (x : ℝ),\n      0 ≤ x ∧ x < 1 →\n        ∀ (x_2 : ℝ), 0 ≤ x_2 ∧ x_2 < 1 → x ≤ x_2 → ((0 ≤ x ∧ x ≤ 1) ∧ ¬1 - x = 0) ∧ (0 ≤ x_2 ∧ x_2 ≤ 1) ∧ ¬1 - x_2 = 0",
+   "undefined": false,
    "symbol": "\\operatorname{RTI}",
    "sentence": 10,
    "name": "rightTailIncreasing",
@@ -310,6 +315,7 @@
    "sentence": 11,
    "satisfiable": "∃ x, copulas x ∧ leftTailDecreasing x",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow \\operatorname{PQD}(x)",
@@ -329,6 +335,7 @@
    "sentence": 13,
    "satisfiable": "∃ x, (copulas x ∧ leftTailDecreasing x) ∧ ∃ x x_1, ↑x = 0",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=0\\Rightarrow x(y,z)=0\\land 0=y\\,z)",
@@ -349,6 +356,7 @@
    "sentence": 14,
    "satisfiable": "∃ x, (copulas x ∧ leftTailDecreasing x) ∧ ∃ x x_1, 0 < ↑x",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ 0<y\\Rightarrow x(1,z)\\le \\frac{x(y,z)}{y}\\land x(1,z)=z)",
@@ -370,6 +378,7 @@
    "sentence": 15,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{LTD}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y,z))",
@@ -390,6 +399,7 @@
    "sentence": 16,
    "satisfiable": "∃ x, copulas x ∧ rightTailIncreasing x",
    "role": "statement",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow \\operatorname{PQD}(x)",
@@ -410,6 +420,7 @@
    "sentence": 18,
    "satisfiable": "∃ x, (copulas x ∧ rightTailIncreasing x) ∧ ∃ x x_1, ↑x = 1",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y=1\\Rightarrow x(y,z)=z\\land z=y\\,z)",
@@ -430,6 +441,7 @@
    "sentence": 19,
    "satisfiable": "∃ x, (copulas x ∧ rightTailIncreasing x) ∧ ∃ x x_1, ↑x < 1",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y<1\\Rightarrow 1-z+x(0,z)\\le \\frac{1-y-z+x(y,z)}{1-y}\\land 1-z+x(0,z)=1-z)",
@@ -451,6 +463,7 @@
    "sentence": 20,
    "satisfiable": "",
    "role": "proof step",
+   "rests": [],
    "refuted": false,
    "reading":
    "\\forall x\\in [0,1]\\to [0,1]\\to \\mathbb{R},\\ \\mathcal{C}(x)\\land \\operatorname{RTI}(x)\\Rightarrow (\\forall y\\in [0,1],\\ \\forall z\\in [0,1],\\ y\\,z\\le x(y,z))",
