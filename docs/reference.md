@@ -25,7 +25,7 @@ loads): a finding in such a file is reported at that file and line.
 | a theorem, lemma, proposition, corollary or definition with sentences without a reading: `Lemma l:bound is not checked: Leanify cannot read any of its 3 sentences`, or `is only partly checked: Leanify cannot read 2 of its 5 sentences (lines …)`, once per result (named by its label, or by the beginning of its statement), with the likely reason: the notation in it that neither the grammar nor the article defines, or a noun phrase it introduces an object by that Leanify does not read as a noun where it stands (`not read as a noun: "Markov jump process"`; a phrase that is read there, such as `an integer` or `there is a constant`, is not named) | warning |
 | a definition without a reading whose symbols later sentences use | warning |
 | a proof with sentences that are not read (prose, or a construction of proofs the grammar does not have), of a result whose statement is read: `the proof of thm:bound is not read completely (Leanify cannot read 1 of its 4 sentences): thm:bound can be checked, but it is not derived from this proof` | info |
-| with `--claims`: every definition and the formal reading of every claim | info |
+| with `--claims`: every definition and the formal reading of every claim, and for a claim that follows a sentence of its result or proof which is not read: `claim 4 follows a sentence that Leanify does not read (line 33): its reading has the hypotheses of the sentences that are read, and may lack one or keep one that has ended`. The summary counts these claims | info |
 | with `--defined`: also what each claim and definition needs in order to be meaningful (`claim 4 is meaningful if: …`, `y is well defined if: \forall x\in\mathbb{R},\ \neg(x=0)\Rightarrow\neg(x=0)`): nonzero denominators, arguments inside the domains of the functions they are given to, integrable integrands. These are the statements `meaningfulK` and `wellDefinedI` of the Lean files | info |
 | with `--prose`: every sentence of a proof, a remark, an example or a conjecture without a reading, a proof sentence whose construction is not supported, and every definition of the running text without a reading | info |
 
@@ -198,8 +198,24 @@ text. The certificate and every refutation may use only the axioms
 
 ### What a verified claim does not say
 
-Two things are reported next to the status of a claim, because a proof without
+Three things are reported next to the status of a claim, because a proof without
 `sorry` does not show them.
+
+**The claim is the claim of the text.** A claim is read with the variables and
+hypotheses of the sentences before it in its result or proof (in a proof: also
+those of the statement). If one of these sentences is not read, the reading has
+only what the other sentences say. It may lack a hypothesis (`Suppose moreover
+that …`, not read), and it may keep one that the text has ended: a supposition
+after the unread sentence that states the contradiction, or the first case after
+an unread `In the other case, …`. The claim as read is then not what the text
+claims at that place, and a proof of it shows less than it seems: under a
+supposition that cannot hold, the conclusion of the proof is true for an empty
+reason. Leanify cannot know what an unread sentence says, so it reports every
+such claim: `after` lists the sentences in question, `leanify check --claims`
+names their lines, and the summaries count a verified claim of this kind apart,
+as *verified as read*. The result itself is not affected where its mark is
+already cautious: a statement with an unread sentence is *partly checked*, and a
+result is *derived* only from a proof that is read completely.
 
 **The hypotheses can hold.** A statement `for every x with P(x), Q(x)` is true
 if no `x` has `P`: a mistyped hypothesis (`$0<x<0$`) makes every conclusion
@@ -265,6 +281,9 @@ unverified claim why it is not verified). The status of a claim is `text`
 the text), `quoted` (a statement that the article quotes from the literature and
 does not prove: an assumption, the axiom `Foo.Quoted.claimK`), `unverified` or
 `refuted`. `rests` lists the quoted claims that a verified claim rests on.
+`after` lists the sentences before the claim, in its result or proof, that are
+not read: its reading may lack a hypothesis of one of them, or keep one that it
+ends.
 `notDefined` lists what the article uses without defining it
 ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)),
 and a definition that is such a quantity has `undefined`. `axioms` are the standard
@@ -288,7 +307,8 @@ python .lake/packages/leanify/scripts/leanify_diagnostics.py article.leanify.jso
 ```
 
 Prints the findings of a report in editor format: a refuted claim is an error,
-an unverified claim and a sentence that did not compile are warnings. With
+an unverified claim and a sentence that did not compile are warnings, and so is
+a verified claim that follows a sentence which is not read (`verified as read`). With
 `--standard`, a verified step that the standard tactic does not close is a
 warning, and with `--satisfiable` a claim whose hypotheses are not shown to
 hold together (once for each set of hypotheses). The exit status is 1 if the article changed after it was

@@ -567,6 +567,38 @@ def capitalize (s : String) : String :=
   | c :: r => String.ofList (c.toUpper :: r)
   | [] => s
 
+/-- The sentences before sentence `s` that belong to its context and are not read: those
+of its result or proof and, for a sentence of a proof, those of the statement that the
+proof proves. A claim of `s` is read with the variables and hypotheses of the sentences
+before it that are read. If one of them is not read, the reading may lack a hypothesis
+that the sentence makes, or keep one that it ends (a supposition after `This is a
+contradiction.`, a case after `In the other case, …`): the claim as read is then not
+the claim of the text, and the reports say so. A sentence of the running text is read
+on its own. -/
+def Doc.unreadBefore (d : Doc) (s : Nat) : List Nat :=
+  match d.sentences[s]? with
+  | none => []
+  | some (ctx, _, _) =>
+    if ctx.kind == .text then [] else
+    -- the statement that a proof proves (as the compiler finds it: `envTable`)
+    let proved : Option Nat := if ctx.kind != .proof then none else
+      d.sentences.findSome? fun (c, _, _) => match c.kind with
+        | .result _ => if c.label == ctx.proves then some c.env else none
+        | _ => none
+    (List.range s).filter fun t => match d.sentences[t]?, d.outcomes[t]? with
+      | some (c, _, _), o =>
+        (c.env == ctx.env || (c.kind != .text && some c.env == proved)) &&
+          (match o with | some (.compiled _ _) => false | _ => true)
+      | none, _ => false
+
+/-- The claims that follow a sentence of their context that is not read
+(`Doc.unreadBefore`), each with these sentences. -/
+def Doc.openContext (d : Doc) : List (Nat × List Nat) :=
+  (List.range d.claims.length).filterMap fun k =>
+    match d.unreadBefore (d.claims[k]!).sent with
+    | [] => none
+    | ts => some (k, ts)
+
 /-- Diagnostics for a compiled document. A result (theorem, lemma, …) whose
 sentences have no reading is reported once, at its first such sentence, with the
 notation in them that nothing defines. A sentence that failed is reported with
@@ -737,6 +769,14 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
           match d.claims[k]? with
           | some cl =>
             out := out ++ [s!"{rel}:{l}:{c}: info: claim {k}: {V.texTypes (cl.body.tex cs gs [])}"]
+            -- a claim after a sentence of its result or proof that is not read
+            match d.unreadBefore s with
+            | [] => pure ()
+            | ts =>
+              let ls := (ts.map lineOf).eraseDups
+              out := out ++ [s!"{rel}:{l}:{c}: info: claim {k} follows {if ts.length == 1 then "a sentence" else s!"{ts.length} sentences"} \
+                that Leanify does not read ({if ls.length == 1 then "line" else "lines"} {fewOf 6 ls}): its reading has the \
+                hypotheses of the sentences that are read, and may lack one or keep one that has ended"]
             if defined && cl.body.defined != .tt then
               out := out ++ [s!"{rel}:{l}:{c}: info: claim {k} is meaningful if: {V.texTypes (cl.body.defined.tex cs gs [])}"]
           | none => pure ()
@@ -876,7 +916,7 @@ def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : L
     let c := d.claims[k]!
     Json.mkObj [("index", toJson k), ("sentence", toJson c.sent), ("role", toJson (roleOf c.role)),
       ("reading", toJson (V.texTypes (c.body.tex cs gs []))), ("premises", toJson c.premises),
-      ("cites", toJson (c.cites.map Codes.toString))]
+      ("cites", toJson (c.cites.map Codes.toString)), ("after", toJson (d.unreadBefore c.sent))]
   let defs : List Json := (List.range d.values.length).map fun i =>
     Json.mkObj [("index", toJson i), ("name", toJson (defName d i)), ("symbol", toJson (gs.getD i ""))]
   let proofs : List Json := d.proofs.map fun p =>
@@ -918,6 +958,11 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
     else
       for l in out do IO.println l
       IO.println s!"{path}: {d.globs.length} definitions, {d.claims.length} claims\n{cov.render}"
+      -- the claims whose context is not read completely
+      match d.openContext.length with
+      | 0 => pure ()
+      | 1 => IO.println s!"{path}: 1 of the {d.claims.length} claims follows a sentence of its result or proof that is not read: its reading may lack a hypothesis, or keep one that has ended (--claims names it)"
+      | n => IO.println s!"{path}: {n} of the {d.claims.length} claims follow a sentence of their result or proof that is not read: their readings may lack a hypothesis, or keep one that has ended (--claims names them)"
       -- what the article uses without defining it, and what it could declare so
       match notDefinedHere V d with
       | [] => pure ()

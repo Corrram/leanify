@@ -581,6 +581,12 @@ def reportRecs (path : System.FilePath) : IO (Array Rec) := do
   recs := recs.push (.say s!"certificate: {claims.size} claims: {derived} derived in the text from their citations{steps}, \
     {count "status" "companion"} justified by companion proofs, {count "status" "refuted"} refuted, \
     {count "status" "unverified"} unverified; {(arr "definitions").size} definitions well defined")
+  -- the verified claims that follow a sentence of their result or proof that is not read
+  let after := (claims.filter fun c => (str c "status" == "text" || str c "status" == "companion") &&
+    !(((c.getObjVal? "after").toOption.bind (·.getArr?.toOption)).getD #[]).isEmpty).size
+  unless after == 0 do
+    recs := recs.push (.say s!"{after} of the verified claims follow a sentence of their result or proof that is not \
+      read: they are verified as read, with the hypotheses of the sentences that are read")
   let reps := claims.filter fun c => (c.getObjValAs? Nat "hypothesesOf").toOption == (c.getObjValAs? Nat "index").toOption
     && (c.getObjValAs? Nat "index").toOption.isSome
   let openReps := reps.filter fun c => str c "hypotheses" == "open"

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sourcePin, mathRegions, markSentences, sentenceStatus, validateReport, renderCompiledArticle, renderCompiledReader, inspectorData} from '../reader/reader.mjs';
+import {sourcePin, mathRegions, markSentences, sentenceStatus, validateReport, renderCompiledArticle, renderCompiledReader, inspectorData, coverage} from '../reader/reader.mjs';
 
 const source = String.raw`\title{A compiled note}
 \author{A mathematician}
@@ -112,6 +112,22 @@ test('the legend has a box per status that occurs, with its count, under one for
   assert.match(legend, /^<fieldset class="lm-legend"><legend><label class="lm-filter lm-filter-all"><input type="checkbox" data-filter-all checked>All markers <span class="lm-count">4<\/span><\/label><\/legend>/);
   assert.deepEqual([...legend.matchAll(/data-filter="(\w+)".*?lm-count">(\d+)</g)].map(m => [m[1], Number(m[2])]),
     [['text', 2], ['definition', 1], ['prose', 1]]);
+});
+
+test('a verified claim after a sentence that is not read says so', () => {
+  const r = report();
+  r.sentences[0] = {...r.sentences[0], outcome: 'prose', definitions: [], claims: []};
+  r.claims[0].after = [0];
+  validateReport(r, source);
+  // a sentence that is read, or one after the claim, is refused
+  const bad = report();
+  bad.claims[1].after = [1];
+  assert.throws(() => validateReport(bad, source), /follow unread/);
+  assert.deepEqual(inspectorData(r)[1].claims[0].after, [{sentence: 0, line: r.sentences[0].line}]);
+  assert.equal(coverage(r).after, 1);
+  const html = renderCompiledReader({title: 'Note', source, report: r, assets: {styles: [], script: 'reader.js'}});
+  assert.match(html, /1 of the verified claims follows a sentence of its result or proof that is not read, and is verified as read\./);
+  assert.doesNotMatch(renderCompiledReader({title: 'Note', source, report: report(), assets: {styles: [], script: 'reader.js'}}), /verified as read/);
 });
 
 test('a statement quoted from the literature is an assumption, and a verified claim may rest on it', () => {

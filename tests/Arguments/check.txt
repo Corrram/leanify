@@ -28,7 +28,7 @@ tests/Arguments/article.tex:108:1: info: claim 26: \forall x\in \mathbb{R},\ \fo
 tests/Arguments/article.tex:114:1: info: claim 27: \forall x\in \mathbb{R},\ 0\le {x}^{2}
 tests/Arguments/article.tex:120:1: info: claim 28: \forall x\in \mathbb{R},\ 0\le x\Rightarrow {x}^{2}=x\,x\land 0\le x\,x
 tests/Arguments/article.tex:122:1: info: claim 29: \forall x\in \mathbb{R},\ x<0\Rightarrow 0<-x
-tests/Arguments/article.tex:122:1: info: claim 30: \forall x\in \mathbb{R},\ x<0\Rightarrow {x}^{2}=-x\,-x\land 0<-x\,-x
+tests/Arguments/article.tex:122:1: info: claim 30: \forall x\in \mathbb{R},\ x<0\Rightarrow {x}^{2}=-x\,(-x)\land 0<-x\,(-x)
 tests/Arguments/article.tex:128:1: info: claim 31: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 2\,x\,y\le {x}^{2}+{y}^{2}
 tests/Arguments/article.tex:134:1: info: claim 32: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow 0\le x-y
 tests/Arguments/article.tex:134:1: info: claim 33: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\le x\Rightarrow {x}^{2}+{y}^{2}-2\,x\,y=(x-y)\,(x-y)\land 0\le (x-y)\,(x-y)

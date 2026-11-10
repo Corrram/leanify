@@ -488,6 +488,17 @@ The steps of a proof by contradiction are exempt: their hypotheses are refuted,
 and that is their point. Write the second case as `Assume now that $x<0$.`, or
 both as the items of a list.
 
+**A sentence that is not read may have said something.** A hypothesis lasts
+until a sentence that Leanify reads ends it. If the sentence that ends a case or
+states the contradiction is not read, the steps after it are still read under the
+hypothesis, and if a sentence that makes a hypothesis is not read, the claims
+after it lack it. `leanify check --claims` names every claim that follows an
+unread sentence of its result or proof, and the reports count such a claim apart
+when it is verified
+([What a verified claim does not say](reference.md#what-a-verified-claim-does-not-say)).
+The remedy is to write the sentence in a form that is read: `This is a
+contradiction.`, `Assume now that $x<0$.`.
+
 **Induction.** A proof by induction names its variable and states its hypothesis
 as a sentence:
 

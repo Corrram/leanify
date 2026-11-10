@@ -109,6 +109,18 @@ proofs() {
     fail "tests/Undefined: the quoted statement is not among the axioms of the report"
   endgroup
 
+  group "A verified claim after a sentence that is not read is verified as read"
+  $PYTHON scripts/leanify_diagnostics.py tests/Context/article.leanify.json --verified > "$TMP/context.txt" 2> "$TMP/context.err"
+  grep -q "proof step (claim 7) is verified as read, after a sentence that Leanify does not read (line 45)" "$TMP/context.txt" ||
+    fail "tests/Context: the conclusion under the supposition that an unread sentence ends"
+  if grep -q "claim \(8\|9\|10\)) is verified as read" "$TMP/context.txt"; then
+    fail "tests/Context: a claim of the proof that is read completely is reported"; fi
+  grep -q "4 of the verified after a sentence that is not read" "$TMP/context.err" || fail "tests/Context: the count"
+  grep -q '^\\leanifycontext{4}$' tests/Context/article.leanify.tex || fail "tests/Context: the record of the status file"
+  grep -q '^\\leanifysummary{11}{7}{5}' tests/Context/article.leanify.tex ||
+    fail "tests/Context: the summary counts the claims that are verified as read among the verified"
+  endgroup
+
   group "The refuted theorem is reported false, and the claims resting on it unverified"
   if $PYTHON scripts/leanify_diagnostics.py tests/Refuted/article.leanify.json > "$TMP/refuted.txt"; then
     fail "tests/Refuted: no error reported"; fi

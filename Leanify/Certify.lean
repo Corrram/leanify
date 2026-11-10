@@ -342,8 +342,12 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   let resting := ((List.range d.claims.length).filter fun k => status k != "quoted" && !rests[k]!.isEmpty).length
   let quotedText := if quoted == 0 then "" else
     s!" {quoted} quoted from the literature and assumed ({resting} of the verified claims rest on them),"
+  -- the verified claims that follow a sentence of their result or proof that is not read
+  let after := (d.openContext.filter fun (k, _) => status k == "text" || status k == "companion").length
+  let afterText := if after == 0 then "" else
+    s!" ({after} of the verified claims follow a sentence of their result or proof that is not read: they are verified as read)"
   logInfo m!"{d.claims.length} claims: {count "text"} derived in the text from their citations, \
     {count "companion"} justified by companion proofs,{quotedText} {count "refuted"} refuted, \
-    {count "unverified"} unverified; {d.values.length} definitions well defined. Axioms: {axs.toList}"
+    {count "unverified"} unverified{afterText}; {d.values.length} definitions well defined. Axioms: {axs.toList}"
 
 end Leanify

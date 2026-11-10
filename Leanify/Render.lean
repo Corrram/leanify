@@ -228,9 +228,9 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     let dom := match d with | .tt => "" | d => "\\,[" ++ d.tex cs gs (v :: ls) ++ "]"
     "(" ++ v ++ "\\in " ++ t.tex ++ dom ++ "\\mapsto " ++ b.tex cs gs (v :: ls) ++ ")"
   | .num n => toString n
-  | .add x y => wrap 6 x ++ "+" ++ wrap 7 y
-  | .sub x y => wrap 6 x ++ "-" ++ wrap 7 y
-  | .mul x y => wrap 7 x ++ "\\," ++ wrap 8 y
+  | .add x y => wrap 6 x ++ "+" ++ wrapR 7 y
+  | .sub x y => wrap 6 x ++ "-" ++ wrapR 7 y
+  | .mul x y => wrap 7 x ++ "\\," ++ wrapR 8 y
   | .div x y => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .neg x => "-" ++ wrap 8 x
   | .abs x => "\\lvert " ++ x.tex cs gs ls ++ "\\rvert"
@@ -304,6 +304,12 @@ where
   wrap (p : Nat) (t : Tm) : String :=
     let s := t.tex cs gs ls
     if t.prec < p then "(" ++ s ++ ")" else s
+  /-- The right operand of a sum, a difference or a product: a negative term is put in
+  parentheses, so that `x\,(-y)` is not printed as `x\,-y`, which reads as a difference. -/
+  wrapR (p : Nat) (t : Tm) : String :=
+    match t with
+    | .neg _ => "(" ++ t.tex cs gs ls ++ ")"
+    | _ => wrap p t
   /-- The binding strength of a term, with the constants named by operators. -/
   cprec (t : Tm) : Nat := match t with
     | .app (.app (.const i) _) _ => match cs.getD i "" with

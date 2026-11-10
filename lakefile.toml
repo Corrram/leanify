@@ -110,6 +110,13 @@ srcDir = "tests"
 globs = ["Undefined.+"]
 
 [[lean_lib]]
+# Claims that follow a sentence which is not read (a hypothesis that is missing, a case
+# or a supposition that has ended): verified as read, named and counted apart.
+name = "Context"
+srcDir = "tests"
+globs = ["Context.+"]
+
+[[lean_lib]]
 # The language of proofs: assumptions, cases written as the items of a list,
 # contradictions and induction, compiled by the kernel and certified, each step by the
 # standard tactic.

@@ -14,15 +14,18 @@ tests/Undefined/article.tex:60:1: info: claim 6: \forall x\in \mathrm{Graph},\ \
 tests/Undefined/article.tex:64:1: info: claim 7: \forall x\in \mathrm{Graph},\ \forall y\in \mathrm{Graph},\ d(x,y)<d(x,y)+1
 tests/Undefined/article.tex:73:1: warning: unknown noun: tree: sentence not checked
 tests/Undefined/article.tex:73:20: info: claim 8: 1\le 2
+tests/Undefined/article.tex:73:20: info: claim 8 follows a sentence that Leanify does not read (line 73): its reading has the hypotheses of the sentences that are read, and may lack one or keep one that has ended
 tests/Undefined/article.tex:83:1: warning: that such an object exists is not checked: a noun that the article does not define is assumed to have an element: sentence not checked
 tests/Undefined/article.tex:83:23: warning: that such an object exists is not checked: a noun that the article does not define is assumed to have an element: sentence not checked
 tests/Undefined/article.tex:84:1: info: claim 9: \exists x\in \mathrm{Graph},\ \chi(x)\le \chi(x)
+tests/Undefined/article.tex:84:1: info: claim 9 follows 2 sentences that Leanify does not read (line 83): its reading has the hypotheses of the sentences that are read, and may lack one or keep one that has ended
 tests/Undefined/article.tex: 5 definitions, 10 claims
   text: 5 compiled, 1 failed, 14 prose (of 20)
   results: 8 compiled, 3 failed, 0 prose (of 11)
   proofs: 3 compiled, 0 failed, 0 prose (of 3)
   all: 16 compiled, 4 failed, 14 prose (of 34)
   complete proofs: 1 of 1 (a result is derived from a proof that is read completely)
+tests/Undefined/article.tex: 2 of the 10 claims follow a sentence of their result or proof that is not read: their readings may lack a hypothesis, or keep one that has ended (--claims names them)
 tests/Undefined/article.tex: not defined here (a kind of object among them is assumed to have an element): graph, vertex, degree (a number), distance (a number), finite graph, connected graph, \chi (chromatic number), \omega (clique number), \Delta (maximum degree), d (edit distance), L (line graph)
 tests/Undefined/article.tex: quoted from the literature and not proved here (assumed): lemma clique, lemma greedy
 tests/Undefined/article.tex: nouns without a reading: tree (to use a noun without defining it: \usepackage[notions={…}]{leanify}, docs/writing.md)

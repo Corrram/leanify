@@ -114,7 +114,11 @@ fixed tactic, `leanify_step`, on every claim derived in the text, and reports
 the claim as a *standard* step if the tactic closes it and as an *argument*
 otherwise. A result with an argument among its steps is *argued*, not
 *derived*: it is proved from what the text cites, but the printed proof leaves
-out more than routine steps. Claims without a
+out more than routine steps. A claim that follows a sentence of its result or
+proof which is not read is verified *as read*: its reading has the hypotheses of
+the sentences that are read, and the reports name it and count it apart
+([What a verified claim does not say](reference.md#what-a-verified-claim-does-not-say)).
+Claims without a
 compiled proof (cited theorems, displayed formulas) may use any Lean proof:
 typically a companion development, connected by proved bridge theorems. The
 certificate permits only the axioms `propext`, `Classical.choice` and

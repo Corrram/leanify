@@ -96,6 +96,15 @@ def findings(report, prose=False, standard=False, satisfiable=False):
             rests = c.get("rests") or []
             given = f", given the quoted claim{'s' if len(rests) > 1 else ''} {', '.join(map(str, rests))}" if rests else ""
             yield (*where, "info", f"claim {c['index']} derived from its citations{given}")
+        # a verified claim after a sentence of its result or proof that is not read: it is
+        # verified as read, with the hypotheses of the sentences that are read
+        if c["status"] in ("text", "companion") and c.get("after"):
+            lines = sorted({sentences[t]["line"] for t in c["after"]})
+            n = len(c["after"])
+            what = "a sentence" if n == 1 else f"{n} sentences"
+            yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is verified as read, after "
+                   f"{what} that Leanify does not read (line{'s' if len(lines) > 1 else ''} "
+                   f"{', '.join(map(str, lines))}): its reading may lack a hypothesis, or keep one that has ended")
         # a step that the standard tactic does not close is larger than it looks in the text
         if standard and c["status"] == "text" and c.get("step") == "argument":
             yield (*where, "warning", f"{ROLE.get(c['role'], 'claim')} (claim {c['index']}) is derived in the text, "
@@ -147,10 +156,13 @@ def main():
         warnings += severity == "warning"
     claims = report["claims"]
     count = lambda st: sum(c["status"] == st for c in claims)
+    after = sum(c["status"] in ("text", "companion") and bool(c.get("after")) for c in claims)
     print(f"{shown.as_posix()}: {len(report['sentences'])} sentences, {len(claims)} claims "
           f"({count('text')} derived from citations, {count('companion')} by companion proofs, "
           + (f"{count('quoted')} quoted from the literature, " if count('quoted') else "") +
-          f"{count('refuted')} refuted, {count('unverified')} unverified), {len(report['definitions'])} definitions; "
+          f"{count('refuted')} refuted, {count('unverified')} unverified"
+          + (f"; {after} of the verified after a sentence that is not read" if after else "") +
+          f"), {len(report['definitions'])} definitions; "
           f"{errors} errors, {warnings} warnings", file=sys.stderr)
     unverified = count('unverified')
     return 1 if errors or (args.strict and warnings) or (args.verified and unverified) else 0

@@ -142,7 +142,7 @@ def statusTex (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc) (cl
   out := out ++ "\\providecommand\\leanifyversion[1]{}\\providecommand\\leanifydefinition[3]{}" ++
     "\\providecommand\\leanifyreading[4]{}\\providecommand\\leanifysteps[2]{}" ++
     "\\providecommand\\leanifyhypotheses[2]{}\\providecommand\\leanifyquoted[2]{}" ++
-    "\\providecommand\\leanifynotdefined[1]{}\n"
+    "\\providecommand\\leanifynotdefined[1]{}\\providecommand\\leanifycontext[1]{}\n"
   out := out ++ s!"\\leanifyversion\{{version}}\n"
   let mut seen : List Nat := []
   for s in [0:d.sentences.length] do
@@ -181,9 +181,13 @@ def statusTex (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc) (cl
   -- of the claims derived in the text, those the standard tactic closes; of the
   -- different hypotheses under which claims are made, those shown to hold together
   let countBy (f : ClaimInfo → Bool) := ((List.range d.claims.length).filter fun k => f (claims.getD k {})).length
-  let tried := countBy fun i => i.step != ""
+  -- (the claims that follow a sentence which is not read are counted apart, below)
+  let open_ := d.openContext.map (·.1)
+  let countAt (f : ClaimInfo → Bool) :=
+    ((List.range d.claims.length).filter fun k => !open_.contains k && f (claims.getD k {})).length
+  let tried := countAt fun i => i.step != ""
   if tried > 0 then
-    out := out ++ s!"\\leanifysteps\{{countBy fun i => i.step == "standard"}}\{{tried}}\n"
+    out := out ++ s!"\\leanifysteps\{{countAt fun i => i.step == "standard"}}\{{tried}}\n"
   let reps := (List.range d.claims.length).filter fun k => d.hypsOf k == some k
   if !reps.isEmpty then
     out := out ++ s!"\\leanifyhypotheses\{{(reps.filter fun k => (claims.getD k {}).hypotheses == "shown").length}}\{{reps.length}}\n"
@@ -195,7 +199,13 @@ def statusTex (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc) (cl
   match notDefinedHere V d true with
   | [] => pure ()
   | ns => out := out ++ s!"\\leanifynotdefined\{{String.intercalate ", " ns}}\n"
-  out := out ++ s!"\\leanifysummary\{{d.claims.length}}\{{verified.length}}\{{count "text"}}\{{d.values.length}}\{{compiled}}\{{d.sentences.length}}\n"
+  -- the verified claims that follow a sentence of their result or proof that is not read:
+  -- they are verified as read, and the summary counts them apart
+  let after := (verified.filter open_.contains).length
+  if after > 0 then
+    out := out ++ s!"\\leanifycontext\{{after}}\n"
+  let derived := countAt fun i => i.status == "text"
+  out := out ++ s!"\\leanifysummary\{{d.claims.length}}\{{verified.length - after}}\{{derived}}\{{d.values.length}}\{{compiled}}\{{d.sentences.length}}\n"
   return out
 
 /-- Write `<article>.leanify.json`. Claims without information are unverified. -/
@@ -222,6 +232,9 @@ def writeReport (ns jn : Name) (rel : String) (d : Doc) (claims : Array ClaimInf
       ("index", toJson k), ("sentence", toJson c.sent), ("role", toJson (roleString c.role)),
       ("cites", toJson (c.cites.map Codes.toString)), ("premises", toJson c.premises),
       ("status", toJson info.status), ("rank", toJson info.rank), ("rests", toJson info.rests),
+      -- (the sentences of its result or proof before it that are not read: its reading
+      -- may lack a hypothesis of one of them, or keep one that it ends)
+      ("after", toJson (d.unreadBefore c.sent)),
       ("reading", toJson (V.texTypes (c.body.tex cTex gTex []))),
       ("lean", toJson (← ppConst (ns ++ nm s!"claim{k}"))),
       ("meaningful", toJson (← ppConst (ns ++ nm s!"meaningful{k}"))),

@@ -52,6 +52,9 @@ export function validateReport(report, source) {
     if (c.premises.some(j => !report.claims[j])) throw new Error(`Claim ${k} has an unknown premise`);
     if (isVerified(c.status) && c.premises.some(j => !isVerified(report.claims[j].status) && report.claims[j].status !== 'quoted'))
       throw new Error(`Claim ${k} is verified from an unverified premise`);
+    // (the sentences before it that are not read are earlier sentences without a reading)
+    if ((c.after ?? []).some(t => !(t < c.sentence) || !report.sentences[t] || report.sentences[t].outcome === 'compiled'))
+      throw new Error(`Claim ${k}: a sentence that it is said to follow unread is read, or is not before it`);
   });
   const verified = new Set(report.verified);
   report.claims.forEach(c => { if (isVerified(c.status) !== verified.has(c.index)) throw new Error(`Claim ${c.index}: status disagrees with the certificate`); });
@@ -172,6 +175,8 @@ export function inspectorData(report, {declarationURL = () => null} = {}) {
         const c = report.claims[k];
         return {index: k, role: c.role, status: c.status, statusText: statusText[c.status], note: c.note ?? '',
           step: c.step ?? '', hypotheses: c.hypotheses ?? '', rests: c.rests ?? [],
+          // the sentences of its result or proof before it that are not read
+          after: (c.after ?? []).map(t => ({sentence: t, line: report.sentences[t]?.line ?? 0})),
           reading: renderReading(c.reading), lean: c.lean, meaningful: c.meaningful,
           justification: c.justification, justificationURL: declarationURL(c.justification, c.module),
           premises: c.premises.map(j => ({claim: j, sentence: sentenceOfClaim(j), status: report.claims[j].status})),
@@ -199,6 +204,8 @@ export function coverage(report) {
     claims: report.claims.length, text: claims('text'), companion: claims('companion'), unverified: claims('unverified'),
     quoted: claims('quoted'), resting: report.claims.filter(c => c.status !== 'quoted' && (c.rests ?? []).length).length,
     refuted: claims('refuted'),
+    // the verified claims that follow a sentence of their result or proof that is not read
+    after: report.claims.filter(c => (c.status === 'text' || c.status === 'companion') && (c.after ?? []).length).length,
     definitions: report.definitions.length,
   };
 }
@@ -255,7 +262,7 @@ ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+
 <div class="lm-layout"><main id="lm-article" tabindex="-1">
 <section class="lm-summary" id="lm-summary"><p class="lm-kicker">Single source · compiled by the Lean kernel</p>
 <p>${intro}</p>
-<p>${n(c.sentences, 'sentence')}. ${c.compiled} compiled into ${n(c.claims, 'claim')} and ${n(c.definitions, 'definition')}. Of the claims, <strong>${c.text} ${c.text === 1 ? 'is' : 'are'} derived from the results they cite</strong>, ${c.companion} ${c.companion === 1 ? 'is' : 'are'} checked by the companion Lean development, ${c.quoted ? `${c.quoted} ${c.quoted === 1 ? 'is' : 'are'} quoted from the literature and assumed (${c.resting} of the verified claims rest on ${c.quoted === 1 ? 'it' : 'them'}), ` : ''}${c.refuted ? `<strong>${c.refuted} ${c.refuted === 1 ? 'is' : 'are'} false as stated</strong>, ` : ''}and ${c.unverified} ${c.unverified === 1 ? 'is' : 'are'} unverified. ${n(c.failed, 'sentence')} failed to compile, and ${n(c.proseMath, 'sentence')} in results and proofs ${c.proseMath === 1 ? 'is' : 'are'} prose the grammar does not read yet.</p>
+<p>${n(c.sentences, 'sentence')}. ${c.compiled} compiled into ${n(c.claims, 'claim')} and ${n(c.definitions, 'definition')}. Of the claims, <strong>${c.text} ${c.text === 1 ? 'is' : 'are'} derived from the results they cite</strong>, ${c.companion} ${c.companion === 1 ? 'is' : 'are'} checked by the companion Lean development, ${c.quoted ? `${c.quoted} ${c.quoted === 1 ? 'is' : 'are'} quoted from the literature and assumed (${c.resting} of the verified claims rest on ${c.quoted === 1 ? 'it' : 'them'}), ` : ''}${c.refuted ? `<strong>${c.refuted} ${c.refuted === 1 ? 'is' : 'are'} false as stated</strong>, ` : ''}and ${c.unverified} ${c.unverified === 1 ? 'is' : 'are'} unverified. ${c.after ? `${c.after} of the verified claims ${c.after === 1 ? 'follows' : 'follow'} a sentence of ${c.after === 1 ? 'its' : 'their'} result or proof that is not read, and ${c.after === 1 ? 'is' : 'are'} verified as read. ` : ''}${n(c.failed, 'sentence')} failed to compile, and ${n(c.proseMath, 'sentence')} in results and proofs ${c.proseMath === 1 ? 'is' : 'are'} prose the grammar does not read yet.</p>
 ${proved.length ? `<p class="lm-proved">Results whose proof is compiled sentence by sentence: ${proved.join(' · ')}</p>` : ''}
 <fieldset class="lm-legend">${legend}</fieldset></section>
 ${body}</main>

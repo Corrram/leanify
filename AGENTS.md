@@ -180,7 +180,10 @@ These hold for every change. A feature that cannot meet them is not added.
     `opaque` constant, and what it quotes without proving it is an axiom
     `Foo.Quoted.claimK` that the certificate prints and the reports count. A claim
     that rests on a quoted result says so. There is no other way for an
-    unproved statement to count.
+    unproved statement to count. A claim that follows a sentence of its result or
+    proof which is not read is read without what that sentence says: the reports
+    name it (`after`) and count it apart from the verified claims
+    (`Doc.unreadBefore`).
 
 ## Working on the code
 

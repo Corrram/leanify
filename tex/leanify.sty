@@ -100,9 +100,16 @@
 \newcommand*\leanifystatus[2]{\expandafter\gdef\csname leanify@st@#1\endcsname{#2}}
 \newcommand*\leanifysummary[6]{%
   \gdef\leanify@summary{#2 of #1 claims verified (#3 derived in the text from
-    their citations); #5 of #6 sentences compiled; #4
+    their citations)\leanify@context; #5 of #6 sentences compiled; #4
     \ifnum#4=1 definition\else definitions\fi\ well defined}}
 \newcommand*\leanify@summary{no status file (build the Lean module first)}
+% The verified claims that follow a sentence of their result or proof that is not read:
+% their readings have the hypotheses of the sentences that are read. They are verified
+% as read and are not among the verified claims of the summary.
+\newcommand*\leanifycontext[1]{\gdef\leanify@context{, and #1 more \ifnum#1=1 is\else
+    are\fi\ verified as read, after a sentence of \ifnum#1=1 its\else their\fi\ result
+    or proof that is not read}}
+\newcommand*\leanify@context{}
 \newcommand*\leanifyversion[1]{\gdef\leanify@version{~#1}}
 \newcommand*\leanify@version{}
 % Of the claims derived in the text, those the standard tactic closes; of the

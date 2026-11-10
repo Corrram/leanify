@@ -187,9 +187,12 @@ Note/article.tex: 1 definitions, 5 claims
   proofs: 5 compiled, 1 failed, 0 prose (of 6)
   all: 8 compiled, 1 failed, 41 prose (of 50)
   complete proofs: 2 of 3 (a result is derived from a proof that is read completely)
+Note/article.tex: 1 of the 5 claims follows a sentence of its result or proof that is not read: its reading may lack a hypothesis, or keep one that has ended (--claims names it)
 ```
 
-The 40 prose sentences of the text are the explanations: the abstract, the
+The last line is about the step in the proof of the corollary: the statement
+of the corollary is not read, so the step is read without what the statement
+says. The 40 prose sentences of the text are the explanations: the abstract, the
 introduction, the remarks between the results, the last section and the
 references. The check
 counts them and says nothing else about them, because they assert nothing that

@@ -66,7 +66,10 @@ grammar.
    proof incomplete, and its result is then checked, not derived. A few
    sentences that only organize a proof are read as such (`We distinguish two
    cases:`, `We argue by induction on $n$.`); most are not. The check counts the
-   complete proofs.
+   complete proofs. A claim after an unread sentence is read without what the
+   sentence says, and the reports name and count these claims. What is open is to
+   read more of the sentences that end a hypothesis (`In the other case, …`, `which
+   is absurd`), and a way for an author to say that a sentence is only a remark.
 2. **The size of a step.** The certificate tries one fixed tactic,
    `leanify_step`, on every derived step and reports the steps it closes as
    *standard*; a result with another step is *argued*. What a careful reader
