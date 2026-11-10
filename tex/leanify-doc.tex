@@ -21,6 +21,7 @@
 \date{Version 0.7, 2026-11-10}
 
 \begin{document}
+\emergencystretch=2em
 \maketitle
 
 \begin{abstract}
@@ -100,6 +101,11 @@ lean=FILE & The compiled Lean file of the article, if it is not
 exe=COMMAND & The checker to run instead of the project's, for instance
   \texttt{exe=leanify} for an executable on the \texttt{PATH}. With it the quick
   check also runs outside a Lean project. \\
+notions=NOUNS & The nouns that the article uses without defining them, for
+  instance \texttt{notions=\{graph, finite graph, vertex (vertices)\}}
+  (Section~\ref{sec:notions}). Nothing is printed for them. \\
+quantities=WORDS & Words that name a real number in the names of quantities that
+  the article does not define, for instance \texttt{quantities=\{degree\}}. \\
 \bottomrule
 \end{tabularx}
 
@@ -151,6 +157,28 @@ Without shell escape nothing runs, and in a Lean project a warning says so.
 Outside a Lean project the package runs nothing and says nothing, unless the
 option \opt{exe} names a checker.
 
+\section{Notions that the article does not define}\label{sec:notions}
+
+An article on graphs does not define a graph. If the vocabulary has no field for
+its subject, the article names the nouns that it uses without a definition:
+\begin{lstlisting}
+\usepackage[notions={graph, finite graph, vertex (vertices)},
+            quantities={degree}]{leanify}
+\end{lstlisting}
+A noun is then a kind of object of which nothing is known, and an entry that ends
+with a noun (\texttt{finite graph}) is an adjective of it. An irregular plural is
+given in parentheses. A sentence such as \emph{Let $\chi(G)$ denote the chromatic
+number of a graph $G$.} introduces a symbol for a quantity that the article does
+not define. What Lean proves about these notions is proved whatever they mean.
+
+A result whose heading cites its source and that the article does not prove, as in
+\verb|\begin{lemma}[\cite{diestel}]|, is \emph{quoted from the literature}. The
+article assumes it: it is an axiom of the certificate, and every verified claim
+records the quoted results on which it rests. The summary of \cs{leanifyreport}
+names what is not defined in the article and how many statements are quoted. A
+kind of object is assumed to have an element, so a sentence that says only that
+such an object exists is not read as a claim.
+
 \section{Verification status in the margin}\label{sec:status}
 
 With \opt{status}, every labelled result whose status is known gets one of these
@@ -170,6 +198,8 @@ $\checkmark$\,\textsf{argued} & As \textsf{derived}, with a reservation that the
   tactic (the printed proof leaves out more than a routine step there), or the
   hypotheses of a claim are not shown to hold together (it may be true for an empty
   reason). \\
+$\circ$\,\textsf{quoted} & The result cites its source and has no proof in the
+  article. It is assumed, and the certificate names it among its axioms. \\
 $\circ$\,\textsf{partly checked} & The result is verified in part. \\
 $\circ$\,\textsf{compiled} & The statement compiled, but is not verified yet. \\
 $\times$\,\textsf{false} & The claim is refuted in Lean. \\

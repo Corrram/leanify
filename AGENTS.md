@@ -165,7 +165,11 @@ These hold for every change. A feature that cannot meet them is not added.
     package runs one command, `leanify tex`, and reads its records
     (`\jobname.leanify.out`): what to check, build or report is decided in
     `LeanifyCli.lean`, not in TeX. Typesetting needs only `mathtools` and `amssymb`. The package is on
-    CTAN; `scripts/ctan.sh` builds the upload.
+    CTAN; `scripts/ctan.sh` builds the upload, and `scripts/ctan.sh validate` and
+    `upload` submit it. CTAN takes an update only under a new version, so a change
+    of the package that is to be released changes the version in `\ProvidesPackage`,
+    `tex/README.md` and `tex/leanify-doc.tex`, and these documents describe every
+    option of the package.
 14. **Findings are LaTeX warnings at their lines**, in plain words, with the
     likely fix: the undefined symbol, the unknown noun, the ambiguous word, and
     the sentence that would define it. A finding names a cause only if it is one:

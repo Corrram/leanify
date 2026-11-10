@@ -13,8 +13,12 @@ The LaTeX package `leanify.sty` is the typesetting side:
 * with shell escape, inside a Lean project, it runs the Leanify checker once
   on every compile and reports the findings as LaTeX warnings at their lines;
 * with the option `status`, it marks every labelled result in the margin with
-  its verification status (*derived*, *argued*, *checked*, *partly checked*,
-  *compiled*, *false*);
+  its verification status (*derived*, *argued*, *checked*, *quoted*, *partly
+  checked*, *compiled*, *false*);
+* with the option `notions={graph, finite graph}`, the article names the nouns
+  that it uses without defining them, and nothing is printed for them. A result
+  whose heading cites its source and that has no proof is quoted from the
+  literature, and the certificate lists it as an assumption;
 * `\leanifyreadings` prints the formal reading of every definition and
   statement, so that a reader of the PDF sees what Lean was asked to prove;
 * with the option `exe=leanify`, the check runs a checker on the `PATH`,
