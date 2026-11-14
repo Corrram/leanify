@@ -166,7 +166,8 @@ These hold for every change. A feature that cannot meet them is not added.
     (`\jobname.leanify.out`): what to check, build or report is decided in
     `LeanifyCli.lean`, not in TeX. Typesetting needs only `mathtools` and `amssymb`. The package is on
     CTAN; `scripts/ctan.sh` builds the upload, and `scripts/ctan.sh validate` and
-    `upload` submit it. CTAN takes an update only under a new version, so a change
+    `upload` submit it. CTAN takes an update only under a new version, which
+    it wants as number and date (`0.7 2026-11-10`, as the script sends it), so a change
     of the package that is to be released changes the version in `\ProvidesPackage`,
     `tex/README.md` and `tex/leanify-doc.tex`, and these documents describe every
     option of the package.
