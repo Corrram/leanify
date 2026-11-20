@@ -470,6 +470,24 @@ def implicitArgs (sc : Scope) (i : Nat) : M (List (Tm × Ty)) := do
     | none => fail E.free n
   | none => pure []
 
+/-- The key of the constant that the symbol `m` with the subscript `i` may name (`d_0`,
+`z_-`): the whole symbol. A subscript that is a variable of the scope is an index
+(`x_k` under `for every $k$` is the family `x` at `k`), unless the constant was defined
+among the variables of a result with that variable as an implicit parameter: after
+`Let $n\ge2$ and $\delta_n\coloneqq\frac1n$.`, the name of the symbol is `\delta_n`, and
+each use of it takes the `n` of its context. -/
+def subConstKey (sc : Scope) (m i : MT) : M (Option Codes) := do
+  match i with
+  | .id x =>
+    if (lookupLocal sc x).isNone then pure (symKey m) else
+    match symKey m with
+    | some k =>
+      match ← lookupGlob k with
+      | some (h, _) => pure (if (((← get).implicits.lookup h).getD []).contains x then some k else none)
+      | none => pure none
+    | none => pure none
+  | _ => pure (symKey m)
+
 /-- Closed terms (predicates of globals) used under `n` binders need no shift,
 but a predicate applied to a local must be written as an application. -/
 def applyPred (p : Tm) (x : Tm) : Tm := .app p x
@@ -1780,9 +1798,7 @@ where
           pure (.app (.loc j) a, b, [])
         | _ => do
         -- a constant with a subscript (`z_-`), unless the index is a variable
-        let ck := match i with
-          | .id x => if (lookupLocal sc x).isSome then none else symKey hd
-          | _ => symKey hd
+        let ck ← subConstKey sc hd i
         let c ← match ck with
           | some k => lookupGlob k
           | none => pure none
@@ -2159,9 +2175,7 @@ where
             let h ← asReal (← term f sc none hi)
             return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), .real)
         -- a constant with a subscript (`d_0`), unless the index is a variable
-        let ck := match i with
-          | .id x => if (lookupLocal sc x).isSome then none else symKey m
-          | _ => symKey m
+        let ck ← subConstKey sc m i
         let c ← match ck with
           | some k => lookupGlob k
           | none => pure none

@@ -1251,7 +1251,10 @@ def scopeOf (bs : List BindInfo) : Scope := (bs.map fun b => (b.name, b.ty)).rev
 def wrap (bs : List BindInfo) (body : Tm) : Tm :=
   forallBinders (bs.map fun b => (b.name, b.ty, b.pred.map fun p => Tm.app p (.loc 0))) body
 
-/-- The implicit parameters of the definitions named among `ids` (visible here). -/
+/-- The implicit parameters of the definitions named among `ids` (visible here). A
+definition whose name has a letter as subscript (`\delta_n`, defined among the variables
+of a result) is not among the free identifiers of a formula, where `n` alone is one: the
+callers name it by `subKeys`. -/
 def implicitVars (st : St) (ids : List Codes) : List Codes :=
   ids.flatMap fun n =>
     let rec find : Nat → List Glob → Option Nat
@@ -1416,8 +1419,9 @@ def ineqFree (st : St) (cl : Clause) : List Codes :=
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
-  let ids := (clauseMaths cl.clause ++ cl.defs).flatMap fun m => seqFree st bound m (freeIds 64 bound m)
-  ids ++ implicitVars st ids ++ ineqFree st cl.clause
+  let ms := clauseMaths cl.clause ++ cl.defs
+  let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
+  ids ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
 def zeroElsewhere : Tm → Tm
@@ -1968,7 +1972,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
     let st ← get
     let ids := freeIds 64 argNames rhs
-    let used := ids ++ implicitVars st ids
+    let used := ids ++ implicitVars st (ids ++ subKeys 64 rhs)
     -- A variable whose domain uses the variables before it (`x\in[0,n]`) needs them all,
     -- in their order: the definition takes them too, so that the domain is a condition on
     -- its own parameters.
@@ -2029,7 +2033,7 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
       let usesScope := match m with
         | .chain _ [(.defeq, rhs)] =>
           let ids := freeIds 64 [] rhs
-          (ids ++ implicitVars st ids).any fun n => scope.any (·.name == n)
+          (ids ++ implicitVars st (ids ++ subKeys 64 rhs)).any fun n => scope.any (·.name == n)
         | _ => false
       if usesScope then
         let i ← inlineDef c scope m
@@ -2363,7 +2367,7 @@ def defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Grammar.B
   let bound := (pScope ++ [s] ++ cbs).map (·.name)
   -- the parameters of the quantities `φ` uses (`ℓ` of `\varepsilon`), with their domains
   let ids := (freeIds 64 bound cond).eraseDups
-  let params := ((implicitVars st ids).eraseDups.filter (!bound.contains ·))
+  let params := ((implicitVars st (ids ++ subKeys 64 cond)).eraseDups.filter (!bound.contains ·))
   let domOf (p : Codes) : Option Tm := (st.implicits.findSome? fun (i, ns) =>
       match ns.idxOf? p with
       | some j => (st.globs[i]?).bind fun g => (g.doms[j]?).join
@@ -3487,7 +3491,7 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   let own := npVars np
   let maths := (mathsOf np).filterMap Math.parseFormula ++ (cond.map clauseMaths).getD []
   let ids := (maths.flatMap (freeIds 64 [])).filter (!own.contains ·)
-  let used := ids ++ implicitVars st ids
+  let used := ids ++ implicitVars st (ids ++ maths.flatMap (subKeys 64))
   let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
   let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
     | some b => b
