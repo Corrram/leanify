@@ -13,17 +13,19 @@ import Leanify.Library.Fields
 * `leanify certify ARTICLE.tex [--vocab FIELDS] [--name NAME]` goes from the article to
   its certificate: it writes the Lean files and makes the project if there are none,
   fetches the packages if they are missing, updates the pin and runs `lake build`.
-* `leanify tex ARTICLE.tex [--vocab FIELDS] [--certify]` is what `leanify.sty` runs on a
-  compile: the quick check and, with `--certify`, the certificate, written to
-  `ARTICLE.leanify.out` as records that TeX reads.
+* `leanify tex ARTICLE.tex [--vocab FIELDS] [--certify] [--no-project]` is what
+  `leanify.sty` runs on a compile: the quick check and, with `--certify`, the
+  certificate, written to `ARTICLE.leanify.out` as records that TeX reads. An article
+  that lies in no Lean project gets one, in the folder `lean` next to it (not with
+  `--no-project`).
 * `leanify flatten ARTICLE.tex [OUT.tex]` writes the article with the files it
   inputs in their places, as one file (the certificate pins one file).
 * `leanify --version` prints the version.
 * `leanify init ARTICLE.tex [--name NAME] [--vocab FIELDS]` writes the
   four Lean files of an article next to it (`Compiled`, `Article`, `Proofs`,
   `Certified`, in namespace `NAME`, by default the article's folder name), with a
-  stub proof of every claim, and adds the `lean_lib` entry to `lakefile.toml`; in a
-  folder without a Lean project it makes one.
+  stub proof of every claim, and adds the `lean_lib` entry to `lakefile.toml`; for an
+  article in no Lean project it makes one, in the folder `lean` next to the article.
   It never overwrites an existing file.
 * `leanify prepare ARTICLE.tex --lean COMPILED.lean` updates the article's pin in
   `COMPILED.lean`. Run it before `lake build` (`leanify certify` does both).
@@ -39,7 +41,7 @@ open Leanify
 def usage : String :=
   "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--notions NOUN,NOUN,…] [--quantities WORD,…] [--prose] [--claims] [--defined] [--json]\n" ++
   "       leanify certify ARTICLE.tex [--vocab FIELD,FIELD,…] [--name NAME] [--leanify REV|PATH]\n" ++
-  "       leanify tex ARTICLE.tex [--vocab FIELD,FIELD,…] [--certify] [--status] (for leanify.sty)\n" ++
+  "       leanify tex ARTICLE.tex [--vocab FIELD,FIELD,…] [--certify] [--status] [--no-project] (for leanify.sty)\n" ++
   "       leanify flatten ARTICLE.tex [OUT.tex]\n" ++
   "       leanify --version\n" ++
   "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…] [--leanify REV|PATH]\n" ++
@@ -140,16 +142,25 @@ def writeNew (file : System.FilePath) (contents : String) : IO Unit := do
 
 /-! ### The Lean project of an article -/
 
-/-- The Lean project a folder lies in: the folder or one of the three above it with a
-lakefile (as `leanify.sty` looks for it). -/
+/-- The folder of the Lean project that Leanify makes for an article that lies in none:
+`lean`, next to the article. The article's folder then holds one folder more, and
+everything of Lean and Lake is in it. -/
+def projectFolder : String := "lean"
+
+/-- The Lean project of the articles in a folder: the folder or one of the three above it
+with a lakefile (as `leanify.sty` looks for it); if there is none, the project that Leanify
+made for the article, in the folder `lean` next to it. -/
 def findRoot (dir : System.FilePath) : IO (Option System.FilePath) := do
   let abs ← IO.FS.realPath (if dir.toString.isEmpty then "." else dir)
+  let isProject (d : System.FilePath) : IO Bool := do
+    pure ((← (d / "lakefile.toml").pathExists) || (← (d / "lakefile.lean").pathExists))
   let mut d := abs
   for _ in [0:4] do
-    if (← (d / "lakefile.toml").pathExists) || (← (d / "lakefile.lean").pathExists) then return some d
+    if ← isProject d then return some d
     match d.parent with
     | some p => d := p
-    | none => return none
+    | none => break
+  if ← isProject (abs / projectFolder) then return some (abs / projectFolder)
   return none
 
 /-- A Lean module name made from a file or folder name (`my-paper` gives `MyPaper`). -/
@@ -164,7 +175,8 @@ def moduleNameOf (s : String) : String :=
   | c :: _ => if c.isAlpha then n else "A" ++ n
 
 /-- The compiled Lean file of an article: the one given, `Compiled.lean` next to the
-article, or `NS/Compiled.lean` in a folder next to it that compiles `../ARTICLE`. -/
+article, `NS/Compiled.lean` in a folder next to it that compiles `../ARTICLE`, or
+`lean/NS/Compiled.lean` in the project that Leanify made, which compiles `../../ARTICLE`. -/
 def findCompiled (path : System.FilePath) (given : Option String) : IO (Option System.FilePath) := do
   if let some g := given then return some g
   let dir : System.FilePath := (path.parent.filter fun p => !p.toString.isEmpty).getD "."
@@ -176,6 +188,10 @@ def findCompiled (path : System.FilePath) (given : Option String) : IO (Option S
   for e in ← dir.readDir do
     if ← e.path.isDir then
       if ← names (e.path / "Compiled.lean") ("../" ++ file) then return some (e.path / "Compiled.lean")
+  if ← (dir / projectFolder).isDir then
+    for e in ← (dir / projectFolder).readDir do
+      if ← e.path.isDir then
+        if ← names (e.path / "Compiled.lean") ("../../" ++ file) then return some (e.path / "Compiled.lean")
   return none
 
 /-- The namespace a compiled Lean file compiles its article into. -/
@@ -193,7 +209,9 @@ the Lean files it writes and the library that reads them are one version.
 * The checker runs from a checkout of Leanify (`…/.lake/build/bin/leanify`): the commit
   of the checkout if it has no changes and is on the remote (a lakefile that others can
   use, and that always builds the same); otherwise the checkout itself, by its path.
-* Otherwise (a released checker) the tag of its version, `v0.7.0`.
+* Otherwise (a released checker) the tag of its version, `v0.7.0`. Whether the tag is
+  on the remote is asked of the remote, for the message; not with `--no-remote`
+  (`leanify tex`: a compile does not wait for the network).
 
 A checkout that is required by its path shares its packages with the project
 (`packagesDir`): mathlib is then neither fetched nor built a second time.
@@ -229,7 +247,7 @@ def leanifyRequire (opts : List String) : IO (String × String) := do
   -- remote, the project is made all the same, and the message says what to do.
   let tag := s!"v{Leanify.version}"
   let release : IO (String × String) := do
-    let seen ← try
+    let seen ← if opts.contains "--no-remote" then pure none else try
         let out ← IO.Process.output { cmd := "git", args := #["ls-remote", "--tags", repo, tag] }
         pure (if out.exitCode == 0 then some (out.stdout.trimAscii.toString != "") else none)
       catch _ => pure none
@@ -255,6 +273,19 @@ def leanifyRequire (opts : List String) : IO (String × String) := do
     return byRev h "the commit of this checker"
   | _, _, _ => return ← byPath root "the checkout of this checker"
 
+/-- Make the Lean project of an article that lies in none, in the folder `proj` (`lean`,
+next to the article): `lean-toolchain` (the Lean version of the checker), a `lakefile.toml`
+that requires the Leanify of the checker and has the libraries `libs`, and a `.gitignore`
+for what Lake builds. A file that exists is kept. Returns which Leanify the project
+requires. Nothing is fetched or built: `leanify certify` does that. -/
+def makeProject (proj : System.FilePath) (name libs : String) (opts : List String) : IO String := do
+  IO.FS.createDirAll proj
+  writeNew (proj / "lean-toolchain") s!"leanprover/lean4:v{Lean.versionString}\n"
+  let (require, which) ← leanifyRequire opts
+  writeNew (proj / "lakefile.toml") (s!"name = \"{name}\"\n" ++ require ++ libs)
+  writeNew (proj / ".gitignore") "/.lake/\n"
+  pure which
+
 def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let fs := fieldsOf opts
   if let .error e := vocabOf fs then
@@ -265,14 +296,18 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let selected := !fs.isEmpty && fs != ["unitsquare"]
   let dir : System.FilePath := (path.parent.filter fun p => !p.toString.isEmpty).getD "."
   let file := (path.fileName.getD "article.tex")
-  -- the Lean project of the article. Without one, a project is made in the article's
-  -- folder, with the Lean files in a folder of their own, named after the article's
+  -- the Lean project of the article. Without one, a project is made in the folder `lean`
+  -- next to the article, with the Lean files in a folder of their own, named after the
+  -- article's
   let root? ← findRoot dir
   let fresh := root?.isNone
   let absDir ← IO.FS.realPath dir
+  -- (the project that Leanify made, or makes now, for the article)
+  let below := fresh || root?.map (·.toString) == some (absDir / projectFolder).toString
+  let proj := dir / projectFolder
   -- (an article in the folder of the project itself: its Lean files are in a folder of
   -- their own as well, as a library needs)
-  let sub := fresh || root?.map (·.toString) == some absDir.toString
+  let sub := below || root?.map (·.toString) == some absDir.toString
   -- the namespace: the one given, the one of the Lean files the article has, or the
   -- name of its folder
   let existing ← match ← findCompiled path none with
@@ -289,8 +324,8 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
     IO.eprintln s!"leanify init: the Lean files go into a folder named after the namespace; give a name without dots (--name NAME)"
     return 2
   -- where the Lean files go, and the article as they name it
-  let leanDir := if sub then dir / ns else dir
-  let relArticle := if sub then "../" ++ file else file
+  let leanDir := if below then proj / ns else if sub then dir / ns else dir
+  let relArticle := if below then "../../" ++ file else if sub then "../" ++ file else file
   noteInputs path
   let contents ← IO.FS.readFile path
   let lines ← readLines path
@@ -442,12 +477,9 @@ margin marks of `leanify.sty`). -/
   let entry (src : String) : String :=
     s!"[[lean_lib]]\nname = \"{lib}\"\nsrcDir = \"{src}\"\nglobs = [\"{lib}.+\"]\n"
   if fresh then
-    -- a project of its own, in the article's folder
-    let toolchain := s!"leanprover/lean4:v{Lean.versionString}\n"
-    writeNew (dir / "lean-toolchain") toolchain
-    let (require, which) ← leanifyRequire opts
-    writeNew (dir / "lakefile.toml") (s!"name = \"{ns.toLower}\"\n" ++ require ++ "\n" ++ entry ".")
-    IO.println s!"Made a Lean project in {absDir}. It requires {which}."
+    -- a project of its own, in a folder next to the article
+    let which ← makeProject proj ns.toLower ("\n" ++ entry ".") opts
+    IO.println s!"Made a Lean project in {absDir / projectFolder}. It requires {which}."
     IO.println s!"`leanify certify {path}` builds the certificate (the first time, it fetches what \
       the project requires); or run `lake update` and `lake build {ns}.Certified` there."
     return 0
@@ -612,7 +644,8 @@ def buildCertificate (path : System.FilePath) (opts : List String) (log : String
   let dir : System.FilePath := (path.parent.filter fun p => !p.toString.isEmpty).getD "."
   let some root ← findRoot dir
     | return #[.warn "The certificate needs a Lean project (a lakefile in the article's folder or up to \
-        three folders above): it was not built. `leanify certify ARTICLE.tex` makes one"]
+        three folders above, or in the folder lean next to the article): it was not built. \
+        `leanify certify ARTICLE.tex` makes one"]
   -- the Lean files; the first time, they are written
   let mut made := false
   if (← findCompiled path (optArg opts "--lean")).isNone then
@@ -650,9 +683,28 @@ def buildCertificate (path : System.FilePath) (opts : List String) (log : String
   if built then pure (recs ++ (← reportRecs path))
   else pure (recs.push (.warn s!"The certificate did not build (see {path.withExtension "leanify.log"})"))
 
-/-- `leanify tex ARTICLE.tex [--vocab FIELDS] [--certify] [--no-check] [--lean FILE]
-[--module MODULE]`: the quick check, and with `--certify` the certificate, written as
-records for `leanify.sty`. -/
+/-- The Lean project of an article that lies in none, for `leanify tex`: it is made once,
+in the folder `lean` next to the article, so that the certificate has its place and an
+author needs no knowledge of Lake. The Lean files of the article are not written here but
+when its certificate is first built, from the article as it is then: their stub proofs
+follow its claims, and a file that exists is never overwritten. -/
+def projectRecs (path : System.FilePath) (opts : List String) : IO (Array Rec) := do
+  let dir : System.FilePath := (path.parent.filter fun p => !p.toString.isEmpty).getD "."
+  try
+    if (← findRoot dir).isSome then return #[]
+    let absDir ← IO.FS.realPath dir
+    let name := (moduleNameOf (absDir.fileName.getD (path.fileStem.getD ""))).toLower
+    let which ← makeProject (dir / projectFolder) name "" ("--no-remote" :: opts)
+    IO.println s!"Made a Lean project in {absDir / projectFolder}. It requires {which}."
+    pure #[.say s!"made the Lean project of the article in the folder {projectFolder} (the option \
+      certify of the package, or `leanify certify {path}`, builds the certificate there)"]
+  catch e =>
+    pure #[.warn s!"The Lean project of the article could not be made in {dir / projectFolder}: {e}"]
+
+/-- `leanify tex ARTICLE.tex [--vocab FIELDS] [--certify] [--no-check] [--no-project]
+[--lean FILE] [--module MODULE]`: the quick check, and with `--certify` the certificate,
+written as records for `leanify.sty`. An article that lies in no Lean project gets one
+(`projectRecs`), unless `--no-project` says not to. -/
 def texCommand (path : System.FilePath) (opts : List String) : IO UInt32 := do
   -- (what is printed goes to `ARTICLE.leanify.log`, where the package sends it)
   IO.println s!"leanify {Leanify.version}: {path}"
@@ -662,6 +714,7 @@ def texCommand (path : System.FilePath) (opts : List String) : IO UInt32 := do
   | .error e => recs := recs.push (.warn e)
   | .ok V =>
     unless opts.contains "--no-check" do recs := recs ++ (← checkRecs V path)
+    unless opts.contains "--no-project" do recs := recs ++ (← projectRecs path opts)
     if opts.contains "--certify" then recs := recs ++ (← buildCertificate path opts log)
   -- the marks of a status file older than the article may be out of date
   if !opts.contains "--certify" && opts.contains "--status" then

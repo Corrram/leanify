@@ -10,15 +10,18 @@
 %%   * loads the packages for the notation the grammar reads (\coloneqq from
 %%     mathtools, \mathbb and \le from amssymb);
 %%   * runs Leanify while the article compiles, when it can: if the compiler
-%%     may run programs (shell escape) and the article lies in a Lean project
-%%     (a lakefile in its folder or up to three folders above), every compile
-%%     runs one command, `leanify tex`, which does the quick check and, with
-%%     `certify`, updates the pin and builds the certificate (the first time,
-%%     it writes the Lean files of the article). The command writes its
-%%     findings as records, \jobname.leanify.out, which this package reads
-%%     line by line: they appear as warnings at their lines of the article,
-%%     where editors list them. Without shell escape, as on arXiv, nothing
-%%     runs;
+%%     may run programs (shell escape), every compile runs one command,
+%%     `leanify tex`, which does the quick check and, with `certify`, updates
+%%     the pin and builds the certificate (the first time, it writes the Lean
+%%     files of the article). The checker is the one of the Lean project the
+%%     article lies in (a lakefile in its folder or up to three folders
+%%     above); an article in no Lean project is checked by the checker on the
+%%     PATH, `leanify`, which then makes its Lean project, once, in the folder
+%%     `lean` next to the article (not with project=false). The command
+%%     writes its findings as records, \jobname.leanify.out, which this
+%%     package reads line by line: they appear as warnings at their lines of
+%%     the article, where editors list them. Without shell escape, as on
+%%     arXiv, nothing runs;
 %%   * with the option `status`, marks every labelled result in the margin with
 %%     its verification status, read from \jobname.leanify.tex, which
 %%     #leanify_certify writes next to the article. Without the option the
@@ -39,10 +42,12 @@
 %% them, and \leanifyreport lists them (docs/writing.md), lean=FILE (its
 %% compiled Lean file, if it is not Compiled.lean next to the article or in
 %% the folder that `leanify init` made),
-%% exe=COMMAND (the checker to run, e.g. exe=leanify for one on the PATH: the
-%% quick check then runs outside a Lean project as well).
+%% exe=COMMAND (the checker to run instead of the project's or of `leanify`
+%% on the PATH, e.g. a path), project=false (an article in no Lean project gets
+%% none: it is checked, and nothing is written but the findings).
 %% Compile with shell escape (pdflatex -shell-escape, or the editor's setting)
-%% and with `lake` on the PATH. Leanify's output is in \jobname.leanify.log.
+%% and with `lake` on the PATH, or outside a Lean project with `leanify` on the
+%% PATH. Leanify's output is in \jobname.leanify.log.
 %% Optionally, \leanifyreport prints a one-line summary where it appears, and
 %% \leanifyreadings the readings (in an appendix, say).
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
@@ -54,6 +59,7 @@
 \bool_new:N \l__leanify_status_bool
 \bool_new:N \l__leanify_check_bool
 \bool_new:N \l__leanify_certify_bool
+\bool_new:N \l__leanify_project_bool
 \str_new:N \l__leanify_vocab_str
 % The nouns and the words for numbers that the article uses without defining them
 % (notions={graph, finite graph}, quantities={degree}). Leanify reads them from the
@@ -79,6 +85,8 @@
     quantities .tl_set:N = \l__leanify_quantities_tl ,
     lean    .str_set:N  = \l__leanify_lean_str ,
     exe     .str_set:N  = \l__leanify_exeopt_str ,
+    project .bool_set:N = \l__leanify_project_bool ,
+    project .initial:n  = true ,
   }
 \ProcessKeyOptions [ leanify ]
 % The vocabulary the article is read with, as printed by \leanifyreport.
@@ -235,6 +243,15 @@
     checker ~ named ~ by ~ the ~ option ~ exe) ~ on ~ the ~ PATH? ~ Its ~ output ~
     (in ~ \c__leanify_log_str) ~ begins: ~ #1
   }
+% An article in no Lean project, where the package ran nothing before it looked
+% for the checker on the PATH: what it could not do is said without a warning
+% (to the terminal, or to the log alone), so that the article compiles as
+% quietly as before on a machine without Leanify.
+\msg_new:nnn { leanify } { no-shell-no-project }
+  {
+    Leanify ~ did ~ not ~ check ~ the ~ article, ~ because ~ shell ~ escape ~
+    is ~ off
+  }
 
 % The Lean project: the nearest folder, up to three above, with a lakefile.
 \cs_new_protected:Npn \__leanify_find_root:
@@ -251,7 +268,9 @@
       }
   }
 
-% The checker: the command of the option `exe', or the project's. Before it runs
+% The checker: the command of the option `exe', or the project's; for an article
+% in no Lean project, `leanify' on the PATH (the releases of Leanify have that
+% executable: it needs neither Lean nor mathlib). Before it runs
 % an executable, lake checks that every module of the project is built, mathlib's
 % included, which takes seconds on every compile. So the project's executable is
 % run directly when it is current: in a project that requires Leanify, the
@@ -263,10 +282,15 @@
 \str_new:N \l__leanify_ext_str
 \str_new:N \l__leanify_cand_str
 \bool_new:N \l__leanify_current_bool
+\bool_new:N \l__leanify_path_bool
 \cs_new_protected:Npn \__leanify_find_exe:
   {
     \str_if_empty:NTF \l__leanify_exeopt_str
-      { \__leanify_find_project_exe: }
+      {
+        \bool_if:NTF \l__leanify_path_bool
+          { \str_set:Nn \l__leanify_exe_str { leanify } }
+          { \__leanify_find_project_exe: }
+      }
       { \str_set_eq:NN \l__leanify_exe_str \l__leanify_exeopt_str }
   }
 \cs_new_protected:Npn \__leanify_find_project_exe:
@@ -330,6 +354,7 @@
         \bool_if:NF \l__leanify_check_bool { ~ --no-check }
         \bool_if:NT \l__leanify_certify_bool { ~ --certify }
         \bool_if:NT \l__leanify_status_bool { ~ --status }
+        \bool_if:NF \l__leanify_project_bool { ~ --no-project }
         \str_if_empty:NF \l__leanify_lean_str { ~ --lean ~ " \l__leanify_lean_str " }
         \tl_if_empty:NF \leanify@module { ~ --module ~ \leanify@module }
       }
@@ -342,9 +367,13 @@
           }
       }
       {
+        % (the name of the checker on the PATH stands as it is: a command line
+        % that begins with a quotation mark is read differently by cmd.exe)
         \sys_shell_now:e
           {
-            " \l__leanify_exe_str " ~ \l__leanify_args_str
+            \bool_if:NTF \l__leanify_path_bool
+              { \l__leanify_exe_str } { " \l__leanify_exe_str " }
+            \c_space_tl \l__leanify_args_str
             \c_space_tl > ~ " \c__leanify_log_str " ~ 2>&1
           }
       }
@@ -426,36 +455,53 @@
 \cs_new_protected:Npn \__leanify_run:
   {
     \__leanify_find_root:
-    % in a Lean project, or with a checker named by the option `exe'
-    \bool_lazy_or:nnT
-      { ! \str_if_empty_p:N \l__leanify_root_str } { ! \str_if_empty_p:N \l__leanify_exeopt_str }
+    % an article in no Lean project, and no checker named by the option `exe':
+    % the checker on the PATH checks it (and makes its Lean project)
+    \bool_set:Nn \l__leanify_path_bool
       {
-        \bool_lazy_or:nnT { \l__leanify_check_bool } { \l__leanify_certify_bool }
+        \str_if_empty_p:N \l__leanify_root_str &&
+        \str_if_empty_p:N \l__leanify_exeopt_str
+      }
+    \bool_lazy_or:nnT { \l__leanify_check_bool } { \l__leanify_certify_bool }
+      {
+        \sys_if_shell_unrestricted:TF
           {
-            \sys_if_shell_unrestricted:TF
+            \__leanify_find_exe:
+            \__leanify_summary:e
               {
-                \__leanify_find_exe:
-                \__leanify_summary:e
-                  {
-                    \bool_if:NTF \l__leanify_certify_bool { certifying } { checking }
-                    \c_space_tl \c__leanify_article_str
-                  }
-                \__leanify_tex:
-                % a command that did not run leaves no records, or those of an
-                % earlier version of the article
-                \bool_set_false:N \l__leanify_report_bool
-                \file_if_exist:nT { \c__leanify_out_str }
-                  {
-                    \file_compare_timestamp:nNnF
-                      { \c__leanify_article_str } > { \c__leanify_out_str }
-                      { \__leanify_read_out: }
-                  }
-                \bool_if:NF \l__leanify_report_bool
-                  {
-                    \__leanify_log_start:
-                    \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str }
-                  }
+                \bool_if:NTF \l__leanify_certify_bool { certifying } { checking }
+                \c_space_tl \c__leanify_article_str
               }
+            \__leanify_tex:
+            % a command that did not run leaves no records, or those of an
+            % earlier version of the article
+            \bool_set_false:N \l__leanify_report_bool
+            \file_if_exist:nT { \c__leanify_out_str }
+              {
+                \file_compare_timestamp:nNnF
+                  { \c__leanify_article_str } > { \c__leanify_out_str }
+                  { \__leanify_read_out: }
+              }
+            \bool_if:NF \l__leanify_report_bool
+              {
+                \__leanify_log_start:
+                \bool_if:NTF \l__leanify_path_bool
+                  {
+                    \__leanify_summary:e
+                      {
+                        \c__leanify_article_str \c_space_tl was ~ not ~ checked: ~ it ~
+                        lies ~ in ~ no ~ Lean ~ project, ~ and ~ the ~ checker ~
+                        `leanify' ~ did ~ not ~ run ~ ( \l__leanify_first_str ). ~
+                        Put ~ it ~ on ~ the ~ PATH ~ (the ~ releases ~ of ~ Leanify ~
+                        have ~ it) ~ or ~ name ~ it ~ with ~ the ~ option ~ exe
+                      }
+                  }
+                  { \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str } }
+              }
+          }
+          {
+            \bool_if:NTF \l__leanify_path_bool
+              { \msg_info:nn { leanify } { no-shell-no-project } }
               { \msg_warning:nn { leanify } { no-shell } }
           }
       }

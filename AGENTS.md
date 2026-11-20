@@ -159,11 +159,16 @@ These hold for every change. A feature that cannot meet them is not added.
 ### The LaTeX package
 
 13. **The typeset article does not change.** Without options, `leanify.sty`
-    changes nothing on the page. It runs an external program (`lake`, or the
-    checker) only with unrestricted shell escape and inside a Lean project, or
-    when the option `exe` names the checker; otherwise it runs nothing. The
+    changes nothing on the page. It runs an external program only with
+    unrestricted shell escape: the checker of the Lean project the article lies
+    in (`lake`, or its executable), the checker that the option `exe` names, or
+    else `leanify` on the `PATH`; otherwise it runs nothing. An article in no Lean
+    project gets one from the checker, the folder `lean` next to it (not with
+    `project=false`): three small files, and a compile fetches and builds nothing
+    for it. Where there is no checker, such an article compiles without a
+    warning, as it does on a server. The
     package runs one command, `leanify tex`, and reads its records
-    (`\jobname.leanify.out`): what to check, build or report is decided in
+    (`\jobname.leanify.out`): what to check, build, make or report is decided in
     `LeanifyCli.lean`, not in TeX. Typesetting needs only `mathtools` and `amssymb`. The package is on
     CTAN; `scripts/ctan.sh` builds the upload, and `scripts/ctan.sh validate` and
     `upload` submit it. CTAN takes an update only under a new version, which

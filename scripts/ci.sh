@@ -62,6 +62,34 @@ checks() {
   grep -q "2 definitions, 5 claims" "$TMP/flat.check.txt" || fail "the flattened article"
   endgroup
 
+  group "An article in no Lean project gets one from the check, once, in the folder lean"
+  local leanify="$PWD/$LEANIFY" lone
+  lone="$(mktemp -d "$TMP/lone.XXXXXX")"
+  mkdir "$lone/my-note" "$lone/plain"
+  cp examples/Means/article.tex "$lone/my-note/note.tex"
+  cp examples/Means/article.tex "$lone/plain/note.tex"
+  (cd "$lone/my-note" && "$leanify" tex note.tex > note.leanify.log) || fail "leanify tex outside a Lean project"
+  for f in lakefile.toml lean-toolchain .gitignore; do
+    [ -f "$lone/my-note/lean/$f" ] || fail "leanify tex: lean/$f was not written"
+  done
+  grep -q '^name = "mynote"' "$lone/my-note/lean/lakefile.toml" || fail "the name of the new project"
+  grep -q '^name = "leanify"' "$lone/my-note/lean/lakefile.toml" || fail "the new project does not require Leanify"
+  diff --strip-trailing-cr lean-toolchain "$lone/my-note/lean/lean-toolchain" ||
+    fail "the new project has another Lean version than the checker"
+  grep -q "made the Lean project" "$lone/my-note/note.leanify.out" || fail "the package is not told of the new project"
+  # (the Lean files of the article are written with its first certificate, not by the check)
+  [ -z "$(find "$lone/my-note/lean" -name '*.lean')" ] || fail "the check wrote Lean files of the article"
+  (cd "$lone/my-note" && "$leanify" tex note.tex > note.leanify.log) || fail "the second check"
+  if grep -q "made the Lean project" "$lone/my-note/note.leanify.out"; then fail "the project is made a second time"; fi
+  (cd "$lone/my-note" && "$leanify" init note.tex > "$TMP/lone.init.txt") || fail "leanify init in the new project"
+  grep -q '^#leanify_article MyNote "../../note.tex"' "$lone/my-note/lean/MyNote/Compiled.lean" ||
+    fail "the Lean files of the article are not in the new project"
+  grep -q '^name = "MyNote"' "$lone/my-note/lean/lakefile.toml" ||
+    fail "the library of the article is not in the lakefile of the new project"
+  (cd "$lone/plain" && "$leanify" tex note.tex --no-project > note.leanify.log) || fail "leanify tex --no-project"
+  [ ! -e "$lone/plain/lean" ] || fail "--no-project made a project"
+  endgroup
+
   group "The glossary of the vocabulary is up to date"
   lake exe glossary > "$TMP/glossary.md"
   if [ "${UPDATE:-}" = 1 ]; then cp "$TMP/glossary.md" docs/glossary.md; echo "wrote docs/glossary.md"

@@ -98,9 +98,11 @@ vocab=FIELDS & The fields of the article's vocabulary, for instance
 lean=FILE & The compiled Lean file of the article, if it is not
   \texttt{Compiled.lean} next to it or in the folder that \texttt{leanify init}
   made. \\
-exe=COMMAND & The checker to run instead of the project's, for instance
-  \texttt{exe=leanify} for an executable on the \texttt{PATH}. With it the quick
-  check also runs outside a Lean project. \\
+exe=COMMAND & The checker to run, instead of the project's or of
+  \texttt{leanify} on the \texttt{PATH}: a command or a path. \\
+project=false & An article that lies in no Lean project gets none. Without
+  this option the checker makes one, once, in the folder \texttt{lean} next to
+  the article (Section~\ref{sec:check}). \\
 notions=NOUNS & The nouns that the article uses without defining them, for
   instance \texttt{notions=\{graph, finite graph, vertex (vertices)\}}
   (Section~\ref{sec:notions}). Nothing is printed for them. \\
@@ -130,10 +132,13 @@ quantities=WORDS & Words that name a real number in the names of quantities that
 \section{Checking as you compile}\label{sec:check}
 
 When the compiler may run programs (shell escape: \texttt{pdflatex -shell-escape},
-\texttt{latexmk -shell-escape}, or the setting of the editor) and the article
-lies in a Lean project (a \texttt{lakefile.toml} or \texttt{lakefile.lean} in its
-folder or up to three folders above), every compile runs one command,
-\texttt{leanify tex}, on the article. It writes its findings as records,
+\texttt{latexmk -shell-escape}, or the setting of the editor), every compile runs
+one command, \texttt{leanify tex}, on the article. If the article lies in a Lean
+project (a \texttt{lakefile.toml} or \texttt{lakefile.lean} in its folder or up
+to three folders above), the checker of that project runs. Otherwise the
+executable \texttt{leanify} on the \texttt{PATH} runs, which needs neither Lean
+nor mathlib (the releases of Leanify have it for Linux, macOS and Windows). It
+writes its findings as records,
 \texttt{\cs{jobname}.leanify.out}, and they become LaTeX
 warnings at their lines of the article,
 \begin{lstlisting}
@@ -153,9 +158,19 @@ checker directly, without \texttt{lake}, and take a fraction of a second. The
 records of an unchanged article are the same on every run, so the later passes
 of \texttt{latexmk} see no change.
 
+\paragraph{The Lean project of the article.} An article that lies in no Lean
+project gets one the first time it is checked: the folder \texttt{lean} next to
+the article, with a \texttt{lakefile.toml} that requires the Leanify of the
+checker, a \texttt{lean-toolchain} with its Lean version, and a
+\texttt{.gitignore} for what Lake builds. Nothing is fetched or built for it,
+and nothing else is written to the folder of the article. The Lean files of the
+article go there when its certificate is first built, by the option
+\opt{certify} or by \texttt{leanify certify}, from the article as it is then.
+The option \opt{project=false} leaves the article without a project.
+
 Without shell escape nothing runs, and in a Lean project a warning says so.
-Outside a Lean project the package runs nothing and says nothing, unless the
-option \opt{exe} names a checker.
+An article in no Lean project compiles without a warning on a machine that has
+no checker: one line of the terminal says that it was not checked.
 
 \section{Notions that the article does not define}\label{sec:notions}
 

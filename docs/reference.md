@@ -84,7 +84,8 @@ has none yet (`lake update`, which downloads its compiled files), the pin
 ([`prepare`](#leanify-prepare)), and `lake build NAME.Certified`, whose output
 it shows. Run it again after an edit of the article or of `Proofs.lean`.
 
-In a folder that is no Lean project yet, the new project requires **the Leanify that
+An article that lies in no Lean project gets one, in the folder `lean` next to it
+([`init`](#leanify-init)). The new project requires **the Leanify that
 this checker was built from**, so that the Lean files and the library that reads them
 are one version:
 
@@ -115,11 +116,16 @@ overwritten.
   a folder `NAME/` if the article lies in the folder of the project itself),
   and the `[[lean_lib]]` entry of the article is added to `lakefile.toml`. With
   a `lakefile.lean`, the entry is printed for you to add.
-* **Anywhere else**, the article's folder becomes a Lean project: `init` writes
-  `lean-toolchain` (the Lean version of the checker), a `lakefile.toml` that
-  requires the Leanify of the checker ([`certify`](#leanify-certify) says which),
-  and the Lean files in the folder `NAME/`. So an author needs
-  no knowledge of Lake to start: a folder with `article.tex` is enough.
+* **Anywhere else**, the article gets a Lean project of its own, in the folder
+  `lean` next to it: `init` writes `lean/lean-toolchain` (the Lean version of the
+  checker), `lean/lakefile.toml`, which requires the Leanify of the checker
+  ([`certify`](#leanify-certify) says which), `lean/.gitignore` (for `.lake/`,
+  what Lake builds) and the Lean files in the folder `lean/NAME/`. Everything of
+  Lean and Lake is in that one folder, and it is found again from the article
+  (after the folder of the article and the three above it). So an author needs
+  no knowledge of Lake to start: a folder with `article.tex` is enough. The
+  package makes the same project when it first checks such an article, without
+  the Lean files ([`leanify tex`](#leanify-tex)); `init` then adds them.
 
 For an article that inputs other files, `init`, `prepare` and
 `#leanify_article` say that the certificate covers the one file alone
@@ -156,11 +162,18 @@ a few minutes and changes nothing in the project
 ### `leanify tex`
 
 ```sh
-leanify tex ARTICLE.tex [--vocab FIELDS] [--no-check] [--certify] [--status] [--lean FILE] [--module MODULE]
+leanify tex ARTICLE.tex [--vocab FIELDS] [--no-check] [--certify] [--status] [--no-project] [--lean FILE] [--module MODULE]
 ```
 
 What `leanify.sty` runs, once per compile. It does the quick check, with
-`--certify` the steps of `leanify certify`, and writes two files next to the
+`--certify` the steps of `leanify certify`. If the article lies in no Lean
+project, it makes one in the folder `lean` next to the article, as
+[`init`](#leanify-init) does, but without the Lean files of the article: `lean-toolchain`,
+`lakefile.toml` and `.gitignore`, three small files, and nothing is fetched or
+built. The Lean files are written when the certificate is first built, from the
+article as it is then, because their stub proofs follow its claims and an
+existing file is never overwritten. `--no-project` (the option `project=false`
+of the package) leaves the article without a project. The command writes two files next to the
 article: `ARTICLE.leanify.out`, the findings as records that TeX reads without
 parsing (a line `leanify VERSION`, then for each record a line with its kind and
 one line for each of its fields), and, on its standard output, the full text
@@ -418,14 +431,20 @@ statement with its reading, without Lean. It prints from
 | `certify` | Before the marks are read, the certificate is built, as by [`leanify certify`](#leanify-certify). The first time, when the article has no Lean files yet, `init` writes them. Implies `status`. |
 | `vocab=unitsquare` | The vocabulary of the article, for `check` and `init`. |
 | `notions={graph, finite graph}`, `quantities={degree}` | The nouns that the article uses without defining them, and the words that name numbers ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)). Leanify reads them from the source of the article. Nothing is printed where they are declared; `\leanifyreport` lists them, with the number of results quoted from the literature, and a quoted result has the margin mark *quoted*. |
-| `lean=FILE` | The compiled Lean file of the article, by default `Compiled.lean` next to it, or `NAME/Compiled.lean` as `init` writes it in a folder of its own. The module to build is `\leanifymodule`, or else `NS.Certified` for the namespace `NS` that this file compiles. |
-| `exe=COMMAND` | The checker to run, instead of the project's: `exe=leanify` for an executable on the `PATH`, or a path. With it the quick check also runs outside a Lean project (with shell escape), so a checker without Lean or mathlib is enough to check an article while writing (`.github/workflows/release.yml` builds that executable for Linux, macOS and Windows when a version is tagged). The certificate still needs the project. |
+| `lean=FILE` | The compiled Lean file of the article, by default `Compiled.lean` next to it, or `NAME/Compiled.lean` (`lean/NAME/Compiled.lean`) as `init` writes it in a folder of its own. The module to build is `\leanifymodule`, or else `NS.Certified` for the namespace `NS` that this file compiles. |
+| `exe=COMMAND` | The checker to run, instead of the project's or of `leanify` on the `PATH`: a command or a path. |
+| `project=false` | An article that lies in no Lean project gets none: it is checked, and nothing is written but the findings. Without this option the checker makes the project, once, in the folder `lean` next to the article ([`leanify tex`](#leanify-tex)). |
 
 **Checking as you compile.** When the compiler may run programs (shell escape:
 `pdflatex -shell-escape`, `latexmk -shell-escape`, or the setting of the
-editor) and the article lies in a Lean project (a `lakefile.toml` or
-`lakefile.lean` in its folder or up to three folders above), every compile runs
-[`leanify tex`](#leanify-tex) on the article, once. Its findings become LaTeX warnings
+editor), every compile runs [`leanify tex`](#leanify-tex) on the article, once.
+If the article lies in a Lean project (a `lakefile.toml` or `lakefile.lean` in
+its folder or up to three folders above), the checker of that project runs.
+Otherwise the executable `leanify` on the `PATH` runs: it needs neither Lean nor
+mathlib, so that is enough to check an article while writing
+(`.github/workflows/release.yml` builds it for Linux, macOS and Windows when a
+version is tagged), and it gives the article its Lean project, the folder `lean`
+next to it, where the certificate is built later. Its findings become LaTeX warnings
 at their lines of the article,
 
 ```
@@ -438,8 +457,8 @@ summary goes to the terminal. A finding in a file the article inputs names its
 file and line. If some proofs are not read completely, one more warning says how
 many: their results can be checked, but are not derived from the printed proofs. With `certify`, the errors of the Lean build and
 the refuted claims are warnings too. The full output of Leanify is in
-`\jobname.leanify.log`. `lake` must be on the `PATH` of the compiler; the
-first check also builds the checker, which takes a few minutes once.
+`\jobname.leanify.log`. In a Lean project, `lake` must be on the `PATH` of the
+compiler; the first check also builds the checker, which takes a few minutes once.
 
 **Speed.** After the first build the check runs the checker directly, not through
 `lake exe` (which first checks that every module of the project, mathlib's
@@ -452,9 +471,10 @@ and it stops. With `certify`, the article is compiled to Lean again in about a
 second after an edit, then its proofs are checked, and nothing is rebuilt while
 the status file is newer than the article and its Lean files.
 
-Without shell escape nothing runs, and in a Lean project a warning says so.
-Outside a Lean project, as on arXiv or a journal's server, the package runs
-nothing and says nothing (unless the option `exe` names a checker). Without `status` the typeset article is unchanged,
+Without shell escape, as on arXiv or a journal's server, nothing runs, and in a
+Lean project a warning says so. An article in no Lean project compiles without a
+warning where there is no checker: with shell escape, one line of the terminal
+says that it was not checked, and without, one line of the log. Without `status` the typeset article is unchanged,
 which is what you submit. Once `leanify.sty` is on CTAN, arXiv and journals have
 it; until then, upload it with the article, or leave it out: Leanify reads the
 article without it.
