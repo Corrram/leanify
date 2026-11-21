@@ -1684,7 +1684,7 @@
  "leanify": "0.7.0",
  "justifications": "Arguments.Proofs",
  "definitions":
- [{"wellDefined": "∀ (x : ℝ), ¬x = 0 → ¬x = 0",
+ [{"wellDefined": "True",
    "undefined": false,
    "symbol": "y",
    "sentence": 111,

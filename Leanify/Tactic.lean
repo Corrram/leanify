@@ -43,16 +43,20 @@ elab "intro_premises" : tactic => do
 /-- `definedness [t₁, …]` proves a definedness condition (`meaningfulK`, `wellDefinedI`):
 a tree of `∧`, `→` and `∀` whose leaves are hypotheses, numeric side conditions,
 signs that `positivity` proves, or the given facts, and whose impossible branches (contradictory case
-conditions) are closed by `linarith` or `tauto`. A hypothesis `∃ z, φ` (what a hypothesis
+conditions) are closed by `linarith` or `tauto`. A condition on almost every point of an
+interval (that an integrand is defined there) is proved for every point. A hypothesis `∃ z, φ` (what a hypothesis
 about another variable says about the variables of a definition) is opened, and a leaf
 that follows from the hypotheses by rewriting is closed by `simp_all`. -/
 elab "definedness" " [" ts:term,* "]" : tactic => do
   let leaf ← ts.getElems.foldlM (fun acc t => do
     let accS ← `(Lean.Parser.Tactic.tacticSeq| $acc:tactic)
     `(tactic| first | $accS | exact $t)) (← `(tactic| assumption))
+  let aeOfForall := mkIdent `Leanify.Prelude.ae_of_forall
   let step ← `(tactic| first
     | $leaf:tactic
     | (norm_num; done)
+    -- what holds at every point holds at almost every point
+    | refine $aeOfForall:ident ?_
     | (intro _; try casesm* _ ∧ _, ∃ _, _)
     | refine ⟨?_, ?_⟩
     | (linarith; done)

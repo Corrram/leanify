@@ -90,7 +90,10 @@ These hold for every change. A feature that cannot meet them is not added.
    integral asserts that it is finite, wherever the bound stands. A claim asserts
    that it is meaningful and that it holds. Never denote a quantity by a Mathlib
    expression whose value is 0 when it does not exist (the Bochner integral of a
-   non-integrable function, the supremum of an unbounded set).
+   non-integrable function, the supremum of an unbounded set). An integrand has to
+   be integrable and defined at almost every point (`Prim.ae`), not at every
+   point: the integral does not depend on a set of measure zero, so no value that
+   is not defined enters it.
 5. **Quantifiers as mathematicians mean them.** Implicit quantifiers (generic
    constants, `\ll`, "uniform in", "for every … with …") are read from the
    article's convention sentences, and their order is the one those sentences

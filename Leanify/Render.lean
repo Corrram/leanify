@@ -30,6 +30,7 @@ def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
   | .hasDerivWithin => "\\operatorname{HasDeriv}"
   | .intervalIntegral => "\\int" | .intervalIntegrable => "\\operatorname{Int}"
+  | .ae => "\\operatorname{a.e.}"
   | .compact2 => "\\operatorname{compact}" | .convex2 => "\\operatorname{convex}"
   | .symm2 => "\\operatorname{symmetric}" | .continuousOn => "\\operatorname{continuous}"
   | .concaveOn => "\\operatorname{concave}" | .strictMonoOn => "\\operatorname{increasing}"
@@ -108,6 +109,9 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .limTopConv) D) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  -- for almost every real number
+  | .app (.prim .ae) (.lam t _ b) => let v := varNames.getD ls.length "v"
+    "\\text{for almost every }" ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
   | .app (.prim .factorial) x => wrap 9 x ++ "!"
   | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"

@@ -72,6 +72,7 @@ def primConst : Prim → Option Name
   | .hasDerivWithin => some ``Prelude.hasDerivWithin
   | .intervalIntegral => some ``Prelude.intervalIntegral
   | .intervalIntegrable => some ``Prelude.intervalIntegrable
+  | .ae => some ``Prelude.ae
   | .compact2 => some ``Prelude.compact2
   | .convex2 => some ``Prelude.convex2
   | .symm2 => some ``Prelude.symm2

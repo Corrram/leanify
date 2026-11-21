@@ -1342,8 +1342,15 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- integral of the type, over its elements; defined when the integrand is integrable
       | some iv =>
         let b ← asReal (← term f ((v, iv.ty) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
-        let fn := Tm.lam iv.ty .tt b
-        pure (.guard (.app (.const iv.integrable) fn) (.app (.const iv.integral) fn), .real)
+        -- the integrand has to be defined at almost every point of the interval: the
+        -- condition, for almost every number `t` of the interval, at the element `⟨t⟩`
+        let d := Tm.defined b
+        let fn := Tm.lam iv.ty d b
+        let inside := Tm.and (.le (.num iv.lo) (.loc 0)) (.le (.loc 0) (.num iv.hi))
+        let ae := if d == .tt then Tm.tt else
+          .app (.prim .ae) (.lam .real .tt (.imp inside
+            (.app (.lam iv.ty .tt (shift 1 1 d)) (.guard inside (.app (.const iv.point) (.loc 0))))))
+        pure (.guard (Tm.mkAnd (.app (.const iv.integrable) fn) ae) (.app (.const iv.integral) fn), .real)
       -- `\int_a^b e\,dx`: the oriented integral of a function of a real variable, which
       -- has to be meaningful between `a` and `b`; defined when it is integrable there
       | none =>
@@ -1357,8 +1364,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | .num x, .num y => if x ≤ y then interval a1 c1 (.loc 0)
               else Tm.or (interval a1 c1 (.loc 0)) (interval c1 a1 (.loc 0))
           | _, _ => Tm.or (interval a1 c1 (.loc 0)) (interval c1 a1 (.loc 0))
-        let fn := Tm.lam .real between b
-        pure (.guard (.app (.app (.app (.prim .intervalIntegrable) fn) a) c)
+        -- the integrand has to be defined at almost every number between the ends
+        let d := Tm.defined b
+        let fn := Tm.lam .real (Tm.mkAnd between d) b
+        let ae := if d == .tt then Tm.tt else .app (.prim .ae) (.lam .real .tt (.imp between d))
+        pure (.guard (Tm.mkAnd (.app (.app (.app (.prim .intervalIntegrable) fn) a) c) ae)
           (.app (.app (.app (.prim .intervalIntegral) a) c) fn), .real)
     | .chain (.tuple xs) [(.eq, .tuple ys)] => do
       -- `(a,b) = (c,d)`: componentwise

@@ -63,6 +63,11 @@ inductive Prim where
   | intervalIntegral
   /-- `intervalIntegrable f a b`: `f` is integrable between `a` and `b`. -/
   | intervalIntegrable
+  /-- `ae p`: `p` holds for almost every real number (for Lebesgue measure). The compiler
+  applies it to the definedness condition of an integrand: an integral is meaningful if
+  its integrand is defined almost everywhere and integrable, and it does not depend on
+  what happens on a set of measure zero. -/
+  | ae
   /-- Shapes of a set of points of the plane: compact, convex, symmetric about the origin. -/
   | compact2 | convex2 | symm2
   /-- Properties of a real function on a domain: continuous, concave, strictly increasing. -/
@@ -129,6 +134,7 @@ def Prim.ty : Prim → Ty
   | .hasDerivWithin => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .real ⟶ .real ⟶ .prop
   | .intervalIntegral => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
   | .intervalIntegrable => Ty.rfun ⟶ .real ⟶ .real ⟶ .prop
+  | .ae => (.real ⟶ .prop) ⟶ .prop
   | .compact2 | .convex2 | .symm2 => (.real ⟶ .real ⟶ .prop) ⟶ .prop
   | .continuousOn | .concaveOn | .strictMonoOn | .fnProp _ => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
   | .setProp _ => (.real ⟶ .real ⟶ .prop) ⟶ .prop
@@ -327,8 +333,15 @@ def conjuncts : Tm → List Tm
 def defined : Tm → Tm
   | .glob _ | .loc _ | .prim _ | .const _ | .num _ | .tt => .tt
   | .undef _ => .not .tt
+  -- `ae p` is meaningful as it stands: the compiler applies it to a definedness
+  -- condition, whose truth does not depend on a value that is not defined
+  | .app (.prim .ae) _ => .tt
   | .app f x => mkAnd (defined f) (defined x)
-  | .lam t dom body => mkAll t (mkImp dom (defined body))
+  -- (a function whose declared domain says that its body is defined, as an integrand
+  -- that is defined almost everywhere has it, asks nothing more)
+  | .lam t dom body =>
+    let d := defined body
+    if (conjuncts d).all (conjuncts dom).contains then .tt else mkAll t (mkImp dom d)
   | .neg x | .abs x | .powNat x _ | .not x => defined x
   | .add x y | .sub x y | .mul x y | .eq x y | .lt x y | .le x y | .iff x y =>
       mkAnd (defined x) (defined y)

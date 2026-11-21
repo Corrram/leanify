@@ -14,4 +14,4 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#leanify_article Notation "article.tex" "fnv1a64:a477df6eaca3fc2c"
+#leanify_article Notation "article.tex" "fnv1a64:acf620e2dacf5c9c"
