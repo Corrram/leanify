@@ -1437,6 +1437,19 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let p ← propOf f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
       let fn := Tm.lam seq .tt (Tm.lam seq .tt p)
       pure (.guard (.app (.app (.const pe) ct) fn) (.app (.app (.const pr) ct) fn), .real)
+    -- `On the event $φ$, we have $ψ$`: for all sequences `U`, `V` (the values of a sample),
+    -- `φ` implies `ψ`
+    | .app (.id [64, 115, 111, 110]) [.mapsto (.tuple [.id u, .id v]) body] => do
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleProb.isSome) E.finding
+        w!"`On the event …` is about a sample from a copula, with the vocabulary of the unit square"
+      let seq := Ty.fn .real iv.ty
+      let p ← propOf f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
+      pure (.all seq (.all seq p), .prop)
     -- `C^{\ast k}`: the Markov power of order `k` of a copula `C` (a notion of the vocabulary
     -- of the unit square), for an integer `k ≥ 1`
     | .app (.id [64, 109, 112, 111, 119]) [c, k] => do

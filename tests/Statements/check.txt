@@ -127,8 +127,16 @@ tests/Statements/article.tex:449:56: info: claim 99: \forall x\in \mathbb{R},\ x
 tests/Statements/article.tex:458:44: info: claim 100: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow x<1\Rightarrow {x}^{2}<x+{y}^{2}+{z}^{2}))
 tests/Statements/article.tex:465:43: info: defines \delta_n (deltan)
 tests/Statements/article.tex:465:76: info: claim 101: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 2\le y\Rightarrow 0<\delta_n(x,y))
-tests/Statements/article.tex: 8 definitions, 102 claims
-  text: 7 compiled, 1 failed, 16 prose (of 24)
-  results: 102 compiled, 15 failed, 4 prose (of 121)
-  all: 109 compiled, 16 failed, 20 prose (of 145)
+tests/Statements/article.tex:472:1: info: claim 102: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Statements/article.tex:476:1: info: claim 103: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{3}
+tests/Statements/article.tex:482:1: info: claim 104: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}+{x}^{3}
+tests/Statements/article.tex:485:1: info: claim 105: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Statements/article.tex:485:1: info: claim 106: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{3}
+tests/Statements/article.tex:486:1: info: claim 107: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}+{x}^{3}
+tests/Statements/article.tex: 8 definitions, 108 claims
+  text: 9 compiled, 1 failed, 17 prose (of 27)
+  results: 103 compiled, 15 failed, 4 prose (of 122)
+  proofs: 2 compiled, 0 failed, 0 prose (of 2)
+  all: 114 compiled, 16 failed, 21 prose (of 151)
+  complete proofs: 1 of 1 (a result is derived from a proof that is read completely)
 tests/Statements/article.tex: nouns without a reading: polynomial (to use a noun without defining it: \usepackage[notions={…}]{leanify}, docs/writing.md)

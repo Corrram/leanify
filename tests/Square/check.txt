@@ -175,9 +175,19 @@ tests/Square/article.tex:257:1: info: claim 69: \forall x\in (\mathbb{R}\to [0,1
 tests/Square/article.tex:257:1: info: claim 69 is meaningful if: \forall x\in (\mathbb{R}\to [0,1])\to \mathbb{R},\ \operatorname{Kernel}(x)\Rightarrow (\forall y\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(y)\Rightarrow (\mathcal{C}(y)\land \operatorname{Kernel}(x))\land (\mathcal{C}(y)\land 0\le R(y)\land R(y)\le 1)\land \mathcal{C}(M_{\langle R(y)\rangle_{[0,1]}})\land \operatorname{Kernel}(x)\land \mathcal{C}(y)\land 0\le R(y)\land R(y)\le 1)
 tests/Square/article.tex:263:1: info: claim 70: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in (\mathbb{R}\to [0,1])\to (\mathbb{R}\to [0,1])\to \mathbb{R},\ \operatorname{Statistic}(y)\Rightarrow (\forall z\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{B}(z)\Rightarrow 1-x\le P_{z}\bigl((s\in \mathbb{R}\to [0,1]\mapsto (t\in \mathbb{R}\to [0,1]\mapsto R(z)\le y(s,t)))\bigr))\Rightarrow (\forall z\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{B}(z)\Rightarrow 1-x\le P_{z}\bigl((s\in \mathbb{R}\to [0,1]\mapsto (t\in \mathbb{R}\to [0,1]\mapsto 1\le y(s,t)))\bigr)))
 tests/Square/article.tex:263:1: info: claim 70 is meaningful if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in (\mathbb{R}\to [0,1])\to (\mathbb{R}\to [0,1])\to \mathbb{R},\ \operatorname{Statistic}(y)\Rightarrow (\forall z\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{B}(z)\Rightarrow (\forall s\in \mathbb{R}\to [0,1],\ \forall t\in \mathbb{R}\to [0,1],\ \mathcal{C}(z))\land \operatorname{Event}_{z}((s\in \mathbb{R}\to [0,1]\mapsto (t\in \mathbb{R}\to [0,1]\mapsto R(z)\le y(s,t)))))\land ((\forall z\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{B}(z)\Rightarrow 1-x\le P_{z}\bigl((s\in \mathbb{R}\to [0,1]\mapsto (t\in \mathbb{R}\to [0,1]\mapsto R(z)\le y(s,t)))\bigr))\Rightarrow (\forall z\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{B}(z)\Rightarrow \operatorname{Event}_{z}((s\in \mathbb{R}\to [0,1]\mapsto (t\in \mathbb{R}\to [0,1]\mapsto 1\le y(s,t)))))))
-tests/Square/article.tex: 35 definitions, 71 claims
-  text: 30 compiled, 0 failed, 30 prose (of 60)
-  results: 45 compiled, 0 failed, 0 prose (of 45)
+tests/Square/article.tex:270:1: info: claim 71: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in \mathbb{R}\to [0,1],\ \forall z\in \mathbb{R}\to [0,1],\ \lvert y(1)-z(1)\rvert\le x\Rightarrow y(1)\le z(1)+x)
+tests/Square/article.tex:270:1: info: claim 71 is meaningful if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in \mathbb{R}\to [0,1],\ \forall z\in \mathbb{R}\to [0,1],\ (1\in \mathbb{N}\land 1\in \mathbb{N})\land (\lvert y(1)-z(1)\rvert\le x\Rightarrow 1\in \mathbb{N}\land 1\in \mathbb{N}))
+tests/Square/article.tex:277:1: info: claim 72: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow x(y)\le 1
+tests/Square/article.tex:277:1: info: claim 72 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow y\in \mathbb{N}
+tests/Square/article.tex:277:1: info: claim 73: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow \sum_{z=1}^{y}x(z)\le y
+tests/Square/article.tex:277:1: info: claim 73 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow (1\in \mathbb{Z}\land y\in \mathbb{Z})\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 1\le z\land z\le y\Rightarrow z\in \mathbb{N})
+tests/Square/article.tex:278:1: info: claim 74: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R}\to [0,1],\ x(1)\le y(1)\Rightarrow x(1)-y(1)\le 0
+tests/Square/article.tex:278:1: info: claim 74 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R}\to [0,1],\ (1\in \mathbb{N}\land 1\in \mathbb{N})\land (x(1)\le y(1)\Rightarrow 1\in \mathbb{N}\land 1\in \mathbb{N})
+tests/Square/article.tex:280:1: info: claim 75: \forall x\in \mathbb{R}\to [0,1],\ x(1)\le 1
+tests/Square/article.tex:280:1: info: claim 75 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ 1\in \mathbb{N}
+tests/Square/article.tex: 35 definitions, 76 claims
+  text: 30 compiled, 0 failed, 32 prose (of 62)
+  results: 51 compiled, 0 failed, 0 prose (of 51)
   proofs: 3 compiled, 0 failed, 1 prose (of 4)
-  all: 78 compiled, 0 failed, 31 prose (of 109)
+  all: 84 compiled, 0 failed, 33 prose (of 117)
   complete proofs: 0 of 1 (a result is derived from a proof that is read completely)

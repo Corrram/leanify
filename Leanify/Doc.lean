@@ -429,6 +429,41 @@ def rewriteWords (aliases : List (List Codes × List Tok)) : Nat → Option Tok 
       repl.map (fun r => (⟨r, t.pos, false⟩ : PTok)) ++ rewriteWords aliases f none ((t :: ts).drop n)
     | none => t :: rewriteWords aliases f (some t.tok) ts
 
+/-- `On the event $φ$, [we have] $ψ$`: for all values of the sample, `φ` implies `ψ`
+(the formula `\@onevent{φ}{ψ}`, which the vocabulary of the unit square reads with the two
+sequences `U`, `V` of a sample). The words become `we have` before that formula. -/
+def onEvent : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    let isW (p : PTok) (w : Codes) : Bool := !p.math && (match p.tok with | .word v => Grammar.lower v == w | _ => false)
+    let hit : Option (List PTok × List PTok × List PTok) :=
+      match ts with
+      | a :: b :: o :: rest =>
+        if isW t w!"on" && isW a w!"the" && isW b w!"event" && o.tok == .mopen then
+          let phi := rest.takeWhile (·.tok != .mclose)
+          let r1 := rest.drop (phi.length + 1)
+          let r1 := match r1 with | c :: r => if c.tok == .punct 44 then r else r1 | [] => r1
+          let r1 := match r1 with
+            | x :: y :: r => if isW x w!"we" && isW y w!"have" then r else r1
+            | _ => r1
+          match r1 with
+          | o2 :: r2 =>
+            if o2.tok == .mopen then
+              let psi := r2.takeWhile (·.tok != .mclose)
+              if phi.isEmpty || psi.isEmpty || psi.length == r2.length then none
+              else some (phi, psi, r2.drop (psi.length + 1))
+            else none
+          | [] => none
+        else none
+      | _ => none
+    match hit with
+    | some (phi, psi, rest) =>
+      let m (k : Tok) : PTok := ⟨k, t.pos, true⟩
+      [⟨.word w!"we", t.pos, false⟩, ⟨.word w!"have", t.pos, false⟩, ⟨.mopen, t.pos, false⟩, m (.cmd w!"@onevent"), m .lbrace] ++
+        phi ++ [m .rbrace, m .lbrace] ++ psi ++ [m .rbrace, ⟨.mclose, t.pos, false⟩] ++ onEvent f rest
+    | none => t :: onEvent f ts
+
 end Notation
 
 namespace Compile
@@ -1186,10 +1221,21 @@ def dropBoundIndices (st : St) (m : MT) (free : List Codes) : List Codes :=
       i.length < n.length && n.drop (n.length - i.length - 1) == [95] ++ i).length
     asIndex == 0 || asIndex < (free.filter (· == i)).length
 
+/-- `x_3` as the term of a sequence `x` among the binders `bs` (a variable whose values are
+functions of a real number into a type of the vocabulary): the name `x`. -/
+def termOfSeq (bs : List BindInfo) (n : Codes) : Option Codes :=
+  (bs.find? fun b =>
+    (match b.ty with | .fn .real (.base _) => true | _ => false) &&
+    n.length > b.name.length + 1 && n.take (b.name.length + 1) == b.name ++ [95] &&
+    (n.drop (b.name.length + 1)).all fun c => 48 ≤ c && c ≤ 57).map (·.name)
+
 /-- The sequences of the scope among the free identifiers `ids` of a formula `m`: the
 term `x_1` of a sequence `x` is `x`; and the variables of the scope whose name has a
 letter as subscript. -/
 def seqFree (st : St) (bound : List Codes) (m : MT) (ids : List Codes) : List Codes :=
+  -- (`x_1` of a variable `x` of the scope that is a sequence of points of a vocabulary's
+  -- type, `Let $x$ be a sequence in $[0,1]$`, is its term: the variable is `x`)
+  let ids := ids.map fun n => (termOfSeq (st.envBinders ++ st.fixed.map (·.2)) n).getD n
   let seqs := (subBases 64 m).filter fun k => st.seqs.any (·.1 == k) && !bound.contains k
   ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs ++
     envSubKeys st bound m
@@ -1307,6 +1353,8 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
+    -- (`U_1` of a sequence `U` bound before is its term, not a variable)
+    let free := free.filter fun n => (termOfSeq before n).isNone
     let free := (seqFree st [] φ free).filter fun n => !before.any (·.name == n)
     -- (a term `x_1` of a sequence is not a variable of its own)
     if let some x := free.find? fun n => st.seqs.any (·.1 == n) then
@@ -3355,6 +3403,11 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
     | .ifCond φ =>
       let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
       let fr := seqFree st0 [] φ fr
+      -- (`U_1` of a known `U` is a term of that sequence)
+      let fr := fr.map fun n =>
+        let base := n.takeWhile (· != 95)
+        if base.length + 1 < n.length && known.contains base && !known.contains n &&
+            (n.drop (base.length + 1)).all (fun c => 48 ≤ c && c ≤ 57) then base else n
       !fr.isEmpty && fr.all known.contains
     | _ => false
   let knownAt (k : Nat) : List Codes := known ++ bindNames st0 known (binds.take k)
@@ -4257,6 +4310,8 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let toks0 := s.toks
   let s := if st0.templates.isEmpty || Notation.declares s.toks then s
     else { s with toks := Notation.rewriteAll st0.templates s.toks }
+  -- `On the event $φ$, we have $ψ$`: one formula about every value of the sample
+  let s := { s with toks := Notation.onEvent (s.toks.length + 1) s.toks }
   -- a notation that binds a variable of its argument is not applied: a finding
   let capturedVar := Notation.captured s.toks
   let s := if capturedVar.isSome then { s with toks := toks0 } else s

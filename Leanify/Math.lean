@@ -706,6 +706,12 @@ def run : Nat → Mode → List MTok → R
         let (a, r1) ← run f .group rest
         let (b, r2) ← run f .group r1
         some (.app (.id w!"@binom") [a, b], r2)
+      else if n == w!"@onevent" then do
+        -- `On the event $φ$, we have $ψ$` (`Notation.onEvent`): `φ` implies `ψ` for all values
+        -- of the two sequences `U`, `V` of a sample
+        let (a, r1) ← run f .group rest
+        let (b, r2) ← run f .group r1
+        some (.app (.id w!"@son") [.mapsto (.tuple [.id [85], .id [86]]) (.limp a b)], r2)
       else if n == w!"lVert" then do
         -- `\lVert x\rVert`: a norm (its space in the subscript after it)
         let (x, r1) ← run f (.additive false) rest

@@ -442,6 +442,17 @@ def isEnd : List Chunk → Bool
   | [.p 46] => true
   | _ => false
 
+/-- Further citations after a first one: `CITE, CITE and CITE` (`By \eqref{a} and
+Lemma~\ref{l}, …`). -/
+def moreCites : Nat → List Chunk → List Codes × List Chunk
+  | 0, cs => ([], cs)
+  | f + 1, cs =>
+    let next : Option (Codes × List Chunk) :=
+      (kw [w!"and"] cs >>= cite) <|> (punct 44 cs >>= kw [w!"and"] >>= cite) <|> (punct 44 cs >>= cite)
+    match next with
+    | some (l, r) => let (ls, r') := moreCites f r; (l :: ls, r')
+    | none => ([], cs)
+
 /-- Discourse markers: they connect sentences and assert nothing. -/
 def wMarkers : List (List Codes) :=
   [[w!"to", w!"make", w!"this", w!"precise"], [w!"consequently"], [w!"hence"], [w!"in", w!"particular"],
@@ -786,6 +797,15 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
       | _, _ => none
     let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
     some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ together ++ conds), r'')) <|>
+  (do
+    -- `every sequence $x$ in $[0,1]$`, `every probability measure $\gamma$ on $[0,1]^2$`: a
+    -- noun of the vocabulary with its variable inside the phrase
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    match ws.isEmpty, np.drop ws.length with
+    | false, [.m [.id _], .w p, .m _] | false, [.m [.cmd _], .w p, .m _] =>
+      if p == w!"in" || p == w!"on" then some (.noun np, r') else none
+    | _, _ => none) <|>
   (do
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
@@ -2029,7 +2049,13 @@ def thereIs (cs : List Chunk) : Option (Clause × List Chunk) :=
 def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
   let (pre, r0) : List Codes × List Chunk :=
     match kw [w!"by"] cs >>= cite with
-    | some (l, r) => ([l], optPunct 44 r)
+    | some (l, r) =>
+      let (ls, r') := moreCites 6 r
+      -- `By CITE, we have $φ$`: the words after the citation assert nothing
+      let r' := optPunct 44 r'
+      let r' := ([[w!"we", w!"have"], [w!"we", w!"obtain"], [w!"we", w!"get"], [w!"it", w!"follows", w!"that"],
+        [w!"we", w!"see", w!"that"]].findSome? fun m => kw m r').getD r'
+      (l :: ls, r')
     | none => ([], cs)
   -- CITE gives $φ$
   match cite r0 with
@@ -2074,7 +2100,7 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
     let c := match hypC with | some h => Clause.ifClause h c | none => c
     let post := (kw [w!"by"] r1 >>= cite) <|> (kw [w!"as", w!"specified", w!"in"] r1 >>= cite)
     let (cites, r2) := match post with
-      | some (l, r2) => (pre ++ [l], r2)
+      | some (l, r2) => let (ls, r2') := moreCites 6 r2; (pre ++ l :: ls, r2')
       | none => (pre, r1)
     -- `…, where $g(x)\coloneqq x-1$ [and $h\coloneqq …$]`
     match punct 44 r2 >>= kw [w!"where"] with
