@@ -126,15 +126,25 @@ def sampleHasProbability (F : I → I → ℝ) (E : (ℝ → I) → (ℝ → I) 
 /-- Two sequences have the same terms at the indices below `m`. -/
 def agreeBelow (m : ℕ) (x y : ℝ → I) : Prop := ∀ i : ℕ, i < m → x i = y i
 
+/-- A sequence in `[0,1]` indexed by the natural numbers, as one indexed by the real
+numbers (its term at `x` is the term at the integer part of `x`: the compiler uses it at
+natural numbers). -/
+noncomputable def seqOf (s : ℕ → I) : ℝ → I := fun x => s (Nat.floor x)
+
+/-- The law of a sequence of independent terms, each uniform on `[0,1]`. -/
+noncomputable def uniformLaw : Measure (ℕ → I) := Measure.infinitePi (fun _ : ℕ => (volume : Measure I))
+
+instance : IsProbabilityMeasure uniformLaw := by
+  unfold uniformLaw
+  infer_instance
+
 /-- A kernel: a function of finitely many terms of a sequence in `[0,1]`, measurable and
 square-integrable for independent uniform terms (a function in `L²([0,1]^m)` for some
 `m`). -/
 def isKernel (F : (ℝ → I) → ℝ) : Prop :=
   (∃ m : ℕ, ∀ x y, agreeBelow m x y → F x = F y) ∧
-  AEStronglyMeasurable (fun ω : ℕ → I × I => F (sampleU ω))
-    (sampleLaw (fun u v => Interval.val u * Interval.val v)) ∧
-  Integrable (fun ω : ℕ → I × I => F (sampleU ω) ^ 2)
-    (sampleLaw (fun u v => Interval.val u * Interval.val v))
+  AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s)) uniformLaw ∧
+  Integrable (fun s : ℕ → I => F (seqOf s) ^ 2) uniformLaw
 
 /-- A statistic: a function of finitely many observations of a sample that is measurable
 in them. -/
@@ -395,10 +405,326 @@ theorem sampleProbability_abs_sub_lt {F : I → I → ℝ} (hF : distFn2 F) {T :
   rw [hh] at h
   linarith
 
+/-- A distribution function increases in its first argument. -/
+theorem distFn2_mono_fst {C : I → I → ℝ} (hC : distFn2 C) {u u' : I} (h : u' ≤ u) (v : I) :
+    C u' v ≤ C u v := by
+  have := measureOf_prob hC
+  have e1 := measureOf_apply hC u' v
+  have e2 := measureOf_apply hC u v
+  rw [e1, e2]
+  exact ENNReal.toReal_mono (measure_ne_top _ _)
+    (measure_mono (Set.prod_mono (Set.Iic_subset_Iic.mpr h) subset_rfl))
+
+/-- A distribution function increases in its second argument. -/
+theorem distFn2_mono_snd {C : I → I → ℝ} (hC : distFn2 C) (u : I) {v v' : I} (h : v' ≤ v) :
+    C u v' ≤ C u v := by
+  have := measureOf_prob hC
+  have e1 := measureOf_apply hC u v'
+  have e2 := measureOf_apply hC u v
+  rw [e1, e2]
+  exact ENNReal.toReal_mono (measure_ne_top _ _)
+    (measure_mono (Set.prod_mono subset_rfl (Set.Iic_subset_Iic.mpr h)))
+
+/-- With uniform marginals, a distribution function grows at most as fast as its first
+argument. -/
+theorem distFn2_incr_fst {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) {u u' : I}
+    (hu : u' ≤ u) (v : I) : C u v - C u' v ≤ (u : ℝ) - (u' : ℝ) := by
+  have := measureOf_prob h.1
+  have e1 := measureOf_apply h.1 u v
+  have e2 := measureOf_apply h.1 u' 1
+  have e3 := measureOf_apply h.1 u 1
+  have e4 := measureOf_apply h.1 u' v
+  have m1 := h.2.1 u
+  have m2 := h.2.1 u'
+  have key : (measureOf C) (Set.Iic u ×ˢ Set.Iic v) + (measureOf C) (Set.Iic u' ×ˢ Set.Iic (1 : I)) ≤
+      (measureOf C) (Set.Iic u ×ˢ Set.Iic (1 : I)) + (measureOf C) (Set.Iic u' ×ˢ Set.Iic v) := by
+    rw [← measure_union_add_inter _ (measurableSet_Iic.prod measurableSet_Iic)]
+    refine add_le_add (measure_mono ?_) (measure_mono ?_)
+    · rintro p (hp | hp)
+      · exact ⟨hp.1, unitInterval.le_one'⟩
+      · exact ⟨le_trans hp.1 hu, hp.2⟩
+    · rintro p ⟨hp1, hp2⟩
+      exact ⟨hp2.1, hp1.2⟩
+  have k2 := ENNReal.toReal_mono
+    (ENNReal.add_ne_top.mpr ⟨measure_ne_top _ _, measure_ne_top _ _⟩) key
+  rw [ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _),
+    ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _), ← e1, ← e2, ← e3, ← e4, m1, m2] at k2
+  linarith
+
+/-- With uniform marginals, a distribution function grows at most as fast as its second
+argument. -/
+theorem distFn2_incr_snd {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) (u : I) {v v' : I}
+    (hv : v' ≤ v) : C u v - C u v' ≤ (v : ℝ) - (v' : ℝ) := by
+  have := measureOf_prob h.1
+  have e1 := measureOf_apply h.1 u v
+  have e2 := measureOf_apply h.1 1 v'
+  have e3 := measureOf_apply h.1 1 v
+  have e4 := measureOf_apply h.1 u v'
+  have m1 := h.2.2 v
+  have m2 := h.2.2 v'
+  have key : (measureOf C) (Set.Iic u ×ˢ Set.Iic v) + (measureOf C) (Set.Iic (1 : I) ×ˢ Set.Iic v') ≤
+      (measureOf C) (Set.Iic (1 : I) ×ˢ Set.Iic v) + (measureOf C) (Set.Iic u ×ˢ Set.Iic v') := by
+    rw [← measure_union_add_inter _ (measurableSet_Iic.prod measurableSet_Iic)]
+    refine add_le_add (measure_mono ?_) (measure_mono ?_)
+    · rintro p (hp | hp)
+      · exact ⟨unitInterval.le_one', hp.2⟩
+      · exact ⟨hp.1, le_trans hp.2 hv⟩
+    · rintro p ⟨hp1, hp2⟩
+      exact ⟨hp1.1, hp2.2⟩
+  have k2 := ENNReal.toReal_mono
+    (ENNReal.add_ne_top.mpr ⟨measure_ne_top _ _, measure_ne_top _ _⟩) key
+  rw [ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _),
+    ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _), ← e1, ← e2, ← e3, ← e4, m1, m2] at k2
+  linarith
+
+/-- With uniform marginals, a distribution function is Lipschitz: it changes by at most the
+changes of its two arguments. -/
+theorem distFn2_abs_sub_le {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) (u u' v v' : I) :
+    |C u v - C u' v'| ≤ |(u : ℝ) - (u' : ℝ)| + |(v : ℝ) - (v' : ℝ)| := by
+  have h1 : |C u v - C u' v| ≤ |(u : ℝ) - (u' : ℝ)| := by
+    rcases le_total u' u with hu | hu
+    · have a := distFn2_incr_fst h hu v
+      have b := distFn2_mono_fst h.1 hu v
+      rw [abs_le]
+      constructor <;>
+        linarith [abs_nonneg ((u : ℝ) - (u' : ℝ)), le_abs_self ((u : ℝ) - (u' : ℝ)),
+          neg_abs_le ((u : ℝ) - (u' : ℝ))]
+    · have a := distFn2_incr_fst h hu v
+      have b := distFn2_mono_fst h.1 hu v
+      rw [abs_le]
+      constructor <;>
+        linarith [abs_nonneg ((u : ℝ) - (u' : ℝ)), le_abs_self ((u : ℝ) - (u' : ℝ)),
+          neg_abs_le ((u : ℝ) - (u' : ℝ))]
+  have h2 : |C u' v - C u' v'| ≤ |(v : ℝ) - (v' : ℝ)| := by
+    rcases le_total v' v with hv | hv
+    · have a := distFn2_incr_snd h u' hv
+      have b := distFn2_mono_snd h.1 u' hv
+      rw [abs_le]
+      constructor <;>
+        linarith [abs_nonneg ((v : ℝ) - (v' : ℝ)), le_abs_self ((v : ℝ) - (v' : ℝ)),
+          neg_abs_le ((v : ℝ) - (v' : ℝ))]
+    · have a := distFn2_incr_snd h u' hv
+      have b := distFn2_mono_snd h.1 u' hv
+      rw [abs_le]
+      constructor <;>
+        linarith [abs_nonneg ((v : ℝ) - (v' : ℝ)), le_abs_self ((v : ℝ) - (v' : ℝ)),
+          neg_abs_le ((v : ℝ) - (v' : ℝ))]
+  have h3 := abs_add_le (C u v - C u' v) (C u' v - C u' v')
+  have h4 : C u v - C u' v + (C u' v - C u' v') = C u v - C u' v' := by ring
+  rw [h4] at h3
+  linarith
+
+/-- With uniform marginals, a distribution function is continuous on the square. -/
+theorem distFn2_continuous {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    Continuous (fun p : I × I => C p.1 p.2) := by
+  refine (LipschitzWith.of_dist_le_mul (K := 2) fun p q => ?_).continuous
+  have hl := distFn2_abs_sub_le h p.1 q.1 p.2 q.2
+  have h1 : dist p.1 q.1 ≤ dist p q := by
+    rw [Prod.dist_eq]
+    exact le_max_left _ _
+  have h2 : dist p.2 q.2 ≤ dist p q := by
+    rw [Prod.dist_eq]
+    exact le_max_right _ _
+  rw [Subtype.dist_eq, Real.dist_eq] at h1 h2
+  have h3 : ((2 : NNReal) : ℝ) = 2 := by norm_num
+  rw [Real.dist_eq, h3]
+  linarith
+
+/-- The first coordinates of a sample of a distribution function with uniform marginals
+are independent and uniform. -/
+theorem sampleLaw_map_fst {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    (sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1) = uniformLaw := by
+  have hp := measureOf_prob h.1
+  have e : sampleLaw C = Measure.infinitePi (fun _ : ℕ => measureOf C) := by
+    unfold sampleLaw
+    split
+    · rfl
+    · rename_i hn
+      exact absurd hp hn
+  have key := Measure.infinitePi_map_pi (μ := fun _ : ℕ => measureOf C)
+    (f := fun _ : ℕ => (Prod.fst : I × I → I)) (fun _ => measurable_fst)
+  rw [e]
+  refine key.trans ?_
+  rw [measureOf_map_fst h]
+  rfl
+
+/-- The second coordinates of a sample of a distribution function with uniform marginals
+are independent and uniform. -/
+theorem sampleLaw_map_snd {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    (sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2) = uniformLaw := by
+  have hp := measureOf_prob h.1
+  have e : sampleLaw C = Measure.infinitePi (fun _ : ℕ => measureOf C) := by
+    unfold sampleLaw
+    split
+    · rfl
+    · rename_i hn
+      exact absurd hp hn
+  have key := Measure.infinitePi_map_pi (μ := fun _ : ℕ => measureOf C)
+    (f := fun _ : ℕ => (Prod.snd : I × I → I)) (fun _ => measurable_snd)
+  rw [e]
+  refine key.trans ?_
+  rw [measureOf_map_snd h]
+  rfl
+
+/-- A kernel of the first coordinates of a sample is measurable and square-integrable,
+for a distribution function with uniform marginals. -/
+theorem isKernel_fst {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I → ℝ}
+    (h : distFn2 C ∧ dfUniformMarginals C) :
+    AEStronglyMeasurable (fun ω : ℕ → I × I => F (sampleU ω)) (sampleLaw C) ∧
+      Integrable (fun ω : ℕ → I × I => F (sampleU ω) ^ 2) (sampleLaw C) := by
+  have hπ : Measurable (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1) := by
+    fun_prop
+  have hm := sampleLaw_map_fst h
+  have h1 : AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s))
+      ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1)) := by
+    rw [hm]
+    exact hF.2.1
+  have h2 : Integrable (fun s : ℕ → I => F (seqOf s) ^ 2)
+      ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1)) := by
+    rw [hm]
+    exact hF.2.2
+  exact ⟨h1.comp_measurable hπ, h2.comp_measurable hπ⟩
+
+/-- A kernel of the second coordinates of a sample is measurable and square-integrable,
+for a distribution function with uniform marginals. -/
+theorem isKernel_snd {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I → ℝ}
+    (h : distFn2 C ∧ dfUniformMarginals C) :
+    AEStronglyMeasurable (fun ω : ℕ → I × I => F (sampleV ω)) (sampleLaw C) ∧
+      Integrable (fun ω : ℕ → I × I => F (sampleV ω) ^ 2) (sampleLaw C) := by
+  have hπ : Measurable (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2) := by
+    fun_prop
+  have hm := sampleLaw_map_snd h
+  have h1 : AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s))
+      ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2)) := by
+    rw [hm]
+    exact hF.2.1
+  have h2 : Integrable (fun s : ℕ → I => F (seqOf s) ^ 2)
+      ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2)) := by
+    rw [hm]
+    exact hF.2.2
+  exact ⟨h1.comp_measurable hπ, h2.comp_measurable hπ⟩
+
+/-- The product of a kernel of the first coordinates and of the second coordinates of a
+sample has an expectation, for a distribution function with uniform marginals. -/
+theorem isKernel_sampleIntegrable_mul {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I → ℝ}
+    (h : distFn2 C ∧ dfUniformMarginals C) : sampleIntegrable C (fun U V => F U * F V) := by
+  obtain ⟨hU, hU2⟩ := isKernel_fst hF h
+  obtain ⟨hV, hV2⟩ := isKernel_snd hF h
+  refine ⟨h.1, Integrable.mono' (hU2.add hV2) (hU.mul hV) (Filter.Eventually.of_forall fun ω => ?_)⟩
+  show ‖F (sampleU ω) * F (sampleV ω)‖ ≤ F (sampleU ω) ^ 2 + F (sampleV ω) ^ 2
+  rw [Real.norm_eq_abs, abs_le]
+  constructor <;>
+    nlinarith [sq_nonneg (F (sampleU ω) - F (sampleV ω)), sq_nonneg (F (sampleU ω) + F (sampleV ω))]
+
+/-- A kernel of the first coordinates of a sample has an expectation, for a distribution
+function with uniform marginals. -/
+theorem isKernel_sampleIntegrable {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I → ℝ}
+    (h : distFn2 C ∧ dfUniformMarginals C) : sampleIntegrable C (fun U _ => F U) := by
+  have := sampleLaw_finite C
+  obtain ⟨hU, hU2⟩ := isKernel_fst hF h
+  refine ⟨h.1, Integrable.mono' ((integrable_const (1 : ℝ)).add hU2) hU
+    (Filter.Eventually.of_forall fun ω => ?_)⟩
+  show ‖F (sampleU ω)‖ ≤ 1 + F (sampleU ω) ^ 2
+  rw [Real.norm_eq_abs, abs_le]
+  constructor <;>
+    nlinarith [sq_nonneg (F (sampleU ω) - 1), sq_nonneg (F (sampleU ω) + 1), sq_nonneg (F (sampleU ω))]
+
+/-! ### Events and statistics of a sample are measurable
+
+`leanify_sample_fun` proves that a real expression in the terms of a sample (sums,
+products, differences, quotients, maxima, absolute values, powers, finite sums and case
+distinctions between such expressions) is a measurable function of the sample, and
+`leanify_sample_event` that a comparison of two such expressions is a measurable set of
+samples. `leanify_facts` uses them: a condition on such expressions has a probability. -/
+
+/-- `leanify_sample_fun` proves `Measurable fun ω => e` for an expression `e` in the terms
+`sampleU ω i`, `sampleV ω i` of a sample `ω`. -/
+syntax "leanify_sample_fun" : tactic
+/-- `leanify_sample_event` proves `MeasurableSet {ω | e₁ ≤ e₂}` (or `<`, `=`) for
+expressions in the terms of a sample `ω`. -/
+syntax "leanify_sample_event" : tactic
+
+namespace Meas
+variable {Ω ι : Type} [MeasurableSpace Ω]
+
+/-! The steps of the two tactics, each stated for an expression as it is written (`fun ω =>
+f ω + g ω`), so that a step fits an expression by its form alone. -/
+theorem add {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : Measurable fun ω => f ω + g ω :=
+  hf.add hg
+theorem sub {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : Measurable fun ω => f ω - g ω :=
+  hf.sub hg
+theorem mul {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : Measurable fun ω => f ω * g ω :=
+  hf.mul hg
+theorem div {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : Measurable fun ω => f ω / g ω :=
+  hf.div hg
+theorem neg {f : Ω → ℝ} (hf : Measurable f) : Measurable fun ω => -f ω :=
+  hf.neg
+theorem max {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) :
+    Measurable fun ω => Max.max (f ω) (g ω) :=
+  hf.max hg
+theorem min {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) :
+    Measurable fun ω => Min.min (f ω) (g ω) :=
+  hf.min hg
+theorem abs {f : Ω → ℝ} (hf : Measurable f) : Measurable fun ω => |f ω| :=
+  continuous_abs.measurable.comp hf
+theorem rpow {f : Ω → ℝ} {q : ℝ} (hq : 0 ≤ q) (hf : Measurable f) : Measurable fun ω => f ω ^ q :=
+  (Real.continuous_rpow_const hq).measurable.comp hf
+theorem pow {f : Ω → ℝ} (hf : Measurable f) (n : ℕ) : Measurable fun ω => f ω ^ n :=
+  hf.pow_const n
+theorem sum (s : Finset ι) {f : ι → Ω → ℝ} (hf : ∀ i, Measurable (f i)) :
+    Measurable fun ω => ∑ i ∈ s, f i ω :=
+  Finset.measurable_fun_sum s fun i _ => hf i
+theorem ite {p : Ω → Prop} {d : DecidablePred p} {f g : Ω → ℝ} (hp : MeasurableSet {ω | p ω})
+    (hf : Measurable f) (hg : Measurable g) : Measurable fun ω => @_root_.ite ℝ (p ω) (d ω) (f ω) (g ω) :=
+  Measurable.ite hp hf hg
+theorem lt {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : MeasurableSet {ω | f ω < g ω} :=
+  measurableSet_lt hf hg
+theorem le {f g : Ω → ℝ} (hf : Measurable f) (hg : Measurable g) : MeasurableSet {ω | f ω ≤ g ω} :=
+  measurableSet_le hf hg
+
+end Meas
+
+-- (every step is tried without unfolding definitions: a step that does not fit the
+-- expression fails at once, and does not unfold the expression to see whether it fits)
+macro_rules
+  | `(tactic| leanify_sample_event) => `(tactic| first
+      | with_reducible_and_instances exact MeasurableSet.const _
+      | ((with_reducible_and_instances refine Meas.lt ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.le ?_ ?_) <;> leanify_sample_fun))
+
+macro_rules
+  | `(tactic| leanify_sample_fun) => `(tactic| first
+      | with_reducible_and_instances exact measurable_const
+      | with_reducible_and_instances exact sampleU_measurable _
+      | with_reducible_and_instances exact sampleV_measurable _
+      | with_reducible_and_instances assumption
+      | ((with_reducible_and_instances refine Meas.add ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.sub ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.mul ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.div ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.neg ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.max ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.min ?_ ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.abs ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.rpow ?_ ?_) <;> first | leanify_sample_fun | (norm_num; done))
+      | ((with_reducible_and_instances refine Meas.pow ?_ _) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.sum _ fun _ => ?_) <;> leanify_sample_fun)
+      | ((with_reducible_and_instances refine Meas.ite ?_ ?_ ?_) <;>
+          first | leanify_sample_event | leanify_sample_fun)
+      | (unfold Leanify.Prelude.finSum; leanify_sample_fun))
+
+/-- (for `definedness`) A comparison of two expressions in the terms of a sample has a
+probability. -/
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic|
+      (with_reducible refine sampleHasProbability_of_measurableSet ?_ ?_
+       · first | assumption | leanify_part
+       · try beta_reduce
+         leanify_sample_event))
+
 /-- A constant is a kernel. -/
-theorem isKernel_const (c : ℝ) : isKernel (fun _ => c) := by
-  have := sampleLaw_finite (fun u v => Interval.val u * Interval.val v)
-  exact ⟨⟨0, fun _ _ _ => rfl⟩, aestronglyMeasurable_const, integrable_const _⟩
+theorem isKernel_const (c : ℝ) : isKernel (fun _ => c) :=
+  ⟨⟨0, fun _ _ _ => rfl⟩, aestronglyMeasurable_const, integrable_const _⟩
 
 /-- A constant is a statistic. -/
 theorem isStatistic_const (c : ℝ) : isStatistic (fun _ _ => c) :=
@@ -409,12 +735,14 @@ and the coordinates that is measurable and at most `4` in absolute value: the hy
 give the distribution function, `fun_prop` the measurability and `nlinarith` the bound. -/
 macro_rules
   | `(tactic| leanify_facts) => `(tactic|
-      (refine integrableAgainst_of_bounded (by first | assumption | leanify_part) 4
-          (fun hm hb => ⟨by fun_prop, fun u v => ?_⟩)
-       rw [abs_le]
-       constructor <;>
-         nlinarith [(hb u v).1, (hb u v).2, u.2.1, u.2.2, v.2.1, v.2.2,
-           mul_nonneg u.2.1 v.2.1, mul_le_mul u.2.2 v.2.2 v.2.1 zero_le_one]))
+      (with_reducible refine integrableAgainst_of_bounded ?_ 4 ?_
+       · first | assumption | leanify_part
+       · intro hm hb
+         refine ⟨by fun_prop, fun u v => ?_⟩
+         rw [abs_le]
+         constructor <;>
+           nlinarith [(hb u v).1, (hb u v).2, u.2.1, u.2.2, v.2.1, v.2.2,
+             mul_nonneg u.2.1 v.2.1, mul_le_mul u.2.2 v.2.2 v.2.1 zero_le_one]))
 
 end Leanify.UnitSquare
 

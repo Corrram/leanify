@@ -215,7 +215,14 @@ integral of the function (`integral_fst`, `integral_snd`, `integrable_fst`,
 probability measure (`sampleLaw_prob`), a larger event has a larger probability
 (`sampleProbability_mono`), and `u v` is a distribution function with uniform marginals
 and a bounded density (`distFn2_mul`, `dfUniformMarginals_mul`, `hasBoundedDensity_mul`:
-an example for the hypotheses of a statement). `definedness` uses some of them by itself
+an example for the hypotheses of a statement). With uniform marginals a distribution
+function is increasing, Lipschitz and continuous (`distFn2_mono_fst`,
+`distFn2_abs_sub_le`, `distFn2_continuous`: a supremum over the square is a maximum), the
+coordinates of a sample are independent and uniform (`sampleLaw_map_fst`,
+`sampleLaw_map_snd`), and a kernel of them has an expectation, as has the product of a
+kernel of each (`isKernel_sampleIntegrable`, `isKernel_sampleIntegrable_mul`). A kernel is
+a function of a sequence that is measurable and square-integrable for independent uniform
+terms (`uniformLaw`). `definedness` uses some of them by itself
 (`leanify_facts`, see the [reference](reference.md)).
 
 Reviewing a vocabulary means checking that each phrase means what its Lean
