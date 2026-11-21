@@ -5,6 +5,7 @@ import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.Probability.ProductMeasure
+import Mathlib.Probability.Kernel.Disintegration.Integral
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
 import Mathlib.Analysis.Convex.Function
@@ -156,6 +157,21 @@ def isStatistic (T : (ℝ → I) → (ℝ → I) → ℝ) : Prop :=
 def hasBoundedDensity (F : I → I → ℝ) : Prop :=
   ∃ c : ℝ → ℝ → ℝ, Measurable (fun p : ℝ × ℝ => c p.1 p.2) ∧ (∃ B : ℝ, ∀ s t, |c s t| ≤ B) ∧
     ∀ u v : I, F u v = ∫ s in (0:ℝ)..(Interval.val u), ∫ t in (0:ℝ)..(Interval.val v), c s t
+
+instance (F : I → I → ℝ) : IsFiniteMeasure (measureOf F) := by
+  unfold measureOf
+  split
+  · rename_i h
+    have := (Classical.choose_spec h).1
+    infer_instance
+  · infer_instance
+
+/-- The conditional distribution function of the second coordinate given the first, for
+the measure of a distribution function `F`: `h_F(u,v) = P(V ≤ v | U = u)`, from the
+disintegration of the measure (Mathlib's `Measure.condKernel`). For a copula `C` it is a
+version of the partial derivative `∂₁C`. -/
+noncomputable def conditionalDF (F : I → I → ℝ) : I → I → ℝ := fun u v =>
+  ((measureOf F).condKernel u (Set.Iic v)).toReal
 
 def dfUniformMarginals (F : I → I → ℝ) : Prop :=
   (∀ u : I, F u 1 = u) ∧ ∀ v : I, F 1 v = v
@@ -803,6 +819,6 @@ noncomputable def model : Model where
     ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .real, sampleExpectation⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .prop, sampleIntegrable⟩,
     ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sampleProbability⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop, sampleHasProbability⟩,
     ⟨(seq ⟶ .real) ⟶ .prop, isKernel⟩, ⟨(seq ⟶ seq ⟶ .real) ⟶ .prop, isStatistic⟩,
-    ⟨sq ⟶ .prop, hasBoundedDensity⟩]
+    ⟨sq ⟶ .prop, hasBoundedDensity⟩, ⟨sq ⟶ sq, conditionalDF⟩]
 
 end Leanify.UnitSquare

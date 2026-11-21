@@ -65,6 +65,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 

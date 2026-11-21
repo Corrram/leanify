@@ -72,6 +72,9 @@ def kernel : Nat := 30
 def statistic : Nat := 31
 /-- A function on the square with a bounded density. -/
 def boundedDensity : Nat := 32
+/-- The conditional distribution function of the second coordinate given the first, for
+the measure of a distribution function. -/
+def condDF : Nat := 33
 
 /-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
 abbrev Quantity : Ty := sq ⟶ .real
@@ -107,7 +110,9 @@ def vocab : Vocab where
     -- the expectation and the probability for a sample
     sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .real, sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .prop,
     sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop,
-    (seq ⟶ .real) ⟶ .prop, (seq ⟶ seq ⟶ .real) ⟶ .prop, sq ⟶ .prop]
+    (seq ⟶ .real) ⟶ .prop, (seq ⟶ seq ⟶ .real) ⟶ .prop, sq ⟶ .prop,
+    -- the conditional distribution function
+    sq ⟶ sq]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
@@ -121,7 +126,8 @@ def vocab : Vocab where
     w!"#1\\ast #2", w!"{#1}^{\\ast #2}",
     w!"\\mathbb{E}_{#1}\\bigl[#2\\bigr]", w!"\\operatorname{Int}_{#1}(#2)",
     w!"P_{#1}\\bigl(#2\\bigr)", w!"\\operatorname{Event}_{#1}(#2)",
-    w!"\\operatorname{Kernel}", w!"\\operatorname{Statistic}", w!"\\operatorname{BddDensity}"]
+    w!"\\operatorname{Kernel}", w!"\\operatorname{Statistic}", w!"\\operatorname{BddDensity}",
+    w!"h_{#}"]
   constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
     w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
     w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
@@ -135,7 +141,8 @@ def vocab : Vocab where
     w!"Leanify.UnitSquare.markovProd", w!"Leanify.UnitSquare.markovPowerOf",
     w!"Leanify.UnitSquare.sampleExpectation", w!"Leanify.UnitSquare.sampleIntegrable",
     w!"Leanify.UnitSquare.sampleProbability", w!"Leanify.UnitSquare.sampleHasProbability",
-    w!"Leanify.UnitSquare.isKernel", w!"Leanify.UnitSquare.isStatistic", w!"Leanify.UnitSquare.hasBoundedDensity"]
+    w!"Leanify.UnitSquare.isKernel", w!"Leanify.UnitSquare.isStatistic", w!"Leanify.UnitSquare.hasBoundedDensity",
+    w!"Leanify.UnitSquare.conditionalDF"]
   modules := [w!"Leanify.Library.UnitSquareModel"]
   adjectives := [
     { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
@@ -180,6 +187,9 @@ def vocab : Vocab where
   notions := [
     { name := phrase!"Lebesgue measure on $[0,1]$", value := .const lebesgue, ty := set1 ⟶ .real,
       doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" },
+    { name := phrase!"conditional distribution function of $v$", value := .const condDF, ty := sq ⟶ sq,
+      doms := [some isCopula],
+      doc := "`h_C(u,v) = P(V ≤ v | U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C`" },
     { name := phrase!"Markov product of $v$ and $v$", value := .const markovProduct, ty := sq ⟶ sq ⟶ sq,
       doms := [some isCopula, some isCopula],
       doc := "`(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B`" },
