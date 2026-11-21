@@ -772,6 +772,13 @@ def declaredInt (st : St) (v : Codes) (x : Tm) : Tm :=
 /-- The exponent mentions an index. -/
 def indexExp (e : MT) : Bool := (mtIds 32 e).any indexNames.contains
 
+/-- The exponent is written as a quotient (`x^{1/k}`, `x^{\frac{1}{2k}}`): a root, so a
+real power, whatever letters it is built from. -/
+def quotientExp : MT → Bool
+  | .div _ _ | .frac _ _ => true
+  | .neg x => quotientExp x
+  | _ => false
+
 /-- `a^p`: an integer power when the exponent is built from indices (`(-1)^{k+1}`,
 `2^n`), defined for every base (but `0` to a negative power); otherwise a real
 power of a nonnegative base. -/
@@ -2127,7 +2134,7 @@ where
         else do
           let a ← asReal (← term f sc pf b)
           let p ← asReal (← term f sc pf e)
-          powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
+          powTm a p (!quotientExp e && (indexExp e || (mtIds 32 e).any (← get).letters.contains))
       | .num n => do
         let a ← asReal (← term f sc pf b)
         pure (.powNat a n, .real)
@@ -2138,7 +2145,7 @@ where
       | _ => do
         let a ← asReal (← term f sc pf b)
         let p ← asReal (← term f sc pf e)
-        powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
+        powTm a p (!quotientExp e && (indexExp e || (mtIds 32 e).any (← get).letters.contains))
   head : Nat → Scope → MT → M (Tm × Ty × List (Option Tm))
     | 0, _, _ => fail E.unsupported
     | g + 1, sc, hd =>

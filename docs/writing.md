@@ -41,7 +41,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `$a_n\to L$ as $n\to\infty$`, `$f(x)\sim g(x)$ as $x\to\infty$`, `$f(x)=o(g(x))$ as $x\to c$` | `\lim a_n=L`, `\lim\frac{f}{g}=1`, `\lim\frac{f}{g}=0`, as limits are read |
 | `\lim_{x\to a} e=\infty`, `\lim_{n\to\infty} a_n=-\infty`, `$a_n\to\infty$ as $n\to\infty$` | the points where `e` is defined accumulate at `a` (are unbounded), and for every `M` there is `δ>0` such that `e>M` (`e<M`) at every such point with `0<|x-a|<δ` (there is `N` such that … at every such point `x\ge N`); an index runs through the natural numbers |
 | `\lim_{n\to\infty} a_n` | for an index `n`, `m`, `k`, `j`, `i` (or `N`, `M`, `K`): the limit of the sequence through the natural numbers |
-| `(-1)^k`, `2^{n+1}` | an exponent built from indices is an integer power, for any base |
+| `(-1)^k`, `2^{n+1}` | an exponent built from indices is an integer power, for any base. An exponent written as a quotient (`x^{1/k}`, `x^{\frac{1}{2k}}`) is a root: a real power of a nonnegative base, whatever its letters |
 | `n!`, `\binom{n}{k}` | for natural numbers `n`, `k` |
 | `\exp(x)`, `\exp x`, `e^{x}` | the exponential function (`e` unless the article names something `e`) |
 | `\log x`, `\ln x` | the natural logarithm, applied only to positive numbers (the claim asks that the argument be positive) |
