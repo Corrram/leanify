@@ -106,6 +106,13 @@ noncomputable def factorial (x : ℝ) : ℝ := ((Nat.factorial (Nat.floor x) : �
 /-- `\binom{n}{k}` for natural numbers `n`, `k` (as a real number). -/
 noncomputable def binom (x y : ℝ) : ℝ := ((Nat.choose (Nat.floor x) (Nat.floor y) : ℕ) : ℝ)
 def intervalIntegrable (f : ℝ → ℝ) (a b : ℝ) : Prop := IntervalIntegrable f volume a b
+/-- The integral of `f` over the set `S` of real numbers (for Lebesgue measure). -/
+noncomputable def integralOn (S : ℝ → Prop) (f : ℝ → ℝ) : ℝ :=
+  MeasureTheory.integral
+    (MeasureTheory.Measure.restrict (MeasureTheory.volume : MeasureTheory.Measure ℝ) {t | S t}) f
+/-- `f` is integrable over the set `S` of real numbers. -/
+def integrableOn (f : ℝ → ℝ) (S : ℝ → Prop) : Prop :=
+  MeasureTheory.IntegrableOn f {t | S t} (MeasureTheory.volume : MeasureTheory.Measure ℝ)
 /-- `p` holds for almost every real number (for Lebesgue measure). -/
 def ae (p : ℝ → Prop) : Prop :=
   Filter.Eventually p (MeasureTheory.ae (MeasureTheory.volume : MeasureTheory.Measure ℝ))
@@ -225,6 +232,8 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .hasDerivWithin => Prelude.hasDerivWithin
   | .intervalIntegral => Prelude.intervalIntegral
   | .intervalIntegrable => Prelude.intervalIntegrable
+  | .integralOn => Prelude.integralOn
+  | .integrableOn => Prelude.integrableOn
   | .ae => Prelude.ae
   | .compact2 => Prelude.compact2
   | .convex2 => Prelude.convex2

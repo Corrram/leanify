@@ -158,6 +158,14 @@ structure IntervalType where
   measurable1 : Nat
   measurable2 : Nat
   lebesgue : Nat
+  /-- The integral of a function on the square of the type against the probability
+  measure with a given distribution function (`\int_{[0,1]^2} f(u,v)\,\mathrm{d}C(u,v)`:
+  the constant takes `C`, then `f`), and the condition under which it is defined. -/
+  integral2 : Option Nat := none
+  integrable2 : Option Nat := none
+  /-- A condition on the points of the square holds for almost every point, for the measure
+  of a distribution function (the constant takes `C`, then the condition). -/
+  ae2 : Option Nat := none
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Vocab where
@@ -254,7 +262,9 @@ def append (V W : Vocab) : Vocab :=
     intervals := V.intervals ++ W.intervals.map fun i =>
       { i with ty := shiftTy kt i.ty, val := i.val + kc, point := i.point + kc, integral := i.integral + kc,
                integrable := i.integrable + kc, measurable1 := i.measurable1 + kc,
-               measurable2 := i.measurable2 + kc, lebesgue := i.lebesgue + kc } }
+               measurable2 := i.measurable2 + kc, lebesgue := i.lebesgue + kc,
+               integral2 := i.integral2.map (· + kc), integrable2 := i.integrable2.map (· + kc),
+               ae2 := i.ae2.map (· + kc) } }
 
 instance : Append Vocab := ⟨append⟩
 

@@ -63,6 +63,11 @@ inductive Prim where
   | intervalIntegral
   /-- `intervalIntegrable f a b`: `f` is integrable between `a` and `b`. -/
   | intervalIntegrable
+  /-- `integralOn S f`: the integral of `f` over the set `S` of real numbers (a ray or the
+  line: `\int_{-\infty}^x`, `\int_a^\infty`, `\int_{-\infty}^\infty`). -/
+  | integralOn
+  /-- `integrableOn f S`: `f` is integrable over the set `S`. -/
+  | integrableOn
   /-- `ae p`: `p` holds for almost every real number (for Lebesgue measure). The compiler
   applies it to the definedness condition of an integrand: an integral is meaningful if
   its integrand is defined almost everywhere and integrable, and it does not depend on
@@ -134,6 +139,8 @@ def Prim.ty : Prim → Ty
   | .hasDerivWithin => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .real ⟶ .real ⟶ .prop
   | .intervalIntegral => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
   | .intervalIntegrable => Ty.rfun ⟶ .real ⟶ .real ⟶ .prop
+  | .integralOn => (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .real
+  | .integrableOn => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
   | .ae => (.real ⟶ .prop) ⟶ .prop
   | .compact2 | .convex2 | .symm2 => (.real ⟶ .real ⟶ .prop) ⟶ .prop
   | .continuousOn | .concaveOn | .strictMonoOn | .fnProp _ => Ty.rfun ⟶ (.real ⟶ .prop) ⟶ .prop
@@ -336,6 +343,11 @@ def defined : Tm → Tm
   -- `ae p` is meaningful as it stands: the compiler applies it to a definedness
   -- condition, whose truth does not depend on a value that is not defined
   | .app (.prim .ae) _ => .tt
+  -- a function written out and applied (`\partial_1 C(u,v)`, a combination of functions
+  -- at a point) has to be defined at its argument, not everywhere
+  | .app (.app (.lam _ .tt (.lam _ .tt body)) x) y =>
+    mkAnd (defined x) (mkAnd (defined y) (subst y 0 (subst x 1 (defined body))))
+  | .app (.lam _ .tt body) x => mkAnd (defined x) (subst x 0 (defined body))
   | .app f x => mkAnd (defined f) (defined x)
   -- (a function whose declared domain says that its body is defined, as an integrand
   -- that is defined almost everywhere has it, asks nothing more)
@@ -349,7 +361,10 @@ def defined : Tm → Tm
   | .cases c v rest =>
       mkAnd (defined c) (mkAnd (mkImp c (mkAnd (defined v) (agreesDefined rest v)))
         (mkImp (.not c) (defined rest)))
-  | .and p q | .imp p q => mkAnd (defined p) (mkImp p (defined q))
+  -- (what `p` itself says need not be asked again under it: `Int(f) ∧ ∫f = 0`)
+  | .and p q | .imp p q =>
+    let dq := defined q
+    mkAnd (defined p) (if (conjuncts dq).all (conjuncts p).contains then .tt else mkImp p dq)
   | .or p q => mkAnd (defined p) (mkImp (.not p) (defined q))
   | .all t body | .ex t body => mkAll t (defined body)
   -- a guard's condition must hold (e.g. an argument lies in the function's domain); what

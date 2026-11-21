@@ -10,7 +10,7 @@ tests/Fields/article.tex:21:29: info: claim 3: \forall x\in \mathbb{R},\ x\in \m
 tests/Fields/article.tex:25:1: info: claim 4: \@n2(12)(18)=6
 tests/Fields/article.tex:25:1: info: claim 4 is meaningful if: 18\in \mathbb{Z}\land 12\in \mathbb{Z}
 tests/Fields/article.tex:25:1: info: claim 5: \neg (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \neg (z=0)\land {2}^{\frac{1}{2}}=\frac{y}{z}))
-tests/Fields/article.tex:25:1: info: claim 5 is meaningful if: (\forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow \neg (z=0)\Rightarrow \neg (z=0)))\land 0\le 2\land \neg (2=0)
+tests/Fields/article.tex:25:1: info: claim 5 is meaningful if: 0\le 2\land \neg (2=0)
 tests/Fields/article.tex:29:1: info: claim 6: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0<z\Rightarrow y\,{z}^{x}\le {z}^{x+1}))
 tests/Fields/article.tex:29:1: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0<z\Rightarrow (x\in \mathbb{Z}\land (\neg (z=0)\lor 0\le x))\land x+1\in \mathbb{Z}\land (\neg (z=0)\lor 0\le x+1)))
 tests/Fields/article.tex:33:1: warning: "natural number" has several meanings (in core (with 0) and core (without 0)); say which is meant in the text (By a … we mean …): sentence not checked; n is then undefined at line 33

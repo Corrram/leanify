@@ -16,7 +16,9 @@ the Bochner integral. The meanings of the constants of `UnitSquare.vocab`:
 * it has *uniform marginals* when `F(u,1) = u` and `F(1,v) = v`;
 * a set function `γ` on `[0,1]^2` is a *probability measure on `[0,1]^2`* when it
   agrees with a probability measure on measurable sets;
-* it has *uniform marginals* when `γ([0,u] × [0,1]) = u` and `γ([0,1] × [0,v]) = v`. -/
+* it has *uniform marginals* when `γ([0,u] × [0,1]) = u` and `γ([0,1] × [0,v]) = v`;
+* the integral of `f` *against a distribution function* `F` is the Bochner integral of `f`
+  for the probability measure whose distribution function is `F`. -/
 
 namespace Leanify.UnitSquare
 open MeasureTheory
@@ -35,10 +37,34 @@ noncomputable abbrev Interval.point : ℝ → I := Set.projIcc 0 1 zero_le_one
 noncomputable abbrev Interval.integral : (I → ℝ) → ℝ := MeasureTheory.integral MeasureTheory.MeasureSpace.volume
 /-- Borel measurable maps of `[0,1]`. -/
 abbrev Interval.borel : (I → I) → Prop := fun T => Measurable T
+/-- Borel measurable real functions on `[0,1]`. -/
+abbrev Interval.borelReal : (I → ℝ) → Prop := fun f => Measurable f
 
 def distFn2 (F : I → I → ℝ) : Prop :=
   ∃ μ : Measure (I × I), IsProbabilityMeasure μ ∧
     ∀ u v : I, F u v = (μ (Set.Iic u ×ˢ Set.Iic v)).toReal
+
+/-- The probability measure on `[0,1]^2` whose distribution function is `F` (the zero
+measure when `F` is not a distribution function; the compiler asks for
+`integrableAgainst`, which says that it is one). A measure on `[0,1]^2` is determined by
+its values on the rectangles `[0,u] × [0,v]`, so the choice is of the only one. -/
+noncomputable def measureOf (F : I → I → ℝ) : Measure (I × I) := by
+  classical
+  exact if h : distFn2 F then Classical.choose h else 0
+
+/-- `\int_{[0,1]^2} f(u,v)\,\mathrm{d}F(u,v)`: the integral of `f` against the measure of
+the distribution function `F`. -/
+noncomputable def integralAgainst (F : I → I → ℝ) (f : I → I → ℝ) : ℝ :=
+  ∫ p, f p.1 p.2 ∂(measureOf F)
+
+/-- `F` is a distribution function on `[0,1]^2`, and `f` is integrable for its measure. -/
+def integrableAgainst (F : I → I → ℝ) (f : I → I → ℝ) : Prop :=
+  distFn2 F ∧ Integrable (fun p : I × I => f p.1 p.2) (measureOf F)
+
+/-- `p` holds at almost every point of `[0,1]^2`, for the measure of the distribution
+function `F`. -/
+def aeAgainst (F : I → I → ℝ) (p : I → I → Prop) : Prop :=
+  Filter.Eventually (fun q : I × I => p q.1 q.2) (MeasureTheory.ae (measureOf F))
 
 def dfUniformMarginals (F : I → I → ℝ) : Prop :=
   (∀ u : I, F u 1 = u) ∧ ∀ v : I, F 1 v = v
@@ -102,6 +128,9 @@ noncomputable def model : Model where
     ⟨Class ⟶ .prop, Prelude.closedUniform⟩,
     ⟨I01 ⟶ .real, Interval.val⟩, ⟨.real ⟶ I01, Interval.point⟩, ⟨(I01 ⟶ .real) ⟶ .real, Interval.integral⟩,
     ⟨(I01 ⟶ .real) ⟶ .prop, Prelude.integrable⟩, ⟨set1 ⟶ .prop, Prelude.measurableSet1⟩,
-    ⟨set2 ⟶ .prop, Prelude.measurableSet2⟩, ⟨set1 ⟶ .real, Prelude.leb⟩, ⟨self ⟶ .prop, Interval.borel⟩]
+    ⟨set2 ⟶ .prop, Prelude.measurableSet2⟩, ⟨set1 ⟶ .real, Prelude.leb⟩, ⟨self ⟶ .prop, Interval.borel⟩,
+    ⟨sq ⟶ sq ⟶ .real, integralAgainst⟩, ⟨sq ⟶ sq ⟶ .prop, integrableAgainst⟩,
+    ⟨(I01 ⟶ .real) ⟶ .prop, Interval.borelReal⟩,
+    ⟨sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop, aeAgainst⟩]
 
 end Leanify.UnitSquare

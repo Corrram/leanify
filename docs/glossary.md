@@ -42,6 +42,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
 | with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
 | with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
 

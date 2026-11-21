@@ -93,7 +93,12 @@ These hold for every change. A feature that cannot meet them is not added.
    non-integrable function, the supremum of an unbounded set). An integrand has to
    be integrable and defined at almost every point (`Prim.ae`), not at every
    point: the integral does not depend on a set of measure zero, so no value that
-   is not defined enters it.
+   is not defined enters it. A function that is written out and applied (a
+   derivative at a point, a combination of functions at a point) has to be defined
+   at its argument, not everywhere. A class that an article describes by a condition (`the
+   class of functions $f$ with $\int_0^1 f(x)\,dx=0$`) has the objects for which
+   the condition is meaningful and holds; it does not ask that the condition be
+   meaningful for every object.
 5. **Quantifiers as mathematicians mean them.** Implicit quantifiers (generic
    constants, `\ll`, "uniform in", "for every … with …") are read from the
    article's convention sentences, and their order is the one those sentences

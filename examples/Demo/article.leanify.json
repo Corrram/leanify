@@ -488,7 +488,7 @@
    "premises": [3, 4, 0],
    "note": "",
    "module": "Demo.Proofs",
-   "meaningful": "∀ (x : ℝ), 0 < x → 0 < x",
+   "meaningful": "True",
    "lean": "∀ (x : ℝ), 0 < x → 2 ≤ f x",
    "justification": "Demo.Proofs.proof2",
    "index": 2,

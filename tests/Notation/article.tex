@@ -138,6 +138,13 @@ An integrand has to be defined at almost every point between the ends, not at ev
 We have $\int_0^1\frac{1}{\sqrt x}\,dx=2$.
 \end{lemma}
 
+An integral may be over a ray or over the line.
+
+\begin{lemma}\label{lem:integral-improper}
+We have $\int_{-\infty}^\infty e^{-t^2}\,dt=\sqrt\pi$ and $\int_1^\infty\frac1{t^2}\,dt=1$.
+Moreover, for every $x\in\mathbb{R}$, $\int_{-\infty}^x e^{t}\,dt=e^x$.
+\end{lemma}
+
 A variable whose domain uses the variables before it brings them along: a quantity defined with it depends on them too.
 
 \begin{lemma}\label{lem:dependent-domain}
@@ -162,6 +169,14 @@ For $x\in\mathbb{R}$, set $w(x)\coloneqq\mathbf{1}_{[0,1]}(x)+\mathbb{1}_{\{1<x,
 For every $v\in[0,1]$, $\int_0^1e_v(x)\,dx=0$.
 Moreover, for every $x\in\mathbb{R}$, $0\le w(x)\le1$.
 Finally, $\int_0^2w(x)\,dx=2$.
+\end{lemma}
+
+A family written with a subscript does not take its letter: beside such a family, the
+letter is still Euler's number in a power.
+
+\begin{lemma}\label{lem:euler}
+We have $e^0=1$.
+Moreover, for every $v\in[0,1]$, $e_v(0)\le e^v$.
 \end{lemma}
 
 \end{document}

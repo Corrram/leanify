@@ -931,6 +931,14 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               | none =>
               let ds ← domainsOf false d
               let (ct, cp) ← domainOf false c
+              -- `a function $A:\mathcal C\to\mathbb{R}$` on a class of the article: a
+              -- function of the objects of its type, whose values are asked for at the
+              -- members of the class only
+              match ds, cp with
+              | [(dt, some (.glob gi))], none =>
+                modify fun st => { st with varDoms := (st.curEnv, f, .glob gi) :: st.varDoms }
+                pure (Ty.fn dt ct, [], some [.id f], r)
+              | _, _ =>
               if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
               pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
             | _ => fail E.unsupported
@@ -978,6 +986,31 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | some (m, r) => post f r (m.pred :: acc)
       | none => pure (acc.reverse, cs)
   let (qms, r2) ← post 4 r1 []
+  -- `a copula $C$ with maximal correlation $R=R(C)$`: the value of a function at the
+  -- variable, named by the function's letter for the rest of the result. The words are
+  -- the name under which the article introduced the function.
+  let r2 ← match r2 with
+    | .w w :: r =>
+      let ws := r.takeWhile fun c => match c with | .w v => v != w!"and" | _ => false
+      match (if w == w!"with" then r.drop ws.length else []) with
+      | .m ts :: rest =>
+        match Math.parseFormula ts with
+        | some (.chain (.id x) [(.eq, .app (.id y) args)]) =>
+          let keys := args.filterMap fun a => match a with | .id k => some k | _ => none
+          if x != y || keys.length != args.length || args.isEmpty then pure r2 else
+          match ← lookupGlob x with
+          | some (gi, _) =>
+            let words := (wordsOf ws).map Grammar.lower
+            let known := ((st.named ++ st.ops).filter (·.2 == gi)).map (·.1)
+            if !words.isEmpty && !known.contains words then
+              fail E.finding (w!"the words before $" ++ x ++ w!"=" ++ x ++ w!"(…)$ are the name under which the article introduced " ++ x ++
+                w!" (We write $" ++ x ++ w!"(C)$ for the maximal correlation of a copula $C$.); without them, write: with $" ++ x ++ w!"=" ++ x ++ w!"(…)$")
+            modify fun st => { st with abbrevs := (st.curEnv, x, keys) :: st.abbrevs }
+            pure rest
+          | none => pure r2
+        | _ => pure r2
+      | _ => pure r2
+    | _ => pure r2
   -- `a copula $C$ with $\rho(C)=0$ [and $\beta(C)=0$]`: conditions on the variable
   let (conds, r2) := match r2 with
     | .w w :: r => if w == w!"with" then condsOf 4 r [] else ([], r2)
@@ -995,6 +1028,8 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let condPreds ← conds.mapM fun φ => do
     let (p, pty) ← Elab.term 100000 ([(name, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer) none φ
     if pty != .prop then fail E.type
+    -- (the members of a class: the condition is meaningful for the object, and holds)
+    let p := if (← get).strongConds then Tm.mkAnd (Tm.defined p) p else p
     pure (Tm.lam ty .tt p)
   -- (a noun that says nothing beyond its type, `real number`, adds no condition)
   let all := ((preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).filter
@@ -1073,6 +1108,8 @@ after `Let $x_k>0$.`): such a letter is part of the name, not a variable. -/
 def dropBoundIndices (st : St) (m : MT) (free : List Codes) : List Codes :=
   let keys := (subKeys 64 m).filter fun n =>
     st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n)
+  -- (the letter of a symbol with a numeral as superscript, `\Phi` of `\Phi^2`, is no variable)
+  let free := free.filter fun i => !(st.globs.any fun g => Elab.powerName g.key == some i)
   free.filter fun i =>
     let asIndex := (keys.filter fun n =>
       i.length < n.length && n.drop (n.length - i.length - 1) == [95] ++ i).length
@@ -1101,6 +1138,8 @@ def freeIds : Nat → List Codes → MT → List Codes
         | _ => []
       key.filter (!bound.contains ·) ++ freeIds f bound i
     | .sub b i => freeIds f bound b ++ freeIds f bound i
+    -- a starred name is a symbol of its own (`\tau^*`)
+    | .sup (.id k) (.id [42]) => if bound.contains (k ++ [94, 42]) then [] else [k ++ [94, 42]]
     | .sup b e => freeIds f bound b ++ freeIds f bound e
     -- `\hat x` is the name `\hat{x}`, or `\widehat` applied to `x`
     | .hat (.id k) =>
@@ -1499,7 +1538,7 @@ def object (sc : Scope) (ty : Ty) : Obj → M Tm
     match ty with
     | .fn a r => do
       let (t, tty) ← Elab.lam F [] pat [a] (some r) body
-      let i ← addGlob ⟨[], tty, [], false⟩ t
+      let i ← addGlob ⟨[], tty, [], false, 1⟩ t
       modify fun st => { st with named := st.named ++ [(name, i)] }
       pure (.glob i)
     | _ => fail E.type
@@ -1678,7 +1717,7 @@ def defItem (c : SentCtx) (b : BindInfo) (it : DefItem) : M (List Nat × List Na
     let (body, rty) ← term F sc none rhs
     let value := Tm.lam bty (holdsAt b.pred (.loc 0)) (lamWrap ats body)
     let ty := Ty.fn bty (tyWrap ats rty)
-    let i ← addGlob ⟨key, ty, b.pred :: ats.map (fun _ => none), family⟩ value
+    let i ← addGlob ⟨key, ty, b.pred :: ats.map (fun _ => none), family, 1⟩ value
     registerOp it.name i
     let cs ← chainClaims sc rhs more
     let bs := b :: (args.zip ats).map fun (n, t) => ⟨n, t, none⟩
@@ -1696,7 +1735,7 @@ def defItem (c : SentCtx) (b : BindInfo) (it : DefItem) : M (List Nat × List Na
     let ats := argTypes elemTy (match pat with | .tuple vs => vs.length | _ => 1)
     let (lt, lty) ← Elab.lam F [(b.name, bty)] pat ats (some .real) body
     let value := Tm.lam bty (holdsAt b.pred (.loc 0)) lt
-    let i ← addGlob ⟨[], .fn bty lty, [b.pred], false⟩ value
+    let i ← addGlob ⟨[], .fn bty lty, [b.pred], false, 1⟩ value
     registerOp it.name i
     pure ([i], [])
   | _ => fail E.unsupported
@@ -1737,7 +1776,7 @@ def defBranch (f : Codes) (aty cty : Ty) : DefPiece → M (Tm × Tm)
       let (_, epred) ← domainOf true edom
       let (hv, hty) ← term F [(b, .real)] none h
       let hv ← coerce hv hty .real
-      let ie ← addGlob ⟨e, .fn .real .real, [epred], true⟩ (.lam .real (holdsAt epred (.loc 0)) hv)
+      let ie ← addGlob ⟨e, .fn .real .real, [epred], true, 1⟩ (.lam .real (holdsAt epred (.loc 0)) hv)
       -- the value at x: the y with x = e_b and y = g(b) for some b ∈ P
       let (_, ppred) ← domainOf true pdom
       let sc : Scope := [(b, .real), (w!"", cty), (w!"", aty)]
@@ -1773,7 +1812,7 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
         let (body, bty) ← term F sc none rhs
         let body ← coerce body bty cty
         let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) body
-        let i ← addGlob ⟨f, tyWrap (ds.map (·.1)) cty, ds.map (·.2), false⟩ value
+        let i ← addGlob ⟨f, tyWrap (ds.map (·.1)) cty, ds.map (·.2), false, 1⟩ value
         modify fun st => { st with params := st.params ++ [(i, names)] }
         let k := bs.length
         let applied := (List.range k).foldl (fun acc j => Tm.app acc (.loc (k - 1 - j))) (Tm.glob i)
@@ -1794,7 +1833,7 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
         let bs ← pieces.mapM (defBranch f aty cty)
         pure (bs.foldr (fun (cnd, v) acc => Tm.cases cnd v acc) (.undef cty))
     let value := Tm.lam aty (holdsAt apred (.loc 0)) body
-    let i ← addGlob ⟨f, .fn aty cty, [apred], false⟩ value
+    let i ← addGlob ⟨f, .fn aty cty, [apred], false, 1⟩ value
     let applied := Tm.guard (holdsAt apred (.loc 0)) (.app (.glob i) (.loc 0))
     let codomain := match cpred with
       | some p => [Tm.all aty (.imp (holdsAt apred (.loc 0)) (.app p applied))]
@@ -1836,7 +1875,7 @@ def defByFamily (c : SentCtx) (b : BindInfo) (sg : MT) (pieces : List DefPiece) 
     let (body, bty) ← term F sc none rhs
     let body ← coerce body bty cty
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (.lam aty (holdsAt apred (.loc 0)) body)
-    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true⟩ value
+    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true, 1⟩ value
     let ids ← match cpred with
       | some q => do
         let applied := Tm.guard (holdsAt b.pred (.loc 1))
@@ -1859,7 +1898,7 @@ def defReads (c : SentCtx) (b : BindInfo) (sg disp : MT) (labels : List Codes) :
     let (body, bty) ← term F sc none rhs
     let body' ← coerce body bty cty
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (.lam aty (holdsAt apred (.loc 0)) body')
-    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true⟩ value
+    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true, 1⟩ value
     let cs ← chainClaims sc rhs more
     let ids ← cs.mapM fun q => emit c (wrap [b, ⟨x, aty, apred⟩] q) []
     addLabels labels ids true
@@ -1876,7 +1915,7 @@ def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
     | _ => none
   match ← theMeaning (fun (n : Notion) => (n.ty, n.value)) (·.field) name cands with
   | some (n, _) => do
-    let i ← addGlob ⟨key, n.ty, [], false⟩ n.value
+    let i ← addGlob ⟨key, n.ty, [], false, 1⟩ n.value
     pure ([i], [])
   | none => fail E.noun (((wordsOf name).intersperse [32]).flatten)
 
@@ -1896,7 +1935,7 @@ def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat
       | _ => fail E.unsupported
     let sc : Scope := [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
-    let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family⟩ (.lam b.ty (holdsAt b.pred (.loc 0)) v)
+    let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ (.lam b.ty (holdsAt b.pred (.loc 0)) v)
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let ps ← more.mapM fun (r, y) => do
       if r == .mem then Elab.term.member F sc x y
@@ -1934,7 +1973,7 @@ def setDef (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := d
     let sc : Scope := (names.zip ats).reverse ++ [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (lamWrap ats v)
-    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: ats.map (fun _ => none), family⟩ value
+    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: ats.map (fun _ => none), family, 1⟩ value
     if !family then modify fun st => { st with implicits := st.implicits ++ [(i, [b.name])] }
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let sc1 : Scope := [(b.name, b.ty)]
@@ -1995,7 +2034,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let (v, vty) ← term F (scopeOf all) none rhs
     let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
     let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
-    let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+    let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
     if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
     if !all.isEmpty then modify fun st => { st with telescopes := st.telescopes ++ [(i, all)] }
     match c.ctx.kind with
@@ -2050,7 +2089,7 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
         let some key := symKey lhs
           | fail E.finding w!"the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$); for a family ($A_{ij}$), say what its indices range over (For $i,j\\in\\{1,2\\}$, set …)"
         let (v, vty) ← term F [] none rhs
-        let i ← addGlob ⟨key, vty, [], false⟩ v
+        let i ← addGlob ⟨key, vty, [], false, 1⟩ v
         let x : Tm × Ty := (.glob i, vty)
         let ps ← more.mapM fun (r, y) => do
           if r == .mem then Elab.term.member F [] x y
@@ -2070,6 +2109,20 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
   let mut ds : List Nat := []
   for m in defs do
     match m with
+    -- `For $r\in[0,1]$ and $g\in[-r,r]$, set $C_{r,g}\coloneqq e$`: a family with the
+    -- binder's variables, all of them and in their order, as its subscripts
+    | .chain (.sub (.id k) (.tuple idx)) [(.defeq, rhs)] =>
+      let names ← idx.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+      if names != bs.map (·.name) then
+        fail E.finding (w!"the subscripts of the family " ++ k ++ w!" are the variables of the binder before it, all of them and in its order (For $r\\in[0,1]$ and $g\\in[-r,r]$, set $C_{r,g}\\coloneqq …$)")
+      let all := imp ++ bs
+      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
+      let (v, vty) ← term F sc none rhs
+      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
+      let i ← addGlob { key := k, ty, doms := all.map (·.pred), family := true, indices := names.length } value
+      if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+      ds := ds ++ [i]
     -- `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq e$`: a family, indexed by
     -- the first variable, of functions of the others. Inside a result or a proof, the
     -- variables of the result it uses (`imp`) are implicit parameters
@@ -2083,7 +2136,7 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
           let (v, vty) ← term F sc none rhs
           let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
           let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
-          let i ← addGlob ⟨k, ty, all.map (·.pred), true⟩ value
+          let i ← addGlob ⟨k, ty, all.map (·.pred), true, 1⟩ value
           if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
           ds := ds ++ [i]
           continue
@@ -2094,7 +2147,7 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
       let (v, vty) ← term F sc none rhs
       let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
       let ty := bs.foldr (fun b t => Ty.fn b.ty t) vty
-      let i ← addGlob ⟨key, ty, bs.map (·.pred), false⟩ value
+      let i ← addGlob ⟨key, ty, bs.map (·.pred), false, 1⟩ value
       modify fun st => { st with params := st.params ++ [(i, names)] }
       ds := ds ++ [i]
     | _ => fail E.unsupported
@@ -2141,8 +2194,8 @@ def defDeriv (bi : Option BindInfo) (names : List MT) (dom cod : MT) (anchors : 
     let body := Tm.add (shift 1 0 ct) (.guard integrable integral)
     let fx := Tm.lam .real (holdsAt apred (.loc 0)) body
     let (g, v) : Glob × Tm := match bi with
-      | some b => (⟨key, .fn b.ty (.fn .real .real), [b.pred, apred], family⟩, Tm.lam b.ty (holdsAt b.pred (.loc 0)) fx)
-      | none => (⟨key, .fn .real .real, [apred], family⟩, fx)
+      | some b => (⟨key, .fn b.ty (.fn .real .real), [b.pred, apred], family, 1⟩, Tm.lam b.ty (holdsAt b.pred (.loc 0)) fx)
+      | none => (⟨key, .fn .real .real, [apred], family, 1⟩, fx)
     let i ← addGlob g v
     ids := ids ++ [i]
   addLabels labels [] true
@@ -2198,7 +2251,7 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
         | _ => fail E.unsupported
     | _ => fail E.unsupported
   let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) val
-  let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family⟩ value
+  let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ value
   pure ([i], [])
 
 /-- `We say that a N $x$ is PHRASE of a M $y$ if φ for all u,v∈A`. -/
@@ -2211,7 +2264,7 @@ def weSay (subj : List Chunk) (phrase : List Codes) (o : List Chunk) (cond : MT)
   let body ← prop sc none cond
   let inner := forallBinders (bs.map fun b => (b.name, b.ty, b.pred.map fun p => Tm.app p (.loc 0))) body
   let value := Tm.lam s.ty (holdsAt s.pred (.loc 0)) (.lam t.ty (holdsAt t.pred (.loc 0)) inner)
-  let i ← addGlob ⟨[], .fn s.ty (.fn t.ty .prop), [s.pred, t.pred], false⟩ value
+  let i ← addGlob ⟨[], .fn s.ty (.fn t.ty .prop), [s.pred, t.pred], false, 1⟩ value
   modify fun st => { st with preds := st.preds ++ [(phrase, i)] }
   pure ([i], [])
 
@@ -2220,10 +2273,15 @@ the noun phrase `NP`, and `N` (singular) names it. -/
 def defClass (sym : MT) (plural : List Codes) (np : List Chunk) : M (List Nat × List Nat) := do
   let key ← match sym with | .id k => pure k | _ => fail E.unsupported
   -- without `that is, NP`, the class is a noun of the vocabulary
+  modify fun st => { st with strongConds := plural.isEmpty }
   let b ← nounPhrase (if np.isEmpty then plural.map Chunk.w else np)
-  if !b.name.isEmpty then fail E.unsupported b.name
+  modify fun st => { st with strongConds := false }
+  -- (a noun phrase with a variable describes the members: `the class of functions
+  -- $f:[0,1]\to\mathbb{R}$ with $φ$`; the class then has its symbol only)
+  if !b.name.isEmpty && !plural.isEmpty then fail E.unsupported b.name
   let p := b.pred.getD (.lam b.ty .tt .tt)
-  let i ← addGlob ⟨key, .fn b.ty .prop, [none], false⟩ p
+  let i ← addGlob ⟨key, .fn b.ty .prop, [none], false, 1⟩ p
+  if plural.isEmpty then return ([i], [])
   let sing := plural.dropLast ++ (plural.getLast?.map singular).toList
   let names := [sing, (sing.getLast?).toList].eraseDups
   modify fun st => { st with nouns := st.nouns ++ names.map (·, i), classes := st.classes ++ [(plural, i)] }
@@ -2328,7 +2386,7 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond) :
     | np => nounPhrase np
   if s.name.isEmpty then fail E.unsupported
   let body ← notionBody (scopeOf [s]) cond
-  let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
+  let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false, 1⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
   let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
   modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
   pure ([i], [])
@@ -2414,7 +2472,7 @@ def defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Grammar.B
   let (value, ty) := match param with
     | some _ => (Tm.lam .real .tt pred, Ty.fn .real (.fn fTy .prop))
     | none => (pred, Ty.fn fTy .prop)
-  let i ← addGlob ⟨key, ty, (if param.isSome then [none, none] else [none]), param.isSome⟩ value
+  let i ← addGlob ⟨key, ty, (if param.isSome then [none, none] else [none]), param.isSome, 1⟩ value
   pure ([i], [])
 
 /-- A notion of the article applied to a term. -/
@@ -3470,7 +3528,7 @@ def undefinedDef (c : SentCtx) (lhs : MT) (words : List Codes) (args : List (Lis
   let ordered := vars.filterMap fun v => bs.find? (·.name == v)
   if (← lookupGlob key).isSome then fail E.redefined key
   let j := V.consts.length + undefinedCount st
-  let i ← addGlob ⟨key, tyWrap (ordered.map (·.ty)) resTy, ordered.map (·.pred), false⟩ (.const j)
+  let i ← addGlob ⟨key, tyWrap (ordered.map (·.ty)) resTy, ordered.map (·.pred), false, 1⟩ (.const j)
   modify fun st => { st with named := st.named ++ [(words, i)] }
   pure ([i], [])
 
@@ -3515,7 +3573,7 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
     | .count => Elab.cardTm (.lam .real .tt px)
   let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
   let ty := all.foldr (fun b acc => Ty.fn b.ty acc) Ty.real
-  let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+  let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
   if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
   match c.ctx.kind with
   | .text => pure ()
@@ -3667,7 +3725,7 @@ def meaningDef (ws : List Codes) (rhs : List Chunk) (noun : Bool) : M (List Nat 
     let b ← nounPhrase rhs
     if !b.name.isEmpty then fail E.unsupported b.name
     let p := b.pred.getD (.lam b.ty .tt .tt)
-    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false⟩ p
+    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false, 1⟩ p
     let plural := ws.dropLast ++ (ws.getLast?.map (· ++ [115])).toList
     modify fun st => { st with nouns := st.nouns ++ [(ws, i), (plural, i)], classes := st.classes ++ [(ws, i)] }
     pure ([i], [])
@@ -3898,7 +3956,7 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         | .fixed (.mvar c) :: .slot _ :: _ => if st.globs.any (·.key == [c]) then none else some c
         | _ => none
       let gkey := match letter with | some c => [c] | none => [92] ++ key
-      let i ← addGlob ⟨gkey, gty, varDoms, false⟩ (if fixedArgs.all (·.isNone) then n.value else value)
+      let i ← addGlob ⟨gkey, gty, varDoms, false, 1⟩ (if fixedArgs.all (·.isNone) then n.value else value)
       let slots := (List.range ts.length).map TItem.slot
       let call : List TItem := if slots.isEmpty then [] else
         [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]
@@ -3918,7 +3976,7 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         let key := match Notation.symbolOf pat' with
           | some k => if st.globs.any (·.key == [92] ++ k) then key else k
           | none => key
-        let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false⟩ n.pred
+        let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false, 1⟩ n.pred
         push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)]⟩
         pure ([i], [])
       | none => fail E.noun (((wordsOf rest).intersperse [32]).flatten)
@@ -4068,7 +4126,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- the hypothesis of a case ends with its item
   let st0 := { st0 with envHyps := st0.envHyps.filter fun h => h.item == 0 || s.ctx.items.contains h.item }
   -- definitions local to a result are visible in it and in its proof
-  let st0 := { st0 with curEnv := s.ctx.env, curProved := proved }
+  -- (in the running text, a value named by its function's letter is for its sentence)
+  let st0 := { st0 with curEnv := s.ctx.env, curProved := proved, abbrevs := st0.abbrevs.filter (·.1 != 0) }
+  let st0 := { st0 with varDoms := st0.varDoms.filter (·.1 != 0) }
   let ps := match s.ctx.kind with
     | .proof => if c.proofs.any (·.env == s.ctx.env) then c.proofs
       else c.proofs ++ [({ env := s.ctx.env, proves := s.ctx.proves, steps := [], cites := [], complete := true } : ProofInfo)]

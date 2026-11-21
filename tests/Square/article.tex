@@ -84,4 +84,101 @@ A function on the square has partial derivatives: in each variable, the derivati
 For every $u,v\in[0,1]$, $\partial_1\Pi(u,v)=v$ and $\partial_2\Pi(u,v)=u$.
 Moreover, $\int_0^1\int_0^1\bigl(\partial_1\Pi(u,v)-v\bigr)^2\,du\,dv=0$.
 \end{proposition}
+
+Functions on the square are added, and multiplied by numbers, value by value. A letter
+may name a function and, with a subscript, a family: $M$ and $M_r$ are different symbols.
+
+For $r\in[0,1]$, set $M_r\coloneqq(1-r)\Pi+rM$ and $W_r\coloneqq(1-r)\Pi+rW$.
+For a copula $C$, the diagonal mass of $C$ is $q(C)\coloneqq\int_0^1 C(t,t)\,dt$.
+
+\begin{proposition}\label{p12}
+For every $r\in[0,1]$ and $u,v\in[0,1]$, we have $W_r(u,v)\le M_r(u,v)\le M(u,v)$.
+Moreover, $M_1=M$, $M_0=\Pi$ and $\frac{M+W}2\le M$.
+\end{proposition}
+
+A sentence may run through a list: its items are its statements, one after the other.
+The value of a function may be named by the function's letter.
+
+\begin{proposition}\label{p13}
+Every copula $C$ with diagonal mass $q=q(C)$ satisfies
+\begin{enumerate}[(i)]
+\item $0\le q$, $q\le\frac12$, and $q(1-q)\le\frac14$,
+\item $q^2\le q$.
+\end{enumerate}
+For every copula $C$ and all $u,v\in[0,1]$, we have $C(u,v)\le M(u,v)$.
+\end{proposition}
+
+The integral of a function on the square against a copula is its integral for the measure
+of the copula. An extremum may be over the pairs of a square. A symbol may carry a star
+or, while its letter alone names nothing, a numeral as superscript, and a family may have
+two subscripts.
+
+For a copula $C$, set $\tau(C)\coloneqq4\int_{[0,1]^2}C(u,v)\,\mathrm{d}C(u,v)-1$, $\kappa(C)\coloneqq4\max_{(u,v)\in[0,1]^2}|C(u,v)-uv|$ and $\Phi^2(C)\coloneqq90\int_0^1\int_0^1\bigl(C(u,v)-uv\bigr)^2\,du\,dv$.
+For a copula $C$, set $\tau^*(C)\coloneqq\frac25\tau(C)+\frac4{15}\Phi^2(C)$.
+For $r\in[0,1]$ and $g\in[-r,r]$, set $C_{r,g}\coloneqq(1-r)\Pi+\frac{r+g}2M+\frac{r-g}2W$.
+
+\begin{proposition}\label{p14}
+For every copula $C$, we have $|\tau(C)|\le1$, $\kappa(C)\le1$ and $\tau^*(C)\le\Phi^2(C)+1$.
+For every $r\in[0,1]$, $C_{r,r}=M_r$ and $C_{r,-r}=W_r$.
+Moreover, $\int_{[0,1]^2}uv\,\mathrm{d}M(u,v)=\frac13$ and $\sup_{u,v\in[0,1]}\Pi(u,v)=1$.
+\end{proposition}
+
+A class may be described by its members, and a supremum may be over the members of such
+a class.
+
+Let $\mathcal F$ denote the class of Borel measurable functions $f:[0,1]\to\mathbb{R}$ with $\int_0^1 f(x)\,dx=0$ and $\int_0^1 f(x)^2\,dx=1$.
+For a copula $C$, set $R(C)\coloneqq\sup\{\int_{[0,1]^2} f(u)g(v)\,\mathrm{d}C(u,v) : f,g\in\mathcal F\}$.
+
+\begin{proposition}\label{p15}
+Every copula $C$ with $R=R(C)$ satisfies
+\begin{enumerate}[(i)]
+\item $|\beta(C)|\le R$ and $\kappa(C)\le R$,
+\item $|\tau(C)|\le\frac13R(2+R)$,
+\item $\Phi^2(C)\le R^2$.
+\end{enumerate}
+For every $r\in[0,1]$, we have $R(M_r)=r$ and $\tau(M_r)=\frac13r(2+r)$.
+\end{proposition}
+
+The inverse of a function with a subscript in its name is written like any inverse. The
+integrand of an integral against a copula has to be defined at almost every point for
+the measure of the copula, and a derivative at the point where it is taken.
+
+For $x\in\mathbb{R}$, set $\Phi_{\mathrm N}(x)\coloneqq\frac1{\sqrt{2\pi}}\int_{-\infty}^xe^{-t^2/2}\,dt$.
+For a copula $C$, set $\rho_{\mathrm N}(C)\coloneqq\int_{[0,1]^2}\Phi_{\mathrm N}^{-1}(u)\,\Phi_{\mathrm N}^{-1}(v)\,\mathrm{d}C(u,v)$ and $\xi(C)\coloneqq6\int_0^1\int_0^1\bigl(\partial_1C(u,v)-v\bigr)^2\,du\,dv$.
+
+\begin{proposition}\label{p16}
+Every copula $C$ with $R=R(C)$ satisfies $|\rho_{\mathrm N}(C)|\le R$ and $\xi(C)\le R^2$.
+For every $r\in[0,1]$, we have $R(M_r)=R(W_r)=r$ and
+\begin{gather*}
+\rho_{\mathrm N}(M_r)=r,\qquad\xi(M_r)=\Phi^2(M_r)=r^2,\\
+\rho_{\mathrm N}(W_r)=-r,\qquad\tau(W_r)=-\tfrac13r(2+r).
+\end{gather*}
+\end{proposition}
+
+A function variable may have a class of the article as its domain, and a family may be
+indexed by it. Braces around a pair are the set of that pair. What follows `with' after
+a noun is said of the same object.
+
+For a function $A:\CC\to\mathbb{R}$, let $\mathcal R_A\coloneqq\{(A(C),R(C)) : C\in\CC\}$.
+For $t\in[0,1]$ and $u,v\in[0,1]$, let $Q_t(u,v)\coloneqq(1-t)uv+t\min\{u,v\}$.
+
+\begin{proposition}\label{p17}
+We have
+\begin{align*}
+\mathcal R_\beta=\mathcal R_\rho&=\bigl\{(m,r):\ |m|\le r\le1\bigr\},\\
+\mathcal R_\kappa&=\{(0,0)\}\cup\bigl\{(k,r):\ 0<k\le r\le1\bigr\},\\
+\mathcal R_{\tau^*}&=\{(0,0)\}\cup\bigl\{(s,r):\ 0<r\le1,\ 0<s\le\tfrac1{15}r^2(6+4r)\bigr\}.
+\end{align*}
+For every $t\in[0,1]$, $Q_t$ is a copula with $\beta(Q_t)=t$ and $R(Q_t)=t$.
+\end{proposition}
+
+A notation may have a subscript among its places: the expression it stands for is
+meaningful where it is used, not everywhere.
+
+We write $\ell_A(x)$ for $\min\{R(C):\ C\in\CC,\ A(C)=x\}$.
+
+\begin{proposition}\label{p18}
+For every $x\in[-1,1]$, we have $\ell_\beta(x)=\ell_\rho(x)=|x|$.
+For every $x\in[0,1]$ and $r\in[0,1]$, we have $\ell_{\Phi^2}(x)=r$ if and only if $r^2=x$.
+\end{proposition}
 \end{document}

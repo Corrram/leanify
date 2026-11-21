@@ -360,6 +360,21 @@ def isUnstatedReals : MT → Bool
   | .ival (.neg (.id a)) (.id b) true true => a == w!"\\infty" && b == w!"\\infty"
   | _ => false
 
+/-- The two variables of `\max_{(u,v)\in A^2} e` and `\sup_{u,v\in A} e`, each with its
+set: the extremum is over the values of `e` at all pairs. -/
+def extrRange2 (conds : List MT) : Option ((Codes × MT) × (Codes × MT)) :=
+  match conds with
+  | [.chain (.tuple [.id u, .id v]) [(.mem, .sup d (.num 2))]] => if u == v then none else some ((u, d), (v, d))
+  | [.id u, .chain (.id v) [(.mem, d)]] => if u == v then none else some ((u, d), (v, d))
+  | [.chain (.id u) [(.mem, d1)], .chain (.id v) [(.mem, d2)]] => if u == v then none else some ((u, d1), (v, d2))
+  | _ => none
+
+/-- `body` at the values of the variable (or of the two variables) that `conds` names. -/
+def extrImage (conds : List MT) (body : MT) : Option MT :=
+  match extrRange2 conds with
+  | some ((u, d1), (v, d2)) => some (.image (.image body v d2) u d1)
+  | none => none
+
 /-- The variable of an extremum and the set it ranges over, from the conditions of its
 subscript: `x\in A` (and conditions), bounds (`0\le t<1`, `t\ge0`), or conditions the
 first of which bounds the variable (`n\ge1,\ \omega(n)\le k`). A variable bounded by
@@ -410,7 +425,10 @@ def appHead : MT → Bool
   | .app (.id (64 :: _)) _ => false
   | .id _ | .sub _ _ | .hat _ | .app _ _ => true
   -- `f'(x)`, `R_b^-(z)`
-  | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43]
+  -- (the inverse of a function with a subscript in its name, `\Phi_{\mathrm N}^{-1}(u)`)
+  | .sup (.sub (.id _) (.id _)) (.neg (.num 1)) => true
+  -- (and a starred name, `\tau^*(C)`)
+  | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43] || n == [42]
   -- the inverse function `f^{-1}`
   | .sup (.id _) (.neg (.num 1)) => true
   | _ => false
@@ -551,7 +569,10 @@ def run : Nat → Mode → List MTok → R
         -- braces as parentheses: `4\int_0^1\{C(u,u)+C(u,1-u)\}\de u`
         let (x, r1) ← run f .top rest
         let r2 ← expect .setr r1
-        some (x, r2))
+        -- (braces around a pair are a set: `\{(0,0)\}`)
+        match x with
+        | .tuple [a, b] => some (.finset [.tuple [a, b]], r2)
+        | _ => some (x, r2))
     | .cmd n :: rest =>
       if n == w!"frac" then do
         let (a, r1) ← run f .group rest
@@ -620,8 +641,9 @@ def run : Nat → Mode → List MTok → R
           let conds ← parts.mapM fun p => do
             let (m, rest) ← run f .top p
             if rest.isEmpty then some m else none
-          let (v, dom) ← extrRange conds
           let (body, r2) ← run f (.product false) r1
+          if let some im := extrImage conds body then some (.bound isSup im, r2) else
+          let (v, dom) ← extrRange conds
           some (.bound isSup (.image body v dom), r2)
         | _ => do
           -- `\sup A` for a named set
@@ -723,8 +745,9 @@ def run : Nat → Mode → List MTok → R
           let conds ← parts.mapM fun p => do
             let (m, rest) ← run f .top p
             if rest.isEmpty then some m else none
-          let (v, dom) ← extrRange conds
           let (body, r2) ← run f (.product false) r1
+          if let some im := extrImage conds body then some (.extr (n == w!"max") im, r2) else
+          let (v, dom) ← extrRange conds
           some (.extr (n == w!"max") (.image body v dom), r2)
         | _ => none
       else if n == w!"int" then
@@ -872,6 +895,20 @@ where
     | 0, _, _, _ => none
     | g + 1, lo, hi, ts => do
       let (body, r1) ← run g (.product false) ts
+      -- `\int_{[0,1]^2} e\,\mathrm{d}C(u,v)`: against the measure of the distribution
+      -- function `C`, the variables of the integrand being those after it
+      let against : Option (MT × List MTok) := match hi, r1 with
+        | .id over, .diff :: r2 =>
+          if over != w!"@over" then none else
+          match run g (.factor false) r2 with
+          | some (.app c args, r3) =>
+            let vars := args.filterMap fun a => match a with | .id v => some v | _ => none
+            if vars.length == args.length && vars.length ≥ 2 then
+              some (.app (.id w!"@intd") [lo, c, .mapsto (.tuple args) body], r3)
+            else none
+          | _ => none
+        | _, _ => none
+      if let some r := against then some r else
       match r1 with
       | .diff :: .id v :: r2 => some (.int lo hi body v, r2)
       | _ =>
@@ -1228,6 +1265,10 @@ def parseFormula (ts : List MTok) : Option MT :=
   let ts := sumEllipses 8 ts
   let plain (ts : List MTok) : Option MT :=
     match run (8 * ts.length + 64) .top ts with
+    -- the left side of a definition, `\Phi^2(C)\coloneqq e`: a symbol with a numeral as
+    -- superscript and its arguments, not a product
+    | some (.chain (.mul (.sup (.id k) (.num n)) y) ((.defeq, rhs) :: more), []) =>
+      some (.chain (.app (.sup (.id k) (.num n)) (match y with | .tuple as => as | a => [a])) ((.defeq, rhs) :: more))
     | some (x, []) => some x
     | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
   match chainEllipsis ts with

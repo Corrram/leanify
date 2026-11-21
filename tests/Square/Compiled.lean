@@ -14,4 +14,4 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-#leanify_article Square "article.tex" "fnv1a64:f496bd56530801df" with Leanify.UnitSquare.withCore
+#leanify_article Square "article.tex" "fnv1a64:745474b787a3131d" with Leanify.UnitSquare.withCore

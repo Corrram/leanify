@@ -110,6 +110,9 @@ the field. A function of a field may have a domain (`\arcsin` on `[-1,1]`, in
 `trigonometry`): a claim that uses it is meaningful only on the domain.
 The field `unitsquare` also makes `[0,1]` a type of its own, with its integral and
 Lebesgue measure; without it, `[0,1]` is a set of real numbers like any interval.
+A function on the square is integrated against a copula, or any distribution function
+on `[0,1]^2` (`\int_{[0,1]^2} f(u,v)\,\mathrm{d}C(u,v)`): the integral for the
+probability measure whose distribution function it is.
 An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.

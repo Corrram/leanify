@@ -4,7 +4,8 @@ import Leanify.Library.Core
 
 The interval `[0,1]` as a type of its own (`Vocab.intervals`): its points, the integral
 `\int_0^1` and Lebesgue measure on it, and Borel measurable maps of it. On it:
-distribution functions and probability measures on `[0,1]^2`, uniform
+distribution functions and probability measures on `[0,1]^2`, the integral against
+the measure of a distribution function (`\int_{[0,1]^2} f(u,v)\,\mathrm{d}C(u,v)`), uniform
 marginals, and (bivariate) copulas: distribution functions on `[0,1]^2` with
 uniform marginals; and properties of a quantity of such functions on a class of them
 (convexity, semicontinuity and continuity for uniform convergence) and of such a class.
@@ -45,6 +46,15 @@ def measurable1 : Nat := 16
 def measurable2 : Nat := 17
 def lebesgue : Nat := 18
 def borel : Nat := 19
+/-- The integral of a function on the square against the probability measure with a
+given distribution function, and the condition under which it is defined. -/
+def integral2 : Nat := 20
+def integrable2 : Nat := 21
+/-- Borel measurable real functions on `[0,1]`. -/
+def borelReal : Nat := 22
+/-- A condition holds at almost every point of the square, for the measure of a
+distribution function. -/
+def ae2 : Nat := 23
 
 /-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
 abbrev Quantity : Ty := sq ⟶ .real
@@ -56,7 +66,8 @@ def uniformly : List Codes := [w!"with", w!"respect", w!"to", w!"uniform", w!"co
 def vocab : Vocab where
   types := [w!"[0,1]"]
   typeLean := [(w!"Leanify.UnitSquare.Interval", w!"Leanify.UnitSquare.Interval.zero")]
-  intervals := [{ lo := 0, hi := 1, ty := I01, val, point, integral, integrable, measurable1, measurable2, lebesgue }]
+  intervals := [{ lo := 0, hi := 1, ty := I01, val, point, integral, integrable, measurable1, measurable2, lebesgue,
+                  integral2 := some integral2, integrable2 := some integrable2, ae2 := some ae2 }]
   consts := [sq ⟶ .prop, sq ⟶ .prop, meas2 ⟶ .prop, meas2 ⟶ .prop,
     -- properties of a quantity on a class, and of a class
     Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop,
@@ -64,7 +75,10 @@ def vocab : Vocab where
     Class ⟶ .prop, Class ⟶ .prop, Class ⟶ .prop,
     -- the type `[0,1]`
     I01 ⟶ .real, .real ⟶ I01, (I01 ⟶ .real) ⟶ .real, (I01 ⟶ .real) ⟶ .prop,
-    set1 ⟶ .prop, set2 ⟶ .prop, set1 ⟶ .real, self ⟶ .prop]
+    set1 ⟶ .prop, set2 ⟶ .prop, set1 ⟶ .real, self ⟶ .prop,
+    -- the integral against the measure of a distribution function
+    sq ⟶ sq ⟶ .real, sq ⟶ sq ⟶ .prop, (I01 ⟶ .real) ⟶ .prop,
+    sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
@@ -72,7 +86,9 @@ def vocab : Vocab where
     w!"\\operatorname{continuous\\ (uniform)}(#1)\\text{ on }#2",
     w!"\\operatorname{convex}", w!"\\operatorname{compact\\ (uniform)}", w!"\\operatorname{closed\\ (uniform)}",
     w!"", w!"\\langle #\\rangle_{[0,1]}", w!"\\int_0^1", w!"\\operatorname{Int}",
-    w!"\\operatorname{Meas}", w!"\\operatorname{Meas}", w!"\\lambda\\bigl(#\\bigr)", w!"\\operatorname{Borel}"]
+    w!"\\operatorname{Meas}", w!"\\operatorname{Meas}", w!"\\lambda\\bigl(#\\bigr)", w!"\\operatorname{Borel}",
+    w!"\\int_{[0,1]^2}", w!"\\operatorname{Int}_{\\mathrm{d}#1}(#2)", w!"\\operatorname{Borel}",
+    w!"\\operatorname{a.e.}_{\\mathrm{d}#1}(#2)"]
   constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
     w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
     w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
@@ -80,7 +96,9 @@ def vocab : Vocab where
     w!"Leanify.Prelude.convexClass", w!"Leanify.Prelude.compactUniform", w!"Leanify.Prelude.closedUniform",
     w!"Leanify.UnitSquare.Interval.val", w!"Leanify.UnitSquare.Interval.point", w!"Leanify.UnitSquare.Interval.integral",
     w!"Leanify.Prelude.integrable", w!"Leanify.Prelude.measurableSet1", w!"Leanify.Prelude.measurableSet2",
-    w!"Leanify.Prelude.leb", w!"Leanify.UnitSquare.Interval.borel"]
+    w!"Leanify.Prelude.leb", w!"Leanify.UnitSquare.Interval.borel",
+    w!"Leanify.UnitSquare.integralAgainst", w!"Leanify.UnitSquare.integrableAgainst",
+    w!"Leanify.UnitSquare.Interval.borelReal", w!"Leanify.UnitSquare.aeAgainst"]
   modules := [w!"Leanify.Library.UnitSquareModel"]
   adjectives := [
     { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
@@ -120,6 +138,9 @@ def vocab : Vocab where
     { phrase := phrase!"Borel measurable", prenominal := true, ty := self,
       pred := .lam self .tt (.app (.const borel) (.loc 0)),
       doc := "a Borel measurable map of `[0,1]` (Mathlib `Measurable`)" },
+    { phrase := phrase!"Borel measurable", prenominal := true, ty := I01 ⟶ .real,
+      pred := .lam (I01 ⟶ .real) .tt (.app (.const borelReal) (.loc 0)),
+      doc := "a Borel measurable real function on `[0,1]` (Mathlib `Measurable`)" },
     { phrase := phrase!"with uniform marginals", prenominal := false, ty := sq, pred := .const 1,
       doc := "`F(u,1) = u`, `F(1,v) = v`" },
     { phrase := phrase!"with uniform marginals", prenominal := false, ty := meas2, pred := .const 3,
