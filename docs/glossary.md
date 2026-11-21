@@ -38,9 +38,14 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
+| kernel | (ℝ → $[0,1]$) → ℝ | a real function of finitely many terms of a sequence in `[0,1]` (a function on `[0,1]^m` for some `m`), measurable and square-integrable for independent uniform terms |
+| statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
+| with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
+| symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
 | with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
@@ -60,6 +65,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
+| markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 
 ## `distributions`
 

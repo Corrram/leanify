@@ -112,7 +112,17 @@ The field `unitsquare` also makes `[0,1]` a type of its own, with its integral a
 Lebesgue measure; without it, `[0,1]` is a set of real numbers like any interval.
 A function on the square is integrated against a copula, or any distribution function
 on `[0,1]^2` (`\int_{[0,1]^2} f(u,v)\,\mathrm{d}C(u,v)`): the integral for the
-probability measure whose distribution function it is.
+probability measure whose distribution function it is. The field has the Markov
+product of two copulas (`We write $A*B$ for the Markov product of $A$ and $B$.`) and the
+Markov powers of a copula (`C^{\ast k}`), in which results on stationary Markov chains
+are stated: the copula of `(X_0,X_k)` is the Markov power of order `k` of the copula of
+`(X_0,X_1)`, and the chain is reversible when that copula is symmetric. It also has the sample
+of a copula: independent observations `(U_i,V_i)`, each with the copula as distribution
+function, their expectation `\mathbb{E}_C[\ldots]` and their probability `P_C(\ldots)`.
+A kernel is a square-integrable function of finitely many terms of a sequence in `[0,1]`,
+and a statistic is a measurable function of finitely many observations of the sample:
+`K_F(C)\coloneqq\mathbb{E}_C[F(U)F(V)]` for a kernel `F`, and `P_C(R(C)\le T(U,V))` for a
+statistic `T`. A copula may be symmetric, and it may have a bounded density.
 An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.

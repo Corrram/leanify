@@ -183,6 +183,10 @@ inductive TItem where
 structure Template where
   pat : List TItem
   repl : List TItem
+  /-- The variables that `repl` binds (`C` in `\min\{R(C) : C\in\mathcal C, …\}`): an
+  argument that uses one of them would be captured, so the notation is not applied
+  to it. -/
+  binds : List Tok := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A hypothesis of a result or a proof: `Assume that …`, or the heading of a case. -/
@@ -1398,6 +1402,53 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `u`, `v` of an interval type of the vocabulary, against the probability measure whose
     -- distribution function is `C`. It is defined when `C` is a distribution function and
     -- `e`, which has to be defined at every point, is integrable for that measure
+    -- `\mathbb{E}_C[e]`: the expectation of `e`, a function of the two sequences `U`, `V` of a
+    -- sample of independent observations with the distribution function `C`; defined
+    -- when `C` is a distribution function and `e` is integrable for the law of the sample
+    | .app (.id [64, 115, 101, 120, 112]) [c, .mapsto (.tuple [.id u, .id v]) body] => do
+      -- (the letters of the sample may stand for sequences already: they are bound anew)
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleExp.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"an expectation $\\mathbb{E}_C[\\ldots]$ is for a sample from a copula $C$, with the vocabulary of the unit square"
+      let (some ex, some ei) := (iv.sampleExp, iv.sampleInt) | fail E.unsupported
+      let seq := Ty.fn .real iv.ty
+      let b ← asReal (← term f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body)
+      let fn := Tm.lam seq .tt (Tm.lam seq .tt b)
+      pure (.guard (.app (.app (.const ei) ct) fn) (.app (.app (.const ex) ct) fn), .real)
+    -- `P_C(φ)`: the probability of a condition on the sample; defined when `C` is a
+    -- distribution function and the condition has a probability
+    | .app (.id [64, 115, 112, 114, 111, 98]) [c, .mapsto (.tuple [.id u, .id v]) body] => do
+      -- (the letters of the sample may stand for sequences already: they are bound anew)
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleProb.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"a probability $P_C(\\ldots)$ is for a sample from a copula $C$, with the vocabulary of the unit square"
+      let (some pr, some pe) := (iv.sampleProb, iv.sampleEvent) | fail E.unsupported
+      let seq := Ty.fn .real iv.ty
+      let p ← propOf f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
+      let fn := Tm.lam seq .tt (Tm.lam seq .tt p)
+      pure (.guard (.app (.app (.const pe) ct) fn) (.app (.app (.const pr) ct) fn), .real)
+    -- `C^{\ast k}`: the Markov power of order `k` of a copula `C` (a notion of the vocabulary
+    -- of the unit square), for an integer `k ≥ 1`
+    | .app (.id [64, 109, 112, 111, 119]) [c, k] => do
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.markovPower.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"a starred power ($C^{\\ast k}$) is the Markov power of a copula, with the vocabulary of the unit square"
+      let some mp := iv.markovPower | fail E.unsupported
+      let kt ← asReal (← term f sc pf k)
+      let conds := [Tm.app (.prim .isNat) kt, Tm.le (.num 1) kt] ++
+        (match iv.markovDom with | some p => [Tm.app p ct] | none => [])
+      pure (.guard (conjAll conds) (.app (.app (.const mp) ct) kt), cty)
     | .app (.id [64, 105, 110, 116, 100]) [dom, c, .mapsto (.tuple vars) body] => do
       let names ← vars.mapM fun v => match v with | .id n => pure n | _ => fail E.unsupported
       let iv ← match dom with
@@ -1993,6 +2044,10 @@ where
     | g + 1, sc, pf, (v, c) :: rs => do
       let (vt, ty) ← term g sc pf v
       let vt ← coerce vt ty .real
+      -- `\text{otherwise}`: the last row, where no row before it applies
+      if let .text _ := c then
+        if !rs.isEmpty then fail E.finding w!"in a `cases` display, `otherwise` is the last row"
+        return (vt, .real)
       let (ct, cty) ← term g sc pf c
       if cty != .prop then fail E.type
       let (rt, _) ← casesRows g sc pf rs
@@ -2496,6 +2551,11 @@ where
             let l ← asReal (← term f sc none lo)
             let h ← asReal (← term f sc none hi)
             return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), .real)
+        -- `U_i` for a sequence of points of a vocabulary's type (a sample, `\mathbb{E}_C[\ldots]`):
+        -- its term at the natural number `i`
+        if let some (j, .fn .real (.base bt)) := lookupLocal sc key then
+          let a ← asReal (← term f sc none i)
+          return (.guard (.app (.prim .isNat) a) (.app (.loc j) a), .base bt)
         -- a constant with a subscript (`d_0`), unless the index is a variable
         let ck ← subConstKey sc m i
         let c ← match ck with

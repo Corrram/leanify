@@ -181,4 +181,85 @@ We write $\ell_A(x)$ for $\min\{R(C):\ C\in\CC,\ A(C)=x\}$.
 For every $x\in[-1,1]$, we have $\ell_\beta(x)=\ell_\rho(x)=|x|$.
 For every $x\in[0,1]$ and $r\in[0,1]$, we have $\ell_{\Phi^2}(x)=r$ if and only if $r^2=x$.
 \end{proposition}
+
+The Markov power of a copula is written with a star before the exponent, and a copula
+may be called symmetric. A condition may follow the variable of a binder.
+
+For a copula $C$, the transpose of $C$ is $C^\top(u,v)\coloneqq C(v,u)$.
+
+\begin{proposition}\label{p19}
+For every copula $C$ and every integer $k\ge1$, we have $R(C^{\ast k})\le R(C)^k$.
+For every symmetric copula $C$ and every integer $k\ge1$, we have $R(C^{\ast k})=R(C)^k$.
+For every copula $C$ with $C^\top=C$, we have $R(C)=\sup_{k\ge1}\xi(C^{\ast k})^{1/(2k)}=\lim_{k\to\infty}\xi(C^{\ast k})^{1/(2k)}$.
+For every $r\in[0,1]$ and every integer $k\ge1$, we have $M_r^{\ast k}=M_{r^k}$.
+\end{proposition}
+
+An expectation and a probability with a copula as subscript are for a sample of
+independent observations with that copula: the two sequences of the sample are written
+with the letters of the vocabulary and an index.
+
+For a copula $C$, set $t(C)\coloneqq\mathbb{E}_C\bigl[\sgn(U_1-U_2)\sgn(V_1-V_2)\bigr]$.
+
+\begin{proposition}\label{p20}
+For every copula $C$, we have $t(C)=\tau(C)$ and $\rho(C)=12\,\mathbb{E}_C[U_1V_1]-3$.
+For every copula $C$ and every $\alpha\in(0,1)$, we have $P_C\bigl(R(C)\ge|U_1-V_1|-\alpha\bigr)\ge1-\alpha$.
+\end{proposition}
+
+A piecewise definition may end with a row \emph{otherwise}, for the points where no row
+before it applies. A function that a proof defines may use the variables that the proof
+fixes, and it is local to the proof: its letter is free again afterwards.
+
+For $a\in(0,1]$ and $u,v\in[0,1]$, let
+\[
+A_a(u,v)\coloneqq\begin{cases}\min\{u,v\}&\text{if }\min\{u,v\}\le a,\\ a+\frac{(u-a)(v-a)}{1-a}&\text{otherwise.}\end{cases}
+\]
+
+\begin{proposition}\label{p21}
+For every $a\in(0,1]$, $A_a$ is a copula with $R(A_a)=1$.
+\end{proposition}
+
+\begin{proof}
+Fix $a\in(0,1]$.
+For $v\in[0,1]$, let $b(v)\coloneqq\min\{v,a\}$.
+Then, for every $v\in[0,1]$, we have $A_a(1,v)=v$ and $b(v)\le a$.
+The rest is a computation with the two rows of the definition, which is not written out here.
+\end{proof}
+
+\begin{proposition}\label{p22}
+For all $r\in(0,1]$ and $b\in(0,1]$, we have $R((1-r)\Pi+rA_b)=r$.
+\end{proposition}
+
+In a notation, a subscript is one symbol or one group, as in \TeX: a power after it is a
+power of the whole. The copula of the notation below is the one of the sentence that uses it.
+
+We write $r_k$ for $R(C^{\ast k})$.
+
+\begin{proposition}\label{p23}
+For every copula $C$ and every integer $k\ge1$, we have $r_1\ge r_k^{1/k}$.
+\end{proposition}
+
+A notation may bind a variable, as the minimum below binds its copula. Where the notation
+is written with a formula that uses the same letter, its bound variable is another one.
+
+\begin{proposition}\label{p24}
+For every copula $C$, we have $R(C)\ge\ell_\beta(\beta(C))$.
+\end{proposition}
+
+A kernel is a square-integrable function of finitely many terms of a sequence in $[0,1]$,
+and a statistic is a measurable function of finitely many observations of a sample. A
+copula may have a bounded density.
+
+Let $\mathcal B$ denote the class of copulas with bounded density.
+For a kernel $F$, define $K_F:\CC\to\mathbb{R}$ by $K_F(C)\coloneqq\mathbb{E}_C[F(U)F(V)]$.
+
+\begin{proposition}\label{p25}
+Let $F$ be a kernel and let $C$ be a copula.
+Then $K_F(C)\le K_F(M_{R(C)})$.
+\end{proposition}
+
+\begin{proposition}\label{p26}
+Let $\alpha\in(0,1)$ and let $T$ be a statistic.
+Suppose that $P_C(R(C)\le T(U,V))\ge1-\alpha$ for every $C\in\mathcal B$.
+Then $P_C(T(U,V)\ge1)\ge1-\alpha$ for every $C\in\mathcal B$.
+\end{proposition}
 \end{document}

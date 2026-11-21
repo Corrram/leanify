@@ -85,18 +85,35 @@ def scripts : Nat → List PTok → List PTok → List PTok × List PTok
     else (acc, t :: ts)
   | _ + 1, acc, [] => (acc, [])
 
-/-- An atom: a symbol (with a font: `\mathbf{x}`, `\mathcal P`, or the digits of a
-number) or a group, with its scripts. -/
-def atom (ts : List PTok) : Option (List PTok × List PTok) := do
-  let (base, rest) ← match ts with
+/-- An atom with none, one, two, … of the scripts after it: each with the rest. -/
+def scriptSteps : Nat → List PTok → List PTok → List (List PTok × List PTok)
+  | 0, acc, ts => [(acc, ts)]
+  | f + 1, acc, ts => (acc, ts) :: (match ts with
     | t :: r =>
-      match t.tok with
-      | .cmd n => if Math.wFonts.contains n then (unit r).map fun (u, r') => (t :: u, r') else some ([t], r)
-      | .mnum _ =>
-        let ds := r.takeWhile fun p => match p.tok with | .mnum _ => true | _ => false
-        some (t :: ds, r.drop ds.length)
-      | _ => unit ts
-    | [] => none
+      if t.tok == .msym 95 || t.tok == .msym 94 then
+        match unit r with
+        | some (u, r') => scriptSteps f (acc ++ [t] ++ u) r'
+        | none => []
+      else if t.tok == .msym 39 then scriptSteps f (acc ++ [t]) r
+      else []
+    | [] => [])
+
+/-- A symbol (with a font: `\mathbf{x}`, `\mathcal P`, or the digits of a number) or a
+group, without its scripts. -/
+def atomBase (ts : List PTok) : Option (List PTok × List PTok) :=
+  match ts with
+  | t :: r =>
+    match t.tok with
+    | .cmd n => if Math.wFonts.contains n then (unit r).map fun (u, r') => (t :: u, r') else some ([t], r)
+    | .mnum _ =>
+      let ds := r.takeWhile fun p => match p.tok with | .mnum _ => true | _ => false
+      some (t :: ds, r.drop ds.length)
+    | _ => unit ts
+  | [] => none
+
+/-- An atom: a symbol or a group (`atomBase`), with its scripts. -/
+def atom (ts : List PTok) : Option (List PTok × List PTok) := do
+  let (base, rest) ← atomBase ts
   some (scripts (rest.length + 1) base rest)
 
 /-- The shortest nonempty balanced prefix before a token `stop` outside groups. -/
@@ -122,6 +139,14 @@ def matchItems : Nat → List TItem → List PTok → List (Nat × List PTok) �
     Option (List (Nat × List PTok) × List PTok)
   | 0, _, _, _ => none
   | _ + 1, [], ts, acc => some (acc, ts)
+  -- an argument in a subscript or a superscript is one token or one group, as in TeX:
+  -- `r_k^{1/k}` is `r_k` to the power `1/k`
+  | f + 1, .fixed t :: .slot k :: is, u :: ts, acc =>
+    if u.tok != t then none
+    else if t == .msym 95 || t == .msym 94 then do
+      let (arg, r) ← unit ts
+      matchItems f is r (← bind k arg acc)
+    else matchItems f (.slot k :: is) ts acc
   | f + 1, .fixed t :: is, u :: ts, acc => if u.tok == t then matchItems f is ts acc else none
   | _ + 1, .fixed _ :: _, [], _ => none
   | f + 1, .slot k :: .fixed t :: is, ts, acc => do
@@ -135,6 +160,16 @@ def matchItems : Nat → List TItem → List PTok → List (Nat × List PTok) �
 def matchAt (pat : List TItem) (ts : List PTok) : Option (List (Nat × List PTok) × List PTok) :=
   let f := pat.length + ts.length + 2
   match pat with
+  -- `x^+` with the argument `x`: the symbol before the script, with as few of its own
+  -- scripts as the notation leaves (`x_1^+` is `x_1` with the script `^+`)
+  | .slot k :: .fixed t :: rest =>
+    if t == .msym 95 || t == .msym 94 then do
+      let (base, r) ← atomBase ts
+      (scriptSteps (r.length + 1) base r).findSome? fun (arg, r') =>
+        matchItems f (.fixed t :: rest) r' [(k, arg)]
+    else do
+      let (arg, r) ← atom ts
+      matchItems f (.fixed t :: rest) r [(k, arg)]
   | .slot k :: rest => do
     let (arg, r) ← atom ts
     matchItems f rest r [(k, arg)]
@@ -151,6 +186,39 @@ def substitute (repl : List TItem) (args : List (Nat × List PTok)) (pos : Nat) 
       | some ps => ⟨.lbrace, pos, true⟩ :: ps ++ [⟨.rbrace, pos, true⟩]
       | none => []
 
+/-- Which tokens are part of a name set in a font (`\mathrm{Bin}`, `\mathcal P`):
+those are never arguments. -/
+def fontMask : Nat → List Tok → List Bool
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .cmd n :: .lbrace :: ts =>
+    if Math.wFonts.contains n then
+      let body := ts.takeWhile (· != .rbrace)
+      false :: List.replicate (body.length + 2) true ++ fontMask f (ts.drop (body.length + 1))
+    else false :: fontMask f (.lbrace :: ts)
+  | f + 1, .cmd n :: t :: ts =>
+    if Math.wFonts.contains n then false :: true :: fontMask f ts else false :: fontMask f (t :: ts)
+  | f + 1, _ :: ts => false :: fontMask f ts
+
+/-- What a notation stands for, with each bound variable among `clash` renamed to a
+letter that is not `used` (none if the letters run out). -/
+def renameBound : List Tok → List Tok → List TItem → Option (List TItem)
+  | [], _, repl => some repl
+  | b :: bs, used, repl =>
+    let letters : List Tok := ((List.range 26).map fun i => Tok.mvar (122 - i)) ++
+      (List.range 26).map fun i => Tok.mvar (90 - i)
+    match letters.find? (!used.contains ·) with
+    | some fresh =>
+      -- (not the letter of a name set in a font: `\mathcal{C}`)
+      let toks : List Tok := repl.map fun it => match it with | .fixed u => u | .slot _ => .par
+      let mask := fontMask (toks.length + 1) toks ++ List.replicate toks.length false
+      renameBound bs (fresh :: used) ((repl.zip mask).map fun (it, inFont) =>
+        if !inFont && it == .fixed b then .fixed fresh else it)
+    | none => none
+
+/-- Marks a notation that was not applied, before the variable it would capture. -/
+def captureMark : Tok := .cmd w!"@captured"
+
 /-- Replace every match of a template in the formulas of a token list. -/
 def rewrite (tpl : Template) : Nat → List PTok → List PTok
   | 0, ts => ts
@@ -159,9 +227,26 @@ def rewrite (tpl : Template) : Nat → List PTok → List PTok
     if !t.math then t :: rewrite tpl f ts else
     match matchAt tpl.pat (t :: ts) with
     | some (args, rest) =>
-      if rest.length < ts.length + 1 then substitute tpl.repl args t.pos ++ rewrite tpl f rest
+      if rest.length < ts.length + 1 then
+        -- an argument that uses a variable the notation binds: the bound variable gets
+        -- another letter, so that it does not capture the argument's (`\ell_\beta(\beta(C))`
+        -- with `\ell_A(x)` for `\min\{R(C) : …, A(C)=x\}`)
+        let clash := tpl.binds.filter fun b => args.any fun (_, ps) => ps.any (·.tok == b)
+        let used : List Tok := (t :: ts).map (·.tok) ++ tpl.repl.filterMap fun it =>
+          match it with | .fixed u => some u | .slot _ => none
+        match renameBound clash used tpl.repl with
+        | some repl => substitute repl args t.pos ++ rewrite tpl f rest
+        | none =>
+          match args.findSome? fun (_, ps) => ps.find? fun p => tpl.binds.contains p.tok with
+          | some p => ⟨captureMark, t.pos, true⟩ :: { p with pos := t.pos } :: t :: rewrite tpl f ts
+          | none => substitute tpl.repl args t.pos ++ rewrite tpl f rest
       else t :: rewrite tpl f ts
     | none => t :: rewrite tpl f ts
+
+/-- The variable of a notation that an argument would capture, if `rewrite` marked one. -/
+def captured : List PTok → Option Tok
+  | [] => none
+  | a :: rest => if a.tok == captureMark then rest.head?.map (·.tok) else captured rest
 
 /-- The labelled displays of a sentence: each label with the display's tokens
 (without its labels and its final punctuation). -/
@@ -215,20 +300,6 @@ def slotTok : Tok → Bool
   | .cmd n => !Math.wFonts.contains n
   | _ => false
 
-/-- Which tokens are part of a name set in a font (`\mathrm{Bin}`, `\mathcal P`):
-those are never arguments. -/
-def fontMask : Nat → List Tok → List Bool
-  | 0, _ => []
-  | _ + 1, [] => []
-  | f + 1, .cmd n :: .lbrace :: ts =>
-    if Math.wFonts.contains n then
-      let body := ts.takeWhile (· != .rbrace)
-      false :: List.replicate (body.length + 2) true ++ fontMask f (ts.drop (body.length + 1))
-    else false :: fontMask f (.lbrace :: ts)
-  | f + 1, .cmd n :: t :: ts =>
-    if Math.wFonts.contains n then false :: true :: fontMask f ts else false :: fontMask f (t :: ts)
-  | f + 1, _ :: ts => false :: fontMask f ts
-
 /-- Items of tokens, given the argument tokens (font-set names stay fixed). -/
 def items (args : List Tok) (ts : List Tok) : List TItem :=
   (ts.zip (fontMask (ts.length + 1) ts ++ List.replicate ts.length false)).map fun (t, fixed) =>
@@ -245,7 +316,7 @@ def template (pat repl : List PTok) : Template :=
   let free := (ptoks.zip (fontMask (ptoks.length + 1) ptoks ++ List.replicate ptoks.length false)).filterMap
     fun (t, fixed) => if fixed then none else some t
   let args := (free.filter fun t => slotTok t && repl.any (·.tok == t)).eraseDups
-  ⟨items args ptoks, items args (repl.map (·.tok))⟩
+  { pat := items args ptoks, repl := items args (repl.map (·.tok)) }
 
 /-- The sentence declares a notation (`We write …`): its own formulas are not rewritten. -/
 def declares (ts : List PTok) : Bool :=
@@ -1166,6 +1237,30 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .quant _ vs d b => freeIds f bound d ++ freeIds f (vs ++ bound) b
     | .limit v t b => freeIds f bound t ++ freeIds f (v :: bound) b
     | .sig .. | .text _ => []
+
+/-- The variables that a formula binds: of its sets, integrals, sums, limits, maps and
+quantifiers. -/
+def boundIds : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m =>
+    let all (xs : List MT) := xs.flatMap (boundIds f)
+    match m with
+    | .id _ | .num _ | .sig .. | .text _ => []
+    | .sub x y | .sup x y | .add x y | .minus x y | .mul x y | .div x y | .frac x y
+    | .interval x y | .ival x y _ _ | .equiv x y | .land x y | .lor x y | .limp x y | .liff x y => all [x, y]
+    | .hat x | .neg x | .abs x | .lnot x | .extr _ x | .bound _ x => boundIds f x
+    | .app h as => all (h :: as)
+    | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => all xs
+    | .int lo hi b v => v :: all [lo, hi, b]
+    | .chain x rs => all (x :: rs.map (·.2))
+    | .mapsto p b => freeIds 64 [] p ++ boundIds f b
+    | .setOf p d cs => freeIds 64 [] p ++ all (d :: cs)
+    | .setCond p cs => freeIds 64 [] p ++ all cs
+    | .image e v d => v :: all [e, d]
+    | .cases rows => rows.flatMap fun (a, b) => all [a, b]
+    | .bigop _ v lo hi b => v :: all [lo, hi, b]
+    | .quant _ vs d b => vs ++ all [d, b]
+    | .limit v t b => v :: all [t, b]
 
 /-- A domain of multi-indices `\mathbb{N}_0^n` (`n ≥ 2`): the domain of the components and
 `n`. -/
@@ -2143,11 +2238,13 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
       let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
       if names != bs.map (·.name) then fail E.unsupported
       let some key := Elab.symKey h | fail E.unsupported
-      let sc : Scope := (bs.map fun b => (b.name, b.ty)).reverse
+      let all := imp ++ bs
+      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
       let (v, vty) ← term F sc none rhs
-      let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
-      let ty := bs.foldr (fun b t => Ty.fn b.ty t) vty
-      let i ← addGlob ⟨key, ty, bs.map (·.pred), false, 1⟩ value
+      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
+      let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
+      if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
       modify fun st => { st with params := st.params ++ [(i, names)] }
       ds := ds ++ [i]
     | _ => fail E.unsupported
@@ -3772,10 +3869,16 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | bd => binderInfos bd
       let binderNames := bis.map (·.name)
       let imp := imp.filter fun b => !binderNames.contains b.name
-      match bis with
-      | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
-      | _ :: _ :: _ => multiDefs bis defs labels imp
-      | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
+      let res ← match bis with
+        | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
+        | _ :: _ :: _ => multiDefs bis defs labels imp
+        | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
+      -- a function or a family defined inside a result or a proof is local to it, like a
+      -- constant defined there
+      if c.ctx.kind != .text then
+        modify fun st => { st with locals := st.locals ++
+          (res.1.filter fun i => (st.locals.lookup i).isNone).map fun i => (i, c.ctx.env) }
+      pure res
     | none => constDefs c none defs labels
   | .defByFamily b sg pieces labels => do
     let [bi] ← binderInfos b | fail E.unsupported
@@ -3960,7 +4063,7 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
       let slots := (List.range ts.length).map TItem.slot
       let call : List TItem := if slots.isEmpty then [] else
         [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]
-      push ⟨pat', .fixed (match letter with | some c => .mvar c | none => .cmd key) :: call⟩
+      push ⟨pat', .fixed (match letter with | some c => .mvar c | none => .cmd key) :: call, []⟩
       pure ([i], [])
     | none =>
       -- `the set|class of NOUNS`
@@ -3977,17 +4080,28 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
           | some k => if st.globs.any (·.key == [92] ++ k) then key else k
           | none => key
         let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false, 1⟩ n.pred
-        push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)]⟩
+        push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)], []⟩
         pure ([i], [])
       | none => fail E.noun (((wordsOf rest).intersperse [32]).flatten)
   else
     let some repl := fs[1]? | fail E.unsupported
     let tpl := Notation.template pat repl
+    -- the variables it binds, other than its arguments
+    let bound : List Codes := match (Math.simplify (repl.length + 1) repl).bind Math.parseDisplay with
+      | some m => (boundIds 64 m).eraseDups
+      | none => []
+    let slots : List Tok := (tpl.pat.zip (pat.map (·.tok))).filterMap fun (i, t) =>
+      match i with | .slot _ => some t | _ => none
+    let binds : List Tok := (bound.filterMap fun n => match n with
+      | [c] => some (Tok.mvar c)
+      | 92 :: name => some (Tok.cmd name)
+      | _ => none).filter (!slots.contains ·)
+    let tpl := { tpl with binds }
     match tpl.pat, tpl.repl with
     -- `We write $A\subset B$ if $A\subseteq B$`: one relation symbol for another, in
     -- place (the arguments are whatever stands on either side)
     | [.slot a, .fixed t, .slot b], [.slot a', .fixed t', .slot b'] =>
-      if a == a' && b == b' && a != b then push ⟨[.fixed t], [.fixed t']⟩
+      if a == a' && b == b' && a != b then push { pat := [.fixed t], repl := [.fixed t'] }
       else push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
     | _, _ => push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
     pure ([], [])
@@ -4143,6 +4257,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let toks0 := s.toks
   let s := if st0.templates.isEmpty || Notation.declares s.toks then s
     else { s with toks := Notation.rewriteAll st0.templates s.toks }
+  -- a notation that binds a variable of its argument is not applied: a finding
+  let capturedVar := Notation.captured s.toks
+  let s := if capturedVar.isSome then { s with toks := toks0 } else s
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   -- the symbols this sentence introduces, if it is not read
@@ -4153,6 +4270,11 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let undefinedAlt : Option Grammar.Sent := match s.ctx.kind with
     | .text => Grammar.undefinedOf s
     | _ => none
+  if let some v := capturedVar then
+    let name : Codes := match v with | .mvar ch => [ch] | .cmd nm => 92 :: nm | _ => []
+    let msg : Codes := w!"a notation of the article binds $" ++ name ++ w!"$, and the formula it is written with here uses $" ++ name ++ w!"$ as well: the notation would capture it. Rename one of the two"
+    { c with st := st0u, idx := c.idx + 1, outcomesRev := .failed ⟨E.finding, msg⟩ :: c.outcomesRev, proofs := incomplete ps }
+  else
   match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some sent =>

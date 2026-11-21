@@ -223,7 +223,14 @@ def simplify : Nat → List PTok → Option (List MTok)
           -- (`\text{for every integer }`: its words, one by one)
           let words := inner.filterMap (fun p => match p.tok with | .word w => some w | _ => none)
           if !words.isEmpty && inner.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
-            ((words.map MTok.text) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
+            -- (`\text{otherwise.}`: the punctuation that ends the display)
+            let last : List MTok := match inner.reverse with
+              | p :: _ => (match p.tok with
+                | .punct 46 => [.sym 46]
+                | .punct 44 => [.sym 44]
+                | _ => [])
+              | [] => []
+            ((words.map MTok.text ++ last) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
           else if word.length != inner.length then none
           else (MTok.text word :: ·) <$> simplify f (rest.drop (inner.length + 1))
         | _ => none
@@ -501,6 +508,18 @@ def run : Nat → Mode → List MTok → R
     -- `n!`
     | .sym 33 :: rest => run f (.postfix bar (.app (.id w!"@factorial") [x])) rest
     | .sym 94 :: rest => do
+      -- `C^{\ast k}`, `C^{*k}`: a star before the exponent is the power of a product other
+      -- than the product of numbers (the Markov power of a copula, in `unitsquare`)
+      let starred : Option (MT × List MTok) := match rest with
+        | .lb :: star :: more =>
+          let isStar := match star with | .sym 42 => true | .cmd c => c == w!"ast" | _ => false
+          if isStar && more.head? != some .rb then do
+            let (e, r1) ← run f .top more
+            let r2 ← expect .rb r1
+            some (.app (.id w!"@mpow") [x, e], r2)
+          else none
+        | _ => none
+      if let some (m, r) := starred then run f (.postfix bar m) r else
       let (e, rest') ← run f .group rest
       run f (.postfix bar (.sup x e)) rest'
     | .sym 95 :: rest =>
@@ -525,7 +544,31 @@ def run : Nat → Mode → List MTok → R
   | f + 1, .atom bar, ts =>
     match ts with
     | .digit d :: rest => run f (.number d) rest
-    | .id n :: rest => some (.id n, rest)
+    | .id n :: rest =>
+      -- `\mathbb{E}_C[e]`, `P_C(φ)`: the expectation of `e` and the probability of `φ` for
+      -- a sample of independent observations `(U_i,V_i)` with the distribution function `C`
+      -- (the letters `U`, `V` are the two sequences of the sample)
+      let sample : Option (MT × List MTok) :=
+        if n == w!"\\mathbb{E}" || n == w!"\\mathbb{P}" || n == [80] then
+          match rest with
+          | .sym 95 :: r1 => do
+            let (c, r2) ← run f .group r1
+            let isE := n == w!"\\mathbb{E}"
+            let r3 ← expect (.sym (if isE then 91 else 40)) r2
+            let (body, r4) ← run f .top r3
+            let r5 ← expect (.sym (if isE then 93 else 41)) r4
+            -- (a probability is of a condition)
+            let cond := match body with
+              | .chain .. | .land .. | .lor .. | .lnot .. => true
+              | _ => false
+            if !isE && !cond then none else
+            some (.app (.id (if isE then w!"@sexp" else w!"@sprob"))
+              [c, .mapsto (.tuple [.id [85], .id [86]]) body], r5)
+          | _ => none
+        else none
+      match sample with
+      | some r => some r
+      | none => some (.id n, rest)
     | .sym 40 :: rest =>
       (do
         let (m, rest') ← run f (.list 41 []) rest
@@ -810,7 +853,13 @@ def run : Nat → Mode → List MTok → R
       let (v, r1) ← run f (.additive false) ts
       let r1 := match r1 with | .sym 44 :: r => r | r => r
       let r2 ← expect (.sym 38) r1
-      let (c, r3) ← run f .top r2
+      -- `v & \text{if } φ`, and a last row `v & \text{otherwise}`
+      let r2 := match r2 with
+        | .text w :: r => if w == w!"if" || w == w!"for" || w == w!"when" then r else r2
+        | r => r
+      let (c, r3) ← match r2 with
+        | .text w :: r => if w == w!"otherwise" || w == w!"else" then some (MT.text w, r) else none
+        | _ => run f .top r2
       let r4 := match r3 with | .sym 44 :: r => r | .sym 46 :: r => r | r => r
       match r4 with
       | .row :: r5 => run f (.casesRows ((v, c) :: acc)) r5

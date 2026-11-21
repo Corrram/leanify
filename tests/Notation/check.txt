@@ -86,9 +86,9 @@ tests/Notation/article.tex:145:1: info: claim 52: \forall x\in \mathbb{R},\ \int
 tests/Notation/article.tex:145:1: info: claim 52 is meaningful if: \forall x\in \mathbb{R},\ \operatorname{Int}((y\in \mathbb{R}\,[y\le x]\mapsto \exp(y)))((y\in \mathbb{R}\mapsto y\le x))
 tests/Notation/article.tex:152:1: info: defines r (r)
 tests/Notation/article.tex:152:1: info: r is well defined if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow \neg (y+1=0))
-tests/Notation/article.tex:153:1: info: claim 53: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow r(x)(y)\le 1)
+tests/Notation/article.tex:153:1: info: claim 53: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow r(x,y)\le 1)
 tests/Notation/article.tex:153:1: info: claim 53 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (0\le y\land y\le x)\land 1\le x)
-tests/Notation/article.tex:154:1: info: claim 54: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow r(x)(y)\le 1+z))
+tests/Notation/article.tex:154:1: info: claim 54: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow r(x,y)\le 1+z))
 tests/Notation/article.tex:154:1: info: claim 54 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le x\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow (0\le y\land y\le x)\land 1\le x))
 tests/Notation/article.tex:158:1: info: defines \kappa_{\cdot} (kappa)
 tests/Notation/article.tex:161:1: info: claim 55: \kappa_{1}(\frac{1}{2})=\frac{1}{2}

@@ -322,7 +322,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}}=\\frac{{d(x)(y)}^{2}}{2})",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}}=\\frac{{d(x,y)}^{2}}{2})",
    "rank": 4,
    "premises": [1, 2, 3, 4],
    "note": "",
@@ -408,7 +408,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{{d(x)(y)}^{2}}{2}=\\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}\\land \\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}=\\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}})",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{{d(x,y)}^{2}}{2}=\\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}\\land \\frac{x-2\\,{(x\\,y)}^{\\frac{1}{2}}+y}{2}=\\frac{x+y}{2}-{(x\\,y)}^{\\frac{1}{2}})",
    "rank": 3,
    "premises": [1, 2, 3],
    "note": "",
@@ -431,7 +431,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)\\le G(x)(y)\\land G(x)(y)\\le A(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x,y)\\le G(x,y)\\land G(x,y)\\le A(x,y))",
    "rank": 13,
    "premises": [7, 8, 9, 10, 11, 12, 13, 14, 0],
    "note": "",
@@ -453,7 +453,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x)(y)=A(x)(y)\\Leftrightarrow x=y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x,y)=A(x,y)\\Leftrightarrow x=y))",
    "rank": 13,
    "premises": [7, 8, 9, 10, 11, 12, 13, 14, 0],
    "note": "",
@@ -474,7 +474,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow A(x)(y)-G(x)(y)=\\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2}\\land 0\\le \\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2})",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow A(x,y)-G(x,y)=\\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2}\\land 0\\le \\frac{{({x}^{\\frac{1}{2}}-{y}^{\\frac{1}{2}})}^{2}}{2})",
    "rank": 5,
    "premises": [0],
    "note": "",
@@ -497,7 +497,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x)(y)\\le A(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x,y)\\le A(x,y))",
    "rank": 6,
    "premises": [0, 7],
    "note": "",
@@ -518,7 +518,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x)(y)=A(x)(y)\\Leftrightarrow {x}^{\\frac{1}{2}}={y}^{\\frac{1}{2}}))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow (G(x,y)=A(x,y)\\Leftrightarrow {x}^{\\frac{1}{2}}={y}^{\\frac{1}{2}}))",
    "rank": 7,
    "premises": [0, 7, 8],
    "note": "",
@@ -562,7 +562,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)=\\frac{{G(x)(y)}^{2}}{A(x)(y)})",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x,y)=\\frac{{G(x,y)}^{2}}{A(x,y)})",
    "rank": 9,
    "premises": [0, 7, 8, 9, 10],
    "note": "",
@@ -584,7 +584,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x)(y)\\le A(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow G(x,y)\\le A(x,y))",
    "rank": 10,
    "premises": [0, 7, 8, 9, 10, 11],
    "note": "",
@@ -605,7 +605,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow 0<G(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow 0<G(x,y))",
    "rank": 11,
    "premises": [0, 7, 8, 9, 10, 11, 12],
    "note": "",
@@ -626,7 +626,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x)(y)=G(x)(y)\\,(\\frac{G(x)(y)}{A(x)(y)})\\land G(x)(y)\\,(\\frac{G(x)(y)}{A(x)(y)})\\le G(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow H(x,y)=G(x,y)\\,(\\frac{G(x,y)}{A(x,y)})\\land G(x,y)\\,(\\frac{G(x,y)}{A(x,y)})\\le G(x,y))",
    "rank": 12,
    "premises": [0, 7, 8, 9, 10, 11, 12, 13],
    "note": "",
@@ -649,7 +649,7 @@
    "rests": [],
    "refuted": false,
    "reading":
-   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}\\le Q(x)(y))",
+   "\\forall x\\in \\mathbb{R},\\ 0<x\\Rightarrow (\\forall y\\in \\mathbb{R},\\ 0<y\\Rightarrow \\frac{x+y}{2}\\le Q(x,y))",
    "rank": 0,
    "premises": [],
    "note": "",

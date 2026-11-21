@@ -224,6 +224,8 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   -- a domain predicate applied to an argument: read it about the argument
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
+  -- a family applied index by index, the first inside its domain: `B_{r,a}`
+  | .app (.guard _ (.app f x)) y => (Tm.app (.app f x) y).tex cs gs ls
   -- a function of several variables: `f(x,y)` (definedness guards are not shown)
   -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
   | .app (.app f x) y =>

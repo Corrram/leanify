@@ -800,7 +800,15 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
         -- `every copula $C$ with maximal correlation $R=R(C)$`
         match Math.parseFormula ts with
         | some (.chain (.id x) [(.eq, .app (.id y) _)]) => if x == y then some (.noun np, r') else none
-        | _ => none
+        | _ =>
+          -- `every copula $C$ with $C^\top=C$`: a condition on the variable
+          let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false
+          match withAt with
+          | some i =>
+            match np.drop (i + 1), np[i - 1]? with
+            | [.m _], some (.m v) => if i ≥ 2 && (v.length == 1 || subName v) then some (.noun np, r') else none
+            | _, _ => none
+          | none => none
     | _, _ => none)
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/

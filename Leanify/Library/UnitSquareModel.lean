@@ -1,6 +1,7 @@
 import Leanify.Library.UnitSquare
 import Leanify.Denote
 import Mathlib.MeasureTheory.Constructions.UnitInterval
+import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
 import Mathlib.Analysis.Convex.Function
@@ -65,6 +66,83 @@ def integrableAgainst (F : I → I → ℝ) (f : I → I → ℝ) : Prop :=
 function `F`. -/
 def aeAgainst (F : I → I → ℝ) (p : I → I → Prop) : Prop :=
   Filter.Eventually (fun q : I × I => p q.1 q.2) (MeasureTheory.ae (measureOf F))
+
+/-- The Markov product of two functions on the square (Darsow, Nguyen and Olsen):
+`(A * B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt`. For copulas the two derivatives exist at almost
+every `t`, and the product is the copula of `(X₀,X₂)` for a Markov chain whose steps have
+the copulas `A` and `B`. The vocabulary gives the phrase to copulas only. -/
+noncomputable def markovProd (A B : I → I → ℝ) : I → I → ℝ := fun u v =>
+  ∫ t in (0:ℝ)..1, deriv (fun s : ℝ => A u (Interval.point s)) t *
+    deriv (fun s : ℝ => B (Interval.point s) v) t
+
+/-- The Markov product of `n` factors `C` (for `n = 0`, the unit `M(u,v) = min(u,v)` of
+the product). -/
+noncomputable def markovPow (C : I → I → ℝ) : ℕ → I → I → ℝ
+  | 0 => fun u v => min (Interval.val u) (Interval.val v)
+  | n + 1 => markovProd (markovPow C n) C
+
+/-- The Markov power of order `k` of `C`, for a natural number `k` given as a real number. -/
+noncomputable def markovPowerOf (C : I → I → ℝ) (k : ℝ) : I → I → ℝ := markovPow C (Nat.floor k)
+
+/-- The law of a sample: a sequence of independent observations `(U_i, V_i)`,
+`i = 0, 1, 2, …`, each with the distribution function `F` (the product measure of
+countably many copies of the measure of `F`; the zero measure when `F` is not a
+distribution function: the compiler asks for `sampleIntegrable` or `sampleHasProbability`, which
+say that it is one). -/
+noncomputable def sampleLaw (F : I → I → ℝ) : Measure (ℕ → I × I) := by
+  classical
+  exact if h : IsProbabilityMeasure (measureOf F) then
+    (haveI : IsProbabilityMeasure (measureOf F) := h
+     Measure.infinitePi (fun _ : ℕ => measureOf F))
+  else 0
+
+/-- The first coordinates of a sample, as a sequence indexed by real numbers (`U_i` is its
+value at `i`; the compiler uses it at natural numbers). -/
+noncomputable def sampleU (ω : ℕ → I × I) : ℝ → I := fun x => (ω (Nat.floor x)).1
+/-- The second coordinates of a sample. -/
+noncomputable def sampleV (ω : ℕ → I × I) : ℝ → I := fun x => (ω (Nat.floor x)).2
+
+/-- `\mathbb{E}_F[X]`: the expectation of a function `X` of the sample. -/
+noncomputable def sampleExpectation (F : I → I → ℝ) (X : (ℝ → I) → (ℝ → I) → ℝ) : ℝ :=
+  ∫ ω, X (sampleU ω) (sampleV ω) ∂(sampleLaw F)
+
+/-- `F` is a distribution function on `[0,1]^2`, and `X` is integrable for the law of the
+sample. -/
+def sampleIntegrable (F : I → I → ℝ) (X : (ℝ → I) → (ℝ → I) → ℝ) : Prop :=
+  distFn2 F ∧ Integrable (fun ω : ℕ → I × I => X (sampleU ω) (sampleV ω)) (sampleLaw F)
+
+/-- `P_F(E)`: the probability of a condition `E` on the sample. -/
+noncomputable def sampleProbability (F : I → I → ℝ) (E : (ℝ → I) → (ℝ → I) → Prop) : ℝ :=
+  ((sampleLaw F) {ω : ℕ → I × I | E (sampleU ω) (sampleV ω)}).toReal
+
+/-- `F` is a distribution function on `[0,1]^2`, and the condition `E` on the sample has a
+probability (it describes a measurable set, up to a set of probability zero). -/
+def sampleHasProbability (F : I → I → ℝ) (E : (ℝ → I) → (ℝ → I) → Prop) : Prop :=
+  distFn2 F ∧ NullMeasurableSet {ω : ℕ → I × I | E (sampleU ω) (sampleV ω)} (sampleLaw F)
+
+/-- Two sequences have the same terms at the indices below `m`. -/
+def agreeBelow (m : ℕ) (x y : ℝ → I) : Prop := ∀ i : ℕ, i < m → x i = y i
+
+/-- A kernel: a function of finitely many terms of a sequence in `[0,1]`, measurable and
+square-integrable for independent uniform terms (a function in `L²([0,1]^m)` for some
+`m`). -/
+def isKernel (F : (ℝ → I) → ℝ) : Prop :=
+  (∃ m : ℕ, ∀ x y, agreeBelow m x y → F x = F y) ∧
+  AEStronglyMeasurable (fun ω : ℕ → I × I => F (sampleU ω))
+    (sampleLaw (fun u v => Interval.val u * Interval.val v)) ∧
+  Integrable (fun ω : ℕ → I × I => F (sampleU ω) ^ 2)
+    (sampleLaw (fun u v => Interval.val u * Interval.val v))
+
+/-- A statistic: a function of finitely many observations of a sample that is measurable
+in them. -/
+def isStatistic (T : (ℝ → I) → (ℝ → I) → ℝ) : Prop :=
+  (∃ m : ℕ, ∀ x y x' y', agreeBelow m x x' → agreeBelow m y y' → T x y = T x' y') ∧
+  Measurable (fun ω : ℕ → I × I => T (sampleU ω) (sampleV ω))
+
+/-- `F` has a bounded density: `F(u,v) = ∫₀ᵘ∫₀ᵛ c(s,t) dt ds` for a bounded measurable `c`. -/
+def hasBoundedDensity (F : I → I → ℝ) : Prop :=
+  ∃ c : ℝ → ℝ → ℝ, Measurable (fun p : ℝ × ℝ => c p.1 p.2) ∧ (∃ B : ℝ, ∀ s t, |c s t| ≤ B) ∧
+    ∀ u v : I, F u v = ∫ s in (0:ℝ)..(Interval.val u), ∫ t in (0:ℝ)..(Interval.val v), c s t
 
 def dfUniformMarginals (F : I → I → ℝ) : Prop :=
   (∀ u : I, F u 1 = u) ∧ ∀ v : I, F 1 v = v
@@ -131,6 +209,11 @@ noncomputable def model : Model where
     ⟨set2 ⟶ .prop, Prelude.measurableSet2⟩, ⟨set1 ⟶ .real, Prelude.leb⟩, ⟨self ⟶ .prop, Interval.borel⟩,
     ⟨sq ⟶ sq ⟶ .real, integralAgainst⟩, ⟨sq ⟶ sq ⟶ .prop, integrableAgainst⟩,
     ⟨(I01 ⟶ .real) ⟶ .prop, Interval.borelReal⟩,
-    ⟨sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop, aeAgainst⟩]
+    ⟨sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop, aeAgainst⟩,
+    ⟨sq ⟶ sq ⟶ sq, markovProd⟩, ⟨sq ⟶ .real ⟶ sq, markovPowerOf⟩,
+    ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .real, sampleExpectation⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .prop, sampleIntegrable⟩,
+    ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sampleProbability⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop, sampleHasProbability⟩,
+    ⟨(seq ⟶ .real) ⟶ .prop, isKernel⟩, ⟨(seq ⟶ seq ⟶ .real) ⟶ .prop, isStatistic⟩,
+    ⟨sq ⟶ .prop, hasBoundedDensity⟩]
 
 end Leanify.UnitSquare

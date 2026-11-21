@@ -166,6 +166,20 @@ structure IntervalType where
   /-- A condition on the points of the square holds for almost every point, for the measure
   of a distribution function (the constant takes `C`, then the condition). -/
   ae2 : Option Nat := none
+  /-- The Markov power `C^{\ast k}` of a function on the square of the type (the constant
+  takes `C`, then `k`), and the condition on `C` under which it is meaningful (`C` is a
+  copula). -/
+  markovPower : Option Nat := none
+  markovDom : Option Tm := none
+  /-- A sample: independent observations `(U_i,V_i)`, `i = 0, 1, 2, …`, each with the
+  distribution function `C`, as two sequences of points of the type. The expectation
+  `\mathbb{E}_C[e]` of a function of the sample and the condition under which it is
+  defined; the probability `P_C(φ)` of a condition on the sample and the condition under
+  which it is defined (each constant takes `C`, then the function of the two sequences). -/
+  sampleExp : Option Nat := none
+  sampleInt : Option Nat := none
+  sampleProb : Option Nat := none
+  sampleEvent : Option Nat := none
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Vocab where
@@ -264,7 +278,10 @@ def append (V W : Vocab) : Vocab :=
                integrable := i.integrable + kc, measurable1 := i.measurable1 + kc,
                measurable2 := i.measurable2 + kc, lebesgue := i.lebesgue + kc,
                integral2 := i.integral2.map (· + kc), integrable2 := i.integrable2.map (· + kc),
-               ae2 := i.ae2.map (· + kc) } }
+               ae2 := i.ae2.map (· + kc), markovPower := i.markovPower.map (· + kc),
+               markovDom := i.markovDom.map tm, sampleExp := i.sampleExp.map (· + kc),
+               sampleInt := i.sampleInt.map (· + kc), sampleProb := i.sampleProb.map (· + kc),
+               sampleEvent := i.sampleEvent.map (· + kc) } }
 
 instance : Append Vocab := ⟨append⟩
 

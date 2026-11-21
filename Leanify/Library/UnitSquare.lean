@@ -55,6 +55,23 @@ def borelReal : Nat := 22
 /-- A condition holds at almost every point of the square, for the measure of a
 distribution function. -/
 def ae2 : Nat := 23
+/-- The Markov product of two functions on the square, and the Markov power of one. -/
+def markovProduct : Nat := 24
+def markovPower : Nat := 25
+/-- The expectation and the probability for a sample of independent observations with a
+given distribution function, and the conditions under which they are defined. -/
+def sampleExp : Nat := 26
+def sampleInt : Nat := 27
+def sampleProb : Nat := 28
+def sampleEvent : Nat := 29
+/-- A sequence of points of `[0,1]` (used at the indices `0, 1, 2, …`). -/
+def seq : Ty := .real ⟶ I01
+/-- A kernel: a square-integrable function of finitely many terms of a sequence. -/
+def kernel : Nat := 30
+/-- A statistic: a measurable function of finitely many observations of a sample. -/
+def statistic : Nat := 31
+/-- A function on the square with a bounded density. -/
+def boundedDensity : Nat := 32
 
 /-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
 abbrev Quantity : Ty := sq ⟶ .real
@@ -63,11 +80,17 @@ abbrev Class : Ty := sq ⟶ .prop
 /-- The words `with respect to uniform convergence`. -/
 def uniformly : List Codes := [w!"with", w!"respect", w!"to", w!"uniform", w!"convergence"]
 
+/-- A function on the square is a copula. -/
+def isCopula : Tm := .lam sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0)))
+
 def vocab : Vocab where
   types := [w!"[0,1]"]
   typeLean := [(w!"Leanify.UnitSquare.Interval", w!"Leanify.UnitSquare.Interval.zero")]
   intervals := [{ lo := 0, hi := 1, ty := I01, val, point, integral, integrable, measurable1, measurable2, lebesgue,
-                  integral2 := some integral2, integrable2 := some integrable2, ae2 := some ae2 }]
+                  integral2 := some integral2, integrable2 := some integrable2, ae2 := some ae2,
+                  markovPower := some markovPower, markovDom := some isCopula,
+                  sampleExp := some sampleExp, sampleInt := some sampleInt,
+                  sampleProb := some sampleProb, sampleEvent := some sampleEvent }]
   consts := [sq ⟶ .prop, sq ⟶ .prop, meas2 ⟶ .prop, meas2 ⟶ .prop,
     -- properties of a quantity on a class, and of a class
     Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop,
@@ -78,7 +101,13 @@ def vocab : Vocab where
     set1 ⟶ .prop, set2 ⟶ .prop, set1 ⟶ .real, self ⟶ .prop,
     -- the integral against the measure of a distribution function
     sq ⟶ sq ⟶ .real, sq ⟶ sq ⟶ .prop, (I01 ⟶ .real) ⟶ .prop,
-    sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop]
+    sq ⟶ (I01 ⟶ I01 ⟶ .prop) ⟶ .prop,
+    -- the Markov product and the Markov powers
+    sq ⟶ sq ⟶ sq, sq ⟶ .real ⟶ sq,
+    -- the expectation and the probability for a sample
+    sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .real, sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .prop,
+    sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop,
+    (seq ⟶ .real) ⟶ .prop, (seq ⟶ seq ⟶ .real) ⟶ .prop, sq ⟶ .prop]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
@@ -88,7 +117,11 @@ def vocab : Vocab where
     w!"", w!"\\langle #\\rangle_{[0,1]}", w!"\\int_0^1", w!"\\operatorname{Int}",
     w!"\\operatorname{Meas}", w!"\\operatorname{Meas}", w!"\\lambda\\bigl(#\\bigr)", w!"\\operatorname{Borel}",
     w!"\\int_{[0,1]^2}", w!"\\operatorname{Int}_{\\mathrm{d}#1}(#2)", w!"\\operatorname{Borel}",
-    w!"\\operatorname{a.e.}_{\\mathrm{d}#1}(#2)"]
+    w!"\\operatorname{a.e.}_{\\mathrm{d}#1}(#2)",
+    w!"#1\\ast #2", w!"{#1}^{\\ast #2}",
+    w!"\\mathbb{E}_{#1}\\bigl[#2\\bigr]", w!"\\operatorname{Int}_{#1}(#2)",
+    w!"P_{#1}\\bigl(#2\\bigr)", w!"\\operatorname{Event}_{#1}(#2)",
+    w!"\\operatorname{Kernel}", w!"\\operatorname{Statistic}", w!"\\operatorname{BddDensity}"]
   constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
     w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
     w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
@@ -98,7 +131,11 @@ def vocab : Vocab where
     w!"Leanify.Prelude.integrable", w!"Leanify.Prelude.measurableSet1", w!"Leanify.Prelude.measurableSet2",
     w!"Leanify.Prelude.leb", w!"Leanify.UnitSquare.Interval.borel",
     w!"Leanify.UnitSquare.integralAgainst", w!"Leanify.UnitSquare.integrableAgainst",
-    w!"Leanify.UnitSquare.Interval.borelReal", w!"Leanify.UnitSquare.aeAgainst"]
+    w!"Leanify.UnitSquare.Interval.borelReal", w!"Leanify.UnitSquare.aeAgainst",
+    w!"Leanify.UnitSquare.markovProd", w!"Leanify.UnitSquare.markovPowerOf",
+    w!"Leanify.UnitSquare.sampleExpectation", w!"Leanify.UnitSquare.sampleIntegrable",
+    w!"Leanify.UnitSquare.sampleProbability", w!"Leanify.UnitSquare.sampleHasProbability",
+    w!"Leanify.UnitSquare.isKernel", w!"Leanify.UnitSquare.isStatistic", w!"Leanify.UnitSquare.hasBoundedDensity"]
   modules := [w!"Leanify.Library.UnitSquareModel"]
   adjectives := [
     { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
@@ -130,11 +167,35 @@ def vocab : Vocab where
       doc := "a distribution function on `[0,1]²` with uniform marginals" },
     { sing := phrase!"copula", plural := phrase!"copulas", ty := sq,
       pred := .lam sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0))),
-      doc := "a distribution function on `[0,1]²` with uniform marginals" }]
+      doc := "a distribution function on `[0,1]²` with uniform marginals" },
+    { sing := phrase!"sequence $v$ in $[0,1]$", plural := phrase!"sequences $v$ in $[0,1]$", ty := seq,
+      pred := .lam seq .tt .tt,
+      doc := "a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …`" },
+    { sing := phrase!"kernel", plural := phrase!"kernels", ty := seq ⟶ .real,
+      pred := .lam (seq ⟶ .real) .tt (.app (.const kernel) (.loc 0)),
+      doc := "a real function of finitely many terms of a sequence in `[0,1]` (a function on `[0,1]^m` for some `m`), measurable and square-integrable for independent uniform terms" },
+    { sing := phrase!"statistic", plural := phrase!"statistics", ty := seq ⟶ seq ⟶ .real,
+      pred := .lam (seq ⟶ seq ⟶ .real) .tt (.app (.const statistic) (.loc 0)),
+      doc := "a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them" }]
   notions := [
     { name := phrase!"Lebesgue measure on $[0,1]$", value := .const lebesgue, ty := set1 ⟶ .real,
-      doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" }]
+      doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" },
+    { name := phrase!"Markov product of $v$ and $v$", value := .const markovProduct, ty := sq ⟶ sq ⟶ sq,
+      doms := [some isCopula, some isCopula],
+      doc := "`(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B`" },
+    { name := phrase!"Markov power of order $v$ of $v$",
+      value := .lam .real .tt (.lam sq .tt (.app (.app (.const markovPower) (.loc 0)) (.loc 1))),
+      ty := .real ⟶ sq ⟶ sq,
+      doms := [some (.lam .real .tt (.and (.app (.prim .isNat) (.loc 0)) (.le (.num 1) (.loc 0)))), some isCopula],
+      doc := "the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C`" }]
   mods := [
+    { phrase := phrase!"with bounded density", prenominal := false, ty := sq,
+      pred := .lam sq .tt (.app (.const boundedDensity) (.loc 0)),
+      doc := "an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c`" },
+    { phrase := phrase!"symmetric", prenominal := true, ty := sq,
+      pred := .lam sq .tt (.all I01 (.all I01 (.eq (.app (.app (.loc 2) (.loc 1)) (.loc 0))
+        (.app (.app (.loc 2) (.loc 0)) (.loc 1))))),
+      doc := "a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose)" },
     { phrase := phrase!"Borel measurable", prenominal := true, ty := self,
       pred := .lam self .tt (.app (.const borel) (.loc 0)),
       doc := "a Borel measurable map of `[0,1]` (Mathlib `Measurable`)" },
