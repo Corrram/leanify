@@ -82,14 +82,16 @@ attempt logs is dropped: a failure of it is a result, not an error of the build.
 def standardStep (ty : Expr) : CommandElabM Bool := do
   liftTermElabM do
     let saved ← Core.getAndEmptyMessageLog
-    let ok ← try
-        Term.withoutErrToSorry <|
+    -- (a step that runs out of its budget is not standard: the exception of the limit is
+    -- caught like any other)
+    let ok ← tryCatchRuntimeEx
+        (Term.withoutErrToSorry <|
           withTheReader Core.Context (fun c => { c with maxHeartbeats := 400000 * 1000 }) <| withCurrHeartbeats do
             let e ← Term.elabTermEnsuringType (← `(by leanify_step)) (some ty)
             Term.synthesizeSyntheticMVarsNoPostponing
             let e ← instantiateMVars e
-            pure (!e.hasMVar && !e.hasSyntheticSorry && !e.hasSorry && !(← Core.getMessageLog).hasErrors)
-      catch _ => pure false
+            pure (!e.hasMVar && !e.hasSyntheticSorry && !e.hasSorry && !(← Core.getMessageLog).hasErrors))
+        (fun _ => pure false)
     Core.setMessageLog saved
     pure ok
 

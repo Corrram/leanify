@@ -205,6 +205,19 @@ def dfUniformMarginals (F : I → I → ℝ) : Prop :=
   (∀ u : I, F u 1 = u) ∧ ∀ v : I, F 1 v = v
 ```
 
+The same file proves what the proofs of an article need about these meanings, so that
+an article does not prove them again: a distribution function is measurable and takes
+values in `[0,1]` (`distFn2_measurable`, `distFn2_bounds`), its measure is a probability
+measure (`measureOf_prob`), with uniform marginals a function of one coordinate has the
+integral of the function (`integral_fst`, `integral_snd`, `integrable_fst`,
+`integrable_snd`), a bounded measurable expression is integrable
+(`integrable_of_bounded`, `integrableAgainst_of_bounded`), the law of a sample is a
+probability measure (`sampleLaw_prob`), a larger event has a larger probability
+(`sampleProbability_mono`), and `u v` is a distribution function with uniform marginals
+and a bounded density (`distFn2_mul`, `dfUniformMarginals_mul`, `hasBoundedDensity_mul`:
+an example for the hypotheses of a statement). `definedness` uses some of them by itself
+(`leanify_facts`, see the [reference](reference.md)).
+
 Reviewing a vocabulary means checking that each phrase means what its Lean
 meaning says. That review is the only place where words acquire meaning.
 Everything an article adds is defined in the article and checked.

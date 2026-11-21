@@ -127,6 +127,13 @@ proofs() {
     fail "examples/Means: the step that is not standard is not reported"
   endgroup
 
+  group "A definition without a proof that it is well defined is assumed to be, and named"
+  grep -q '"Assumed.Assumed.wellDefined0"' tests/Assumed/article.leanify.json ||
+    fail "tests/Assumed: the assumed definition is not among the axioms of the report"
+  grep -q '"status": *"\(text\|companion\)"' tests/Assumed/article.leanify.json ||
+    fail "tests/Assumed: the claim about the assumed definition is not verified"
+  endgroup
+
   group "Quoted results are assumptions, and the claims resting on them say so"
   $PYTHON scripts/leanify_diagnostics.py tests/Undefined/article.leanify.json --prose --verified > "$TMP/undefined.txt"
   grep -q "statement (claim 0) is quoted from the literature: the article assumes it" "$TMP/undefined.txt" ||
