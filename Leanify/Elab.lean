@@ -919,6 +919,36 @@ def partialFn (n j : Nat) (F : Tm) (dom : Option Tm := none) : Tm :=
   let body := Tm.app (.app (.app (.app (.prim .hasDerivWithin) g) univ) xj) (.loc 0)
   (List.range n).foldl (fun acc _ => Tm.lam .real .tt acc) (.the .real body)
 
+/-- The argument types and the result type of a function type. -/
+def argTys : Ty → List Ty × Ty
+  | .fn a b => let (as, r) := argTys b; (a :: as, r)
+  | t => ([], t)
+
+/-- The partial derivative in its `j`-th variable (from 0) of `F`, a real function of
+numbers of which some are elements of an interval type of the vocabulary (`tys`: the
+types of its arguments; `ivs`: for each the interval type, or none for a real number).
+In a variable of an interval type `[lo,hi]` it is the derivative within the interval
+(one-sided at an end point) of `t ↦ F(…,⟨t⟩,…)`, at the number that the element is:
+`(x₁,…,xₙ) ↦ the d with HasDerivWithinAt (t ↦ F(…,⟨t⟩,…)) d [lo,hi] xⱼ`. It is defined
+where that derivative exists. -/
+def partialFnT (tys : List Ty) (ivs : List (Option IntervalType)) (j : Nat) (F : Tm) : Tm :=
+  let n := tys.length
+  let ivj : Option IntervalType := (ivs.getD j none)
+  -- (about the bound variable of a function of a real number)
+  let inDom (iv : IntervalType) : Tm := .and (.le (.num iv.lo) (.loc 0)) (.le (.loc 0) (.num iv.hi))
+  -- under the `n` binders, the description's `d`, and `t`
+  let tArg : Tm := match ivj with
+    | some iv => .guard (inDom iv) (.app (.const iv.point) (.loc 0))
+    | none => .loc 0
+  let inner := applyN (shift (n + 2) 0 F)
+    ((List.range n).map fun i => if i == j then tArg else .loc (2 + (n - 1 - i)))
+  let g := Tm.lam .real (match ivj with | some iv => inDom iv | none => .tt) inner
+  let within := Tm.lam .real .tt (match ivj with | some iv => inDom iv | none => .tt)
+  let xj0 := Tm.loc (1 + (n - 1 - j))
+  let xj := match ivj with | some iv => Tm.app (.const iv.val) xj0 | none => xj0
+  let body := Tm.app (.app (.app (.app (.prim .hasDerivWithin) g) within) xj) (.loc 0)
+  tys.reverse.foldl (fun acc t => Tm.lam t .tt acc) (.the .real body)
+
 /-- The partial derivative of `F` in its `j`-th variable at the point `pt`. -/
 def partialAt (j : Nat) (F : Tm) (pt : List Tm) (dom : Option Tm := none) : Tm :=
   -- under the description's `d` and `t`
@@ -1096,7 +1126,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | t => (t, none)
         let (F, fty, doms) ← head f sc hd
         if doms.any (·.isSome) then fail E.unsupported
-        let some n := realArity fty | fail E.type
+        -- a real function of numbers: real numbers, or elements of an interval type of
+        -- the vocabulary (a function on the unit square)
+        let (tys, res) := argTys fty
+        if tys.isEmpty || res != .real then fail E.type
+        let ivs ← tys.mapM intervalOf
+        unless (tys.zip ivs).all (fun (t, iv) => t == .real || iv.isSome) do fail E.type
+        let n := tys.length
+        let allReal := ivs.all (·.isNone)
         let st ← get
         let params : List Codes := match F with
           | .glob i => (st.params.lookup i).getD []
@@ -1116,8 +1153,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let mut D := F
         for op in ops.reverse do
           match op with
-          | some i => D := partialFn n (← pos i) D
-          | none => D := laplacianFn n D
+          | some i =>
+            let j ← pos i
+            D := if allReal then partialFn n j D else partialFnT tys ivs j D
+          | none => if allReal then D := laplacianFn n D else fail E.unsupported
         match args with
         | some as => applyAll D fty [] (← as.mapM (term f sc pf))
         | none => pure (D, fty)

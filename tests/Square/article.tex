@@ -77,4 +77,11 @@ For every $x\in[0,1]$ and every $y\in[0,2]$, $x+y\le 3$ and $\frac{y}{2}\in[0,1]
 \begin{proposition}\label{p10}
 For every copula $C$ and every $u\in[0,1]$, $\int_0^u C(t,t)\,dt\le u$ and $\int_0^1\int_0^1 C(s,t)\,\mathrm{d}s\,\mathrm{d}t\le 1$.
 \end{proposition}
+
+A function on the square has partial derivatives: in each variable, the derivative within $[0,1]$, which is one-sided at the end points.
+
+\begin{proposition}\label{p11}
+For every $u,v\in[0,1]$, $\partial_1\Pi(u,v)=v$ and $\partial_2\Pi(u,v)=u$.
+Moreover, $\int_0^1\int_0^1\bigl(\partial_1\Pi(u,v)-v\bigr)^2\,du\,dv=0$.
+\end{proposition}
 \end{document}
