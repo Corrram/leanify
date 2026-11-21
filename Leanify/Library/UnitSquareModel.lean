@@ -6,6 +6,8 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Kernel.Disintegration.Integral
+import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.Probability.CDF
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Topology.UniformSpace.UniformConvergenceTopology
 import Mathlib.Analysis.Convex.Function
@@ -172,6 +174,16 @@ disintegration of the measure (Mathlib's `Measure.condKernel`). For a copula `C`
 version of the partial derivative `∂₁C`. -/
 noncomputable def conditionalDF (F : I → I → ℝ) : I → I → ℝ := fun u v =>
   ((measureOf F).condKernel u (Set.Iic v)).toReal
+
+open Classical in
+/-- The quantile function of the standard normal distribution on `(0,1)`:
+`Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib's
+`cdf (gaussianReal 0 1)`), and `0` at the two end points. For `0 < u < 1`, it is the
+number `x` with `Φ(x) = u`. -/
+noncomputable def normalQuantile (u : I) : ℝ :=
+  if 0 < (u : ℝ) ∧ (u : ℝ) < 1 then
+    sInf {x : ℝ | (u : ℝ) ≤ ProbabilityTheory.cdf (ProbabilityTheory.gaussianReal 0 1) x}
+  else 0
 
 def dfUniformMarginals (F : I → I → ℝ) : Prop :=
   (∀ u : I, F u 1 = u) ∧ ∀ v : I, F 1 v = v
@@ -819,6 +831,6 @@ noncomputable def model : Model where
     ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .real, sampleExpectation⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .real) ⟶ .prop, sampleIntegrable⟩,
     ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sampleProbability⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop, sampleHasProbability⟩,
     ⟨(seq ⟶ .real) ⟶ .prop, isKernel⟩, ⟨(seq ⟶ seq ⟶ .real) ⟶ .prop, isStatistic⟩,
-    ⟨sq ⟶ .prop, hasBoundedDensity⟩, ⟨sq ⟶ sq, conditionalDF⟩]
+    ⟨sq ⟶ .prop, hasBoundedDensity⟩, ⟨sq ⟶ sq, conditionalDF⟩, ⟨I01 ⟶ .real, normalQuantile⟩]
 
 end Leanify.UnitSquare

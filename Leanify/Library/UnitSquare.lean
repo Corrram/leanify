@@ -75,6 +75,8 @@ def boundedDensity : Nat := 32
 /-- The conditional distribution function of the second coordinate given the first, for
 the measure of a distribution function. -/
 def condDF : Nat := 33
+/-- The quantile function of the standard normal distribution, on `[0,1]`. -/
+def normalQ : Nat := 34
 
 /-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
 abbrev Quantity : Ty := sq ⟶ .real
@@ -112,7 +114,9 @@ def vocab : Vocab where
     sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop,
     (seq ⟶ .real) ⟶ .prop, (seq ⟶ seq ⟶ .real) ⟶ .prop, sq ⟶ .prop,
     -- the conditional distribution function
-    sq ⟶ sq]
+    sq ⟶ sq,
+    -- the standard normal quantile function
+    I01 ⟶ .real]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
@@ -127,7 +131,7 @@ def vocab : Vocab where
     w!"\\mathbb{E}_{#1}\\bigl[#2\\bigr]", w!"\\operatorname{Int}_{#1}(#2)",
     w!"P_{#1}\\bigl(#2\\bigr)", w!"\\operatorname{Event}_{#1}(#2)",
     w!"\\operatorname{Kernel}", w!"\\operatorname{Statistic}", w!"\\operatorname{BddDensity}",
-    w!"h_{#}"]
+    w!"h_{#}", w!"\\Phi^{-1}"]
   constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
     w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
     w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
@@ -142,7 +146,7 @@ def vocab : Vocab where
     w!"Leanify.UnitSquare.sampleExpectation", w!"Leanify.UnitSquare.sampleIntegrable",
     w!"Leanify.UnitSquare.sampleProbability", w!"Leanify.UnitSquare.sampleHasProbability",
     w!"Leanify.UnitSquare.isKernel", w!"Leanify.UnitSquare.isStatistic", w!"Leanify.UnitSquare.hasBoundedDensity",
-    w!"Leanify.UnitSquare.conditionalDF"]
+    w!"Leanify.UnitSquare.conditionalDF", w!"Leanify.UnitSquare.normalQuantile"]
   modules := [w!"Leanify.Library.UnitSquareModel"]
   adjectives := [
     { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
@@ -187,6 +191,8 @@ def vocab : Vocab where
   notions := [
     { name := phrase!"Lebesgue measure on $[0,1]$", value := .const lebesgue, ty := set1 ⟶ .real,
       doc := "the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`)" },
+    { name := phrase!"standard normal quantile function", value := .const normalQ, ty := I01 ⟶ .real,
+      doc := "`Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)`" },
     { name := phrase!"conditional distribution function of $v$", value := .const condDF, ty := sq ⟶ sq,
       doms := [some isCopula],
       doc := "`h_C(u,v) = P(V ≤ v | U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C`" },
