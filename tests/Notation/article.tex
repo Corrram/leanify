@@ -148,4 +148,14 @@ For $c\in(0,2)$ and $t\in[0,c]$, let $\kappa_c(t)\coloneqq c-t$.
 We have $\kappa_1(\frac12)=\frac12$.
 \end{lemma}
 
+The indicator of a condition is $1$ where the condition holds and $0$ elsewhere, and the indicator of a set is that of membership.
+For $v\in[0,1]$ and $x\in\mathbb{R}$, set $e_v(x)\coloneqq\mathbf 1\{x\le v\}-v$.
+For $x\in\mathbb{R}$, set $w(x)\coloneqq\mathbf{1}_{[0,1]}(x)+\mathbb{1}_{\{1<x,\ x\le2\}}$.
+
+\begin{lemma}\label{lem:indicator}
+For every $v\in[0,1]$, $\int_0^1e_v(x)\,dx=0$.
+Moreover, for every $x\in\mathbb{R}$, $0\le w(x)\le1$.
+Finally, $\int_0^2w(x)\,dx=2$.
+\end{lemma}
+
 \end{document}

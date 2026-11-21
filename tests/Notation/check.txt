@@ -87,7 +87,14 @@ tests/Notation/article.tex:141:1: info: claim 50 is meaningful if: \forall x\in 
 tests/Notation/article.tex:145:1: info: defines \kappa (kappa)
 tests/Notation/article.tex:148:1: info: claim 51: \kappa(1)(\frac{1}{2})=\frac{1}{2}
 tests/Notation/article.tex:148:1: info: claim 51 is meaningful if: (\neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land (0<1\land 1<2)\land \neg (2=0))\land \neg (2=0)
-tests/Notation/article.tex: 8 definitions, 52 claims
-  text: 5 compiled, 0 failed, 6 prose (of 11)
-  results: 41 compiled, 0 failed, 0 prose (of 41)
-  all: 46 compiled, 0 failed, 6 prose (of 52)
+tests/Notation/article.tex:152:1: info: defines e (e)
+tests/Notation/article.tex:153:1: info: defines w (w)
+tests/Notation/article.tex:156:1: info: claim 52: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \int_{0}^{1}e(x)(y)\,dy=0
+tests/Notation/article.tex:156:1: info: claim 52 is meaningful if: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow 0\le x\land x\le 1)\land \operatorname{Int}((y\in \mathbb{R}\,[0\le y\land y\le 1]\mapsto e(x)(y)))(0)(1)
+tests/Notation/article.tex:157:1: info: claim 53: \forall x\in \mathbb{R},\ 0\le w(x)\land w(x)\le 1
+tests/Notation/article.tex:158:1: info: claim 54: \int_{0}^{2}w(x)\,dx=2
+tests/Notation/article.tex:158:1: info: claim 54 is meaningful if: \operatorname{Int}((x\in \mathbb{R}\,[0\le x\land x\le 2]\mapsto w(x)))(0)(2)
+tests/Notation/article.tex: 10 definitions, 55 claims
+  text: 7 compiled, 0 failed, 7 prose (of 14)
+  results: 44 compiled, 0 failed, 0 prose (of 44)
+  all: 51 compiled, 0 failed, 7 prose (of 58)

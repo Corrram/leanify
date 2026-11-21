@@ -65,6 +65,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\cosh x`, `\sin^2 x`, `\arctan x` | a named function (LaTeX's operator names) applies to what follows it, with or without parentheses. What the name means is said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field (`\cosh` in `hyperbolic`, `\arcsin` with its domain `[-1,1]` in `trigonometry`); a name without a meaning is reported, with the field that reads it |
 | `\mathbb{N}`, `\mathbb{N}_0`, `\mathbb{Z}` | the natural numbers (with 0, as in mathlib; write `n\ge1` for the positive ones) and the integers, as real numbers |
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
+| `\mathbf 1\{x\le v\}`, `\mathbf{1}_{\{φ,\ ψ\}}`, `\mathbb{1}\{φ\}`, `\mathbf 1_A(x)`, `\mathbf{1}_{[0,1]}(x)` | the indicator: `1` where the condition holds (where all the conditions hold) and `0` elsewhere; of a set `A` at `x`, the indicator of `x\in A`, for a set that is read after `\in` (for a half-open interval, write the condition: `\mathbf 1\{1<x\le2\}`) |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
 | `$$…$$` | a display, like `\[…\]` |
 | `:=`, `\vcentcolon=`, `\colonequals`, `\triangleq`, `\mathrel{:=}` | the defining sign, as `\coloneqq` (so a macro `\defeq` of the article for one of them is read too) |

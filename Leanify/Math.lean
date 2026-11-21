@@ -229,6 +229,11 @@ def simplify : Nat → List PTok → Option (List MTok)
         | _ => none
       else if wFonts.contains n then
         match ts with
+        -- `\mathbf 1`, `\mathbb{1}`: the indicator (of the condition or the set after it)
+        | ⟨.mnum 1, _, _⟩ :: rest =>
+          if n == w!"mathbf" || n == w!"mathbb" then (MTok.cmd w!"@ind" :: ·) <$> simplify f rest else none
+        | ⟨.lbrace, _, _⟩ :: ⟨.mnum 1, _, _⟩ :: ⟨.rbrace, _, _⟩ :: rest =>
+          if n == w!"mathbf" || n == w!"mathbb" then (MTok.cmd w!"@ind" :: ·) <$> simplify f rest else none
         | ⟨.lbrace, _, _⟩ :: rest =>
           let letters := rest.takeWhile (fun p => match p.tok with | .mvar _ => true | _ => false)
           let word := letters.filterMap (fun p => match p.tok with | .mvar c => some c | _ => none)
@@ -662,6 +667,34 @@ def run : Nat → Mode → List MTok → R
         -- `\#\{…\}`, `\#A`: the number of elements of a set
         let (x, r1) ← run f (.atom false) rest
         some (.app (.id w!"@card") [x], r1)
+      else if n == w!"@ind" then
+        -- `\mathbf 1\{φ\}`, `\mathbf 1_{\{φ\}}`: the indicator of a condition (of several:
+        -- of all of them); `\mathbf 1_A(x)`: of the set `A`, at `x`
+        let ofConds (m : MT) (r : List MTok) : R := match m with
+          | .conj [c] => some (.app (.id w!"@ind") [c], r)
+          | .conj (c :: cs) => some (.app (.id w!"@ind") [.conj (c :: cs)], r)
+          | _ => none
+        match rest with
+        | .setl :: r => do
+          let (m, r1) ← run f (.list 125 []) r
+          ofConds m r1
+        | .sym 95 :: .lb :: .setl :: r => do
+          let (m, r1) ← run f (.list 125 []) r
+          let r2 ← expect .rb r1
+          ofConds m r2
+        | .sym 95 :: r => do
+          -- the set, then the point: the condition `x\in A`, as it is read elsewhere
+          let (set, r1) ← match r with
+            | .lb :: body => untilClose (body.length + 1) 0 [] body
+            | t :: after => some ([t], after)
+            | [] => none
+          let r2 ← expect (.sym 40) r1
+          let (x, r3) ← run f (.additive false) r2
+          let r4 ← expect (.sym 41) r3
+          let (m, r5) ← run f .top ([MTok.id w!"@pt", .cmd w!"in"] ++ set)
+          if !r5.isEmpty then none
+          some (.app (.id w!"@ind") [MT.substId w!"@pt" x 64 m], r4)
+        | _ => none
       else if n == w!"lfloor" || n == w!"lceil" then do
         -- `\lfloor x\rfloor`, `\lceil x\rceil`
         let (x, r1) ← run f (.additive false) rest

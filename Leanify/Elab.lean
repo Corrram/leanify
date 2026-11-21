@@ -1198,6 +1198,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `xz(x+z)`: a number before parentheses is a factor, not a function
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
+      -- `\mathbf 1\{φ\}`: the indicator of a condition, `1` where it holds and `0` elsewhere
+      if n == w!"@ind" then do
+        let c ← propOf f sc pf a
+        pure (.cases c (.num 1) (.num 0), .real)
+      else
       if n == w!"@card" then do
         unstatedCount a
         let (p, pty) ← term f sc pf a
