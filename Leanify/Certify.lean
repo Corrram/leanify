@@ -27,6 +27,9 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
   (`Doc.quotedClaims`) as its assumptions: the axiom `Foo.Quoted.claimK` stands for the
   proof of each, the certificate may depend on these axioms and on no other beside the
   standard three, and the report says which verified claims rest on which of them;
+* takes a definition without a proof that it is well defined (`J.definedI` missing, or
+  with `sorry`) as assumed to be: the axiom `Foo.Assumed.wellDefinedI` stands for the proof,
+  and the reports name these definitions;
 * has the kernel check `Foo.certificate : Certificate Foo.model Foo.doc Foo.G …` and
   derives `Foo.verifiedK : Foo.meaningfulK ∧ Foo.claimK` from it;
 * writes `<article>.leanify.json`, the per-sentence status for readers and
@@ -103,17 +106,30 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   -- justifications
   let usesSorry (n : Name) : CommandElabM Bool := do
     pure ((← liftCoreM <| Lean.collectAxioms n).contains ``sorryAx)
+  -- a definition without a proof that it is well defined (none, or one with `sorry`) is
+  -- assumed to be: the axiom `Foo.Assumed.wellDefinedI` stands for the proof, so that an
+  -- article can be certified while these proofs are being written. The certificate then
+  -- holds given these assumptions, which the reports name
   let mut defined : Array Name := #[]
+  let mut assumedDefs : Array Nat := #[]
   for i in [0:d.values.length] do
     let n := jn ++ nm s!"defined{i}"
-    match env.find? n with
-    | some ci =>
-      unless ci.type == Lean.mkConst (ns ++ nm s!"wellDefined{i}") do
-        throwError "{n} must have type {ns ++ nm s!"wellDefined{i}"}"
-      if ← usesSorry n then
-        throwError "definition {i} ({defName d i}): its well-definedness proof {n} uses sorry"
-      defined := defined.push n
-    | none => throwError "definition {i} ({defName d i}) has no well-definedness proof {n}"
+    let proved ← match env.find? n with
+      | some ci =>
+        unless ci.type == Lean.mkConst (ns ++ nm s!"wellDefined{i}") do
+          throwError "{n} must have type {ns ++ nm s!"wellDefined{i}"}"
+        pure !(← usesSorry n)
+      | none => pure false
+    if proved then defined := defined.push n
+    else
+      let ax := ns ++ `Assumed ++ nm s!"wellDefined{i}"
+      liftCoreM <| addDecl <| Declaration.axiomDecl
+        { name := ax, levelParams := [], type := Lean.mkConst (ns ++ nm s!"wellDefined{i}"), isUnsafe := false }
+      defined := defined.push ax
+      assumedDefs := assumedDefs.push i
+  unless assumedDefs.isEmpty do
+    let shown := String.intercalate ", " (assumedDefs.toList.map fun i => s!"{i} ({defName d i})")
+    logInfo m!"{assumedDefs.size} definitions are assumed to be well defined ({jn}.definedI is missing or uses sorry): {shown}"
   -- a statement that the article quotes from the literature and does not prove is an
   -- assumption: the axiom `Foo.Quoted.claimK` of `#leanify_semantics` stands for its
   -- proof, unless the justifications prove it after all
@@ -304,7 +320,9 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   -- are axioms of the certificate, and the only ones beside the standard three)
   let quotedAxioms := (List.range d.claims.length).filterMap fun k =>
     if isQuoted justified k then quotedAxiom k else none
-  let extra := axs.toList.filter fun a => !standard.contains a && !quotedAxioms.contains a
+  let assumedAxioms := assumedDefs.toList.map fun i => ns ++ `Assumed ++ nm s!"wellDefined{i}"
+  let extra := axs.toList.filter fun a =>
+    !standard.contains a && !quotedAxioms.contains a && !assumedAxioms.contains a
   unless extra.isEmpty do throwError "the certificate depends on nonstandard axioms {extra}"
   for r in refuted.toList.filterMap id do
     let extra := (← liftCoreM <| Lean.collectAxioms r).toList.filter (!standard.contains ·)
@@ -348,6 +366,7 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
     s!" ({after} of the verified claims follow a sentence of their result or proof that is not read: they are verified as read)"
   logInfo m!"{d.claims.length} claims: {count "text"} derived in the text from their citations, \
     {count "companion"} justified by companion proofs,{quotedText} {count "refuted"} refuted, \
-    {count "unverified"} unverified{afterText}; {d.values.length} definitions well defined. Axioms: {axs.toList}"
+    {count "unverified"} unverified{afterText}; {d.values.length - assumedDefs.size} definitions well defined\
+    {if assumedDefs.isEmpty then "" else s!", {assumedDefs.size} assumed to be"}. Axioms: {axs.toList}"
 
 end Leanify

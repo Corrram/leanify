@@ -194,7 +194,7 @@ In namespace `J`:
 
 | Declaration | Type | Required |
 | --- | --- | --- |
-| `J.definedI` | `NS.wellDefinedI` | for every definition, without `sorry` |
+| `J.definedI` | `NS.wellDefinedI` | for every definition whose well-definedness is to be shown; a definition without it (or with `sorry` in it) is *assumed* to be well defined |
 | `J.proofK` | `NS.obligationK` | for each claim to verify |
 | `J.refuteK` | `NS.meaningfulK ∧ ¬ NS.claimK` | for a claim that is false as stated |
 | `J.satisfiedK` | `NS.satisfiableK` | for a result to be *derived*: the hypotheses of claim `K` can hold together |
@@ -208,6 +208,19 @@ that is not among its premises, directly or through a helper: its premises are
 the hypotheses of its obligation, and another result has to be cited in the
 text. The certificate and every refutation may use only the axioms
 `propext`, `Classical.choice` and `Quot.sound`.
+
+### Definitions that are assumed to be well defined
+
+That a definition is well defined can be a theorem of its own: an integral needs an
+integrable integrand, a supremum a bounded set, an inverse a bijection. A reader takes
+these for granted, and their Lean proofs are often the longest part of a certificate.
+So a definition without a proof `J.definedI` (or with `sorry` in it) does not stop the
+certificate: the axiom `NS.Assumed.wellDefinedI` stands for the proof, as
+`NS.Quoted.claimK` stands for a quoted result. The certificate then holds *given* that
+these definitions are well defined. The build names them (`3 definitions are assumed to
+be well defined: 6 (R), …`), the summary counts them apart (`33 definitions well
+defined, 3 assumed to be`), and in `article.leanify.json` their `justification` is the
+axiom. An article is fully certified when no definition is assumed.
 
 ### What a verified claim does not say
 

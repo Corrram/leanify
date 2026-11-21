@@ -607,12 +607,17 @@ def reportRecs (path : System.FilePath) : IO (Array Rec) := do
         sentences[i]?.bind fun s => (s.getObjValAs? Nat "line").toOption).getD 0
       recs := recs.push (.at line s!"this {str c "role"} is false as stated: refuted in Lean by {str c "justification"}")
   let count (k v : String) : Nat := (claims.filter fun c => str c k == v).size
+  -- (a definition whose well-definedness the certificate assumes: its justification is
+  -- the axiom `Foo.Assumed.wellDefinedI`)
+  let assumedDefs : Nat := ((arr "definitions").filter fun dj =>
+    ((str dj "justification").splitOn ".Assumed.wellDefined").length > 1).size
   let derived := count "status" "text"
   let steps := if count "step" "standard" + count "step" "argument" == 0 then ""
     else s!" ({count "step" "standard"} by the standard tactic)"
   recs := recs.push (.say s!"certificate: {claims.size} claims: {derived} derived in the text from their citations{steps}, \
     {count "status" "companion"} justified by companion proofs, {count "status" "refuted"} refuted, \
-    {count "status" "unverified"} unverified; {(arr "definitions").size} definitions well defined")
+    {count "status" "unverified"} unverified; {(arr "definitions").size - assumedDefs} definitions well defined\
+    {if assumedDefs == 0 then "" else s!", {assumedDefs} assumed to be (no proof yet)"}")
   -- the verified claims that follow a sentence of their result or proof that is not read
   let after := (claims.filter fun c => (str c "status" == "text" || str c "status" == "companion") &&
     !(((c.getObjVal? "after").toOption.bind (·.getArr?.toOption)).getD #[]).isEmpty).size
