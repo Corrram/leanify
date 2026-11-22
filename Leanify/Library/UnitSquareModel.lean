@@ -161,6 +161,14 @@ def isStatistic (T : (ℝ → I) → (ℝ → I) → ℝ) : Prop :=
   (∃ m : ℕ, ∀ x y x' y', agreeBelow m x x' → agreeBelow m y y' → T x y = T x' y') ∧
   Measurable (fun ω : ℕ → I × I => T (sampleU ω) (sampleV ω))
 
+/-- `T` depends only on the first `n` observations: its value is determined by the terms of the
+two sequences below `n` (`n` a natural number). -/
+def dependsOnFirst (T : (ℝ → I) → (ℝ → I) → ℝ) (n : ℝ) : Prop :=
+  ∃ m : ℕ, (m : ℝ) = n ∧ ∀ x y x' y', agreeBelow m x x' → agreeBelow m y y' → T x y = T x' y'
+
+/-- A real function on the square is Borel measurable. -/
+def measurableSq (g : I → I → ℝ) : Prop := Measurable (fun p : I × I => g p.1 p.2)
+
 /-- `F` has a bounded density: `F(u,v) = ∫₀ᵘ∫₀ᵛ c(s,t) dt ds` for a bounded measurable `c`. -/
 def hasBoundedDensity (F : I → I → ℝ) : Prop :=
   ∃ c : ℝ → ℝ → ℝ, Measurable (fun p : ℝ × ℝ => c p.1 p.2) ∧ (∃ B : ℝ, ∀ s t, |c s t| ≤ B) ∧

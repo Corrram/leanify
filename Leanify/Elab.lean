@@ -2286,6 +2286,13 @@ where
         if ty != Ty.fn fn1 fn1 then fail E.type
         let kt ← asReal (← term f sc pf k)
         pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.tensor)) t) kt), Ty.fn kern kern))
+      -- `T^k`: a power of an operator on functions of the interval
+      | .sup op k => do
+        let st0 ← get
+        let some (t, ty) ← try? op | return none
+        if ty != Ty.fn fn1 fn1 then set st0; return none
+        let kt ← asReal (← term f sc pf k)
+        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.opPow)) t) kt), Ty.fn fn1 fn1))
       -- `F_S(x)`: a component applied to a sequence
       | .app (.sub (.id k) i) args => do
         let some (h, hty) ← opTerm f sc pf (.sub (.id k) i) | return none

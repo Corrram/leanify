@@ -104,7 +104,7 @@ regenerates it from the vocabulary itself. A field is a Lean value
 `Leanify.Fields.all`. Fields built from the core formula language (most of them)
 need nothing else: their meaning is the meaning of the formula language, which
 `Leanify.Denote` gives in terms of Mathlib. A field with constants of its own
-(`unitsquare`, `torus`, `complex`, `hyperbolic`, `trigonometry`) names the Lean
+(`unitsquare`, `hilbert`, `markov`, `torus`, `complex`, `hyperbolic`, `trigonometry`) names the Lean
 meaning of each: a declaration of Mathlib (`Real.sinh`), or a definition written for
 the field. A function of a field may have a domain (`\arcsin` on `[-1,1]`, in
 `trigonometry`): a claim that uses it is meaningful only on the domain.
@@ -122,7 +122,20 @@ function, their expectation `\mathbb{E}_C[\ldots]` and their probability `P_C(\l
 A kernel is a square-integrable function of finitely many terms of a sequence in `[0,1]`,
 and a statistic is a measurable function of finitely many observations of the sample:
 `K_F(C)\coloneqq\mathbb{E}_C[F(U)F(V)]` for a kernel `F`, and `P_C(R(C)\le T(U,V))` for a
-statistic `T`. A copula may be symmetric, and it may have a bounded density.
+statistic `T`. A copula may be symmetric, and it may have a bounded density. A map of the
+square may be Borel measurable (`for every Borel measurable function $g:[0,1]^2\to[0,1]$`),
+and a statistic may be a function of the first `n` observations.
+The field `hilbert` adds, to `unitsquare`, the functions on `[0,1]` as elements of `L^2` and
+`L^2_0` (square-integrable, and with integral zero), their inner product `\langle f,g\rangle` and
+norm `\lVert f\rVert`, operators on them with their phrases (`$T$ fixes the constants`, `maps
+$L^2_0$ into itself with norm at most $1$`, `is $r$ times the identity on $A$`), the powers
+`T^k` of an operator, its norm on a subspace `\lVert T|_{L^2_0}\rVert`, tensor powers
+`T^{\otimes m}` acting on kernels, and the components `F_S` of the Hoeffding decomposition of a
+kernel. These are functions, not classes of functions up to null sets: `\lVert f\rVert` is
+`\sqrt{\int_0^1 f^2}` of the function itself. The field `markov` adds, to `hilbert`, the Markov
+operator `T_C` of a copula (`We write $T_C$ for the \emph{Markov operator} of $C$.`): the
+conditional expectation `(T_Cg)(u)=\mathbb{E}[g(V)\mid U=u]`, an integral against the
+conditional distribution of the copula.
 An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.

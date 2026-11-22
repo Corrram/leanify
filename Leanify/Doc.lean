@@ -1540,6 +1540,7 @@ def clauseMaths : Clause → List MT
   | .timesId op k d => [op, k, d]
   | .dependsFirst g m => [g, m]
   | .hasProps sm _ ms => sm :: ms
+  | .firstObs g m => [g, m]
   | _ => []
 
 /-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
@@ -1826,7 +1827,7 @@ def citeClaims (l : Codes) : M (List Nat) := do
   let st ← get
   match st.labels.lookup l with
   | some cs => pure cs
-  | none => if st.defLabels.contains l then pure [] else fail E.label l
+  | none => if st.defLabels.contains l || l.head? == some 167 then pure [] else fail E.label l
 
 def addLabels (ls : List Codes) (claims : List Nat) (isDef : Bool) : M Unit := do
   for l in ls do
@@ -3175,6 +3176,13 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let (s', ty) ← term F sc none sm
     let ps ← ms.mapM fun m => prop sc (some (s', ty)) m
     pure (conjAll ps)
+  | .firstObs g m => do
+    let some iv := (← get).vocab.intervals.find? (·.firstObs.isSome) | fail E.unsupported
+    let dc ← liftO iv.firstObs E.unsupported
+    let (gt, gty) ← term F sc none g
+    if gty != Ty.fn (Ty.fn .real iv.ty) (Ty.fn (Ty.fn .real iv.ty) .real) then fail E.type
+    let mt ← asReal (← term F sc none m)
+    pure (.app (.app (.const dc) gt) mt)
   | .dependsFirst g m => do
     let iv ← liftO (← Elab.hilbertIv) E.unsupported
     let dc ← liftO iv.dependsFirst E.unsupported
@@ -4322,6 +4330,11 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
     descDef c bs lhs kind np cond
   | .assumeAll binds defs => assumeIn c binds defs
+  | .letSuchThatNP np hyp => do
+    -- the object, then the property it is chosen with
+    let (d1, c1) ← assumeIn c [.noun np] []
+    let (d2, c2) ← supposeIn c [hyp] false false false none
+    pure (d1 ++ d2, c1 ++ c2)
   | .letSuchThat v hyp defs => do
     -- the variable, then the property it is chosen with, then the definitions
     let (d1, c1) ← assumeIn c [.every [v] (.id w!"\\mathbb{R}")] []
@@ -4779,7 +4792,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       match parts with
       | [(_, sn)] => do
         let st ← get
-        tryCatch (one s sn toks0 undefinedAlt) fun e =>
+        tryCatch (one s sn toks0 (undefinedAlt.orElse fun _ => Grammar.thatIsSentence s)) fun e =>
           match partsOf () with
           | some ps@(_ :: _ :: _) => do
             set st

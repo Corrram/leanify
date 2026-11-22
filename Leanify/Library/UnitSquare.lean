@@ -77,6 +77,10 @@ the measure of a distribution function. -/
 def condDF : Nat := 33
 /-- The quantile function of the standard normal distribution, on `[0,1]`. -/
 def normalQ : Nat := 34
+/-- A function of two sequences depends only on the first `n` observations (their terms below `n`). -/
+def firstObs : Nat := 35
+/-- A function on the square is Borel measurable. -/
+def borelSq : Nat := 36
 
 /-- A quantity of functions on the unit square (of copulas, say), and a class of them. -/
 abbrev Quantity : Ty := sq ⟶ .real
@@ -95,7 +99,8 @@ def vocab : Vocab where
                   integral2 := some integral2, integrable2 := some integrable2, ae2 := some ae2,
                   markovPower := some markovPower, markovDom := some isCopula,
                   sampleExp := some sampleExp, sampleInt := some sampleInt,
-                  sampleProb := some sampleProb, sampleEvent := some sampleEvent }]
+                  sampleProb := some sampleProb, sampleEvent := some sampleEvent,
+                  firstObs := some firstObs }]
   consts := [sq ⟶ .prop, sq ⟶ .prop, meas2 ⟶ .prop, meas2 ⟶ .prop,
     -- properties of a quantity on a class, and of a class
     Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop, Quantity ⟶ Class ⟶ .prop,
@@ -116,7 +121,9 @@ def vocab : Vocab where
     -- the conditional distribution function
     sq ⟶ sq,
     -- the standard normal quantile function
-    I01 ⟶ .real]
+    I01 ⟶ .real,
+    -- functions of the first observations, Borel functions on the square
+    (seq ⟶ seq ⟶ .real) ⟶ .real ⟶ .prop, sq ⟶ .prop]
   constNames := [w!"\\operatorname{DistFn}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{Prob}_{[0,1]^2}", w!"\\operatorname{UnifMarg}",
     w!"\\operatorname{convex}(#1)\\text{ on }#2", w!"\\operatorname{concave}(#1)\\text{ on }#2",
@@ -131,7 +138,7 @@ def vocab : Vocab where
     w!"\\mathbb{E}_{#1}\\bigl[#2\\bigr]", w!"\\operatorname{Int}_{#1}(#2)",
     w!"P_{#1}\\bigl(#2\\bigr)", w!"\\operatorname{Event}_{#1}(#2)",
     w!"\\operatorname{Kernel}", w!"\\operatorname{Statistic}", w!"\\operatorname{BddDensity}",
-    w!"h_{#}", w!"\\Phi^{-1}"]
+    w!"h_{#}", w!"\\Phi^{-1}", w!"\\operatorname{FirstObs}(#1,#2)", w!"\\operatorname{Borel}"]
   constLean := [w!"Leanify.UnitSquare.distFn2", w!"Leanify.UnitSquare.dfUniformMarginals",
     w!"Leanify.UnitSquare.probMeasure2", w!"Leanify.UnitSquare.measUniformMarginals",
     w!"Leanify.Prelude.convexOnSq", w!"Leanify.Prelude.concaveOnSq", w!"Leanify.Prelude.lscUniform",
@@ -146,7 +153,8 @@ def vocab : Vocab where
     w!"Leanify.UnitSquare.sampleExpectation", w!"Leanify.UnitSquare.sampleIntegrable",
     w!"Leanify.UnitSquare.sampleProbability", w!"Leanify.UnitSquare.sampleHasProbability",
     w!"Leanify.UnitSquare.isKernel", w!"Leanify.UnitSquare.isStatistic", w!"Leanify.UnitSquare.hasBoundedDensity",
-    w!"Leanify.UnitSquare.conditionalDF", w!"Leanify.UnitSquare.normalQuantile"]
+    w!"Leanify.UnitSquare.conditionalDF", w!"Leanify.UnitSquare.normalQuantile",
+    w!"Leanify.UnitSquare.dependsOnFirst", w!"Leanify.UnitSquare.measurableSq"]
   modules := [w!"Leanify.Library.UnitSquareModel"]
   adjectives := [
     { words := [w!"convex"], ty := Quantity, pred := .const 4, onDomain := true,
@@ -215,6 +223,13 @@ def vocab : Vocab where
     { phrase := phrase!"Borel measurable", prenominal := true, ty := self,
       pred := .lam self .tt (.app (.const borel) (.loc 0)),
       doc := "a Borel measurable map of `[0,1]` (Mathlib `Measurable`)" },
+    { phrase := phrase!"Borel measurable", prenominal := true, ty := sq,
+      pred := .lam sq .tt (.app (.const borelSq) (.loc 0)),
+      doc := "a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function)" },
+    { phrase := phrase!"Borel measurable", prenominal := true, ty := I01 ⟶ I01 ⟶ I01,
+      pred := .lam (I01 ⟶ I01 ⟶ I01) .tt (.app (.const borelSq)
+        (.lam I01 .tt (.lam I01 .tt (.app (.const val) (.app (.app (.loc 2) (.loc 1)) (.loc 0)))))),
+      doc := "a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function)" },
     { phrase := phrase!"Borel measurable", prenominal := true, ty := I01 ⟶ .real,
       pred := .lam (I01 ⟶ .real) .tt (.app (.const borelReal) (.loc 0)),
       doc := "a Borel measurable real function on `[0,1]` (Mathlib `Measurable`)" },

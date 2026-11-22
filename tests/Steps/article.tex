@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{leanify}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\title{Reasons, restatements and chosen objects in proofs}
+% A test of proof sentences that give their reasons in words, restate an informal sentence,
+% or choose an object: `INFORMAL, that is, FORMAL`; `since WORDS` at the start and in the
+% middle of a sentence, with a relative clause; a description before `so`; `Let $c>0$ be
+% such that …`; `we can find … such that …`; `we obtain a NP $X$ such that …`; headings of
+% paragraphs; a section as a citation; `for each of the WORDS $x\in S$`; `Letting
+% $\varepsilon\to0$ gives the claim.` The expected output of `leanify check --claims` is
+% check.txt.
+\begin{document}
+\maketitle
+
+\section{Squares}\label{sec:squares}
+
+Every square of a real number is nonnegative, that is, for every real number $x$, we have $x^2\ge0$.
+We have $x^3=x$ for each of the three numbers $x\in\{-1,0,1\}$.
+
+\begin{lemma}\label{lem:sum}
+For all real numbers $x$ and $y$, we have $x^2+y^2\ge2xy$.
+\end{lemma}
+
+\begin{proof}
+\emph{Expanding the square.}
+We have $(x-y)^2=x^2-2xy+y^2$.
+Hence $(x-y)^2\ge0$ by Section~\ref{sec:squares}, and since the square is the expansion above, $x^2+y^2-2xy\ge0$.
+\end{proof}
+
+\begin{lemma}\label{lem:archimedes}
+For every real number $\varepsilon>0$, there is a positive integer $n$ such that $\frac1n<\varepsilon$.
+\end{lemma}
+
+\begin{proof}
+By the Archimedean property of the real numbers, we can find a positive integer $n$ such that $n>\frac1\varepsilon$.
+Then $\frac1n<\varepsilon$.
+\end{proof}
+
+\begin{theorem}\label{thm:zero}
+Let $a$ be a real number.
+Assume that $a\le\varepsilon$ for every $\varepsilon>0$.
+Then $a\le0$.
+\end{theorem}
+
+\begin{proof}
+Let $\varepsilon>0$.
+Since the hypothesis applies to $\varepsilon$, which is positive, $a\le\varepsilon$.
+Letting $\varepsilon\to0$ gives the claim.
+\end{proof}
+
+\begin{lemma}\label{lem:between}
+For every real number $x$, there is an integer $k$ such that $k\le x<k+1$.
+\end{lemma}
+
+\begin{proof}
+Taking the integer part of $x$, we obtain an integer $k$ such that $k\le x<k+1$.
+Then $k\le x$.
+\end{proof}
+
+\begin{lemma}\label{lem:small}
+Let $b$ be a real number with $0<b<1$.
+Then $b^2<b$.
+\end{lemma}
+
+\begin{proof}
+Let $c>0$ be such that $b+c=1$.
+The number $c$ is the distance from $b$ to $1$, so $b^2=b(1-c)$.
+Since $c$ is positive, $b^2<b$.
+\end{proof}
+
+\end{document}

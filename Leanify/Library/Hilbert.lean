@@ -12,7 +12,7 @@ functions on `[0,1]` and the operators on it:
   uniform terms);
 * an operator `T` (a map of functions of `[0,1]` to such functions) applied to a function by
   juxtaposition, `Tg` and `(Tg)(u)`, its norm on a class of functions, `\lVert T|_{A}\rVert`, and
-  its tensor power `T^{\otimes m}`, which applies `T` to each of the terms `1, …, m` of a
+  its powers `T^k` (`T` applied `k` times), its tensor power `T^{\otimes m}`, which applies `T` to each of the terms `1, …, m` of a
   sequence: an operator on kernels;
 * the components `F_S` of a kernel `F` in its Hoeffding decomposition, for finite sets `S` of
   positive integers, and the subspace of the components for `S`;
@@ -52,23 +52,24 @@ def hoeff : Nat := base + 9
 def hspace : Nat := base + 10
 def dependsFirst : Nat := base + 11
 def subsetSum : Nat := base + 12
+def opPow : Nat := base + 13
 
 /-- The constants of this field, in order: their types, readable names, and Lean meanings. -/
 def consts : List Ty := [fn1 ⟶ .prop, fn1 ⟶ .prop, fn1 ⟶ fn1 ⟶ .real, fn1 ⟶ .real,
   kern ⟶ kern ⟶ .real, kern ⟶ .real, op1 ⟶ (fn1 ⟶ .prop) ⟶ .real, opK ⟶ (kern ⟶ .prop) ⟶ .real,
   op1 ⟶ .real ⟶ opK, kern ⟶ rset ⟶ kern, rset ⟶ kern ⟶ .prop, kern ⟶ .real ⟶ .prop,
-  .real ⟶ (rset ⟶ .real) ⟶ .real]
+  .real ⟶ (rset ⟶ .real) ⟶ .real, op1 ⟶ .real ⟶ op1]
 
 def constNames : List Codes := [w!"L^2", w!"L^2_0", w!"\\langle #1,#2\\rangle", w!"\\lVert #\\rVert",
   w!"\\langle #1,#2\\rangle", w!"\\lVert #\\rVert", w!"\\lVert #1|_{#2}\\rVert", w!"\\lVert #1|_{#2}\\rVert",
   w!"{#1}^{\\otimes #2}", w!"{#1}_{#2}", w!"H_{#}", w!"\\operatorname{dep}(#1,#2)",
-  w!"\\sum_{S\\subseteq\\{1,\\dots,#1\\}}#2"]
+  w!"\\sum_{S\\subseteq\\{1,\\dots,#1\\}}#2", w!"{#1}^{#2}"]
 
 def constLean : List Codes := [w!"Leanify.Hilbert.Model.memL2", w!"Leanify.Hilbert.Model.memL20",
   w!"Leanify.Hilbert.Model.inner1", w!"Leanify.Hilbert.Model.norm1", w!"Leanify.Hilbert.Model.innerSeq",
   w!"Leanify.Hilbert.Model.normSeq", w!"Leanify.Hilbert.Model.opNormOn", w!"Leanify.Hilbert.Model.opNormOnSeq",
   w!"Leanify.Hilbert.Model.tensorPow", w!"Leanify.Hilbert.Model.hoeffding", w!"Leanify.Hilbert.Model.hoeffSpace",
-  w!"Leanify.Hilbert.Model.dependsFirst", w!"Leanify.Hilbert.Model.subsetSum"]
+  w!"Leanify.Hilbert.Model.dependsFirst", w!"Leanify.Hilbert.Model.subsetSum", w!"Leanify.Hilbert.Model.opPow"]
 
 /-- A finite set of positive integers. -/
 def finPos : Tm := Build.close (Build.lamT rset (fun _ => Build.tt) fun S =>
@@ -108,7 +109,7 @@ def vocab : Vocab :=
                 innerSeq := some innerSeq, normSeq := some normSeq, opNorm1 := some opNorm1,
                 opNormSeq := some opNormSeq, tensor := some tensor, hoeff := some hoeff,
                 hspace := some hspace, dependsFirst := some dependsFirst,
-                isKernel := some UnitSquare.kernel, subsetSum := some subsetSum } }
+                isKernel := some UnitSquare.kernel, subsetSum := some subsetSum, opPow := some opPow } }
 
 def withCore : Vocab := Vocab.core ++ vocab
 

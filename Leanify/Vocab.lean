@@ -180,6 +180,9 @@ structure IntervalType where
   sampleInt : Option Nat := none
   sampleProb : Option Nat := none
   sampleEvent : Option Nat := none
+  /-- `T is a function of the first n observations`: a function of two sequences that depends
+  only on their terms below `n`. -/
+  firstObs : Option Nat := none
   /-- Square-integrable functions on the interval (the field `hilbert`): the class `L^2`
   (measurable, with an integrable square) and its functions with integral zero
   (`L^2_0`), the inner product `\langle f,g\rangle = ∫ f g` and the norm
@@ -200,6 +203,8 @@ structure IntervalType where
   /-- `T^{\otimes m}`: an operator on functions of the interval applied to the terms
   `1, …, m` of a sequence, an operator on kernels. -/
   tensor : Option Nat := none
+  /-- `T^k`: the `k`-th power (iterate) of an operator on functions of the interval. -/
+  opPow : Option Nat := none
   /-- `F_S`: the component of a kernel in its Hoeffding decomposition for a finite set `S` of
   positive integers, and the subspace of the components for `S`. -/
   hoeff : Option Nat := none
@@ -312,12 +317,12 @@ def append (V W : Vocab) : Vocab :=
                ae2 := i.ae2.map (· + kc), markovPower := i.markovPower.map (· + kc),
                markovDom := i.markovDom.map tm, sampleExp := i.sampleExp.map (· + kc),
                sampleInt := i.sampleInt.map (· + kc), sampleProb := i.sampleProb.map (· + kc),
-               sampleEvent := i.sampleEvent.map (· + kc),
+               sampleEvent := i.sampleEvent.map (· + kc), firstObs := i.firstObs.map (· + kc),
                memL2 := i.memL2.map (· + kc), memL20 := i.memL20.map (· + kc),
                inner1 := i.inner1.map (· + kc), norm1 := i.norm1.map (· + kc),
                innerSeq := i.innerSeq.map (· + kc), normSeq := i.normSeq.map (· + kc),
                opNorm1 := i.opNorm1.map (· + kc), opNormSeq := i.opNormSeq.map (· + kc),
-               tensor := i.tensor.map (· + kc), hoeff := i.hoeff.map (· + kc),
+               tensor := i.tensor.map (· + kc), opPow := i.opPow.map (· + kc), hoeff := i.hoeff.map (· + kc),
                hspace := i.hspace.map (· + kc), dependsFirst := i.dependsFirst.map (· + kc),
                isKernel := i.isKernel.map (· + kc), subsetSum := i.subsetSum.map (· + kc) } }
 

@@ -587,6 +587,35 @@ Its domain is what the text says about those variables:
   `Let $n\ge1$ and $x\in[0,n]$.`, `Set $r\coloneqq\frac1{x+1}$.` defines `r(n,x)`
   for `x ∈ [0,n]`, although its formula does not mention `n`.
 
+### Reasons, restatements and objects chosen in a proof
+
+A proof says why a step holds and which objects it works with, often in words. A
+reason in words asserts nothing: the claim it supports is checked, and the step may
+use what the sentence cites, nothing else. A restatement replaces an informal sentence
+by one that Leanify reads. `tests/Steps/article.tex` uses these forms with examples from
+elementary analysis, `tests/Operators/article.tex` with operators on `L^2`.
+
+| Sentence | Reading |
+| --- | --- |
+| `Every square of a real number is nonnegative, that is, for every real number $x$, we have $x^2\ge0$.` | `INFORMAL, that is, FORMAL`: only the formal restatement after the first `, that is,` is read; the words before it may state the same informally, with formulas. Also when the words before it would be read on their own and their reading fails |
+| `Since the hypothesis applies to $\varepsilon$, which is positive, $a\le\varepsilon$.`, `Since $c$ is positive, $b^2<b$.` | a reason in words before the claim (at least two words, with formulas that state nothing); a relative clause after a comma (`, whose maximal correlation is $1$,`, `, which is positive,`) belongs to it |
+| `Hence $(x-y)^2\ge0$ by Section~\ref{sec:squares}, and since the square is the expansion above, $x^2+y^2-2xy\ge0$.` | a second claim of the sentence with its own reason in words. A section (`Section~\ref{s}`, also an item `Section~\ref{s}~(d)`) is cited as a reason: it names no result, and the step may use no claim through it |
+| `The number $c$ is the distance from $b$ to $1$, so $b^2=b(1-c)$.`, `…, so that, by Lemma~\ref{l}, …` | a description in words before `, so`: a reason; the clauses after `so` are claims |
+| `With the Markov operator $\frac{r+g}2\id+\frac{r-g}2J$ of $C_{r,g}$, this gives DISPLAY` | the words after `With` are a reason, the display is the claim (also `this yields`) |
+| `Let $c>0$ be such that $b+c=1$.`, `Let $n$ be such that $T$ is a function of the first $n$ observations.` | a variable of the rest of the proof, and the condition it is chosen with: a hypothesis of the steps after it, which has to be shown to hold together with the others (`satisfiableK`) |
+| `By the Archimedean property of the real numbers, we can find a positive integer $n$ such that $n>\frac1\varepsilon$.`, `…, we may choose $c>0$ such that …`, `Taking the integer part of $x$, we obtain an integer $k$ such that $k\le x<k+1$.` | as `Let`: the object of the noun phrase, and the condition it is chosen with. The words before it are a description and assert nothing; the step after it is checked under the condition |
+| `For Kendall's tau, we use the kernel $F=F_{\{1\}}+F_{\{2\}}+F_{\{1,2\}}$ from the proof of Theorem~\ref{t}.` | the definitions of another proof, available in this one; `$Q_{r^2}$ from Lemma~\ref{l} has $R=r$ and $D=0$` states the formulas about an object a result defines |
+| `Here $A_a$ is the ordinal sum of Section~\ref{sec:prelim}.` | a reminder of a definition the article made: it organizes the proof and asserts nothing |
+| `\emph{Expanding the square.}` at the start of a paragraph | the heading of a paragraph of the proof: it organizes the proof and asserts nothing |
+| `Letting $\varepsilon\to0$ gives the claim.` (`the assertion`) | the end of an argument by a limit: it organizes the proof. The result has to follow, in Lean, from the steps before it |
+| `We have $x^3=x$ for each of the three numbers $x\in\{-1,0,1\}$.` | `for each of the WORDS $x\in S$`: the words describe the members of `S`, and the claim is for every `x ∈ S` |
+| `$\varphi,\qquad\text{hence}\qquad\psi$` in a display (`so`, `thus`, `and`) | both formulas are claims |
+| `$a$ and $b$ are nonincreasing on $(0,1)$`, `the map $\theta\mapsto\Psi(C_\theta)$ is continuous on $[0,1]$` | functions of one variable that are monotone, or continuous, on a domain |
+| `$T$ is a function of the first $n$ observations` (field `unitsquare`) | a statistic that depends only on the observations `(U_i,V_i)` with `i < n`, for a natural number `n` |
+| `$T_C$ fixes the constants and maps $L^2_0$ into itself with norm at most $1$`, `$T$ is $r$ times the identity on $A$` (field `hilbert`) | the phrases of an operator: `T` maps every constant function to itself (up to a null set); maps the functions of `L^2_0` into `L^2_0`, with `\lVert T|_{L^2_0}\rVert\le1`; and `\lVert Tg-rg\rVert=0` for the `g` of `A` |
+| `\lVert T_C^{k+1}f\rVert\le\lVert T_C^kf\rVert` (field `hilbert`) | the powers of an operator, for a natural number `k` (`T^0` is the identity) |
+| `for every Borel measurable function $g:[0,1]^2\to[0,1]$` (field `unitsquare`) | a map of the square to `[0,1]`, measurable as a function of the pair; `\int g(u,v)\,\mathrm{d}C(u,v)` is its integral against the copula `C` |
+
 ## Checking while writing
 
 ```sh

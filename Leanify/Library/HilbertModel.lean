@@ -18,6 +18,7 @@ each `g` of `A` to a function `h` with `\lVert h-cg\rVert=0`.
 * `opNormOn T A`: the least `c ≥ 0` with `\lVert Tg\rVert ≤ c\lVert g\rVert` for all `g` of `A`
   (the norm of `T` on `A`; `0` when there is no such `c`); `opNormOnSeq` for operators on
   kernels;
+* `opPow T k`: `T` applied `k` times (`T^k`);
 * `tensorPow T m`: `T` applied to each of the terms `1, …, m` of the sequence, one after the
   other (`T` acting on the function of that term with the others fixed);
 * `hoeffding F S`: the component of `F` for a finite set `S` of positive integers,
@@ -69,6 +70,10 @@ noncomputable def applyUpTo (T : (I → ℝ) → (I → ℝ)) : ℕ → ((ℝ �
 /-- The tensor power `T^{\otimes m}`: `T` applied to each of the terms `1, …, m`. -/
 noncomputable def tensorPow (T : (I → ℝ) → (I → ℝ)) (m : ℝ) (F : (ℝ → I) → ℝ) : (ℝ → I) → ℝ :=
   applyUpTo T (Nat.floor m) F
+
+/-- The power `T^k` of an operator: `T` applied `k` times (`k` a natural number). -/
+noncomputable def opPow (T : (I → ℝ) → (I → ℝ)) (k : ℝ) : (I → ℝ) → (I → ℝ) :=
+  T^[Nat.floor k]
 
 /-- The conditional expectation of a kernel given the terms of a set `A` of indices: the
 other terms are replaced by independent uniform ones. -/

@@ -469,7 +469,13 @@ def cite : List Chunk → Option (Codes × List Chunk)
   | .w v :: .r .ref l :: cs =>
     if [w!"lemma", w!"theorem", w!"corollary", w!"proposition", w!"equation", w!"section", w!"claim",
         w!"fact", w!"observation", w!"definition", w!"remark"].contains v then
-      some (l, cs) else none
+      -- (a section is cited as `§l`: it names no result, and gives no premises)
+      let l := if v == w!"section" then [167] ++ l else l
+      -- (an item of it: `Section~\ref{s}~(d)`)
+      match cs with
+      | .p 40 :: .w i :: .p 41 :: r => if i.length ≤ 4 then some (l, r) else some (l, cs)
+      | _ => some (l, cs)
+    else none
   | _ => none
 
 def isEnd : List Chunk → Bool
@@ -511,6 +517,8 @@ where
     | 0, _, _ => none
     | f + 1, cs, n => match cs with
       | .p 44 :: .w s :: r =>
+        -- (`, so that, by CITE, …`: the words `that` and the comma are part of `so`)
+        let r := if s == w!"so" then optPunct 44 ((kw [w!"that"] r).getD r) else r
         if s == w!"so" then (if n ≥ 3 then some r else none) else go f (.w s :: r) n
       | .p 44 :: r => go f r n
       | c :: r => if descChunk c then go f r (match c with | .w _ => n + 1 | _ => n) else none
@@ -1295,6 +1303,8 @@ inductive Clause where
   function written alone applied to it (`R` is `R(Q_{r^2})`); `from` names the result whose
   definitions the object uses. -/
   | hasProps (s : MT) (fromLabel : Option Codes) (ms : List MT)
+  /-- `$T$ is a function of the first $n$ observations`: a statistic of the terms below `n`. -/
+  | firstObs (f n : MT)
   /-- What `stmtAt` stands for, once the proof is known: the clauses `stmt` of the
   statement, under the hypotheses `hyps` of the result that speak about its variable
   `v`, with `v` replaced by `e`. The grammar does not produce it. -/
@@ -1752,6 +1762,15 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       some (Clause.hasProps sm fromL ms, r4)) with
   | some res => some res
   | none =>
+  -- `$T$ is a function of the first $n$ observations`
+  match (do
+      let (fm, r) ← formula cs
+      let r1 ← kw [w!"is", w!"a", w!"function", w!"of", w!"the", w!"first"] r
+      let (m, r2) ← formula r1
+      let r3 ← kw [w!"observations"] r2
+      some (Clause.firstObs fm m, r3)) with
+  | some res => some res
+  | none =>
   -- `$F$ depends only on the first $m$ terms`
   match (do
       let (fm, r) ← formula cs
@@ -2185,6 +2204,15 @@ def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
             else split f (.w e :: rest) (.w a :: cur) acc
           | f + 1, c0 :: rest, cur, acc => split f rest (c0 :: cur) acc
         let nps := split (np.length + 1) np [] []
+        -- `each of the ten coefficients $A\in S$`: the words describe the members of `S`
+        let nps := nps.map fun np => match np with
+          | .w o :: .w t :: rest =>
+            if o == w!"of" && t == w!"the" then
+              match rest.dropWhile (fun c => match c with | .w _ => true | _ => false) with
+              | [.m ts] => if (binderMath ts).isSome && rest.length ≥ 2 then [Chunk.m ts] else np
+              | _ => np
+            else np
+          | _ => np
         (nps.foldr (fun np acc => Clause.forEveryNP acc np) c, r3)
       | none => (c, r)
     | _ => (c, r)
@@ -2485,6 +2513,34 @@ no NPs such that …`). -/
 def thereIs (cs : List Chunk) : Option (Clause × List Chunk) :=
   thereIsWith (fun r => thereIs0 r <|> clause r) cs
 
+/-- A reason in words up to a comma: words, and formulas that state nothing (`$(U_i,V_i)$`,
+no relation), with at least two words. The chunks from the comma on. -/
+def wordsReason (cs : List Chunk) : Option (List Chunk) :=
+  let inReason : Chunk → Bool := fun c => match c with
+    | .w _ | .p 45 => true
+    | .m ts => match Math.parseFormula ts with
+      | some (.chain _ _) | some (.land _ _) | some (.lor _ _) | some (.limp _ _) | some (.liff _ _)
+      | some (.lnot _) | some (.quant ..) | none => false
+      | _ => true
+    | _ => false
+  let part := cs.takeWhile inReason
+  let nw := (part.filter fun c => match c with | .w _ => true | _ => false).length
+  let rest := cs.drop part.length
+  match rest with
+  | .p 44 :: r =>
+    if nw < 2 then none else
+    -- (a relative clause in words after a comma belongs to the reason: `since the
+    -- hypothesis applies to $C_\varepsilon$, whose maximal correlation is $1$,`)
+    match r with
+    | .w w :: r' =>
+      if w == w!"whose" || w == w!"which" then
+        match r'.dropWhile inReason with
+        | .p 44 :: r'' => some (.p 44 :: r'')
+        | _ => some rest
+      else some rest
+    | _ => some rest
+  | _ => none
+
 /-- A clause with its leading citations: `By CITE, ...`, `CITE gives ...`, trailing `by CITE`. -/
 def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
   let afterBy (r' : List Chunk) : List Chunk :=
@@ -2495,7 +2551,13 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
   -- a reason in words beside the citations asserts nothing: `By \eqref{a} and the substitution
   -- $t\mapsto1-t$,`, `By independence of the two observations and \eqref{a},`, `By the
   -- intermediate value theorem,`
-  let byPart : Option (List Codes × List Chunk) := do
+  let byPart : Option (List Codes × List Chunk) :=
+    -- `since WORDS, CLAUSE` (`and since the first $n$ observations are independent, $φ$`)
+    (do let r ← kw [w!"since"] cs
+        let r ← wordsReason r
+        let r ← punct 44 r
+        if (clause r).isNone && (thereIs r).isNone then none else
+        some ([], r)) <|> do
     let r ← kw [w!"by"] cs
     match cite r with
     | some (l, r1) =>
@@ -2620,22 +2682,6 @@ where
           | _ => some (acc.reverse, r)
         | none => some (acc.reverse, r)
       | _ => none
-
-/-- A reason in words up to a comma: words, and formulas that state nothing (`$(U_i,V_i)$`,
-no relation), with at least two words. The chunks from the comma on. -/
-def wordsReason (cs : List Chunk) : Option (List Chunk) :=
-  let part := cs.takeWhile fun c => match c with
-    | .w _ | .p 45 => true
-    | .m ts => match Math.parseFormula ts with
-      | some (.chain _ _) | some (.land _ _) | some (.lor _ _) | some (.limp _ _) | some (.liff _ _)
-      | some (.lnot _) | some (.quant ..) | none => false
-      | _ => true
-    | _ => false
-  let nw := (part.filter fun c => match c with | .w _ => true | _ => false).length
-  let rest := cs.drop part.length
-  match rest with
-  | .p 44 :: _ => if nw ≥ 2 then some rest else none
-  | _ => none
 
 /-- `in $L^2([0,1]^m)$`, `in $L^2$`: the space in which a formula of the field `hilbert` is
 meant, which its operands say already. The chunks after it. -/
@@ -2843,6 +2889,9 @@ inductive Sent where
   result or proof, chosen with the property that the clause states (a hypothesis about it),
   and definitions. -/
   | letSuchThat (v : Codes) (hyp : Clause) (defs : List MT)
+  /-- `[DESCRIPTION,] we can find a NP $X$ such that CLAUSE`: an object of the noun phrase,
+  chosen with the property that the clause states (a hypothesis about it). -/
+  | letSuchThatNP (np : List Chunk) (hyp : Clause)
   /-- `Assume [that] CLAUSE [and CLAUSE].`, `Suppose …`, `We assume …`, `Assume further that
   …`, `Suppose, for contradiction, that …`: hypotheses of the following sentences of the
   result or proof (of the list item, inside one), until the proof or the item ends, a
@@ -3794,7 +3843,16 @@ def organizeSent (cs : List Chunk) : Option Sent :=
     | .w _ :: .r _ _ :: r5 => if done r5 then some .organizes else none
     | .r _ _ :: r5 => if done r5 then some .organizes else none
     | _ => none
-  cases <|> contra <|> induction <|> announces <|> hoeffNote <|> usesFrom <|> reminder
+  -- `Letting $\varepsilon\to0$ gives the claim.`, `$\varepsilon\to0$ gives the assertion.`
+  let limitEnd : Option Sent := do
+    let r := (kw [w!"letting"] cs).getD cs
+    match r with
+    | .m ts :: r1 => if !(ts.contains (.cmd w!"to")) then none else
+      let r2 ← kw [w!"gives"] r1 <|> kw [w!"yields"] r1 <|> kw [w!"proves"] r1
+      let r3 ← kw [w!"the", w!"claim"] r2 <|> kw [w!"the", w!"assertion"] r2 <|> kw [w!"the", w!"theorem"] r2
+      if done r3 then some .organizes else none
+    | _ => none
+  cases <|> contra <|> induction <|> announces <|> hoeffNote <|> usesFrom <|> reminder <|> limitEnd
 
 def sentenceCore (cs : List Chunk) : Option Sent :=
   match descSent none cs with
@@ -3814,6 +3872,59 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
   | some s => some s
   | none =>
   match meaningSent cs with
+  | some s => some s
+  | none =>
+  -- `[Since REASON,] we can find $c>0$ such that CLAUSE.`: as `Let $c>0$ be such that CLAUSE.`
+  -- (a description in words before it, `Keeping …, spreading …, and moving …,`, is a reason)
+  let finds : List (List Codes) := [[w!"we", w!"can", w!"find"], [w!"we", w!"may", w!"choose"],
+    [w!"we", w!"can", w!"choose"], [w!"we", w!"may", w!"find"], [w!"we", w!"fix"], [w!"we", w!"choose"],
+    [w!"we", w!"obtain"]]
+  let skipDesc : List Chunk → Option (List Chunk) := fun cs0 =>
+    let rec go : Nat → List Chunk → Option (List Chunk)
+      | 0, _ => none
+      | f + 1, cs => match anyKw finds cs with
+        | some _ => some cs
+        | none => match cs with
+          | c :: r => if descChunk c || (match (c : Chunk) with | .p 44 | .r _ _ | .p 40 | .p 41 => true | _ => false)
+              then go f r else none
+          | [] => none
+    go 96 cs0
+  match (do
+      let r0 ← skipDesc cs
+      let r ← anyKw finds r0
+      -- `a copula $C_\varepsilon\in\mathcal B$ such that CLAUSE`
+      let r := match r with
+        | .w a :: r' => if a == w!"a" || a == w!"an" then r' else r
+        | _ => r
+      let ws := r.takeWhile fun (c : Chunk) => match c with | .w v => v != w!"such" | _ => false
+      if ws.isEmpty then none else
+      let (np, r1) : List Chunk × List Chunk := match r.drop ws.length with
+        | .m t :: r' => (ws ++ [Chunk.m t], r')
+        | r' => (ws, r')
+      if !(np.any fun (c : Chunk) => match c with | .m _ => true | _ => false) then none else
+      let r2 ← kw [w!"such", w!"that"] r1
+      let r2 := optPunct 44 r2
+      let (cl, r3) ← suchThatClauses (fun r => thereIs r <|> clause r) r2
+      if isEnd r3 then some (Sent.letSuchThatNP np cl) else none) with
+  | some s => some s
+  | none =>
+  match (do
+      let r0 := match kw [w!"since"] cs >>= wordsReason with
+        | some r => optPunct 44 r
+        | none => cs
+      let r ← anyKw finds r0
+      let (ts, r1) ← mathChunk r
+      let (v, cond) ← match Math.parseFormula ts with
+        | some (.id v) => some (v, none)
+        | some (.chain (.id v) [rel]) => some (v, some (MT.chain (.id v) [rel]))
+        | _ => none
+      let r2 ← kw [w!"such", w!"that"] r1
+      let r2 := optPunct 44 r2
+      let (cl, r3) ← clause r2 <|> thereIs r2 <|> suchThatClauses (fun r => thereIs r <|> clause r) r2
+      let cl := match cond with
+        | some m => Clause.both [.fact m, cl]
+        | none => cl
+      if isEnd r3 then some (Sent.letSuchThat v cl []) else none) with
   | some s => some s
   | none =>
   let (topic, cs) := marker cs
@@ -3856,11 +3967,17 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
     -- `Let $m$ be such that CLAUSE[, and let $X\coloneqq e$, …]`
     (do
       let (ts, r1) ← mathChunk r
-      let v ← match Math.parseFormula ts with
-        | some (.id v) => some v
+      -- (`Let $c>0$ be such that …`: the condition is part of the property)
+      let (v, cond) ← match Math.parseFormula ts with
+        | some (.id v) => some (v, none)
+        | some (.chain (.id v) [rel]) => some (v, some (MT.chain (.id v) [rel]))
         | _ => none
       let r2 ← kw [w!"be", w!"such", w!"that"] r1
-      let (cl, r3) ← clause r2
+      let r2 := optPunct 44 r2
+      let (cl, r3) ← clause r2 <|> thereIs r2 <|> suchThatClauses (fun r => thereIs r <|> clause r) r2
+      let cl := match cond with
+        | some m => Clause.both [.fact m, cl]
+        | none => cl
       let (bs, ds, r4) ← letMore 6 r3 [] []
       if isEnd r4 && bs.isEmpty then some (.letSuchThat v cl ds) else none) <|>
     -- `Let $C$ be a|an NP[, and let …]`, `Let $a,b\in A$, and let $X\coloneqq e$, ….`
@@ -4358,6 +4475,13 @@ def undefinedOf (s : Sentence) : Option Sent :=
   let first := s.toks.findSome? fun p => match p.tok with | .word w => some (lower w) | _ => none
   if !(first.any fun w => [w!"let", w!"we", w!"write", w!"denote"].contains w) then none else
   (chunks (s.toks.length + 1) s.toks []).bind undefinedSent
+
+/-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
+sentence when its reading as a whole does not compile. -/
+def thatIsSentence (s : Sentence) : Option Sent := do
+  let cs ← chunks (s.toks.length + 1) s.toks []
+  let r ← skipThatIs cs
+  sentence0 r
 
 def parseSentence (s : Sentence) : Option Sent := do
   match s.toks with

@@ -39,7 +39,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
-| kernel | (ℝ → $[0,1]$) → ℝ | a real function of finitely many terms of a sequence in `[0,1]` (a function on `[0,1]^m` for some `m`), measurable and square-integrable for independent uniform terms |
+| kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
 
 | Adjective or phrase | Of | Meaning |
@@ -47,6 +47,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
+| borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
 | borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
 | with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
 | with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
@@ -69,6 +71,103 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
+
+## `hilbert`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
+| probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
+| bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
+| kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
+| statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
+| finite set of positive integers | ℝ → Prop | a finite set of integers `≥ 1` (an index set of the terms of a sequence) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
+| symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
+| borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
+| borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
+| with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
+| with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| convex [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
+| concave [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
+| lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
+| compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
+| closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
+| conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
+| markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $L^2$ | ($[0,1]$ → ℝ) → Prop | the square-integrable functions on `[0,1]`: measurable, with an integrable square (Mathlib `MemLp f 2`) |
+| $L^2_0$ | ($[0,1]$ → ℝ) → Prop | the functions of `L^2` with integral zero |
+
+## `markov`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
+| probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
+| bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
+| kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
+| statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
+| finite set of positive integers | ℝ → Prop | a finite set of integers `≥ 1` (an index set of the terms of a sequence) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
+| symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
+| borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
+| borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
+| with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
+| with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| convex [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
+| concave [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
+| lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
+| compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
+| closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
+| conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
+| markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
+| markov operator of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → ℝ) → $[0,1]$ → ℝ | `(T_C g)(u) = ∫ g(y) K_C(u, dy)` for a copula `C`, with the conditional distribution `K_C(u,·)` of the second coordinate given the first (Mathlib `Measure.condKernel`): `E[g(V) \| U = u]` |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $L^2$ | ($[0,1]$ → ℝ) → Prop | the square-integrable functions on `[0,1]`: measurable, with an integrable square (Mathlib `MemLp f 2`) |
+| $L^2_0$ | ($[0,1]$ → ℝ) → Prop | the functions of `L^2` with integral zero |
 
 ## `distributions`
 
