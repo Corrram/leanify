@@ -2716,10 +2716,10 @@ where
 /-- Clauses separated by `, and` / `, so`, ending with the final period. -/
 def clauses : Nat → List Chunk → List CClause → Option (List CClause)
   | 0, _, _ => none
-  | f + 1, cs, acc => step f cs acc <|> (skipThatIs cs >>= fun r => step f r acc)
-where
-  step : Nat → List Chunk → List CClause → Option (List CClause)
-  | f, cs, acc => do
+  | f + 1, cs0, acc0 =>
+  -- (the clauses as written, or the formal restatement after `, that is,`; a local function,
+  -- so that the recursion stays structural in the fuel, which the audit needs)
+  let step (cs : List Chunk) (acc : List CClause) : Option (List CClause) := do
     let (c, r) ← cclause cs
     let r := (spaceQualifier r).getD r
     -- `…, which is at most $Z$` (`at least`): the last term of the claim is at most `Z`
@@ -2762,6 +2762,7 @@ where
       match next with
       | some r'' => clauses f r'' acc
       | none => none
+  step cs0 acc0 <|> (skipThatIs cs0 >>= fun r => step r acc0)
 
 /-- A definition item `the NAME [of $x$ ...] is DEF`. -/
 structure DefItem where
