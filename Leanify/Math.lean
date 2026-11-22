@@ -867,7 +867,13 @@ def run : Nat → Mode → List MTok → R
             integralBody f lo hi r3
           -- `\int_{\mathbb{R}^3} e\,dx`: over a domain (`hi` is the marker `@over`)
           | _ => integralBody f lo (.id w!"@over") r1
-        | _ => none
+        -- `\int e\,\mathrm{d}C(u,v)`: against a distribution function, over its whole domain
+        -- (the marker `@whole`)
+        | _ => do
+          let (m, r1) ← integralBody f (.id w!"@whole") (.id w!"@over") rest
+          match m with
+          | .app (.id n) _ => if n == w!"@intd" then some (m, r1) else none
+          | _ => none
       else if (relOf (.cmd n)).isSome || n == w!"mapsto" || n == w!"to" || n == w!"qquad" || n == w!"quad" ||
           n == w!"approx" || n == w!"ldots" || wConnectives.contains n || n == w!"rfloor" ||
           n == w!"rceil" then none

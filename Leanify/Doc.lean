@@ -1632,12 +1632,25 @@ def ineqFree (st : St) (cl : Clause) : List Codes :=
     | none => []
   else []
 
+/-- The names of a formula that occur other than as the function of an application. -/
+def bareIds : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m => match m with
+    | .id n => [n]
+    | .app (.id _) args => args.flatMap (bareIds f)
+    | _ => (mtChildren m).flatMap (bareIds f)
+
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
   let ms := clauseMaths cl.clause ++ cl.defs
   let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
-  ids ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause ++
+  -- (`R` for `R(C)`, after `a copula $C$ with maximal correlation $R=R(C)$`, uses `C`; not
+  -- the function `R` applied, `R(M_r)`)
+  let abbrKeys := (ms.flatMap (bareIds 64)).eraseDups.flatMap fun n =>
+    if !ids.contains n then [] else
+    ((st.abbrevs.find? fun (e, k, _) => k == n && (e == st.curEnv || st.curProved == some e)).map (·.2.2)).getD []
+  ids ++ abbrKeys ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause ++
     (ms.flatMap (subBaseVars st bound))
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
@@ -2187,6 +2200,10 @@ def fixedFor (c : SentCtx) (m : MT) : M (Option BindInfo) := do
   | some p => pure (((← get).fixed.find? fun (s, b) => s == c.ctx.sec && b.name == p).map (·.2))
   | none => pure none
 
+/-- The type of a sequence of points of the vocabulary's interval (`U`, `V` of a sample). -/
+def seqTy : M (Option Ty) := do
+  pure (((← get).vocab.intervals.find? (·.sampleExp.isSome)).map fun iv => Ty.fn .real iv.ty)
+
 /-- An inline definition `X\coloneqq e` or `f(y)\coloneqq e` among the binders `bs` of
 its context: an argument that is a binder's variable ranges over the binder's
 domain, and the binders that `e` uses are implicit parameters, supplied from the
@@ -2198,6 +2215,13 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
       | .app h as => (h, as)
       | _ => (lhs, [])
     let some key := Elab.symKey hd | fail E.unsupported
+    -- `F(x_1,x_2)\coloneqq e`: a kernel, a function of the sequence `x`
+    let seqArg : Option (Codes × Ty) ← match Elab.kernelPattern args, ← seqTy with
+      | some x, some t => pure (some (x, t))
+      | _, _ => pure none
+    let args := match seqArg with
+      | some (x, _) => [MT.id x]
+      | none => args
     let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
     let st ← get
     let ids := freeIds 64 argNames rhs
@@ -2214,7 +2238,9 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
       !argNames.contains b.name && (used.contains b.name || lastDep.any (i < ·))).map (·.1)
     let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
       | some b => b
-      | none => ⟨n, .real, none⟩
+      | none => match seqArg with
+        | some (x, t) => if x == n then ⟨n, t, none⟩ else ⟨n, .real, none⟩
+        | none => ⟨n, .real, none⟩
     let all := imp ++ argInfo
     match lastDep with
     | some l =>
@@ -2271,7 +2297,7 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
       match m with
       -- `Define $f(x,y)\coloneqq e$.` without a binder: a function of real variables
       | .chain (.app h args) [(.defeq, _)] => do
-        if (symKey h).isNone || !args.all (fun a => match a with | .id _ => true | _ => false) then
+        if (symKey h).isNone || (!args.all (fun a => match a with | .id _ => true | _ => false) && (Elab.kernelPattern args).isNone) then
           fail E.finding w!"the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$)"
         let i ← inlineDef c [] m
         ds := ds ++ [i]
@@ -3574,7 +3600,7 @@ def laterIfC (cls : List CClause) : Bool :=
   (cls.drop 1).any fun cl => match cl.clause with | .ifThen .. | .ifClause .. => true | _ => false
 
 /-- The claims of one sentence. `exactly one` takes the following clauses into its scope. -/
-def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) : M (List Nat) := do
+def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) : M (List Nat) := do
   modify fun st => { st with topic := if topic == .none then st.topic else topic }
   -- (`Hence the statement holds for $n+1$.`)
   let cls ← cls.mapM fun cl => do pure { cl with clause := ← expandStmt c cl.clause }
@@ -3811,6 +3837,27 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         pure (id :: ids)
   go 16 cls none
 
+def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List CClause) : M (List Nat) := do
+  -- definitions of the sentence (`… for $F(x)=e$`): made first; a later sentence may
+  -- define the same symbol again (`Similarly, … for $F(x)=e'$`), and then means that one
+  let fds := cls.flatMap (·.forDefs)
+  for d in fds do
+    let key := match d with
+      | .chain (.app h _) _ | .chain h _ => (Elab.symKey h).getD []
+      | _ => []
+    let st ← get
+    let old := st.forGlobs.filter fun i => (st.globs[i]?).any (·.key == key) && Elab.visibleIn st i
+    -- (the earlier one is no longer visible: its environment is one that never is current)
+    modify fun st => { st with locals := st.locals.map fun (i, e) => if old.contains i then (i, 1000000000) else (i, e) }
+    let n0 := (← get).globs.length
+    discard <| inlineDef c [] d
+    let n1 := (← get).globs.length
+    -- (in the running text, the definition is local to its section's text: as in a proof)
+    modify fun st => { st with forGlobs := st.forGlobs ++ (List.range (n1 - n0)).map (n0 + ·) }
+    if c.ctx.kind == .text then
+      modify fun st => { st with locals := st.locals ++ (List.range (n1 - n0)).map fun k => (n0 + k, c.ctx.env) }
+  claimSentenceCore c topic binds cls
+
 /-- The number of quantities that the article has introduced without defining them:
 the definitions whose value is a constant after those of the vocabulary. -/
 def undefinedCount (st : St) : Nat :=
@@ -4041,7 +4088,7 @@ def contradictionIn (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : Lis
     | none => (((st.envHyps.filter fun h => h.env == c.ctx.env).getLast?).map (·.sent)).getD 0
   let n0 := (← get).globs.length
   let ids ← if cls.isEmpty then pure [] else claimSentence c topic binds cls
-  let ids' ← claimSentence c .none [] [⟨cites, .absurd, [], []⟩]
+  let ids' ← claimSentence c .none [] [⟨cites, .absurd, [], [], []⟩]
   let inEnv (cl : Claim) : Bool := match cl.role with
     | .step e | .statement e => e == c.ctx.env
     | _ => false
