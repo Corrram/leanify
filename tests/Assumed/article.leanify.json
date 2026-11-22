@@ -51,7 +51,7 @@
    "claims": [0]}],
  "notDefined": [],
  "namespace": "Assumed",
- "leanify": "0.7.0",
+ "leanify": "0.8.0",
  "justifications": "Assumed.Proofs",
  "definitions":
  [{"wellDefined": "∀ (x : ℝ), 0 < x → ¬x = 0",
