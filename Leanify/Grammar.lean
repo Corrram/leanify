@@ -2230,6 +2230,11 @@ inductive Sent where
   | defBy (sig : MT) (pieces : List DefPiece) (labels : List Codes) (observe : Option (MT × List Codes × MT))
   | denotedBy (name : List Chunk) (sym : MT)
   | letDenote (bind : Bind) (sym : MT) (np : List Chunk)
+  /-- `Let DISPLAY denote the NAME, NAME, and NAME NOUNS.`, `Let $f(x)\coloneqq e$ denote the
+  NAME NOUN.`: definitions, each named by one of the names, of objects of the noun. The
+  variables of a definition range over the arguments of the noun's objects (of a copula:
+  the points of `[0,1]`), and that each defined object is such an object is a claim. -/
+  | defsNamed (defs : List MT) (labels : List Codes) (np : List Chunk)
   /-- `For B, [set $X\coloneqq e$ and] let $S$ be NP[, where $sig$ is given by DISPLAY]`. -/
   | defSteps (bind : Bind) (sets : List MT) (sym : MT) (np : List Chunk) (whereDef : Option (MT × MT × List Codes))
   | weSay (subj : List Chunk) (phrase : List Codes) (obj : List Chunk) (cond : MT)
@@ -3250,6 +3255,15 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
       if isEnd r2 && (isNoun || bs.length > 1 || !ds.isEmpty) then some (.assumeAll bs ds) else none) <|>
     -- `Let $X\coloneqq e$.`, `Let $h(k)=e$.`: as `set`
     constDefsOf none r <|>
+    -- `Let DISPLAY denote the NAME, NAME, and NAME NOUNS.`
+    (do
+      let (items, ls, r1) ← defList 6 r [] []
+      if items.isEmpty || !items.all isDefeq then none else
+      let r2 ← kw [w!"denote", w!"the"] r1 <|> kw [w!"be", w!"the"] r1
+      if r2.length < 2 || !isEnd (r2.drop (r2.length - 1)) then none else
+      let np := r2.dropLast
+      if !np.all (fun c => match c with | .w _ | .p 44 | .p 45 | .m _ => true | _ => false) then none else
+      some (.defsNamed items ls np)) <|>
     -- `Let $f,g:A\to B$ be continuous, normalized by …, with derivatives DISPLAY.`
     (do
       let (ts, r1) ← mathChunk r
@@ -3312,7 +3326,7 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
     constDefsOf none r
   | none =>
   match kw [w!"set"] cs <|> kw [w!"put"] cs <|> kw [w!"write"] cs <|> kw [w!"we", w!"set"] cs <|>
-      kw [w!"we", w!"put"] cs <|> kw [w!"let", w!"us", w!"set"] cs with
+      kw [w!"we", w!"put"] cs <|> kw [w!"let", w!"us", w!"set"] cs <|> kw [w!"we", w!"write"] cs with
   | some r => constDefsOf none r
   | none =>
   -- fix $B$ [and define|set|put DEFS].
@@ -3468,7 +3482,7 @@ where
         | none =>
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
         match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 <|> kw [w!"we", w!"set"] r1 <|>
-            kw [w!"we", w!"put"] r1 with
+            kw [w!"we", w!"put"] r1 <|> kw [w!"we", w!"write"] r1 with
         | some r2 => (do
           let (m, r3) ← formula r2
           let r4 ← kw [w!"and", w!"let"] r3
@@ -3705,6 +3719,177 @@ def parseSentence (s : Sentence) : Option Sent := do
     if h == w!"@heading" then caseHeading (← chunks (rest.length + 1) rest [])
     else sentence (← chunks (s.toks.length + 1) s.toks [])
   | _ => sentence (← chunks (s.toks.length + 1) s.toks [])
+
+
+/-! ## Sentences of several parts
+
+A sentence that no form reads as a whole may be several sentences in one. Each of the
+following is read as the sentences it is made of, one after the other, and only if each
+of them is read:
+
+* parts joined by `, and` before a word that begins a definition (`let`, `set`, `put`,
+  `define`, `we`, `write`, `denote`, `fix`): `Let $\mathcal C$ denote the set of
+  copulas, and let DISPLAY denote …`. A binder at the start of the sentence (`For
+  $x\in A$,`) is the binder of each part;
+* a part after `, and` that is a formula continues the verb of the part before it:
+  `For a NOUN $C$, we write $C^\top(u,v)\coloneqq C(v,u)$, and $h_C$ for the NAME of
+  $C$.` is `… we write …` twice;
+* `, where $S$ is the WORDS.` at the end: the notation `We write $S$ for the WORDS.`,
+  made before the rest of the sentence;
+* `We [further] consider WORDS of a NOUN $x$, DISPLAY`: the definitions of the display
+  for every NOUN $x$, as `For a NOUN $x$, set DISPLAY`. The words name what is defined. -/
+
+/-- The words that begin a definition. -/
+def coordStarts : List Codes :=
+  [w!"let", w!"set", w!"put", w!"define", w!"we", w!"write", w!"denote", w!"fix"]
+
+/-- The verbs that a formula after `, and` continues. -/
+def coordVerbs : List (List Codes) :=
+  [[w!"we", w!"write"], [w!"let", w!"us", w!"write"], [w!"we", w!"set"], [w!"set"], [w!"let"],
+   [w!"put"], [w!"we", w!"put"], [w!"define"], [w!"write"]]
+
+/-- The lower-case word of a token of the sentence's own text. -/
+def textWord (t : PTok) : Option Codes :=
+  if t.math then none else match t.tok with
+    | .word w => some (lower w)
+    | _ => none
+
+def isTextComma (t : PTok) : Bool := !t.math && t.tok == .punct 44
+
+/-- A token that begins a formula or a display. -/
+def opensMath (t : PTok) : Bool :=
+  match t.tok with
+  | .mopen => true
+  | .begin e => Lex.wDisplayEnvs.contains e
+  | _ => false
+
+/-- Each token of a sentence with the token before it and the two after it. -/
+def windows (prev : Option PTok) : List PTok → List (Option PTok × PTok × Option PTok × Option PTok)
+  | [] => []
+  | t :: rest => (prev, t, rest.head?, (rest.drop 1).head?) :: windows (some t) rest
+
+/-- Split at the positions of `, and` that begin a part: before a word that begins a
+definition, or before a formula. -/
+def coordSegments (ts : List PTok) : List (List PTok) :=
+  let cuts := (windows none ts).map fun (_, a, b, c) =>
+    match b, c with
+    | some b, some c =>
+      isTextComma a && textWord b == some w!"and" && ((textWord c).any coordStarts.contains || opensMath c)
+    | _, _ => false
+  -- (the `and` after a cut is dropped with it)
+  let (segs, cur, _) := (ts.zip cuts).foldl (fun (acc : List (List PTok) × List PTok × Bool) (t, cut) =>
+      let (segs, cur, skip) := acc
+      if cut then (cur.reverse :: segs, [], true)
+      else if skip then (segs, cur, false)
+      else (segs, t :: cur, false)) ([], [], false)
+  (cur.reverse :: segs).reverse
+
+/-- The binder at the start of a part (`For $x\in A$,`: up to the first comma of the
+text), and the rest. -/
+def leadingBinder (ts : List PTok) : List PTok × List PTok :=
+  match ts.head? >>= textWord with
+  | some w =>
+    if w != w!"for" then ([], ts) else
+    match ts.findIdx? isTextComma with
+    | some k => (ts.take (k + 1), ts.drop (k + 1))
+    | none => ([], ts)
+  | none => ([], ts)
+
+/-- The verb before the first formula of a part (`we write`, `set`, `let`), if it is one
+that a later formula may continue. -/
+def leadingVerb (ts : List PTok) : List PTok :=
+  let ws := ts.takeWhile fun t => (textWord t).isSome
+  if coordVerbs.contains (ws.filterMap textWord) && (ts.drop ws.length).head?.any opensMath then ws else []
+
+/-- `, where $S$ is the WORDS` at the end of the sentence (before its period): the rest
+of the sentence and the notation `We write $S$ for the WORDS.` -/
+def whereNotation (ts : List PTok) : Option (List PTok × List PTok) := do
+  -- the end of a display whose last token is a comma
+  let displayComma (prev : Option PTok) (a : PTok) : Bool :=
+    (match a.tok with | .finish e => Lex.wDisplayEnvs.contains e | _ => false) &&
+      prev.any fun b => b.tok == .punct 44 || b.tok == .msym 44
+  -- the last comma of the text that is followed by `where` and a formula (or the comma
+  -- that ends a display before them)
+  let hits := ((windows none ts).zipIdx.filter fun ((prev, a, b, c), _) =>
+      match b, c with
+      | some b, some c => (isTextComma a || displayComma prev a) && textWord b == some w!"where" && c.tok == .mopen
+      | _, _ => false)
+  let ((prev, a, _, _), k) ← hits.getLast?
+  let tail := ts.drop (k + 2)
+  -- the formula, then `is the|a|an WORDS.`
+  let fm := tail.takeWhile fun t => t.math
+  let rest := tail.drop fm.length
+  -- (the name may contain formulas: `the binomial distribution with parameters $n$ and $p$`)
+  match rest.getLast? with
+  | some p =>
+    let name := rest.dropLast
+    let words := name.filterMap textWord
+    let d := (words[1]?).getD []
+    if fm.isEmpty || words.length < 3 || (name.head? >>= textWord) != some w!"is" ||
+      !(d == w!"the" || d == w!"a" || d == w!"an") || p.tok != .punct 46 || p.math then none else
+    let nt := [⟨.word w!"we", a.pos, false⟩, ⟨.word w!"write", a.pos, false⟩] ++ fm ++
+      [⟨.word w!"for", a.pos, false⟩] ++ (name.drop 1) ++ [p]
+    -- (the rest ends with a period: in its display, if a display ended with the comma)
+    let rest := match prev with
+      | some b => if displayComma prev a then ts.take (k - 1) ++ [{ b with tok := .msym 46 }, a]
+        else ts.take k ++ [⟨.punct 46, a.pos, false⟩]
+      | none => ts.take k ++ [⟨.punct 46, a.pos, false⟩]
+    some (rest, nt)
+  | none => none
+
+/-- `We [further|also] consider WORDS of a|an NP, DISPLAY …` as `For a|an NP, set DISPLAY …`
+(the noun phrase `NP` with its variable, `a copula $C$`, `a distribution $\nu$ on
+$\mathbb N_0$`, ends at the comma before the display). -/
+def considerAsSet (ts : List PTok) : Option (List PTok) := do
+  let ws := ts.takeWhile fun t => (textWord t).isSome
+  let words := ws.filterMap textWord
+  let start ← if words.head? != some w!"we" then none
+    else if words[1]? == some w!"consider" then some 2
+    else if (words[1]? == some w!"further" || words[1]? == some w!"also") && words[2]? == some w!"consider" then some 3
+    else none
+  -- the last `of a|an` among the words, then the noun phrase up to a comma before a display
+  let k ← (List.range ws.length).reverse.find? fun i =>
+    i ≥ start && words[i]? == some w!"of" && (words[i + 1]? == some w!"a" || words[i + 1]? == some w!"an")
+  let after := ts.drop (k + 1)
+  let hit ← ((windows none after).zipIdx.find? fun ((_, a, b, _), _) =>
+    isTextComma a && b.any opensMath)
+  let j := hit.2
+  let np := after.take j
+  let c ← after[j]?
+  if !(np.any fun t => t.math) then none else
+  let pos := (ts.head?.map (·.pos)).getD 0
+  some ([⟨.word w!"for", pos, false⟩] ++ np ++ [c, ⟨.word w!"set", c.pos, false⟩] ++ after.drop (j + 1))
+
+/-- The sentences that a sentence of several parts is made of, if each of them is read
+(see above). -/
+def partsOf (s : Sentence) : Option (List Sentence) := do
+  let parses (ts : List PTok) : Bool := (parseSentence { s with toks := ts }).isSome
+  let (ts, pre) := match whereNotation s.toks with
+    | some (rest, nt) => (rest, [nt])
+    | none => (s.toks, [])
+  let consider := considerAsSet ts
+  let ts := consider.getD ts
+  let segs := coordSegments ts
+  if segs.length < 2 && pre.isEmpty && consider.isNone then none else
+  let (binder, main0) := leadingBinder (segs.head?.getD [])
+  let verb := leadingVerb main0
+  let n := segs.length
+  let parts ← (segs.zipIdx.mapM fun (seg, i) => do
+    -- (each part but the last ends with a period)
+    let seg := if i + 1 < n then
+      match seg.getLast? with
+      | some t => seg ++ [⟨.punct 46, t.pos, false⟩]
+      | none => seg
+      else seg
+    if i == 0 then (if parses seg then some seg else none) else
+    let cands : List (List PTok) :=
+      if seg.head?.any opensMath then
+        (if verb.isEmpty then [] else (if binder.isEmpty then [] else [binder ++ verb ++ seg]) ++ [verb ++ seg])
+      else (if binder.isEmpty then [] else [binder ++ seg]) ++ [seg]
+    cands.find? parses)
+  let all := pre ++ parts
+  if all.length < 2 && consider.isNone then none else
+  some (all.map fun ts => { s with toks := ts })
 
 end Grammar
 end Leanify

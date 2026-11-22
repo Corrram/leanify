@@ -4,7 +4,8 @@
 % The expected output of `leanify check --claims` is check.txt: composition,
 % inclusion, suprema and infima, finite sums and products, equivalent statements,
 % `$$` displays, abbreviations, standard functions and constants, set operations,
-% connectives and quantifiers.
+% connectives and quantifiers; sentences of several parts, the positive part, and a
+% symbol of a result beside a notation of the article with the same letter.
 \begin{document}
 Define $f\colon(0,\infty)\to\mathbb{R}$ by $f(x)\coloneqq x+\frac1x$.
 Define $g\colon\mathbb{R}\to\mathbb{R}$ by $g(x)\coloneqq x^2+1$.
@@ -179,4 +180,30 @@ We have $e^0=1$.
 Moreover, for every $v\in[0,1]$, $e_v(0)\le e^v$.
 \end{lemma}
 
+We write $h_a$ for $a^2+1$.
+For $x\in\mathbb{R}$, set $\phi(x)\coloneqq x^2+1$, and let $\psi(x)\coloneqq2\phi(x)$.
+We write $s(t)\coloneqq t^3-t$, and $a\star b$ for $ab+1$.
+For $x\in\mathbb{R}$, set $\theta(x)\coloneqq(x-1)^+-(x-1)^-$.
+We consider two sums of a positive integer $n$,
+\[
+S_1(n)\coloneqq\sum_{k=1}^{n}k,\qquad S_2(n)\coloneqq\sum_{k=1}^{n}k^2.
+\]
+
+\begin{lemma}\label{lem:parts}
+For every $x\in\mathbb{R}$, $\psi(x)\ge2$, $x\star0=1$ and $\theta(x)=x-1$.
+Moreover, $s(1)=0$ and $S_1(2)=3$.
+\end{lemma}
+
+\begin{lemma}\label{lem:local}
+Let $y>0$. For $x\in\mathbb{R}$, let $h_y(x)\coloneqq x+y$. Then $h_y(0)=y$.
+\end{lemma}
+
+\begin{lemma}\label{lem:family}
+For $t\in[0,1]$ and $x,y\in\mathbb{R}$, let $u_t(x)\coloneqq tx$ and $v_t(x,y)\coloneqq u_t(x)+y$.
+Then $v_t(0,0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{lem:notation}
+$h_2=5$.
+\end{lemma}
 \end{document}

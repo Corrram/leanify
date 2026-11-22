@@ -19,4 +19,4 @@ set_option maxHeartbeats 0
 /-- The vocabulary of the article: the core and the field `distributions`. -/
 def Vocabulary.vocabulary : Leanify.Vocab := Leanify.Fields.select ["distributions"]
 
-#leanify_article Vocabulary "article.tex" "fnv1a64:bbc98f68a9155036" with Vocabulary.vocabulary
+#leanify_article Vocabulary "article.tex" "fnv1a64:1de093c51e3cef46" with Vocabulary.vocabulary

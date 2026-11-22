@@ -2125,6 +2125,15 @@ where
         let a ← term f sc none e
         applyAll (.glob h) g.ty g.doms [a]
       | none =>
+      -- `(x-1)^+`, `f(x)^-`: the positive (negative) part of a value that is not a name,
+      -- `\max\{x-1,0\}` (`\max\{-f(x),0\}`); a name with `+` or `-` as superscript,
+      -- `R^+`, is a name of its own
+      let compound := match b with
+        | .id _ | .sub _ _ | .hat _ | .num _ | .sup _ _ => false
+        | _ => true
+      if compound && (e matches .id [43] || e matches .id [45]) then
+        term f sc pf (.maxm [if e matches .id [43] then b else .neg b, .num 0])
+      else
       match e with
       | .id d =>
         if d == w!"\\top" || d == w!"\\perp" then do

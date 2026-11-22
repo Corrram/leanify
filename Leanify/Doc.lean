@@ -278,6 +278,29 @@ def expandRefs (ds : List (Codes × List PTok)) : Nat → List PTok → List PTo
     | _, _ => a :: expandRefs ds f (b :: rest)
   | _ + 1, ts => ts
 
+/-- The formulas and displays of a sentence, each as its tokens. -/
+def mathSegs : List PTok → List PTok → Bool → List (List PTok) → List (List PTok)
+  | [], cur, inM, acc => (if inM then cur.reverse :: acc else acc).reverse
+  | t :: ts, cur, inM, acc =>
+    match t.tok with
+    | .mopen => mathSegs ts [] true acc
+    | .mclose => mathSegs ts [] false (cur.reverse :: acc)
+    | .begin e =>
+      if Lex.wDisplayEnvs.contains e then mathSegs ts [] true acc
+      else mathSegs ts (if inM then t :: cur else cur) inM acc
+    | .finish e =>
+      if Lex.wDisplayEnvs.contains e then mathSegs ts [] false (cur.reverse :: acc)
+      else mathSegs ts (if inM then t :: cur else cur) inM acc
+    | _ => mathSegs ts (if inM then t :: cur else cur) inM acc
+
+/-- The letter of a symbol with a subscript that a formula defines (`h_t(u,v)\coloneqq …`). -/
+def definedLetter : List PTok → Option Nat
+  | a :: b :: rest =>
+    match a.tok, b.tok with
+    | .mvar ch, .msym 95 => if rest.any (·.tok == .cmd w!"coloneqq") then some ch else none
+    | _, _ => none
+  | _ => none
+
 /-- All templates, in order, three times (a notation may use an earlier one). -/
 def rewriteAll (tpls : List Template) (ts : List PTok) : List PTok :=
   if tpls.isEmpty then ts else
@@ -2090,6 +2113,18 @@ def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat
 /-- `For B, set $X_p\coloneqq e [\in D]$`: a family on the binder's domain, and the
 claims of the rest of the chain. -/
 def setDef (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := do
+  -- `For a NOUN $C$, set $C^\top(u,v)\coloneqq C(v,u)$`: an operation on the binder's
+  -- variable, as `the transpose of $C$ is …`
+  let onBinder : MT → Bool := fun h => match h with
+    | .sup (.id x) (.id _) | .hat (.id x) => x == b.name
+    | _ => false
+  match m with
+  | .chain (.app h _) ((.defeq, _) :: _) =>
+    if onBinder h then defItem c b ⟨[], m, []⟩ else setDefMain m
+  | .chain h ((.defeq, _) :: _) =>
+    if onBinder h then defItem c b ⟨[], m, []⟩ else setDefMain m
+  | _ => setDefMain m
+where setDefMain (m : MT) : M (List Nat × List Nat) := do
   match m with
   -- `f_p(x,…)\coloneqq e`, `R_p^-(z)\coloneqq e`: a family with further real
   -- arguments; `z_-(x)\coloneqq e`, `c\coloneqq e`: a symbol that does not show `p`,
@@ -2247,10 +2282,25 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
 /-- `For $u,v\in A$, set $f(u,v)\coloneqq e$, …`: functions of all the binder's
 variables, in their order. Under `u,v\in[0,1]`, `M(u,v)\coloneqq\min\{u,v\}` is a
 function on the unit square, like a copula. -/
-def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp : List BindInfo := []) :
+def multiDefs (bs0 : List BindInfo) (defs : List MT) (labels : List Codes) (imp : List BindInfo := []) :
     M (List Nat × List Nat) := do
   let mut ds : List Nat := []
+  -- (`For $t\in[0,1]$ and $u,v\in[0,1]$, let $f_t(v)\coloneqq …$ and $Q_t(u,v)\coloneqq …$`:
+  -- a definition takes the variables of the binder that its arguments name, in the
+  -- binder's order; a variable it leaves out has no condition)
+  let pick (names : List Codes) : List BindInfo :=
+    let kept := bs0.filter fun b => names.contains b.name
+    let dropped := bs0.filter fun b => !names.contains b.name
+    let laterKept := (bs0.dropWhile fun b => names.contains b.name).filter fun b => names.contains b.name
+    if kept.map (·.name) == names && dropped.all (·.pred.isNone) && laterKept.all (·.pred.isNone) then kept else bs0
   for m in defs do
+    let bs : List BindInfo := match m with
+      | .chain (.app h args) [(.defeq, _)] =>
+        let names := args.filterMap fun a => match a with | .id n => some n | _ => none
+        match familyKey h with
+        | some (_, p) => if bs0.head?.map (·.name) == some p then pick (p :: names) else pick names
+        | none => pick names
+      | _ => bs0
     match m with
     -- `For $r\in[0,1]$ and $g\in[-r,r]$, set $C_{r,g}\coloneqq e$`: a family with the
     -- binder's variables, all of them and in their order, as its subscripts
@@ -2398,6 +2448,56 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
   let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) val
   let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ value
   pure ([i], [])
+
+/-- `Let DISPLAY denote the NAME, NAME, and NAME NOUNS.`, `Let $f(x)\coloneqq e$ denote the
+NAME NOUN.`: each definition, named by one of the names (words that are not read), of an
+object of the noun. The variables of a definition `f(x,y)\coloneqq e` range over the
+arguments of the noun's objects, in order (with the field `unitsquare`, the points of
+`[0,1]` for a copula), and that `f` is such an object is a claim of the sentence. The
+noun is the longest end of the last name that is a noun of the article or of its
+vocabulary and leaves a name before it. -/
+def defsNamed (c : SentCtx) (defs : List MT) (labels : List Codes) (np : List Chunk) :
+    M (List Nat × List Nat) := do
+  -- the names, separated by `,` and `and`
+  let rec split : List Chunk → List Chunk → List (List Chunk) → List (List Chunk)
+    | [], cur, acc => (cur.reverse :: acc).reverse
+    | ch :: rest, cur, acc =>
+      match ch with
+      | .p 44 => split rest [] (cur.reverse :: acc)
+      | .w w => if w == w!"and" then split rest [] (cur.reverse :: acc) else split rest (ch :: cur) acc
+      | _ => split rest (ch :: cur) acc
+  let items := (split np [] []).filter (!·.isEmpty)
+  if items.length != defs.length then
+    fail E.finding w!"after `denote the`, a name for each definition, in their order, and the noun after the last name (the comonotonicity and independence copulas)"
+  let last := items.getLast?.getD []
+  let st0 ← get
+  let mut found : Option BindInfo := none
+  for l in ((List.range last.length).filter (· ≥ 1)).reverse do
+    if found.isNone then
+      found ← tryCatch (some <$> nounPhrase (last.drop (last.length - l))) fun _ => do
+        set st0
+        pure none
+  let some bi := found | fail E.noun (((wordsOf last).intersperse [32]).flatten)
+  let mut ds : List Nat := []
+  let mut cs : List Nat := []
+  for m in defs do
+    let ids ← match m with
+      | .chain (.app _ args) [(.defeq, _)] => do
+        let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+        let tys := argTypes bi.ty names.length
+        if tys.length != names.length then fail E.type
+        let bis : List BindInfo := (names.zip tys).map fun (n, t) => ⟨n, t, none⟩
+        pure (← multiDefs bis [m] [] []).1
+      | _ => pure (← constDefs c none [m] []).1
+    for i in ids do
+      let g := ((← get).globs[i]?).getD default
+      if g.ty != bi.ty then fail E.type
+      if let some p := bi.pred then
+        let id ← emit c (.app p (.glob i)) []
+        cs := cs ++ [id]
+    ds := ds ++ ids
+  addLabels labels [] true
+  pure (ds, cs)
 
 /-- `We say that a N $x$ is PHRASE of a M $y$ if φ for all u,v∈A`. -/
 def weSay (subj : List Chunk) (phrase : List Codes) (o : List Chunk) (cond : MT) (vs : List Codes) (d : MT) :
@@ -3931,6 +4031,18 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
       if c.ctx.kind != .text then
         modify fun st => { st with locals := st.locals ++
           (res.1.filter fun i => (st.locals.lookup i).isNone).map fun i => (i, c.ctx.env) }
+      -- in the statement of a result, the parameter of a family it defines stays bound in
+      -- its later sentences and its proof (`For $t\in[0,1]$, let $Q_t(u,v)\coloneqq …$.
+      -- Then $Q_t$ is a copula.`)
+      if c.ctx.kind matches .result _ then
+        let idx := defs.filterMap fun m => match m with
+          | .chain (.app h _) _ | .chain h _ => match h with
+            | .sub (.id _) (.id p) => some p
+            | _ => (familyKey h).map (·.2)
+          | _ => none
+        let keep := bis.filter fun b => idx.contains b.name
+        unless keep.isEmpty do
+          modify fun st => { st with envBinders := keep ++ st.envBinders.filter fun x => !(keep.any (·.name == x.name)) }
       pure res
     | none => constDefs c none defs labels
   | .defByFamily b sg pieces labels => do
@@ -3944,6 +4056,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .letDenote b sym np => do
     let [bi] ← binderInfos b | fail E.unsupported
     letDenote bi sym np
+  | .defsNamed defs labels np => defsNamed c defs labels np
   | .weSay sb ph o cond vs d => weSay sb ph o cond vs d
   | .defSteps b sets sym np whereDef => do
     let [bi] ← binderInfos b | fail E.unsupported
@@ -4307,9 +4420,23 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     (s.toks.length + 1) s.toks
   let s := { s with toks := expanded }
   -- the article's notations, in the formulas of later sentences
+  -- (a symbol that a result or its proof defines, `h_t`, hides a notation of the article
+  -- written with the same letter, `h_C`: in the sentence that defines it and after it)
+  let target := (envs.lookup s.ctx.proves).getD 0
+  let hidden : List Nat :=
+    (Notation.mathSegs s.toks [] false []).filterMap Notation.definedLetter ++
+    ((st0.globs.zip (List.range st0.globs.length)).filterMap fun (g, i) =>
+      match g.key, st0.locals.lookup i with
+      | ch :: rest, some e =>
+        if (rest.isEmpty || rest.head? == some 95) && (e == s.ctx.env || (s.ctx.kind == .proof && e == target))
+        then some ch else none
+      | _, _ => none)
+  let templates := st0.templates.filter fun t => match t.pat with
+    | .fixed (.mvar ch) :: _ => !hidden.contains ch
+    | _ => true
   let toks0 := s.toks
-  let s := if st0.templates.isEmpty || Notation.declares s.toks then s
-    else { s with toks := Notation.rewriteAll st0.templates s.toks }
+  let s := if templates.isEmpty || Notation.declares s.toks then s
+    else { s with toks := Notation.rewriteAll templates s.toks }
   -- `On the event $φ$, we have $ψ$`: one formula about every value of the sample
   let s := { s with toks := Notation.onEvent (s.toks.length + 1) s.toks }
   -- a notation that binds a variable of its argument is not applied: a finding
@@ -4330,47 +4457,88 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     let msg : Codes := w!"a notation of the article binds $" ++ name ++ w!"$, and the formula it is written with here uses $" ++ name ++ w!"$ as well: the notation would capture it. Rename one of the two"
     { c with st := st0u, idx := c.idx + 1, outcomesRev := .failed ⟨E.finding, msg⟩ :: c.outcomesRev, proofs := incomplete ps }
   else
-  match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
+  -- (a sentence of several parts: the sentences it is made of, if it has no other reading,
+  -- or if its reading as a whole does not compile)
+  let partsOf : Unit → Option (List (Sentence × Grammar.Sent)) := fun _ =>
+    (Grammar.partsOf s).bind fun ps => ps.mapM fun p => (Grammar.parseSentence p).map (p, ·)
+  let parsed : Option (List (Sentence × Grammar.Sent)) :=
+    match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
+    | some sent => some [(s, sent)]
+    | none => partsOf ()
+  match parsed with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
-  | some sent =>
+  | some parts =>
+    let sent : Grammar.Sent := match parts with
+      | [(_, sn)] => sn
+      | _ => .constDefs none [] []
     let sc : SentCtx := ⟨s.ctx, (envs.lookup s.ctx.proves).getD 0, c.idx⟩
-    let labelled : M (List Nat × List Nat) := do
-      let before ← get
-      let primary : M (List Nat × List Nat) := match sent with
-        | .notation k rhs => Compile.notationDef toks0 k rhs
-        -- `We write $L$ for the WORDS`: a notation for an operation of the vocabulary, or
-        -- else a description
-        | .defDesc _ _ _ _ _ (some (k, rhs)) => do
-          let st ← get
-          tryCatch (Compile.notationDef toks0 k rhs) fun _ => do
-            set st
-            Compile.sentence sc sent
-        | _ => Compile.sentence sc sent
-      -- (if no reading of the sentence compiles: the quantity it names, undefined)
-      let (ds, cs) ← tryCatch primary fun e =>
-        match undefinedAlt, sent with
-        | _, .undefined .. => throw e
-        | some alt, _ => do
-          set before
-          -- (a finding about the quantity says more than the reading that failed)
-          tryCatch (Compile.sentence sc alt) fun e' => throw (if e'.code == E.finding then e' else e)
-        | none, _ => throw e
-      -- a definition made under hypotheses takes those about its variables
-      Compile.defsUnderHyps sc ds
-      match sent with
-      | .claims _ _ _ | .claimsContra _ _ _ =>
-        -- labels of displays in the sentence, and of the enclosing result, name its claims
-        let ls := s.toks.filterMap fun p => match p.tok with | .ref .label l => some l | _ => none
-        let ls := match s.ctx.kind with
-          | .result _ => if s.ctx.label.isEmpty then ls else s.ctx.label :: ls
-          | _ => ls
-        Compile.addLabels ls cs false
-      | .defNotion .. =>
-        -- the displays of a notion's definition: citing them cites the definition
-        let ls := s.toks.filterMap fun p => match p.tok with | .ref .label l => some l | _ => none
-        Compile.addLabels ls [] true
-      | _ => pure ()
+    let one (part : Sentence) (sent : Grammar.Sent) (ptoks0 : List PTok) (alt : Option Grammar.Sent) :
+        M (List Nat × List Nat) := do
+        let before ← get
+        let primary : M (List Nat × List Nat) := match sent with
+          | .notation k rhs => Compile.notationDef ptoks0 k rhs
+          -- `We write $L$ for the WORDS`: a notation for an operation of the vocabulary, or
+          -- else a description
+          | .defDesc _ _ _ _ _ (some (k, rhs)) => do
+            let st ← get
+            tryCatch (Compile.notationDef ptoks0 k rhs) fun _ => do
+              set st
+              Compile.sentence sc sent
+          | _ => Compile.sentence sc sent
+        -- (if no reading of the sentence compiles: the quantity it names, undefined)
+        let (ds, cs) ← tryCatch primary fun e =>
+          match alt, sent with
+          | _, .undefined .. => throw e
+          | some alt, _ => do
+            set before
+            -- (a finding about the quantity says more than the reading that failed)
+            tryCatch (Compile.sentence sc alt) fun e' => throw (if e'.code == E.finding then e' else e)
+          | none, _ => throw e
+        -- a definition made under hypotheses takes those about its variables
+        Compile.defsUnderHyps sc ds
+        match sent with
+        | .claims _ _ _ | .claimsContra _ _ _ =>
+          -- labels of displays in the sentence, and of the enclosing result, name its claims
+          let ls := part.toks.filterMap fun p => match p.tok with | .ref .label l => some l | _ => none
+          let ls := match s.ctx.kind with
+            | .result _ => if s.ctx.label.isEmpty then ls else s.ctx.label :: ls
+            | _ => ls
+          Compile.addLabels ls cs false
+        | .defNotion .. =>
+          -- the displays of a notion's definition: citing them cites the definition
+          let ls := part.toks.filterMap fun p => match p.tok with | .ref .label l => some l | _ => none
+          Compile.addLabels ls [] true
+        | _ => pure ()
+        pure (ds, cs)
+    -- the parts one after the other, each with the notations of the parts before it
+    let runParts (parts : List (Sentence × Grammar.Sent)) : M (List Nat × List Nat) := do
+      let n0 := st0.templates.length
+      let mut ds : List Nat := []
+      let mut cs : List Nat := []
+      for (p, sn) in parts do
+        let newT := (← get).templates.drop n0
+        let (p, sn) := if newT.isEmpty || Notation.declares p.toks then (p, sn) else
+          let p' := { p with toks := Notation.rewriteAll newT p.toks }
+          match Grammar.parseSentence p' with
+          | some sn' => (p', sn')
+          | none => (p, sn)
+        let (d, cl) ← one p sn p.toks none
+        ds := ds ++ d
+        cs := cs ++ cl
       pure (ds, cs)
+    let labelled : M (List Nat × List Nat) :=
+      match parts with
+      | [(_, sn)] => do
+        let st ← get
+        tryCatch (one s sn toks0 undefinedAlt) fun e =>
+          match partsOf () with
+          | some ps@(_ :: _ :: _) => do
+            set st
+            tryCatch (runParts ps) fun _ => do
+              set st
+              throw e
+          | _ => throw e
+      | _ => runParts parts
     let (r, st) := labelled.run.run st0
     match r with
     | .ok (ds, cs) =>
