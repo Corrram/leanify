@@ -305,9 +305,18 @@ def boundBinders (ts : List MTok) : Option (List Codes × MT) := do
     | _ => none
   some (names ++ vs, d)
 
+/-- `S\subseteq A`: a variable that ranges over the subsets of `A`. -/
+def binderSubset (ts : List MTok) : Option (List Codes × MT) := do
+  match ts with
+  | .id v :: .cmd c :: rest =>
+    if c != w!"subseteq" then none
+    let dom ← Math.parseFormula rest
+    some ([v], .app (.id w!"@subsets") [dom])
+  | _ => none
+
 /-- A binder: `x\in A`, or a bound on one real variable (`c>0`) or several (`a,b>0`). -/
 def binderMath (ts : List MTok) : Option (List Codes × MT) :=
-  binderIn ts <|> boundBinder ts <|> boundBinders ts
+  binderIn ts <|> boundBinder ts <|> boundBinders ts <|> binderSubset ts
 
 /-- The part of a display after its last top-level `\quad` or `\qquad`: `(head, tail)`. -/
 def lastQuad : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok) →
@@ -1063,6 +1072,17 @@ inductive Clause where
   $n$`: the statement for every value of the variable of the induction below it (`v`: the
   variable, if the sentence names it). -/
   | stmtBelow (v : Option Codes)
+  /-- `$T$ fixes the constants` (the field `hilbert`): `T` maps every constant function to
+  itself, as an element of `L^2`. -/
+  | fixesConsts (op : MT)
+  /-- `$T$ maps $A$ into itself|$B$ [with norm $r$] [, with norm at most $c$ on it]`: `T` maps
+  the functions of `A` into `B`, and its norm on `A` is `r` (at most `c`: `(true, c)`). -/
+  | mapsInto (op dom cod : MT) (norm : Option (Bool × MT))
+  /-- `$T$ is $c$ times the identity on $A$`: `\lVert Tg-cg\rVert = 0` for the `g` of `A`. -/
+  | timesId (op c dom : MT)
+  /-- `$F$ depends only on the first $m$ terms`: a function of a sequence that depends only
+  on its terms `1, …, m` (the field `hilbert`). -/
+  | dependsFirst (f m : MT)
   /-- What `stmtAt` stands for, once the proof is known: the clauses `stmt` of the
   statement, under the hypotheses `hyps` of the result that speak about its variable
   `v`, with `v` replaced by `e`. The grammar does not produce it. -/
@@ -1356,10 +1376,77 @@ def stmtClause (cs : List Chunk) : Option (Clause × List Chunk) := do
     let (e, r2) ← formula r
     some (.stmtAt e, r2)
 
+/-- A set as the object of an operator's phrase: a formula, or `the subspace of the component
+$F_S$` (the functions whose component for `S` is all of them). -/
+def opObject (cs : List Chunk) : Option (MT × List Chunk) :=
+  (do
+    let r ← kw [w!"the", w!"subspace", w!"of", w!"the", w!"component"] cs <|> kw [w!"the", w!"subspace", w!"of"] cs
+    let (m, r1) ← formula r
+    some (.app (.id w!"@hsub") [m], r1)) <|>
+  formula cs
+
+/-- The phrases of an operator (the field `hilbert`), joined by `and`: `fixes the constants`,
+`maps $A$ into itself|$B$ [with norm $r$] [, with norm at most $c$ on it]`, `is $c$ times
+the identity on $A$`. The subject is a formula, or `the operator $T$`. -/
+def opClauses (cs : List Chunk) : Option (List Clause × List Chunk) := do
+  let cs := (kw [w!"the", w!"operator"] cs).getD cs
+  let (op, r) ← formula cs
+  let one (r : List Chunk) : Option (Clause × List Chunk) :=
+    (do
+      let r1 ← kw [w!"fixes", w!"the", w!"constants"] r
+      some (.fixesConsts op, r1)) <|>
+    (do
+      let r1 ← kw [w!"maps"] r
+      let (dom, r2) ← opObject r1
+      let r3 ← kw [w!"into"] r2
+      let (cod, r4) ← (do let r' ← kw [w!"itself"] r3; some (dom, r')) <|> opObject r3
+      -- `with norm $r$`, `, with norm at most $c$ on it`
+      let r5 := (punct 44 r4 >>= fun r' => if (kw [w!"with", w!"norm"] r').isSome then some r' else none).getD r4
+      match kw [w!"with", w!"norm", w!"at", w!"most"] r5 with
+      | some r6 => do
+        let (c, r7) ← formula r6
+        let r8 := (kw [w!"on", w!"it"] r7).getD r7
+        some (.mapsInto op dom cod (some (true, c)), r8)
+      | none =>
+        match kw [w!"with", w!"norm"] r5 with
+        | some r6 => do
+          let (c, r7) ← formula r6
+          let r8 := (kw [w!"on", w!"it"] r7).getD r7
+          some (.mapsInto op dom cod (some (false, c)), r8)
+        | none => some (.mapsInto op dom cod none, r4)) <|>
+    (do
+      let r1 ← kw [w!"is"] r
+      let (c, r2) ← formula r1
+      let r3 ← kw [w!"times", w!"the", w!"identity", w!"on"] r2
+      let (dom, r4) ← opObject r3
+      some (.timesId op c dom, r4))
+  let (c1, r1) ← one r
+  let rec more : Nat → List Clause → List Chunk → List Clause × List Chunk
+    | 0, acc, r => (acc.reverse, r)
+    | f + 1, acc, r =>
+      match kw [w!"and"] r >>= one with
+      | some (c, r') => more f (c :: acc) r'
+      | none => (acc.reverse, r)
+  some (more 4 [c1] r1)
+
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
 def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
   match stmtClause cs with
   | some res => some res
+  | none =>
+  -- `$F$ depends only on the first $m$ terms`
+  match (do
+      let (fm, r) ← formula cs
+      let r1 ← kw [w!"depends", w!"only", w!"on", w!"the", w!"first"] r
+      let (m, r2) ← formula r1
+      let r3 ← kw [w!"terms"] r2
+      some (Clause.dependsFirst fm m, r3)) with
+  | some res => some res
+  | none =>
+  -- the phrases of an operator: one clause, or `both`
+  match opClauses cs with
+  | some ([c], r) => some (c, r)
+  | some (cs', r) => some (.both cs', r)
   | none =>
   match asLimit cs with
   | some res => some res
@@ -2125,11 +2212,41 @@ where
         | none => some (acc.reverse, r)
       | _ => none
 
+/-- A reason in words up to a comma: words, and formulas that state nothing (`$(U_i,V_i)$`,
+no relation), with at least two words. The chunks from the comma on. -/
+def wordsReason (cs : List Chunk) : Option (List Chunk) :=
+  let part := cs.takeWhile fun c => match c with
+    | .w _ | .p 45 => true
+    | .m ts => match Math.parseFormula ts with
+      | some (.chain _ _) | some (.land _ _) | some (.lor _ _) | some (.limp _ _) | some (.liff _ _)
+      | some (.lnot _) | some (.quant ..) | none => false
+      | _ => true
+    | _ => false
+  let nw := (part.filter fun c => match c with | .w _ => true | _ => false).length
+  let rest := cs.drop part.length
+  match rest with
+  | .p 44 :: _ => if nw ≥ 2 then some rest else none
+  | _ => none
+
+/-- `in $L^2([0,1]^m)$`, `in $L^2$`: the space in which a formula of the field `hilbert` is
+meant, which its operands say already. The chunks after it. -/
+def spaceQualifier (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"in"] cs
+  match r with
+  | .m ts :: r' =>
+    match Math.parseFormula ts with
+    | some (.sup (.id [76]) (.num 2)) => some r'
+    | some (.app (.sup (.id [76]) (.num 2)) _) => some r'
+    | some (.mul (.sup (.id [76]) (.num 2)) _) => some r'
+    | _ => none
+  | _ => none
+
 /-- Clauses separated by `, and` / `, so`, ending with the final period. -/
 def clauses : Nat → List Chunk → List CClause → Option (List CClause)
   | 0, _, _ => none
   | f + 1, cs, acc => do
     let (c, r) ← cclause cs
+    let r := (spaceQualifier r).getD r
     -- a reason in words only (`…, since the square root is injective.`) asserts nothing
     let r := match punct 44 r >>= kw [w!"since"] with
       | some r' =>
@@ -2277,6 +2394,10 @@ inductive Sent where
   $a,b\in A$, and let $X\coloneqq e$.`: variables of the rest of the result or proof,
   and definitions local to it. -/
   | assumeAll (binds : List Bind) (defs : List MT)
+  /-- `Let $m$ be such that CLAUSE[, and let $X\coloneqq e$]`: a variable of the rest of the
+  result or proof, chosen with the property that the clause states (a hypothesis about it),
+  and definitions. -/
+  | letSuchThat (v : Codes) (hyp : Clause) (defs : List MT)
   /-- `Assume [that] CLAUSE [and CLAUSE].`, `Suppose …`, `We assume …`, `Assume further that
   …`, `Suppose, for contradiction, that …`: hypotheses of the following sentences of the
   result or proof (of the list item, inside one), until the proof or the item ends, a
@@ -3188,7 +3309,22 @@ def organizeSent (cs : List Chunk) : Option Sent :=
       [w!"the", w!"following", w!"statements", w!"hold"], [w!"the", w!"following", w!"assertions", w!"hold"],
       [w!"the", w!"following", w!"are", w!"true"]] cs
     if done r then some .organizes else none
-  cases <|> contra <|> induction <|> announces
+  -- `For S⊆…, let $F_S$ denote the component of $F$ in its Hoeffding decomposition, that is, …`:
+  -- the notation `F_S` of the field `hilbert`, which reads it for every kernel
+  let hoeffNote : Option Sent := do
+    let rec find : Nat → List Chunk → Option (List Chunk)
+      | 0, _ => none
+      | _, [] => none
+      | f + 1, c :: r => match kw [w!"denote", w!"the", w!"component", w!"of"] (c :: r) with
+        | some r' => some r'
+        | none => find f r
+    let r ← find cs.length cs
+    let (_, r1) ← formula r
+    let _ ← kw [w!"in", w!"its"] r1 >>= fun r2 => match r2 with
+      | .w h :: .w d :: _ => if lower h == w!"hoeffding" && d == w!"decomposition" then some () else none
+      | _ => none
+    some .organizes
+  cases <|> contra <|> induction <|> announces <|> hoeffNote
 
 def sentenceCore (cs : List Chunk) : Option Sent :=
   match descSent none cs with
@@ -3247,6 +3383,16 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
       let (ts, r1) ← mathChunk r
       let m ← Math.parseFormula ts
       if isEnd r1 && isCondition m then some (.assume (.ifCond m)) else none) <|>
+    -- `Let $m$ be such that CLAUSE[, and let $X\coloneqq e$, …]`
+    (do
+      let (ts, r1) ← mathChunk r
+      let v ← match Math.parseFormula ts with
+        | some (.id v) => some v
+        | _ => none
+      let r2 ← kw [w!"be", w!"such", w!"that"] r1
+      let (cl, r3) ← clause r2
+      let (bs, ds, r4) ← letMore 6 r3 [] []
+      if isEnd r4 && bs.isEmpty then some (.letSuchThat v cl ds) else none) <|>
     -- `Let $C$ be a|an NP[, and let …]`, `Let $a,b\in A$, and let $X\coloneqq e$, ….`
     (do
       let (b1, r1) ← letBinder r
@@ -3432,12 +3578,21 @@ where
   claimsOrDefs (topic : Topic) (cs : List Chunk) : Option Sent :=
     -- `Since $φ$ [and $ψ$], [it follows that] CLAUSES.`: the reasons are claims too
     match kw [w!"since"] cs with
-    | some r => do
-      let (facts, r1) ← sinceFacts 4 r []
-      let r2 ← punct 44 r1
-      let (_, r3) := marker r2
-      let rest ← clauses 24 r3 []
-      some (.claims topic [] (facts.map (fun m => ({ cites := [], clause := .fact m } : CClause)) ++ rest))
+    | some r =>
+      (do
+        let (facts, r1) ← sinceFacts 4 r []
+        let r2 ← punct 44 r1
+        let (_, r3) := marker r2
+        let rest ← clauses 24 r3 []
+        some (.claims topic [] (facts.map (fun m => ({ cites := [], clause := .fact m } : CClause)) ++ rest))) <|>
+      (do
+        -- `Since the pairs $(U_i,V_i)$ are independent, CLAUSES`: a reason in words, whose
+        -- formulas state nothing (no relation), asserts nothing, as after the claims
+        let r1 ← wordsReason r
+        let r2 ← punct 44 r1
+        let (_, r3) := marker r2
+        let rest ← clauses 24 r3 []
+        some (.claims topic [] rest))
     | none =>
     match binder cs with
     | some (b, r) =>

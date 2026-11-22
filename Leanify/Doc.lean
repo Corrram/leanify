@@ -1231,6 +1231,13 @@ def envSubKeys (st : St) (bound : List Codes) (m : MT) : List Codes :=
   (subKeys 64 m).eraseDups.filter fun n =>
     !bound.contains n && (st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n))
 
+/-- The variables of the result or the proof that a formula uses as the base of a subscript,
+when no family of the article has that name: a kernel `F` in its component `F_S`. -/
+def subBaseVars (st : St) (bound : List Codes) (m : MT) : List Codes :=
+  (subBases 64 m).eraseDups.filter fun k =>
+    !bound.contains k && st.envBinders.any (fun b => b.name == k && match b.ty with | .fn _ _ => true | _ => false) &&
+      !(st.globs.any fun g => g.key == k && g.family)
+
 /-- The free identifiers `free` of a condition `m` (with repetitions) without the letters
 that occur in it only as the subscript of a name that the scope binds (`k` in `x_k`,
 after `Let $x_k>0$.`): such a letter is part of the name, not a variable. -/
@@ -1372,7 +1379,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
     -- bound again
     let st ← get
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i)).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
@@ -1506,6 +1513,10 @@ def clauseMaths : Clause → List MT
   | .compare l _ r => [l, r]
   | .stmtAt e => [e]
   | .inst _ e hs cs => e :: clauseMathsAll hs ++ clauseMathsAll cs
+  | .fixesConsts op => [op]
+  | .mapsInto op d e n => [op, d, e] ++ (n.map (·.2)).toList
+  | .timesId op k d => [op, k, d]
+  | .dependsFirst g m => [g, m]
   | _ => []
 
 /-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
@@ -1626,7 +1637,8 @@ parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
   let ms := clauseMaths cl.clause ++ cl.defs
   let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
-  ids ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause
+  ids ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause ++
+    (ms.flatMap (subBaseVars st bound))
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
 def zeroElsewhere : Tm → Tm
@@ -2550,7 +2562,7 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
     | some (x, _, _, _) => [x]
     | none => npVars [.m ts]
   | .ifCond φ =>
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i)).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
   | .hyp b => bindNames1 st env b
   | _ => []
@@ -2903,6 +2915,39 @@ def checkDependence (sc : Scope) (cl : Clause) : M Unit := do
           w!" after the constant")
       | none => pure ()
 
+/-- The points of the functions an operator of the field `hilbert` acts on (the interval, or
+the sequences of it for an operator on kernels), and the norm and the class `L^2` there. -/
+def opParts (iv : IntervalType) (ty : Ty) : M (Ty × Nat × Nat) := do
+  let fn1 := Ty.fn iv.ty .real
+  let seqT := Ty.fn .real iv.ty
+  let kern := Ty.fn seqT .real
+  if ty == Ty.fn fn1 fn1 then
+    pure (iv.ty, ← liftO iv.norm1 E.unsupported, ← liftO iv.memL2 E.unsupported)
+  else if ty == Ty.fn kern kern then
+    pure (seqT, ← liftO iv.normSeq E.unsupported, ← liftO iv.isKernel E.unsupported)
+  else fail E.type
+
+/-- A class of functions as the object of an operator's phrase: a set (`L^2_0`), or the
+subspace of the component `F_S` of a kernel (`H_S`). -/
+def opSet (sc : Scope) (m : MT) (fnTy : Ty) : M Tm := do
+  let iv ← liftO (← Elab.hilbertIv) E.unsupported
+  match m with
+  | .app (.id n) [x] =>
+    if n == w!"@hsub" then
+      match ← term F sc none x with
+      | (.app (.app (.const h) _) st, _) =>
+        if some h != iv.hoeff then fail E.unsupported
+        pure (.app (.const (← liftO iv.hspace E.unsupported)) st)
+      | _ => fail E.finding w!"the subspace of a component $F_S$ of a kernel"
+    else do
+      let (t, ty) ← term F sc none m
+      if ty != Ty.fn fnTy .prop then fail E.type
+      pure t
+  | _ => do
+    let (t, ty) ← term F sc none m
+    if ty != Ty.fn fnTy .prop then fail E.type
+    pure t
+
 mutual
 /-- One clause; `rest` are the following clauses of the sentence (for scopes). -/
 def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Option MT) :
@@ -3039,6 +3084,47 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let ex ← findExtremum c.target isMax
     let xt ← term F sc none x
     attainsOnly sc ex xt true
+  -- the phrases of an operator (the field `hilbert`)
+  | .fixesConsts op => do
+    let iv ← liftO (← Elab.hilbertIv) E.unsupported
+    let (t, ty) ← term F sc none op
+    let (pt, nrm, mem) ← opParts iv ty
+    -- for every number `c`: `\lVert T(c)-c\rVert = 0`
+    let cst := Tm.lam pt .tt (.loc 1)
+    let diff := Tm.lam pt .tt (.sub (.app (.app (shift 2 0 t) (shift 1 0 cst)) (.loc 0)) (.loc 1))
+    pure (.all .real (.guard (.app (.const mem) diff) (.eq (.app (.const nrm) diff) (.num 0))))
+  | .mapsInto op dom cod norm => do
+    let iv ← liftO (← Elab.hilbertIv) E.unsupported
+    let (t, ty) ← term F sc none op
+    let (pt, _, _) ← opParts iv ty
+    let fnTy := Ty.fn pt .real
+    let d ← opSet sc dom fnTy
+    let e ← opSet sc cod fnTy
+    let into := Tm.all fnTy (.imp (.app (shift 1 0 d) (.loc 0)) (.app (shift 1 0 e) (.app (shift 1 0 t) (.loc 0))))
+    match norm with
+    | none => pure into
+    | some (atMost, k) => do
+      let kt ← asReal (← term F sc none k)
+      let onC ← liftO (if pt == iv.ty then iv.opNorm1 else iv.opNormSeq) E.unsupported
+      let n := Tm.app (.app (.const onC) t) d
+      pure (.and into (if atMost then .le n kt else .eq n kt))
+  | .timesId op k dom => do
+    let iv ← liftO (← Elab.hilbertIv) E.unsupported
+    let (t, ty) ← term F sc none op
+    let (pt, nrm, mem) ← opParts iv ty
+    let fnTy := Ty.fn pt .real
+    let d ← opSet sc dom fnTy
+    let kt ← asReal (← term F sc none k)
+    -- for every `g` of the set: `\lVert Tg-kg\rVert = 0`
+    let diff := Tm.lam pt .tt (.sub (.app (.app (shift 2 0 t) (.loc 1)) (.loc 0)) (.mul (shift 2 0 kt) (.app (.loc 1) (.loc 0))))
+    pure (.all fnTy (.imp (.app (shift 1 0 d) (.loc 0)) (.guard (.app (.const mem) diff) (.eq (.app (.const nrm) diff) (.num 0)))))
+  | .dependsFirst g m => do
+    let iv ← liftO (← Elab.hilbertIv) E.unsupported
+    let dc ← liftO iv.dependsFirst E.unsupported
+    let (gt, gty) ← term F sc none g
+    if gty != Ty.fn (Ty.fn .real iv.ty) .real then fail E.type
+    let mt ← asReal (← term F sc none m)
+    pure (.app (.app (.const dc) gt) mt)
   | .sends (.mapsto (.id v) body) fm gm => do
     let some (ty, p) ← pfDomain 16 fm | fail E.unsupported
     let sc' := (v, ty) :: sc
@@ -3501,7 +3587,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
   -- if $x>0$, then …`)
   let isHyp (known : List Codes) (b : Bind) : Bool := match b with
     | .ifCond φ =>
-      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
+      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i)).eraseDups
       let fr := seqFree st0 [] φ fr
       -- (`U_1` of a known `U` is a term of that sequence)
       let fr := fr.map fun n =>
@@ -3575,12 +3661,12 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
     | some (.on d) => do
       let (_, p) ← domainOf true d
       let free := (cls.flatMap (fun cl => (clauseMaths cl.clause).flatMap (freeIds 64 bNames))).eraseDups
-      let free := free.filter fun n => !(st.globs.any (·.key == n))
+      let free := free.filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && Elab.visibleIn st i)
       match free with
       | [v] => pure (some (⟨v, .real, p⟩ : BindInfo))
       | _ => fail E.free free.flatten
     | _ => pure none
-  let isGlob (n : Codes) : Bool := st.globs.any fun g => g.key == n && !g.family
+  let isGlob (n : Codes) : Bool := st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i
   let domEnv := if inScope then ((bindMaths binds).flatMap fun m => seqFree st bNames m (freeIds 64 bNames m)).filter
       fun n => envNames.contains n else []
   -- (binders whose domains use variables of the result come after all of them)
@@ -3659,7 +3745,7 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
         let own := own ++ (if usesIneq k then ((stNow.lastIneq.map (·.1.map (·.name))).getD []) else [])
         let free := clauseFree stNow ((scopeOf bs).map (·.1) ++ cbVars ++ own) cl
         -- a domain of the clause's binders may use a variable of the result (`for every $v\in[0,s]$`)
-        let domFree := (cbDoms.flatMap (freeIds 64 [])).filter fun n => !(stNow.globs.any (·.key == n))
+        let domFree := (cbDoms.flatMap (freeIds 64 [])).filter fun n => !(stNow.globs.zipIdx.any fun (g, i) => g.key == n && Elab.visibleIn stNow i)
         let inh := usedBinders inherited (free ++ domFree)
         let hasOwn := !cl.binds.isEmpty
         -- (the sentence's binders may depend on any inherited binder)
@@ -4105,6 +4191,12 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
     descDef c bs lhs kind np cond
   | .assumeAll binds defs => assumeIn c binds defs
+  | .letSuchThat v hyp defs => do
+    -- the variable, then the property it is chosen with, then the definitions
+    let (d1, c1) ← assumeIn c [.every [v] (.id w!"\\mathbb{R}")] []
+    let (d2, c2) ← supposeIn c [hyp] false false false none
+    let (d3, c3) ← if defs.isEmpty then pure ([], []) else assumeIn c [] defs
+    pure (d1 ++ d2 ++ d3, c1 ++ c2 ++ c3)
   | .assume b => assumeIn c [b] []
   | .suppose hyps additive caseLike contra asBinder => supposeIn c hyps additive caseLike contra asBinder
   | .caseOf hyps => caseIn c hyps

@@ -180,6 +180,37 @@ structure IntervalType where
   sampleInt : Option Nat := none
   sampleProb : Option Nat := none
   sampleEvent : Option Nat := none
+  /-- Square-integrable functions on the interval (the field `hilbert`): the class `L^2`
+  (measurable, with an integrable square) and its functions with integral zero
+  (`L^2_0`), the inner product `\langle f,g\rangle = ∫ f g` and the norm
+  `\lVert f\rVert = (∫ f²)^{1/2}` of such functions. -/
+  memL2 : Option Nat := none
+  memL20 : Option Nat := none
+  inner1 : Option Nat := none
+  norm1 : Option Nat := none
+  /-- The same for kernels, functions of a sequence of points of the interval: the inner
+  product and the norm for independent uniform terms. -/
+  innerSeq : Option Nat := none
+  normSeq : Option Nat := none
+  /-- The norm of an operator on a class of functions (`\lVert T|_{A}\rVert`: the least upper
+  bound of `\lVert Tg\rVert` over the `g` of the class with `\lVert g\rVert ≤ 1`), for operators on
+  functions of the interval and on kernels. -/
+  opNorm1 : Option Nat := none
+  opNormSeq : Option Nat := none
+  /-- `T^{\otimes m}`: an operator on functions of the interval applied to the terms
+  `1, …, m` of a sequence, an operator on kernels. -/
+  tensor : Option Nat := none
+  /-- `F_S`: the component of a kernel in its Hoeffding decomposition for a finite set `S` of
+  positive integers, and the subspace of the components for `S`. -/
+  hoeff : Option Nat := none
+  hspace : Option Nat := none
+  /-- A kernel depends only on the terms `1, …, m` of a sequence. -/
+  dependsFirst : Option Nat := none
+  /-- That a function of a sequence is a kernel (the condition of its inner product and norm). -/
+  isKernel : Option Nat := none
+  /-- `\sum_{S\subseteq\{1,\dots,m\}} e`: the sum over the subsets of `\{1, …, m\}` (the constant
+  takes `m`, then the summand as a function of the set). -/
+  subsetSum : Option Nat := none
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 structure Vocab where
@@ -281,7 +312,14 @@ def append (V W : Vocab) : Vocab :=
                ae2 := i.ae2.map (· + kc), markovPower := i.markovPower.map (· + kc),
                markovDom := i.markovDom.map tm, sampleExp := i.sampleExp.map (· + kc),
                sampleInt := i.sampleInt.map (· + kc), sampleProb := i.sampleProb.map (· + kc),
-               sampleEvent := i.sampleEvent.map (· + kc) } }
+               sampleEvent := i.sampleEvent.map (· + kc),
+               memL2 := i.memL2.map (· + kc), memL20 := i.memL20.map (· + kc),
+               inner1 := i.inner1.map (· + kc), norm1 := i.norm1.map (· + kc),
+               innerSeq := i.innerSeq.map (· + kc), normSeq := i.normSeq.map (· + kc),
+               opNorm1 := i.opNorm1.map (· + kc), opNormSeq := i.opNormSeq.map (· + kc),
+               tensor := i.tensor.map (· + kc), hoeff := i.hoeff.map (· + kc),
+               hspace := i.hspace.map (· + kc), dependsFirst := i.dependsFirst.map (· + kc),
+               isKernel := i.isKernel.map (· + kc), subsetSum := i.subsetSum.map (· + kc) } }
 
 instance : Append Vocab := ⟨append⟩
 
