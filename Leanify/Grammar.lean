@@ -442,6 +442,17 @@ def isEnd : List Chunk → Bool
   | [.p 46] => true
   | _ => false
 
+/-- Further citations after a first one: `CITE, CITE and CITE` (`By \eqref{a} and
+Lemma~\ref{l}, …`). -/
+def moreCites : Nat → List Chunk → List Codes × List Chunk
+  | 0, cs => ([], cs)
+  | f + 1, cs =>
+    let next : Option (Codes × List Chunk) :=
+      (kw [w!"and"] cs >>= cite) <|> (punct 44 cs >>= kw [w!"and"] >>= cite) <|> (punct 44 cs >>= cite)
+    match next with
+    | some (l, r) => let (ls, r') := moreCites f r; (l :: ls, r')
+    | none => ([], cs)
+
 /-- Discourse markers: they connect sentences and assert nothing. -/
 def wMarkers : List (List Codes) :=
   [[w!"to", w!"make", w!"this", w!"precise"], [w!"consequently"], [w!"hence"], [w!"in", w!"particular"],
@@ -787,6 +798,15 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
     some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ together ++ conds), r'')) <|>
   (do
+    -- `every sequence $x$ in $[0,1]$`, `every probability measure $\gamma$ on $[0,1]^2$`: a
+    -- noun of the vocabulary with its variable inside the phrase
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    match ws.isEmpty, np.drop ws.length with
+    | false, [.m [.id _], .w p, .m _] | false, [.m [.cmd _], .w p, .m _] =>
+      if p == w!"in" || p == w!"on" then some (.noun np, r') else none
+    | _, _ => none) <|>
+  (do
     let (np, r') := npUpTo (r.length + 1) r []
     match np.head?, np.getLast? with
     | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r')
@@ -795,7 +815,20 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
       match binderMath ts, hatName ts with
       | some ([_], _), _ | _, some (_, []) => some (.noun np, r')
       -- `every integer $n_0$`
-      | _, _ => if subName ts then some (.noun np, r') else none
+      | _, _ =>
+        if subName ts then some (.noun np, r') else
+        -- `every copula $C$ with maximal correlation $R=R(C)$`
+        match Math.parseFormula ts with
+        | some (.chain (.id x) [(.eq, .app (.id y) _)]) => if x == y then some (.noun np, r') else none
+        | _ =>
+          -- `every copula $C$ with $C^\top=C$`: a condition on the variable
+          let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false
+          match withAt with
+          | some i =>
+            match np.drop (i + 1), np[i - 1]? with
+            | [.m _], some (.m v) => if i ≥ 2 && (v.length == 1 || subName v) then some (.noun np, r') else none
+            | _, _ => none
+          | none => none
     | _, _ => none)
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
@@ -845,6 +878,14 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   match withConds r1 with
   | some (c, r2) => some (.many (nouns ++ together ++ [.ifCond c]), r2)
   | none => some (.many (nouns ++ together), r1)
+
+/-- Does a further formula follow (`, $ψ$`, `, and $χ$`, `and $χ$`)? -/
+def moreFormulas (r : List Chunk) : Bool :=
+  let r := (punct 44 r).getD r
+  let r := (kw [w!"and"] r).getD r
+  match r with
+  | .m _ :: _ | .d _ _ :: _ => true
+  | _ => false
 
 /-- Sentence-initial binders: `For every $x\in A$,` `For $x\in A$,` `For a NP,`
 `For every NP $x$,` `On $I$,`. -/
@@ -1447,6 +1488,8 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       let (vs, dom) ← binderMath ts
       let r2 ← kw [w!"satisfies"] r1 <|> kw [w!"obeys"] r1
       let (body, r3) ← formulaOrDisplay r2
+      -- (several statements: read as `For every $x\in A$, CLAUSES`, see `everySatisfies`)
+      if moreFormulas r3 then none else
       some (.every vs dom body, r3)) <|>
     (do
       let (np, r1) ← chunksUntil [w!"satisfies", w!"obeys"] r []
@@ -1460,6 +1503,7 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
           some (Bind.every vs d, r'')) with
         | some (b, r') => ([b], r')
         | none => ([], r3)
+      if moreFormulas r4 then none else
       some (.everyNP np body inner, r4)) <|>
     (do
       let (np, r1) ← chunksUntil [w!"is"] r []
@@ -1619,7 +1663,18 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
         | .math f => do
           let (neg, r2) := match kw [w!"not"] r1 with | some r' => (true, r') | none => (false, r1)
           let (np, r3) ← untilClauseEnd 32 r2 []
-          if np.isEmpty then none else some (.isA f np neg, r3)
+          -- `$Q_t$ is a copula with $D(Q_t)=0$ [and $R(Q_t)=\sqrt t$]`: what follows `with`
+          -- is said of the same object, as further clauses
+          let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false
+          match withAt with
+          | some i =>
+            match np.drop (i + 1) with
+            | [.m ts] =>
+              if neg || i == 0 || !(Math.parseFormula ts).isSome then
+                (if np.isEmpty then none else some (.isA f np neg, r3))
+              else some (.isA f (np.take i) false, [.w w!"and", .m ts] ++ r3)
+            | _ => if np.isEmpty then none else some (.isA f np neg, r3)
+          | none => if np.isEmpty then none else some (.isA f np neg, r3)
         | _ => none
     | none =>
     match s, kw [w!"increases", w!"bijectively", w!"from"] r with
@@ -1994,7 +2049,13 @@ def thereIs (cs : List Chunk) : Option (Clause × List Chunk) :=
 def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
   let (pre, r0) : List Codes × List Chunk :=
     match kw [w!"by"] cs >>= cite with
-    | some (l, r) => ([l], optPunct 44 r)
+    | some (l, r) =>
+      let (ls, r') := moreCites 6 r
+      -- `By CITE, we have $φ$`: the words after the citation assert nothing
+      let r' := optPunct 44 r'
+      let r' := ([[w!"we", w!"have"], [w!"we", w!"obtain"], [w!"we", w!"get"], [w!"it", w!"follows", w!"that"],
+        [w!"we", w!"see", w!"that"]].findSome? fun m => kw m r').getD r'
+      (l :: ls, r')
     | none => ([], cs)
   -- CITE gives $φ$
   match cite r0 with
@@ -2039,7 +2100,7 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
     let c := match hypC with | some h => Clause.ifClause h c | none => c
     let post := (kw [w!"by"] r1 >>= cite) <|> (kw [w!"as", w!"specified", w!"in"] r1 >>= cite)
     let (cites, r2) := match post with
-      | some (l, r2) => (pre ++ [l], r2)
+      | some (l, r2) => let (ls, r2') := moreCites 6 r2; (pre ++ l :: ls, r2')
       | none => (pre, r1)
     -- `…, where $g(x)\coloneqq x-1$ [and $h\coloneqq …$]`
     match punct 44 r2 >>= kw [w!"where"] with
@@ -3116,7 +3177,13 @@ def organizeSent (cs : List Chunk) : Option Sent :=
     match r with
     | .m [.id v] :: r' => if done r' then some (.inductionOn v) else none
     | _ => none
-  cases <|> contra <|> induction
+  -- `Then the following hold.` before a list whose items are sentences
+  let announces : Option Sent := do
+    let r ← anyKw [[w!"the", w!"following", w!"hold"], [w!"the", w!"following", w!"holds"],
+      [w!"the", w!"following", w!"statements", w!"hold"], [w!"the", w!"following", w!"assertions", w!"hold"],
+      [w!"the", w!"following", w!"are", w!"true"]] cs
+    if done r then some .organizes else none
+  cases <|> contra <|> induction <|> announces
 
 def sentenceCore (cs : List Chunk) : Option Sent :=
   match descSent none cs with
@@ -3197,6 +3264,10 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
     let (sym, r1) ← formula r
     let r2 ← kw [w!"denote", w!"the"] r1
     let r2 ← classOf r2
+    -- `let $\mathcal F$ denote the class of functions $f:[0,1]\to\mathbb{R}$ with $φ$ and
+    -- $ψ$.`: the class of the objects that a noun phrase with a variable describes
+    let described := r2.any fun c => match c with | .m ts => isSig ts | _ => false
+    if described && isEnd (r2.drop (r2.length - 1)) then some (.defClass sym [] r2.dropLast) else
     let (plural, r3) ← wordsUntil [] 6 r2 [] <|> (do
       let ws := r2.takeWhile (fun c => match c with | .w _ => true | _ => false)
       some (ws.filterMap (fun c => match c with | .w w => some w | _ => none), r2.drop ws.length))
@@ -3351,7 +3422,7 @@ where
       let (facts, r1) ← sinceFacts 4 r []
       let r2 ← punct 44 r1
       let (_, r3) := marker r2
-      let rest ← clauses 8 r3 []
+      let rest ← clauses 24 r3 []
       some (.claims topic [] (facts.map (fun m => ({ cites := [], clause := .fact m } : CClause)) ++ rest))
     | none =>
     match binder cs with
@@ -3413,7 +3484,10 @@ where
         | none => do
           -- For B, (For B,)* CLAUSES.
           let (bs, r2) ← moreBinders 3 r1 [b]
-          let cs ← clauses 8 r2 []
+          -- (`For B, we have CLAUSES`: words that join the binder to its clause)
+          let r2 := (kw [w!"we", w!"have", w!"that"] r2 <|> kw [w!"we", w!"have"] r2 <|>
+            kw [w!"one", w!"has"] r2 <|> kw [w!"it", w!"holds", w!"that"] r2).getD r2
+          let cs ← clauses 24 r2 []
           let cs := match cs with
             | c :: rest => { c with defs := bdefs ++ c.defs } :: rest
             | [] => []
@@ -3425,7 +3499,7 @@ where
         let ds := items.flatMap fun it => match it.defn with | .conj xs => xs | m => [m]
         if ds.all isDefeq then some (.constDefs none ds (items.flatMap (·.labels))) else none) <|>
       (do
-        let cs ← clauses 8 cs []
+        let cs ← clauses 24 cs []
         some (.claims topic [] cs))
   /-- `and $s\coloneqq e$` after a binder: definitions made with the sentence's binders. -/
   binderDefs : Nat → List Chunk → List MT → List MT × List Chunk
@@ -3487,9 +3561,61 @@ where
         | none => some (acc.reverse, cs)
       | none => some (acc.reverse, cs)
 
+/-- A sentence that runs through a list (`Then \begin{enumerate}[(i)] \item $φ$, $ψ$,
+\item $χ$. \end{enumerate}`): the same sentence with its items one after the other,
+joined by `, and`. An item is what stands between two markers of the list, without its
+label and its final comma, semicolon or `and`. Words that only announce the list (`the
+following hold:`) are dropped. -/
+def joinList (cs : List Chunk) : Option (List Chunk) :=
+  let isX (c : Chunk) : Bool := match c with | .x => true | _ => false
+  if !cs.any isX then none else
+  match listItems cs [] [] with
+  | pre :: rest =>
+    let tail := rest.getLast?.getD []
+    -- (the option of the list, `[(i)]`, and the label of an item)
+    let unlabel (it : List Chunk) : List Chunk := match it with
+      | .p 91 :: r => (r.dropWhile (fun (c : Chunk) => match c with
+          | .p 93 => false | .w _ | .p _ => true | _ => false)).drop 1
+      | _ => it
+    let clean (it : List Chunk) : List Chunk :=
+      let it := unlabel it
+      let it := match it.reverse with
+        | .w a :: .p 44 :: r => if a == w!"and" then r.reverse else it
+        | .w a :: r => if a == w!"and" then r.reverse else it
+        | _ => it
+      match it.reverse with
+      | .p c :: r => if c == 59 || c == 46 || c == 44 then r.reverse else it
+      | _ => it
+    let items := (rest.dropLast.map clean).filter (!·.isEmpty)
+    if items.isEmpty then none else
+    -- (a list ends its sentence, or the sentence ends after it)
+    if !(tail.isEmpty || isEnd tail) then none else
+    let pre := match pre.reverse with
+      | .p 58 :: r => r.reverse
+      | _ => pre
+    let announce : List (List Codes) :=
+      [[w!"the", w!"following", w!"hold"], [w!"the", w!"following", w!"holds"],
+       [w!"the", w!"following", w!"statements", w!"hold"], [w!"the", w!"following", w!"assertions", w!"hold"],
+       [w!"the", w!"following", w!"are", w!"true"], [w!"the", w!"following", w!"is", w!"true"]]
+    let pre := match announce.find? (fun a => pre.length ≥ a.length &&
+        (kw a (pre.drop (pre.length - a.length))).any (·.isEmpty)) with
+      | some a => pre.take (pre.length - a.length)
+      | none => pre
+    let joined := items.foldl (fun acc it => if acc.isEmpty then it else acc ++ [.p 44, .w w!"and"] ++ it) []
+    some (pre ++ joined ++ [.p 46])
+  | [] => none
+
+/-- `Every NP satisfies CLAUSES` as `For every NP, CLAUSES` (several statements about each
+object of the noun phrase: `Every copula $C$ satisfies $φ$, $ψ$, and $χ$.`). -/
+def everySatisfies (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"every"] cs
+  let (np, r1) ← chunksUntil [w!"satisfies", w!"obeys"] r []
+  let r2 ← kw [w!"satisfies"] r1 <|> kw [w!"obeys"] r1
+  some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44] ++ r2)
+
 /-- A sentence: an assumption, a contradiction, or one of the other forms, possibly
 ending in a contradiction. -/
-def sentence (cs : List Chunk) : Option Sent :=
+def sentence0 (cs : List Chunk) : Option Sent :=
   match supposeSent cs <|> contradictionSent cs <|> organizeSent cs with
   | some s => some s
   | none =>
@@ -3499,6 +3625,17 @@ def sentence (cs : List Chunk) : Option Sent :=
       | some (.claims topic binds cls) => some (.claimsContra topic binds cls)
       | _ => none
     | none => sentenceCore cs
+
+def sentence (cs : List Chunk) : Option Sent :=
+  match sentence0 cs with
+  | some s => some s
+  | none =>
+    -- (a sentence through a list, as one sentence; `Every NP satisfies` several statements)
+    let flat := (joinList cs).getD cs
+    let (_, body) := marker flat
+    match everySatisfies body with
+    | some cs' => sentence0 cs'
+    | none => if (joinList cs).isSome then sentence0 flat else none
 
 /-- `[We] let $L$ denote|be the WORDS [of NP [and|of NP]]`, `[we] write $L$ for the WORDS …`,
 `[we] denote by $L$ the WORDS …`: a symbol for a quantity that the article does not

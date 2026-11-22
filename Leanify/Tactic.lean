@@ -40,20 +40,68 @@ elab "intro_premises" : tactic => do
       | _ => pure ()
   loop 1000
 
+/-- The parts of a proof `e` of a proposition: `e`, and for a conjunction (once the
+definitions are unfolded) the parts of its two sides, with their propositions. -/
+partial def partsOf (fuel : Nat) (e : Expr) : MetaM (List (Expr × Expr)) := do
+  let ty ← instantiateMVars (← inferType e)
+  if fuel == 0 then return [(e, ty)]
+  let t ← whnf ty
+  match t.and? with
+  | some (a, b) =>
+    let l ← partsOf (fuel - 1) (mkApp3 (Lean.mkConst ``And.left) a b e)
+    let r ← partsOf (fuel - 1) (mkApp3 (Lean.mkConst ``And.right) a b e)
+    return (e, ty) :: l ++ r
+  | none => return [(e, ty)]
+
+/-- `leanify_part` closes a goal that is a part of a hypothesis: a side of a conjunction
+that the hypothesis is once its definitions are unfolded (that a function is a
+distribution function, from the hypothesis that it is a copula of the article). -/
+elab "leanify_part" : tactic => withMainContext do
+  let g ← getMainGoal
+  let target ← instantiateMVars (← g.getType)
+  for d in ← getLCtx do
+    if d.isImplementationDetail then continue
+    unless ← isProp d.type do continue
+    for (p, ty) in ← partsOf 3 d.toExpr do
+      if ← withReducible (isDefEq ty target) then
+        g.assign p
+        replaceMainGoal []
+        return
+  throwError "leanify_part: the goal is not a part of a hypothesis"
+
+/-- `leanify_facts` closes a leaf of a definedness condition with the facts of the model of
+a vocabulary: a library gives its rules with `macro_rules` (the unit square: an integral
+against a distribution function of a bounded expression). Without a rule that applies,
+it fails. -/
+syntax "leanify_facts" : tactic
+
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic| fail "leanify_facts: no fact of a model applies")
+
 /-- `definedness [t₁, …]` proves a definedness condition (`meaningfulK`, `wellDefinedI`):
 a tree of `∧`, `→` and `∀` whose leaves are hypotheses, numeric side conditions,
 signs that `positivity` proves, or the given facts, and whose impossible branches (contradictory case
-conditions) are closed by `linarith` or `tauto`. A hypothesis `∃ z, φ` (what a hypothesis
+conditions) are closed by `linarith` or `tauto`. A condition on almost every point of an
+interval (that an integrand is defined there) is proved for every point. A hypothesis `∃ z, φ` (what a hypothesis
 about another variable says about the variables of a definition) is opened, and a leaf
-that follows from the hypotheses by rewriting is closed by `simp_all`. -/
+that follows from the hypotheses by rewriting is closed by `simp_all`. A leaf that is a
+side of a hypothesis (`leanify_part`) or a fact of the model of the vocabulary
+(`leanify_facts`) is closed by it. -/
 elab "definedness" " [" ts:term,* "]" : tactic => do
   let leaf ← ts.getElems.foldlM (fun acc t => do
     let accS ← `(Lean.Parser.Tactic.tacticSeq| $acc:tactic)
     `(tactic| first | $accS | exact $t)) (← `(tactic| assumption))
+  let aeOfForall := mkIdent `Leanify.Prelude.ae_of_forall
   let step ← `(tactic| first
     | $leaf:tactic
+    -- a side of a hypothesis that is a conjunction once its definitions are unfolded
+    | leanify_part
     | (norm_num; done)
+    -- what holds at every point holds at almost every point
+    | refine $aeOfForall:ident ?_
     | (intro _; try casesm* _ ∧ _, ∃ _, _)
+    -- a fact of the model of the vocabulary
+    | (leanify_facts; done)
     | refine ⟨?_, ?_⟩
     | (linarith; done)
     | (positivity; done)

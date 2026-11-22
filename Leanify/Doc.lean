@@ -85,18 +85,35 @@ def scripts : Nat → List PTok → List PTok → List PTok × List PTok
     else (acc, t :: ts)
   | _ + 1, acc, [] => (acc, [])
 
-/-- An atom: a symbol (with a font: `\mathbf{x}`, `\mathcal P`, or the digits of a
-number) or a group, with its scripts. -/
-def atom (ts : List PTok) : Option (List PTok × List PTok) := do
-  let (base, rest) ← match ts with
+/-- An atom with none, one, two, … of the scripts after it: each with the rest. -/
+def scriptSteps : Nat → List PTok → List PTok → List (List PTok × List PTok)
+  | 0, acc, ts => [(acc, ts)]
+  | f + 1, acc, ts => (acc, ts) :: (match ts with
     | t :: r =>
-      match t.tok with
-      | .cmd n => if Math.wFonts.contains n then (unit r).map fun (u, r') => (t :: u, r') else some ([t], r)
-      | .mnum _ =>
-        let ds := r.takeWhile fun p => match p.tok with | .mnum _ => true | _ => false
-        some (t :: ds, r.drop ds.length)
-      | _ => unit ts
-    | [] => none
+      if t.tok == .msym 95 || t.tok == .msym 94 then
+        match unit r with
+        | some (u, r') => scriptSteps f (acc ++ [t] ++ u) r'
+        | none => []
+      else if t.tok == .msym 39 then scriptSteps f (acc ++ [t]) r
+      else []
+    | [] => [])
+
+/-- A symbol (with a font: `\mathbf{x}`, `\mathcal P`, or the digits of a number) or a
+group, without its scripts. -/
+def atomBase (ts : List PTok) : Option (List PTok × List PTok) :=
+  match ts with
+  | t :: r =>
+    match t.tok with
+    | .cmd n => if Math.wFonts.contains n then (unit r).map fun (u, r') => (t :: u, r') else some ([t], r)
+    | .mnum _ =>
+      let ds := r.takeWhile fun p => match p.tok with | .mnum _ => true | _ => false
+      some (t :: ds, r.drop ds.length)
+    | _ => unit ts
+  | [] => none
+
+/-- An atom: a symbol or a group (`atomBase`), with its scripts. -/
+def atom (ts : List PTok) : Option (List PTok × List PTok) := do
+  let (base, rest) ← atomBase ts
   some (scripts (rest.length + 1) base rest)
 
 /-- The shortest nonempty balanced prefix before a token `stop` outside groups. -/
@@ -122,6 +139,14 @@ def matchItems : Nat → List TItem → List PTok → List (Nat × List PTok) �
     Option (List (Nat × List PTok) × List PTok)
   | 0, _, _, _ => none
   | _ + 1, [], ts, acc => some (acc, ts)
+  -- an argument in a subscript or a superscript is one token or one group, as in TeX:
+  -- `r_k^{1/k}` is `r_k` to the power `1/k`
+  | f + 1, .fixed t :: .slot k :: is, u :: ts, acc =>
+    if u.tok != t then none
+    else if t == .msym 95 || t == .msym 94 then do
+      let (arg, r) ← unit ts
+      matchItems f is r (← bind k arg acc)
+    else matchItems f (.slot k :: is) ts acc
   | f + 1, .fixed t :: is, u :: ts, acc => if u.tok == t then matchItems f is ts acc else none
   | _ + 1, .fixed _ :: _, [], _ => none
   | f + 1, .slot k :: .fixed t :: is, ts, acc => do
@@ -135,6 +160,16 @@ def matchItems : Nat → List TItem → List PTok → List (Nat × List PTok) �
 def matchAt (pat : List TItem) (ts : List PTok) : Option (List (Nat × List PTok) × List PTok) :=
   let f := pat.length + ts.length + 2
   match pat with
+  -- `x^+` with the argument `x`: the symbol before the script, with as few of its own
+  -- scripts as the notation leaves (`x_1^+` is `x_1` with the script `^+`)
+  | .slot k :: .fixed t :: rest =>
+    if t == .msym 95 || t == .msym 94 then do
+      let (base, r) ← atomBase ts
+      (scriptSteps (r.length + 1) base r).findSome? fun (arg, r') =>
+        matchItems f (.fixed t :: rest) r' [(k, arg)]
+    else do
+      let (arg, r) ← atom ts
+      matchItems f (.fixed t :: rest) r [(k, arg)]
   | .slot k :: rest => do
     let (arg, r) ← atom ts
     matchItems f rest r [(k, arg)]
@@ -151,6 +186,39 @@ def substitute (repl : List TItem) (args : List (Nat × List PTok)) (pos : Nat) 
       | some ps => ⟨.lbrace, pos, true⟩ :: ps ++ [⟨.rbrace, pos, true⟩]
       | none => []
 
+/-- Which tokens are part of a name set in a font (`\mathrm{Bin}`, `\mathcal P`):
+those are never arguments. -/
+def fontMask : Nat → List Tok → List Bool
+  | 0, _ => []
+  | _ + 1, [] => []
+  | f + 1, .cmd n :: .lbrace :: ts =>
+    if Math.wFonts.contains n then
+      let body := ts.takeWhile (· != .rbrace)
+      false :: List.replicate (body.length + 2) true ++ fontMask f (ts.drop (body.length + 1))
+    else false :: fontMask f (.lbrace :: ts)
+  | f + 1, .cmd n :: t :: ts =>
+    if Math.wFonts.contains n then false :: true :: fontMask f ts else false :: fontMask f (t :: ts)
+  | f + 1, _ :: ts => false :: fontMask f ts
+
+/-- What a notation stands for, with each bound variable among `clash` renamed to a
+letter that is not `used` (none if the letters run out). -/
+def renameBound : List Tok → List Tok → List TItem → Option (List TItem)
+  | [], _, repl => some repl
+  | b :: bs, used, repl =>
+    let letters : List Tok := ((List.range 26).map fun i => Tok.mvar (122 - i)) ++
+      (List.range 26).map fun i => Tok.mvar (90 - i)
+    match letters.find? (!used.contains ·) with
+    | some fresh =>
+      -- (not the letter of a name set in a font: `\mathcal{C}`)
+      let toks : List Tok := repl.map fun it => match it with | .fixed u => u | .slot _ => .par
+      let mask := fontMask (toks.length + 1) toks ++ List.replicate toks.length false
+      renameBound bs (fresh :: used) ((repl.zip mask).map fun (it, inFont) =>
+        if !inFont && it == .fixed b then .fixed fresh else it)
+    | none => none
+
+/-- Marks a notation that was not applied, before the variable it would capture. -/
+def captureMark : Tok := .cmd w!"@captured"
+
 /-- Replace every match of a template in the formulas of a token list. -/
 def rewrite (tpl : Template) : Nat → List PTok → List PTok
   | 0, ts => ts
@@ -159,9 +227,26 @@ def rewrite (tpl : Template) : Nat → List PTok → List PTok
     if !t.math then t :: rewrite tpl f ts else
     match matchAt tpl.pat (t :: ts) with
     | some (args, rest) =>
-      if rest.length < ts.length + 1 then substitute tpl.repl args t.pos ++ rewrite tpl f rest
+      if rest.length < ts.length + 1 then
+        -- an argument that uses a variable the notation binds: the bound variable gets
+        -- another letter, so that it does not capture the argument's (`\ell_\beta(\beta(C))`
+        -- with `\ell_A(x)` for `\min\{R(C) : …, A(C)=x\}`)
+        let clash := tpl.binds.filter fun b => args.any fun (_, ps) => ps.any (·.tok == b)
+        let used : List Tok := (t :: ts).map (·.tok) ++ tpl.repl.filterMap fun it =>
+          match it with | .fixed u => some u | .slot _ => none
+        match renameBound clash used tpl.repl with
+        | some repl => substitute repl args t.pos ++ rewrite tpl f rest
+        | none =>
+          match args.findSome? fun (_, ps) => ps.find? fun p => tpl.binds.contains p.tok with
+          | some p => ⟨captureMark, t.pos, true⟩ :: { p with pos := t.pos } :: t :: rewrite tpl f ts
+          | none => substitute tpl.repl args t.pos ++ rewrite tpl f rest
       else t :: rewrite tpl f ts
     | none => t :: rewrite tpl f ts
+
+/-- The variable of a notation that an argument would capture, if `rewrite` marked one. -/
+def captured : List PTok → Option Tok
+  | [] => none
+  | a :: rest => if a.tok == captureMark then rest.head?.map (·.tok) else captured rest
 
 /-- The labelled displays of a sentence: each label with the display's tokens
 (without its labels and its final punctuation). -/
@@ -215,20 +300,6 @@ def slotTok : Tok → Bool
   | .cmd n => !Math.wFonts.contains n
   | _ => false
 
-/-- Which tokens are part of a name set in a font (`\mathrm{Bin}`, `\mathcal P`):
-those are never arguments. -/
-def fontMask : Nat → List Tok → List Bool
-  | 0, _ => []
-  | _ + 1, [] => []
-  | f + 1, .cmd n :: .lbrace :: ts =>
-    if Math.wFonts.contains n then
-      let body := ts.takeWhile (· != .rbrace)
-      false :: List.replicate (body.length + 2) true ++ fontMask f (ts.drop (body.length + 1))
-    else false :: fontMask f (.lbrace :: ts)
-  | f + 1, .cmd n :: t :: ts =>
-    if Math.wFonts.contains n then false :: true :: fontMask f ts else false :: fontMask f (t :: ts)
-  | f + 1, _ :: ts => false :: fontMask f ts
-
 /-- Items of tokens, given the argument tokens (font-set names stay fixed). -/
 def items (args : List Tok) (ts : List Tok) : List TItem :=
   (ts.zip (fontMask (ts.length + 1) ts ++ List.replicate ts.length false)).map fun (t, fixed) =>
@@ -245,7 +316,7 @@ def template (pat repl : List PTok) : Template :=
   let free := (ptoks.zip (fontMask (ptoks.length + 1) ptoks ++ List.replicate ptoks.length false)).filterMap
     fun (t, fixed) => if fixed then none else some t
   let args := (free.filter fun t => slotTok t && repl.any (·.tok == t)).eraseDups
-  ⟨items args ptoks, items args (repl.map (·.tok))⟩
+  { pat := items args ptoks, repl := items args (repl.map (·.tok)) }
 
 /-- The sentence declares a notation (`We write …`): its own formulas are not rewritten. -/
 def declares (ts : List PTok) : Bool :=
@@ -357,6 +428,41 @@ def rewriteWords (aliases : List (List Codes × List Tok)) : Nat → Option Tok 
     | some (n, repl) =>
       repl.map (fun r => (⟨r, t.pos, false⟩ : PTok)) ++ rewriteWords aliases f none ((t :: ts).drop n)
     | none => t :: rewriteWords aliases f (some t.tok) ts
+
+/-- `On the event $φ$, [we have] $ψ$`: for all values of the sample, `φ` implies `ψ`
+(the formula `\@onevent{φ}{ψ}`, which the vocabulary of the unit square reads with the two
+sequences `U`, `V` of a sample). The words become `we have` before that formula. -/
+def onEvent : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    let isW (p : PTok) (w : Codes) : Bool := !p.math && (match p.tok with | .word v => Grammar.lower v == w | _ => false)
+    let hit : Option (List PTok × List PTok × List PTok) :=
+      match ts with
+      | a :: b :: o :: rest =>
+        if isW t w!"on" && isW a w!"the" && isW b w!"event" && o.tok == .mopen then
+          let phi := rest.takeWhile (·.tok != .mclose)
+          let r1 := rest.drop (phi.length + 1)
+          let r1 := match r1 with | c :: r => if c.tok == .punct 44 then r else r1 | [] => r1
+          let r1 := match r1 with
+            | x :: y :: r => if isW x w!"we" && isW y w!"have" then r else r1
+            | _ => r1
+          match r1 with
+          | o2 :: r2 =>
+            if o2.tok == .mopen then
+              let psi := r2.takeWhile (·.tok != .mclose)
+              if phi.isEmpty || psi.isEmpty || psi.length == r2.length then none
+              else some (phi, psi, r2.drop (psi.length + 1))
+            else none
+          | [] => none
+        else none
+      | _ => none
+    match hit with
+    | some (phi, psi, rest) =>
+      let m (k : Tok) : PTok := ⟨k, t.pos, true⟩
+      [⟨.word w!"we", t.pos, false⟩, ⟨.word w!"have", t.pos, false⟩, ⟨.mopen, t.pos, false⟩, m (.cmd w!"@onevent"), m .lbrace] ++
+        phi ++ [m .rbrace, m .lbrace] ++ psi ++ [m .rbrace, ⟨.mclose, t.pos, false⟩] ++ onEvent f rest
+    | none => t :: onEvent f ts
 
 end Notation
 
@@ -931,6 +1037,14 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               | none =>
               let ds ← domainsOf false d
               let (ct, cp) ← domainOf false c
+              -- `a function $A:\mathcal C\to\mathbb{R}$` on a class of the article: a
+              -- function of the objects of its type, whose values are asked for at the
+              -- members of the class only
+              match ds, cp with
+              | [(dt, some (.glob gi))], none =>
+                modify fun st => { st with varDoms := (st.curEnv, f, .glob gi) :: st.varDoms }
+                pure (Ty.fn dt ct, [], some [.id f], r)
+              | _, _ =>
               if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
               pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
             | _ => fail E.unsupported
@@ -978,6 +1092,31 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | some (m, r) => post f r (m.pred :: acc)
       | none => pure (acc.reverse, cs)
   let (qms, r2) ← post 4 r1 []
+  -- `a copula $C$ with maximal correlation $R=R(C)$`: the value of a function at the
+  -- variable, named by the function's letter for the rest of the result. The words are
+  -- the name under which the article introduced the function.
+  let r2 ← match r2 with
+    | .w w :: r =>
+      let ws := r.takeWhile fun c => match c with | .w v => v != w!"and" | _ => false
+      match (if w == w!"with" then r.drop ws.length else []) with
+      | .m ts :: rest =>
+        match Math.parseFormula ts with
+        | some (.chain (.id x) [(.eq, .app (.id y) args)]) =>
+          let keys := args.filterMap fun a => match a with | .id k => some k | _ => none
+          if x != y || keys.length != args.length || args.isEmpty then pure r2 else
+          match ← lookupGlob x with
+          | some (gi, _) =>
+            let words := (wordsOf ws).map Grammar.lower
+            let known := ((st.named ++ st.ops).filter (·.2 == gi)).map (·.1)
+            if !words.isEmpty && !known.contains words then
+              fail E.finding (w!"the words before $" ++ x ++ w!"=" ++ x ++ w!"(…)$ are the name under which the article introduced " ++ x ++
+                w!" (We write $" ++ x ++ w!"(C)$ for the maximal correlation of a copula $C$.); without them, write: with $" ++ x ++ w!"=" ++ x ++ w!"(…)$")
+            modify fun st => { st with abbrevs := (st.curEnv, x, keys) :: st.abbrevs }
+            pure rest
+          | none => pure r2
+        | _ => pure r2
+      | _ => pure r2
+    | _ => pure r2
   -- `a copula $C$ with $\rho(C)=0$ [and $\beta(C)=0$]`: conditions on the variable
   let (conds, r2) := match r2 with
     | .w w :: r => if w == w!"with" then condsOf 4 r [] else ([], r2)
@@ -995,6 +1134,8 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let condPreds ← conds.mapM fun φ => do
     let (p, pty) ← Elab.term 100000 ([(name, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer) none φ
     if pty != .prop then fail E.type
+    -- (the members of a class: the condition is meaningful for the object, and holds)
+    let p := if (← get).strongConds then Tm.mkAnd (Tm.defined p) p else p
     pure (Tm.lam ty .tt p)
   -- (a noun that says nothing beyond its type, `real number`, adds no condition)
   let all := ((preds ++ pms.map (·.pred) ++ qms ++ memberPred ++ notionPreds ++ condPreds).filter
@@ -1073,15 +1214,28 @@ after `Let $x_k>0$.`): such a letter is part of the name, not a variable. -/
 def dropBoundIndices (st : St) (m : MT) (free : List Codes) : List Codes :=
   let keys := (subKeys 64 m).filter fun n =>
     st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n)
+  -- (the letter of a symbol with a numeral as superscript, `\Phi` of `\Phi^2`, is no variable)
+  let free := free.filter fun i => !(st.globs.any fun g => Elab.powerName g.key == some i)
   free.filter fun i =>
     let asIndex := (keys.filter fun n =>
       i.length < n.length && n.drop (n.length - i.length - 1) == [95] ++ i).length
     asIndex == 0 || asIndex < (free.filter (· == i)).length
 
+/-- `x_3` as the term of a sequence `x` among the binders `bs` (a variable whose values are
+functions of a real number into a type of the vocabulary): the name `x`. -/
+def termOfSeq (bs : List BindInfo) (n : Codes) : Option Codes :=
+  (bs.find? fun b =>
+    (match b.ty with | .fn .real (.base _) => true | _ => false) &&
+    n.length > b.name.length + 1 && n.take (b.name.length + 1) == b.name ++ [95] &&
+    (n.drop (b.name.length + 1)).all fun c => 48 ≤ c && c ≤ 57).map (·.name)
+
 /-- The sequences of the scope among the free identifiers `ids` of a formula `m`: the
 term `x_1` of a sequence `x` is `x`; and the variables of the scope whose name has a
 letter as subscript. -/
 def seqFree (st : St) (bound : List Codes) (m : MT) (ids : List Codes) : List Codes :=
+  -- (`x_1` of a variable `x` of the scope that is a sequence of points of a vocabulary's
+  -- type, `Let $x$ be a sequence in $[0,1]$`, is its term: the variable is `x`)
+  let ids := ids.map fun n => (termOfSeq (st.envBinders ++ st.fixed.map (·.2)) n).getD n
   let seqs := (subBases 64 m).filter fun k => st.seqs.any (·.1 == k) && !bound.contains k
   ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs ++
     envSubKeys st bound m
@@ -1101,6 +1255,8 @@ def freeIds : Nat → List Codes → MT → List Codes
         | _ => []
       key.filter (!bound.contains ·) ++ freeIds f bound i
     | .sub b i => freeIds f bound b ++ freeIds f bound i
+    -- a starred name is a symbol of its own (`\tau^*`)
+    | .sup (.id k) (.id [42]) => if bound.contains (k ++ [94, 42]) then [] else [k ++ [94, 42]]
     | .sup b e => freeIds f bound b ++ freeIds f bound e
     -- `\hat x` is the name `\hat{x}`, or `\widehat` applied to `x`
     | .hat (.id k) =>
@@ -1127,6 +1283,30 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .quant _ vs d b => freeIds f bound d ++ freeIds f (vs ++ bound) b
     | .limit v t b => freeIds f bound t ++ freeIds f (v :: bound) b
     | .sig .. | .text _ => []
+
+/-- The variables that a formula binds: of its sets, integrals, sums, limits, maps and
+quantifiers. -/
+def boundIds : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m =>
+    let all (xs : List MT) := xs.flatMap (boundIds f)
+    match m with
+    | .id _ | .num _ | .sig .. | .text _ => []
+    | .sub x y | .sup x y | .add x y | .minus x y | .mul x y | .div x y | .frac x y
+    | .interval x y | .ival x y _ _ | .equiv x y | .land x y | .lor x y | .limp x y | .liff x y => all [x, y]
+    | .hat x | .neg x | .abs x | .lnot x | .extr _ x | .bound _ x => boundIds f x
+    | .app h as => all (h :: as)
+    | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => all xs
+    | .int lo hi b v => v :: all [lo, hi, b]
+    | .chain x rs => all (x :: rs.map (·.2))
+    | .mapsto p b => freeIds 64 [] p ++ boundIds f b
+    | .setOf p d cs => freeIds 64 [] p ++ all (d :: cs)
+    | .setCond p cs => freeIds 64 [] p ++ all cs
+    | .image e v d => v :: all [e, d]
+    | .cases rows => rows.flatMap fun (a, b) => all [a, b]
+    | .bigop _ v lo hi b => v :: all [lo, hi, b]
+    | .quant _ vs d b => vs ++ all [d, b]
+    | .limit v t b => v :: all [t, b]
 
 /-- A domain of multi-indices `\mathbb{N}_0^n` (`n ≥ 2`): the domain of the components and
 `n`. -/
@@ -1173,6 +1353,8 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
+    -- (`U_1` of a sequence `U` bound before is its term, not a variable)
+    let free := free.filter fun n => (termOfSeq before n).isNone
     let free := (seqFree st [] φ free).filter fun n => !before.any (·.name == n)
     -- (a term `x_1` of a sequence is not a variable of its own)
     if let some x := free.find? fun n => st.seqs.any (·.1 == n) then
@@ -1251,7 +1433,10 @@ def scopeOf (bs : List BindInfo) : Scope := (bs.map fun b => (b.name, b.ty)).rev
 def wrap (bs : List BindInfo) (body : Tm) : Tm :=
   forallBinders (bs.map fun b => (b.name, b.ty, b.pred.map fun p => Tm.app p (.loc 0))) body
 
-/-- The implicit parameters of the definitions named among `ids` (visible here). -/
+/-- The implicit parameters of the definitions named among `ids` (visible here). A
+definition whose name has a letter as subscript (`\delta_n`, defined among the variables
+of a result) is not among the free identifiers of a formula, where `n` alone is one: the
+callers name it by `subKeys`. -/
 def implicitVars (st : St) (ids : List Codes) : List Codes :=
   ids.flatMap fun n =>
     let rec find : Nat → List Glob → Option Nat
@@ -1416,8 +1601,9 @@ def ineqFree (st : St) (cl : Clause) : List Codes :=
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
-  let ids := (clauseMaths cl.clause ++ cl.defs).flatMap fun m => seqFree st bound m (freeIds 64 bound m)
-  ids ++ implicitVars st ids ++ ineqFree st cl.clause
+  let ms := clauseMaths cl.clause ++ cl.defs
+  let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
+  ids ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
 def zeroElsewhere : Tm → Tm
@@ -1495,7 +1681,7 @@ def object (sc : Scope) (ty : Ty) : Obj → M Tm
     match ty with
     | .fn a r => do
       let (t, tty) ← Elab.lam F [] pat [a] (some r) body
-      let i ← addGlob ⟨[], tty, [], false⟩ t
+      let i ← addGlob ⟨[], tty, [], false, 1⟩ t
       modify fun st => { st with named := st.named ++ [(name, i)] }
       pure (.glob i)
     | _ => fail E.type
@@ -1674,7 +1860,7 @@ def defItem (c : SentCtx) (b : BindInfo) (it : DefItem) : M (List Nat × List Na
     let (body, rty) ← term F sc none rhs
     let value := Tm.lam bty (holdsAt b.pred (.loc 0)) (lamWrap ats body)
     let ty := Ty.fn bty (tyWrap ats rty)
-    let i ← addGlob ⟨key, ty, b.pred :: ats.map (fun _ => none), family⟩ value
+    let i ← addGlob ⟨key, ty, b.pred :: ats.map (fun _ => none), family, 1⟩ value
     registerOp it.name i
     let cs ← chainClaims sc rhs more
     let bs := b :: (args.zip ats).map fun (n, t) => ⟨n, t, none⟩
@@ -1692,7 +1878,7 @@ def defItem (c : SentCtx) (b : BindInfo) (it : DefItem) : M (List Nat × List Na
     let ats := argTypes elemTy (match pat with | .tuple vs => vs.length | _ => 1)
     let (lt, lty) ← Elab.lam F [(b.name, bty)] pat ats (some .real) body
     let value := Tm.lam bty (holdsAt b.pred (.loc 0)) lt
-    let i ← addGlob ⟨[], .fn bty lty, [b.pred], false⟩ value
+    let i ← addGlob ⟨[], .fn bty lty, [b.pred], false, 1⟩ value
     registerOp it.name i
     pure ([i], [])
   | _ => fail E.unsupported
@@ -1733,7 +1919,7 @@ def defBranch (f : Codes) (aty cty : Ty) : DefPiece → M (Tm × Tm)
       let (_, epred) ← domainOf true edom
       let (hv, hty) ← term F [(b, .real)] none h
       let hv ← coerce hv hty .real
-      let ie ← addGlob ⟨e, .fn .real .real, [epred], true⟩ (.lam .real (holdsAt epred (.loc 0)) hv)
+      let ie ← addGlob ⟨e, .fn .real .real, [epred], true, 1⟩ (.lam .real (holdsAt epred (.loc 0)) hv)
       -- the value at x: the y with x = e_b and y = g(b) for some b ∈ P
       let (_, ppred) ← domainOf true pdom
       let sc : Scope := [(b, .real), (w!"", cty), (w!"", aty)]
@@ -1769,7 +1955,7 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
         let (body, bty) ← term F sc none rhs
         let body ← coerce body bty cty
         let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) body
-        let i ← addGlob ⟨f, tyWrap (ds.map (·.1)) cty, ds.map (·.2), false⟩ value
+        let i ← addGlob ⟨f, tyWrap (ds.map (·.1)) cty, ds.map (·.2), false, 1⟩ value
         modify fun st => { st with params := st.params ++ [(i, names)] }
         let k := bs.length
         let applied := (List.range k).foldl (fun acc j => Tm.app acc (.loc (k - 1 - j))) (Tm.glob i)
@@ -1790,7 +1976,7 @@ def defBy (c : SentCtx) (sg : MT) (pieces : List DefPiece) (labels : List Codes)
         let bs ← pieces.mapM (defBranch f aty cty)
         pure (bs.foldr (fun (cnd, v) acc => Tm.cases cnd v acc) (.undef cty))
     let value := Tm.lam aty (holdsAt apred (.loc 0)) body
-    let i ← addGlob ⟨f, .fn aty cty, [apred], false⟩ value
+    let i ← addGlob ⟨f, .fn aty cty, [apred], false, 1⟩ value
     let applied := Tm.guard (holdsAt apred (.loc 0)) (.app (.glob i) (.loc 0))
     let codomain := match cpred with
       | some p => [Tm.all aty (.imp (holdsAt apred (.loc 0)) (.app p applied))]
@@ -1832,7 +2018,7 @@ def defByFamily (c : SentCtx) (b : BindInfo) (sg : MT) (pieces : List DefPiece) 
     let (body, bty) ← term F sc none rhs
     let body ← coerce body bty cty
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (.lam aty (holdsAt apred (.loc 0)) body)
-    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true⟩ value
+    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true, 1⟩ value
     let ids ← match cpred with
       | some q => do
         let applied := Tm.guard (holdsAt b.pred (.loc 1))
@@ -1855,7 +2041,7 @@ def defReads (c : SentCtx) (b : BindInfo) (sg disp : MT) (labels : List Codes) :
     let (body, bty) ← term F sc none rhs
     let body' ← coerce body bty cty
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (.lam aty (holdsAt apred (.loc 0)) body')
-    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true⟩ value
+    let i ← addGlob ⟨f, .fn b.ty (.fn aty cty), [b.pred, apred], true, 1⟩ value
     let cs ← chainClaims sc rhs more
     let ids ← cs.mapM fun q => emit c (wrap [b, ⟨x, aty, apred⟩] q) []
     addLabels labels ids true
@@ -1872,7 +2058,7 @@ def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
     | _ => none
   match ← theMeaning (fun (n : Notion) => (n.ty, n.value)) (·.field) name cands with
   | some (n, _) => do
-    let i ← addGlob ⟨key, n.ty, [], false⟩ n.value
+    let i ← addGlob ⟨key, n.ty, [], false, 1⟩ n.value
     pure ([i], [])
   | none => fail E.noun (((wordsOf name).intersperse [32]).flatten)
 
@@ -1892,7 +2078,7 @@ def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat
       | _ => fail E.unsupported
     let sc : Scope := [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
-    let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family⟩ (.lam b.ty (holdsAt b.pred (.loc 0)) v)
+    let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ (.lam b.ty (holdsAt b.pred (.loc 0)) v)
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let ps ← more.mapM fun (r, y) => do
       if r == .mem then Elab.term.member F sc x y
@@ -1930,7 +2116,7 @@ def setDef (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := d
     let sc : Scope := (names.zip ats).reverse ++ [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
     let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (lamWrap ats v)
-    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: ats.map (fun _ => none), family⟩ value
+    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: ats.map (fun _ => none), family, 1⟩ value
     if !family then modify fun st => { st with implicits := st.implicits ++ [(i, [b.name])] }
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let sc1 : Scope := [(b.name, b.ty)]
@@ -1968,7 +2154,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
     let st ← get
     let ids := freeIds 64 argNames rhs
-    let used := ids ++ implicitVars st ids
+    let used := ids ++ implicitVars st (ids ++ subKeys 64 rhs)
     -- A variable whose domain uses the variables before it (`x\in[0,n]`) needs them all,
     -- in their order: the definition takes them too, so that the domain is a condition on
     -- its own parameters.
@@ -1991,7 +2177,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let (v, vty) ← term F (scopeOf all) none rhs
     let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
     let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
-    let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+    let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
     if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
     if !all.isEmpty then modify fun st => { st with telescopes := st.telescopes ++ [(i, all)] }
     match c.ctx.kind with
@@ -2029,7 +2215,7 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
       let usesScope := match m with
         | .chain _ [(.defeq, rhs)] =>
           let ids := freeIds 64 [] rhs
-          (ids ++ implicitVars st ids).any fun n => scope.any (·.name == n)
+          (ids ++ implicitVars st (ids ++ subKeys 64 rhs)).any fun n => scope.any (·.name == n)
         | _ => false
       if usesScope then
         let i ← inlineDef c scope m
@@ -2046,7 +2232,7 @@ def constDefs (c : SentCtx) (b : Option BindInfo) (defs : List MT) (labels : Lis
         let some key := symKey lhs
           | fail E.finding w!"the left side of a definition is a symbol ($X$, $d_0$) or a function of variables ($f(x,y)$); for a family ($A_{ij}$), say what its indices range over (For $i,j\\in\\{1,2\\}$, set …)"
         let (v, vty) ← term F [] none rhs
-        let i ← addGlob ⟨key, vty, [], false⟩ v
+        let i ← addGlob ⟨key, vty, [], false, 1⟩ v
         let x : Tm × Ty := (.glob i, vty)
         let ps ← more.mapM fun (r, y) => do
           if r == .mem then Elab.term.member F [] x y
@@ -2066,6 +2252,20 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
   let mut ds : List Nat := []
   for m in defs do
     match m with
+    -- `For $r\in[0,1]$ and $g\in[-r,r]$, set $C_{r,g}\coloneqq e$`: a family with the
+    -- binder's variables, all of them and in their order, as its subscripts
+    | .chain (.sub (.id k) (.tuple idx)) [(.defeq, rhs)] =>
+      let names ← idx.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
+      if names != bs.map (·.name) then
+        fail E.finding (w!"the subscripts of the family " ++ k ++ w!" are the variables of the binder before it, all of them and in its order (For $r\\in[0,1]$ and $g\\in[-r,r]$, set $C_{r,g}\\coloneqq …$)")
+      let all := imp ++ bs
+      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
+      let (v, vty) ← term F sc none rhs
+      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
+      let i ← addGlob { key := k, ty, doms := all.map (·.pred), family := true, indices := names.length } value
+      if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
+      ds := ds ++ [i]
     -- `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq e$`: a family, indexed by
     -- the first variable, of functions of the others. Inside a result or a proof, the
     -- variables of the result it uses (`imp`) are implicit parameters
@@ -2079,18 +2279,20 @@ def multiDefs (bs : List BindInfo) (defs : List MT) (labels : List Codes) (imp :
           let (v, vty) ← term F sc none rhs
           let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
           let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
-          let i ← addGlob ⟨k, ty, all.map (·.pred), true⟩ value
+          let i ← addGlob ⟨k, ty, all.map (·.pred), true, 1⟩ value
           if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
           ds := ds ++ [i]
           continue
       let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
       if names != bs.map (·.name) then fail E.unsupported
       let some key := Elab.symKey h | fail E.unsupported
-      let sc : Scope := (bs.map fun b => (b.name, b.ty)).reverse
+      let all := imp ++ bs
+      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
       let (v, vty) ← term F sc none rhs
-      let value := bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
-      let ty := bs.foldr (fun b t => Ty.fn b.ty t) vty
-      let i ← addGlob ⟨key, ty, bs.map (·.pred), false⟩ value
+      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
+      let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
+      if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
       modify fun st => { st with params := st.params ++ [(i, names)] }
       ds := ds ++ [i]
     | _ => fail E.unsupported
@@ -2137,8 +2339,8 @@ def defDeriv (bi : Option BindInfo) (names : List MT) (dom cod : MT) (anchors : 
     let body := Tm.add (shift 1 0 ct) (.guard integrable integral)
     let fx := Tm.lam .real (holdsAt apred (.loc 0)) body
     let (g, v) : Glob × Tm := match bi with
-      | some b => (⟨key, .fn b.ty (.fn .real .real), [b.pred, apred], family⟩, Tm.lam b.ty (holdsAt b.pred (.loc 0)) fx)
-      | none => (⟨key, .fn .real .real, [apred], family⟩, fx)
+      | some b => (⟨key, .fn b.ty (.fn .real .real), [b.pred, apred], family, 1⟩, Tm.lam b.ty (holdsAt b.pred (.loc 0)) fx)
+      | none => (⟨key, .fn .real .real, [apred], family, 1⟩, fx)
     let i ← addGlob g v
     ids := ids ++ [i]
   addLabels labels [] true
@@ -2194,7 +2396,7 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
         | _ => fail E.unsupported
     | _ => fail E.unsupported
   let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) val
-  let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family⟩ value
+  let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ value
   pure ([i], [])
 
 /-- `We say that a N $x$ is PHRASE of a M $y$ if φ for all u,v∈A`. -/
@@ -2207,7 +2409,7 @@ def weSay (subj : List Chunk) (phrase : List Codes) (o : List Chunk) (cond : MT)
   let body ← prop sc none cond
   let inner := forallBinders (bs.map fun b => (b.name, b.ty, b.pred.map fun p => Tm.app p (.loc 0))) body
   let value := Tm.lam s.ty (holdsAt s.pred (.loc 0)) (.lam t.ty (holdsAt t.pred (.loc 0)) inner)
-  let i ← addGlob ⟨[], .fn s.ty (.fn t.ty .prop), [s.pred, t.pred], false⟩ value
+  let i ← addGlob ⟨[], .fn s.ty (.fn t.ty .prop), [s.pred, t.pred], false, 1⟩ value
   modify fun st => { st with preds := st.preds ++ [(phrase, i)] }
   pure ([i], [])
 
@@ -2216,10 +2418,15 @@ the noun phrase `NP`, and `N` (singular) names it. -/
 def defClass (sym : MT) (plural : List Codes) (np : List Chunk) : M (List Nat × List Nat) := do
   let key ← match sym with | .id k => pure k | _ => fail E.unsupported
   -- without `that is, NP`, the class is a noun of the vocabulary
+  modify fun st => { st with strongConds := plural.isEmpty }
   let b ← nounPhrase (if np.isEmpty then plural.map Chunk.w else np)
-  if !b.name.isEmpty then fail E.unsupported b.name
+  modify fun st => { st with strongConds := false }
+  -- (a noun phrase with a variable describes the members: `the class of functions
+  -- $f:[0,1]\to\mathbb{R}$ with $φ$`; the class then has its symbol only)
+  if !b.name.isEmpty && !plural.isEmpty then fail E.unsupported b.name
   let p := b.pred.getD (.lam b.ty .tt .tt)
-  let i ← addGlob ⟨key, .fn b.ty .prop, [none], false⟩ p
+  let i ← addGlob ⟨key, .fn b.ty .prop, [none], false, 1⟩ p
+  if plural.isEmpty then return ([i], [])
   let sing := plural.dropLast ++ (plural.getLast?.map singular).toList
   let names := [sing, (sing.getLast?).toList].eraseDups
   modify fun st => { st with nouns := st.nouns ++ names.map (·, i), classes := st.classes ++ [(plural, i)] }
@@ -2324,7 +2531,7 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond) :
     | np => nounPhrase np
   if s.name.isEmpty then fail E.unsupported
   let body ← notionBody (scopeOf [s]) cond
-  let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
+  let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false, 1⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
   let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
   modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
   pure ([i], [])
@@ -2363,7 +2570,7 @@ def defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Grammar.B
   let bound := (pScope ++ [s] ++ cbs).map (·.name)
   -- the parameters of the quantities `φ` uses (`ℓ` of `\varepsilon`), with their domains
   let ids := (freeIds 64 bound cond).eraseDups
-  let params := ((implicitVars st ids).eraseDups.filter (!bound.contains ·))
+  let params := ((implicitVars st (ids ++ subKeys 64 cond)).eraseDups.filter (!bound.contains ·))
   let domOf (p : Codes) : Option Tm := (st.implicits.findSome? fun (i, ns) =>
       match ns.idxOf? p with
       | some j => (st.globs[i]?).bind fun g => (g.doms[j]?).join
@@ -2410,7 +2617,7 @@ def defMember (subj : List Chunk) (cls : MT) (cond : MT) (binds : List Grammar.B
   let (value, ty) := match param with
     | some _ => (Tm.lam .real .tt pred, Ty.fn .real (.fn fTy .prop))
     | none => (pred, Ty.fn fTy .prop)
-  let i ← addGlob ⟨key, ty, (if param.isSome then [none, none] else [none]), param.isSome⟩ value
+  let i ← addGlob ⟨key, ty, (if param.isSome then [none, none] else [none]), param.isSome, 1⟩ value
   pure ([i], [])
 
 /-- A notion of the article applied to a term. -/
@@ -3196,6 +3403,11 @@ def claimSentence (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : List 
     | .ifCond φ =>
       let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.any fun g => g.key == n && !g.family)).eraseDups
       let fr := seqFree st0 [] φ fr
+      -- (`U_1` of a known `U` is a term of that sequence)
+      let fr := fr.map fun n =>
+        let base := n.takeWhile (· != 95)
+        if base.length + 1 < n.length && known.contains base && !known.contains n &&
+            (n.drop (base.length + 1)).all (fun c => 48 ≤ c && c ≤ 57) then base else n
       !fr.isEmpty && fr.all known.contains
     | _ => false
   let knownAt (k : Nat) : List Codes := known ++ bindNames st0 known (binds.take k)
@@ -3466,7 +3678,7 @@ def undefinedDef (c : SentCtx) (lhs : MT) (words : List Codes) (args : List (Lis
   let ordered := vars.filterMap fun v => bs.find? (·.name == v)
   if (← lookupGlob key).isSome then fail E.redefined key
   let j := V.consts.length + undefinedCount st
-  let i ← addGlob ⟨key, tyWrap (ordered.map (·.ty)) resTy, ordered.map (·.pred), false⟩ (.const j)
+  let i ← addGlob ⟨key, tyWrap (ordered.map (·.ty)) resTy, ordered.map (·.pred), false, 1⟩ (.const j)
   modify fun st => { st with named := st.named ++ [(words, i)] }
   pure ([i], [])
 
@@ -3487,7 +3699,7 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   let own := npVars np
   let maths := (mathsOf np).filterMap Math.parseFormula ++ (cond.map clauseMaths).getD []
   let ids := (maths.flatMap (freeIds 64 [])).filter (!own.contains ·)
-  let used := ids ++ implicitVars st ids
+  let used := ids ++ implicitVars st (ids ++ maths.flatMap (subKeys 64))
   let imp := bs.filter fun b => used.contains b.name && !argNames.contains b.name
   let argInfo : List BindInfo := argNames.map fun n => match bs.find? (·.name == n) with
     | some b => b
@@ -3511,7 +3723,7 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
     | .count => Elab.cardTm (.lam .real .tt px)
   let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
   let ty := all.foldr (fun b acc => Ty.fn b.ty acc) Ty.real
-  let i ← addGlob ⟨key, ty, all.map (·.pred), false⟩ value
+  let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
   if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
   match c.ctx.kind with
   | .text => pure ()
@@ -3663,7 +3875,7 @@ def meaningDef (ws : List Codes) (rhs : List Chunk) (noun : Bool) : M (List Nat 
     let b ← nounPhrase rhs
     if !b.name.isEmpty then fail E.unsupported b.name
     let p := b.pred.getD (.lam b.ty .tt .tt)
-    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false⟩ p
+    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false, 1⟩ p
     let plural := ws.dropLast ++ (ws.getLast?.map (· ++ [115])).toList
     modify fun st => { st with nouns := st.nouns ++ [(ws, i), (plural, i)], classes := st.classes ++ [(ws, i)] }
     pure ([i], [])
@@ -3710,10 +3922,16 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | bd => binderInfos bd
       let binderNames := bis.map (·.name)
       let imp := imp.filter fun b => !binderNames.contains b.name
-      match bis with
-      | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
-      | _ :: _ :: _ => multiDefs bis defs labels imp
-      | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
+      let res ← match bis with
+        | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
+        | _ :: _ :: _ => multiDefs bis defs labels imp
+        | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
+      -- a function or a family defined inside a result or a proof is local to it, like a
+      -- constant defined there
+      if c.ctx.kind != .text then
+        modify fun st => { st with locals := st.locals ++
+          (res.1.filter fun i => (st.locals.lookup i).isNone).map fun i => (i, c.ctx.env) }
+      pure res
     | none => constDefs c none defs labels
   | .defByFamily b sg pieces labels => do
     let [bi] ← binderInfos b | fail E.unsupported
@@ -3894,11 +4112,11 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         | .fixed (.mvar c) :: .slot _ :: _ => if st.globs.any (·.key == [c]) then none else some c
         | _ => none
       let gkey := match letter with | some c => [c] | none => [92] ++ key
-      let i ← addGlob ⟨gkey, gty, varDoms, false⟩ (if fixedArgs.all (·.isNone) then n.value else value)
+      let i ← addGlob ⟨gkey, gty, varDoms, false, 1⟩ (if fixedArgs.all (·.isNone) then n.value else value)
       let slots := (List.range ts.length).map TItem.slot
       let call : List TItem := if slots.isEmpty then [] else
         [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]
-      push ⟨pat', .fixed (match letter with | some c => .mvar c | none => .cmd key) :: call⟩
+      push ⟨pat', .fixed (match letter with | some c => .mvar c | none => .cmd key) :: call, []⟩
       pure ([i], [])
     | none =>
       -- `the set|class of NOUNS`
@@ -3914,18 +4132,29 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         let key := match Notation.symbolOf pat' with
           | some k => if st.globs.any (·.key == [92] ++ k) then key else k
           | none => key
-        let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false⟩ n.pred
-        push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)]⟩
+        let i ← addGlob ⟨[92] ++ key, .fn n.ty .prop, [], false, 1⟩ n.pred
+        push ⟨pat.map (TItem.fixed ·.tok), [.fixed (.cmd key)], []⟩
         pure ([i], [])
       | none => fail E.noun (((wordsOf rest).intersperse [32]).flatten)
   else
     let some repl := fs[1]? | fail E.unsupported
     let tpl := Notation.template pat repl
+    -- the variables it binds, other than its arguments
+    let bound : List Codes := match (Math.simplify (repl.length + 1) repl).bind Math.parseDisplay with
+      | some m => (boundIds 64 m).eraseDups
+      | none => []
+    let slots : List Tok := (tpl.pat.zip (pat.map (·.tok))).filterMap fun (i, t) =>
+      match i with | .slot _ => some t | _ => none
+    let binds : List Tok := (bound.filterMap fun n => match n with
+      | [c] => some (Tok.mvar c)
+      | 92 :: name => some (Tok.cmd name)
+      | _ => none).filter (!slots.contains ·)
+    let tpl := { tpl with binds }
     match tpl.pat, tpl.repl with
     -- `We write $A\subset B$ if $A\subseteq B$`: one relation symbol for another, in
     -- place (the arguments are whatever stands on either side)
     | [.slot a, .fixed t, .slot b], [.slot a', .fixed t', .slot b'] =>
-      if a == a' && b == b' && a != b then push ⟨[.fixed t], [.fixed t']⟩
+      if a == a' && b == b' && a != b then push { pat := [.fixed t], repl := [.fixed t'] }
       else push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
     | _, _ => push { tpl with repl := .fixed .lbrace :: tpl.repl ++ [.fixed .rbrace] }
     pure ([], [])
@@ -4064,7 +4293,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- the hypothesis of a case ends with its item
   let st0 := { st0 with envHyps := st0.envHyps.filter fun h => h.item == 0 || s.ctx.items.contains h.item }
   -- definitions local to a result are visible in it and in its proof
-  let st0 := { st0 with curEnv := s.ctx.env, curProved := proved }
+  -- (in the running text, a value named by its function's letter is for its sentence)
+  let st0 := { st0 with curEnv := s.ctx.env, curProved := proved, abbrevs := st0.abbrevs.filter (·.1 != 0) }
+  let st0 := { st0 with varDoms := st0.varDoms.filter (·.1 != 0) }
   let ps := match s.ctx.kind with
     | .proof => if c.proofs.any (·.env == s.ctx.env) then c.proofs
       else c.proofs ++ [({ env := s.ctx.env, proves := s.ctx.proves, steps := [], cites := [], complete := true } : ProofInfo)]
@@ -4079,6 +4310,11 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let toks0 := s.toks
   let s := if st0.templates.isEmpty || Notation.declares s.toks then s
     else { s with toks := Notation.rewriteAll st0.templates s.toks }
+  -- `On the event $φ$, we have $ψ$`: one formula about every value of the sample
+  let s := { s with toks := Notation.onEvent (s.toks.length + 1) s.toks }
+  -- a notation that binds a variable of its argument is not applied: a finding
+  let capturedVar := Notation.captured s.toks
+  let s := if capturedVar.isSome then { s with toks := toks0 } else s
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   -- the symbols this sentence introduces, if it is not read
@@ -4089,6 +4325,11 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let undefinedAlt : Option Grammar.Sent := match s.ctx.kind with
     | .text => Grammar.undefinedOf s
     | _ => none
+  if let some v := capturedVar then
+    let name : Codes := match v with | .mvar ch => [ch] | .cmd nm => 92 :: nm | _ => []
+    let msg : Codes := w!"a notation of the article binds $" ++ name ++ w!"$, and the formula it is written with here uses $" ++ name ++ w!"$ as well: the notation would capture it. Rename one of the two"
+    { c with st := st0u, idx := c.idx + 1, outcomesRev := .failed ⟨E.finding, msg⟩ :: c.outcomesRev, proofs := incomplete ps }
+  else
   match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some sent =>

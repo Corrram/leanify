@@ -53,10 +53,11 @@ MESSAGE = re.compile(r"^(.*?):(\d+):(\d+): (error|warning): (.*)$")
 # --- the project, the report and the stubs --------------------------------------------
 
 def project_root(start):
-    for d in [start, *start.parents]:
+    # (after the folders above: the project that Leanify made for the article, `lean` next to it)
+    for d in [start, *start.parents, start / "lean"]:
         if (d / "lakefile.toml").exists() or (d / "lakefile.lean").exists():
             return d
-    raise SystemExit(f"{start}: no lakefile.toml or lakefile.lean in this folder or above")
+    raise SystemExit(f"{start}: no lakefile.toml or lakefile.lean in this folder or above, or in its folder lean")
 
 
 def stub_blocks(lines, head=STUB_HEAD):

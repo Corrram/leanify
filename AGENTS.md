@@ -90,7 +90,15 @@ These hold for every change. A feature that cannot meet them is not added.
    integral asserts that it is finite, wherever the bound stands. A claim asserts
    that it is meaningful and that it holds. Never denote a quantity by a Mathlib
    expression whose value is 0 when it does not exist (the Bochner integral of a
-   non-integrable function, the supremum of an unbounded set).
+   non-integrable function, the supremum of an unbounded set). An integrand has to
+   be integrable and defined at almost every point (`Prim.ae`), not at every
+   point: the integral does not depend on a set of measure zero, so no value that
+   is not defined enters it. A function that is written out and applied (a
+   derivative at a point, a combination of functions at a point) has to be defined
+   at its argument, not everywhere. A class that an article describes by a condition (`the
+   class of functions $f$ with $\int_0^1 f(x)\,dx=0$`) has the objects for which
+   the condition is meaningful and holds; it does not ask that the condition be
+   meaningful for every object.
 5. **Quantifiers as mathematicians mean them.** Implicit quantifiers (generic
    constants, `\ll`, "uniform in", "for every … with …") are read from the
    article's convention sentences, and their order is the one those sentences
@@ -159,14 +167,20 @@ These hold for every change. A feature that cannot meet them is not added.
 ### The LaTeX package
 
 13. **The typeset article does not change.** Without options, `leanify.sty`
-    changes nothing on the page. It runs an external program (`lake`, or the
-    checker) only with unrestricted shell escape and inside a Lean project, or
-    when the option `exe` names the checker; otherwise it runs nothing. The
+    changes nothing on the page. It runs an external program only with
+    unrestricted shell escape: the checker of the Lean project the article lies
+    in (`lake`, or its executable), the checker that the option `exe` names, or
+    else `leanify` on the `PATH`; otherwise it runs nothing. An article in no Lean
+    project gets one from the checker, the folder `lean` next to it (not with
+    `project=false`): three small files, and a compile fetches and builds nothing
+    for it. Where there is no checker, such an article compiles without a
+    warning, as it does on a server. The
     package runs one command, `leanify tex`, and reads its records
-    (`\jobname.leanify.out`): what to check, build or report is decided in
+    (`\jobname.leanify.out`): what to check, build, make or report is decided in
     `LeanifyCli.lean`, not in TeX. Typesetting needs only `mathtools` and `amssymb`. The package is on
     CTAN; `scripts/ctan.sh` builds the upload, and `scripts/ctan.sh validate` and
-    `upload` submit it. CTAN takes an update only under a new version, so a change
+    `upload` submit it. CTAN takes an update only under a new version, which
+    it wants as number and date (`0.7 2026-11-10`, as the script sends it), so a change
     of the package that is to be released changes the version in `\ProvidesPackage`,
     `tex/README.md` and `tex/leanify-doc.tex`, and these documents describe every
     option of the package.

@@ -62,6 +62,8 @@ structure Glob where
   /-- Domain predicates of the curried arguments (`none`: the whole type). -/
   doms : List (Option Tm)
   family : Bool
+  /-- The number of subscripts of a family (`M_r`: one; `C_{r,g}`: two). -/
+  indices : Nat := 1
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 inductive Role where
@@ -181,6 +183,10 @@ inductive TItem where
 structure Template where
   pat : List TItem
   repl : List TItem
+  /-- The variables that `repl` binds (`C` in `\min\{R(C) : C\in\mathcal C, …\}`): an
+  argument that uses one of them would be captured, so the notation is not applied
+  to it. -/
+  binds : List Tok := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A hypothesis of a result or a proof: `Assume that …`, or the heading of a case. -/
@@ -304,6 +310,20 @@ structure St where
   /-- Names that state their dependence (`Q(\nu)` for the `Q` of `there is $Q=Q(\nu)$`),
   and the symbols they stand for, while the clause of their existence is read. -/
   aliases : List (Codes × List Codes × MT) := []
+  /-- The value of a function, named by the function's own letter (`a copula $C$ with
+  maximal correlation $R=R(C)$`): the environment in which it was stated, the letter, and
+  the arguments. In that result and its proof, `R` alone is `R(C)`. -/
+  abbrevs : List (Nat × Codes × List Codes) := []
+  /-- While the members of a class are described (`the class of functions $f:[0,1]\to
+  \mathbb{R}$ with $\int_0^1 f(x)\,dx=0$`): a condition holds of an object when it is
+  meaningful for the object and true. The class has the functions that are integrable
+  and have integral zero; it does not ask that every function be integrable. -/
+  strongConds : Bool := false
+  /-- A function variable whose signature gives a class of the article as its domain
+  (`a function $A:\mathcal C\to\mathbb{R}$`): the environment in which it was bound, its
+  name, and the class. Its value at an argument is meaningful for the members of the
+  class. -/
+  varDoms : List (Nat × Codes × Tm) := []
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -347,6 +367,19 @@ def symKey : MT → Option Codes
   | .sub (.id k) (.tuple xs) => do
     let ns ← xs.mapM fun x => match x with | .id n => some n | _ => none
     some (k ++ [95, 123] ++ (ns.intersperse [44]).flatten ++ [125])
+  -- a name with a star or a numeral as superscript (`\tau^*`, `\Phi^2`): see `decorKey`
+  | .sup (.id k) (.id [42]) => some (k ++ [94, 42])
+  | .sup (.id k) (.num n) => some (k ++ [94] ++ (Nat.toDigits 10 n).map Char.toNat)
+  | _ => none
+
+/-- Is `key` a letter with a numeral as superscript (`\Phi^2`)? Then its letter. A symbol
+may have such a name only while the letter alone names nothing: `\Phi^2` is then never a
+square. -/
+def powerName (key : Codes) : Option Codes :=
+  let digits := (key.reverse.takeWhile fun c => 48 ≤ c && c ≤ 57)
+  let rest := key.reverse.drop digits.length
+  match rest with
+  | 94 :: base => if digits.isEmpty || base.isEmpty then none else some base.reverse
   | _ => none
 
 /-- The identifiers of a formula (in order of occurrence). -/
@@ -382,14 +415,27 @@ def visibleIn (st : St) (i : Nat) : Bool :=
   | some e => e == st.curEnv || st.curProved == some e
   | none => true
 
-def lookupGlob (key : Codes) : M (Option (Nat × Glob)) := do
+/-- The visible definition named `key`. A symbol may name a constant and, written with a
+subscript, a family (`M`, and `M_r` for `r\in[0,1]`): the printed use says which one is
+meant, and `fam` is that. Where the symbol has one definition only, it is that one. -/
+def lookupGlobAs (fam : Bool) (key : Codes) : M (Option (Nat × Glob)) := do
   let st ← get
-  let rec find : Nat → List Glob → Option (Nat × Glob)
-    | _, [] => none
-    | i, g :: gs => match find (i + 1) gs with
-      | some r => some r
-      | none => if g.key == key && !key.isEmpty && visibleIn st i then some (i, g) else none
-  pure (find 0 st.globs)
+  -- (the latest of the kind, and the latest of the other kind)
+  let rec find : Nat → List Glob → Option (Nat × Glob) × Option (Nat × Glob)
+    | _, [] => (none, none)
+    | i, g :: gs =>
+      let (same, other) := find (i + 1) gs
+      if g.key == key && !key.isEmpty && visibleIn st i then
+        if g.family == fam then (same <|> some (i, g), other) else (same, other <|> some (i, g))
+      else (same, other)
+  let (same, other) := find 0 st.globs
+  pure (same <|> other)
+
+/-- The definition that the symbol `key`, written without a subscript, names. -/
+def lookupGlob (key : Codes) : M (Option (Nat × Glob)) := lookupGlobAs false key
+
+/-- The definition that the symbol `key` names where it carries a subscript: the family. -/
+def lookupFam (key : Codes) : M (Option (Nat × Glob)) := lookupGlobAs true key
 
 def addGlob (g : Glob) (v : Tm) : M Nat := do
   -- A definition is a closed term, and the domain of its `i`-th argument speaks only about
@@ -399,7 +445,17 @@ def addGlob (g : Glob) (v : Tm) : M Nat := do
   if Tm.shift 1 0 v != v || g.doms.zipIdx.any (fun (p, i) => p.any fun p => Tm.shift 1 (i + 1) p != p) then
     fail E.finding (w!"the definition of " ++ g.key ++ w!" uses a variable that is not one of its arguments (the domain of an argument depends on it): state the variable with the definition (For $n\\ge1$ and $x\\in[0,n]$, set $…$)")
   let st ← get
-  let visibleIdx := (List.range st.globs.length).find? fun j => (st.globs[j]?).any (·.key == g.key) && visibleIn st j
+  -- (a name with a numeral as superscript, `\Phi^2`, and its letter alone, `\Phi`, cannot
+  -- both be symbols: `\Phi^2` would be a name here and a square there)
+  let clash := match powerName g.key with
+    | some base => st.globs.any (·.key == base)
+    | none => st.globs.any fun o => powerName o.key == some g.key
+  if clash && !g.key.isEmpty then
+    fail E.finding (w!"a symbol with a numeral as superscript ($\\Phi^2$) is a name only while its letter alone names nothing: here both " ++
+      g.key ++ w!" and the other are defined; rename one of them")
+  -- (a constant and a family written with a subscript may share their letter: `M` and `M_r`)
+  let visibleIdx := (List.range st.globs.length).find? fun j =>
+    (st.globs[j]?).any (fun o => o.key == g.key && o.family == g.family) && visibleIn st j
   match (if g.key.isEmpty then none else visibleIdx) with
   | some i =>
     -- a family extended to a further parameter domain (`κ_w` for `w∈[1/2,1)`, then `κ_b`
@@ -469,6 +525,24 @@ def implicitArgs (sc : Scope) (i : Nat) : M (List (Tm × Ty)) := do
     | some (j, t) => pure (.loc j, t)
     | none => fail E.free n
   | none => pure []
+
+/-- The key of the constant that the symbol `m` with the subscript `i` may name (`d_0`,
+`z_-`): the whole symbol. A subscript that is a variable of the scope is an index
+(`x_k` under `for every $k$` is the family `x` at `k`), unless the constant was defined
+among the variables of a result with that variable as an implicit parameter: after
+`Let $n\ge2$ and $\delta_n\coloneqq\frac1n$.`, the name of the symbol is `\delta_n`, and
+each use of it takes the `n` of its context. -/
+def subConstKey (sc : Scope) (m i : MT) : M (Option Codes) := do
+  match i with
+  | .id x =>
+    if (lookupLocal sc x).isNone then pure (symKey m) else
+    match symKey m with
+    | some k =>
+      match ← lookupGlob k with
+      | some (h, _) => pure (if (((← get).implicits.lookup h).getD []).contains x then some k else none)
+      | none => pure none
+    | none => pure none
+  | _ => pure (symKey m)
 
 /-- Closed terms (predicates of globals) used under `n` binders need no shift,
 but a predicate applied to a local must be written as an application. -/
@@ -698,6 +772,13 @@ def declaredInt (st : St) (v : Codes) (x : Tm) : Tm :=
 /-- The exponent mentions an index. -/
 def indexExp (e : MT) : Bool := (mtIds 32 e).any indexNames.contains
 
+/-- The exponent is written as a quotient (`x^{1/k}`, `x^{\frac{1}{2k}}`): a root, so a
+real power, whatever letters it is built from. -/
+def quotientExp : MT → Bool
+  | .div _ _ | .frac _ _ => true
+  | .neg x => quotientExp x
+  | _ => false
+
 /-- `a^p`: an integer power when the exponent is built from indices (`(-1)^{k+1}`,
 `2^n`), defined for every base (but `0` to a negative power); otherwise a real
 power of a nonnegative base. -/
@@ -735,6 +816,47 @@ def predArgs : Ty → Option (List Ty)
   | .fn a b => (predArgs b).map (a :: ·)
   | _ => none
 
+/-- The argument types and the result type of a function type. -/
+def argTys : Ty → List Ty × Ty
+  | .fn a b => let (as, r) := argTys b; (a :: as, r)
+  | t => ([], t)
+
+/-- The identifiers of the pattern of a set `\{e : conds\}`, without those that the
+pattern binds itself (the variable of an integral, the variables of an integral against a
+distribution function). -/
+def patIds : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m =>
+    match m with
+    | .mapsto p b => (patIds f b).filter (!(mtIds 32 p).contains ·)
+    | .int lo hi b v => patIds f lo ++ patIds f hi ++ (patIds f b).filter (· != v)
+    | .app h as => patIds f h ++ as.flatMap (patIds f)
+    | .add x y | .minus x y | .mul x y | .div x y | .frac x y => patIds f x ++ patIds f y
+    | .neg x | .abs x => patIds f x
+    | .sup b e => patIds f b ++ patIds f e
+    | .tuple xs | .conj xs | .minm xs | .maxm xs => xs.flatMap (patIds f)
+    | m => mtIds (f + 1) m
+
+/-- `f,g\in\mathcal F` among the conditions of a set: each of the variables before a
+membership is in the same set. -/
+def expandMem : List MT → List MT
+  | [] => []
+  | c :: rest =>
+    let rest' := expandMem rest
+    match c, rest' with
+    | .id v, .chain (.id _) [(.mem, d)] :: _ => .chain (.id v) [(.mem, d)] :: rest'
+    | _, _ => c :: rest'
+
+/-- The argument types of a real function of points of the vocabulary's types (a function
+on the unit square, `[0,1]\to[0,1]\to\mathbb{R}`). Such a function has a value at every
+point of its type, so that two of them are added, and one is multiplied by a number, value
+by value. -/
+def pointFn (ty : Ty) : M (Option (List Ty)) := do
+  let (tys, res) := argTys ty
+  if tys.isEmpty || res != .real then return none
+  let ivs ← tys.mapM intervalOf
+  pure (if ivs.all (·.isSome) then some tys else none)
+
 /-- `A ⊆ B` for predicates of any number of arguments. -/
 def setSubN (tys : List Ty) (a b : Tm) : Tm :=
   let k := tys.length
@@ -762,6 +884,18 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
     | .ge => return (← callMethod t .le [b, a]).1
     | .gt => return (← callMethod t .lt [b, a]).1
     | _ => pure ()
+  -- (functions of points of the vocabulary's types, on the same points: an order between
+  -- them is the order of their values at every point, `W\le C\le M`)
+  if let some tys ← pointFn x.2 then
+    if x.2 == y.2 && (r == .le || r == .lt || r == .ge || r == .gt) then
+      let n := tys.length
+      let val (t : Tm) : Tm := (List.range n).foldl (fun acc i => .app acc (.loc (n - 1 - i))) (Tm.shift n 0 t)
+      let body := match r with
+        | .le => Tm.le (val x.1) (val y.1)
+        | .lt => Tm.lt (val x.1) (val y.1)
+        | .ge => Tm.le (val y.1) (val x.1)
+        | _ => Tm.lt (val y.1) (val x.1)
+      return tys.foldr (fun t acc => Tm.all t acc) body
   match r with
   | .eq =>
     if x.2 == y.2 then pure (.eq x.1 y.1)
@@ -901,6 +1035,31 @@ def partialFn (n j : Nat) (F : Tm) (dom : Option Tm := none) : Tm :=
   let body := Tm.app (.app (.app (.app (.prim .hasDerivWithin) g) univ) xj) (.loc 0)
   (List.range n).foldl (fun acc _ => Tm.lam .real .tt acc) (.the .real body)
 
+/-- The partial derivative in its `j`-th variable (from 0) of `F`, a real function of
+numbers of which some are elements of an interval type of the vocabulary (`tys`: the
+types of its arguments; `ivs`: for each the interval type, or none for a real number).
+In a variable of an interval type `[lo,hi]` it is the derivative within the interval
+(one-sided at an end point) of `t ↦ F(…,⟨t⟩,…)`, at the number that the element is:
+`(x₁,…,xₙ) ↦ the d with HasDerivWithinAt (t ↦ F(…,⟨t⟩,…)) d [lo,hi] xⱼ`. It is defined
+where that derivative exists. -/
+def partialFnT (tys : List Ty) (ivs : List (Option IntervalType)) (j : Nat) (F : Tm) : Tm :=
+  let n := tys.length
+  let ivj : Option IntervalType := (ivs.getD j none)
+  -- (about the bound variable of a function of a real number)
+  let inDom (iv : IntervalType) : Tm := .and (.le (.num iv.lo) (.loc 0)) (.le (.loc 0) (.num iv.hi))
+  -- under the `n` binders, the description's `d`, and `t`
+  let tArg : Tm := match ivj with
+    | some iv => .guard (inDom iv) (.app (.const iv.point) (.loc 0))
+    | none => .loc 0
+  let inner := applyN (shift (n + 2) 0 F)
+    ((List.range n).map fun i => if i == j then tArg else .loc (2 + (n - 1 - i)))
+  let g := Tm.lam .real (match ivj with | some iv => inDom iv | none => .tt) inner
+  let within := Tm.lam .real .tt (match ivj with | some iv => inDom iv | none => .tt)
+  let xj0 := Tm.loc (1 + (n - 1 - j))
+  let xj := match ivj with | some iv => Tm.app (.const iv.val) xj0 | none => xj0
+  let body := Tm.app (.app (.app (.app (.prim .hasDerivWithin) g) within) xj) (.loc 0)
+  tys.reverse.foldl (fun acc t => Tm.lam t .tt acc) (.the .real body)
+
 /-- The partial derivative of `F` in its `j`-th variable at the point `pt`. -/
 def partialAt (j : Nat) (F : Tm) (pt : List Tm) (dom : Option Tm := none) : Tm :=
   -- under the description's `d` and `t`
@@ -992,6 +1151,29 @@ def unstatedCount (set : MT) : M Unit := do
         v ++ w!"$ denotes an integer.)")
   | _ => pure ()
 
+/-- `a op b` for functions of points, value by value: `(1-r)\Pi+rM` is the function
+`(u,v)\mapsto(1-r)\Pi(u,v)+rM(u,v)`. With `scalar`, one of the two may be a number (a
+multiple, a quotient by a number); a sum and a difference are of two functions on the
+same points. `none` when neither is such a function. -/
+def pointwise (op : Tm → Tm → Tm) (scalar : Bool) (a b : Tm × Ty) : M (Option (Tm × Ty)) := do
+  let fa ← pointFn a.2
+  let fb ← pointFn b.2
+  let found : Option (List Ty × Ty) := match fa, fb with
+    | some ta, some tb => if ta == tb then some (ta, a.2) else none
+    | some ta, none => if scalar then some (ta, a.2) else none
+    | none, some tb => if scalar then some (tb, b.2) else none
+    | none, none => none
+  match found with
+  | none => if fa.isSome || fb.isSome then fail E.type else pure none
+  | some (tys, fty) =>
+    let n := tys.length
+    let valAt (p : Tm × Ty) (isFn : Bool) : M Tm :=
+      if isFn then pure (applyN (shift n 0 p.1) ((List.range n).map fun i => .loc (n - 1 - i)))
+      else do pure (shift n 0 (← asReal p))
+    let x ← valAt a fa.isSome
+    let y ← valAt b fb.isSome
+    pure (some (tys.foldr (fun t acc => Tm.lam t .tt acc) (op x y), fty))
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1012,6 +1194,32 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if let some k := symKey h then
         if als.any (·.1 == k) then
           fail E.finding (k ++ w!" is a number chosen for each value of the variables its name lists, not a function of them: write it with the same variables, or define the function")
+    -- `R` for `R(C)`, after `a copula $C$ with maximal correlation $R=R(C)$`: the letter
+    -- alone is the value, and before parentheses other than its own arguments a factor
+    let stA ← get
+    let abbr (n : Codes) : Option (List Codes) :=
+      if (lookupLocal sc n).isSome then none else
+      (stA.abbrevs.find? fun (e, k, _) => k == n && (e == stA.curEnv || stA.curProved == some e)).map (·.2.2)
+    match m with
+    | .id n =>
+      if let some ks := abbr n then return ← term f sc pf (.app (.id n) (ks.map MT.id))
+    | .app (.id n) [a] =>
+      if let some ks := abbr n then
+        if ks.map some != [symKey a] then
+          -- (an argument of the function's own kind, which is not a number, is an
+          -- argument: `R(M_r)` beside `R(2+R)`)
+          let st0 ← get
+          let aty ← tryCatch (do let r ← term f sc pf a; pure (some r.2)) (fun _ => pure none)
+          set st0
+          let domTy : Option Ty := match ← lookupGlob n with
+            | some (_, g) => match g.ty with | .fn d _ => some d | _ => none
+            | none => none
+          let ivs := (← get).vocab.intervals
+          let isArg := match aty, domTy with
+            | some t, some d => t == d && t != .real && !ivs.any (·.ty == t)
+            | _, _ => false
+          if !isArg then return ← term f sc pf (.mul (.id n) a)
+    | _ => pure ()
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
@@ -1052,13 +1260,30 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- (with an operand of a vocabulary's type, that type's method)
     | .add x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      if let some r ← pointwise Tm.add false a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .add a b
       else pure (.add (← asReal a) (← asReal b), .real)
     | .minus x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      if let some r ← pointwise Tm.sub false a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .sub a b
       else pure (.sub (← asReal a) (← asReal b), .real)
     | .mul x y => do
+      -- `\Phi^2(C)` for a symbol named `\Phi^2` (a letter with a numeral as superscript,
+      -- which the article defined while the letter alone named nothing)
+      let named ← match x with
+        | .sup (.id k) (.num _) =>
+          if (lookupLocal sc k).isSome then pure false else
+          match symKey x with
+          | some key => pure ((← lookupGlob key).any fun (_, g) => !g.family && g.ty != .real)
+          | none => pure false
+        | _ => pure false
+      if named then return ← term f sc pf (.app x (match y with | .tuple as => as | a => [a]))
+      -- (after a factor, `\frac4{15}\Phi^2(C)`: the product is read from the left)
+      if let .mul a (.sup (.id k) (.num n)) := x then
+        let key := (symKey (.sup (.id k) (.num n))).getD []
+        if (lookupLocal sc k).isNone && ((← lookupGlob key).any fun (_, g) => !g.family && g.ty != .real) then
+          return ← term f sc pf (.mul a (.app (.sup (.id k) (.num n)) (match y with | .tuple as => as | b => [b])))
       -- `\partial^I f(x,y)`
       match ← multiPartial f sc pf x y with
       | some r => pure r
@@ -1078,7 +1303,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | t => (t, none)
         let (F, fty, doms) ← head f sc hd
         if doms.any (·.isSome) then fail E.unsupported
-        let some n := realArity fty | fail E.type
+        -- a real function of numbers: real numbers, or elements of an interval type of
+        -- the vocabulary (a function on the unit square)
+        let (tys, res) := argTys fty
+        if tys.isEmpty || res != .real then fail E.type
+        let ivs ← tys.mapM intervalOf
+        unless (tys.zip ivs).all (fun (t, iv) => t == .real || iv.isSome) do fail E.type
+        let n := tys.length
+        let allReal := ivs.all (·.isNone)
         let st ← get
         let params : List Codes := match F with
           | .glob i => (st.params.lookup i).getD []
@@ -1098,13 +1330,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let mut D := F
         for op in ops.reverse do
           match op with
-          | some i => D := partialFn n (← pos i) D
-          | none => D := laplacianFn n D
+          | some i =>
+            let j ← pos i
+            D := if allReal then partialFn n j D else partialFnT tys ivs j D
+          | none => if allReal then D := laplacianFn n D else fail E.unsupported
         match args with
         | some as => applyAll D fty [] (← as.mapM (term f sc pf))
         | none => pure (D, fty)
       | none => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      if let some r ← pointwise Tm.mul true a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .mul a b
       else pure (.mul (← asReal a) (← asReal b), .real)
     | .div x y | .frac x y => do
@@ -1114,10 +1349,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- (a quotient ring `\mathbb{Z}/p\mathbb{Z}` is not a set of real numbers)
       if let .id z := x then if z == w!"\\mathbb{Z}" then fail E.finding finiteField
       let a ← term f sc pf x; let b ← term f sc pf y
+      -- (a function of points divided by a number)
+      if (← pointFn a.2).isSome && (← pointFn b.2).isNone then
+        if let some r ← pointwise Tm.div true a b then return r
       if (← ownTy a.2) || (← ownTy b.2) then arith .div a b
       else pure (.div (← asReal a) (← asReal b), .real)
     | .neg x => do
       let a ← term f sc pf x
+      if let some r ← pointwise (fun u _ => Tm.neg u) true a (.num 0, .real) then pure r else
       if (← ownTy a.2) then callMethod a.2 .neg [a.1]
       else pure (.neg (← asReal a), .real)
     | .abs x => do
@@ -1166,6 +1405,103 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       match b with
       | .app (.id nm) [x] => if nm == w!"@norm" then normTm f sc pf x (some i) else subTm f sc pf m b i
       | _ => subTm f sc pf m b i
+    -- `\int_{[0,1]^2} e\,\mathrm{d}C(u,v)`: the integral of `e`, a function of the points
+    -- `u`, `v` of an interval type of the vocabulary, against the probability measure whose
+    -- distribution function is `C`. It is defined when `C` is a distribution function and
+    -- `e`, which has to be defined at every point, is integrable for that measure
+    -- `\mathbb{E}_C[e]`: the expectation of `e`, a function of the two sequences `U`, `V` of a
+    -- sample of independent observations with the distribution function `C`; defined
+    -- when `C` is a distribution function and `e` is integrable for the law of the sample
+    | .app (.id [64, 115, 101, 120, 112]) [c, .mapsto (.tuple [.id u, .id v]) body] => do
+      -- (the letters of the sample may stand for sequences already: they are bound anew)
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleExp.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"an expectation $\\mathbb{E}_C[\\ldots]$ is for a sample from a copula $C$, with the vocabulary of the unit square"
+      let (some ex, some ei) := (iv.sampleExp, iv.sampleInt) | fail E.unsupported
+      let seq := Ty.fn .real iv.ty
+      let b ← asReal (← term f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body)
+      let fn := Tm.lam seq .tt (Tm.lam seq .tt b)
+      pure (.guard (.app (.app (.const ei) ct) fn) (.app (.app (.const ex) ct) fn), .real)
+    -- `P_C(φ)`: the probability of a condition on the sample; defined when `C` is a
+    -- distribution function and the condition has a probability
+    | .app (.id [64, 115, 112, 114, 111, 98]) [c, .mapsto (.tuple [.id u, .id v]) body] => do
+      -- (the letters of the sample may stand for sequences already: they are bound anew)
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleProb.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"a probability $P_C(\\ldots)$ is for a sample from a copula $C$, with the vocabulary of the unit square"
+      let (some pr, some pe) := (iv.sampleProb, iv.sampleEvent) | fail E.unsupported
+      let seq := Ty.fn .real iv.ty
+      let p ← propOf f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
+      let fn := Tm.lam seq .tt (Tm.lam seq .tt p)
+      pure (.guard (.app (.app (.const pe) ct) fn) (.app (.app (.const pr) ct) fn), .real)
+    -- `On the event $φ$, we have $ψ$`: for all sequences `U`, `V` (the values of a sample),
+    -- `φ` implies `ψ`
+    | .app (.id [64, 115, 111, 110]) [.mapsto (.tuple [.id u, .id v]) body] => do
+      for x in [u, v] do
+        match lookupLocal sc x with
+        | some (_, .fn .real (.base _)) | none => pure ()
+        | some _ => fail E.shadow x
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.sampleProb.isSome) E.finding
+        w!"`On the event …` is about a sample from a copula, with the vocabulary of the unit square"
+      let seq := Ty.fn .real iv.ty
+      let p ← propOf f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
+      pure (.all seq (.all seq p), .prop)
+    -- `C^{\ast k}`: the Markov power of order `k` of a copula `C` (a notion of the vocabulary
+    -- of the unit square), for an integer `k ≥ 1`
+    | .app (.id [64, 109, 112, 111, 119]) [c, k] => do
+      let (ct, cty) ← term f sc pf c
+      let ivs := (← get).vocab.intervals
+      let iv ← liftO (ivs.find? fun iv => iv.markovPower.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
+        w!"a starred power ($C^{\\ast k}$) is the Markov power of a copula, with the vocabulary of the unit square"
+      let some mp := iv.markovPower | fail E.unsupported
+      let kt ← asReal (← term f sc pf k)
+      let conds := [Tm.app (.prim .isNat) kt, Tm.le (.num 1) kt] ++
+        (match iv.markovDom with | some p => [Tm.app p ct] | none => [])
+      pure (.guard (conjAll conds) (.app (.app (.const mp) ct) kt), cty)
+    | .app (.id [64, 105, 110, 116, 100]) [dom, c, .mapsto (.tuple vars) body] => do
+      let names ← vars.mapM fun v => match v with | .id n => pure n | _ => fail E.unsupported
+      let iv ← match dom with
+        | .sup d (.num 2) => liftO (← intervalType d) E.unsupported
+        | _ => fail E.finding w!"an integral against a distribution function is over the unit square: $\\int_{[0,1]^2} f(u,v)\\,\\mathrm{d}C(u,v)$"
+      let (some i2, some ib2) := (iv.integral2, iv.integrable2) | fail E.unsupported
+      if names.length != 2 then fail E.unsupported
+      for v in names do if (lookupLocal sc v).isSome then fail E.shadow v
+      let (ct, cty) ← term f sc pf c
+      if cty != .fn iv.ty (.fn iv.ty .real) then fail E.type
+      let sc' : Scope := (names.reverse.map fun nm => (nm, iv.ty)) ++ sc
+      let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 2 0 s, t)) body)
+      -- (the integrand has to be defined at almost every point, for the measure of `C`:
+      -- `\Phi_{\mathrm N}^{-1}(u)` has no value at `u=0`, a set of measure zero)
+      let d := Tm.defined b
+      let fn := Tm.lam iv.ty .tt (Tm.lam iv.ty d b)
+      let ae ← if d == .tt then pure Tm.tt else do
+        let aeC ← liftO iv.ae2 E.finding w!"the integrand of an integral against a distribution function has to be defined at every point"
+        pure (Tm.app (.app (.const aeC) ct) (Tm.lam iv.ty .tt (Tm.lam iv.ty .tt d)))
+      pure (.guard (Tm.mkAnd (.app (.app (.const ib2) ct) fn) ae) (.app (.app (.const i2) ct) fn), .real)
+    | .app (.sup (.sub (.id k) (.id s)) (.neg (.num 1))) [a] => do
+      -- `\Phi_{\mathrm N}^{-1}(a)`: the inverse of a function with a subscript in its name
+      let fn := (symKey (.sub (.id k) (.id s))).getD k
+      let (i, g) ← liftO (← lookupGlob fn) E.undefined fn
+      if g.family then fail E.unsupported fn
+      match g.ty with
+      | .fn dty cty => do
+        let at_ ← term f sc pf a
+        let a' ← coerce at_.1 at_.2 cty
+        let fy ← applyAll (.glob i) g.ty g.doms [(.loc 0, dty)]
+        let dom := match g.doms.head? with | some (some p) => [Tm.app p (.loc 0)] | _ => []
+        pure (.the dty (conjAll (dom ++ [.eq fy.1 (shift 1 0 a')])), dty)
+      | _ => fail E.type fn
     | .app (.sup (.id fn) (.neg (.num 1))) [a] => do
       -- `f^{-1}(a)`: the element of the domain of `f` that `f` sends to `a`
       let (i, g) ← liftO (← lookupGlob fn) E.undefined fn
@@ -1180,6 +1516,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `xz(x+z)`: a number before parentheses is a factor, not a function
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
+      -- `\mathbf 1\{φ\}`: the indicator of a condition, `1` where it holds and `0` elsewhere
+      if n == w!"@ind" then do
+        let c ← propOf f sc pf a
+        pure (.cases c (.num 1) (.num 0), .real)
+      else
       if n == w!"@card" then do
         unstatedCount a
         let (p, pty) ← term f sc pf a
@@ -1280,11 +1621,34 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- integral of the type, over its elements; defined when the integrand is integrable
       | some iv =>
         let b ← asReal (← term f ((v, iv.ty) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
-        let fn := Tm.lam iv.ty .tt b
-        pure (.guard (.app (.const iv.integrable) fn) (.app (.const iv.integral) fn), .real)
+        -- the integrand has to be defined at almost every point of the interval: the
+        -- condition, for almost every number `t` of the interval, at the element `⟨t⟩`
+        let d := Tm.defined b
+        let fn := Tm.lam iv.ty d b
+        let inside := Tm.and (.le (.num iv.lo) (.loc 0)) (.le (.loc 0) (.num iv.hi))
+        let ae := if d == .tt then Tm.tt else
+          .app (.prim .ae) (.lam .real .tt (.imp inside
+            (.app (.lam iv.ty .tt (shift 1 1 d)) (.guard inside (.app (.const iv.point) (.loc 0))))))
+        pure (.guard (Tm.mkAnd (.app (.const iv.integrable) fn) ae) (.app (.const iv.integral) fn), .real)
       -- `\int_a^b e\,dx`: the oriented integral of a function of a real variable, which
       -- has to be meaningful between `a` and `b`; defined when it is integrable there
       | none =>
+        -- `\int_{-\infty}^x e\,dt`, `\int_a^\infty e\,dt`, `\int_{-\infty}^\infty e\,dt`: the
+        -- integral over the ray or the line, defined when `e` is defined at almost every
+        -- point of it and integrable over it
+        if isInfty false lo || isInfty true hi then
+          let b ← asReal (← term f ((v, .real) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+          let lower ← if isInfty false lo then pure Tm.tt else do
+            pure (Tm.le (shift 1 0 (← asReal (← term f sc pf lo))) (.loc 0))
+          let upper ← if isInfty true hi then pure Tm.tt else do
+            pure (Tm.le (.loc 0) (shift 1 0 (← asReal (← term f sc pf hi))))
+          let within := Tm.mkAnd lower upper
+          let d := Tm.defined b
+          let set := Tm.lam .real .tt within
+          let fn := Tm.lam .real (Tm.mkAnd within d) b
+          let ae := if d == .tt then Tm.tt else .app (.prim .ae) (.lam .real .tt (Tm.mkImp within d))
+          return (.guard (Tm.mkAnd (.app (.app (.prim .integrableOn) fn) set) ae)
+            (.app (.app (.prim .integralOn) set) fn), .real)
         let a ← asReal (← term f sc pf lo)
         let c ← asReal (← term f sc pf hi)
         let b ← asReal (← term f ((v, .real) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
@@ -1295,8 +1659,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           | .num x, .num y => if x ≤ y then interval a1 c1 (.loc 0)
               else Tm.or (interval a1 c1 (.loc 0)) (interval c1 a1 (.loc 0))
           | _, _ => Tm.or (interval a1 c1 (.loc 0)) (interval c1 a1 (.loc 0))
-        let fn := Tm.lam .real between b
-        pure (.guard (.app (.app (.app (.prim .intervalIntegrable) fn) a) c)
+        -- the integrand has to be defined at almost every number between the ends
+        let d := Tm.defined b
+        let fn := Tm.lam .real (Tm.mkAnd between d) b
+        let ae := if d == .tt then Tm.tt else .app (.prim .ae) (.lam .real .tt (.imp between d))
+        pure (.guard (Tm.mkAnd (.app (.app (.app (.prim .intervalIntegrable) fn) a) c) ae)
           (.app (.app (.app (.prim .intervalIntegral) a) c) fn), .real)
     | .chain (.tuple xs) [(.eq, .tuple ys)] => do
       -- `(a,b) = (c,d)`: componentwise
@@ -1309,6 +1676,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let p ← member f sc' (.loc 0, .real) (.tuple [a, b])
       pure (.lam .real .tt p, .fn .real .prop)
     | .finset xs => do
+      -- `\{(0,0)\}`, `\{(a,b),(c,d)\}`: the pairs of numbers equal to one of the elements
+      let pairs := xs.filterMap fun x => match x with | .tuple [a, b] => some (a, b) | _ => none
+      if !xs.isEmpty && pairs.length == xs.length then
+        let ts ← pairs.mapM fun (a, b) => do
+          pure (← asReal (← term f sc none a), ← asReal (← term f sc none b))
+        let eqs := ts.map fun (a, b) => Tm.and (.eq (.loc 1) (shift 2 0 a)) (.eq (.loc 0) (shift 2 0 b))
+        match eqs with
+        | e :: es =>
+          return (.lam .real .tt (.lam .real .tt (es.foldl (fun acc q => .or acc q) e)), .fn .real (.fn .real .prop))
+        | [] => fail E.unsupported
       -- `\{a,b\}`: the numbers equal to one of the elements
       let ts ← xs.mapM fun x => do asReal (← term f sc none x)
       let eqs := ts.map fun t => Tm.eq (.loc 0) (shift 1 0 t)
@@ -1485,8 +1862,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- the variables of the pattern that are not bound range over the reals
       let st ← get
       -- (a family `e_b` does not prevent `e` from naming a variable)
-      let fresh := ((mtIds 32 pat).filter fun n =>
-        (lookupLocal sc n).isNone && !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+      let conds := expandMem conds
+      let fresh := ((patIds 32 pat).filter fun n =>
+        n.head? != some 64 && (lookupLocal sc n).isNone && !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
       -- a variable with a membership `v\in D` among the conditions (`D` a class)
       -- ranges over the elements of `D`; the others over the real numbers
       let classOf (v : Codes) : Option Codes := conds.findSome? fun c => match c with
@@ -1561,6 +1939,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let sc' := (v, vty) :: (w!"", .real) :: sc
       let a ← asReal (← term f sc' none e)
       pure (.lam .real .tt (.ex vty (.and (.app (.glob dp) (.loc 0)) (.eq a (.loc 1)))), .fn .real .prop)
+    | .image (.image e v d2) u d1 => do
+      -- {e(u,v) : u ∈ D₁, v ∈ D₂} for sets of real numbers: y ↦ ∃ u ∈ D₁, ∃ v ∈ D₂, e = y
+      -- (`\max_{(u,v)\in[0,1]^2} e`, `\sup_{u,v\in A} e`)
+      if (lookupLocal sc u).isSome then fail E.shadow u
+      if (lookupLocal sc v).isSome then fail E.shadow v
+      let sc1 := (u, Ty.real) :: (w!"", .real) :: sc
+      let m1 ← member f sc1 (.loc 0, .real) d1
+      let sc2 := (v, Ty.real) :: sc1
+      let m2 ← member f sc2 (.loc 0, .real) d2
+      let a ← asReal (← term f sc2 none e)
+      pure (.lam .real .tt (.ex .real (.and m1 (.ex .real (.and m2 (.eq a (.loc 2)))))), .fn .real .prop)
     | .image e v dom => do
       -- {e(v) : v ∈ D} for a set D of real numbers: y ↦ ∃ v ∈ D, e = y
       let sc' := (v, Ty.real) :: (w!"", .real) :: sc
@@ -1675,6 +2064,10 @@ where
     | g + 1, sc, pf, (v, c) :: rs => do
       let (vt, ty) ← term g sc pf v
       let vt ← coerce vt ty .real
+      -- `\text{otherwise}`: the last row, where no row before it applies
+      if let .text _ := c then
+        if !rs.isEmpty then fail E.finding w!"in a `cases` display, `otherwise` is the last row"
+        return (vt, .real)
       let (ct, cty) ← term g sc pf c
       if cty != .prop then fail E.type
       let (rt, _) ← casesRows g sc pf rs
@@ -1683,10 +2076,11 @@ where
   supTerm : Nat → Scope → PF → MT → MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | f + 1, sc, pf, b, e => do
-      -- `e^x` is `\exp(x)`, unless the article names something `e`
+      -- `e^x` is `\exp(x)`, unless the article names something `e` (a family `e_t`, which
+      -- is written with its subscript, does not name the letter alone)
       let isE ← match b with
         | .id [101] => do
-          pure ((lookupLocal sc [101]).isNone && (← lookupGlob [101]).isNone &&
+          pure ((lookupLocal sc [101]).isNone && ((← lookupGlob [101]).all fun (_, g) => g.family) &&
             !(← get).unreadIds.contains [101])
         | _ => pure false
       if isE then do
@@ -1709,6 +2103,17 @@ where
             let (r, rty) ← callMethod t .pow [z, p]
             return (.guard (.app (.prim .isNat) p) r, rty)
       set st0
+      -- a symbol whose name carries a star or a numeral as superscript (`\tau^*`, `\Phi^2`)
+      let decor ← match symKey (.sup b e), b with
+        | some k, .id base => if (lookupLocal sc base).isSome then pure none else lookupGlob k
+        | _, _ => pure none
+      if let some (h, g) := decor then
+        if !g.family then
+          let (hd, hty, hdoms) ← withImplicit sc h g
+          match pf, hty with
+          | some (s, sty), .fn a _ =>
+            return ← (if a == sty then applyAll hd hty hdoms [(s, sty)] else pure (hd, hty))
+          | _, _ => return (hd, hty)
       -- a family written with a superscript (`\gamma^T`)
       let fam ← match b, e with
         | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")
@@ -1729,7 +2134,7 @@ where
         else do
           let a ← asReal (← term f sc pf b)
           let p ← asReal (← term f sc pf e)
-          powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
+          powTm a p (!quotientExp e && (indexExp e || (mtIds 32 e).any (← get).letters.contains))
       | .num n => do
         let a ← asReal (← term f sc pf b)
         pure (.powNat a n, .real)
@@ -1740,14 +2145,21 @@ where
       | _ => do
         let a ← asReal (← term f sc pf b)
         let p ← asReal (← term f sc pf e)
-        powTm a p (indexExp e || (mtIds 32 e).any (← get).letters.contains)
+        powTm a p (!quotientExp e && (indexExp e || (mtIds 32 e).any (← get).letters.contains))
   head : Nat → Scope → MT → M (Tm × Ty × List (Option Tm))
     | 0, _, _ => fail E.unsupported
     | g + 1, sc, hd =>
       match hd with
       | .id n =>
         match lookupLocal sc n with
-        | some (i, t) => pure (.loc i, t, [])
+        | some (i, t) => do
+          -- (a function variable on a class of the article: its arguments are members)
+          let st ← get
+          let dom := (st.varDoms.find? fun (e, k, _) =>
+            k == n && (e == st.curEnv || st.curProved == some e)).map (·.2.2)
+          match dom, t with
+          | some p, .fn _ _ => pure (.loc i, t, [some p])
+          | _, _ => pure (.loc i, t, [])
         | none => do
           match ← lookupGlob n, builtinFn n with
           | none, some b => pure b
@@ -1780,9 +2192,7 @@ where
           pure (.app (.loc j) a, b, [])
         | _ => do
         -- a constant with a subscript (`z_-`), unless the index is a variable
-        let ck := match i with
-          | .id x => if (lookupLocal sc x).isSome then none else symKey hd
-          | _ => symKey hd
+        let ck ← subConstKey sc hd i
         let c ← match ck with
           | some k => lookupGlob k
           | none => pure none
@@ -1793,12 +2203,15 @@ where
         -- `\eta_-` is a symbol of its own: a sign is not an index
         let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
         if sign then fail E.undefined ((symKey hd).getD key)
-        let (h, gl) ← liftO (← lookupGlob key) E.undefined key
-        let a ← term g sc none i
+        let (h, gl) ← liftO (← lookupFam key) E.undefined key
+        -- (a family with several subscripts, `C_{r,g}`, at all of them)
+        let as ← match i with
+          | .tuple xs => if gl.family && gl.indices == xs.length then xs.mapM (term g sc none) else fail E.unsupported key
+          | _ => do pure [← term g sc none i]
         let (h0, ty0, doms0) ← withImplicit sc h gl
         -- (the domains of the arguments that follow may speak about the index: `g_c(t)`
         -- for `t\in[0,c]`)
-        applyAllD h0 ty0 doms0 [a]
+        applyAllD h0 ty0 doms0 as
       -- a family written with a sub- and a superscript (`R_b^-`, `T^0_q`)
       | .sup (.sub (.id key) i) sup => do
         let s ← match sup with
@@ -2158,10 +2571,13 @@ where
             let l ← asReal (← term f sc none lo)
             let h ← asReal (← term f sc none hi)
             return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), .real)
+        -- `U_i` for a sequence of points of a vocabulary's type (a sample, `\mathbb{E}_C[\ldots]`):
+        -- its term at the natural number `i`
+        if let some (j, .fn .real (.base bt)) := lookupLocal sc key then
+          let a ← asReal (← term f sc none i)
+          return (.guard (.app (.prim .isNat) a) (.app (.loc j) a), .base bt)
         -- a constant with a subscript (`d_0`), unless the index is a variable
-        let ck := match i with
-          | .id x => if (lookupLocal sc x).isSome then none else symKey m
-          | _ => symKey m
+        let ck ← subConstKey sc m i
         let c ← match ck with
           | some k => lookupGlob k
           | none => pure none
@@ -2177,11 +2593,13 @@ where
         | none =>
         let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
         if sign then fail E.undefined ((symKey m).getD key)
-        let (h, g) ← liftO (← lookupGlob key) E.undefined key
+        let (h, g) ← liftO (← lookupFam key) E.undefined key
         if !g.family then fail E.unsupported key
-        let a ← term f sc none i
+        let as ← match i with
+          | .tuple xs => if g.indices == xs.length then xs.mapM (term f sc none) else fail E.unsupported key
+          | _ => do pure [← term f sc none i]
         let (h0, ty0, doms0) ← withImplicit sc h g
-        applyAll h0 ty0 doms0 [a]
+        applyAll h0 ty0 doms0 as
       | _ => fail E.finding w!"a subscript on a formula, such as $(B_k)_L$: name the quantity (Set $C_k\\coloneqq …$) and subscript the name"
   propOf : Nat → Scope → PF → MT → M Tm
     | 0, _, _, _ => fail E.unsupported

@@ -30,6 +30,8 @@ def Prim.tex : Prim → String
   | .rpow => "\\operatorname{pow}" | .min => "\\min" | .max => "\\max"
   | .hasDerivWithin => "\\operatorname{HasDeriv}"
   | .intervalIntegral => "\\int" | .intervalIntegrable => "\\operatorname{Int}"
+  | .integralOn => "\\int" | .integrableOn => "\\operatorname{Int}"
+  | .ae => "\\operatorname{a.e.}"
   | .compact2 => "\\operatorname{compact}" | .convex2 => "\\operatorname{convex}"
   | .symm2 => "\\operatorname{symmetric}" | .continuousOn => "\\operatorname{continuous}"
   | .concaveOn => "\\operatorname{concave}" | .strictMonoOn => "\\operatorname{increasing}"
@@ -79,6 +81,19 @@ def seqDom (D : Tm) (v : String) : String :=
   | .lam _ _ (.and (.app (.prim .isNat) (.loc 0)) _) => ",\\ " ++ v ++ "\\in \\mathbb{N}"
   | _ => ""
 
+/-- The end of the name of a family in a reading: a symbol with a place for its subscript
+(`M_{\cdot}`, shown as `M_{r}` where it is applied), which tells it from the constant of
+the same letter (`M`). -/
+def familyMark : String := "_{\\cdot}"
+
+/-- The mark of a family with `k` subscripts (`C_{\cdot,\cdot}`). -/
+def familyMarkN (k : Nat) : String := "_{" ++ ",".intercalate (List.replicate k "\\cdot") ++ "}"
+
+/-- The letter and the number of subscripts of the name of a family in a reading. -/
+def familyOf (n : String) : Option (String × Nat) :=
+  [1, 2, 3, 4].findSome? fun k =>
+    if n.endsWith (familyMarkN k) then some ((n.dropEnd (familyMarkN k).length).toString, k) else none
+
 partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .glob i => gs.getD i s!"g_{i}"
   | .loc i => ls.getD i s!"v_{i}"
@@ -108,6 +123,9 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim .limTopConv) D) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to\\infty" ++ seqDom D v ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\text{ exists}"
+  -- for almost every real number
+  | .app (.prim .ae) (.lam t _ b) => let v := varNames.getD ls.length "v"
+    "\\text{for almost every }" ++ v ++ "\\in " ++ t.tex ++ ",\\ " ++ b.tex cs gs (v :: ls)
   | .app (.prim .factorial) x => wrap 9 x ++ "!"
   | .app (.app (.prim .binom) x) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
   | .app (.guard _ (.app (.prim .binom) x)) y => "\\binom{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
@@ -134,6 +152,18 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.prim (.fnProp k)) f) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       Prim.tex (.fnProp k) ++ "(" ++ f.tex cs gs ls ++ ")\\text{ on }\\{" ++ v ++ ":" ++ body.tex cs gs (v :: ls) ++ "\\}"
+  -- an integral over a ray or the line: over the set of its variable
+  | .app (.app (.prim .integralOn) (.lam _ _ cond)) (.lam _ _ body) =>
+      let v := varNames.getD ls.length "t"
+      let ends : Option (String × String) := match cond with
+        | .tt => some ("-\\infty", "\\infty")
+        | .le (.loc 0) c => some ("-\\infty", c.tex cs gs (v :: ls))
+        | .le a (.loc 0) => some (a.tex cs gs (v :: ls), "\\infty")
+        | _ => none
+      (match ends with
+        | some (a, b) => "\\int_{" ++ a ++ "}^{" ++ b ++ "}"
+        | none => "\\int_{\\{" ++ v ++ ":" ++ cond.tex cs gs (v :: ls) ++ "\\}}") ++
+        body.tex cs gs (v :: ls) ++ "\\,d" ++ v
   | .app (.app (.app (.prim .intervalIntegral) a) b) (.lam _ _ body) =>
       let v := varNames.getD ls.length "t"
       "\\int_{" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls) ++ "\\,d" ++ v
@@ -157,6 +187,19 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     | "/" => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
     | "^" => "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
     | _ =>
+      -- an integral of the vocabulary against a distribution function
+      -- (`\int_{[0,1]^2}`), of a function of two points: over its variables
+      let against : Option String := match y with
+        | .lam _ _ (.lam _ _ body) =>
+          if n.startsWith "\\int" then
+            let u := varNames.getD ls.length "u"
+            let v := varNames.getD (ls.length + 1) "v"
+            let s := body.tex cs gs (v :: u :: ls)
+            some (n ++ " " ++ (if body.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\,\\mathrm{d}" ++
+              cwrap 9 x ls ++ "(" ++ u ++ "," ++ v ++ ")")
+          else none
+        | _ => none
+      if let some s := against then s else
       -- `#1` and `#2` in the name stand for the two arguments
       if (n.splitOn "#1").length > 1 then (n.replace "#1" (x.tex cs gs ls)).replace "#2" (y.tex cs gs ls)
       else (Tm.app (.const i) x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
@@ -181,6 +224,8 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   -- a domain predicate applied to an argument: read it about the argument
   | .app (.app (.lam _ _ (.lam _ _ b)) x) y => b.tex cs gs (y.tex cs gs ls :: x.tex cs gs ls :: ls)
   | .app (.lam _ _ b) x => b.tex cs gs (x.tex cs gs ls :: ls)
+  -- a family applied index by index, the first inside its domain: `B_{r,a}`
+  | .app (.guard _ (.app f x)) y => (Tm.app (.app f x) y).tex cs gs ls
   -- a function of several variables: `f(x,y)` (definedness guards are not shown)
   -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
   | .app (.app f x) y =>
@@ -213,12 +258,20 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
       let n := if i ≥ 1000000 then ls.getD (i - 1000000) "?" else gs.getD i s!"g_{i}"
       if n.startsWith "^" || n == "\\widehat" then
         (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
+      -- a family at its index: `S_{s}(u,v)`
+      else if let some (base, k) := familyOf n then
+        if args.length < k then n ++ "(" ++ ",".intercalate (args.map (·.tex cs gs ls)) ++ ")" else
+        let rest := args.drop k
+        base ++ "_{" ++ ",".intercalate ((args.take k).map (·.tex cs gs ls)) ++ "}" ++
+          (if rest.isEmpty then "" else "(" ++ ",".intercalate (rest.map (·.tex cs gs ls)) ++ ")")
       else n ++ "(" ++ ",".intercalate (args.map (·.tex cs gs ls)) ++ ")"
     | none => (Tm.app f x).tex cs gs ls ++ "(" ++ y.tex cs gs ls ++ ")"
   | .app (.glob i) x =>
     let n := gs.getD i s!"g_{i}"
     if n.startsWith "^" then "{" ++ wrap 9 x ++ "}" ++ n
     else if n == "\\widehat" then "\\widehat{" ++ x.tex cs gs ls ++ "}"
+    else if n.endsWith familyMark then (n.dropEnd familyMark.length).toString ++ "_{" ++ x.tex cs gs ls ++ "}"
+    else if (familyOf n).isSome then n ++ "(" ++ x.tex cs gs ls ++ ")"
     else n ++ "(" ++ x.tex cs gs ls ++ ")"
   | .app f x => (match f with
       | .lam .. => "(" ++ f.tex cs gs ls ++ ")"
@@ -357,7 +410,7 @@ def Doc.globNames (d : Doc) : List String :=
       | none, some [w] => "\\operatorname{" ++ Codes.toString w ++ "}"
       | none, some ws => "\\text{" ++ phraseText ws ++ "}"
       | none, none => s!"\\mathrm\{op}_\{{i}}"
-    else Codes.toString g.key
+    else Codes.toString g.key ++ (if g.family then familyMarkN (max g.indices 1) else "")
 
 /-- A Lean-identifier name for a definition: from the phrase that introduced it
 (`the transpose of $C$` gives `transpose`, the class of `bivariate copulas`
@@ -388,6 +441,8 @@ def defNameRaw (d : Doc) (i : Nat) : String :=
   -- `R_b^-`, `z_+`
   else if key.endsWith "^-" || key.endsWith "_-" then clean key ++ "Minus"
   else if key.endsWith "^+" || key.endsWith "_+" then clean key ++ "Plus"
+  -- the family `M_r` next to the constant `M`
+  else if g.family && d.globs.any (fun o => o.key == g.key && !o.family) then clean key ++ "Family"
   else clean key
 
 /-- Names that `#leanify_article`, `#leanify_semantics` and `#leanify_certify`

@@ -10,9 +10,10 @@
 #
 # `validate` and `upload` use the upload interface of CTAN (https://ctan.org/help/submit)
 # and need the address of the uploader in CTAN_EMAIL. It is sent to CTAN only, which
-# confirms the upload to it. The version is the one of \ProvidesPackage in
-# tex/leanify.sty: CTAN takes an update only under a new version, so a change of the
-# package that is to be released changes that line (and tex/README.md, tex/leanify-doc.tex).
+# confirms the upload to it. The version is number and date of \ProvidesPackage in
+# tex/leanify.sty (`0.7 2026-11-10`: CTAN asks for the date in the version). CTAN takes
+# an update only under a new version, so a change of the package that is to be released
+# changes that line (and tex/README.md, tex/leanify-doc.tex).
 # CTAN_ANNOUNCEMENT, if set, is the text of the announcement on the CTAN mailing list
 # (none is sent without it), and CTAN_NOTE is a note to the CTAN team.
 # An upload is handled by the CTAN team by hand: release versions, not every commit.
@@ -33,25 +34,31 @@ echo "$out/leanify.zip:"
 unzip -l "$out/leanify.zip"
 [ "$mode" = build ] && exit 0
 
-# the version of the package: `\ProvidesPackage{leanify}[2026/11/10 v0.7 …]` gives 0.7
-version="$(sed -n 's/^\\ProvidesPackage{leanify}\[[0-9\/]* v\([0-9][0-9.]*\).*/\1/p' tex/leanify.sty)"
-[ -n "$version" ] || { echo "no version in the \\ProvidesPackage line of tex/leanify.sty" >&2; exit 1; }
-# the three places that state it agree
-grep -q "^Version $version," tex/README.md || { echo "tex/README.md does not say Version $version" >&2; exit 1; }
-grep -q "Version $version," tex/leanify-doc.tex || { echo "tex/leanify-doc.tex does not say Version $version" >&2; exit 1; }
+# the version of the package, as CTAN wants it: number and date. The line
+# `\ProvidesPackage{leanify}[2026/11/10 v0.7 …]` gives `0.7 2026-11-10`
+number="$(sed -n 's/^\\ProvidesPackage{leanify}\[[0-9\/]* v\([0-9][0-9.]*\).*/\1/p' tex/leanify.sty)"
+date="$(sed -n 's/^\\ProvidesPackage{leanify}\[\([0-9]*\)\/\([0-9]*\)\/\([0-9]*\) v.*/\1-\2-\3/p' tex/leanify.sty)"
+[ -n "$number" ] && [ -n "$date" ] || { echo "no date and version in the \\ProvidesPackage line of tex/leanify.sty" >&2; exit 1; }
+version="$number $date"
+# the three places that state them agree
+grep -q "^Version $number, $date" tex/README.md || { echo "tex/README.md does not say Version $number, $date" >&2; exit 1; }
+grep -q "Version $number, $date" tex/leanify-doc.tex || { echo "tex/leanify-doc.tex does not say Version $number, $date" >&2; exit 1; }
 [ -n "$CTAN_EMAIL" ] || { echo "set CTAN_EMAIL to the address of the uploader" >&2; exit 1; }
 echo "leanify $version"
 
 if [ "$mode" = upload ]; then
-  # the version that CTAN has (its catalogue as JSON); if it cannot be read, CTAN decides:
-  # it refuses a version that it already has
-  have="$(curl -fsS -m 30 https://ctan.org/json/2.0/pkg/leanify 2>/dev/null \
-    | sed -n 's/.*"version" *: *{[^}]*"number" *: *"\([^"]*\)".*/\1/p' | head -n 1)"
+  # the version that CTAN has (its catalogue as JSON: `"version":{"number":…,"date":…}`);
+  # if it cannot be read, CTAN decides: it refuses a version that it already has
+  catalogue="$(curl -fsS -m 30 https://ctan.org/json/2.0/pkg/leanify 2>/dev/null \
+    | sed -n 's/.*"version" *: *{\([^}]*\)}.*/\1/p' | head -n 1)"
+  have="$(printf '%s' "$catalogue" | sed -n 's/.*"number" *: *"\([^"]*\)".*/\1/p') \
+$(printf '%s' "$catalogue" | sed -n 's/.*"date" *: *"\([^"]*\)".*/\1/p')"
   if [ "$have" = "$version" ]; then
     echo "CTAN has leanify $version: nothing to upload"
     exit 0
   fi
-  echo "CTAN has leanify ${have:-(version not read)}: uploading $version"
+  [ "$have" = " " ] && have="(version not read)"
+  echo "CTAN has leanify $have: uploading $version"
 fi
 
 set -- \

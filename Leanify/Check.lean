@@ -208,10 +208,16 @@ def failedMessage (e : Err) : String :=
       | none => s!"unknown notation {d}"
     else s!"{d} is not defined"
   else if e.code == E.noun && !d.isEmpty then
-    -- (a field of the vocabulary that has the noun is named)
+    -- (a field of the vocabulary that has the noun is named, also when words follow the
+    -- noun: `a copula with $R(C)=r$`)
     let ws := (e.detail.splitOn 32).filter (!·.isEmpty)
-    match Fields.all.find? (fun (_, V) => let (h, noun, rest) := Compile.knownHead V [] ws; noun && rest.isEmpty && !h.isEmpty) with
-    | some (f, _) => s!"unknown noun: {d}: the field {f} of the vocabulary has it (\\usepackage[vocab={f}]\{leanify})"
+    match Fields.all.findSome? (fun (f, V) =>
+        let (h, noun, rest) := Compile.knownHead V [] ws
+        if noun && !h.isEmpty then some (f, h, rest.isEmpty) else none) with
+    | some (f, _, true) => s!"unknown noun: {d}: the field {f} of the vocabulary has it (\\usepackage[vocab={f}]\{leanify})"
+    | some (f, h, false) =>
+      let noun := String.intercalate " " (h.map Codes.toString)
+      s!"unknown noun: {d}: the field {f} of the vocabulary has the noun \"{noun}\" (\\usepackage[vocab={f}]\{leanify})"
     | none => errMessage e
   else if e.code == E.ambiguous then
     s!"{d}; say which is meant in the text (By a … we mean …)"
@@ -551,6 +557,14 @@ def readsNoun (V : Vocab) (own : List (List Codes)) (there : Bool) (p : String) 
   | some (.failed e) => e.code != E.noun && e.code != E.nounWords
   | _ => false
 
+/-- The field of the vocabulary that has the noun phrase `p`, for a finding about a noun
+that the vocabulary of the article does not have. -/
+def fieldOfNoun (p : String) : Option String :=
+  let ws := ((p.splitOn " ").filter (· != "")).map fun w => Codes.ofString w.toLower
+  Fields.all.findSome? fun (f, V) =>
+    let (h, noun, rest) := Compile.knownHead V [] ws
+    if noun && rest.isEmpty && !h.isEmpty then some f else none
+
 /-- `a, b and c`, with at most `k` items and `…` for the rest. -/
 def fewOf (k : Nat) (xs : List String) : String :=
   let shown := xs.take k
@@ -737,7 +751,12 @@ def diagnostics (V : Vocab) (rel : String) (lines : List (List Nat)) (d : Doc)
           cov := { cov with nouns := phrases.reverse ++ cov.nouns }
           let phraseHint := match phrases with
             | [] => ""
-            | ps => s!"; not read as a noun: {fewOf 2 (ps.map fun p => s!"\"{p}\"")}"
+            | ps =>
+              -- (a field of the vocabulary that has one of the nouns is named)
+              let field := match ps.findSome? fun p => (fieldOfNoun p).map fun f => (p, f) with
+                | some (p, f) => s!" (the field {f} of the vocabulary has \"{p}\": \\usepackage[vocab={f}]\{leanify})"
+                | none => ""
+              s!"; not read as a noun: {fewOf 2 (ps.map fun p => s!"\"{p}\"")}{field}"
           let hint := unknownIn unread ++ phraseHint
           let hint := if hint.isEmpty then
               "; docs/writing.md lists the forms it reads" else hint

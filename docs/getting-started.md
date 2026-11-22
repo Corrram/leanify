@@ -85,8 +85,10 @@ Linux, macOS and Windows), a folder with the article is enough:
 leanify certify article.tex
 ```
 
-makes the folder a Lean project, writes the Lean files of step 4, fetches
-Leanify and mathlib, and builds the certificate of step 5. The project requires the
+makes a Lean project for the article (the folder `lean` next to it), writes the Lean
+files of step 4 there, fetches Leanify and mathlib, and builds the certificate of
+step 5. Compiling the article with `\usepackage{leanify}` and shell escape makes the
+same project and reports the findings of step 3 as LaTeX warnings. The project requires the
 Leanify that the checker was built from: its release, or, for a checker that runs
 from a checkout of Leanify, that checkout, whose mathlib it then uses (the first
 certificate takes seconds). This guide takes the steps one at a time.

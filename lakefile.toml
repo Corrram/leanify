@@ -137,3 +137,10 @@ globs = ["Notions.+"]
 name = "Square"
 srcDir = "tests"
 globs = ["Square.+"]
+
+[[lean_lib]]
+# A definition without a proof that it is well defined: the certificate assumes it and
+# names the assumption (a test of `Foo.Assumed.wellDefinedI`).
+name = "Assumed"
+srcDir = "tests"
+globs = ["Assumed.+"]

@@ -12,10 +12,10 @@ tests/Conventions/article.tex:59:1: info: claim 8: \forall x\in \mathbb{R},\ x\i
 tests/Conventions/article.tex:63:1: info: claim 9: \forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ \exists z\in \mathbb{R},\ y+z=x
 tests/Conventions/article.tex:68:1: info: defines \lambda (lambda)
 tests/Conventions/article.tex:68:1: info: defines \mu (mu)
-tests/Conventions/article.tex:73:1: info: defines \mathcal{B} (mathcalB)
-tests/Conventions/article.tex:77:1: info: defines \mathcal{S} (mathcalS)
-tests/Conventions/article.tex:81:1: info: claim 10: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{B}(x,z)\Rightarrow \mathcal{B}(y,z))
-tests/Conventions/article.tex:85:1: info: claim 11: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{S}(x,z)\Rightarrow \mathcal{S}(y,z))
+tests/Conventions/article.tex:73:1: info: defines \mathcal{B}_{\cdot} (mathcalB)
+tests/Conventions/article.tex:77:1: info: defines \mathcal{S}_{\cdot} (mathcalS)
+tests/Conventions/article.tex:81:1: info: claim 10: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{B}_{x}(z)\Rightarrow \mathcal{B}_{y}(z))
+tests/Conventions/article.tex:85:1: info: claim 11: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x\le y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \mathcal{S}_{x}(z)\Rightarrow \mathcal{S}_{y}(z))
 tests/Conventions/article.tex:92:1: info: claim 12: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow 2\,x\le {x}^{2}
 tests/Conventions/article.tex:93:1: info: claim 13: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2<x\Rightarrow 3\le x
 tests/Conventions/article.tex:94:1: info: claim 14: (\#\{y : y\in \mathbb{Z}\land (1\le y\land y\le 5)\land {y}^{2}\le 9\})=3

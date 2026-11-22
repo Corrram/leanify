@@ -68,9 +68,10 @@ rev = "main"
 ```
 
 Or start from the article alone: with the checker on the `PATH`,
-`leanify certify article.tex` makes its folder a Lean project that requires the
-Leanify of the checker, writes the Lean files, fetches mathlib and builds the
-certificate.
+`leanify certify article.tex` makes a Lean project for it, in the folder `lean`
+next to the article, that requires the Leanify of the checker, writes the Lean
+files, fetches mathlib and builds the certificate. Compiling the article with
+`\usepackage{leanify}` and shell escape checks it and makes the same project.
 
 `leanify init` writes four files next to the article, and adds the article's
 library to `lakefile.toml`:

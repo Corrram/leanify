@@ -54,7 +54,6 @@ tests/Arguments/article.tex:212:1: info: claim 52: \forall x\in \mathbb{R},\ x\i
 tests/Arguments/article.tex:221:1: info: claim 53: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
 tests/Arguments/article.tex:226:1: info: claim 54: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<x\,y+z))
 tests/Arguments/article.tex:234:1: info: defines y (y)
-tests/Arguments/article.tex:234:1: info: y is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
 tests/Arguments/article.tex:235:1: info: claim 55: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=1
 tests/Arguments/article.tex:235:1: info: claim 55 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow \neg (x=0)
 tests/Arguments/article.tex:239:1: info: claim 56: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow x\,y(x)=x\,(\frac{1}{x})

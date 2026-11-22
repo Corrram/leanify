@@ -223,12 +223,24 @@ def simplify : Nat → List PTok → Option (List MTok)
           -- (`\text{for every integer }`: its words, one by one)
           let words := inner.filterMap (fun p => match p.tok with | .word w => some w | _ => none)
           if !words.isEmpty && inner.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then
-            ((words.map MTok.text) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
+            -- (`\text{otherwise.}`: the punctuation that ends the display)
+            let last : List MTok := match inner.reverse with
+              | p :: _ => (match p.tok with
+                | .punct 46 => [.sym 46]
+                | .punct 44 => [.sym 44]
+                | _ => [])
+              | [] => []
+            ((words.map MTok.text ++ last) ++ ·) <$> simplify f (rest.drop (inner.length + 1))
           else if word.length != inner.length then none
           else (MTok.text word :: ·) <$> simplify f (rest.drop (inner.length + 1))
         | _ => none
       else if wFonts.contains n then
         match ts with
+        -- `\mathbf 1`, `\mathbb{1}`: the indicator (of the condition or the set after it)
+        | ⟨.mnum 1, _, _⟩ :: rest =>
+          if n == w!"mathbf" || n == w!"mathbb" then (MTok.cmd w!"@ind" :: ·) <$> simplify f rest else none
+        | ⟨.lbrace, _, _⟩ :: ⟨.mnum 1, _, _⟩ :: ⟨.rbrace, _, _⟩ :: rest =>
+          if n == w!"mathbf" || n == w!"mathbb" then (MTok.cmd w!"@ind" :: ·) <$> simplify f rest else none
         | ⟨.lbrace, _, _⟩ :: rest =>
           let letters := rest.takeWhile (fun p => match p.tok with | .mvar _ => true | _ => false)
           let word := letters.filterMap (fun p => match p.tok with | .mvar c => some c | _ => none)
@@ -355,6 +367,21 @@ def isUnstatedReals : MT → Bool
   | .ival (.neg (.id a)) (.id b) true true => a == w!"\\infty" && b == w!"\\infty"
   | _ => false
 
+/-- The two variables of `\max_{(u,v)\in A^2} e` and `\sup_{u,v\in A} e`, each with its
+set: the extremum is over the values of `e` at all pairs. -/
+def extrRange2 (conds : List MT) : Option ((Codes × MT) × (Codes × MT)) :=
+  match conds with
+  | [.chain (.tuple [.id u, .id v]) [(.mem, .sup d (.num 2))]] => if u == v then none else some ((u, d), (v, d))
+  | [.id u, .chain (.id v) [(.mem, d)]] => if u == v then none else some ((u, d), (v, d))
+  | [.chain (.id u) [(.mem, d1)], .chain (.id v) [(.mem, d2)]] => if u == v then none else some ((u, d1), (v, d2))
+  | _ => none
+
+/-- `body` at the values of the variable (or of the two variables) that `conds` names. -/
+def extrImage (conds : List MT) (body : MT) : Option MT :=
+  match extrRange2 conds with
+  | some ((u, d1), (v, d2)) => some (.image (.image body v d2) u d1)
+  | none => none
+
 /-- The variable of an extremum and the set it ranges over, from the conditions of its
 subscript: `x\in A` (and conditions), bounds (`0\le t<1`, `t\ge0`), or conditions the
 first of which bounds the variable (`n\ge1,\ \omega(n)\le k`). A variable bounded by
@@ -405,7 +432,10 @@ def appHead : MT → Bool
   | .app (.id (64 :: _)) _ => false
   | .id _ | .sub _ _ | .hat _ | .app _ _ => true
   -- `f'(x)`, `R_b^-(z)`
-  | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43]
+  -- (the inverse of a function with a subscript in its name, `\Phi_{\mathrm N}^{-1}(u)`)
+  | .sup (.sub (.id _) (.id _)) (.neg (.num 1)) => true
+  -- (and a starred name, `\tau^*(C)`)
+  | .sup _ (.id n) => n == w!"\\top" || n == w!"\\perp" || n == [39] || n == [45] || n == [43] || n == [42]
   -- the inverse function `f^{-1}`
   | .sup (.id _) (.neg (.num 1)) => true
   | _ => false
@@ -478,6 +508,18 @@ def run : Nat → Mode → List MTok → R
     -- `n!`
     | .sym 33 :: rest => run f (.postfix bar (.app (.id w!"@factorial") [x])) rest
     | .sym 94 :: rest => do
+      -- `C^{\ast k}`, `C^{*k}`: a star before the exponent is the power of a product other
+      -- than the product of numbers (the Markov power of a copula, in `unitsquare`)
+      let starred : Option (MT × List MTok) := match rest with
+        | .lb :: star :: more =>
+          let isStar := match star with | .sym 42 => true | .cmd c => c == w!"ast" | _ => false
+          if isStar && more.head? != some .rb then do
+            let (e, r1) ← run f .top more
+            let r2 ← expect .rb r1
+            some (.app (.id w!"@mpow") [x, e], r2)
+          else none
+        | _ => none
+      if let some (m, r) := starred then run f (.postfix bar m) r else
       let (e, rest') ← run f .group rest
       run f (.postfix bar (.sup x e)) rest'
     | .sym 95 :: rest =>
@@ -502,7 +544,31 @@ def run : Nat → Mode → List MTok → R
   | f + 1, .atom bar, ts =>
     match ts with
     | .digit d :: rest => run f (.number d) rest
-    | .id n :: rest => some (.id n, rest)
+    | .id n :: rest =>
+      -- `\mathbb{E}_C[e]`, `P_C(φ)`: the expectation of `e` and the probability of `φ` for
+      -- a sample of independent observations `(U_i,V_i)` with the distribution function `C`
+      -- (the letters `U`, `V` are the two sequences of the sample)
+      let sample : Option (MT × List MTok) :=
+        if n == w!"\\mathbb{E}" || n == w!"\\mathbb{P}" || n == [80] then
+          match rest with
+          | .sym 95 :: r1 => do
+            let (c, r2) ← run f .group r1
+            let isE := n == w!"\\mathbb{E}"
+            let r3 ← expect (.sym (if isE then 91 else 40)) r2
+            let (body, r4) ← run f .top r3
+            let r5 ← expect (.sym (if isE then 93 else 41)) r4
+            -- (a probability is of a condition)
+            let cond := match body with
+              | .chain .. | .land .. | .lor .. | .lnot .. => true
+              | _ => false
+            if !isE && !cond then none else
+            some (.app (.id (if isE then w!"@sexp" else w!"@sprob"))
+              [c, .mapsto (.tuple [.id [85], .id [86]]) body], r5)
+          | _ => none
+        else none
+      match sample with
+      | some r => some r
+      | none => some (.id n, rest)
     | .sym 40 :: rest =>
       (do
         let (m, rest') ← run f (.list 41 []) rest
@@ -546,7 +612,10 @@ def run : Nat → Mode → List MTok → R
         -- braces as parentheses: `4\int_0^1\{C(u,u)+C(u,1-u)\}\de u`
         let (x, r1) ← run f .top rest
         let r2 ← expect .setr r1
-        some (x, r2))
+        -- (braces around a pair are a set: `\{(0,0)\}`)
+        match x with
+        | .tuple [a, b] => some (.finset [.tuple [a, b]], r2)
+        | _ => some (x, r2))
     | .cmd n :: rest =>
       if n == w!"frac" then do
         let (a, r1) ← run f .group rest
@@ -615,8 +684,9 @@ def run : Nat → Mode → List MTok → R
           let conds ← parts.mapM fun p => do
             let (m, rest) ← run f .top p
             if rest.isEmpty then some m else none
-          let (v, dom) ← extrRange conds
           let (body, r2) ← run f (.product false) r1
+          if let some im := extrImage conds body then some (.bound isSup im, r2) else
+          let (v, dom) ← extrRange conds
           some (.bound isSup (.image body v dom), r2)
         | _ => do
           -- `\sup A` for a named set
@@ -636,6 +706,12 @@ def run : Nat → Mode → List MTok → R
         let (a, r1) ← run f .group rest
         let (b, r2) ← run f .group r1
         some (.app (.id w!"@binom") [a, b], r2)
+      else if n == w!"@onevent" then do
+        -- `On the event $φ$, we have $ψ$` (`Notation.onEvent`): `φ` implies `ψ` for all values
+        -- of the two sequences `U`, `V` of a sample
+        let (a, r1) ← run f .group rest
+        let (b, r2) ← run f .group r1
+        some (.app (.id w!"@son") [.mapsto (.tuple [.id [85], .id [86]]) (.limp a b)], r2)
       else if n == w!"lVert" then do
         -- `\lVert x\rVert`: a norm (its space in the subscript after it)
         let (x, r1) ← run f (.additive false) rest
@@ -662,6 +738,34 @@ def run : Nat → Mode → List MTok → R
         -- `\#\{…\}`, `\#A`: the number of elements of a set
         let (x, r1) ← run f (.atom false) rest
         some (.app (.id w!"@card") [x], r1)
+      else if n == w!"@ind" then
+        -- `\mathbf 1\{φ\}`, `\mathbf 1_{\{φ\}}`: the indicator of a condition (of several:
+        -- of all of them); `\mathbf 1_A(x)`: of the set `A`, at `x`
+        let ofConds (m : MT) (r : List MTok) : R := match m with
+          | .conj [c] => some (.app (.id w!"@ind") [c], r)
+          | .conj (c :: cs) => some (.app (.id w!"@ind") [.conj (c :: cs)], r)
+          | _ => none
+        match rest with
+        | .setl :: r => do
+          let (m, r1) ← run f (.list 125 []) r
+          ofConds m r1
+        | .sym 95 :: .lb :: .setl :: r => do
+          let (m, r1) ← run f (.list 125 []) r
+          let r2 ← expect .rb r1
+          ofConds m r2
+        | .sym 95 :: r => do
+          -- the set, then the point: the condition `x\in A`, as it is read elsewhere
+          let (set, r1) ← match r with
+            | .lb :: body => untilClose (body.length + 1) 0 [] body
+            | t :: after => some ([t], after)
+            | [] => none
+          let r2 ← expect (.sym 40) r1
+          let (x, r3) ← run f (.additive false) r2
+          let r4 ← expect (.sym 41) r3
+          let (m, r5) ← run f .top ([MTok.id w!"@pt", .cmd w!"in"] ++ set)
+          if !r5.isEmpty then none
+          some (.app (.id w!"@ind") [MT.substId w!"@pt" x 64 m], r4)
+        | _ => none
       else if n == w!"lfloor" || n == w!"lceil" then do
         -- `\lfloor x\rfloor`, `\lceil x\rceil`
         let (x, r1) ← run f (.additive false) rest
@@ -690,8 +794,9 @@ def run : Nat → Mode → List MTok → R
           let conds ← parts.mapM fun p => do
             let (m, rest) ← run f .top p
             if rest.isEmpty then some m else none
-          let (v, dom) ← extrRange conds
           let (body, r2) ← run f (.product false) r1
+          if let some im := extrImage conds body then some (.extr (n == w!"max") im, r2) else
+          let (v, dom) ← extrRange conds
           some (.extr (n == w!"max") (.image body v dom), r2)
         | _ => none
       else if n == w!"int" then
@@ -754,7 +859,13 @@ def run : Nat → Mode → List MTok → R
       let (v, r1) ← run f (.additive false) ts
       let r1 := match r1 with | .sym 44 :: r => r | r => r
       let r2 ← expect (.sym 38) r1
-      let (c, r3) ← run f .top r2
+      -- `v & \text{if } φ`, and a last row `v & \text{otherwise}`
+      let r2 := match r2 with
+        | .text w :: r => if w == w!"if" || w == w!"for" || w == w!"when" then r else r2
+        | r => r
+      let (c, r3) ← match r2 with
+        | .text w :: r => if w == w!"otherwise" || w == w!"else" then some (MT.text w, r) else none
+        | _ => run f .top r2
       let r4 := match r3 with | .sym 44 :: r => r | .sym 46 :: r => r | r => r
       match r4 with
       | .row :: r5 => run f (.casesRows ((v, c) :: acc)) r5
@@ -839,6 +950,20 @@ where
     | 0, _, _, _ => none
     | g + 1, lo, hi, ts => do
       let (body, r1) ← run g (.product false) ts
+      -- `\int_{[0,1]^2} e\,\mathrm{d}C(u,v)`: against the measure of the distribution
+      -- function `C`, the variables of the integrand being those after it
+      let against : Option (MT × List MTok) := match hi, r1 with
+        | .id over, .diff :: r2 =>
+          if over != w!"@over" then none else
+          match run g (.factor false) r2 with
+          | some (.app c args, r3) =>
+            let vars := args.filterMap fun a => match a with | .id v => some v | _ => none
+            if vars.length == args.length && vars.length ≥ 2 then
+              some (.app (.id w!"@intd") [lo, c, .mapsto (.tuple args) body], r3)
+            else none
+          | _ => none
+        | _, _ => none
+      if let some r := against then some r else
       match r1 with
       | .diff :: .id v :: r2 => some (.int lo hi body v, r2)
       | _ =>
@@ -1195,6 +1320,10 @@ def parseFormula (ts : List MTok) : Option MT :=
   let ts := sumEllipses 8 ts
   let plain (ts : List MTok) : Option MT :=
     match run (8 * ts.length + 64) .top ts with
+    -- the left side of a definition, `\Phi^2(C)\coloneqq e`: a symbol with a numeral as
+    -- superscript and its arguments, not a product
+    | some (.chain (.mul (.sup (.id k) (.num n)) y) ((.defeq, rhs) :: more), []) =>
+      some (.chain (.app (.sup (.id k) (.num n)) (match y with | .tuple as => as | a => [a])) ((.defeq, rhs) :: more))
     | some (x, []) => some x
     | _ => if ts.any (isCmdIn wConnectives) then logic (ts.length + 2) ts else none
   match chainEllipsis ts with

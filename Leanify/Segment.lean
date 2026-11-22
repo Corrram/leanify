@@ -80,6 +80,19 @@ def tfaeIntro : List PTok → Bool
     e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following")
   | _ => false
 
+/-- Does the current sentence (latest token first) run on into a list? It does when it
+stops at a word that needs its object (`Every copula $C$ satisfies`, `Then`, `we have`,
+`such that`), or announces the list (`the following hold:`). The items of the list then
+belong to the sentence: they are its statements, one after the other. -/
+def listIntro : List PTok → Bool
+  | ⟨.word w, _, false⟩ :: _ =>
+    [w!"satisfies", w!"obeys", w!"have", w!"has", w!"that", w!"then", w!"Then"].contains w
+  | ⟨.punct 58, _, false⟩ :: rest =>
+    let ws := (rest.take 4).filterMap fun p => match p.tok with | .word w => some w | _ => none
+    (ws.head?.any fun w => [w!"hold", w!"holds", w!"true"].contains w) &&
+      (ws.contains w!"following" || ws.contains w!"Following")
+  | _ => false
+
 /-- `… with the following property.`, `… such that the following holds.` (reversed): the next
 sentence states the property, and belongs to this one. -/
 def followingIntro : List PTok → Bool
@@ -198,11 +211,12 @@ def go : Nat → List PTok → St → St
           let rest := ts.drop (i + 1)
           let last := body.reverse.find? (fun p => match p.tok with
             | .finish _ | .rbrace | .csym 92 | .ref .label _ => false | _ => true)
-          let ends : Bool := match last with | some p => p.tok == .msym 46 | none => false
+          -- (also the period of `\text{otherwise.}` in the last row of a `cases`)
+          let ends : Bool := match last with | some p => p.tok == .msym 46 || p.tok == .punct 46 | none => false
           let s := { s with cur := closer :: (body.reverse ++ (t :: s.cur)) }
           if ends && !s.tfae then go f rest (flush s) else go f rest s
         | none => go f ts { s with cur := t :: s.cur }
-      else if Lex.wListEnvs.contains e && tfaeIntro s.cur then
+      else if Lex.wListEnvs.contains e && (tfaeIntro s.cur || listIntro s.cur) then
         go f ts { s with cur := t :: s.cur, tfae := true }
       -- a list: its items are numbered, for the cases of a proof
       else if Lex.wListEnvs.contains e then go f ts { flush s with items := 0 :: s.items }
