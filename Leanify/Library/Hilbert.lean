@@ -64,11 +64,11 @@ def constNames : List Codes := [w!"L^2", w!"L^2_0", w!"\\langle #1,#2\\rangle", 
   w!"{#1}^{\\otimes #2}", w!"{#1}_{#2}", w!"H_{#}", w!"\\operatorname{dep}(#1,#2)",
   w!"\\sum_{S\\subseteq\\{1,\\dots,#1\\}}#2"]
 
-def constLean : List Codes := [w!"Leanify.Hilbert.memL2", w!"Leanify.Hilbert.memL20",
-  w!"Leanify.Hilbert.inner1", w!"Leanify.Hilbert.norm1", w!"Leanify.Hilbert.innerSeq",
-  w!"Leanify.Hilbert.normSeq", w!"Leanify.Hilbert.opNormOn", w!"Leanify.Hilbert.opNormOnSeq",
-  w!"Leanify.Hilbert.tensorPow", w!"Leanify.Hilbert.hoeffding", w!"Leanify.Hilbert.hoeffSpace",
-  w!"Leanify.Hilbert.dependsFirst", w!"Leanify.Hilbert.subsetSum"]
+def constLean : List Codes := [w!"Leanify.Hilbert.Model.memL2", w!"Leanify.Hilbert.Model.memL20",
+  w!"Leanify.Hilbert.Model.inner1", w!"Leanify.Hilbert.Model.norm1", w!"Leanify.Hilbert.Model.innerSeq",
+  w!"Leanify.Hilbert.Model.normSeq", w!"Leanify.Hilbert.Model.opNormOn", w!"Leanify.Hilbert.Model.opNormOnSeq",
+  w!"Leanify.Hilbert.Model.tensorPow", w!"Leanify.Hilbert.Model.hoeffding", w!"Leanify.Hilbert.Model.hoeffSpace",
+  w!"Leanify.Hilbert.Model.dependsFirst", w!"Leanify.Hilbert.Model.subsetSum"]
 
 /-- A finite set of positive integers. -/
 def finPos : Tm := Build.close (Build.lamT rset (fun _ => Build.tt) fun S =>

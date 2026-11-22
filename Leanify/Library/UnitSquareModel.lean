@@ -134,6 +134,12 @@ numbers (its term at `x` is the term at the integer part of `x`: the compiler us
 natural numbers). -/
 noncomputable def seqOf (s : ℕ → I) : ℝ → I := fun x => s (Nat.floor x)
 
+/-- `seqOf` is measurable. -/
+theorem seqOf_measurable : Measurable seqOf := by
+  rw [measurable_pi_iff]
+  intro x
+  exact measurable_pi_apply (Nat.floor x)
+
 /-- The law of a sequence of independent terms, each uniform on `[0,1]`. -/
 noncomputable def uniformLaw : Measure (ℕ → I) := Measure.infinitePi (fun _ : ℕ => (volume : Measure I))
 
@@ -141,12 +147,12 @@ instance : IsProbabilityMeasure uniformLaw := by
   unfold uniformLaw
   infer_instance
 
-/-- A kernel: a function of finitely many terms of a sequence in `[0,1]`, measurable and
-square-integrable for independent uniform terms (a function in `L²([0,1]^m)` for some
-`m`). -/
+/-- A kernel: a Borel function of finitely many terms of a sequence in `[0,1]`, the terms
+`1, …, m` (articles number observations from `1`), square-integrable for independent uniform
+terms (a function in `L²([0,1]^m)` for some `m`). -/
 def isKernel (F : (ℝ → I) → ℝ) : Prop :=
-  (∃ m : ℕ, ∀ x y, agreeBelow m x y → F x = F y) ∧
-  AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s)) uniformLaw ∧
+  (∃ m : ℕ, ∀ x y : ℝ → I, (∀ i : ℕ, 1 ≤ i → i ≤ m → x i = y i) → F x = F y) ∧
+  Measurable F ∧
   Integrable (fun s : ℕ → I => F (seqOf s) ^ 2) uniformLaw
 
 /-- A statistic: a function of finitely many observations of a sample that is measurable
@@ -606,7 +612,7 @@ theorem isKernel_fst {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I �
   have h1 : AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s))
       ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1)) := by
     rw [hm]
-    exact hF.2.1
+    exact (hF.2.1.comp seqOf_measurable).aestronglyMeasurable
   have h2 : Integrable (fun s : ℕ → I => F (seqOf s) ^ 2)
       ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).1)) := by
     rw [hm]
@@ -625,7 +631,7 @@ theorem isKernel_snd {F : (ℝ → I) → ℝ} (hF : isKernel F) {C : I → I �
   have h1 : AEStronglyMeasurable (fun s : ℕ → I => F (seqOf s))
       ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2)) := by
     rw [hm]
-    exact hF.2.1
+    exact (hF.2.1.comp seqOf_measurable).aestronglyMeasurable
   have h2 : Integrable (fun s : ℕ → I => F (seqOf s) ^ 2)
       ((sampleLaw C).map (fun (ω : ℕ → I × I) (i : ℕ) => (ω i).2)) := by
     rw [hm]
@@ -752,7 +758,7 @@ macro_rules
 
 /-- A constant is a kernel. -/
 theorem isKernel_const (c : ℝ) : isKernel (fun _ => c) :=
-  ⟨⟨0, fun _ _ _ => rfl⟩, aestronglyMeasurable_const, integrable_const _⟩
+  ⟨⟨0, fun _ _ _ => rfl⟩, measurable_const, integrable_const _⟩
 
 /-- A constant is a statistic. -/
 theorem isStatistic_const (c : ℝ) : isStatistic (fun _ _ => c) :=

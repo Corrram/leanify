@@ -518,6 +518,23 @@ where
         | c :: r => if descChunk c then go f r (match c with | .w _ => n + 1 | _ => n) else none
         | [] => none
 
+/-- A subject in words that introduces a claim: `Comparing the two terms in the maximum
+shows that`, `a direct computation shows that` (at least two words, and formulas that state
+nothing). It asserts nothing; the chunks after `that` (and an optional comma). -/
+def showsThat (cs : List Chunk) : Option (List Chunk) :=
+  match cs with
+  | .w _ :: _ => go 32 cs 0
+  | _ => none
+where
+  go : Nat → List Chunk → Nat → Option (List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, n =>
+      match kw [w!"shows", w!"that"] cs <|> kw [w!"show", w!"that"] cs with
+      | some r => if n ≥ 2 then some (optPunct 44 r) else none
+      | none => match cs with
+        | c :: r => if descChunk c then go f r (match c with | .w _ => n + 1 | _ => n) else none
+        | [] => none
+
 /-- Further citations after a first one: `CITE, CITE and CITE` (`By \eqref{a} and
 Lemma~\ref{l}, …`). -/
 def moreCites : Nat → List Chunk → List Codes × List Chunk
@@ -564,6 +581,8 @@ def topicPhrase (cs : List Chunk) : Option (List Chunk) := do
     -- (a formula that names a symbol: no relation, no membership)
     match Math.parseFormula ts with
     | some (.id _) | some (.sub _ _) | some (.sup _ _) => some r'
+    -- `For $t=1$,` before claims that speak of the value itself (`Q_1`)
+    | some (.chain (.id _) [(.eq, .num _)]) => some r'
     | _ => none
   | .w w0 :: _ =>
     if [w!"every", w!"all", w!"each", w!"any", w!"some", w!"a", w!"an", w!"the", w!"no", w!"both",
@@ -577,6 +596,7 @@ def topicPhrase (cs : List Chunk) : Option (List Chunk) := do
 def marker (cs : List Chunk) : Topic × List Chunk :=
   let cs := (itemLabel cs).getD cs
   let cs := (topicPhrase cs).getD cs
+  let cs := (showsThat cs).getD cs
   match kw [w!"for", w!"the", w!"minimum"] cs with
   | some r => (.minimum, optPunct 44 r)
   | none =>
@@ -1076,6 +1096,22 @@ inductive RelPart where
   | pred (phrase : List Codes) (obj : Obj)
   deriving Repr, Inhabited, Lean.ToExpr
 
+/-- Monotonicity of a map: `non-increasing`, `non-decreasing`, `strictly increasing`,
+`strictly decreasing`. (A plain `increasing` is ambiguous between the first two
+readings, so the grammar does not read it.) -/
+inductive Mono where
+  | nonincreasing | nondecreasing | increasing | decreasing
+  deriving Repr, Inhabited, DecidableEq, Lean.ToExpr
+
+/-- `non-increasing`, `non-decreasing`, `strictly increasing`, `strictly decreasing`. -/
+def monoWord (cs : List Chunk) : Option (Mono × List Chunk) :=
+  ((kw [w!"non"] cs >>= punct 45 >>= kw [w!"increasing"]).map (Mono.nonincreasing, ·)) <|>
+  ((kw [w!"nonincreasing"] cs).map (Mono.nonincreasing, ·)) <|>
+  ((kw [w!"non"] cs >>= punct 45 >>= kw [w!"decreasing"]).map (Mono.nondecreasing, ·)) <|>
+  ((kw [w!"nondecreasing"] cs).map (Mono.nondecreasing, ·)) <|>
+  ((kw [w!"strictly", w!"increasing"] cs).map (Mono.increasing, ·)) <|>
+  ((kw [w!"strictly", w!"decreasing"] cs).map (Mono.decreasing, ·))
+
 inductive Clause where
   | fact (f : MT)
   | holds (f : MT)
@@ -1098,6 +1134,13 @@ inductive Clause where
   | extremumOf (isMax : Bool) (value : MT) (f : Option MT) (s : Subj) (at_ : Option MT) (rels : List RelPart)
   /-- `both maps F and G are strictly increasing`. -/
   | increasing (maps : List MT)
+  /-- `$a$ and $b$ are nonincreasing on $D$`: functions of one variable (after their
+  parameters), monotone on `D`. -/
+  | monoFns (fns : List MT) (dom : MT) (mono : Mono)
+  /-- `$φ$ for $ψ$` with a condition `ψ` (`$a(v)=c$ for $v\ge\frac12$`): about variables
+  bound before, the hypothesis `ψ`; otherwise its free variables range over the numbers
+  with `ψ`. -/
+  | forCond (f cond : MT)
   /-- `the first|second ranges over B`: the image of a map of the preceding sentence. -/
   | ranges (which : Nat) (target : MT)
   /-- `the maximum X [and the minimum Y] of F over all NOUNS $C$ with φ are each
@@ -1676,6 +1719,30 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
         some (Clause.equalityWhen m, r2)) with
   | some res => some res
   | none =>
+  -- `$a$ and $b$ are nonincreasing on $(0,1)$`
+  match (do
+      let rec names : Nat → List Chunk → List MT → Option (List MT × List Chunk)
+        | 0, _, _ => none
+        | f + 1, cs, acc => do
+          let (m, r) ← formula cs
+          -- a name, or an application with the placeholder `\cdot` (`$h_t(u,\cdot)$`)
+          let ok := match m with
+            | .id _ => true
+            | .app _ args => args.any fun a => match a with | .id n => n == w!"\\cdot" | _ => false
+            | _ => false
+          if !ok then none else
+            match kw [w!"and"] r with
+            | some r' => names f r' (m :: acc)
+            | none => some ((m :: acc).reverse, r)
+      let cs := (kw [w!"the", w!"functions"] cs <|> kw [w!"the", w!"function"] cs).getD cs
+      let (fs, r1) ← names 4 cs []
+      let r2 ← kw [w!"are"] r1 <|> kw [w!"is"] r1
+      let (mono, r3) ← monoWord r2
+      let r4 ← kw [w!"on"] r3
+      let (d, r5) ← formula r4
+      some (Clause.monoFns fs d mono, r5)) with
+  | some res => some res
+  | none =>
   -- [both] [the] [parameter] maps $f$ and $g$ are strictly increasing
   match (do
       let r0 := (kw [w!"both"] cs).getD cs
@@ -1947,6 +2014,17 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     -- $φ$ [for every $x\in A$] [, with equality only at $x=a$]
     match s with
     | .math f =>
+      -- `$φ$ for $ψ$`, with a relation `ψ` that is no membership (`for $v\ge\frac12$`)
+      match (do
+          let r1 ← kw [w!"for"] r
+          let (c, r2) ← formula r1
+          match c with
+          | .chain _ rs =>
+            if rs.all (fun (rel, _) => rel == .lt || rel == .le || rel == .gt || rel == .ge || rel == .ne)
+            then some (Clause.forCond f c, r2) else none
+          | _ => none) with
+      | some res => some res
+      | none =>
       let (vars, dom, r1) := match kw [w!"for", w!"every"] r <|> kw [w!"for", w!"all"] r with
         | some r' => match mathChunk r' with
           | some (ts, r'') => match binderMath ts with
@@ -2470,10 +2548,30 @@ def spaceQualifier (cs : List Chunk) : Option (List Chunk) := do
     | _ => none
   | _ => none
 
+/-- `INFORMAL, that is, FORMAL`: the words before `, that is,` (which may state things
+informally, with formulas) are restated by what follows, which is read instead. The chunks
+after the first `, that is,` (none if there is none, or nothing before it). -/
+def skipThatIs (cs : List Chunk) : Option (List Chunk) :=
+  go 96 cs 0
+where
+  go : Nat → List Chunk → Nat → Option (List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, n =>
+      match cs with
+      | .p 44 :: .w a :: .w b :: .p 44 :: r =>
+        if a == w!"that" && b == w!"is" then (if n ≥ 1 then some r else none)
+        else go f (cs.drop 1) (n + 1)
+      | .p 46 :: _ => none
+      | _ :: r => go f r (n + 1)
+      | [] => none
+
 /-- Clauses separated by `, and` / `, so`, ending with the final period. -/
 def clauses : Nat → List Chunk → List CClause → Option (List CClause)
   | 0, _, _ => none
-  | f + 1, cs, acc => do
+  | f + 1, cs, acc => step f cs acc <|> (skipThatIs cs >>= fun r => step f r acc)
+where
+  step : Nat → List Chunk → List CClause → Option (List CClause)
+  | f, cs, acc => do
     let (c, r) ← cclause cs
     let r := (spaceQualifier r).getD r
     -- `…, which is at most $Z$` (`at least`): the last term of the claim is at most `Z`
@@ -2501,10 +2599,15 @@ def clauses : Nat → List Chunk → List CClause → Option (List CClause)
       -- formula (`$φ$, $ψ$ and $χ$`)
       let next := (do
         let r' ← punct 44 r
+        (kw [w!"and"] r' >>= showsThat) <|>
         kw [w!"and"] r' <|> kw [w!"so"] r' <|> kw [w!"whereas"] r' <|>
           -- `, which gives $φ$`, `, that is, $φ$`: the next claim
           kw [w!"which", w!"gives"] r' <|> (kw [w!"that", w!"is"] r' >>= punct 44) <|>
-          (match r' with | .m _ :: _ => some r' | _ => none)) <|> kw [w!"and"] r
+          (match r' with | .m _ :: _ => some r' | _ => none) <|>
+          -- `…, with $φ$ for $v\ge\frac12$ and …`: further claims about the same objects
+          (match kw [w!"with"] r' with
+           | some (.m t :: r'') => some (.m t :: r'')
+           | _ => none)) <|> kw [w!"and"] r
       match next with
       | some r'' => clauses f r'' acc
       | none => none
@@ -2559,13 +2662,6 @@ def piecesDefeq : DefPiece → DefPiece
       .formula (.chain (.app (.id f) args) [(.defeq, rhs)])
     else .formula (.chain (.app (.id f) args) [(.eq, rhs)])
   | p => p
-
-/-- Monotonicity of a map: `non-increasing`, `non-decreasing`, `strictly increasing`,
-`strictly decreasing`. (A plain `increasing` is ambiguous between the first two
-readings, so the grammar does not read it.) -/
-inductive Mono where
-  | nonincreasing | nondecreasing | increasing | decreasing
-  deriving Repr, Inhabited, DecidableEq
 
 /-- The condition of a notion the article defines. -/
 inductive NotionCond where
@@ -2832,15 +2928,6 @@ def nameAbbr (cs : List Chunk) : Option (List Codes × List Codes × List Chunk)
     let r3 ← punct 41 r2
     if abbr.isEmpty then none else some (name, abbr, r3)
   | none => some (name, [], r)
-
-/-- `non-increasing`, `non-decreasing`, `strictly increasing`, `strictly decreasing`. -/
-def monoWord (cs : List Chunk) : Option (Mono × List Chunk) :=
-  ((kw [w!"non"] cs >>= punct 45 >>= kw [w!"increasing"]).map (Mono.nonincreasing, ·)) <|>
-  ((kw [w!"nonincreasing"] cs).map (Mono.nonincreasing, ·)) <|>
-  ((kw [w!"non"] cs >>= punct 45 >>= kw [w!"decreasing"]).map (Mono.nondecreasing, ·)) <|>
-  ((kw [w!"nondecreasing"] cs).map (Mono.nondecreasing, ·)) <|>
-  ((kw [w!"strictly", w!"increasing"] cs).map (Mono.increasing, ·)) <|>
-  ((kw [w!"strictly", w!"decreasing"] cs).map (Mono.decreasing, ·))
 
 /-- `for every|all|each $x\in A$`. -/
 def forBinder (cs : List Chunk) : Option (Bind × List Chunk) := do
@@ -4061,6 +4148,10 @@ def sentence (cs : List Chunk) : Option Sent :=
   match sentence0 cs with
   | some s => some s
   | none =>
+    -- `INFORMAL, that is, FORMAL`: the formal restatement (a sentence of its own)
+    match skipThatIs cs >>= sentence0 with
+    | some s => some s
+    | none =>
     -- (a sentence through a list, as one sentence; `Every NP satisfies` several statements)
     let flat := (joinList cs).getD cs
     let (_, body) := marker flat

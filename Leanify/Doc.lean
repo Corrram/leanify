@@ -1246,6 +1246,14 @@ def dropBoundIndices (st : St) (m : MT) (free : List Codes) : List Codes :=
     st.envBinders.any (·.name == n) || st.fixed.any (·.2.name == n)
   -- (the letter of a symbol with a numeral as superscript, `\Phi` of `\Phi^2`, is no variable)
   let free := free.filter fun i => !(st.globs.any fun g => Elab.powerName g.key == some i)
+  -- (a family at a numeral, `Q_1` of the family `Q_t`, is no variable)
+  let famAt (i : Codes) : Bool :=
+    let ds := i.reverse.takeWhile fun c => 48 ≤ c && c ≤ 57
+    let rest := i.reverse.drop ds.length
+    match rest with
+    | 95 :: k => !ds.isEmpty && st.globs.any fun g => g.family && g.key == k.reverse
+    | _ => false
+  let free := free.filter fun i => !famAt i
   free.filter fun i =>
     let asIndex := (keys.filter fun n =>
       i.length < n.length && n.drop (n.length - i.length - 1) == [95] ++ i).length
@@ -1486,6 +1494,10 @@ def clauseMaths : Clause → List MT
   | .everyNP _ b _ => [b]
   | .extremumOf _ v f _ a _ => v :: f.toList ++ a.toList
   | .increasing ms => ms
+  | .monoFns fs d _ => d :: fs.map fun f => match f with
+    | .app g args => .app g (args.filter fun a => match a with | .id n => n != w!"\\cdot" | _ => true)
+    | _ => f
+  | .forCond f c => [f, c]
   | .ranges _ b => [b]
   | .extremaOver items f _ _ cond => items.map (·.2) ++ [f, cond]
   | .increases f a b => [f, a, b]
@@ -1495,7 +1507,9 @@ def clauseMaths : Clause → List MT
   | .equalityWhen φ => [φ]
   | .ifThen c cl => c :: clauseMaths cl
   | .ifClause h cl => clauseMaths h ++ clauseMaths cl
-  | .adjectives s adjs => s :: adjs.filterMap (·.2)
+  | .adjectives s adjs => (match s with
+    | .app g args => .app g (args.filter fun a => match a with | .id n => n != w!"\\cdot" | _ => true)
+    | _ => s) :: adjs.filterMap (·.2)
   | .notions s _ _ => [s]
   | .isA s np _ => s :: (mathsOf np).filterMap Math.parseFormula
   | .thereIs _ c => clauseMaths c
@@ -3359,6 +3373,27 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .iff p q => do pure (.iff (← prop sc none p) (← prop sc none q))
   | .compare l r rr => do relTm r (← term F sc none l) (← term F sc none rr)
   | .adjectives s adjs => do
+    -- `$h_t(u,\cdot)$`: the function of the placeholder
+    let isDot (a : MT) : Bool := match a with | .id n => n == w!"\\cdot" | _ => false
+    let monoOf (a : List Codes) : Option Mono :=
+      if a == [w!"nondecreasing"] || a == [w!"non", w!"decreasing"] then some .nondecreasing
+      else if a == [w!"nonincreasing"] || a == [w!"non", w!"increasing"] then some .nonincreasing
+      else if a == [w!"strictly", w!"increasing"] then some .increasing
+      else if a == [w!"strictly", w!"decreasing"] then some .decreasing
+      else none
+    match s with
+    | .app g args =>
+      if args.any isDot then
+        -- monotone on a domain: the map of the placeholder
+        let x : Codes := w!"\\@dotvar"
+        let body := MT.app g (args.map fun a => if isDot a then MT.id x else a)
+        let ps ← adjs.mapM fun (a, on) => do
+          let some mono := monoOf a | fail E.unsupported
+          let some d := on | fail E.unsupported
+          monoTm sc (.conj [.mapsto (.id x) body, .chain (.id x) [(.mem, d)]]) mono
+        return conjAll ps
+      else pure ()
+    | _ => pure ()
     let (t, ty) ← term F sc none s
     -- a function's domain is the one its definition states
     let defDom : Option Tm ← match Elab.symKey s with
@@ -3412,6 +3447,26 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         infos := infos ++ [(v, body)]
       | _ => fail E.unsupported
     modify fun st => { st with lastMaps := infos }
+    pure (conjAll parts)
+  | .forCond f cond => do
+    let before : List BindInfo := (sc.map fun (n, t) => (⟨n, t, none⟩ : BindInfo)).reverse
+    let bs ← tryCatch (binderInfosRaw (.ifCond cond) before) fun _ => pure []
+    if bs.isEmpty then
+      pure (Tm.imp (← prop sc none cond) (← prop sc none f))
+    else
+      pure (wrap bs (← prop (scopeOf bs ++ sc) none f))
+  | .monoFns fs d mono => do
+    -- each function, applied to a fresh variable of the domain
+    let x : Codes := w!"\\@monovar"
+    let parts ← fs.mapM fun f =>
+      -- (`$h_t(u,\cdot)$`: the placeholder is the variable)
+      let body := match f with
+        | .app g args =>
+          let isDot (a : MT) : Bool := match a with | .id n => n == w!"\\cdot" | _ => false
+          if args.any isDot then MT.app g (args.map fun a => if isDot a then MT.id x else a)
+          else MT.app f [MT.id x]
+        | _ => .app f [.id x]
+      monoTm sc (.conj [.mapsto (.id x) body, .chain (.id x) [(.mem, d)]]) mono
     pure (conjAll parts)
   | _ => fail E.unsupported
 
@@ -4514,6 +4569,16 @@ structure CState where
   proofs : List ProofInfo := []
   deriving Inhabited, Lean.ToExpr
 
+/-- The sentence with `, that is,` turned into `; that is,`: no longer read through its
+formal restatement. -/
+def noThatIs (s : Sentence) : Sentence :=
+  let rec go : List PTok → List PTok
+    | a :: b :: c :: rest =>
+      if a.tok == .punct 44 && b.tok == .word w!"that" && c.tok == .word w!"is"
+      then { a with tok := .punct 59 } :: go (b :: c :: rest) else a :: go (b :: c :: rest)
+    | l => l
+  { s with toks := go s.toks }
+
 /-- Environment index of each result, by label (for proofs that name their result). -/
 def envTable (ss : List Sentence) : List (Codes × Nat) :=
   ss.filterMap fun s => match s.ctx.kind with
@@ -4733,7 +4798,12 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
         else e
       -- A noun that the article or its vocabulary know is not what stopped the sentence.
       let e : Err := if e.code == E.noun then nounFinding st0.vocab st0.nouns e else e
-      let o : Outcome := if e.code == E.prose then .prose else .failed e
+      -- A sentence of the text that is read only through `, that is,` (its formal
+      -- restatement) stays prose if that restatement does not compile.
+      let isText : Bool := match s.ctx.kind with | .text => true | _ => false
+      let thatIsOnly : Bool := isText && (Grammar.parseSentence s).isSome &&
+        (Grammar.parseSentence (noThatIs s)).isNone
+      let o : Outcome := if e.code == E.prose || thatIsOnly then .prose else .failed e
       { c with st := st0u, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
 
 /-- Compile a list of sentences, starting from a compiler state. -/

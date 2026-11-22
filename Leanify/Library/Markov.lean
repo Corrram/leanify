@@ -21,7 +21,7 @@ def markovOp : Nat := base
 def delta : Vocab where
   consts := [sq ⟶ op1]
   constNames := [w!"T_{#}"]
-  constLean := [w!"Leanify.Markov.markovOp"]
+  constLean := [w!"Leanify.Markov.Model.markovOp"]
   modules := [w!"Leanify.Library.MarkovModel"]
   notions := [
     { name := phrase!"Markov operator of $v$", value := .const markovOp, ty := sq ⟶ op1,

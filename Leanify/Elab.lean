@@ -2194,7 +2194,10 @@ where
         let kt ← asReal (← term f sc pf hi)
         -- the summand, for a subset `v` of `\{1,…,m\}` (the sum binds its own `v`)
         let b ← asReal (← term f ((v, rset) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
-        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.subsetSum)) kt) (.lam rset .tt b)), .real))
+        -- (the summand is asked to be defined only at the subsets of `\{1,…,m\}`)
+        let dom : Tm := .all .real (.imp (.app (.loc 1) (.loc 0))
+          (conjAll [.app (.prim .isInt) (.loc 0), Tm.le (.num 1) (.loc 0), Tm.le (.loc 0) (shift 2 0 kt)]))
+        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.subsetSum)) kt) (.lam rset dom b)), .real))
       -- `\langle f,g\rangle`
       | .app (.id n) [x, y] =>
         if n != w!"@inner" then return none
@@ -2430,6 +2433,26 @@ where
         -- `\eta_-` is a symbol of its own: a sign is not an index
         let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
         if sign then fail E.undefined ((symKey hd).getD key)
+        -- `h_1` for a symbol `h_t` defined among the variables of a result with the implicit
+        -- parameter `t`: that definition at `t=1`
+        if (← lookupFam key).isNone then
+          let st ← get
+          let cands := st.globs.zipIdx.filter fun (gl, j) => visibleIn st j && !gl.family &&
+            gl.key.length > key.length + 1 && gl.key.take (key.length + 1) == key ++ [95]
+          for (gl, j) in cands do
+            let x := gl.key.drop (key.length + 1)
+            let ns := (st.implicits.lookup j).getD []
+            if ns.contains x then
+              let mut args : List (Tm × Ty) := []
+              for n in ns do
+                match lookupLocal sc n with
+                | some (k, t) =>
+                  if n == x then
+                    let (v, vt) ← term g sc none i
+                    args := args ++ [(← coerce v vt t, t)]
+                  else args := args ++ [(.loc k, t)]
+                | none => fail E.free n
+              return ← applyAllD (.glob j) gl.ty gl.doms args
         let (h, gl) ← liftO (← lookupFam key) E.undefined key
         -- (a family with several subscripts, `C_{r,g}`, at all of them)
         let as ← match i with
@@ -2511,11 +2534,14 @@ where
       | _ =>
       -- `F_{\{1\}}(x_1)=2x_1-1`: a kernel as a function of the terms of a sequence `x`, for
       -- every sequence
-      let asKernel : Option (MT × Codes) := match x with
+      -- (`\beta(M_1)` of a defined family `M_r` is no kernel)
+      let asKernel : Option (MT × Codes) ← match x with
         | .app h args => match kernelPattern args with
-          | some v => if (lookupLocal sc v).isNone then some (h, v) else none
-          | none => none
-        | _ => none
+          | some v =>
+            if (lookupLocal sc v).isNone && (← lookupGlob v).isNone && (← lookupFam v).isNone
+            then pure (some (h, v)) else pure none
+          | none => pure none
+        | _ => pure none
       let seqT := ((← get).vocab.intervals.find? (·.sampleExp.isSome)).map fun iv => Ty.fn .real iv.ty
       match asKernel, seqT with
       | some (h, v), some st =>

@@ -184,7 +184,7 @@ def vocab : Vocab where
       doc := "a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …`" },
     { sing := phrase!"kernel", plural := phrase!"kernels", ty := seq ⟶ .real,
       pred := .lam (seq ⟶ .real) .tt (.app (.const kernel) (.loc 0)),
-      doc := "a real function of finitely many terms of a sequence in `[0,1]` (a function on `[0,1]^m` for some `m`), measurable and square-integrable for independent uniform terms" },
+      doc := "a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms" },
     { sing := phrase!"statistic", plural := phrase!"statistics", ty := seq ⟶ seq ⟶ .real,
       pred := .lam (seq ⟶ seq ⟶ .real) .tt (.app (.const statistic) (.loc 0)),
       doc := "a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them" }]
