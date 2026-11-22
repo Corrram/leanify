@@ -365,7 +365,7 @@
    "claims": [10]}],
  "notDefined": [],
  "namespace": "Context",
- "leanify": "0.7.0",
+ "leanify": "0.8.0",
  "justifications": "Context.Proofs",
  "definitions": [],
  "claims":

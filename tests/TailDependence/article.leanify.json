@@ -262,7 +262,7 @@
    "claims": [7]}],
  "notDefined": [],
  "namespace": "TailDependence",
- "leanify": "0.7.0",
+ "leanify": "0.8.0",
  "justifications": "TailDependence.Proofs",
  "definitions":
  [{"wellDefined": "True",

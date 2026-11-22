@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.7.0"
+version = "0.8.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -144,3 +144,16 @@ globs = ["Square.+"]
 name = "Assumed"
 srcDir = "tests"
 globs = ["Assumed.+"]
+
+[[lean_lib]]
+# Reasons in words, restatements and objects chosen in proofs, compiled by the kernel.
+name = "Steps"
+srcDir = "tests"
+globs = ["Steps.+"]
+
+[[lean_lib]]
+# The fields hilbert and markov: operators on L^2, their powers and norms, and the Markov
+# operator of a copula, compiled by the kernel.
+name = "Operators"
+srcDir = "tests"
+globs = ["Operators.+"]

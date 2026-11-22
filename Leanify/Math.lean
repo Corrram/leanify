@@ -311,6 +311,30 @@ def untilVert : Nat → Int → List MTok → List MTok → Option (List MTok ×
     | .rb | .setr | .sym 41 | .sym 93 | .finish _ => untilVert f (d - 1) (t :: acc) ts
     | _ => untilVert f d (t :: acc) ts
 
+/-- The tokens up to the command `\c` outside brackets (`\rVert`, `\rangle`), and the rest after
+it. -/
+def untilCmd : Nat → Codes → Int → List MTok → List MTok → Option (List MTok × List MTok)
+  | 0, _, _, _, _ => none
+  | _ + 1, _, _, _, [] => none
+  | f + 1, c, d, acc, t :: ts =>
+    if d == 0 && t == .cmd c then some (acc.reverse, ts) else
+    match t with
+    | .lb | .setl | .sym 40 | .sym 91 | .begin _ => untilCmd f c (d + 1) (t :: acc) ts
+    | .rb | .setr | .sym 41 | .sym 93 | .finish _ => untilCmd f c (d - 1) (t :: acc) ts
+    | _ => untilCmd f c d (t :: acc) ts
+
+/-- The position of a bar `|_` outside brackets (`T|_{A}`, a restriction), if there is one. -/
+def restrictBar (ts : List MTok) : Option Nat :=
+  let rec go : Nat → Int → List MTok → Option Nat
+    | _, _, [] => none
+    | k, d, t :: rest =>
+      match t, rest with
+      | .sym 124, .sym 95 :: _ => if d == 0 then some k else go (k + 1) d rest
+      | .lb, _ | .setl, _ | .sym 40, _ | .sym 91, _ => go (k + 1) (d + 1) rest
+      | .rb, _ | .setr, _ | .sym 41, _ | .sym 93, _ => go (k + 1) (d - 1) rest
+      | _, _ => go (k + 1) d rest
+  go 0 0 ts
+
 /-- The tokens up to the `}` that closes a group whose `{` was read, and the tokens after it. -/
 def untilClose : Nat → Nat → List MTok → List MTok → Option (List MTok × List MTok)
   | 0, _, _, _ => none
@@ -422,7 +446,7 @@ def startsFactor : MTok → Bool
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
         n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
-        n != w!"approx" && n != w!"ldots" && n != w!"rVert" && n != w!"pmod" && n != w!"cdots" &&
+        n != w!"approx" && n != w!"ldots" && n != w!"rVert" && n != w!"rangle" && n != w!"pmod" && n != w!"cdots" &&
         n != w!"dots")
   | _ => false
 
@@ -606,6 +630,10 @@ def run : Nat → Mode → List MTok → R
         -- a finite set `\{0,2\}`
         let (m, r1) ← run f (.list 125 []) rest
         match m with
+        | .conj [x] => match x with
+          -- a set of one number or name, `\{1\}` (a subscript `F_{\{1\}}`)
+          | .num _ | .id _ => some (.finset [x], r1)
+          | _ => none
         | .conj xs => if xs.length ≥ 2 then some (.finset xs, r1) else none
         | _ => none) <|>
       (do
@@ -654,7 +682,7 @@ def run : Nat → Mode → List MTok → R
         some (match pow with | some e => .sup app e | none => app, r2)
 
       else if n == w!"sum" || n == w!"prod" then
-        match rest with
+        (match rest with
         | .sym 95 :: r => do
           -- `\sum_{j=1}^{3} e`
           let (b, r1) ← run f .group r
@@ -665,7 +693,15 @@ def run : Nat → Mode → List MTok → R
             let (body, r4) ← run f (.product false) r3
             some (.bigop (n == w!"sum") v lo hi body, r4)
           | _ => none
-        | _ => none
+        | _ => none)
+      <|> (do
+        -- `\sum_{S\subseteq A} e`: the sum over the subsets of a finite set
+        let .sym 95 :: r := rest | none
+        let (b, r1) ← run f .group r
+        let .chain (.id v) [(.subset, dom)] := b | none
+        if n != w!"sum" then none
+        let (body, r2) ← run f (.product false) r1
+        some (.app (.id w!"@sumsub") [dom, .mapsto (.id v) body], r2))
       else if n == w!"sup" || n == w!"inf" then
         let isSup := n == w!"sup"
         match rest with
@@ -712,11 +748,33 @@ def run : Nat → Mode → List MTok → R
         let (a, r1) ← run f .group rest
         let (b, r2) ← run f .group r1
         some (.app (.id w!"@son") [.mapsto (.tuple [.id [85], .id [86]]) (.limp a b)], r2)
-      else if n == w!"lVert" then do
-        -- `\lVert x\rVert`: a norm (its space in the subscript after it)
-        let (x, r1) ← run f (.additive false) rest
-        let r2 ← expect (.cmd w!"rVert") r1
-        some (.app (.id w!"@norm") [x], r2)
+      else if n == w!"lVert" then
+        (do
+          -- `\lVert T|_{A}\rVert`: the norm of an operator on a class of functions
+          let (inner, r1) ← untilCmd (rest.length + 1) w!"rVert" 0 [] rest
+          let k ← restrictBar inner
+          let (x, r2) ← run f (.additive false) (inner.take k)
+          if !r2.isEmpty then none
+          let (a, r3) ← run f .group (inner.drop (k + 2))
+          if !r3.isEmpty then none
+          some (.app (.id w!"@norm") [.app (.id w!"@restrict") [x, a]], r1)) <|>
+        (do
+          -- `\lVert x\rVert`: a norm (its space in the subscript after it)
+          let (x, r1) ← run f (.additive false) rest
+          let r2 ← expect (.cmd w!"rVert") r1
+          some (.app (.id w!"@norm") [x], r2))
+      else if n == w!"langle" then do
+        -- `\langle f,g\rangle`: an inner product
+        let (inner, r1) ← untilCmd (rest.length + 1) w!"rangle" 0 [] rest
+        let (m, r2) ← run f (.list 0 []) (inner ++ [.rb])
+        if !r2.isEmpty then none
+        match m with
+        | .conj [a, b] => some (.app (.id w!"@inner") [a, b], r1)
+        | _ => none
+      else if n == w!"otimes" then do
+        -- `T^{\otimes m}`: the superscript of a tensor power
+        let (a, r1) ← run f (.atom false) rest
+        some (.app (.id w!"@otimes") [a], r1)
       else if n == w!"Vert" then do
         -- `\|x\|`: a norm, as `\lVert x\rVert`
         let (inner, r1) ← untilVert (rest.length + 1) 0 [] rest
@@ -809,7 +867,13 @@ def run : Nat → Mode → List MTok → R
             integralBody f lo hi r3
           -- `\int_{\mathbb{R}^3} e\,dx`: over a domain (`hi` is the marker `@over`)
           | _ => integralBody f lo (.id w!"@over") r1
-        | _ => none
+        -- `\int e\,\mathrm{d}C(u,v)`: against a distribution function, over its whole domain
+        -- (the marker `@whole`)
+        | _ => do
+          let (m, r1) ← integralBody f (.id w!"@whole") (.id w!"@over") rest
+          match m with
+          | .app (.id n) _ => if n == w!"@intd" then some (m, r1) else none
+          | _ => none
       else if (relOf (.cmd n)).isSome || n == w!"mapsto" || n == w!"to" || n == w!"qquad" || n == w!"quad" ||
           n == w!"approx" || n == w!"ldots" || wConnectives.contains n || n == w!"rfloor" ||
           n == w!"rceil" then none

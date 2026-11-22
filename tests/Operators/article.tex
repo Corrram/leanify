@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[vocab=markov]{leanify}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newcommand{\de}{\,\mathrm{d}}
+\title{Markov operators of copulas: the fields \emph{hilbert} and \emph{markov}}
+% A test of the fields `hilbert` (functions in $L^2$ and $L^2_0$ on $[0,1]$, inner products,
+% norms, operators, their powers and their norms on a subspace) and `markov` (the Markov
+% operator $T_C$ of a copula, statistics of a sample). Also proof sentences of 0.8 about them:
+% operator phrases (`fixes the constants`, `maps $L^2_0$ into itself with norm at most $1$`),
+% `$T$ is a function of the first $n$ observations`, Borel measurable maps of the square, and
+% integrals against a copula. The expected output of `leanify check --vocab markov --claims`
+% is check.txt.
+\begin{document}
+\maketitle
+
+We write $T_C$ for the \emph{Markov operator} of $C$.
+A \emph{statistic} is a measurable real function $T$ of the first $n$ observations, for some $n$, and $T(U,V)$ denotes its value.
+
+\begin{lemma}\label{lem:contraction}
+Let $C$ be a copula.
+Then $T_C$ fixes the constants and maps $L^2_0$ into itself with norm at most $1$.
+\end{lemma}
+
+\begin{lemma}\label{lem:inner}
+Let $C$ be a symmetric copula.
+Then, for all $f,g\in L^2_0$, we have $\langle T_Cf,g\rangle=\langle f,T_Cg\rangle$ and $\lvert\langle T_Cf,g\rangle\rvert\le\lVert T_Cf\rVert\,\lVert g\rVert$.
+\end{lemma}
+
+\begin{lemma}\label{lem:powers}
+Let $C$ be a copula, let $f\in L^2_0$, and let $k$ be a nonnegative integer.
+Then $\lVert T_C^{k+1}f\rVert\le\lVert T_C^kf\rVert$ and $\lVert T_C|_{L^2_0}\rVert\le1$.
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:contraction}, $\lVert T_Cg\rVert\le\lVert g\rVert$ for every $g\in L^2_0$.
+Since $T_C^kf$ lies in $L^2_0$, the claim follows for it, that is, $\lVert T_C^{k+1}f\rVert\le\lVert T_C^kf\rVert$.
+The norm of $T_C$ on $L^2_0$ is at most $1$, that is, $\lVert T_C|_{L^2_0}\rVert\le1$.
+\end{proof}
+
+\begin{lemma}\label{lem:bounded}
+Let $C$ be a copula.
+Then $\bigl|\int g(u,v)\de C(u,v)\bigr|\le1$ for every Borel measurable function $g:[0,1]^2\to[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{lem:events}
+Let $C$ be a copula, and let $T$ be a statistic.
+Let $n$ be such that $T$ is a function of the first $n$ observations.
+Then $0\le P_C\bigl(T(U,V)<1\bigr)\le1$.
+\end{lemma}
+
+\end{document}

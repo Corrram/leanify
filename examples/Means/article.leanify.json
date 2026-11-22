@@ -260,7 +260,7 @@
    "claims": [15]}],
  "notDefined": [],
  "namespace": "Means",
- "leanify": "0.7.0",
+ "leanify": "0.8.0",
  "justifications": "Means.Proofs",
  "definitions":
  [{"wellDefined": "∀ (x : ℝ), 0 < x → ∀ (x_2 : ℝ), 0 < x_2 → (0 ≤ x ∧ ¬2 = 0) ∧ 0 ≤ x_2 ∧ ¬2 = 0",

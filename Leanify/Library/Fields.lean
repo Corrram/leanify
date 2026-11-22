@@ -5,6 +5,7 @@ import Leanify.Library.Torus
 import Leanify.Library.Complex
 import Leanify.Library.Hyperbolic
 import Leanify.Library.Trigonometry
+import Leanify.Library.Markov
 
 /-! # The fields of the vocabulary
 
@@ -21,6 +22,8 @@ namespace Leanify.Fields
 /-- The fields, by name. -/
 def all : List (String × Vocab) := [
   ("unitsquare", UnitSquare.vocab),
+  ("hilbert", Hilbert.vocab),
+  ("markov", Markov.vocab),
   ("distributions", Distributions.vocab),
   ("numbers", Numbers.vocab),
   ("torus", Torus.vocab),
@@ -31,11 +34,17 @@ def all : List (String × Vocab) := [
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
+/-- The fields that a field includes: `hilbert` is `unitsquare` with more words, and `markov`
+is `hilbert` with more. Their entries are tagged with the field that adds them. -/
+def includes : List (String × List String) :=
+  [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"])]
+
 /-- The core vocabulary followed by the named fields, in order (each entry tagged
-with its field). -/
+with its field). A field that another named field includes is left out: its words are there. -/
 def select (fs : List String) : Vocab :=
+  let fs := fs.filter fun f => !fs.any fun g => ((includes.lookup g).getD []).contains f
   fs.foldl (fun V f => match all.lookup f with
-    | some W => V ++ Vocab.tag (f.toList.map Char.toNat) W
+    | some W => V ++ (if (includes.lookup f).isSome then W else Vocab.tag (f.toList.map Char.toNat) W)
     | none => V) Vocab.core
 
 /-- The named fields that do not exist. -/

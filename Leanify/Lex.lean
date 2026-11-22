@@ -254,6 +254,25 @@ def proofOfTitle (title : Codes) : Option Codes :=
       else findRef f cs
   if opens then findRef title.length title else none
 
+/-- The tokens so far end a paragraph (or open a proof). -/
+def afterPar (out : List PTok) : Bool :=
+  match out with
+  | [] => true
+  | ⟨.par, _, _⟩ :: _ => true
+  | ⟨.begin e, _, _⟩ :: _ => e == w!"proof"
+  | _ => false
+
+/-- A group `{WORDS.}` of words that ends with a period, without math. -/
+def paraHeading (rest : Codes) : Bool :=
+  match rest with
+  | 123 :: r =>
+    match group 100000 0 r [] with
+    | some (inner, _, _) =>
+      let t := (inner.reverse.dropWhile (· == 32)).reverse
+      !t.isEmpty && t.getLast? == some 46 && !inner.contains 36 && !inner.contains 92
+    | none => false
+  | _ => false
+
 /-- Directly after `\item` (or `\item[…]`): the emitted tokens, latest first. -/
 def afterItem (out : List PTok) : Bool :=
   match out with
@@ -418,6 +437,11 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             -- `\item \emph{$A\ge z$ and $B\le1+z$.}`: the heading of a case, not a claim
             if afterItem out && (name == w!"emph" || name == w!"textit" || name == w!"textbf") then
               emit (.cmd w!"@heading") rest n st
+            -- `\emph{Signed coefficients.}` at the start of a paragraph of a proof: the
+            -- heading of the paragraph, words that end with a period
+            else if afterPar out && (name == w!"emph" || name == w!"textit" || name == w!"textbf") &&
+                paraHeading rest then
+              emit (.cmd w!"@paraheading") rest n st
             else lexAux macros f rest (pos + n) st out
           else if math && wDropMath.contains name then lexAux macros f rest (pos + n) st out
           else if math && (name == w!"text" || name == w!"textup" || name == w!"textrm" ||

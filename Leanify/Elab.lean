@@ -287,6 +287,17 @@ structure St where
   /-- The environment of the current sentence, and the result its proof proves. -/
   curEnv : Nat := 0
   curProved : Option Nat := none
+  /-- The environments of the proofs, by the label of the result they prove. -/
+  proofEnvs : List (Codes × Nat) := []
+  /-- The environments of the labelled results. -/
+  resultEnvs : List (Codes × Nat) := []
+  /-- Environments whose local definitions are visible in another one (`we use the
+  kernel $F$ from the proof of Theorem~\ref{l}`): the environment, and the one it uses. -/
+  imports : List (Nat × Nat) := []
+  /-- The environment of the definitions of the current sentence only (`… for $F(x)=e$`). -/
+  sentEnv : Option Nat := none
+  /-- The definitions made by `… for $F(x)=e$`: a later one of the same symbol replaces it. -/
+  forGlobs : List Nat := []
   /-- The binders and the formula of the latest inequality claimed for every point
   of a domain (for `equality holds exactly on …`). -/
   lastIneq : Option (List BindInfo × MT) := none
@@ -412,7 +423,8 @@ def singular (w : Codes) : Codes :=
 that environment and in the proof of the result it belongs to. -/
 def visibleIn (st : St) (i : Nat) : Bool :=
   match st.locals.lookup i with
-  | some e => e == st.curEnv || st.curProved == some e
+  | some e => e == st.curEnv || st.curProved == some e || st.sentEnv == some e ||
+    st.imports.contains (st.curEnv, e)
   | none => true
 
 /-- The visible definition named `key`. A symbol may name a constant and, written with a
@@ -613,6 +625,19 @@ def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
 
 def coerce (t : Tm) (src dst : Ty) : M Tm := do
   if src == dst then return t
+  -- a real function as a function on an interval type of the vocabulary (`e_v` of `x\in\mathbb{R}`
+  -- as an element of `L^2` on `[0,1]`): its restriction
+  if let (.fn .real .real, .fn d .real) := (src, dst) then
+    if let some iv ← intervalOf d then
+      return .lam d .tt (.app (shift 1 0 t) (.app (.const iv.val) (.loc 0)))
+  -- a function of one point as a kernel: a function of the first term of a sequence
+  -- (`K_F` for `F(x)=\sqrt3(2x-1)`)
+  if let .fn (.fn .real pt) .real := dst then
+    if let some iv ← intervalOf pt then
+      let first := Tm.app (.loc 0) (.num 1)
+      if src == Ty.fn pt .real then return .lam (.fn .real pt) .tt (.app (shift 1 0 t) first)
+      if src == Ty.fn .real .real then
+        return .lam (.fn .real pt) .tt (.app (shift 1 0 t) (.app (.const iv.val) first))
   -- an element of an interval type is the number it is
   let (t, src) ← match ← intervalOf src with
     | some iv => pure (Tm.app (.const iv.val) t, Ty.real)
@@ -677,6 +702,26 @@ def applyAllD (head : Tm) (ty : Ty) (doms : List (Option Tm)) :
   | (a, aty) :: rest =>
     match ty with
     | .fn dom cod => do
+      -- a kernel at points, `F_{\{1,2\}}(1-x_1,x_2)`: the kernel at the sequence whose first
+      -- terms are the points (the others `0`); each point must lie in the interval
+      if let .fn .real pt := dom then
+        if let some _ ← intervalOf pt then
+          if aty != dom && (aty == .real || aty == pt) then
+            let all := (a, aty) :: rest
+            let pts ← all.mapM fun (x, xty) => coerce x xty pt
+            let parts := pts.map fun p => match p with
+              | .guard g v => (some g, v)
+              | v => (none, v)
+            let dflt ← coerce (.num 0) .real pt
+            let dflt := match dflt with | .guard _ v => v | v => v
+            let k := parts.length
+            let body := (List.range k).foldr (fun i acc =>
+              Tm.cases (.eq (.loc 0) (.num (i + 1))) (shift 1 0 ((parts[i]?.map (·.2)).getD dflt)) acc) (shift 1 0 dflt)
+            let sq := Tm.lam .real .tt body
+            let gs := parts.filterMap (·.1)
+            let applied := Tm.app head sq
+            let applied := gs.foldr (fun g acc => Tm.guard g acc) applied
+            return (applied, cod, [])
       let a' ← coerce a aty dom
       let applied := Tm.app head a'
       let guarded := match doms.head? with
@@ -854,8 +899,25 @@ by value. -/
 def pointFn (ty : Ty) : M (Option (List Ty)) := do
   let (tys, res) := argTys ty
   if tys.isEmpty || res != .real then return none
+  -- (a kernel, a function of a sequence of points: `F-F_{\{1\}}`, value by value)
+  if let [.fn .real pt] := tys then
+    if (← intervalOf pt).isSome then return some tys
   let ivs ← tys.mapM intervalOf
   pure (if ivs.all (·.isSome) then some tys else none)
+
+/-- The sequence letter of the arguments `x_1,x_2` (`x_1,\dots,x_5`) of a kernel: a function of
+the terms of a sequence `x` (the field `unitsquare`). -/
+def kernelPattern (args : List MT) : Option Codes :=
+  let letters := args.filterMap fun a => match a with
+    | .sub (.id x) (.num _) => some x
+    | _ => none
+  let others := args.filter fun a => match a with
+    | .sub (.id _) (.num _) => false
+    | .id d => d != w!"\\dots" && d != w!"\\ldots"
+    | _ => true
+  match letters with
+  | x :: rest => if others.isEmpty && rest.all (· == x) then some x else none
+  | [] => none
 
 /-- `A ⊆ B` for predicates of any number of arguments. -/
 def setSubN (tys : List Ty) (a b : Tm) : Tm :=
@@ -896,6 +958,18 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
         | .ge => Tm.le (val y.1) (val x.1)
         | _ => Tm.lt (val y.1) (val x.1)
       return tys.foldr (fun t acc => Tm.all t acc) body
+  -- (a function of points or of a sequence and a number: `F_\emptyset=0` at every point)
+  if r == .eq && x.2 != y.2 then
+    let fnNum (f c : Tm × Ty) : M (Option Tm) := do
+      match ← pointFn f.2 with
+      | some tys =>
+        if c.2 != .real then return none
+        let n := tys.length
+        let val := (List.range n).foldl (fun acc i => Tm.app acc (.loc (n - 1 - i))) (Tm.shift n 0 f.1)
+        pure (some (tys.foldr (fun t acc => Tm.all t acc) (.eq val (Tm.shift n 0 c.1))))
+      | none => pure none
+    if let some t ← fnNum x y then return t
+    if let some t ← fnNum y x then return t
   match r with
   | .eq =>
     if x.2 == y.2 then pure (.eq x.1 y.1)
@@ -1174,6 +1248,42 @@ def pointwise (op : Tm → Tm → Tm) (scalar : Bool) (a b : Tm × Ty) : M (Opti
     let y ← valAt b fb.isSome
     pure (some (tys.foldr (fun t acc => Tm.lam t .tt acc) (op x y), fty))
 
+/-- The interval type with the notation of the field `hilbert` (`L^2`, inner products,
+operators), if the article's vocabulary has it. -/
+def hilbertIv : M (Option IntervalType) := do
+  pure ((← get).vocab.intervals.find? (·.inner1.isSome))
+
+/-- A real function on the interval, as one: a function of real numbers is restricted to the
+points of the interval (`e_v(x)` of `x\in\mathbb{R}`, as an element of `L^2`). -/
+def asFn1 (iv : IntervalType) (p : Tm × Ty) : Option Tm :=
+  if p.2 == Ty.fn iv.ty .real then some p.1
+  else if p.2 == Ty.fn .real .real then some (.lam iv.ty .tt (.app (shift 1 0 p.1) (.app (.const iv.val) (.loc 0))))
+  else none
+
+/-- `Tg`, `T_Ce_v`, `(Tg)(u)`: an operator (a map of functions of the interval, or of kernels)
+applied to a function by juxtaposition, and a function of the interval applied to a point of
+it. `none` for other products. -/
+def applyOp (a b : Tm × Ty) : M (Option (Tm × Ty)) := do
+  let some iv ← hilbertIv | pure none
+  let fn1 := Ty.fn iv.ty .real
+  let kern := Ty.fn (Ty.fn .real iv.ty) .real
+  match a.2 with
+  | .fn d r =>
+    if (d == fn1 || d == kern) && r == d then
+      if b.2 == d then return some (.app a.1 b.1, r)
+      if d == fn1 then
+        if let some g := asFn1 iv b then return some (.app a.1 g, r)
+      pure none
+    else if a.2 == fn1 && b.2 == iv.ty then pure (some (.app a.1 b.1, .real))
+    else pure none
+  | _ => pure none
+
+/-- `m` of `\{1,\dots,m\}` (also `\{1,\ldots,m\}`). -/
+def upTo (dom : MT) : Option MT :=
+  match dom with
+  | .finset [.num 1, .id d, hi] => if d == w!"\\dots" || d == w!"\\ldots" then some hi else none
+  | _ => none
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1220,6 +1330,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             | _, _ => false
           if !isArg then return ← term f sc pf (.mul (.id n) a)
     | _ => pure ()
+    -- the notation of the field `hilbert`
+    if let some r ← opTerm f sc pf m then return r
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
@@ -1260,11 +1372,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- (with an operand of a vocabulary's type, that type's method)
     | .add x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      -- (two real functions: their sum, value by value: `e_t+e_{1-t}`)
+      if a.2 == Ty.rfun && b.2 == Ty.rfun then
+        return (.lam .real .tt (.add (.app (shift 1 0 a.1) (.loc 0)) (.app (shift 1 0 b.1) (.loc 0))), Ty.rfun)
       if let some r ← pointwise Tm.add false a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .add a b
       else pure (.add (← asReal a) (← asReal b), .real)
     | .minus x y => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      if a.2 == Ty.rfun && b.2 == Ty.rfun then
+        return (.lam .real .tt (.sub (.app (shift 1 0 a.1) (.loc 0)) (.app (shift 1 0 b.1) (.loc 0))), Ty.rfun)
       if let some r ← pointwise Tm.sub false a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .sub a b
       else pure (.sub (← asReal a) (← asReal b), .real)
@@ -1339,6 +1456,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | none => pure (D, fty)
       | none => do
       let a ← term f sc pf x; let b ← term f sc pf y
+      if let some r ← applyOp a b then return r
       if let some r ← pointwise Tm.mul true a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .mul a b
       else pure (.mul (← asReal a) (← asReal b), .real)
@@ -1471,13 +1589,18 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       pure (.guard (conjAll conds) (.app (.app (.const mp) ct) kt), cty)
     | .app (.id [64, 105, 110, 116, 100]) [dom, c, .mapsto (.tuple vars) body] => do
       let names ← vars.mapM fun v => match v with | .id n => pure n | _ => fail E.unsupported
+      let (ct, cty) ← term f sc pf c
       let iv ← match dom with
         | .sup d (.num 2) => liftO (← intervalType d) E.unsupported
+        -- (`\int e\,\mathrm{d}C(u,v)`: over the domain of `C`)
+        | .id n =>
+          if n != w!"@whole" then fail E.unsupported else
+          liftO ((← get).vocab.intervals.find? fun iv => iv.integral2.isSome && cty == .fn iv.ty (.fn iv.ty .real))
+            E.finding w!"an integral against a distribution function is over the unit square: $\\int_{[0,1]^2} f(u,v)\\,\\mathrm{d}C(u,v)$"
         | _ => fail E.finding w!"an integral against a distribution function is over the unit square: $\\int_{[0,1]^2} f(u,v)\\,\\mathrm{d}C(u,v)$"
       let (some i2, some ib2) := (iv.integral2, iv.integrable2) | fail E.unsupported
       if names.length != 2 then fail E.unsupported
       for v in names do if (lookupLocal sc v).isSome then fail E.shadow v
-      let (ct, cty) ← term f sc pf c
       if cty != .fn iv.ty (.fn iv.ty .real) then fail E.type
       let sc' : Scope := (names.reverse.map fun nm => (nm, iv.ty)) ++ sc
       let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 2 0 s, t)) body)
@@ -1686,6 +1809,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | e :: es =>
           return (.lam .real .tt (.lam .real .tt (es.foldl (fun acc q => .or acc q) e)), .fn .real (.fn .real .prop))
         | [] => fail E.unsupported
+      -- `\{\xi,\kappa,D\}`: functions (of one type) equal to one of the elements
+      let els ← xs.mapM fun x => term f sc none x
+      match els with
+      | (_, ty@(.fn _ _)) :: _ =>
+        if els.all (·.2 == ty) then
+          let eqs := els.map fun (t, _) => Tm.eq (.loc 0) (shift 1 0 t)
+          match eqs with
+          | e :: es => return (.lam ty .tt (es.foldl (fun acc q => .or acc q) e), .fn ty .prop)
+          | [] => fail E.unsupported
+      | _ => pure ()
       -- `\{a,b\}`: the numbers equal to one of the elements
       let ts ← xs.mapM fun x => do asReal (← term f sc none x)
       let eqs := ts.map fun t => Tm.eq (.loc 0) (shift 1 0 t)
@@ -1864,7 +1997,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- (a family `e_b` does not prevent `e` from naming a variable)
       let conds := expandMem conds
       let fresh := ((patIds 32 pat).filter fun n =>
-        n.head? != some 64 && (lookupLocal sc n).isNone && !(st.globs.any fun g => g.key == n && !g.family)).eraseDups
+        n.head? != some 64 && (lookupLocal sc n).isNone && !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && visibleIn st i)).eraseDups
       -- a variable with a membership `v\in D` among the conditions (`D` a class)
       -- ranges over the elements of `D`; the others over the real numbers
       let classOf (v : Codes) : Option Codes := conds.findSome? fun c => match c with
@@ -2058,6 +2191,139 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | .setCond .. => fail E.finding w!"a set $\\{x : φ\\}$ needs the set its elements are taken from: $\\{x\\in A : φ\\}$"
       | _ => fail E.unsupported
 where
+  /-- The notation of the field `hilbert`: `L^2` and `L^2_0`, `\langle f,g\rangle`, `\lVert f\rVert` of
+  a function of the interval or of a kernel, `\lVert T|_{A}\rVert`, `T^{\otimes m}`, the sum over the
+  subsets of `\{1,\dots,m\}`, and the Hoeffding components `F_S`, `F_\emptyset`, `F_{\{1,2\}}` of a
+  kernel `F`. `none` for any other formula, or without the field. -/
+  opTerm : Nat → Scope → PF → MT → M (Option (Tm × Ty))
+    | 0, _, _, _ => pure none
+    | f + 1, sc, pf, m => do
+      let some iv ← hilbertIv | pure none
+      let fn1 := Ty.fn iv.ty .real
+      let seqT := Ty.fn .real iv.ty
+      let kern := Ty.fn seqT .real
+      let rset := Ty.fn .real .prop
+      let free (n : Codes) : M Bool := do
+        pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
+      -- a formula elaborated tentatively: the state is kept only if it is read
+      let try? (x : MT) : M (Option (Tm × Ty)) := do
+        let st0 ← get
+        tryCatch (do let r ← term f sc pf x; pure (some r)) (fun _ => do set st0; pure none)
+      let c (k : Option Nat) : M Nat := liftO k E.unsupported
+      let kernelOf (t : Tm) : M Tm := do pure (.app (.const (← c iv.isKernel)) t)
+      match m with
+      -- `\{1,\dots,m\}`: the integers from `1` to `m`
+      | .finset [.num 1, .id d, hi] =>
+        if d != w!"\\dots" && d != w!"\\ldots" then return none
+        let h ← asReal (← term f sc pf hi)
+        pure (some (.lam .real .tt (.and (.app (.prim .isInt) (.loc 0))
+          (.and (.le (.num 1) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))), rset))
+      -- `L^2`, `L^2_0`: the classes of square-integrable functions on the interval
+      | .sup (.id [76]) (.num 2) =>
+        if !(← free [76]) then return none
+        pure (some (.const (← c iv.memL2), Ty.fn fn1 .prop))
+      | .sub (.sup (.id [76]) (.num 2)) (.num 0) | .sup (.sub (.id [76]) (.num 0)) (.num 2) =>
+        if !(← free [76]) then return none
+        pure (some (.const (← c iv.memL20), Ty.fn fn1 .prop))
+      -- `\sum_{S\subseteq\{1,\dots,m\}} e`
+      | .app (.id n) [dom, .mapsto (.id v) body] =>
+        if n != w!"@sumsub" then return none
+        let some hi := upTo dom | fail E.finding w!"a sum over sets is over the subsets of $\\{1,\\dots,m\\}$"
+        let kt ← asReal (← term f sc pf hi)
+        -- the summand, for a subset `v` of `\{1,…,m\}` (the sum binds its own `v`)
+        let b ← asReal (← term f ((v, rset) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+        -- (the summand is asked to be defined only at the subsets of `\{1,…,m\}`)
+        let dom : Tm := .all .real (.imp (.app (.loc 1) (.loc 0))
+          (conjAll [.app (.prim .isInt) (.loc 0), Tm.le (.num 1) (.loc 0), Tm.le (.loc 0) (shift 2 0 kt)]))
+        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.subsetSum)) kt) (.lam rset dom b)), .real))
+      -- `\langle f,g\rangle`
+      | .app (.id n) [x, y] =>
+        if n != w!"@inner" then return none
+        let a ← term f sc pf x
+        let b ← term f sc pf y
+        match asFn1 iv a, asFn1 iv b with
+        | some ta, some tb =>
+          let l2 ← c iv.memL2
+          pure (some (.guard (.and (.app (.const l2) ta) (.app (.const l2) tb))
+            (.app (.app (.const (← c iv.inner1)) ta) tb), .real))
+        | _, _ =>
+          if a.2 == kern && b.2 == kern then
+            pure (some (.guard (.and (← kernelOf a.1) (← kernelOf b.1))
+              (.app (.app (.const (← c iv.innerSeq)) a.1) b.1), .real))
+          else fail E.type
+      | .app (.id n) [x] =>
+        -- the subsets of a set of numbers (the domain of `S\subseteq A`)
+        if n == w!"@subsets" then
+          let (at_, aty) ← term f sc pf x
+          if aty != rset then fail E.type
+          return some (.lam rset .tt (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0)))),
+            Ty.fn rset .prop)
+        -- `\lVert f\rVert`, `\lVert T|_{A}\rVert`
+        if n != w!"@norm" then return none
+        match x with
+        | .app (.id r) [op, dom] =>
+          if r != w!"@restrict" then return none
+          let (t, ty) ← term f sc pf op
+          let (d, dty) ← term f sc pf dom
+          if ty == Ty.fn fn1 fn1 && dty == Ty.fn fn1 .prop then
+            pure (some (.app (.app (.const (← c iv.opNorm1)) t) d, .real))
+          else if ty == Ty.fn kern kern && dty == Ty.fn kern .prop then
+            pure (some (.app (.app (.const (← c iv.opNormSeq)) t) d, .real))
+          else fail E.type
+        | _ =>
+          let some a ← try? x | return none
+          match asFn1 iv a with
+          | some ta =>
+            pure (some (.guard (.app (.const (← c iv.memL2)) ta) (.app (.const (← c iv.norm1)) ta), .real))
+          | none =>
+            if a.2 == kern then
+              pure (some (.guard (← kernelOf a.1) (.app (.const (← c iv.normSeq)) a.1), .real))
+            else return none
+      -- `T^{\otimes m}`
+      | .sup op (.app (.id n) [k]) =>
+        if n != w!"@otimes" then return none
+        let (t, ty) ← term f sc pf op
+        if ty != Ty.fn fn1 fn1 then fail E.type
+        let kt ← asReal (← term f sc pf k)
+        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.tensor)) t) kt), Ty.fn kern kern))
+      -- `T^k`: a power of an operator on functions of the interval
+      | .sup op k => do
+        let st0 ← get
+        let some (t, ty) ← try? op | return none
+        if ty != Ty.fn fn1 fn1 then set st0; return none
+        let kt ← asReal (← term f sc pf k)
+        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.opPow)) t) kt), Ty.fn fn1 fn1))
+      -- `F_S(x)`: a component applied to a sequence
+      | .app (.sub (.id k) i) args => do
+        let some (h, hty) ← opTerm f sc pf (.sub (.id k) i) | return none
+        let as ← args.mapM (term f sc pf)
+        pure (some (← applyAll h hty [] as))
+      -- `F_S`: the component of a kernel `F` for a set `S` of indices
+      | .sub (.id k) i => do
+        match lookupLocal sc k with
+        | some (_, ty) => if ty != kern then return none
+        | none => match ← lookupGlob k with
+          | some (_, g) => if g.ty != kern then return none
+          | none => return none
+        let st? : Option Tm ← match i with
+          | .id e =>
+            if e == w!"\\emptyset" then pure (some (.lam .real .tt (.not .tt))) else
+            match ← try? i with
+            | some (t, ty) => pure (if ty == rset then some t else none)
+            | none => pure none
+          | .finset xs => do
+            let es ← xs.mapM fun e => do
+              let (t, ty) ← term f sc pf e
+              coerce t ty .real
+            match es with
+            | [] => pure none
+            | e :: rest => pure (some (.lam .real .tt (rest.foldl (fun acc t => .or acc (.eq (.loc 0) (shift 1 0 t)))
+                (.eq (.loc 0) (shift 1 0 e)))))
+          | _ => pure none
+        let some st := st? | return none
+        let (t, _) ← term f sc pf (.id k)
+        pure (some (.app (.app (.const (← c iv.hoeff)) t) st, kern))
+      | _ => pure none
   casesRows : Nat → Scope → PF → List (MT × MT) → M (Tm × Ty)
     | 0, _, _, _ => fail E.unsupported
     | _ + 1, _, _, [] => pure (.undef .real, .real)
@@ -2125,6 +2391,15 @@ where
         let a ← term f sc none e
         applyAll (.glob h) g.ty g.doms [a]
       | none =>
+      -- `(x-1)^+`, `f(x)^-`: the positive (negative) part of a value that is not a name,
+      -- `\max\{x-1,0\}` (`\max\{-f(x),0\}`); a name with `+` or `-` as superscript,
+      -- `R^+`, is a name of its own
+      let compound := match b with
+        | .id _ | .sub _ _ | .hat _ | .num _ | .sup _ _ => false
+        | _ => true
+      if compound && (e matches .id [43] || e matches .id [45]) then
+        term f sc pf (.maxm [if e matches .id [43] then b else .neg b, .num 0])
+      else
       match e with
       | .id d =>
         if d == w!"\\top" || d == w!"\\perp" then do
@@ -2203,6 +2478,26 @@ where
         -- `\eta_-` is a symbol of its own: a sign is not an index
         let sign := match i with | .id [c] => c == 43 || c == 45 || c == 42 | _ => false
         if sign then fail E.undefined ((symKey hd).getD key)
+        -- `h_1` for a symbol `h_t` defined among the variables of a result with the implicit
+        -- parameter `t`: that definition at `t=1`
+        if (← lookupFam key).isNone then
+          let st ← get
+          let cands := st.globs.zipIdx.filter fun (gl, j) => visibleIn st j && !gl.family &&
+            gl.key.length > key.length + 1 && gl.key.take (key.length + 1) == key ++ [95]
+          for (gl, j) in cands do
+            let x := gl.key.drop (key.length + 1)
+            let ns := (st.implicits.lookup j).getD []
+            if ns.contains x then
+              let mut args : List (Tm × Ty) := []
+              for n in ns do
+                match lookupLocal sc n with
+                | some (k, t) =>
+                  if n == x then
+                    let (v, vt) ← term g sc none i
+                    args := args ++ [(← coerce v vt t, t)]
+                  else args := args ++ [(.loc k, t)]
+                | none => fail E.free n
+              return ← applyAllD (.glob j) gl.ty gl.doms args
         let (h, gl) ← liftO (← lookupFam key) E.undefined key
         -- (a family with several subscripts, `C_{r,g}`, at all of them)
         let as ← match i with
@@ -2282,6 +2577,26 @@ where
         let b ← asReal (← term f sc pf b)
         pure (.le (.abs a) (.mul c (.abs b)), .prop)
       | _ =>
+      -- `F_{\{1\}}(x_1)=2x_1-1`: a kernel as a function of the terms of a sequence `x`, for
+      -- every sequence
+      -- (`\beta(M_1)` of a defined family `M_r` is no kernel)
+      let asKernel : Option (MT × Codes) ← match x with
+        | .app h args => match kernelPattern args with
+          | some v =>
+            -- (the terms `x_1`, `x_2` must not be bound as variables of their own)
+            let boundTerm := args.any fun a => match a with
+              | .sub (.id x) (.num n) => (lookupLocal sc (x ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)).isSome
+              | _ => false
+            if !boundTerm && (lookupLocal sc v).isNone && (← lookupGlob v).isNone && (← lookupFam v).isNone
+            then pure (some (h, v)) else pure none
+          | none => pure none
+        | _ => pure none
+      let seqT := ((← get).vocab.intervals.find? (·.sampleExp.isSome)).map fun iv => Ty.fn .real iv.ty
+      match asKernel, seqT with
+      | some (h, v), some st =>
+        let (p, _) ← chainRest f ((v, st) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) (.app h [.id v]) rest
+        pure (.all st p, .prop)
+      | _, _ =>
       let ts ← (x :: rest.map (·.2)).mapM (term f sc pf)
       let rels := rest.map (·.1)
       if rels.any (· == .mem) then

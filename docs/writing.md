@@ -80,6 +80,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\lfloor x\rfloor`, `\lceil x\rceil` | the largest integer at most `x`, the smallest at least `x` |
 | `\mathbf 1\{x\le v\}`, `\mathbf{1}_{\{φ,\ ψ\}}`, `\mathbb{1}\{φ\}`, `\mathbf 1_A(x)`, `\mathbf{1}_{[0,1]}(x)` | the indicator: `1` where the condition holds (where all the conditions hold) and `0` elsewhere; of a set `A` at `x`, the indicator of `x\in A`, for a set that is read after `\in` (for a half-open interval, write the condition: `\mathbf 1\{1<x\le2\}`) |
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
+| `(x-1)^+`, `f(x)^-` | the positive part `\max\{x-1,0\}` and the negative part `\max\{-f(x),0\}` of a value that is not a name: `x^+` and `R^+` are names of their own (`We write $x^+$ for …` gives `x^+` a meaning) |
 | `$$…$$` | a display, like `\[…\]` |
 | `:=`, `\vcentcolon=`, `\colonequals`, `\triangleq`, `\mathrel{:=}` | the defining sign, as `\coloneqq` (so a macro `\defeq` of the article for one of them is read too) |
 | `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
@@ -106,6 +107,7 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | `We write $\langle a,b\rangle$ for $\frac{a+b}{2}$.` | later formulas `\langle x,y\rangle` are read as `\frac{x+y}{2}`; the letters and commands of the pattern that occur on the right are its arguments (`Let us write …` too) |
 | `We write $a\sim b$ if $|a-b|\le1$.` | a relation, read the same way |
 | `We write $r_k$ for $R(C^{\ast k})$.`, `We write $x^+$ for $\max\{x,0\}$.` | an argument in a subscript or a superscript is one symbol or one group, as in TeX: `r_k^{1/k}` is `r_k` to the power `1/k`, and `r_{k+1}` has the argument `k+1`. An argument before a script is the symbol or group before it, with the scripts the notation does not use: `x_1^+` is `\max\{x_1,0\}`. A letter on the right that is not an argument (`C`) is the one of the sentence that uses the notation |
+| `We write $h_a$ for $a^2+1$.`, then in a result `For $x\in\mathbb R$, let $h_y(x)\coloneqq x+y$.` | a symbol that a result or its proof defines hides a notation of the article written with the same letter: in the sentence that defines it and after it, in the result and its proof, `h_y` is that symbol; elsewhere `h_2` is the notation |
 | `We write $\ell_A(x)$ for $\min\{R(C) : C\in\mathcal C,\ A(C)=x\}$.` | a notation may bind a variable (the `C` of the set, the variable of an integral, a sum or a limit). Where it is written with a formula that uses the same letter, `\ell_\beta(\beta(C))`, the bound variable is another one: the minimum is over the copulas whose `\beta` is `\beta(C)` |
 | `We write $A\subset B$ if $A\subseteq B$.` | one relation symbol for another: every later `\subset` is `\subseteq`, whatever stands on either side (Leanify refuses `\subset` without such a sentence, since it also means strict inclusion) |
 | `We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.` | a symbol for a notion of the vocabulary, with its arguments |
@@ -255,6 +257,7 @@ fields of the vocabulary and what happens when a word has several meanings.
 | family with a local map | `For $w\in[0,1]$, let $A_w$ be the NOUN associated with $\gamma_{T_w}$, where $T_w:[0,1]\to[0,1]$ is given by \begin{equation}…\end{equation}` |
 | auxiliary symbol | `For $b\in(0,\frac12]$, set $z_b\coloneqq\frac{b}{2(1-b)}$ and let $B_b$ be …` |
 | functions of several variables | `For $u,v\in[0,1]$, set $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq\max\{u+v-1,0\}$ and $\Pi(u,v)\coloneqq uv$.` (the arguments are the binder's variables, in its order; on $[0,1]$ the result is a function on the unit square) |
+| part of the binder's variables | `For $t\in[0,1]$ and $u,v\in[0,1]$, let $f_t(v)\coloneqq\frac{1-t}2v+t\min\{v,\frac12\}$ and \[Q_t(u,v)\coloneqq\max\{uv,\ f_t(v)-(\tfrac12-u)^+\}.\] Then $Q_t$ is a copula.` (each definition takes the variables of the binder that it names, in the binder's order. In the statement of a result, the parameter of a family it defines stays bound in its later sentences and in its proof: `Then $Q_t$ is a copula` is about every `t\in[0,1]`) |
 | a family of functions | `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq\min\{u,v,1-s\}+\max\{u+v+s-2,0\}$.` (indexed by the first variable, a function of the others) |
 | a piecewise function | `For $a\in(0,1]$ and $u,v\in[0,1]$, let \[A_a(u,v)\coloneqq\begin{cases}\min\{u,v\}&\text{if }\min\{u,v\}\le a,\\ a+\frac{(u-a)(v-a)}{1-a}&\text{otherwise.}\end{cases}\]` (a display; each row is a value and its condition, `v & φ` or `v & \text{if } φ`, and the first row whose condition holds gives the value. A last row `\text{otherwise}` is for the points where no row before it applies; without it the function is defined only where a row applies. A value has to be meaningful only where its row applies: `1-a` is not zero in the second row) |
 | combinations of functions on the square | `For $r\in[0,1]$, set $M_r\coloneqq(1-r)\Pi+rM$.`, `$\frac{M+W}2$`, `$-C$` (functions on the unit square are added, subtracted, and multiplied or divided by a number, value by value: `(1-r)\Pi+rM` is the function `(u,v)\mapsto(1-r)\Pi(u,v)+rM(u,v)`; an order between two of them, `$W\le C\le M$`, is the order of their values at every point) |
@@ -270,6 +273,11 @@ fields of the vocabulary and what happens when a word has several meanings.
 | a function on a class, and a family indexed by it | `For a function $A:\mathcal C\to\mathbb{R}$, let $\mathcal R_A\coloneqq\{(A(C),R(C)) : C\in\mathcal C\}$.`, then `$\mathcal R_\beta=\mathcal R_\rho=\{(m,r) : |m|\le r\le1\}$`, `$\mathcal R_{\tau^*}$` (the domain of the signature is a class of the article, `Let $\mathcal C$ denote the set of NOUNS.`; the value of the variable is asked for at members of the class only) |
 | a family with two subscripts | `For $r\in[0,1]$ and $g\in[-r,r]$, set $C_{r,g}\coloneqq(1-r)\Pi+\frac{r+g}2M+\frac{r-g}2W$.` (the subscripts are the binder's variables, all of them and in its order; then `C_{r,r}`, `C_{r,-r}`) |
 | class of the vocabulary | `Let $\mathcal{X}$ denote the class of NOUNS.`, `We denote by $\mathcal{X}$ the set of NOUNS.` |
+| definitions named by a noun | `Let \[M(u,v)\coloneqq\min\{u,v\},\qquad W(u,v)\coloneqq\max\{u+v-1,0\}\] denote the comonotonicity and countermonotonicity copulas.` (with the field `unitsquare`), `let \[e(k)\coloneqq…,\qquad c(k)\coloneqq…\] denote the trivial and the fair-coin distributions.` (each definition has one of the names, in their order, and the names are not read. The variables of a definition range over the arguments of the noun's objects, the points of `[0,1]` for a copula, and that each defined function is such an object is a claim) |
+| definitions announced | `We consider five signed coefficients of a copula $C$, DISPLAY`, `We further consider two weights of a distribution $\nu$, DISPLAY` (as `For a copula $C$, set DISPLAY`: the words before `of` name what the display defines) |
+| a notation in a `where` | `Set $z\coloneqq\mathrm{NB}(1,\frac12)(0)$, where $\mathrm{NB}(r,p)$ is the negative binomial distribution with parameters $r$ and $p$.`, `…, where $\Phi_{\mathrm N}^{-1}$ is the standard normal quantile function.` (as `We write $\mathrm{NB}(r,p)$ for the …`, before the rest of the sentence) |
+| several definitions in one sentence | `Let $\mathcal C$ denote the set of bivariate copulas, and let DISPLAY denote …`, `For $x\in\mathbb R$, set $\phi(x)\coloneqq x^2+1$, and let $\psi(x)\coloneqq2\phi(x)$.`, `For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$, and $h_C$ for the conditional distribution function of $C$.` (the sentences it is made of, one after the other, joined by `, and` before `let`, `set`, `put`, `define`, `we`, `write`, `denote` or `fix`. A formula after `, and` continues the verb before it (`we write`), and a binder at the start of the sentence is the binder of each part. Read so only if every part is read, and if the sentence as a whole has no reading that compiles) |
+| `we write` a definition | `We write $s(t)\coloneqq t^3-t$.`, `For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$.` (as `set`) |
 | two quantities at once | `For a NOUN $x$, the NAME and the NAME of $x$ are \begin{equation}\alpha(x)\coloneqq…,\qquad\beta(x)\coloneqq….\end{equation}` |
 | constants | `Set $r_0\coloneqq\frac{144+9\sqrt6}{500}\approx0.33209$.`, `Define \begin{equation}d_0\coloneqq…,\qquad\Delta_0\coloneqq….\end{equation}` |
 | a named set | `The joint range of $\alpha$ and $\beta$ is \begin{equation}\Omega\coloneqq\{(\alpha(x),\beta(x)):x\in\mathcal{X}\}.\end{equation}` |
@@ -578,6 +586,35 @@ Its domain is what the text says about those variables:
 * a variable whose domain uses the variables before it brings them along: after
   `Let $n\ge1$ and $x\in[0,n]$.`, `Set $r\coloneqq\frac1{x+1}$.` defines `r(n,x)`
   for `x ∈ [0,n]`, although its formula does not mention `n`.
+
+### Reasons, restatements and objects chosen in a proof
+
+A proof says why a step holds and which objects it works with, often in words. A
+reason in words asserts nothing: the claim it supports is checked, and the step may
+use what the sentence cites, nothing else. A restatement replaces an informal sentence
+by one that Leanify reads. `tests/Steps/article.tex` uses these forms with examples from
+elementary analysis, `tests/Operators/article.tex` with operators on `L^2`.
+
+| Sentence | Reading |
+| --- | --- |
+| `Every square of a real number is nonnegative, that is, for every real number $x$, we have $x^2\ge0$.` | `INFORMAL, that is, FORMAL`: only the formal restatement after the first `, that is,` is read; the words before it may state the same informally, with formulas. Also when the words before it would be read on their own and their reading fails |
+| `Since the hypothesis applies to $\varepsilon$, which is positive, $a\le\varepsilon$.`, `Since $c$ is positive, $b^2<b$.` | a reason in words before the claim (at least two words, with formulas that state nothing); a relative clause after a comma (`, whose maximal correlation is $1$,`, `, which is positive,`) belongs to it |
+| `Hence $(x-y)^2\ge0$ by Section~\ref{sec:squares}, and since the square is the expansion above, $x^2+y^2-2xy\ge0$.` | a second claim of the sentence with its own reason in words. A section (`Section~\ref{s}`, also an item `Section~\ref{s}~(d)`) is cited as a reason: it names no result, and the step may use no claim through it |
+| `The number $c$ is the distance from $b$ to $1$, so $b^2=b(1-c)$.`, `…, so that, by Lemma~\ref{l}, …` | a description in words before `, so`: a reason; the clauses after `so` are claims |
+| `With the Markov operator $\frac{r+g}2\id+\frac{r-g}2J$ of $C_{r,g}$, this gives DISPLAY` | the words after `With` are a reason, the display is the claim (also `this yields`) |
+| `Let $c>0$ be such that $b+c=1$.`, `Let $n$ be such that $T$ is a function of the first $n$ observations.` | a variable of the rest of the proof, and the condition it is chosen with: a hypothesis of the steps after it, which has to be shown to hold together with the others (`satisfiableK`) |
+| `By the Archimedean property of the real numbers, we can find a positive integer $n$ such that $n>\frac1\varepsilon$.`, `…, we may choose $c>0$ such that …`, `Taking the integer part of $x$, we obtain an integer $k$ such that $k\le x<k+1$.` | as `Let`: the object of the noun phrase, and the condition it is chosen with. The words before it are a description and assert nothing; the step after it is checked under the condition |
+| `For Kendall's tau, we use the kernel $F=F_{\{1\}}+F_{\{2\}}+F_{\{1,2\}}$ from the proof of Theorem~\ref{t}.` | the definitions of another proof, available in this one; `$Q_{r^2}$ from Lemma~\ref{l} has $R=r$ and $D=0$` states the formulas about an object a result defines |
+| `Here $A_a$ is the ordinal sum of Section~\ref{sec:prelim}.` | a reminder of a definition the article made: it organizes the proof and asserts nothing |
+| `\emph{Expanding the square.}` at the start of a paragraph | the heading of a paragraph of the proof: it organizes the proof and asserts nothing |
+| `Letting $\varepsilon\to0$ gives the claim.` (`the assertion`) | the end of an argument by a limit: it organizes the proof. The result has to follow, in Lean, from the steps before it |
+| `We have $x^3=x$ for each of the three numbers $x\in\{-1,0,1\}$.` | `for each of the WORDS $x\in S$`: the words describe the members of `S`, and the claim is for every `x ∈ S` |
+| `$\varphi,\qquad\text{hence}\qquad\psi$` in a display (`so`, `thus`, `and`) | both formulas are claims |
+| `$a$ and $b$ are nonincreasing on $(0,1)$`, `the map $\theta\mapsto\Psi(C_\theta)$ is continuous on $[0,1]$` | functions of one variable that are monotone, or continuous, on a domain |
+| `$T$ is a function of the first $n$ observations` (field `unitsquare`) | a statistic that depends only on the observations `(U_i,V_i)` with `i < n`, for a natural number `n` |
+| `$T_C$ fixes the constants and maps $L^2_0$ into itself with norm at most $1$`, `$T$ is $r$ times the identity on $A$` (field `hilbert`) | the phrases of an operator: `T` maps every constant function to itself (up to a null set); maps the functions of `L^2_0` into `L^2_0`, with `\lVert T|_{L^2_0}\rVert\le1`; and `\lVert Tg-rg\rVert=0` for the `g` of `A` |
+| `\lVert T_C^{k+1}f\rVert\le\lVert T_C^kf\rVert` (field `hilbert`) | the powers of an operator, for a natural number `k` (`T^0` is the identity) |
+| `for every Borel measurable function $g:[0,1]^2\to[0,1]$` (field `unitsquare`) | a map of the square to `[0,1]`, measurable as a function of the pair; `\int g(u,v)\,\mathrm{d}C(u,v)` is its integral against the copula `C` |
 
 ## Checking while writing
 

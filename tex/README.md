@@ -1,6 +1,6 @@
 # leanify — a LaTeX article checked by Lean
 
-Version 0.7, 2026-11-10.
+Version 0.8, 2026-11-22.
 
 Leanify compiles an ordinary mathematical article, written in LaTeX, to the
 Lean proof assistant: every definition and theorem becomes a Lean statement
