@@ -376,6 +376,31 @@ def displayParts (ts : List MTok) : Option (MT × Option (List Chunk)) :=
     | .sym 44 :: r | .sym 46 :: r | .sym 59 :: r => r.reverse
     | _ => ts
   let plain : Option (MT × Option (List Chunk)) := (Math.parseDisplay ts).map (·, none)
+  -- `φ,\qquad\text{hence}\qquad ψ` (`so`, `thus`, `and`): both formulas
+  let hence : Option (MT × Option (List Chunk)) := do
+    let rec split : Nat → Int → List MTok → List MTok → Option (List MTok × List MTok)
+      | 0, _, _, _ => none
+      | _ + 1, _, _, [] => none
+      | f + 1, d, acc, t :: rest =>
+        let d' : Int := match t with
+          | .lb | .setl | .sym 40 | .sym 91 | .begin _ => d + 1
+          | .rb | .setr | .sym 41 | .sym 93 | .finish _ => d - 1
+          | _ => d
+        match t, rest with
+        | .cmd q1, .text w :: .cmd q2 :: r =>
+          if d == 0 && (q1 == w!"qquad" || q1 == w!"quad") && (q2 == w!"qquad" || q2 == w!"quad") &&
+              [w!"hence", w!"so", w!"thus", w!"and", w!"therefore"].contains (lower w) then
+            some (acc.reverse, r)
+          else split f d' (t :: acc) rest
+        | _, _ => split f d' (t :: acc) rest
+    let (a, b) ← split (ts'.length + 1) 0 [] ts'
+    let a := match a.reverse with
+      | .sym 44 :: r => r.reverse
+      | _ => a
+    let ma ← Math.parseDisplay a
+    let mb ← Math.parseDisplay b
+    some (.conj [ma, mb], none)
+  if hence.isSome then hence else
   match lastQuad (ts'.length + 1) 0 [] ts' none with
   | none => plain
   | some (head, tail) =>
@@ -553,6 +578,7 @@ def wMarkers : List (List Codes) :=
    [w!"in", w!"addition"], [w!"finally"], [w!"again"], [w!"conversely"], [w!"similarly"],
    [w!"in", w!"other", w!"words"], [w!"that", w!"is"], [w!"we", w!"have"], [w!"it", w!"follows", w!"that"],
    [w!"we", w!"obtain"], [w!"note", w!"that"], [w!"we", w!"see", w!"that"], [w!"more", w!"precisely"],
+   [w!"this", w!"gives"], [w!"this", w!"yields"],
    [w!"equivalently"], [w!"also"], [w!"in", w!"both", w!"cases"], [w!"in", w!"either", w!"case"],
    [w!"in", w!"all", w!"cases"], [w!"in", w!"each", w!"case"], [w!"in", w!"any", w!"case"],
    [w!"by", w!"the", w!"induction", w!"hypothesis"], [w!"by", w!"the", w!"inductive", w!"hypothesis"],
@@ -593,9 +619,21 @@ def topicPhrase (cs : List Chunk) : Option (List Chunk) := do
     | _ => none
   | _ => none
 
+/-- `With the Markov operator $\frac{r+g}2\id+\frac{r-g}2J$ of $C_{r,g}$,`: a reason in words
+(with formulas that state nothing) before the claims; it asserts nothing. -/
+def withReason (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"with"] cs
+  let ws := r.takeWhile descChunk
+  let nw := (ws.filter fun c => match c with | .w _ => true | _ => false).length
+  if nw < 2 then none else
+  match r.drop ws.length with
+  | .p 44 :: r' => some r'
+  | _ => none
+
 def marker (cs : List Chunk) : Topic × List Chunk :=
   let cs := (itemLabel cs).getD cs
   let cs := (topicPhrase cs).getD cs
+  let cs := (withReason cs).getD cs
   let cs := (showsThat cs).getD cs
   match kw [w!"for", w!"the", w!"minimum"] cs with
   | some r => (.minimum, optPunct 44 r)
@@ -677,6 +715,19 @@ def moreAnd : Nat → List Chunk → List Bind → List Bind × List Chunk
 def withConds (cs : List Chunk) : Option (MT × List Chunk) := do
   let r ← kw [w!"with"] cs <|> kw [w!"such", w!"that"] cs
   let (m, r1) ← formula r
+  -- `with $φ$, $ψ$, or $χ$`, `with $φ$ or $ψ$`: one of the conditions
+  let rec orList : Nat → List MT → List Chunk → Option (List MT × List Chunk)
+    | 0, _, _ => none
+    | f + 1, acc, r =>
+      match kw [w!"or"] r <|> (punct 44 r >>= kw [w!"or"]) with
+      | some r' => do let (m', r'') ← formula r'; some ((m' :: acc).reverse, r'')
+      | none => do
+        let r' ← punct 44 r
+        let (m', r'') ← formula r'
+        orList f (m' :: acc) r''
+  match orList 6 [m] r1 with
+  | some (ms, r3) => some (ms.tail.foldl (fun a b => MT.lor a b) (ms.headD m), r3)
+  | none =>
   match (do let r2 ← kw [w!"and"] r1; formula r2) with
   | some (m2, r3) => some (.conj [m, m2], r3)
   | none => some (m, r1)
@@ -845,6 +896,17 @@ def postSufficient (cs : List Chunk) : Option (Bind × List Chunk) := do
   let (b, _) ← sufficientBinder [.w w!"sufficiently", .w s, .m ts]
   some (b, r1)
 
+/-- `, $ψ$, or $χ$` or ` or $χ$` after a condition `with $φ$`: the further conditions, of
+which one holds (the chunks, and the rest). -/
+def orTail : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+  | 0, _, _ => none
+  | f + 1, cs, acc =>
+    match cs with
+    | .w o :: .m m :: rest => if o == w!"or" then some ((acc.reverse ++ [.w o, .m m]), rest) else none
+    | .p 44 :: .w o :: .m m :: rest => if o == w!"or" then some ((acc.reverse ++ [.p 44, .w o, .m m]), rest) else none
+    | .p 44 :: .m m :: rest => orTail f rest (.m m :: .p 44 :: acc)
+    | _ => none
+
 /-- A noun phrase of a binder, up to a comma, `and every|each|all`, `and $…$`, or `there`. -/
 def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
@@ -952,7 +1014,13 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
           match withAt with
           | some i =>
             match np.drop (i + 1), np[i - 1]? with
-            | [.m _], some (.m v) => if i ≥ 2 && (v.length == 1 || subName v) then some (.noun np, r') else none
+            | [.m _], some (.m v) =>
+              if i ≥ 2 && (v.length == 1 || subName v) then
+                -- `with $φ$, $ψ$, or $χ$`: one of the conditions
+                match orTail 6 r' [] with
+                | some (tl, r'') => some (.noun (np ++ tl), r'')
+                | none => some (.noun np, r')
+              else none
             | _, _ => none
           | none => none
     | _, _ => none)
@@ -1223,6 +1291,10 @@ inductive Clause where
   /-- `$F$ depends only on the first $m$ terms`: a function of a sequence that depends only
   on its terms `1, …, m` (the field `hilbert`). -/
   | dependsFirst (f m : MT)
+  /-- `$Q_{r^2}$ from Lemma~\ref{l} has $R=r$ and $D=0$`: the formulas about the object, a
+  function written alone applied to it (`R` is `R(Q_{r^2})`); `from` names the result whose
+  definitions the object uses. -/
+  | hasProps (s : MT) (fromLabel : Option Codes) (ms : List MT)
   /-- What `stmtAt` stands for, once the proof is known: the clauses `stmt` of the
   statement, under the hypotheses `hyps` of the result that speak about its variable
   `v`, with `v` replaced by `e`. The grammar does not produce it. -/
@@ -1639,6 +1711,18 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       | _ => none) with
   | some res => some res
   | none =>
+  -- `the copula $C_{r,g}$ of~\eqref{eq:Crg} has $φ$`: the formula (the words, formulas that
+  -- state nothing and references name its subject)
+  match (do
+      let i := (cs.findIdx? fun (c : Chunk) => match c with | .w v => v == w!"has" | _ => false).getD 0
+      let cs' := (cs.take i).filter (fun (c : Chunk) => match c with | .r _ _ => false | _ => true) ++ cs.drop i
+      let r ← wordsThen [w!"has"] cs'
+      let (m, r') ← formula r
+      match m with
+      | .chain _ _ => some (Clause.fact m, r')
+      | _ => none) with
+  | some res => some res
+  | none =>
   -- `the four affine coefficients $\beta$, …, and $\rho_{\mathrm N}$ equal $r$ at $M_r$ and
   -- $-r$ at $W_r$`: each function has these values at these points
   match (do
@@ -1648,6 +1732,24 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       let (pairs, r3) ← atPairs 4 r2 []
       some (Clause.both (fs.flatMap fun fn => pairs.map fun (a, x) =>
         Clause.fact (.chain (.app fn [x]) [(.eq, a)])), r3)) with
+  | some res => some res
+  | none =>
+  -- `$Q_{r^2}$ from Lemma~\ref{l} has $R=r$ and $D=0$`
+  match (do
+      let (sm, r) ← formula cs
+      match sm with
+      | .chain _ _ => none
+      | _ =>
+      let (fromL, r1) := match kw [w!"from"] r >>= cite with
+        | some (l, r') => (some l, r')
+        | none => (none, r)
+      let r2 ← kw [w!"has"] r1
+      let (m1, r3) ← formula r2
+      let (ms, r4) := match kw [w!"and"] r3 >>= formula with
+        | some (m2, r') => ([m1, m2], r')
+        | none => ([m1], r3)
+      if !ms.all (fun m => match m with | .chain _ _ => true | _ => false) then none else
+      some (Clause.hasProps sm fromL ms, r4)) with
   | some res => some res
   | none =>
   -- `$F$ depends only on the first $m$ terms`
@@ -2590,7 +2692,10 @@ where
     -- (and formulas that state nothing: `…, since $W_r$ is the copula of $(U,1-V)$ when …`)
     let r := match punct 44 r >>= kw [w!"since"] <|> kw [w!"since"] r with
       | some r' =>
-        let ws := r'.takeWhile descChunk
+        -- (with references to sections and their items: `of Section~\ref{s}~(d)`)
+        let ws := r'.takeWhile fun c => descChunk c || match c with
+          | .r _ _ | .p 40 | .p 41 | .p 44 => true
+          | _ => false
         if ws.any (fun c => match c with | .w _ => true | _ => false) && isEnd (r'.drop ws.length) then r'.drop ws.length else r
       | none => r
     if isEnd r then some acc.reverse
@@ -2763,6 +2868,10 @@ inductive Sent where
   says how the argument is organized. It asserts nothing, and is read as such, so that
   it does not leave the proof incomplete. -/
   | organizes
+  /-- `For Kendall's tau, we use the kernel $F=F_{\{1\}}+F_{\{2\}}+F_{\{1,2\}}$ from the proof of
+  Theorem~\ref{l}.`: the definitions of that proof are visible in this one, and the formula
+  (if it states something) is a claim. -/
+  | usesFrom (label : Codes) (claim : Option MT)
   /-- `Throughout, $p$ and $q$ denote integers.`, `In this paper, the letter $t$ denotes
   an integer.`: wherever one of the letters is bound, it is an integer. -/
   | letters (vars : List Codes)
@@ -3655,7 +3764,37 @@ def organizeSent (cs : List Chunk) : Option Sent :=
       | .w h :: .w d :: _ => if lower h == w!"hoeffding" && d == w!"decomposition" then some () else none
       | _ => none
     some .organizes
-  cases <|> contra <|> induction <|> announces <|> hoeffNote
+  -- `[For WORDS,] we use the WORDS $φ$ from the proof of Theorem~\ref{l}.`
+  let usesFrom : Option Sent := do
+    let r0 := match kw [w!"for"] cs with
+      | some r => match r.dropWhile (fun c => match c with | .w _ | .p 39 | .p 45 => true | _ => false) with
+        | .p 44 :: r' => r'
+        | _ => cs
+      | none => cs
+    let r1 ← kw [w!"we", w!"use", w!"the"] r0
+    let ws := r1.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+    let (φ, r3) ← formula (r1.drop ws.length)
+    let r4 ← kw [w!"from", w!"the", w!"proof", w!"of"] r3
+    let r5 := match r4 with | .w _ :: r => r | _ => r4
+    match r5 with
+    | .r _ l :: r6 =>
+      if done r6 then some (.usesFrom l (match φ with | .chain _ _ => some φ | _ => none)) else none
+    | _ => none
+  -- `Here $A_a$ is the ordinal sum of Section~\ref{sec:prelim}.`: a reminder of a definition
+  let reminder : Option Sent := do
+    let r ← kw [w!"here"] cs
+    let (m, r1) ← formula r
+    match m with
+    | .chain _ _ => none
+    | _ =>
+    let r2 ← kw [w!"is", w!"the"] r1
+    let ws := r2.takeWhile (fun c => match c with | .w v => v != w!"of" | .p 45 => true | _ => false)
+    let r4 ← kw [w!"of"] (r2.drop ws.length)
+    match r4 with
+    | .w _ :: .r _ _ :: r5 => if done r5 then some .organizes else none
+    | .r _ _ :: r5 => if done r5 then some .organizes else none
+    | _ => none
+  cases <|> contra <|> induction <|> announces <|> hoeffNote <|> usesFrom <|> reminder
 
 def sentenceCore (cs : List Chunk) : Option Sent :=
   match descSent none cs with
@@ -4025,7 +4164,7 @@ where
     | f + 1, cs, acc => do
       let (m, r) ← formula cs
       -- `$φ$ for $u\in[0,1]$`: for every `u`
-      let (m, r) := match kw [w!"for"] r >>= mathChunk with
+      let (m, r) := match kw [w!"for"] r >>= (fun r' => mathChunk ((kw [w!"all"] r' <|> kw [w!"every"] r').getD r')) with
         | some (ts, r') => match binderMath ts with
           | some (vs, d) => (MT.quant true vs d m, r')
           | none => (m, r)
@@ -4225,6 +4364,10 @@ def parseSentence (s : Sentence) : Option Sent := do
   -- the heading of a case (`\item \emph{…}`)
   | ⟨.cmd h, _, _⟩ :: rest =>
     if h == w!"@heading" then caseHeading (← chunks (rest.length + 1) rest [])
+    -- the heading of a paragraph of a proof (`\emph{Signed coefficients.}`) organizes it
+    else if h == w!"@paraheading" then
+      if rest.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then some .organizes
+      else sentence (← chunks (rest.length + 1) rest [])
     else sentence (← chunks (s.toks.length + 1) s.toks [])
   | _ => sentence (← chunks (s.toks.length + 1) s.toks [])
 

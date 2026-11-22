@@ -942,6 +942,14 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
   | f + 1, cs, acc =>
     match Grammar.formula cs with
     | some (m, r) =>
+      -- `$φ$, $ψ$, or $χ$`: one of them
+      match Grammar.orTail 6 r [] with
+      | some (tl, r') =>
+        let ms := tl.filterMap fun c => match c with
+          | .m ts => Grammar.formula [.m ts] |>.map (·.1)
+          | _ => none
+        ((ms.foldl (fun a b => MT.lor a b) m :: acc).reverse, r')
+      | none =>
       match r with
       | .w w :: r' => if w == w!"and" then condsOf f r' (m :: acc) else ((m :: acc).reverse, r)
       | _ => ((m :: acc).reverse, r)
@@ -1531,6 +1539,7 @@ def clauseMaths : Clause → List MT
   | .mapsInto op d e n => [op, d, e] ++ (n.map (·.2)).toList
   | .timesId op k d => [op, k, d]
   | .dependsFirst g m => [g, m]
+  | .hasProps sm _ ms => sm :: ms
   | _ => []
 
 /-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
@@ -3158,6 +3167,14 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     -- for every `g` of the set: `\lVert Tg-kg\rVert = 0`
     let diff := Tm.lam pt .tt (.sub (.app (.app (shift 2 0 t) (.loc 1)) (.loc 0)) (.mul (shift 2 0 kt) (.app (.loc 1) (.loc 0))))
     pure (.all fnTy (.imp (.app (shift 1 0 d) (.loc 0)) (.guard (.app (.const mem) diff) (.eq (.app (.const nrm) diff) (.num 0)))))
+  | .hasProps sm fromL ms => do
+    -- (the definitions of the cited result are visible here)
+    if let some l := fromL then
+      if let some e := (← get).resultEnvs.lookup l then
+        modify fun st => { st with imports := (st.curEnv, e) :: st.imports }
+    let (s', ty) ← term F sc none sm
+    let ps ← ms.mapM fun m => prop sc (some (s', ty)) m
+    pure (conjAll ps)
   | .dependsFirst g m => do
     let iv ← liftO (← Elab.hilbertIv) E.unsupported
     let dc ← liftO iv.dependsFirst E.unsupported
@@ -3391,6 +3408,18 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
           let some mono := monoOf a | fail E.unsupported
           let some d := on | fail E.unsupported
           monoTm sc (.conj [.mapsto (.id x) body, .chain (.id x) [(.mem, d)]]) mono
+        return conjAll ps
+      else pure ()
+    -- `the map $\theta\mapsto e$ is continuous on $[0,1]$`: a real function of `θ` on the
+    -- domain, whose values there are defined
+    | .mapsto (.id v) body =>
+      if adjs.all (fun (_, on) => on.isSome) then
+        let ps ← adjs.mapM fun (a, on) => do
+          let some d := on | fail E.unsupported
+          let (_, pd) ← domainOf true d sc
+          let (fn, _) ← Elab.lam F sc (.id v) [.real] (some .real) body
+          let fn := onDomain pd fn
+          adjectiveTm sc fn (.fn .real .real) (some (pd.getD (.lam .real .tt .tt))) a on
         return conjAll ps
       else pure ()
     | _ => pure ()
@@ -4306,6 +4335,15 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .claimsContra topic binds cls => contradictionIn c topic binds cls []
   -- (it organizes a proof; elsewhere it is prose)
   | .organizes => if c.ctx.kind == .proof then pure ([], []) else fail E.prose
+  | .usesFrom l φ => do
+    if c.ctx.kind != .proof then fail E.prose
+    let some e := (← get).proofEnvs.lookup l | fail E.prose
+    modify fun st => { st with imports := (st.curEnv, e) :: st.imports }
+    match φ with
+    | some m =>
+      let ids ← claimSentence c .none [] [{ cites := [], clause := .fact m }]
+      pure ([], ids)
+    | none => pure ([], [])
   | .undefined lhs words args => undefinedDef c lhs words args
   | .letters vs => do
     modify fun st => { st with letters := st.letters ++ vs.filter (!st.letters.contains ·) }
@@ -4612,6 +4650,13 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- definitions local to a result are visible in it and in its proof
   -- (in the running text, a value named by its function's letter is for its sentence)
   let st0 := { st0 with curEnv := s.ctx.env, curProved := proved, abbrevs := st0.abbrevs.filter (·.1 != 0) }
+  -- (the environment of each proof, for `… from the proof of Theorem~\ref{l}`)
+  let st0 := if s.ctx.kind == .proof && !st0.proofEnvs.any (·.2 == s.ctx.env) then
+      { st0 with proofEnvs := (s.ctx.proves, s.ctx.env) :: st0.proofEnvs } else st0
+  let st0 := match s.ctx.kind with
+    | .result _ => if !s.ctx.label.isEmpty && !st0.resultEnvs.any (·.2 == s.ctx.env) then
+        { st0 with resultEnvs := (s.ctx.label, s.ctx.env) :: st0.resultEnvs } else st0
+    | _ => st0
   let st0 := { st0 with varDoms := st0.varDoms.filter (·.1 != 0) }
   let ps := match s.ctx.kind with
     | .proof => if c.proofs.any (·.env == s.ctx.env) then c.proofs

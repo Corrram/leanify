@@ -287,6 +287,13 @@ structure St where
   /-- The environment of the current sentence, and the result its proof proves. -/
   curEnv : Nat := 0
   curProved : Option Nat := none
+  /-- The environments of the proofs, by the label of the result they prove. -/
+  proofEnvs : List (Codes × Nat) := []
+  /-- The environments of the labelled results. -/
+  resultEnvs : List (Codes × Nat) := []
+  /-- Environments whose local definitions are visible in another one (`we use the
+  kernel $F$ from the proof of Theorem~\ref{l}`): the environment, and the one it uses. -/
+  imports : List (Nat × Nat) := []
   /-- The environment of the definitions of the current sentence only (`… for $F(x)=e$`). -/
   sentEnv : Option Nat := none
   /-- The definitions made by `… for $F(x)=e$`: a later one of the same symbol replaces it. -/
@@ -416,7 +423,8 @@ def singular (w : Codes) : Codes :=
 that environment and in the proof of the result it belongs to. -/
 def visibleIn (st : St) (i : Nat) : Bool :=
   match st.locals.lookup i with
-  | some e => e == st.curEnv || st.curProved == some e || st.sentEnv == some e
+  | some e => e == st.curEnv || st.curProved == some e || st.sentEnv == some e ||
+    st.imports.contains (st.curEnv, e)
   | none => true
 
 /-- The visible definition named `key`. A symbol may name a constant and, written with a
@@ -694,6 +702,26 @@ def applyAllD (head : Tm) (ty : Ty) (doms : List (Option Tm)) :
   | (a, aty) :: rest =>
     match ty with
     | .fn dom cod => do
+      -- a kernel at points, `F_{\{1,2\}}(1-x_1,x_2)`: the kernel at the sequence whose first
+      -- terms are the points (the others `0`); each point must lie in the interval
+      if let .fn .real pt := dom then
+        if let some _ ← intervalOf pt then
+          if aty != dom && (aty == .real || aty == pt) then
+            let all := (a, aty) :: rest
+            let pts ← all.mapM fun (x, xty) => coerce x xty pt
+            let parts := pts.map fun p => match p with
+              | .guard g v => (some g, v)
+              | v => (none, v)
+            let dflt ← coerce (.num 0) .real pt
+            let dflt := match dflt with | .guard _ v => v | v => v
+            let k := parts.length
+            let body := (List.range k).foldr (fun i acc =>
+              Tm.cases (.eq (.loc 0) (.num (i + 1))) (shift 1 0 ((parts[i]?.map (·.2)).getD dflt)) acc) (shift 1 0 dflt)
+            let sq := Tm.lam .real .tt body
+            let gs := parts.filterMap (·.1)
+            let applied := Tm.app head sq
+            let applied := gs.foldr (fun g acc => Tm.guard g acc) applied
+            return (applied, cod, [])
       let a' ← coerce a aty dom
       let applied := Tm.app head a'
       let guarded := match doms.head? with
@@ -1781,6 +1809,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | e :: es =>
           return (.lam .real .tt (.lam .real .tt (es.foldl (fun acc q => .or acc q) e)), .fn .real (.fn .real .prop))
         | [] => fail E.unsupported
+      -- `\{\xi,\kappa,D\}`: functions (of one type) equal to one of the elements
+      let els ← xs.mapM fun x => term f sc none x
+      match els with
+      | (_, ty@(.fn _ _)) :: _ =>
+        if els.all (·.2 == ty) then
+          let eqs := els.map fun (t, _) => Tm.eq (.loc 0) (shift 1 0 t)
+          match eqs with
+          | e :: es => return (.lam ty .tt (es.foldl (fun acc q => .or acc q) e), .fn ty .prop)
+          | [] => fail E.unsupported
+      | _ => pure ()
       -- `\{a,b\}`: the numbers equal to one of the elements
       let ts ← xs.mapM fun x => do asReal (← term f sc none x)
       let eqs := ts.map fun t => Tm.eq (.loc 0) (shift 1 0 t)
@@ -2538,7 +2576,11 @@ where
       let asKernel : Option (MT × Codes) ← match x with
         | .app h args => match kernelPattern args with
           | some v =>
-            if (lookupLocal sc v).isNone && (← lookupGlob v).isNone && (← lookupFam v).isNone
+            -- (the terms `x_1`, `x_2` must not be bound as variables of their own)
+            let boundTerm := args.any fun a => match a with
+              | .sub (.id x) (.num n) => (lookupLocal sc (x ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat)).isSome
+              | _ => false
+            if !boundTerm && (lookupLocal sc v).isNone && (← lookupGlob v).isNone && (← lookupFam v).isNone
             then pure (some (h, v)) else pure none
           | none => pure none
         | _ => pure none
