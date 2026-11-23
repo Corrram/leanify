@@ -51,6 +51,35 @@ def takeWhile (p : Nat → Bool) : Codes → Codes × Codes
   | [] => ([], [])
   | c :: cs => if p c then let (a, b) := takeWhile p cs; (c :: a, b) else ([], c :: cs)
 
+/-- The letter with a TeX accent (`\"o` is `ö`, `\'e` is `é`), for the accents and letters
+of the names in mathematical prose. -/
+def accented (accent letter : Nat) : Option Nat :=
+  let table : List (Nat × List (Nat × Nat)) := [
+    (34, [(97, 228), (111, 246), (117, 252), (65, 196), (79, 214), (85, 220), (101, 235), (105, 239)]),
+    (39, [(97, 225), (101, 233), (105, 237), (111, 243), (117, 250), (121, 253), (99, 263), (110, 324),
+      (115, 347), (122, 378), (69, 201)]),
+    (96, [(97, 224), (101, 232), (105, 236), (111, 242), (117, 249)]),
+    (94, [(97, 226), (101, 234), (105, 238), (111, 244), (117, 251)]),
+    (126, [(110, 241), (97, 227), (111, 245)])]
+  (table.lookup accent).bind (·.lookup letter)
+
+/-- A word of the text, with the letters that TeX accents make (`M\"obius` is `Möbius`,
+`Erd\H{o}s` is not read): the word, the rest, and the number of characters read. -/
+def accentedWord : Nat → Codes → Codes → Nat → Codes × Codes × Nat
+  | 0, cs, acc, n => (acc.reverse, cs, n)
+  | f + 1, cs, acc, n =>
+    match cs with
+    | 92 :: a :: 123 :: l :: 125 :: rest =>
+      match accented a l with
+      | some c => accentedWord f rest (c :: acc) (n + 5)
+      | none => (acc.reverse, cs, n)
+    | 92 :: a :: l :: rest =>
+      match accented a l with
+      | some c => accentedWord f rest (c :: acc) (n + 3)
+      | none => (acc.reverse, cs, n)
+    | c :: rest => if isWordChar c then accentedWord f rest (c :: acc) (n + 1) else (acc.reverse, cs, n)
+    | [] => (acc.reverse, cs, n)
+
 /-- Read a balanced `{...}` group (the opening brace already consumed). -/
 def group : Nat → Nat → Codes → Codes → Option (Codes × Codes × Nat)
   | 0, _, _, _ => none
@@ -486,8 +515,8 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
       else if c == 58 && cs.head? == some 61 then emit (.cmd w!"coloneqq") (cs.drop 1) 2 st
       else emit (.msym c) cs 1 st
     else if isWordChar c then
-      let (w, rest) := takeWhile isWordChar (c :: cs)
-      emit (.word w) rest w.length st
+      let (w, rest, n) := accentedWord (cs.length + 2) (c :: cs) [] 0
+      emit (.word w) rest n st
     else emit (.punct c) cs 1 st
 
 /-! ### Macros

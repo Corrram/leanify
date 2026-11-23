@@ -10,7 +10,6 @@ We write $\|f\|_\infty$ for the supremum norm of $f$.
 We write $\operatorname{Lip}(f)$ for the Lipschitz constant of $f$.
 We write $V(f)$ for the total variation of $f$ on $[0,1]$.
 We write $Z(f)$ for the set of zeros of $f$.
-We write $D(f)$ for the derivative of $f$.
 
 \section{Real functions}
 
@@ -19,7 +18,7 @@ Let $f$ be a Lipschitz function. Then $f$ is uniformly continuous.
 \end{lemma}
 
 \begin{lemma}\label{derivative}
-Let $f$ be a $1$-Lipschitz function. Then $f$ is Lipschitz and $\operatorname{Lip}(f)\le1$.
+Let $f$ be a differentiable function. If $|f'(x)|\le1$ for every $x\in\mathbb{R}$, then $f$ is $1$-Lipschitz and $\operatorname{Lip}(f)\le1$.
 \end{lemma}
 
 \begin{lemma}\label{periodic}
@@ -27,7 +26,7 @@ Let $f$ be a continuous periodic function. Then $f$ is bounded and uniformly con
 \end{lemma}
 
 \begin{lemma}\label{even}
-Let $f$ be an even differentiable function. Then $D(f)(0)=0$.
+Let $f$ be an even differentiable function. Then $f'(0)=0$.
 \end{lemma}
 
 \begin{lemma}\label{monotone}

@@ -16,18 +16,16 @@ tests/Graphs/article.tex:33:1: info: claim 4: \forall x\in \mathbb{R},\ x\in \ma
 tests/Graphs/article.tex:33:1: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\in \mathbb{Z}\land 0\le x
 tests/Graphs/article.tex:33:1: info: claim 5: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \@n1(\@n6(x))=\frac{x\,(x-1)}{2}
 tests/Graphs/article.tex:33:1: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 0\le x)\land \neg (2=0)
-tests/Graphs/article.tex:37:1: info: claim 6: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \operatorname{Connected}(\@n7(x))
-tests/Graphs/article.tex:37:1: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow x\in \mathbb{Z}\land 3\le x
-tests/Graphs/article.tex:37:1: info: claim 7: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \operatorname{Hamiltonian}(\@n7(x))
-tests/Graphs/article.tex:37:1: info: claim 7 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow x\in \mathbb{Z}\land 3\le x
-tests/Graphs/article.tex:37:74: info: claim 8: \chi(\@n7(5))=3
-tests/Graphs/article.tex:37:74: info: claim 8 is meaningful if: 5\in \mathbb{Z}\land 3\le 5
-tests/Graphs/article.tex:37:74: info: claim 9: \chi(\@n7(6))=2
-tests/Graphs/article.tex:37:74: info: claim 9 is meaningful if: 6\in \mathbb{Z}\land 3\le 6
-tests/Graphs/article.tex:41:1: info: claim 10: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\land 1\le \@n1(x)\Rightarrow \chi(x)=2
-tests/Graphs/article.tex:45:71: info: claim 11: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\Rightarrow (\forall z\in \mathbb{R},\ \@n0(y,z)\Rightarrow \deg(z,y)\le x-1))
-tests/Graphs/article.tex:49:39: info: claim 12: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow (\forall z\in \mathrm{Graph},\ (\operatorname{Regular}(z)\land (\forall a\in \mathbb{R},\ a\in V(z)\Rightarrow \deg_{z}(a)=x))\land \lvert V(z)\rvert=y\Rightarrow 2\,\@n1(z)=x\,y))
-tests/Graphs/article.tex: 8 definitions, 13 claims
+tests/Graphs/article.tex:37:1: info: claim 6: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \operatorname{Connected}(\@n7(x))\land \operatorname{Hamiltonian}(\@n7(x))\land \operatorname{Regular}(\@n7(x))\land (\forall y\in \mathbb{R},\ y\in V(\@n7(x))\Rightarrow \deg_{\@n7(x)}(y)=2)
+tests/Graphs/article.tex:37:1: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow (x\in \mathbb{Z}\land 3\le x)\land (\operatorname{Connected}(\@n7(x))\Rightarrow (x\in \mathbb{Z}\land 3\le x)\land (\operatorname{Hamiltonian}(\@n7(x))\Rightarrow (x\in \mathbb{Z}\land 3\le x)\land (\operatorname{Regular}(\@n7(x))\Rightarrow (\forall y\in \mathbb{R},\ (x\in \mathbb{Z}\land 3\le x)\land (y\in V(\@n7(x))\Rightarrow x\in \mathbb{Z}\land 3\le x)))))
+tests/Graphs/article.tex:37:77: info: claim 7: \chi(\@n7(5))=3
+tests/Graphs/article.tex:37:77: info: claim 7 is meaningful if: 5\in \mathbb{Z}\land 3\le 5
+tests/Graphs/article.tex:37:77: info: claim 8: \chi(\@n7(6))=2
+tests/Graphs/article.tex:37:77: info: claim 8 is meaningful if: 6\in \mathbb{Z}\land 3\le 6
+tests/Graphs/article.tex:41:1: info: claim 9: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\land 1\le \@n1(x)\Rightarrow \chi(x)=2
+tests/Graphs/article.tex:45:71: info: claim 10: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\Rightarrow (\forall z\in \mathbb{R},\ \@n0(y,z)\Rightarrow \deg(z,y)\le x-1))
+tests/Graphs/article.tex:49:39: info: claim 11: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow (\forall z\in \mathrm{Graph},\ (\operatorname{Regular}(z)\land (\forall a\in \mathbb{R},\ a\in V(z)\Rightarrow \deg_{z}(a)=x))\land \lvert V(z)\rvert=y\Rightarrow 2\,\@n1(z)=x\,y))
+tests/Graphs/article.tex: 8 definitions, 12 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
   results: 11 compiled, 0 failed, 0 prose (of 11)
   all: 19 compiled, 0 failed, 0 prose (of 19)

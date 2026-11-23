@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Topology.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["topology"]
 
-#leanify_article Topology "article.tex" "fnv1a64:39c38c41d85253c5" with Topology.vocabulary
+#leanify_article Topology "article.tex" "fnv1a64:490fe2f01dff942b" with Topology.vocabulary

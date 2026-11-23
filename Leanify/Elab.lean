@@ -2376,6 +2376,11 @@ where
   supTerm : Nat → Scope → PF → MT → MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | f + 1, sc, pf, b, e => do
+      -- `f'` of a real function that a sentence binds (`Let $f$ be a differentiable function`):
+      -- its derivative, defined where `f` is differentiable
+      if let (.id n, .id [39]) := (b, e) then
+        if let some (i, .fn .real .real) := lookupLocal sc n then
+          return (partialFn 1 0 (.loc i), Ty.rfun)
       -- `e^x` is `\exp(x)`, unless the article names something `e` (a family `e_t`, which
       -- is written with its subscript, does not name the letter alone)
       let isE ← match b with
@@ -2989,6 +2994,10 @@ where
         pure (rayTm l h true true (← asReal x))
       | .id n => do
         if n == w!"\\mathbb{R}" then do let _ ← asReal x; pure .tt else
+        -- (a set that a sentence binds: `Let $S$ be a compact set`, then `$x\in S$`)
+        if let some (i, .fn a .prop) := lookupLocal sc n then
+          let x' ← coerce x.1 x.2 a
+          return .app (.loc i) x'
         match ← lookupGlob n, builtinConst n with
         | none, some (p, .fn a .prop) => do let x' ← coerce x.1 x.2 a; pure (.app p x')
         | _, _ =>

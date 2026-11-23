@@ -715,6 +715,8 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       if n == w!"\\mathbb{R}" then pure (.real, none) else
       if let some s := (← get).vocab.symbols.find? (fun s => s.sym == n && s.const.isNone) then
         pure (s.ty, none) else
+      -- (a set that a sentence binds: `Let $U$ be an open set`, then `there is $x\in U$`)
+      if let some (i, .fn a .prop) := Elab.lookupLocal sc n then pure (a, some (.loc i)) else
       match ← lookupGlob n, Elab.builtinConst n with
       | none, some (p, .fn .real .prop) => pure (.real, some p)
       | _, _ =>
@@ -1031,10 +1033,21 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           let some m := Math.parseFormula a | fail E.unsupported
           Elab.term 100000 outer none m
         let (val, vty) ← applyAll n.value n.ty n.doms ts
-        if !(vty == .real || Elab.isBase vty) then fail E.unsupported
         -- (the value is in the scope of the variables before this one)
         let k := if outer.isEmpty then 1 else 2
-        return ⟨v, vty, some (Tm.lam vty .tt (.eq (.loc 0) (shift k 0 val)))⟩
+        -- a number or an object of a field's type; a function or a set, value by value
+        let ptwise (a : Ty) (isSet : Bool) : Tm :=
+          let l := Tm.app (.loc 1) (.loc 0)
+          let r := Tm.app (shift (k + 1) 0 val) (.loc 0)
+          Tm.all a (if isSet then .iff l r else .eq l r)
+        let body? : Option Tm :=
+          if vty == .real || Elab.isBase vty then some (Tm.eq (.loc 0) (shift k 0 val)) else
+          match vty with
+          | .fn a .prop => some (ptwise a true)
+          | .fn a b => if b == .real || Elab.isBase b then some (ptwise a false) else none
+          | _ => none
+        let some body := body? | fail E.unsupported
+        return ⟨v, vty, some (Tm.lam vty .tt body)⟩
       | none => fail E.noun ((wordsOf cs).intersperse [32]).flatten
   | _ => pure ()
   -- `every $M_r$`, `for every fixed $l$`: no noun says what the variable ranges over
@@ -1404,6 +1417,10 @@ def seqFree (st : St) (bound : List Codes) (m : MT) (ids : List Codes) : List Co
   ids.filter (fun n => !seqs.any fun k => k ++ [95] == n.take (k.length + 1)) ++ seqs ++
     envSubKeys st bound m
 
+/-- A standard constant is not a variable of a condition (`If $x=\frac{\pi}{2}$`, `for
+every $x\in\mathbb{R}$`). -/
+def constName (n : Codes) : Bool := (Elab.builtinConst n).isSome || n == w!"\\infty"
+
 /-- Free identifiers of a formula (for `On I,`). -/
 def freeIds : Nat → List Codes → MT → List Codes
   | 0, _, _ => []
@@ -1444,7 +1461,8 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .lnot x | .extr _ x | .bound _ x => freeIds f bound x
     | .finset xs => xs.flatMap (freeIds f bound)
     | .bigop _ v lo hi b => freeIds f bound lo ++ freeIds f bound hi ++ freeIds f (v :: bound) b
-    | .quant _ vs d b => freeIds f bound d ++ freeIds f (vs ++ bound) b
+    -- (the domain may be a condition on the variables, `\varepsilon>0`)
+    | .quant _ vs d b => freeIds f (vs ++ bound) d ++ freeIds f (vs ++ bound) b
     | .limit v t b => freeIds f bound t ++ freeIds f (v :: bound) b
     | .sig .. | .text _ => []
 
@@ -1513,7 +1531,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
     -- bound again
     let st ← get
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     if let some v := free.find? st.unreadIds.contains then fail E.undefined v
@@ -1784,10 +1802,23 @@ def bareIds : Nat → MT → List Codes
     | .app (.id _) args => args.flatMap (bareIds f)
     | _ => (mtChildren m).flatMap (bareIds f)
 
+/-- The domains of the binders inside a clause (`there is $x\in U$ such that …`,
+`… for every $x\in U$`): a domain may be a set that the result binds. -/
+def innerDoms : Clause → List MT
+  | .thereIs b c | .under b c =>
+    (match b with
+      | .every _ d => [d]
+      | .many bs => bs.filterMap fun b' => match b' with | .every _ d => some d | _ => none
+      | _ => []) ++ innerDoms c
+  | .scoped _ _ (some d) _ => [d]
+  | _ => []
+
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
-  let ms := clauseMaths cl.clause ++ cl.defs
+  let ms := clauseMaths cl.clause ++ cl.defs ++
+    -- (only a letter that is a set bound before: the other domains are as they were)
+    (innerDoms cl.clause).filter (fun d => match d with | .id n => n.length == 1 | _ => false)
   let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
   -- (`R` for `R(C)`, after `a copula $C$ with maximal correlation $R=R(C)$`, uses `C`; not
   -- the function `R` applied, `R(M_r)`)
@@ -2748,7 +2779,7 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
     | some (x, _, _, _) => [x]
     | none => npVars [.m ts]
   | .ifCond φ =>
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
   | .hyp b => bindNames1 st env b
   | _ => []
@@ -2936,6 +2967,8 @@ def knownStart (st : St) (np : List Chunk) : Bool :=
     let starts (p : Phrase) : Bool := p.head? == some (.w w)
     V.nouns.any (fun n => starts n.sing || starts n.plural) || V.mods.any (fun m => starts m.phrase) ||
       V.notions.any (fun n => starts n.name) || st.nouns.any (fun (ws, _) => ws.head? == some w)
+  -- (`$1$-Lipschitz`, `$2$-regular`: a modifier that starts with its variable)
+  | .m _ :: _ => V.mods.any fun m => match m.phrase.head? with | some .v | some (.f _) => true | _ => false
   | _ => false
 
 /-- The chunks of a name (a hyphen as `-`). -/
@@ -3878,7 +3911,7 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   -- if $x>0$, then …`)
   let isHyp (known : List Codes) (b : Bind) : Bool := match b with
     | .ifCond φ =>
-      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i)).eraseDups
+      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i) && !constName n).eraseDups
       let fr := seqFree st0 [] φ fr
       -- (`U_1` of a known `U` is a term of that sequence)
       let fr := fr.map fun n =>
@@ -4609,12 +4642,21 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
     | some ((n, args), _) => do
       -- each argument is a variable of the pattern, or a fixed value
       -- (`We write $NF$ for the derivative of $F$ in the direction $(\sqrt2-1,1)$.`)
+      -- (a letter that is not in the pattern is a symbol of the article, a fixed value too:
+      -- `We write $K$ for the circle with centre $O$ and radius $5$.`, `O` the origin)
+      let fixedOf (a : List MTok) : M (Option (Tm × Ty)) := do
+        let some m := Math.parseFormula a | fail E.unsupported
+        let (v, vty) ← term F [] none m
+        pure (some (v, vty))
       let fixedArgs ← args.mapM fun a => match Notation.varTok a with
-        | some _ => pure none
-        | none => do
-          let some m := Math.parseFormula a | fail E.unsupported
-          let (v, vty) ← term F [] none m
-          pure (some (v, vty))
+        | some t =>
+          if pat.any (·.tok == t) then pure none else do
+            let st1 ← get
+            -- (the symbol as the article's notations have it)
+            let toks := Notation.rewriteAll st1.templates [{ tok := t, pos := 0, math := true }]
+            let a' := (Math.simplify (toks.length + 1) toks).getD a
+            tryCatch (fixedOf a') fun _ => do set st1; pure none
+        | none => fixedOf a
       let tsAll := (args.zip fixedArgs).filterMap fun (a, c) => if c.isSome then none else Notation.varTok a
       -- (a variable in several arguments, `$M_n$` for the set of `$n\times n$` matrices: one
       -- argument of the notation)

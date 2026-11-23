@@ -143,6 +143,16 @@ Further forms that the fields use (they are read for any vocabulary):
 | `$\mathcal{C}$ is compact and perfect and nowhere dense` | adjectives of the core language (`compact`) and of a field (`perfect`) in one list, joined by `and`: where the core language has no such property of the object, the field's adjective with these words is meant |
 | `$\lVert x+y\rVert\le\lVert x\rVert+\lVert y\rVert$`, `$\langle x,y\rangle$` | the norm and the inner product of objects of a field's type that has them (vectors) |
 | `the area of the triangle with vertices $A$, $B$ and $C$` | a phrase of the vocabulary may have commas |
+| `$C_n$ is connected, Hamiltonian and $2$-regular.` | a list of adjectives with commas is the list joined by `and`; an adjective may begin with a formula and a hyphen (`$1$-Lipschitz`, `$2$-regular`), also after `is` (`$f$ is $1$-Lipschitz`) |
+| `If $|f'(x)|\le1$ for every $x\in\mathbb{R}$, then …`, `If $a\le\varepsilon$ for every $\varepsilon>0$, then …` | a hypothesis that binds its own variable: `(∀ x, …) → …` |
+| `If $\alpha(C,A,B)=\frac{\pi}{2}$, then …` | a standard constant (`\pi`, `\mathbb{R}`) in a hypothesis is the constant, never a new variable |
+| `$f'(0)=0$`, `$|f'(x)|\le1$` | the derivative of a real function bound by a noun (`a differentiable function $f$`) |
+| `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |
+| `Let $T$ be the closure of $S$.`, `let $\ell$ denote the line through $A$ and $B$` | `be the` and `denote the` alike; the value of the notion may be a set or a function (then the variable is that set: `$M\in\ell$`) |
+| `Let $\varphi$ denote Euler's totient function.` | as `We write $\varphi$ for Euler's totient function.`: a symbol for a notion of the vocabulary |
+| `We write $K$ for the circle with centre $O$ and radius $5$.` | in a notation, a letter that the article has defined (`O`) is that object; the other letters are the notation's parameters |
+| `$S$ is of measure zero` | a modifier of the vocabulary that begins with `of`, after `is` |
+| `the M\"obius function` | TeX accents in words are read as the letters they print (`Möbius`) |
 
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to

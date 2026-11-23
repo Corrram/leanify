@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Geometry.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["geometry"]
 
-#leanify_article Geometry "article.tex" "fnv1a64:b8f6b3557ce4f9b0" with Geometry.vocabulary
+#leanify_article Geometry "article.tex" "fnv1a64:9f46492c2e7110f7" with Geometry.vocabulary
