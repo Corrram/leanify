@@ -431,7 +431,7 @@
   "d (edit distance)",
   "L (line graph)"],
  "namespace": "Undefined",
- "leanify": "0.8.0",
+ "leanify": "0.9.0",
  "justifications": "Undefined.Proofs",
  "definitions":
  [{"wellDefined": "True",
