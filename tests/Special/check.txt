@@ -1,0 +1,35 @@
+tests/Special/article.tex:9:1: info: defines \@n0 (n0)
+tests/Special/article.tex:10:1: info: defines \@n1 (n1)
+tests/Special/article.tex:11:1: info: defines \gamma (gamma)
+tests/Special/article.tex:12:1: info: defines \phi (phi)
+tests/Special/article.tex:12:1: info: \phi is well defined if: \neg (2=0)\land \neg (2=0)
+tests/Special/article.tex:17:1: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \Gamma(x+1)=x!
+tests/Special/article.tex:17:1: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \neg (x+1\in \mathbb{Z}\land x+1\le 0)\land x\in \mathbb{N}
+tests/Special/article.tex:17:51: info: claim 1: \Gamma(\frac{1}{2})={\pi}^{\frac{1}{2}}
+tests/Special/article.tex:17:51: info: claim 1 is meaningful if: (\neg (2=0)\land \neg (\frac{1}{2}\in \mathbb{Z}\land \frac{1}{2}\le 0))\land 0\le \pi\land \neg (2=0)
+tests/Special/article.tex:21:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\Rightarrow \Gamma(x+1)=x\,\Gamma(x)
+tests/Special/article.tex:21:1: info: claim 2 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (x+1\in \mathbb{Z}\land x+1\le 0)\land \neg (x\in \mathbb{Z}\land x\le 0)
+tests/Special/article.tex:25:1: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n0(x,y)=\@n0(y,x))
+tests/Special/article.tex:25:1: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<y\land 0<x)\land 0<x\land 0<y)
+tests/Special/article.tex:25:1: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n0(x,1)=\frac{1}{x})
+tests/Special/article.tex:25:1: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<1\land 0<x)\land \neg (x=0))
+tests/Special/article.tex:29:1: info: claim 5: \zeta(2)=\frac{{\pi}^{2}}{6}
+tests/Special/article.tex:29:1: info: claim 5 is meaningful if: 1<2\land \neg (6=0)
+tests/Special/article.tex:29:1: info: claim 6: \zeta(4)=\frac{{\pi}^{4}}{90}
+tests/Special/article.tex:29:1: info: claim 6 is meaningful if: 1<4\land \neg (90=0)
+tests/Special/article.tex:29:1: info: claim 7: \forall x\in \mathbb{R},\ 1<x\Rightarrow 1<\zeta(x)
+tests/Special/article.tex:33:1: info: claim 8: \@n1(0)=1
+tests/Special/article.tex:33:1: info: claim 8 is meaningful if: 0\in \mathbb{Z}\land 0\le 0
+tests/Special/article.tex:33:1: info: claim 9: \@n1(2)=\frac{1}{6}
+tests/Special/article.tex:33:1: info: claim 9 is meaningful if: (2\in \mathbb{Z}\land 0\le 2)\land \neg (6=0)
+tests/Special/article.tex:33:1: info: claim 10: \zeta(2)=\frac{{(2\,\pi)}^{2}\,\lvert \@n1(2)\rvert}{4}
+tests/Special/article.tex:33:1: info: claim 10 is meaningful if: 1<2\land (2\in \mathbb{Z}\land 0\le 2)\land \neg (4=0)
+tests/Special/article.tex:37:1: info: claim 11: \frac{1}{2}<\gamma\land \gamma<\frac{3}{5}
+tests/Special/article.tex:37:1: info: claim 11 is meaningful if: \neg (2=0)\land (\frac{1}{2}<\gamma\Rightarrow \neg (5=0))
+tests/Special/article.tex:37:1: info: claim 12: {\phi}^{2}=\phi+1
+tests/Special/article.tex:41:1: info: claim 13: \Gamma(0)=1
+tests/Special/article.tex:41:1: info: claim 13 is meaningful if: \neg (0\in \mathbb{Z}\land 0\le 0)
+tests/Special/article.tex: 4 definitions, 14 claims
+  text: 4 compiled, 0 failed, 0 prose (of 4)
+  results: 8 compiled, 0 failed, 0 prose (of 8)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

@@ -89,8 +89,11 @@ inductive OpKey where
   | le | lt
   /-- A named function of one element (`\exp`, `\Re`, `\operatorname{Re}`): `T → U`. -/
   | fn (name : Codes)
-  /-- A decoration of a variable (`\overline{z}`, `\bar z`): `T → U`. -/
+  /-- A decoration of a variable (`\overline{z}`, `\bar z`), or a superscript that is not
+  an exponent (`A^\top`, as the decoration `^\top`): `T → U`. -/
   | decor (name : Codes)
+  /-- An element applied to a number (`\sigma(i)`): `T → ℝ → U`. -/
+  | call
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A method: the notation `op` on elements of `ty` is the constant `const`. -/
@@ -100,6 +103,10 @@ structure Method where
   const : Nat
   /-- Its meaning and Mathlib counterpart, for the glossary. -/
   doc : String := ""
+  /-- Where the notation is defined, if not everywhere: a closed predicate of its arguments
+  (curried, as the constant takes them), such as that two matrices have the same size. A
+  claim that uses the notation is meaningful only where it holds. -/
+  dom : Option Tm := none
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A symbol of the vocabulary: a constant (`\mathrm{i}`), or, without one, the set of
@@ -306,7 +313,8 @@ def append (V W : Vocab) : Vocab :=
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
     notions := V.notions ++ W.notions.map fun n =>
       { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
-    methods := V.methods ++ W.methods.map fun m => { m with ty := shiftTy kt m.ty, const := m.const + kc }
+    methods := V.methods ++ W.methods.map fun m =>
+      { m with ty := shiftTy kt m.ty, const := m.const + kc, dom := m.dom.map tm }
     symbols := V.symbols ++ W.symbols.map fun s =>
       { s with ty := shiftTy kt s.ty, const := s.const.map (· + kc), doms := s.doms.map (·.map tm) }
     intervals := V.intervals ++ W.intervals.map fun i =>
@@ -572,6 +580,8 @@ def phraseOf (s : String) : Except String Phrase := do
           else go f rest (.m ms :: acc)
         | none => throw s!"cannot read the formula in phrase {s}"
       | .punct 39 => go f ts acc
+      -- a hyphen (`prime-counting`, `$v$-th`): the word `-`, which matches the hyphen
+      | .punct 45 => go f ts (.w [45] :: acc)
       | _ => throw s!"unexpected token in phrase {s}"
   go (toks.length + 1) toks []
 

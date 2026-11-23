@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.8.0"
+version = "0.9.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -18,15 +18,6 @@ rev = "5ed2965256430c3649e86755f9576b54eca72435"
 [[lean_lib]]
 name = "Leanify"
 globs = ["Leanify.*"]
-
-[[lean_exe]]
-name = "leanify"
-root = "LeanifyCli"
-
-[[lean_exe]]
-# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
-name = "glossary"
-root = "GlossaryMain"
 
 [[lean_lib]]
 # A short paper on the harmonic, geometric and arithmetic mean: definitions inside a
@@ -73,6 +64,48 @@ globs = ["Vocabulary.+"]
 name = "Fields"
 srcDir = "tests"
 globs = ["Fields.+"]
+
+[[lean_lib]]
+# The field combinatorics: counting numbers as notions with arguments.
+name = "Combinatorics"
+srcDir = "tests"
+globs = ["Combinatorics.+"]
+
+[[lean_lib]]
+# The field arithmetic: arithmetic functions, perfect numbers, multiplicative functions.
+name = "Arithmetic"
+srcDir = "tests"
+globs = ["Arithmetic.+"]
+
+[[lean_lib]]
+# The field polynomials: polynomials as real functions, modifiers with an argument (of degree n).
+name = "Polynomials"
+srcDir = "tests"
+globs = ["Polynomials.+"]
+
+[[lean_lib]]
+# The field graphs: a type of its own, graphs on n vertices, k-regular graphs, the complement.
+name = "Graphs"
+srcDir = "tests"
+globs = ["Graphs.+"]
+
+[[lean_lib]]
+# The field permutations: a type with an application to numbers, composition and the sign.
+name = "Permutations"
+srcDir = "tests"
+globs = ["Permutations.+"]
+
+[[lean_lib]]
+# The field matrices: notation defined for matrices of matching sizes, the transpose, n×n matrices.
+name = "Matrices"
+srcDir = "tests"
+globs = ["Matrices.+"]
+
+[[lean_lib]]
+# The field special: the gamma, beta and zeta functions with their domains, Bernoulli numbers.
+name = "Special"
+srcDir = "tests"
+globs = ["Special.+"]
 
 [[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.
@@ -157,3 +190,12 @@ globs = ["Steps.+"]
 name = "Operators"
 srcDir = "tests"
 globs = ["Operators.+"]
+
+[[lean_exe]]
+name = "leanify"
+root = "LeanifyCli"
+
+[[lean_exe]]
+# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
+name = "glossary"
+root = "GlossaryMain"

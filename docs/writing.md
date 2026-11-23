@@ -111,10 +111,25 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | `We write $\ell_A(x)$ for $\min\{R(C) : C\in\mathcal C,\ A(C)=x\}$.` | a notation may bind a variable (the `C` of the set, the variable of an integral, a sum or a limit). Where it is written with a formula that uses the same letter, `\ell_\beta(\beta(C))`, the bound variable is another one: the minimum is over the copulas whose `\beta` is `\beta(C)` |
 | `We write $A\subset B$ if $A\subseteq B$.` | one relation symbol for another: every later `\subset` is `\subseteq`, whatever stands on either side (Leanify refuses `\subset` without such a sentence, since it also means strict inclusion) |
 | `We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.` | a symbol for a notion of the vocabulary, with its arguments |
+| `We write $C_n$ for the $n$th Catalan number.`, `We write $\deg_G(v)$ for the degree of $v$ in $G$.`, `We write $M_n$ for the set of $n\times n$ matrices.` | the same, for the notions of the fields of other branches (`docs/vocabulary.md`); `$n$-th` is `$n$th`, and a letter that stands for several arguments (`n` of `$n\times n$`) is one argument of the notation |
 | `We write $\mathcal P$ for the set of probability distributions on $\mathbb{N}_0$.` | a symbol for the class of a vocabulary noun |
 | `By a distribution we mean a probability distribution on $\mathbb{N}_0$.` | a noun of the article (`Let $\nu$ be a distribution.`) |
 | `Throughout, increasing means non-decreasing.`, `In this paper, …` | the words stand for the others in the following sentences (`strictly increasing` is unchanged) |
 | `Throughout, $p$ and $q$ denote integers.`, `In this paper, the letters $s,t$ always denote integers.`, `Here and below, $d$ is an integer.` | from here on, each of the letters is an integer wherever it is bound: `For every $p\ge2$`, `If $q>2$`, `Let $p\in[1,3]$`, `\{1\le p\le5 : φ\}`, `\max_{1\le p\le3}`, `\forall p\in A`; `\lim_{q\to\infty}` is the limit of a sequence, and an exponent built from them is an integer power. Without the convention, a letter other than `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K` bounded by inequalities alone is a real number |
+
+### Objects of the fields, and modifiers with numbers
+
+A field may have objects of a type of its own (graphs, permutations, matrices), which an
+article binds as it binds numbers, and modifiers that take numbers:
+
+| Sentence | Reading |
+| --- | --- |
+| `Let $G$ be a graph on $n$ vertices.`, `For every positive integer $n$ and every tree $T$ on $n$ vertices, …`, `For every $k$-regular graph $G$ on $n$ vertices, …` | a modifier with numbers (`on $v$ vertices`, `$v$-regular`): its formulas are terms of the sentence, here the variable `n` of the result, and not variables that the noun phrase binds |
+| `Let $p$ be a polynomial of degree $n$.`, `Let $A$ and $B$ be $n\times n$ matrices.`, `Let $A$ be an invertible $n\times n$ matrix.` | the same before the noun (a formula with `\times`, or followed by a hyphen) and after it |
+| `$\sigma(i)$`, `$\sigma\tau$`, `$\sigma^k$` | a permutation applied to a number, a composition and a power: the field's notation, defined where it fits (`\sigma(i)` for `1\le i\le n`, `\sigma\tau` for permutations of the same degree) |
+| `$AB$`, `$2A$`, `$A+B$`, `$A^{-1}$`, `$A^\top$` (or `$A^T$`), `$\det A$`, `$\operatorname{tr}(A)$` | the algebra of matrices: `AB` asks that the columns of `A` are as many as the rows of `B`, `A^{-1}` that `A` is invertible; a claim that uses them is meaningful only then |
+| `$\deg p$`, `$\deg(pq)=\deg p+\deg q$` | `\deg` and `\det` apply to what follows them, as `\sin` does; the product of two real functions, or of a number and a real function, is taken value by value |
+| `$\overline{G}$` | the complement of a graph (a decoration of the field's type) |
 
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to

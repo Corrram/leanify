@@ -1031,7 +1031,36 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
               else none
             | _, _ => none
           | none => none
-    | _, _ => none)
+    | _, _ => none) <|>
+  (do
+    -- `every graph $G$ on $n$ vertices`, `every matrix $A$ of size $n\times n$`: the variable,
+    -- then a phrase with numbers (a modifier of the vocabulary with arguments)
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    match np.drop ws.length with
+    | .m v :: .w p :: post =>
+      let isVar := match v with | [.id _] | [.cmd _] => true | _ => subName v
+      if ws.isEmpty || !isVar || ![w!"on", w!"with", w!"of", w!"in"].contains p then none else
+      if !post.any (fun c => match c with | .m _ => true | _ => false) then none else
+      -- (`with $φ$` alone is a condition, read above)
+      if p == w!"with" && post.length == 1 then none else
+      some (.noun np, r')
+    | _ => none)
+
+/-- `every $k$-regular graph $G$`, `every $n\times n$ matrix $A$`: a formula before the noun
+(the argument of a modifier of the vocabulary), then a binder of `everyOne`. -/
+def everyLead (r : List Chunk) : Option (Bind × List Chunk) :=
+  match r with
+  | .m t :: .p 45 :: rest@(.w _ :: _) =>
+    match everyOne rest with
+    | some (.noun np, r') => some (.noun ([.m t, .p 45] ++ np), r')
+    | _ => none
+  | .m t :: rest@(.w _ :: _) =>
+    if !t.contains (.cmd w!"times") then none else
+    match everyOne rest with
+    | some (.noun np, r') => some (.noun (.m t :: np), r')
+    | _ => none
+  | _ => none
 
 /-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
 def everyMore : Nat → List Chunk → List Bind → List Bind × List Chunk
@@ -1041,7 +1070,7 @@ def everyMore : Nat → List Chunk → List Bind → List Bind × List Chunk
       (do let r ← kw [w!"and"] cs; match r with | .m _ :: _ => some r | _ => none) <|>
       -- `For every $k$, every $N$ and every $x$`
       (do let r ← punct 44 cs; kw [w!"every"] r <|> kw [w!"each"] r <|> kw [w!"and", w!"every"] r))
-    match next.bind everyOne with
+    match next.bind (fun r => everyOne r <|> everyLead r) with
     | some (b, r) => everyMore f r (b :: acc)
     | none => (acc.reverse, cs)
 
@@ -1049,7 +1078,7 @@ def everyMore : Nat → List Chunk → List Bind → List Bind × List Chunk
 def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
   -- (a binder with conditions is itself several: they are flattened)
   let flat (b : Bind) : List Bind := match b with | .many bs => bs | _ => [b]
-  match everyOne r with
+  match everyOne r <|> everyLead r with
   | some (b, r') =>
     match everyMore 4 r' [] with
     | ([], _) => some (b, r')
@@ -1063,11 +1092,36 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
   -- (a singular noun is read where its variable is)
   if (kw [w!"a"] r).isSome || (kw [w!"an"] r).isSome then none else
+  -- (`$n\times n$ matrices`, `$k$-regular graphs`: a formula before the noun)
+  let lead : List Chunk := match r with
+    | .m t :: .p 45 :: .w _ :: _ => [.m t, .p 45]
+    | .m t :: .w _ :: _ => if t.contains (.cmd w!"times") then [.m t] else []
+    | _ => []
+  let r := r.drop lead.length
   let ws := r.takeWhile fun c => match c with
     | .w w => w != w!"with" && w != w!"such" && w != w!"then" && w != w!"and"
     | .p 45 => true
     | _ => false
   let r1 := r.drop ws.length
+  -- (`graphs on $n$ vertices`, `polynomials of degree $n$`: a phrase with a number after
+  -- the noun, which follows the variable)
+  let preps := [w!"on", w!"of", w!"in", w!"over"]
+  let prepAt := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?.map (·.2)
+  let slotted : Option (List Chunk × List Chunk × List Chunk) := match prepAt, r1 with
+    | some i, .m t :: more =>
+      if i == 0 then none else
+      let after := more.takeWhile fun c => match c with
+        | .w w => !([w!"with", w!"such", w!"then", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w)
+        | _ => false
+      some (ws.take i, ws.drop i ++ [.m t] ++ after, more.drop after.length)
+    | _, _ => none
+  if let some (head, tailPhrase, r2) := slotted then
+    let (head, ps) := collectiveWords 8 head
+    let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
+    let nouns := vars.map fun v => Bind.noun (lead ++ head ++ [.m v] ++ tailPhrase)
+    return (match withConds r2 with
+      | some (c, r3) => (.many (nouns ++ together ++ [.ifCond c]), r3)
+      | none => (.many (nouns ++ together), r2))
   -- `distinct`, `relatively prime`: a condition on all of them
   let (ws, ps) := collectiveWords 8 ws
   let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
@@ -1076,7 +1130,7 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
     if together.isEmpty then none else
     let (vs, d) ← binderMath ts
     return (.many (.every vs d :: together), r1)
-  let nouns := vars.map fun v => Bind.noun (ws ++ [.m v])
+  let nouns := vars.map fun v => Bind.noun (lead ++ ws ++ [.m v])
   match withConds r1 with
   | some (c, r2) => some (.many (nouns ++ together ++ [.ifCond c]), r2)
   | none => some (.many (nouns ++ together), r1)
@@ -3151,6 +3205,22 @@ def isCondition : MT → Bool
   | .chain _ rs => !rs.isEmpty && rs.all fun (r, _) => r == .lt || r == .le || r == .gt || r == .ge || r == .ne
   | _ => false
 
+/-- The words of a noun phrase before its variable, with the formulas of its modifiers
+(`invertible $n\times n$ matrix`, `$k$-regular graph`): a formula before a hyphen, or a
+product `$m\times n$` before a word. -/
+def prenominalWords (cs : List Chunk) : List Chunk :=
+  let rec go : Nat → List Chunk → List Chunk → List Chunk
+    | 0, _, acc => acc.reverse
+    | _ + 1, [], acc => acc.reverse
+    | f + 1, c :: rest, acc =>
+      match c, rest with
+      | .w w, _ => if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
+      | .p 45, _ => go f rest (c :: acc)
+      | .m _, .p 45 :: _ => go f rest (c :: acc)
+      | .m t, .w _ :: _ => if t.contains (.cmd w!"times") then go f rest (c :: acc) else acc.reverse
+      | _, _ => acc.reverse
+  go (cs.length + 1) cs []
+
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   (do
@@ -3195,14 +3265,20 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
         | _, some ([_], _) => some ts
         -- `Let $n_0$ be a positive integer.`
         | _, _ => if subName ts then some ts else none
-    let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
+    let r0 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
+    -- (`a $k$-regular graph`, `an $n\times n$ matrix`: a formula before the noun, the
+    -- argument of a modifier of the vocabulary)
+    let lead : List Chunk := match r0 with
+      | .m t :: .p 45 :: .w _ :: _ => [.m t, .p 45]
+      | .m t :: .w _ :: _ => if t.contains (.cmd w!"times") then [.m t] else []
+      | _ => []
+    let r1 := r0.drop lead.length
     -- (`… be an integer and let $x_1,\ldots,x_n$ be …`, `… and $\lambda>0$`: the next binder)
     let cut := (r1.zipIdx.find? fun (c, i) => match c, r1[i + 1]? with
       | .w w, some (.w w') => w == w!"and" && w' == w!"let"
       | .w w, some (.m _) => w == w!"and"
       | _, _ => false).map (·.2)
-    let ws := (r1.take (cut.getD r1.length)).takeWhile (fun c => match c with
-      | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
+    let ws := prenominalWords (r1.take (cut.getD r1.length))
     -- a noun that ends in a fixed formula: `probability distribution on $\mathbb{N}_0$`
     let tail := match r1.drop ws.length with
       | .m t :: _ =>
@@ -3217,7 +3293,32 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _ => false
     let post := if tail.isEmpty && !opensPost then [] else
       rest.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
-    if ws.isEmpty then none else some (.noun (ws ++ tail ++ [.m v] ++ post), rest.drop post.length))
+    if ws.isEmpty then none else
+    -- `a graph on $n$ vertices`, `a polynomial of degree $n$`: a phrase with a number after
+    -- the noun (a modifier of the vocabulary with an argument), not a noun ending in a fixed
+    -- formula; the variable follows the noun
+    let simple (t : List MTok) : Bool := !t.isEmpty && t.all fun x => match x with
+      | .id n => n.length == 1 | .digit _ => true | .sym c => c == 43 || c == 45 | _ => false
+    let preps := [w!"on", w!"of", w!"in", w!"over"]
+    let lastPrep := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?
+    let argPhrase : Option (List Chunk × List Chunk) := match lastPrep, r1.drop ws.length with
+      | some (_, i), .m t :: more =>
+        -- (after `on` or `in`, a formula that is not a number may end the noun: `on $\mathbb{N}_0$`)
+        if i == 0 || (!tail.isEmpty && !simple t) then none else
+        let after := more.takeWhile (fun c => match c with | .w w => !([w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w) | _ => false)
+        -- (`on $n$ vertices`: words after the number; `of degree $n$`: none)
+        if tail.isEmpty || !after.isEmpty then some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop after.length)
+        else none
+      | _, _ => none
+    match argPhrase with
+    | some (np, rest') =>
+      -- (conditions after it, `with $φ$`, as for any noun)
+      let post' := match rest' with
+        | .w w :: _ => if w == w!"with" || w == w!"such" then
+            rest'.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true) else []
+        | _ => []
+      some (.noun (lead ++ np ++ post'), rest'.drop post'.length)
+    | none => some (.noun (lead ++ ws ++ tail ++ [.m v] ++ post), rest.drop post.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/

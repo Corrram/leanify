@@ -19,3 +19,10 @@ article-reader/
 /tests/Notions/article.leanify.*
 /tests/Square/article.leanify.*
 /tests/Statements/article.leanify.*
+/tests/Arithmetic/article.leanify.*
+/tests/Combinatorics/article.leanify.*
+/tests/Graphs/article.leanify.*
+/tests/Matrices/article.leanify.*
+/tests/Permutations/article.leanify.*
+/tests/Polynomials/article.leanify.*
+/tests/Special/article.leanify.*

@@ -273,6 +273,29 @@ def leanifyRequire (opts : List String) : IO (String × String) := do
     return byRev h "the commit of this checker"
   | _, _, _ => return ← byPath root "the checkout of this checker"
 
+/-- `text`, a `lakefile.toml`, with the table `entry` (a `[[lean_lib]]`) after its last
+library and before the tables that follow it (`[[lean_exe]]`), so that the tables of one
+kind stay together; at the end if it has no library. -/
+def addLeanLib (text entry : String) : String :=
+  let lines := (text.splitOn "\n").toArray
+  let header (l : String) : Bool := l.startsWith "["
+  match (List.range lines.size).reverse.find? (fun i => (lines[i]!).startsWith "[[lean_lib]]") with
+  | none => text ++ (if text.endsWith "\n" then "" else "\n") ++ "\n" ++ entry
+  | some last =>
+    match ((List.range lines.size).drop (last + 1)).find? (fun i => header lines[i]!) with
+    | none => text ++ (if text.endsWith "\n" then "" else "\n") ++ "\n" ++ entry
+    | some next =>
+      -- (the comments and blank lines before the next table stay with it)
+      let rec back : Nat → Nat → Nat
+        | 0, i => i
+        | f + 1, i => if i > last + 1 && ((lines[i - 1]!).startsWith "#" || (lines[i - 1]!).trimAscii.isEmpty)
+            then back f (i - 1) else i
+      let at_ := back lines.size next
+      let before := (lines.toList.take at_)
+      let after := (lines.toList.drop at_).dropWhile (·.trimAscii.isEmpty)
+      let before := (before.reverse.dropWhile (·.trimAscii.isEmpty)).reverse
+      "\n".intercalate (before ++ [""] ++ (entry.splitOn "\n").dropLast ++ [""] ++ after)
+
 /-- Make the Lean project of an article that lies in none, in the folder `proj` (`lean`,
 next to the article): `lean-toolchain` (the Lean version of the checker), a `lakefile.toml`
 that requires the Leanify of the checker and has the libraries `libs`, and a `.gitignore`
@@ -500,7 +523,7 @@ margin marks of `leanify.sty`). -/
       if (text.splitOn s!"name = \"{lib}\"").length > 1 then
         IO.println s!"The library {lib} is in lakefile.toml. Build the certificate with `lake build {ns}.Certified`."
       else
-        IO.FS.writeFile lakefile (text ++ (if text.endsWith "\n" then "" else "\n") ++ "\n" ++ entry src)
+        IO.FS.writeFile lakefile (addLeanLib text (entry src))
         IO.println s!"Added the library {lib} to {lakefile}. Build the certificate with `lake build {ns}.Certified`."
     else
       IO.println s!"Add the library to the lakefile (once):\n\n{entry src}\nthen build the certificate with `lake build {ns}.Certified`."

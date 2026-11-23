@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={graphs}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $V(G)$ for the vertex set of $G$.
+We write $e(G)$ for the number of edges of $G$.
+We write $\deg_G(v)$ for the degree of $v$ in $G$.
+We write $\chi(G)$ for the chromatic number of $G$.
+We write $\omega(G)$ for the clique number of $G$.
+We write $\alpha(G)$ for the independence number of $G$.
+We write $K_n$ for the complete graph on $n$ vertices.
+We write $C_n$ for the cycle on $n$ vertices.
+
+\section{Graphs}
+
+\begin{lemma}\label{handshake}
+For every positive integer $n$ and every graph $G$ on $n$ vertices, $\sum_{v=1}^{n}\deg_G(v)=2e(G)$.
+\end{lemma}
+
+\begin{lemma}\label{trees}
+For every positive integer $n$ and every tree $T$ on $n$ vertices, $e(T)=n-1$.
+\end{lemma}
+
+\begin{lemma}\label{clique}
+For every graph $G$, $\omega(G)\le\chi(G)$ and $\alpha(G)=\omega(\overline{G})$.
+\end{lemma}
+
+\begin{lemma}\label{complete}
+For every positive integer $n$, $\chi(K_n)=n$ and $e(K_n)=\frac{n(n-1)}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{cycles}
+For every integer $n\ge3$, $C_n$ is connected, and $C_n$ is Hamiltonian. Moreover, $\chi(C_5)=3$ and $\chi(C_6)=2$.
+\end{lemma}
+
+\begin{lemma}\label{bipartite}
+Every bipartite graph $G$ with $e(G)\ge1$ satisfies $\chi(G)=2$.
+\end{lemma}
+
+\begin{lemma}\label{degree}
+Let $n$ be a positive integer and let $G$ be a graph on $n$ vertices. Then $\deg_G(v)\le n-1$ for every $v\in V(G)$.
+\end{lemma}
+
+\begin{lemma}\label{regular}
+Let $k$ and $n$ be positive integers. For every $k$-regular graph $G$ on $n$ vertices, $2e(G)=kn$.
+\end{lemma}
+
+\end{document}

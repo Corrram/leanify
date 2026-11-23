@@ -279,3 +279,292 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | $\arctan$ | ℝ → ℝ | the inverse tangent (Mathlib `Real.arctan`) |
 | $\cot$ | ℝ → ℝ | the cotangent, where the sine is not zero (Mathlib `Real.cot`) |
 
+## `arithmetic`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| perfect number | ℝ | a positive integer equal to the sum of its proper divisors: `σ(n) = 2n` (Mathlib `Nat.Perfect`) |
+| mersenne prime | ℝ | a prime `2^k - 1` |
+| arithmetic function | ℝ → ℝ | a function of the positive integers, as a real function (Mathlib `ArithmeticFunction`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| perfect | ℝ | `σ(n) = 2n` (Mathlib `Nat.Perfect`) |
+| abundant | ℝ | `σ(n) > 2n` |
+| deficient | ℝ | `σ(n) < 2n` |
+| multiplicative | ℝ → ℝ | `f(1) = 1`, `f(mn) = f(m)f(n)` for coprime positive integers (Mathlib `ArithmeticFunction.IsMultiplicative`) |
+| completely multiplicative | ℝ → ℝ | `f(1) = 1`, `f(mn) = f(m)f(n)` for all positive integers |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| euler's totient function | ℝ → ℝ | `φ(n)`, the integers in `[1, n]` coprime to `n` (Mathlib `Nat.totient`) |
+| möbius function | ℝ → ℝ | `μ(n)` (Mathlib `ArithmeticFunction.moebius`) |
+| moebius function | ℝ → ℝ | `μ(n)` (Mathlib `ArithmeticFunction.moebius`) |
+| divisor counting function | ℝ → ℝ | `τ(n)`, the number of positive divisors (Mathlib `Nat.divisors`) |
+| prime-counting function | ℝ → ℝ | `π(x)`, the number of primes `≤ x` (Mathlib `Nat.primeCounting`) |
+| prime counting function | ℝ → ℝ | `π(x)`, the number of primes `≤ x` (Mathlib `Nat.primeCounting`) |
+| number of divisors of $a$ | ℝ → ℝ | the number of positive divisors (Mathlib `(Nat.divisors n).card`) |
+| number of positive divisors of $a$ | ℝ → ℝ | the number of positive divisors (Mathlib `(Nat.divisors n).card`) |
+| sum of the divisors of $a$ | ℝ → ℝ | `σ(n)` (Mathlib `ArithmeticFunction.sigma 1`) |
+| sum of the positive divisors of $a$ | ℝ → ℝ | `σ(n)` (Mathlib `ArithmeticFunction.sigma 1`) |
+| sum of divisors of $a$ | ℝ → ℝ | `σ(n)` (Mathlib `ArithmeticFunction.sigma 1`) |
+| sum of the $a$ th powers of the divisors of $b$ | ℝ → ℝ → ℝ | `σ_k(n)` (Mathlib `ArithmeticFunction.sigma k`) |
+| number of primes not exceeding $a$ | ℝ → ℝ | `π(x)` (Mathlib `Nat.primeCounting`) |
+| number of primes at most $a$ | ℝ → ℝ | `π(x)` (Mathlib `Nat.primeCounting`) |
+| number of primes less than or equal to $a$ | ℝ → ℝ | `π(x)` (Mathlib `Nat.primeCounting`) |
+| $a$ th prime | ℝ → ℝ | `p_1 = 2`, `p_2 = 3`, … (Mathlib `Nat.nth Nat.Prime (n - 1)`) |
+| $a$ th prime number | ℝ → ℝ | `p_1 = 2`, `p_2 = 3`, … (Mathlib `Nat.nth Nat.Prime (n - 1)`) |
+| number of distinct prime factors of $a$ | ℝ → ℝ | `ω(n)` (Mathlib `ArithmeticFunction.cardDistinctFactors`) |
+| number of distinct prime divisors of $a$ | ℝ → ℝ | `ω(n)` (Mathlib `ArithmeticFunction.cardDistinctFactors`) |
+| number of prime factors of $a$ counted with multiplicity | ℝ → ℝ | `Ω(n)` (Mathlib `ArithmeticFunction.cardFactors`) |
+| $a$-adic valuation of $b$ | ℝ → ℝ → ℝ | the exponent of the prime `p` in `n` (Mathlib `padicValNat`) |
+| multiplicative order of $a$ modulo $b$ | ℝ → ℝ → ℝ | the least `k ≥ 1` with `a^k ≡ 1 (mod n)`, for `a` coprime to `n` (Mathlib `orderOf` in `ZMod n`) |
+| order of $a$ modulo $b$ | ℝ → ℝ → ℝ | the least `k ≥ 1` with `a^k ≡ 1 (mod n)`, for `a` coprime to `n` (Mathlib `orderOf` in `ZMod n`) |
+| sum of the digits of $a$ | ℝ → ℝ | in base 10 (Mathlib `(Nat.digits 10 n).sum`) |
+| sum of the digits of $a$ in base $b$ | ℝ → ℝ → ℝ | (Mathlib `(Nat.digits b n).sum`) |
+| dirichlet convolution of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `(f * g)(n) = ∑_{d ∣ n} f(d) g(n/d)` (Mathlib `ArithmeticFunction` multiplication) |
+
+## `combinatorics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th fibonacci number | ℝ → ℝ | `F_0 = 0`, `F_1 = 1`, `F_{n+2} = F_{n+1} + F_n` (Mathlib `Nat.fib`) |
+| $a$ th catalan number | ℝ → ℝ | `C_n = \binom{2n}{n}/(n+1)` (Mathlib `catalan`) |
+| $a$ th bell number | ℝ → ℝ | the number of partitions of a set of `n` elements (Mathlib `Nat.bell`) |
+| $a$ th harmonic number | ℝ → ℝ | `H_n = ∑_{k=1}^{n} 1/k` (Mathlib `harmonic`) |
+| $a$ th triangular number | ℝ → ℝ | `n(n+1)/2` |
+| number of derangements of $a$ elements | ℝ → ℝ | the permutations of `n` elements without fixed points (Mathlib `numDerangements`) |
+| number of partitions of $a$ | ℝ → ℝ | the ways of writing `n` as a sum of positive integers, without order (Mathlib `Nat.Partition`) |
+| number of partitions of a set of $a$ elements | ℝ → ℝ | the Bell number (Mathlib `Nat.bell`) |
+| number of partitions of a set of $a$ elements into $b$ blocks | ℝ → ℝ → ℝ | the Stirling number of the second kind (Mathlib `Nat.stirlingSecond`) |
+| stirling number of the second kind for $a$ and $b$ | ℝ → ℝ → ℝ | the partitions of a set of `n` elements into `k` blocks (Mathlib `Nat.stirlingSecond`) |
+| number of permutations of $a$ elements with $b$ cycles | ℝ → ℝ → ℝ | the unsigned Stirling number of the first kind (Mathlib `Nat.stirlingFirst`) |
+| stirling number of the first kind for $a$ and $b$ | ℝ → ℝ → ℝ | unsigned: the permutations of `n` elements with `k` cycles (Mathlib `Nat.stirlingFirst`) |
+
+## `polynomials`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| polynomial | ℝ → ℝ | a real function given by a polynomial with real coefficients (Mathlib `Polynomial.eval`) |
+| polynomial function | ℝ → ℝ | a real function given by a polynomial with real coefficients (Mathlib `Polynomial.eval`) |
+| real polynomial | ℝ → ℝ | a real function given by a polynomial with real coefficients (Mathlib `Polynomial.eval`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| monic | ℝ → ℝ | leading coefficient 1 (Mathlib `Polynomial.Monic`) |
+| quadratic | ℝ → ℝ | a polynomial of degree 2 |
+| cubic | ℝ → ℝ | a polynomial of degree 3 |
+| quartic | ℝ → ℝ | a polynomial of degree 4 |
+| nonconstant | ℝ → ℝ | a polynomial of degree at least 1 |
+| irreducible over $\mathbb{Q}$ | ℝ → ℝ | with rational coefficients, and irreducible in `ℚ[X]` (Mathlib `Irreducible`) |
+| irreducible over $\mathbb{R}$ | ℝ → ℝ | irreducible in `ℝ[X]` (Mathlib `Irreducible`) |
+| irreducible over $\mathbb{Q}$ | ℝ → ℝ | with rational coefficients, and irreducible in `ℚ[X]` (Mathlib `Irreducible`) |
+| irreducible over $\mathbb{R}$ | ℝ → ℝ | irreducible in `ℝ[X]` (Mathlib `Irreducible`) |
+| nonzero | ℝ → ℝ | not the zero polynomial |
+| of degree $x$ | ℝ → ℝ | a nonzero polynomial of degree `n` |
+| of degree at most $x$ | ℝ → ℝ | zero, or of degree at most `n` |
+| with real coefficients | ℝ → ℝ | a polynomial (Mathlib `Polynomial ℝ`) |
+| with integer coefficients | ℝ → ℝ | every coefficient is an integer |
+| with rational coefficients | ℝ → ℝ | every coefficient is rational |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| degree of $a$ | (ℝ → ℝ) → ℝ | of a nonzero polynomial (Mathlib `Polynomial.natDegree`) |
+| leading coefficient of $a$ | (ℝ → ℝ) → ℝ | of a nonzero polynomial (Mathlib `Polynomial.leadingCoeff`) |
+| constant term of $a$ | (ℝ → ℝ) → ℝ | `p(0)` (Mathlib `Polynomial.coeff p 0`) |
+| $a$ th coefficient of $b$ | ℝ → (ℝ → ℝ) → ℝ | the coefficient of `x^k` (Mathlib `Polynomial.coeff`) |
+| number of real roots of $a$ | (ℝ → ℝ) → ℝ | distinct, of a nonzero polynomial (Mathlib `Polynomial.roots`) |
+| number of distinct real roots of $a$ | (ℝ → ℝ) → ℝ | of a nonzero polynomial (Mathlib `Polynomial.roots`) |
+| set of real roots of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x ∈ ℝ : p(x) = 0}` |
+| multiplicity of $a$ as a root of $b$ | ℝ → (ℝ → ℝ) → ℝ | `0` if it is not a root (Mathlib `Polynomial.rootMultiplicity`) |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\deg$ | (ℝ → ℝ) → ℝ | the degree of a nonzero polynomial (Mathlib `Polynomial.natDegree`) |
+
+## `graphs`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| graph | $\mathrm{Graph}$ | a finite simple graph on the vertices `1, …, n` (Mathlib `SimpleGraph (Fin n)`) |
+| simple graph | $\mathrm{Graph}$ | a finite simple graph (Mathlib `SimpleGraph (Fin n)`) |
+| finite graph | $\mathrm{Graph}$ | a finite simple graph (Mathlib `SimpleGraph (Fin n)`) |
+| finite simple graph | $\mathrm{Graph}$ | (Mathlib `SimpleGraph (Fin n)`) |
+| tree | $\mathrm{Graph}$ | connected and acyclic (Mathlib `SimpleGraph.IsTree`) |
+| forest | $\mathrm{Graph}$ | acyclic (Mathlib `SimpleGraph.IsAcyclic`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| connected | $\mathrm{Graph}$ | nonempty, and any two vertices are joined by a walk (Mathlib `SimpleGraph.Connected`) |
+| acyclic | $\mathrm{Graph}$ | without cycles (Mathlib `SimpleGraph.IsAcyclic`) |
+| bipartite | $\mathrm{Graph}$ | 2-colorable (Mathlib `SimpleGraph.Colorable 2`) |
+| regular | $\mathrm{Graph}$ | all vertices have the same degree (Mathlib `SimpleGraph.IsRegularOfDegree`) |
+| complete | $\mathrm{Graph}$ | any two distinct vertices are adjacent (`G = ⊤`) |
+| hamiltonian | $\mathrm{Graph}$ | with a cycle through every vertex (Mathlib `SimpleGraph.IsHamiltonian`) |
+| triangle-free | $\mathrm{Graph}$ | without three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`) |
+| $x$-regular | $\mathrm{Graph}$ | every vertex has degree `k` (Mathlib `SimpleGraph.IsRegularOfDegree`) |
+| on $x$ vertices | $\mathrm{Graph}$ | with `n` vertices |
+| with $x$ vertices | $\mathrm{Graph}$ | with `n` vertices |
+| with $x$ edges | $\mathrm{Graph}$ | with `m` edges |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| vertex set of $a$ | $\mathrm{Graph}$ → ℝ → Prop | `{1, …, n}` |
+| number of vertices of $a$ | $\mathrm{Graph}$ → ℝ | `n` (Mathlib `Fintype.card (Fin n)`) |
+| number of edges of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `G.edgeSet`) |
+| degree of $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ | the number of neighbours of a vertex (Mathlib `SimpleGraph.degree`) |
+| set of neighbours of $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ → Prop | the vertices adjacent to a vertex (Mathlib `SimpleGraph.neighborSet`) |
+| set of neighbors of $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ → Prop | the vertices adjacent to a vertex (Mathlib `SimpleGraph.neighborSet`) |
+| adjacency relation of $a$ | $\mathrm{Graph}$ → ℝ → ℝ → Prop | `u ∼ v` (Mathlib `SimpleGraph.Adj`) |
+| distance between $a$ and $b$ in $c$ | ℝ → ℝ → $\mathrm{Graph}$ → ℝ | the length of a shortest walk, between vertices of one component (Mathlib `SimpleGraph.dist`) |
+| minimum degree of $a$ | $\mathrm{Graph}$ → ℝ | of a graph with a vertex (Mathlib `SimpleGraph.minDegree`) |
+| maximum degree of $a$ | $\mathrm{Graph}$ → ℝ | of a graph with a vertex (Mathlib `SimpleGraph.maxDegree`) |
+| chromatic number of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.chromaticNumber`) |
+| clique number of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.cliqueNum`) |
+| independence number of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.indepNum`) |
+| number of connected components of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.ConnectedComponent`) |
+| number of components of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.ConnectedComponent`) |
+| diameter of $a$ | $\mathrm{Graph}$ → ℝ | of a connected graph (Mathlib `SimpleGraph.diam`) |
+| girth of $a$ | $\mathrm{Graph}$ → ℝ | the length of a shortest cycle, of a graph with a cycle (Mathlib `SimpleGraph.girth`) |
+| complete graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | `K_n` (Mathlib `⊤`) |
+| cycle on $a$ vertices | ℝ → $\mathrm{Graph}$ | `C_n`, for `n ≥ 3` (Mathlib `SimpleGraph.cycleGraph`) |
+| cycle graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | `C_n`, for `n ≥ 3` (Mathlib `SimpleGraph.cycleGraph`) |
+| path on $a$ vertices | ℝ → $\mathrm{Graph}$ | `P_n` (Mathlib `SimpleGraph.pathGraph`) |
+| path graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | `P_n` (Mathlib `SimpleGraph.pathGraph`) |
+| empty graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | no edges (Mathlib `⊥`) |
+| complete bipartite graph $K_{a,b}$ | ℝ → ℝ → $\mathrm{Graph}$ | parts `{1, …, m}` and `{m+1, …, m+n}` |
+| complement of $a$ | $\mathrm{Graph}$ → $\mathrm{Graph}$ | the same vertices, the other pairs adjacent (Mathlib `Gᶜ`) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| $\overline{x}$ | $\mathrm{Graph}$ | the complement `Gᶜ` |
+
+## `permutations`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| permutation | $\mathrm{Perm}$ | a permutation of `{1, …, n}` for some `n` (Mathlib `Equiv.Perm (Fin n)`) |
+| transposition | $\mathrm{Perm}$ | exchanges two points (Mathlib `Equiv.Perm.IsSwap`) |
+| cycle | $\mathrm{Perm}$ | a single nontrivial cycle (Mathlib `Equiv.Perm.IsCycle`) |
+| derangement | $\mathrm{Perm}$ | without fixed points |
+| involution | $\mathrm{Perm}$ | `σ² = id` |
+| identity | $\mathrm{Perm}$ | the identity permutation (of its degree) |
+| identity permutation | $\mathrm{Perm}$ | the identity permutation (of its degree) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| even | $\mathrm{Perm}$ | sign `1` (Mathlib `Equiv.Perm.sign`) |
+| odd | $\mathrm{Perm}$ | sign `-1` (Mathlib `Equiv.Perm.sign`) |
+| of $\{1,\dots ,x\}$ | $\mathrm{Perm}$ | of degree `n` |
+| of $\{1,\ldots ,x\}$ | $\mathrm{Perm}$ | of degree `n` |
+| of degree $x$ | $\mathrm{Perm}$ | a permutation of `{1, …, n}` |
+| on $x$ letters | $\mathrm{Perm}$ | a permutation of `{1, …, n}` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| sign of $a$ | $\mathrm{Perm}$ → ℝ | `1` or `-1` (Mathlib `Equiv.Perm.sign`) |
+| signature of $a$ | $\mathrm{Perm}$ → ℝ | `1` or `-1` (Mathlib `Equiv.Perm.sign`) |
+| order of $a$ | $\mathrm{Perm}$ → ℝ | the least `k ≥ 1` with `σ^k = id` (Mathlib `orderOf`) |
+| number of fixed points of $a$ | $\mathrm{Perm}$ → ℝ | the `i` with `σ(i) = i` |
+| number of cycles of $a$ | $\mathrm{Perm}$ → ℝ | in its cycle decomposition, fixed points included (Mathlib `Equiv.Perm.cycleType`) |
+| number of inversions of $a$ | $\mathrm{Perm}$ → ℝ | the pairs `i < j` with `σ(i) > σ(j)` |
+| degree of $a$ | $\mathrm{Perm}$ → ℝ | `n`, for a permutation of `{1, …, n}` |
+| inverse of $a$ | $\mathrm{Perm}$ → $\mathrm{Perm}$ | `σ⁻¹` |
+| identity permutation of $\{1,\dots ,a\}$ | ℝ → $\mathrm{Perm}$ | `id`, of degree `n` |
+| identity permutation of $\{1,\ldots ,a\}$ | ℝ → $\mathrm{Perm}$ | `id`, of degree `n` |
+| set of permutations of $\{1,\dots ,a\}$ | ℝ → $\mathrm{Perm}$ → Prop | the symmetric group `S_n` |
+| set of permutations of $\{1,\ldots ,a\}$ | ℝ → $\mathrm{Perm}$ → Prop | the symmetric group `S_n` |
+| symmetric group on $a$ letters | ℝ → $\mathrm{Perm}$ → Prop | the permutations of `{1, …, n}` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| $x(t)$ | $\mathrm{Perm}$ | `σ(i)`, for `i` one of `1, …, n` |
+| $\cdot$ | $\mathrm{Perm}$ | `στ = σ ∘ τ`, for permutations of the same degree |
+| $x^n$ | $\mathrm{Perm}$ | `σ^k`, for a natural number `k` |
+| $\operatorname{sgn}$ | $\mathrm{Perm}$ | the sign (Mathlib `Equiv.Perm.sign`) |
+| $\operatorname{sign}$ | $\mathrm{Perm}$ | the sign (Mathlib `Equiv.Perm.sign`) |
+
+## `matrices`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| square | $\mathrm{Mat}$ | `n × n` |
+| symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
+| skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
+| orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
+| invertible | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| nonsingular | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| singular | $\mathrm{Mat}$ | square, with `det A = 0` |
+| positive definite | $\mathrm{Mat}$ | `xᵀAx > 0` for `x ≠ 0`, and symmetric (Mathlib `Matrix.PosDef`) |
+| positive semidefinite | $\mathrm{Mat}$ | `xᵀAx ≥ 0`, and symmetric (Mathlib `Matrix.PosSemidef`) |
+| diagonal | $\mathrm{Mat}$ | square, zero off the diagonal |
+| upper triangular | $\mathrm{Mat}$ | square, zero below the diagonal |
+| lower triangular | $\mathrm{Mat}$ | square, zero above the diagonal |
+| nilpotent | $\mathrm{Mat}$ | square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`) |
+| idempotent | $\mathrm{Mat}$ | square, `A² = A` |
+| stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
+| $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
+| of size $x\timesa$ | $\mathrm{Mat}$ | `m × n` |
+| of order $x$ | $\mathrm{Mat}$ | `n × n` |
+| of rank $x$ | $\mathrm{Mat}$ | (Mathlib `Matrix.rank`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of rows of $a$ | $\mathrm{Mat}$ → ℝ | `m` |
+| number of columns of $a$ | $\mathrm{Mat}$ → ℝ | `n` |
+| entry of $a$ in row $b$ and column $c$ | $\mathrm{Mat}$ → ℝ → ℝ → ℝ | `A i j`, for `1 ≤ i ≤ m`, `1 ≤ j ≤ n` |
+| determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
+| trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
+| rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
+| inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
+| identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| identity matrix of order $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ identity matrix | ℝ → ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
+| set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
+| $+$ | $\mathrm{Mat}$ | `A + B`, of the same size |
+| $-$ | $\mathrm{Mat}$ | `A - B`, of the same size |
+| $-$ (sign) | $\mathrm{Mat}$ | `-A` |
+| $\cdot$ | $\mathrm{Mat}$ | `AB` (`cA` for a `1 × 1` matrix `c`) |
+| $/$ | $\mathrm{Mat}$ | `A B⁻¹`, for an invertible `B` (`1/A = A⁻¹`) |
+| $x^n$ | $\mathrm{Mat}$ | `A^k` of a square matrix, `k` natural |
+| $x^\top$ | $\mathrm{Mat}$ | `Aᵀ` (also `A^T`, `A^\intercal`) |
+| $\det$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{det}$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
+| $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+
+## `special`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| gamma function | ℝ → ℝ | `Γ(x) = ∫_0^∞ t^{x-1} e^{-t} dt`, extended (Mathlib `Real.Gamma`) |
+| beta function of $a$ and $b$ | ℝ → ℝ → ℝ | `B(x,y) = Γ(x)Γ(y)/Γ(x+y)`, for `x, y > 0` |
+| riemann zeta function | ℝ → ℝ | `ζ(s) = ∑_{n ≥ 1} n^{-s}`, for `s > 1` |
+| $a$ th bernoulli number | ℝ → ℝ | `B_0 = 1`, `B_1 = -1/2`, `B_2 = 1/6`, … (Mathlib `bernoulli`) |
+| sinc function | ℝ → ℝ | `sin x / x`, and `1` at `0` (Mathlib `Real.sinc`) |
+| euler-mascheroni constant | ℝ | `γ = lim (H_n - log n)` (Mathlib `Real.eulerMascheroniConstant`) |
+| euler's constant | ℝ | `γ = lim (H_n - log n)` (Mathlib `Real.eulerMascheroniConstant`) |
+| golden ratio | ℝ | `(1 + √5)/2` (Mathlib `goldenRatio`) |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\Gamma$ | ℝ → ℝ | the gamma function, except at `0, -1, -2, …` (Mathlib `Real.Gamma`) |
+| $\zeta$ | ℝ → ℝ | the Riemann zeta function `∑ n^{-s}`, for `s > 1` (Mathlib `riemannZeta`) |
+

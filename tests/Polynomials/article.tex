@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={polynomials}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\operatorname{lc}(p)$ for the leading coefficient of $p$.
+We write $a_k(p)$ for the $k$th coefficient of $p$.
+We write $N(p)$ for the number of real roots of $p$.
+We write $Z(p)$ for the set of real roots of $p$.
+
+\section{Polynomials}
+
+\begin{lemma}\label{product}
+Let $p$ and $q$ be nonzero polynomials. Then $\deg(pq)=\deg p+\deg q$ and $\operatorname{lc}(pq)=\operatorname{lc}(p)\operatorname{lc}(q)$.
+\end{lemma}
+
+\begin{lemma}\label{roots}
+Let $n$ be a positive integer. For every polynomial $p$ of degree $n$, $N(p)\le n$.
+\end{lemma}
+
+\begin{lemma}\label{odd}
+Let $p$ be a cubic polynomial. Then there is $x\in\mathbb{R}$ such that $p(x)=0$.
+\end{lemma}
+
+\begin{lemma}\label{monic}
+Let $p$ be a monic polynomial with integer coefficients, and let $r$ be a rational number with $p(r)=0$. Then $r$ is an integer.
+\end{lemma}
+
+\begin{lemma}\label{irreducible}
+Let $p$ be a quadratic polynomial with $N(p)=0$. Then $p$ is irreducible over $\mathbb{R}$.
+\end{lemma}
+
+\begin{lemma}\label{coefficients}
+Let $p$ be a polynomial. Then $a_0(p)=p(0)$.
+\end{lemma}
+
+\begin{lemma}\label{set}
+Let $p$ be a nonzero polynomial and let $a\in Z(p)$. Then $p(a)=0$.
+\end{lemma}
+
+\end{document}

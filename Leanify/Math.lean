@@ -142,13 +142,13 @@ end MT
 namespace Math
 
 /-- The named functions of one argument: LaTeX's operator names (`\sin`, `\cosh`,
-`\arctan`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
+`\arctan`, `\deg`, `\det`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
 with or without parentheses (`\cosh x`, `\sin^2 x`). This is syntax: what a name means is
 said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field of the
 vocabulary (`\cosh` in `hyperbolic`), and a name without a meaning is reported. -/
 def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im",
   w!"sinh", w!"cosh", w!"tanh", w!"coth", w!"cot", w!"sec", w!"csc",
-  w!"arcsin", w!"arccos", w!"arctan"]
+  w!"arcsin", w!"arccos", w!"arctan", w!"deg", w!"det"]
 
 def isReals : MT → Bool
   | .id n => n == w!"\\mathbb{R}"
@@ -663,22 +663,27 @@ def run : Nat → Mode → List MTok → R
         | _ => do
           let (a, r1) ← run f .group rest
           some (.sup a (.frac (.num 1) (.num 2)), r1)
-      else if wFunctions.contains n then do
+      -- (`\deg_G(v)`: a name with a subscript is a symbol of the article, not the function)
+      else if wFunctions.contains n && rest.head? != some (.sym 95) then do
         -- `\exp(x)`, `\log x`, `\sin^2 x` (the square of `\sin x`)
         let (pow, r1) ← match rest with
           | .sym 94 :: r => do let (e, r') ← run f .group r; some (some e, r')
           | r => some (none, r)
-        let (arg, r2) ← match r1 with
+        let (args, r2) ← match r1 with
           | .sym 40 :: r => do
             let (m, r') ← run f (.list 41 []) r
             match m with
-            | .conj [x] => some (x, r')
+            | .conj [x] => some ([x], r')
+            -- (several arguments: a symbol of the article with this name, `\deg(v,G)` for
+            -- `\deg_G(v)`)
+            | .conj xs => if xs.length > 1 && pow.isNone then some (xs, r') else none
             | _ => none
           | r => do
             let (x0, r') ← run f (.atom false) r
-            run f (.postfix false x0) r'
+            let (x, r'') ← run f (.postfix false x0) r'
+            some ([x], r'')
         let name := if n == w!"ln" then w!"log" else n
-        let app := MT.app (.id ([92] ++ name)) [arg]
+        let app := MT.app (.id ([92] ++ name)) args
         some (match pow with | some e => .sup app e | none => app, r2)
 
       else if n == w!"sum" || n == w!"prod" then
