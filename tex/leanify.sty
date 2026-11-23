@@ -51,7 +51,7 @@
 %% Optionally, \leanifyreport prints a one-line summary where it appears, and
 %% \leanifyreadings the readings (in an appendix, say).
 \NeedsTeXFormat{LaTeX2e}[2022/06/01]
-\ProvidesPackage{leanify}[2026/11/23 v0.10 Leanify checks, status marks and readings]
+\ProvidesPackage{leanify}[2026/11/23 v0.9 Leanify checks, status marks and readings]
 \RequirePackage{mathtools}
 \RequirePackage{amssymb}
 
@@ -246,14 +246,19 @@
     checker ~ named ~ by ~ the ~ option ~ exe) ~ on ~ the ~ PATH? ~ Its ~ output ~
     (in ~ \c__leanify_log_str) ~ begins: ~ #1
   }
-% An article in no Lean project, where the package ran nothing before it looked
-% for the checker on the PATH: what it could not do is said without a warning
-% (to the terminal, or to the log alone), so that the article compiles as
-% quietly as before on a machine without Leanify.
-\msg_new:nnn { leanify } { no-shell-no-project }
+% An article in no Lean project, whose checker is `leanify' on the PATH, on a
+% machine where that did not run: a warning that says what to install (the
+% package is never silent about an article that it did not check; check=false
+% is how an author says that it need not be checked).
+\msg_new:nnn { leanify } { no-checker }
   {
-    Leanify ~ did ~ not ~ check ~ the ~ article, ~ because ~ shell ~ escape ~
-    is ~ off
+    Leanify ~ did ~ not ~ check ~ \c__leanify_article_str : ~ the ~ checker ~
+    `leanify' ~ did ~ not ~ run ~ (#1). ~ Install ~ Leanify ~ and ~ put ~ `leanify' ~
+    on ~ the ~ PATH ~ (the ~ releases ~ at ~ https://github.com/Corrram/leanify ~
+    have ~ the ~ executable; ~ it ~ needs ~ neither ~ Lean ~ nor ~ mathlib ~ to ~
+    check ~ an ~ article, ~ and ~ it ~ sets ~ up ~ the ~ Lean ~ project ~ of ~ the ~
+    article ~ itself), ~ or ~ name ~ the ~ checker ~ with ~ the ~ option ~ exe, ~ or ~
+    load ~ the ~ package ~ with ~ check=false ~ to ~ silence ~ this
   }
 
 % The Lean project: the nearest folder, up to three above, with a lakefile.
@@ -291,7 +296,26 @@
     \str_if_empty:NTF \l__leanify_exeopt_str
       {
         \bool_if:NTF \l__leanify_path_bool
-          { \str_set:Nn \l__leanify_exe_str { leanify } }
+          {
+            % the checker of the article's own Lean project (the folder `lean'
+            % that `leanify tex' makes), if it is built and current: it is the
+            % version that the project requires. Otherwise `leanify' on the PATH.
+            \str_set:Nn \l__leanify_exe_str { leanify }
+            \sys_if_platform_windows:TF
+              { \str_set:Nn \l__leanify_ext_str { .exe } }
+              { \str_clear:N \l__leanify_ext_str }
+            \str_set:Nx \l__leanify_cand_str
+              { lean/.lake/packages/leanify/.lake/build/bin/leanify \l__leanify_ext_str }
+            \file_if_exist:nT { \l__leanify_cand_str }
+              {
+                \file_compare_timestamp:nNnF { lean/lake-manifest.json } > { \l__leanify_cand_str }
+                  {
+                    \str_set_eq:NN \l__leanify_exe_str \l__leanify_cand_str
+                    \sys_if_platform_windows:T
+                      { \exp_args:NNnV \str_replace_all:Nnn \l__leanify_exe_str { / } \c_backslash_str }
+                  }
+              }
+          }
           { \__leanify_find_project_exe: }
       }
       { \str_set_eq:NN \l__leanify_exe_str \l__leanify_exeopt_str }
@@ -374,7 +398,7 @@
         % that begins with a quotation mark is read differently by cmd.exe)
         \sys_shell_now:e
           {
-            \bool_if:NTF \l__leanify_path_bool
+            \str_if_eq:VnTF \l__leanify_exe_str { leanify }
               { \l__leanify_exe_str } { " \l__leanify_exe_str " }
             \c_space_tl \l__leanify_args_str
             \c_space_tl > ~ " \c__leanify_log_str " ~ 2>&1
@@ -489,23 +513,12 @@
               {
                 \__leanify_log_start:
                 \bool_if:NTF \l__leanify_path_bool
-                  {
-                    \__leanify_summary:e
-                      {
-                        \c__leanify_article_str \c_space_tl was ~ not ~ checked: ~ it ~
-                        lies ~ in ~ no ~ Lean ~ project, ~ and ~ the ~ checker ~
-                        `leanify' ~ did ~ not ~ run ~ ( \l__leanify_first_str ). ~
-                        Put ~ it ~ on ~ the ~ PATH ~ (the ~ releases ~ of ~ Leanify ~
-                        have ~ it) ~ or ~ name ~ it ~ with ~ the ~ option ~ exe
-                      }
-                  }
+                  { \msg_warning:nne { leanify } { no-checker } { \l__leanify_first_str } }
                   { \msg_warning:nne { leanify } { no-report } { \l__leanify_first_str } }
               }
           }
           {
-            \bool_if:NTF \l__leanify_path_bool
-              { \msg_info:nn { leanify } { no-shell-no-project } }
-              { \msg_warning:nn { leanify } { no-shell } }
+            \msg_warning:nn { leanify } { no-shell }
           }
       }
   }
@@ -514,8 +527,7 @@
 % those the file records), and Leanify did not check the article in this compile
 % (shell escape is off, or the checker did not run): nothing says that the
 % article as it is now was checked, and the marks and the summary of the status
-% file are of the earlier version. This is a warning also where the package is
-% otherwise quiet (an article in no Lean project, on a machine without Leanify).
+% file are of the earlier version.
 \msg_new:nnn { leanify } { stale }
   {
     \c__leanify_article_str \c_space_tl has ~ changed ~ since ~ Leanify ~ checked ~ it, ~

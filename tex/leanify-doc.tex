@@ -18,7 +18,7 @@
 
 \title{The \pkg{leanify} package\\[2pt]\large A LaTeX article checked by Lean}
 \author{Marcus Rockel\\\small\url{https://github.com/Corrram/leanify}}
-\date{Version 0.10, 2026-11-23}
+\date{Version 0.9, 2026-11-23}
 
 \begin{document}
 \emergencystretch=2em
@@ -174,9 +174,13 @@ article go there when its certificate is first built, by the option
 \opt{certify} or by \texttt{leanify certify}, from the article as it is then.
 The option \opt{project=false} leaves the article without a project.
 
-Without shell escape nothing runs, and in a Lean project a warning says so.
-An article in no Lean project compiles without a warning on a machine that has
-no checker: one line of the terminal says that it was not checked.
+The package is never silent about an article that it did not check. Without
+shell escape nothing runs, and a warning says so. With shell escape on a machine
+where the checker does not run, a warning says what to install. If the article
+has changed since the status file was written and Leanify did not run, a
+warning says that the status is that of an earlier version. The option
+\opt{check=false} is for an article that need not be checked (a submission):
+no warning then.
 
 \section{Notions that the article does not define}\label{sec:notions}
 

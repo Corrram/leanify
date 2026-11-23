@@ -493,11 +493,16 @@ escape is off, or the checker is not on the PATH), the package warns that the ar
 as it is now is not checked and that the status is that of the earlier version: an
 edited statement is never typeset silently with the marks of the old one.
 
-Without shell escape, as on arXiv or a journal's server, nothing runs, and in a
-Lean project a warning says so. An article in no Lean project compiles without a
-warning where there is no checker: with shell escape, one line of the terminal
-says that it was not checked, and without, one line of the log. Without `status` the typeset article is unchanged,
-which is what you submit. Once `leanify.sty` is on CTAN, arXiv and journals have
+The package is never silent about an article that it did not check. Without shell
+escape, as on arXiv or a journal's server, nothing runs, and a warning says so. With
+shell escape on a machine where the checker does not run (no `leanify` on the PATH, for
+an article in no Lean project), a warning says what to install: the executable of the
+releases checks an article without Lean or mathlib, and sets up the Lean project of the
+article (the folder `lean` with its lakefile) itself. An article whose project in `lean`
+is built is checked by the checker of that project, the version it requires. Load the
+package with `check=false` where the article need not be checked (a submission): no
+warning then. Without `status` the typeset article is unchanged, which is what you
+submit. Once `leanify.sty` is on CTAN, arXiv and journals have
 it; until then, upload it with the article, or leave it out: Leanify reads the
 article without it.
 
