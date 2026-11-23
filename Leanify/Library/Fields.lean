@@ -6,6 +6,13 @@ import Leanify.Library.Complex
 import Leanify.Library.Hyperbolic
 import Leanify.Library.Trigonometry
 import Leanify.Library.Markov
+import Leanify.Library.Arithmetic
+import Leanify.Library.Combinatorics
+import Leanify.Library.Polynomials
+import Leanify.Library.Graphs
+import Leanify.Library.Permutations
+import Leanify.Library.Matrices
+import Leanify.Library.Special
 
 /-! # The fields of the vocabulary
 
@@ -29,7 +36,14 @@ def all : List (String × Vocab) := [
   ("torus", Torus.vocab),
   ("complex", Complex.vocab),
   ("hyperbolic", Hyperbolic.vocab),
-  ("trigonometry", Trigonometry.vocab)]
+  ("trigonometry", Trigonometry.vocab),
+  ("arithmetic", Arithmetic.vocab),
+  ("combinatorics", Combinatorics.vocab),
+  ("polynomials", Polynomials.vocab),
+  ("graphs", Graphs.vocab),
+  ("permutations", Permutations.vocab),
+  ("matrices", Matrices.vocab),
+  ("special", Special.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)

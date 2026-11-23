@@ -104,7 +104,8 @@ regenerates it from the vocabulary itself. A field is a Lean value
 `Leanify.Fields.all`. Fields built from the core formula language (most of them)
 need nothing else: their meaning is the meaning of the formula language, which
 `Leanify.Denote` gives in terms of Mathlib. A field with constants of its own
-(`unitsquare`, `hilbert`, `markov`, `torus`, `complex`, `hyperbolic`, `trigonometry`) names the Lean
+(`unitsquare`, `hilbert`, `markov`, `torus`, `complex`, `hyperbolic`, `trigonometry`, and
+the fields of other branches below) names the Lean
 meaning of each: a declaration of Mathlib (`Real.sinh`), or a definition written for
 the field. A function of a field may have a domain (`\arcsin` on `[-1,1]`, in
 `trigonometry`): a claim that uses it is meaningful only on the domain.
@@ -136,6 +137,43 @@ kernel. These are functions, not classes of functions up to null sets: `\lVert f
 operator `T_C` of a copula (`We write $T_C$ for the \emph{Markov operator} of $C$.`): the
 conditional expectation `(T_Cg)(u)=\mathbb{E}[g(V)\mid U=u]`, an integral against the
 conditional distribution of the copula.
+Further fields cover other branches of mathematics:
+
+* `arithmetic`: Euler's totient function, the Möbius function, the number and the sums of
+  powers of the divisors, the prime-counting function, the `n`th prime, the number of
+  prime factors, `p`-adic valuations, multiplicative orders, sums of digits; perfect,
+  abundant and deficient numbers, Mersenne primes; multiplicative functions and the
+  Dirichlet convolution;
+* `combinatorics`: Fibonacci, Catalan, Bell, harmonic and triangular numbers,
+  derangements, partitions of integers and of sets, Stirling numbers of both kinds;
+* `polynomials`: polynomials as real functions (`p(x)`, `pq`, `p'`), their degree
+  (`\deg p`, of a nonzero polynomial), coefficients and real roots; monic, quadratic,
+  cubic and irreducible polynomials, polynomials with integer or rational coefficients;
+* `graphs`: finite simple graphs on the vertices `1, …, n`, a type of its own: degrees,
+  neighbours, distances, the chromatic, clique and independence numbers, components,
+  diameter and girth; connected, bipartite, regular, Hamiltonian and triangle-free
+  graphs, trees and forests; complete graphs, cycles, paths, `K_{m,n}` and the
+  complement `\overline{G}`;
+* `permutations`: permutations of `{1, …, n}`, a type of its own, applied to numbers
+  (`\sigma(i)`) and composed (`\sigma\tau`, `\sigma^k`): the sign, order, fixed points,
+  cycles and inversions; transpositions, cycles, derangements and involutions;
+* `matrices`: real `m × n` matrices, a type of its own, with their algebra (`A+B`, `AB`,
+  `cA`, `A^k`, `A^{-1}`, `A^\top`), `\det`, `\operatorname{tr}`, `\operatorname{rank}`,
+  entries, the characteristic polynomial and the real eigenvalues; symmetric,
+  orthogonal, invertible, positive definite, triangular, nilpotent and stochastic
+  matrices;
+* `special`: the gamma function `\Gamma`, the beta function, the zeta function `\zeta` on
+  `(1,∞)`, the Bernoulli numbers, the sinc function, the Euler–Mascheroni constant and
+  the golden ratio.
+
+Their notions take arguments (`the $n$th Catalan number`, `the degree of $v$ in $G$`),
+and an article gives them its notation (`We write $C_n$ for the $n$th Catalan number.`,
+`We write $\deg_G(v)$ for the degree of $v$ in $G$.`). A modifier may take a number too:
+`a graph $G$ on $n$ vertices`, `a polynomial $p$ of degree $n$`, `a $k$-regular graph`,
+`an $n\times n$ matrix`. Notation that is defined for some elements only (`AB` when the
+columns of `A` are as many as the rows of `B`, `\sigma\tau` for permutations of the same
+degree) makes a claim meaningful only for those, as a domain does.
+
 An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.

@@ -615,13 +615,18 @@ def opName : OpKey → Codes
   | .mul => w!"$\\cdot$" | .div => w!"$/$" | .pow => w!"a power"
   | .abs => w!"$\\lvert\\cdot\\rvert$" | .sum => w!"$\\sum$" | .prod => w!"$\\prod$"
   | .le | .lt => w!"an order ($\\le$, $<$)" | .fn n => w!"$" ++ n ++ w!"$"
-  | .decor n => w!"$" ++ n ++ w!"$"
+  | .decor n => w!"$" ++ n ++ w!"$" | .call => w!"an application to a number"
 
 /-- `op` on elements of `t`, applied to `args`: the method's constant. -/
 def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
   let some (c, cty) ← method t op
     | fail E.finding (opName op ++ w!" has no meaning on " ++ (← tyName t) ++ w!" in the vocabulary")
-  pure (args.foldl .app c, resultTy args.length cty)
+  -- (a notation defined on some elements only, such as the product of two matrices of
+  -- matching sizes: the claim asks that its arguments are such elements)
+  let dom := ((← get).vocab.methods.find? fun m => m.ty == t && m.op == op).bind (·.dom)
+  match dom with
+  | some d => pure (.guard (args.foldl .app d) (args.foldl .app c), resultTy args.length cty)
+  | none => pure (args.foldl .app c, resultTy args.length cty)
 
 def coerce (t : Tm) (src dst : Ty) : M Tm := do
   if src == dst then return t
@@ -1457,6 +1462,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | none => do
       let a ← term f sc pf x; let b ← term f sc pf y
       if let some r ← applyOp a b then return r
+      -- (two real functions, or a number and a real function: the product value by value,
+      -- `pq` of two polynomials, `2p`)
+      if (a.2 == Ty.rfun && b.2 == Ty.rfun) || (a.2 == Ty.rfun && b.2 == .real) || (a.2 == .real && b.2 == Ty.rfun) then
+        let at0 (p : Tm × Ty) : Tm := if p.2 == Ty.rfun then .app (shift 1 0 p.1) (.loc 0) else shift 1 0 p.1
+        return (.lam .real .tt (.mul (at0 a) (at0 b)), Ty.rfun)
       if let some r ← pointwise Tm.mul true a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .mul a b
       else pure (.mul (← asReal a) (← asReal b), .real)
@@ -1665,6 +1675,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         if isNum && single then
           fail E.finding (n ++ w!"(…) is a product or a name that states what it depends on: write the product without parentheses, or introduce the name as `there is $" ++ n ++ w!"=" ++ n ++ w!"(…)$`")
         else if isNum then term f sc pf (.mul (.id n) a)
+        -- an element of a vocabulary's type applied to a number (`\sigma(i)` for a
+        -- permutation): the type's method for it
+        else if (← ownTy t) && (← method t .call).isSome then do
+          let some (i, _) := lookupLocal sc n | fail E.undefined n
+          let x ← asReal (← term f sc pf a)
+          callMethod t .call [.loc i, x]
         else do
           let (h, hty, doms) ← head f sc (.id n)
           applyAll h hty doms [← term f sc pf a]
@@ -2361,6 +2377,14 @@ where
       let bt ← tryCatch (some <$> term f sc pf b) (fun _ => pure none)
       if let some (z, t) := bt then
         if (← ownTy t) then
+          -- `A^\top`, `A^T`: a superscript that the type reads as a decoration (the transpose
+          -- of a matrix), not as an exponent
+          let top : Option Codes := match e with
+            | .id n => if [w!"T", w!"\\top", w!"\\intercal", w!"\\mathsf{T}", w!"\\mathrm{T}", w!"\\mathsf T"].contains n
+                then some w!"^\\top" else none
+            | _ => none
+          if let some d := top then
+            if (← method t (.decor d)).isSome then return (← callMethod t (.decor d) [z])
           match e with
           | .num n => return (← callMethod t .pow [z, .num n])
           | .neg (.num n) => return (← arith .div (.num 1, .real) (← callMethod t .pow [z, .num n]))

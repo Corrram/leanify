@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={special}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $B(x,y)$ for the beta function of $x$ and $y$.
+We write $B_n$ for the $n$th Bernoulli number.
+We write $\gamma$ for the Euler-Mascheroni constant.
+We write $\phi$ for the golden ratio.
+
+\section{Special functions}
+
+\begin{lemma}\label{gamma}
+For every positive integer $n$, $\Gamma(n+1)=n!$. Moreover, $\Gamma(\frac12)=\sqrt{\pi}$.
+\end{lemma}
+
+\begin{lemma}\label{functional}
+For every $x>0$, $\Gamma(x+1)=x\Gamma(x)$.
+\end{lemma}
+
+\begin{lemma}\label{beta}
+For all $x>0$ and $y>0$, $B(x,y)=B(y,x)$ and $B(x,1)=\frac{1}{x}$.
+\end{lemma}
+
+\begin{lemma}\label{zeta}
+$\zeta(2)=\frac{\pi^2}{6}$ and $\zeta(4)=\frac{\pi^4}{90}$, and $\zeta(s)>1$ for every $s>1$.
+\end{lemma}
+
+\begin{lemma}\label{bernoulli}
+$B_0=1$ and $B_2=\frac16$, and $\zeta(2)=\frac{(2\pi)^2|B_2|}{4}$.
+\end{lemma}
+
+\begin{lemma}\label{constants}
+$\frac12<\gamma<\frac35$ and $\phi^2=\phi+1$.
+\end{lemma}
+
+\begin{lemma}\label{pole}
+$\Gamma(0)=1$.
+\end{lemma}
+
+\end{document}

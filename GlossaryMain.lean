@@ -37,7 +37,7 @@ def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do
         s := s ++ toksText seg
         first := false
       out := out ++ ["$" ++ s ++ "$"]
-  return " ".intercalate out
+  return (" ".intercalate out).replace " - " "-"
 
 /-- A type, with the names of the field's own types (`B0` without one). -/
 def tyText (ts : List Codes) : Ty → String
@@ -53,7 +53,8 @@ def opText : OpKey → String
   | .neg => "$-$ (sign)" | .pow => "$x^n$" | .abs => "$\\lvert x\\rvert$" | .sum => "$\\sum_{k=a}^{b}$"
   | .prod => "$\\prod_{k=a}^{b}$" | .le => "$\\le$" | .lt => "$<$"
   | .fn n => (if n.head? == some 92 then "$" ++ Codes.toString n ++ "$" else "$\\operatorname{" ++ Codes.toString n ++ "}$")
-  | .decor n => "$" ++ Codes.toString n ++ "{x}$"
+  | .decor n => if n.head? == some 94 then "$x" ++ Codes.toString n ++ "$" else "$" ++ Codes.toString n ++ "{x}$"
+  | .call => "$x(t)$"
 
 def cell (s : String) : String := s.replace "|" "\\|"
 

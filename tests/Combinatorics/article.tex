@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={combinatorics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $F_n$ for the $n$th Fibonacci number.
+We write $C_n$ for the $n$th Catalan number.
+We write $B_n$ for the $n$th Bell number.
+We write $D_n$ for the number of derangements of $n$ elements.
+We write $S(n,k)$ for the number of partitions of a set of $n$ elements into $k$ blocks.
+We write $c(n,k)$ for the number of permutations of $n$ elements with $k$ cycles.
+We write $p(n)$ for the number of partitions of $n$.
+We write $H_n$ for the $n$th harmonic number.
+We write $T_n$ for the $n$th triangular number.
+
+\section{Counting}
+
+\begin{lemma}\label{fibonacci}
+For every nonnegative integer $n$, $F_{n+2}=F_{n+1}+F_n$. Moreover, $F_{10}=55$.
+\end{lemma}
+
+\begin{lemma}\label{catalan}
+$C_4=14$, and $C_{n}=\frac{1}{n+1}\binom{2n}{n}$ for every nonnegative integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{bell}
+For every nonnegative integer $n$, $B_n=\sum_{k=0}^{n}S(n,k)$. Moreover, $B_5=52$.
+\end{lemma}
+
+\begin{lemma}\label{derangements}
+For every integer $n\ge2$, $D_n=(n-1)(D_{n-1}+D_{n-2})$.
+\end{lemma}
+
+\begin{lemma}\label{stirling}
+For every positive integer $n$, $\sum_{k=0}^{n}c(n,k)=n!$ and $S(n,1)=1$.
+\end{lemma}
+
+\begin{lemma}\label{partitions}
+$p(5)=7$ and $T_4=10$ and $H_2=\frac32$.
+\end{lemma}
+
+\begin{lemma}\label{words}
+For every nonnegative integer $n$, $C_n\le4^n$ and $D_n\le n!$.
+\end{lemma}
+
+\end{document}

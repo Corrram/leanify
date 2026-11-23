@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={matrices}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $I_n$ for the identity matrix of size $n$.
+We write $p_A$ for the characteristic polynomial of $A$.
+We write $a_{ij}(A)$ for the entry of $A$ in row $i$ and column $j$.
+We write $M_n$ for the set of $n\times n$ matrices.
+
+\section{Matrices}
+
+\begin{lemma}\label{determinant}
+For every positive integer $n$ and all $A,B\in M_n$, $\det(AB)=\det(A)\det(B)$ and $\det(A^\top)=\det(A)$.
+\end{lemma}
+
+\begin{lemma}\label{trace}
+Let $n$ be a positive integer, and let $A$ and $B$ be $n\times n$ matrices. Then $\operatorname{tr}(AB)=\operatorname{tr}(BA)$ and $\operatorname{tr}(A+B)=\operatorname{tr}(A)+\operatorname{tr}(B)$.
+\end{lemma}
+
+\begin{lemma}\label{inverse}
+Let $n$ be a positive integer and let $A$ be an invertible $n\times n$ matrix. Then $AA^{-1}=I_n$ and $\det(A^{-1})=\frac{1}{\det(A)}$.
+\end{lemma}
+
+\begin{lemma}\label{scalar}
+For every positive integer $n$ and every $A\in M_n$, $\det(2A)=2^n\det(A)$.
+\end{lemma}
+
+\begin{lemma}\label{rank}
+Let $m$ and $n$ be positive integers and let $A$ be an $m\times n$ matrix. Then $\operatorname{rank}(A)\le m$ and $\operatorname{rank}(A^\top)=\operatorname{rank}(A)$.
+\end{lemma}
+
+\begin{lemma}\label{charpoly}
+Let $n$ be a positive integer and let $A$ be an $n\times n$ matrix. Then $p_A(0)=(-1)^n\det(A)$.
+\end{lemma}
+
+\begin{lemma}\label{symmetric}
+Every symmetric matrix $A$ satisfies $A^\top=A$, and every orthogonal matrix $Q$ satisfies $\det(Q)^2=1$.
+\end{lemma}
+
+\begin{lemma}\label{nilpotent}
+Every nilpotent matrix $A$ satisfies $\det(A)=0$ and $\operatorname{tr}(A)=0$.
+\end{lemma}
+
+\end{document}

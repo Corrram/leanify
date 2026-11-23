@@ -65,16 +65,16 @@ def vocab : Vocab where
     { sing := phrase!"complex number", plural := phrase!"complex numbers", ty := C,
       pred := close (lamT C (fun _ => tt) fun _ => tt), doc := "a complex number (Mathlib `ℂ`)" }]
   methods := [
-    ⟨C, .ofReal, ofReal, "a real number `x` as the complex number `(x : ℂ)`"⟩,
-    ⟨C, .add, add, "`z + w`"⟩, ⟨C, .sub, sub, "`z - w`"⟩, ⟨C, .mul, mul, "`z * w`"⟩,
-    ⟨C, .div, div, "`z / w`, for `w ≠ 0`"⟩, ⟨C, .neg, neg, "`-z`"⟩,
-    ⟨C, .pow, pow, "`z ^ n`, for a natural number `n`"⟩, ⟨C, .abs, abs, "the modulus `‖z‖`"⟩,
-    ⟨C, .decor w!"\\overline", conj, "the conjugate `starRingEnd ℂ z`"⟩,
-    ⟨C, .decor w!"\\bar", conj, "the conjugate `starRingEnd ℂ z`"⟩,
-    ⟨C, .fn w!"\\Re", re, "the real part `z.re`"⟩, ⟨C, .fn w!"Re", re, "the real part `z.re`"⟩,
-    ⟨C, .fn w!"\\Im", im, "the imaginary part `z.im`"⟩, ⟨C, .fn w!"Im", im, "the imaginary part `z.im`"⟩,
-    ⟨C, .fn w!"\\exp", exp, "`Complex.exp z` (also `e^{z}`)"⟩,
-    ⟨C, .sum, sum, "`∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`"⟩, ⟨C, .prod, prod, "`∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`"⟩]
+    ⟨C, .ofReal, ofReal, "a real number `x` as the complex number `(x : ℂ)`", none⟩,
+    ⟨C, .add, add, "`z + w`", none⟩, ⟨C, .sub, sub, "`z - w`", none⟩, ⟨C, .mul, mul, "`z * w`", none⟩,
+    ⟨C, .div, div, "`z / w`, for `w ≠ 0`", none⟩, ⟨C, .neg, neg, "`-z`", none⟩,
+    ⟨C, .pow, pow, "`z ^ n`, for a natural number `n`", none⟩, ⟨C, .abs, abs, "the modulus `‖z‖`", none⟩,
+    ⟨C, .decor w!"\\overline", conj, "the conjugate `starRingEnd ℂ z`", none⟩,
+    ⟨C, .decor w!"\\bar", conj, "the conjugate `starRingEnd ℂ z`", none⟩,
+    ⟨C, .fn w!"\\Re", re, "the real part `z.re`", none⟩, ⟨C, .fn w!"Re", re, "the real part `z.re`", none⟩,
+    ⟨C, .fn w!"\\Im", im, "the imaginary part `z.im`", none⟩, ⟨C, .fn w!"Im", im, "the imaginary part `z.im`", none⟩,
+    ⟨C, .fn w!"\\exp", exp, "`Complex.exp z` (also `e^{z}`)", none⟩,
+    ⟨C, .sum, sum, "`∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`", none⟩, ⟨C, .prod, prod, "`∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`", none⟩]
   symbols := [
     { sym := w!"\\mathbb{C}", ty := C, doc := "the complex numbers (Mathlib `ℂ`), as a domain" },
     { sym := w!"\\mathrm{i}", ty := C, const := some I, doc := "the imaginary unit (Mathlib `Complex.I`)" }]

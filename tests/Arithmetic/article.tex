@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers,arithmetic}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\varphi$ for Euler's totient function.
+We write $\mu$ for the Möbius function.
+We write $\tau(n)$ for the number of divisors of $n$.
+We write $\sigma(n)$ for the sum of the divisors of $n$.
+We write $\pi(x)$ for the number of primes not exceeding $x$.
+We write $p_n$ for the $n$-th prime.
+We write $\omega(n)$ for the number of distinct prime factors of $n$.
+We write $\nu_p(n)$ for the $p$-adic valuation of $n$.
+We write $\operatorname{ord}_n(a)$ for the multiplicative order of $a$ modulo $n$.
+We write $s(n)$ for the sum of the digits of $n$.
+
+\section{Arithmetic functions}
+
+\begin{lemma}\label{totient}
+For every prime $p$, $\varphi(p)=p-1$. Moreover, $\varphi(12)=4$ and $\mu(6)=1$ and $\mu(12)=0$.
+\end{lemma}
+
+\begin{lemma}\label{divisors}
+$\tau(12)=6$ and $\sigma(6)=12$, and $6$ is perfect and $12$ is abundant.
+\end{lemma}
+
+\begin{lemma}\label{primes}
+$\pi(10)=4$ and $p_5=11$ and $\omega(60)=3$ and $\nu_2(48)=4$.
+\end{lemma}
+
+\begin{lemma}\label{order}
+$\operatorname{ord}_7(2)=3$ and $s(1234)=10$.
+\end{lemma}
+
+\begin{lemma}\label{multiplicative}
+$\varphi$ is multiplicative and $\mu$ is multiplicative. Moreover, $\tau(n)\le2\sqrt{n}$ for every positive integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{mersenne}
+For every Mersenne prime $p$, $p\,\frac{p+1}{2}$ is a perfect number.
+\end{lemma}
+
+\end{document}

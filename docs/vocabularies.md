@@ -109,6 +109,22 @@ types and constants of the second are renumbered after those of the first. An
 article may name several fields with constants and types of their own
 (`--vocab numbers,torus,hyperbolic,trigonometry`).
 
+A modifier may have variables of its own, numbers that the article writes where the
+phrase stands: `on $v$ vertices` (field `graphs`), `of degree $v$` (`polynomials`),
+`$v$-regular`, `$v\times v$` (`matrices`). Its predicate takes their values first, then
+the object:
+
+```lean
+    { phrase := phrase!"on $v$ vertices", prenominal := false, ty := G,
+      pred := close <| lamR fun n => lamT G (fun _ => tt) fun g => eq (nv g) n }
+```
+
+`Let $G$ be a graph on $n$ vertices.`, `For every $k$-regular graph $G$ on $n$ vertices, …`
+and `Let $A$ and $B$ be $n\times n$ matrices.` are then read; the formulas of the
+modifier are terms in the scope of the sentence (`n` a variable of the result), not
+variables that the noun phrase binds. A phrase may have a hyphen (`prime-counting
+function`, `triangle-free`), and `$v$th` also matches `$n$-th`.
+
 An *adjective* is a property of objects of one type that a sentence states with
 `$X$ is ADJ [on $A$]`: the unit square's field has `convex`, `concave` and
 `lower semicontinuous with respect to uniform convergence` for a quantity of
@@ -128,17 +144,26 @@ method names a piece of notation (`OpKey`) and the constant it is on that type.
 structure Method where
   ty : Ty          -- the type (a base type of the vocabulary)
   op : OpKey       -- ofReal, add, sub, mul, div, neg, pow, abs, sum, prod, le, lt,
-                   -- fn "\exp" (a named function), decor "\overline" (a decoration)
+                   -- fn "\exp" (a named function), decor "\overline" (a decoration),
+                   -- decor "^\top" (a superscript: `A^\top`, `A^T`), call (`\sigma(i)`)
   const : Nat      -- the constant that is this notation on the type
+  dom : Option Tm  -- where it is defined, if not everywhere: a predicate of its arguments
 ```
 
 `ofReal` makes a real number an element of the type where one is expected (`1+z`),
 `z/w` is defined when `w` is not the image of `0`, and `z^n` when `n` is a natural
-number. A type without `le` has no order: `z\le w` is refused with a finding. *Symbols*
+number. A method with a domain is defined only there: in the field `matrices`, `A+B` asks
+that the matrices have the same size and `AB` that the columns of `A` are as many as the
+rows of `B` (`dom := some (.const mulable)`); in `permutations`, `\sigma\tau` asks for
+permutations of the same degree and `\sigma(i)` for a point `i` of `{1, …, n}`. A claim
+that uses the notation is meaningful only where the domain holds, as for `\arcsin`. A type without `le` has no order: `z\le w` is refused with a finding. *Symbols*
 name a constant (`\mathrm{i}`) or all the elements of a type (`\mathbb{C}`, as a
 domain), or a function (`\sinh`). The field `complex` (`Leanify/Library/Complex.lean`,
 with the definitions of `ComplexModel.lean`) is such a vocabulary: one base type,
-whose Lean meaning is Mathlib's `ℂ`, and fifteen constants for its notation. A
+whose Lean meaning is Mathlib's `ℂ`, and fifteen constants for its notation. So are
+`graphs` (Mathlib's `SimpleGraph (Fin n)`, for some `n`), `permutations`
+(`Equiv.Perm (Fin n)`) and `matrices` (`Matrix (Fin m) (Fin n) ℝ`): a type of its own
+is a `Σ` type when its elements come in sizes. A
 constant's name says how a reading writes it: an operator (`+`), `#` for its
 argument (`\lvert #\rvert`), `#1` and `#2` for two arguments
 (`\operatorname{convex}(#1)\text{ on }#2`), or nothing (a real number as a

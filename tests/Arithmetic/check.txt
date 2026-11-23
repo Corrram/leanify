@@ -1,0 +1,41 @@
+tests/Arithmetic/article.tex:9:1: info: defines \varphi (varphi)
+tests/Arithmetic/article.tex:10:1: info: defines \mu (mu)
+tests/Arithmetic/article.tex:11:1: info: defines \tau (tau)
+tests/Arithmetic/article.tex:12:1: info: defines \sigma (sigma)
+tests/Arithmetic/article.tex:13:1: info: defines \pi (pi)
+tests/Arithmetic/article.tex:14:1: info: defines \@n5 (n5)
+tests/Arithmetic/article.tex:15:1: info: defines \omega (omega)
+tests/Arithmetic/article.tex:16:1: info: defines \nu (nu)
+tests/Arithmetic/article.tex:17:1: info: defines \operatorname{ord} (operatornameord)
+tests/Arithmetic/article.tex:17:1: info: \operatorname{ord} is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=z\,s)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land y=z\,s)\Rightarrow z=1\lor z=-1))
+tests/Arithmetic/article.tex:18:1: info: defines \@n9 (n9)
+tests/Arithmetic/article.tex:23:1: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow \varphi(x)=x-1
+tests/Arithmetic/article.tex:23:40: info: claim 1: \varphi(12)=4
+tests/Arithmetic/article.tex:23:40: info: claim 2: \mu(6)=1
+tests/Arithmetic/article.tex:23:40: info: claim 3: \mu(12)=0
+tests/Arithmetic/article.tex:27:1: info: claim 4: \tau(12)=6
+tests/Arithmetic/article.tex:27:1: info: claim 4 is meaningful if: 12\in \mathbb{Z}\land 0<12
+tests/Arithmetic/article.tex:27:1: info: claim 5: \sigma(6)=12
+tests/Arithmetic/article.tex:27:1: info: claim 5 is meaningful if: 6\in \mathbb{Z}\land 0<6
+tests/Arithmetic/article.tex:27:1: info: claim 6: (6\in \mathbb{Z}\land 0<6)\land \sigma_{1}(6)=2\,6
+tests/Arithmetic/article.tex:27:1: info: claim 7: (12\in \mathbb{Z}\land 0<12)\land 2\,12<\sigma_{1}(12)
+tests/Arithmetic/article.tex:31:1: info: claim 8: \pi(10)=4
+tests/Arithmetic/article.tex:31:1: info: claim 9: \@n5(5)=11
+tests/Arithmetic/article.tex:31:1: info: claim 9 is meaningful if: 5\in \mathbb{Z}\land 0<5
+tests/Arithmetic/article.tex:31:1: info: claim 10: \omega(60)=3
+tests/Arithmetic/article.tex:31:1: info: claim 10 is meaningful if: 60\in \mathbb{Z}\land 0<60
+tests/Arithmetic/article.tex:31:1: info: claim 11: \nu(2,48)=4
+tests/Arithmetic/article.tex:31:1: info: claim 11 is meaningful if: (48\in \mathbb{Z}\land 0<48)\land 2\in \mathbb{Z}\land 2\le 2\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (y\in \mathbb{N}\land z\in \mathbb{N})\land y\,z=2\Rightarrow y=1\lor z=1)
+tests/Arithmetic/article.tex:35:1: info: claim 12: \operatorname{ord}(2,7)=3
+tests/Arithmetic/article.tex:35:1: info: claim 13: \@n9(1234)=10
+tests/Arithmetic/article.tex:35:1: info: claim 13 is meaningful if: 1234\in \mathbb{Z}\land 0\le 1234
+tests/Arithmetic/article.tex:39:1: info: claim 14: \varphi(1)=1\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ ((y\in \mathbb{Z}\land 0<y)\land z\in \mathbb{Z}\land 0<z)\land (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\Rightarrow (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=s\,t)\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land z=s\,t)\Rightarrow s=1\lor s=-1)\Rightarrow \varphi(y\,z)=\varphi(y)\,\varphi(z))
+tests/Arithmetic/article.tex:39:1: info: claim 15: \mu(1)=1\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ ((y\in \mathbb{Z}\land 0<y)\land z\in \mathbb{Z}\land 0<z)\land (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\Rightarrow (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=s\,t)\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land z=s\,t)\Rightarrow s=1\lor s=-1)\Rightarrow \mu(y\,z)=\mu(y)\,\mu(z))
+tests/Arithmetic/article.tex:39:58: info: claim 16: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \tau(x)\le 2\,{x}^{\frac{1}{2}}
+tests/Arithmetic/article.tex:39:58: info: claim 16 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 0<x)\land 0\le x\land \neg (2=0)
+tests/Arithmetic/article.tex:43:1: info: claim 17: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1))\land (\exists z\in \mathbb{R},\ z\in \mathbb{N}\land x={2}^{z}-1)\Rightarrow (x\,(\frac{x+1}{2})\in \mathbb{Z}\land 0<x\,(\frac{x+1}{2}))\land \sigma_{1}(x\,(\frac{x+1}{2}))=2\,x\,(\frac{x+1}{2})
+tests/Arithmetic/article.tex:43:1: info: claim 17 is meaningful if: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1))\land (\exists z\in \mathbb{R},\ z\in \mathbb{N}\land x={2}^{z}-1)\Rightarrow \neg (2=0)
+tests/Arithmetic/article.tex: 10 definitions, 18 claims
+  text: 10 compiled, 0 failed, 0 prose (of 10)
+  results: 8 compiled, 0 failed, 0 prose (of 8)
+  all: 18 compiled, 0 failed, 0 prose (of 18)

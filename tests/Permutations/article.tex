@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={permutations}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S_n$ for the set of permutations of $\{1,\dots,n\}$.
+We write $\operatorname{id}_n$ for the identity permutation of $\{1,\dots,n\}$.
+We write $\operatorname{fix}(\sigma)$ for the number of fixed points of $\sigma$.
+We write $\operatorname{ord}(\sigma)$ for the order of $\sigma$.
+We write $\operatorname{inv}(\sigma)$ for the number of inversions of $\sigma$.
+
+\section{Permutations}
+
+\begin{lemma}\label{sign}
+For every positive integer $n$ and all $\sigma,\tau\in S_n$, $\operatorname{sgn}(\sigma\tau)=\operatorname{sgn}(\sigma)\operatorname{sgn}(\tau)$.
+\end{lemma}
+
+\begin{lemma}\label{inversions}
+For every permutation $\sigma$, $\operatorname{sgn}(\sigma)^2=1$ and $\operatorname{inv}(\sigma)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{order}
+For every permutation $\sigma$, $\sigma^{\operatorname{ord}(\sigma)}$ is the identity.
+\end{lemma}
+
+\begin{lemma}\label{transposition}
+Let $\tau$ be a transposition. Then $\tau$ is odd, and $\tau^2$ is the identity.
+\end{lemma}
+
+\begin{lemma}\label{fixed}
+Let $n$ be a positive integer and let $\sigma$ be a permutation of $\{1,\dots,n\}$. Then $\operatorname{fix}(\sigma)\le n$, and $\sigma(i)\le n$ for every integer $i$ with $1\le i\le n$.
+\end{lemma}
+
+\begin{lemma}\label{derangement}
+Every derangement $\sigma$ satisfies $\operatorname{fix}(\sigma)=0$.
+\end{lemma}
+
+\end{document}
