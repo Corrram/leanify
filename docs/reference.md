@@ -487,6 +487,12 @@ and it stops. With `certify`, the article is compiled to Lean again in about a
 second after an edit, then its proofs are checked, and nothing is rebuilt while
 the status file is newer than the article and its Lean files.
 
+The status file records which version of the article it is of (the MD5 sum of the
+article). If the article has changed since and Leanify did not run in this compile (shell
+escape is off, or the checker is not on the PATH), the package warns that the article
+as it is now is not checked and that the status is that of the earlier version: an
+edited statement is never typeset silently with the marks of the old one.
+
 Without shell escape, as on arXiv or a journal's server, nothing runs, and in a
 Lean project a warning says so. An article in no Lean project compiles without a
 warning where there is no checker: with shell escape, one line of the terminal
