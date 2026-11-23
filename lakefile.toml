@@ -19,15 +19,6 @@ rev = "5ed2965256430c3649e86755f9576b54eca72435"
 name = "Leanify"
 globs = ["Leanify.*"]
 
-[[lean_exe]]
-name = "leanify"
-root = "LeanifyCli"
-
-[[lean_exe]]
-# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
-name = "glossary"
-root = "GlossaryMain"
-
 [[lean_lib]]
 # A short paper on the harmonic, geometric and arithmetic mean: definitions inside a
 # result, in a claim and after it.
@@ -157,3 +148,12 @@ globs = ["Steps.+"]
 name = "Operators"
 srcDir = "tests"
 globs = ["Operators.+"]
+
+[[lean_exe]]
+name = "leanify"
+root = "LeanifyCli"
+
+[[lean_exe]]
+# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
+name = "glossary"
+root = "GlossaryMain"
