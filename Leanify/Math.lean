@@ -588,6 +588,12 @@ def run : Nat → Mode → List MTok → R
             if !isE && !cond then none else
             some (.app (.id (if isE then w!"@sexp" else w!"@sprob"))
               [c, .mapsto (.tuple [.id [85], .id [86]]) body], r5)
+          -- `\mathbb{E}[e]`: the expectation for the random pair of the result
+          | .sym 91 :: r1 =>
+            if n != w!"\\mathbb{E}" then none else do
+            let (body, r2) ← run f .top r1
+            let r3 ← expect (.sym 93) r2
+            some (.app (.id w!"@rexp") [body], r3)
           | _ => none
         else none
       match sample with

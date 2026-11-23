@@ -335,6 +335,12 @@ structure St where
   name, and the class. Its value at an argument is meaningful for the members of the
   class. -/
   varDoms : List (Nat × Codes × Tm) := []
+  /-- A random pair of a result (`Let $Y$ be an integrable random variable with continuous
+  distribution function $F$, and let $Z$ be uniformly distributed on $[0,1]$`): the
+  environment in which it was introduced, the letters of the two random variables and of
+  the distribution function of the first, and whether the first is integrable and its
+  distribution function continuous. Its joint law is the variable `\\mathbb{P}` of the result. -/
+  randomPair : Option (Nat × Codes × Option Codes × Option Codes × Bool × Bool) := none
   deriving Inhabited, Lean.ToExpr
 
 abbrev M := ExceptT Err (StateM St)
@@ -635,6 +641,26 @@ def coerce (t : Tm) (src dst : Ty) : M Tm := do
   if let (.fn .real .real, .fn d .real) := (src, dst) then
     if let some iv ← intervalOf d then
       return .lam d .tt (.app (shift 1 0 t) (.app (.const iv.val) (.loc 0)))
+  -- a real function as a map of an interval type (`\zeta_c:[0,1]\to[0,1]` of a real variable
+  -- as a map of `[0,1]`, in `\gamma_{\zeta_c}`): its restriction, with values that have to
+  -- lie in the interval
+  if let (.fn .real .real, .fn d e) := (src, dst) then
+    if d == e then
+      if let some iv ← intervalOf d then
+        let v := Tm.app (shift 1 0 t) (.app (.const iv.val) (.loc 0))
+        let inside := Tm.and (.le (.num iv.lo) v) (.le v (.num iv.hi))
+        return .lam d .tt (.guard inside (.app (.const iv.point) v))
+  -- a set of real numbers, or of pairs of them, as a set of points of an interval type (or of
+  -- pairs of points): the points whose numbers lie in it (`\{(x,T(x)):x\in[0,1]\}` as a
+  -- subset of the square)
+  if let (.fn .real .prop, .fn d .prop) := (src, dst) then
+    if let some iv ← intervalOf d then
+      return .lam d .tt (.app (shift 1 0 t) (.app (.const iv.val) (.loc 0)))
+  if let (.fn .real (.fn .real .prop), .fn d (.fn e .prop)) := (src, dst) then
+    if d == e then
+      if let some iv ← intervalOf d then
+        return .lam d .tt (.lam d .tt (.app (.app (shift 2 0 t) (.app (.const iv.val) (.loc 1)))
+          (.app (.const iv.val) (.loc 0))))
   -- a function of one point as a kernel: a function of the first term of a sequence
   -- (`K_F` for `F(x)=\sqrt3(2x-1)`)
   if let .fn (.fn .real pt) .real := dst then
@@ -963,6 +989,14 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
         | .ge => Tm.le (val y.1) (val x.1)
         | _ => Tm.lt (val y.1) (val x.1)
       return tys.foldr (fun t acc => Tm.all t acc) body
+  -- (set functions on the square of an interval type, such as couplings: equal as measures,
+  -- that is, on every measurable set, `\gamma=\gamma_T`)
+  if (r == .eq || r == .ne) && x.2 == y.2 then
+    if let some iv := (← get).vocab.intervals.find? fun iv => x.2 == .fn (.fn iv.ty (.fn iv.ty .prop)) .real then
+      let set2 : Ty := .fn iv.ty (.fn iv.ty .prop)
+      let body := Tm.all set2 (.imp (.app (.const iv.measurable2) (.loc 0))
+        (.eq (.app (Tm.shift 1 0 x.1) (.loc 0)) (.app (Tm.shift 1 0 y.1) (.loc 0))))
+      return if r == .eq then body else .not body
   -- (a function of points or of a sequence and a number: `F_\emptyset=0` at every point)
   if r == .eq && x.2 != y.2 then
     let fnNum (f c : Tm × Ty) : M (Option Tm) := do
@@ -1548,6 +1582,19 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | some _ => fail E.shadow x
       let (ct, cty) ← term f sc pf c
       let ivs := (← get).vocab.intervals
+      -- `\mathbb{E}_\gamma[e]` for a coupling `γ` (a set function on the square): the integral
+      -- of `e`, a function of the two coordinates `X` and `Z`, against `γ`; defined when
+      -- `γ` is a probability measure and `e` is integrable for it
+      if let some iv := ivs.find? fun iv => iv.couplingExp.isSome &&
+          cty == .fn (.fn iv.ty (.fn iv.ty .prop)) .real then
+        let (some ex, some ei) := (iv.couplingExp, iv.couplingInt) | fail E.unsupported
+        for x in [w!"X", w!"Z"] do
+          match lookupLocal sc x with
+          | some (_, t) => if t != iv.ty then fail E.shadow x
+          | none => pure ()
+        let b ← asReal (← term f ((w!"Z", iv.ty) :: (w!"X", iv.ty) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body)
+        let fn := Tm.lam iv.ty .tt (Tm.lam iv.ty .tt b)
+        return (.guard (.app (.app (.const ei) ct) fn) (.app (.app (.const ex) ct) fn), .real)
       let iv ← liftO (ivs.find? fun iv => iv.sampleExp.isSome && cty == .fn iv.ty (.fn iv.ty .real)) E.finding
         w!"an expectation $\\mathbb{E}_C[\\ldots]$ is for a sample from a copula $C$, with the vocabulary of the unit square"
       let (some ex, some ei) := (iv.sampleExp, iv.sampleInt) | fail E.unsupported
@@ -1555,6 +1602,29 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let b ← asReal (← term f ((v, seq) :: (u, seq) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body)
       let fn := Tm.lam seq .tt (Tm.lam seq .tt b)
       pure (.guard (.app (.app (.const ei) ct) fn) (.app (.app (.const ex) ct) fn), .real)
+    -- `\mathbb{E}[e]` and `φ almost surely` for the random pair of the result: the expectation
+    -- of `e`, a function of the two random variables, for their joint law (defined when `e`
+    -- is integrable), and `φ` at almost every value of the pair
+    | .app (.id [64, 114, 101, 120, 112]) [body] => do
+      let stR ← get
+      let some (e, y, some z, _, _, _) := stR.randomPair | fail E.prose
+      if !(e == stR.curEnv || stR.curProved == some e) then fail E.prose
+      let some (li, .fn (.fn .real (.fn pt .prop)) .real) := lookupLocal sc w!"\\mathbb{P}" | fail E.prose
+      let some iv := stR.vocab.intervals.find? fun iv => iv.ty == pt && iv.pairExp.isSome | fail E.prose
+      let (some ex, some ei) := (iv.pairExp, iv.pairInt) | fail E.unsupported
+      let b ← asReal (← term f ((z, pt) :: (y, .real) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body)
+      let fn := Tm.lam .real .tt (Tm.lam pt .tt b)
+      let law := Tm.loc li
+      pure (.guard (.app (.app (.const ei) law) fn) (.app (.app (.const ex) law) fn), .real)
+    | .app (.id [64, 114, 97, 101]) [body] => do
+      let stR ← get
+      let some (e, y, some z, _, _, _) := stR.randomPair | fail E.prose
+      if !(e == stR.curEnv || stR.curProved == some e) then fail E.prose
+      let some (li, .fn (.fn .real (.fn pt .prop)) .real) := lookupLocal sc w!"\\mathbb{P}" | fail E.prose
+      let some iv := stR.vocab.intervals.find? fun iv => iv.ty == pt && iv.pairAe.isSome | fail E.prose
+      let some ae := iv.pairAe | fail E.unsupported
+      let p ← propOf f ((z, pt) :: (y, .real) :: sc) (pf.map fun (s, t) => (shift 2 0 s, t)) body
+      pure (.app (.app (.const ae) (.loc li)) (Tm.lam .real .tt (Tm.lam pt .tt p)), .prop)
     -- `P_C(φ)`: the probability of a condition on the sample; defined when `C` is a
     -- distribution function and the condition has a probability
     | .app (.id [64, 115, 112, 114, 111, 98]) [c, .mapsto (.tuple [.id u, .id v]) body] => do
@@ -1892,6 +1962,15 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let sets ← tryCatch (do
           let (a, aty) ← term f sc pf x
           let (b, bty) ← term f sc pf k
+          -- (a set of pairs of numbers beside a set of pairs of points: the points in it)
+          let (a, aty, b, bty) ← (do
+            if aty == bty then return (a, aty, b, bty)
+            match ← tryCatch (some <$> coerce b bty aty) fun _ => pure none with
+            | some b' => pure (a, aty, b', aty)
+            | none =>
+              match ← tryCatch (some <$> coerce a aty bty) fun _ => pure none with
+              | some a' => pure (a', bty, b, bty)
+              | none => pure (a, aty, b, bty) : M (Tm × Ty × Tm × Ty))
           match predArgs aty with
           | some tys => pure (if aty == bty && 2 ≤ tys.length then some (setSubN tys a b) else none)
           | none => pure none) fun _ => pure none
@@ -2500,6 +2579,16 @@ where
           | some p, .fn _ _ => pure (.loc i, t, [some p])
           | _, _ => pure (.loc i, t, [])
         | none => do
+          -- the distribution function of the first variable of a random pair
+          let stR ← get
+          let dfHead : Option (Tm × Ty × List (Option Tm)) := match stR.randomPair, lookupLocal sc w!"\\mathbb{P}" with
+            | some (e, _, _, some dfN, _, _), some (li, .fn (.fn .real (.fn pt .prop)) .real) =>
+              if dfN == n && (e == stR.curEnv || stR.curProved == some e) then
+                (stR.vocab.intervals.find? fun iv => iv.ty == pt && iv.pairDf.isSome).bind fun iv =>
+                  iv.pairDf.map fun d => (Tm.app (.const d) (.loc li), Ty.fn .real .real, [none])
+              else none
+            | _, _ => none
+          if let some h := dfHead then return h
           match ← lookupGlob n, builtinFn n with
           | none, some b => pure b
           | _, _ =>
@@ -2602,6 +2691,19 @@ where
         if op == w!"\\cup" then .or p q
         else if op == w!"\\cap" then (if isTrue p then q else .and p q)
         else (if isTrue p then .not q else .and p (.not q))
+      -- (a set of numbers beside a set of points of an interval type: the points in it)
+      let (a, b) ← (do
+        if a.2 == b.2 then return (a, b)
+        let pointSet (t : Ty) : M Bool := do
+          match t with
+          | .fn d .prop => pure (← intervalOf d).isSome
+          | .fn d (.fn e .prop) => pure (d == e && (← intervalOf d).isSome)
+          | _ => pure false
+        if ← pointSet a.2 then
+          return (a, ((← tryCatch (coerce b.1 b.2 a.2) fun _ => pure b.1), a.2))
+        if ← pointSet b.2 then
+          return (((← tryCatch (coerce a.1 a.2 b.2) fun _ => pure a.1), b.2), b)
+        pure (a, b) : M ((Tm × Ty) × (Tm × Ty)))
       if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\setminus" then
         if a.2 != b.2 then fail E.type
         match a.2 with
@@ -2615,6 +2717,17 @@ where
       -- `2\times3`: a product of numbers
       else if a.2 == .real && b.2 == .real then pure (.mul a.1 b.1, .real)
       else do
+        -- `N_1\times[0,1]` for a set `N_1` of points of an interval type: a set of pairs of
+        -- points
+        let ptOf (t : Ty) : M (Option Ty) := do
+          match t with
+          | .fn d .prop => if (← intervalOf d).isSome then pure (some d) else pure none
+          | _ => pure none
+        if let some d ← (do match ← ptOf a.2 with | some d => pure (some d) | none => ptOf b.2) then
+          let sa ← coerce a.1 a.2 (.fn d .prop)
+          let sb ← coerce b.1 b.2 (.fn d .prop)
+          return (.lam d .tt (.lam d .tt (.and (.app (shift 2 0 sa) (.loc 1)) (.app (shift 2 0 sb) (.loc 0)))),
+            .fn d (.fn d .prop))
         let set1 (p : Tm × Ty) : M Tm := do
           match p.2 with
           | .fn .real .prop => pure p.1

@@ -210,6 +210,81 @@ def probMeasure2 (γ : (I → I → Prop) → ℝ) : Prop :=
 def measUniformMarginals (γ : (I → I → Prop) → ℝ) : Prop :=
   (∀ u : I, γ (fun x _ => x ≤ u) = u) ∧ ∀ v : I, γ (fun _ z => z ≤ v) = v
 
+/-! ## Couplings
+
+A coupling is a probability measure on `[0,1]^2` with uniform marginals, as a set function
+(`probMeasure2`, `measUniformMarginals`): the law of a pair `(X,Z)` of uniform random
+variables. -/
+
+/-- The measure on `[0,1]^2` that the set function `γ` agrees with on measurable sets (the
+zero measure when there is none; the compiler asks for `couplingIntegrable`, which says
+that there is one). It is the only one. -/
+noncomputable def measureOfSetFn (γ : (I → I → Prop) → ℝ) : Measure (I × I) := by
+  classical
+  exact if h : probMeasure2 γ then Classical.choose h else 0
+
+/-- `\mathbb{E}_\gamma[f(X,Z)]`: the integral of `f` against the measure of `γ`. -/
+noncomputable def couplingExpectation (γ : (I → I → Prop) → ℝ) (f : I → I → ℝ) : ℝ :=
+  ∫ p, f p.1 p.2 ∂(measureOfSetFn γ)
+
+/-- `γ` is a probability measure on `[0,1]^2`, and `f` is integrable for it. -/
+def couplingIntegrable (γ : (I → I → Prop) → ℝ) (f : I → I → ℝ) : Prop :=
+  probMeasure2 γ ∧ Integrable (fun p : I × I => f p.1 p.2) (measureOfSetFn γ)
+
+/-- The coupling associated with a copula `C`: the law of `(X,Z) = (1-U,1-V)` for a pair
+`(U,V)` with the distribution function `C`. -/
+noncomputable def couplingOfCopula (C : I → I → ℝ) : (I → I → Prop) → ℝ := fun A =>
+  ((measureOf C) {p : I × I | A (unitInterval.symm p.1) (unitInterval.symm p.2)}).toReal
+
+/-- The copula associated with a coupling `γ`: the distribution function of
+`(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the law `γ`. -/
+noncomputable def copulaOfCoupling (γ : (I → I → Prop) → ℝ) : I → I → ℝ := fun u v =>
+  γ (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm v ≤ z)
+
+/-! ## Random pairs
+
+A pair `(Y,Z)` of a real random variable and a random point of `[0,1]`, on any probability
+space, enters a statement only through its joint law, a probability measure on
+`ℝ × [0,1]`: a statement about all such pairs is a statement about all such laws. The law
+is a set function, like a coupling. -/
+
+/-- The set function `P` agrees with a probability measure on `ℝ × [0,1]` on measurable sets. -/
+def jointLaw (P : (ℝ → I → Prop) → ℝ) : Prop :=
+  ∃ μ : Measure (ℝ × I), IsProbabilityMeasure μ ∧
+    ∀ A : ℝ → I → Prop, MeasurableSet {p : ℝ × I | A p.1 p.2} →
+      P A = (μ {p : ℝ × I | A p.1 p.2}).toReal
+
+/-- The measure of a joint law (the zero measure when `P` is none). -/
+noncomputable def measureOfJoint (P : (ℝ → I → Prop) → ℝ) : Measure (ℝ × I) := by
+  classical
+  exact if h : jointLaw P then Classical.choose h else 0
+
+/-- `\mathbb{E}[f(Y,Z)]` for a pair with the joint law `P`. -/
+noncomputable def jointExpectation (P : (ℝ → I → Prop) → ℝ) (f : ℝ → I → ℝ) : ℝ :=
+  ∫ p, f p.1 p.2 ∂(measureOfJoint P)
+
+/-- `P` is a joint law, and `f(Y,Z)` is integrable. -/
+def jointIntegrable (P : (ℝ → I → Prop) → ℝ) (f : ℝ → I → ℝ) : Prop :=
+  jointLaw P ∧ Integrable (fun p : ℝ × I => f p.1 p.2) (measureOfJoint P)
+
+/-- A condition on `(Y,Z)` holds almost surely. -/
+def jointAlmostSurely (P : (ℝ → I → Prop) → ℝ) (q : ℝ → I → Prop) : Prop :=
+  Filter.Eventually (fun p : ℝ × I => q p.1 p.2) (MeasureTheory.ae (measureOfJoint P))
+
+/-- The distribution function of `Y`: `t ↦ P(Y ≤ t)`. -/
+noncomputable def jointDistFn (P : (ℝ → I → Prop) → ℝ) (t : ℝ) : ℝ := P (fun y _ => y ≤ t)
+
+/-- `Z` is uniformly distributed on `[0,1]`: `P(Z ≤ v) = v`. -/
+def jointUniformSecond (P : (ℝ → I → Prop) → ℝ) : Prop := ∀ v : I, P (fun _ z => z ≤ v) = v
+
+/-- Continuous real functions on `[0,1]` and on `[0,1]^2`, and finite sets of points. -/
+def continuousOnInterval (f : I → ℝ) : Prop := Continuous f
+def continuousOnSquare (f : I → I → ℝ) : Prop := Continuous (fun p : I × I => f p.1 p.2)
+def finiteSet1 (A : I → Prop) : Prop := Set.Finite {x : I | A x}
+
+/-- A Borel measurable map of `[0,1]` that preserves Lebesgue measure. -/
+def lebesguePreserving (T : I → I) : Prop := MeasurePreserving T volume volume
+
 /-! ## Facts about distribution functions, their measures and samples
 
 What the proofs of an article use about the meanings above, and what `definedness`
@@ -812,6 +887,11 @@ def uscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) 
   UpperSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
 def continuousUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
   ContinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
+/-- `F` is affine on the class `D`: it respects the convex combinations of two of its
+members. -/
+def affineOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
+  ∀ C₁ C₂ : I → I → ℝ, D C₁ → D C₂ → ∀ t : ℝ, 0 ≤ t → t ≤ 1 →
+    F ((1 - t) • C₁ + t • C₂) = (1 - t) * F C₁ + t * F C₂
 def convexClass (D : (I → I → ℝ) → Prop) : Prop := Convex ℝ {C | D C}
 def compactUniform (D : (I → I → ℝ) → Prop) : Prop :=
   IsCompact {g : UniformFun (I × I) ℝ | D (ofUniform g)}

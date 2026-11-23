@@ -16,6 +16,11 @@ of the items below as well.
 
 ## Next constructions
 
+Items 1 to 4 and 8 are read since version 0.9 (couplings, function variables with
+properties, random pairs through their joint law, equality cases): see the table
+"Couplings and random pairs" in `docs/writing.md` and `tests/Couplings`. The revised
+version of the first article is read in all its results.
+
 1. **Random pairs and expectations under a coupling.** "If $(X,Z)$ follows the
    coupling $\gamma$, then $\alpha(F)=12\,\E[XZ]-3$", "Every $\gamma\in\Gamma$
    satisfies $\E_\gamma[c(X,Z)]\le\int_0^1\varphi+\int_0^1\psi$". Reading:

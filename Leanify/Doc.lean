@@ -1044,6 +1044,12 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           if vty == .real || Elab.isBase vty then some (Tm.eq (.loc 0) (shift k 0 val)) else
           match vty with
           | .fn a .prop => some (ptwise a true)
+          -- (a function of two points, `let $C$ be the copula associated with $\gamma$`)
+          | .fn a (.fn a2 b2) =>
+            if b2 == .real || Elab.isBase b2 then
+              some (Tm.all a (Tm.all a2 (Tm.eq (.app (.app (.loc 2) (.loc 1)) (.loc 0))
+                (.app (.app (shift (k + 2) 0 val) (.loc 1)) (.loc 0)))))
+            else none
           | .fn a b => if b == .real || Elab.isBase b then some (ptwise a false) else none
           | _ => none
         let some body := body? | fail E.unsupported
@@ -1159,7 +1165,12 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             match sg with
             | .sig (.id f) d c => do
               -- a field (`u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`)
-              match ← fieldSig d c with
+              -- (a function on a power of an interval type of the vocabulary, `c:[0,1]^2\to\mathbb{R}`
+              -- with the field `unitsquare`, is a function of its points, not a field)
+              let onPoints := (← tryCatch (do
+                  let ds ← domainsOf false d
+                  pure (!ds.isEmpty && ds.all fun (t, p) => Elab.isBase t && p.isNone)) fun _ => pure false)
+              match ← (if onPoints then pure none else fieldSig d c) with
               | some (info, ty) =>
                 modify fun st => { st with fields := (f, info) :: st.fields }
                 pure (ty, [], some [.id f], r)
@@ -1534,7 +1545,10 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
-    if let some v := free.find? st.unreadIds.contains then fail E.undefined v
+    -- (not a variable that the result or the sentence has bound: `Let $T$ be …. If
+    -- $K\subseteq\{…T(x)…\}$, …`)
+    if let some v := free.find? (fun n => st.unreadIds.contains n && !before.any (·.name == n)) then
+      fail E.undefined v
     -- (`U_1` of a sequence `U` bound before is its term, not a variable)
     let free := free.filter fun n => (termOfSeq before n).isNone
     let free := (seqFree st [] φ free).filter fun n => !before.any (·.name == n)
@@ -1813,6 +1827,25 @@ def innerDoms : Clause → List MT
   | .scoped _ _ (some d) _ => [d]
   | _ => []
 
+/-- Does a formula speak of the random pair of the result: an expectation `\mathbb{E}[…]`
+or a condition that holds almost surely? -/
+def usesRandomPair : Nat → MT → Bool
+  | 0, _ => false
+  | f + 1, m =>
+    (match m with
+      | .app (.id n) _ => n == w!"@rexp" || n == w!"@rae"
+      | _ => false) || (mtChildren m).any (usesRandomPair f)
+
+/-- The joint law of the random pair of the result, as a variable that formulas use: where
+they speak of the pair (`\mathbb{E}[…]`, `almost surely`) or of the distribution function of
+its first variable. -/
+def lawIds (st : St) (ms : List MT) (ids : List Codes) : List Codes :=
+  match st.randomPair with
+  | some (_, _, _, df, _, _) =>
+    if ms.any (usesRandomPair 64) || (match df with | some d => ids.contains d | none => false)
+    then [w!"\\mathbb{P}"] else []
+  | none => []
+
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
@@ -1825,7 +1858,8 @@ def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
   let abbrKeys := (ms.flatMap (bareIds 64)).eraseDups.flatMap fun n =>
     if !ids.contains n then [] else
     ((st.abbrevs.find? fun (e, k, _) => k == n && (e == st.curEnv || st.curProved == some e)).map (·.2.2)).getD []
-  ids ++ abbrKeys ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause ++
+  let law := lawIds st ms ids
+  ids ++ law ++ abbrKeys ++ implicitVars st (ids ++ ms.flatMap (subKeys 64)) ++ ineqFree st cl.clause ++
     (ms.flatMap (subBaseVars st bound))
 
 /-- A piecewise formula that no piece covers is `0` there (for integrands). -/
@@ -2413,7 +2447,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
     let st ← get
     let ids := freeIds 64 argNames rhs
-    let used := ids ++ implicitVars st (ids ++ subKeys 64 rhs)
+    let used := ids ++ implicitVars st (ids ++ subKeys 64 rhs) ++ lawIds st [rhs] ids
     -- A variable whose domain uses the variables before it (`x\in[0,n]`) needs them all,
     -- in their order: the definition takes them too, so that the domain is a condition on
     -- its own parameters.
@@ -2662,14 +2696,28 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
       if t != w!"the" then fail E.unsupported
       else do
         let ws := wordsOf rest
+        -- a notion of the vocabulary with its arguments (`the copula associated with
+        -- $\gamma_{T_w}$`)
+        let vocabNotion : M (Tm × Ty) := do
+          let V := (← get).vocab
+          let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name rest []).map fun a => ((n, a), [])
+          match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) rest cands with
+          | some ((n, args), _) =>
+            let ts ← args.mapM fun a => do
+              let some m := Math.parseFormula a | fail E.unsupported
+              term F sc none m
+            applyAll n.value n.ty n.doms ts
+          | none => fail E.noun ((ws.intersperse [32]).flatten)
         match mathsOf rest with
         | [arg] => do
-          let some i := lookupWords (← get).ops ws | fail E.noun ((ws.intersperse [32]).flatten)
-          let g := ((← get).globs[i]?).getD default
-          let m ← liftO (Math.parseFormula arg) E.unsupported
-          let a ← term F sc none m
-          applyAll (.glob i) g.ty g.doms [a]
-        | _ => fail E.unsupported
+          match lookupWords (← get).ops ws with
+          | some i =>
+            let g := ((← get).globs[i]?).getD default
+            let m ← liftO (Math.parseFormula arg) E.unsupported
+            let a ← term F sc none m
+            applyAll (.glob i) g.ty g.doms [a]
+          | none => vocabNotion
+        | _ => vocabNotion
     | _ => fail E.unsupported
   let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) val
   let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ value
@@ -2756,6 +2804,11 @@ def defClass (sym : MT) (plural : List Codes) (np : List Chunk) : M (List Nat ×
   modify fun st => { st with strongConds := false }
   -- (a noun phrase with a variable describes the members: `the class of functions
   -- $f:[0,1]\to\mathbb{R}$ with $φ$`; the class then has its symbol only)
+  -- (`the set of couplings, that is, probability measures $\gamma$ on $[0,1]^2$ with …`: a
+  -- gloss with a variable, for a class that is a noun of the vocabulary)
+  let b ← if !b.name.isEmpty && !plural.isEmpty then
+      tryCatch (do set st0; nounPhrase (plural.map Chunk.w)) fun _ => fail E.unsupported b.name
+    else pure b
   if !b.name.isEmpty && !plural.isEmpty then fail E.unsupported b.name
   let p := b.pred.getD (.lam b.ty .tt .tt)
   let i ← addGlob ⟨key, .fn b.ty .prop, [none], false, 1⟩ p
@@ -4338,8 +4391,13 @@ def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Boo
   let st ← get
   let known := st.envBinders.map (·.name) ++ (st.fixed.filter (·.1 == c.ctx.sec)).map (·.2.name)
   let newVars (b : Bind) : Bool := (bindNames st known [b]).any (!known.contains ·)
+  -- (a symbol that the article or the result has defined is no new variable: `Suppose that
+  -- $K\subseteq A$.` about the set `K` defined before is a hypothesis)
+  let defined ← match asBinder with
+    | some (.every vs _) => vs.allM fun v => do pure (← Elab.lookupGlob v).isSome
+    | _ => pure false
   match asBinder with
-  | some b => if !contra && newVars b then return ← assumeIn c [b] [] else pure ()
+  | some b => if !contra && !defined && newVars b then return ← assumeIn c [b] [] else pure ()
   | none => pure ()
   let item := c.ctx.items.headD 0
   -- the assumptions of this proof (of this item), not the headings of its cases
@@ -4466,6 +4524,7 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | _ => [])
       -- a variable of the result (it shadows a definition of the same name)
       let used := (maths.flatMap fun m => freeIds 64 [] m ++ subKeys 64 m).eraseDups.filter fun n => env.any (·.name == n)
+      let used := used ++ lawIds (← get) maths (maths.flatMap fun m => freeIds 64 [] m)
       let imp := if c.ctx.kind == .text then [] else usedBinders env used
       let bis ← match bd with
         | .many bs => bindersInfos (bs.map id) imp
@@ -4473,6 +4532,17 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | bd => binderInfos bd
       let binderNames := bis.map (·.name)
       let imp := imp.filter fun b => !binderNames.contains b.name
+      -- `For $b\in(0,\frac12)$ and $x\in(1-b,1]$, set $z_-(x)\coloneqq…$`: the first variables
+      -- of the binder that no defined symbol shows are implicit parameters of the
+      -- definitions, supplied from the scope where the symbols are used
+      let shown := (defs.flatMap fun m => match m with
+        | .chain l _ => freeIds 64 [] l ++ subKeys 64 l
+        | _ => []).eraseDups
+      let hidden := bis.takeWhile fun b => !shown.contains b.name
+      let (bis, imp) :=
+        if !hidden.isEmpty && hidden.length < bis.length &&
+            (bis.drop hidden.length).all (fun b => shown.contains b.name)
+        then (bis.drop hidden.length, imp ++ hidden) else (bis, imp)
       let res ← match bis with
         | [bi] => if imp.isEmpty then constDefs c (some bi) defs labels else multiDefs bis defs labels imp
         | _ :: _ :: _ => multiDefs bis defs labels imp
@@ -4495,7 +4565,28 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         unless keep.isEmpty do
           modify fun st => { st with envBinders := keep ++ st.envBinders.filter fun x => !(keep.any (·.name == x.name)) }
       pure res
-    | none => constDefs c none defs labels
+    | none =>
+      -- `We set $B_{1/2}\coloneqq A_{1/2}$.` for a family `B` of the article: the family at
+      -- one further parameter (`addGlob` joins it to the family on its domain)
+      let atPoint : Option (Codes × MT × MT) := match defs with
+        | [.chain (.sub (.id k) e) [(.defeq, rhs)]] => if (freeIds 64 [] e).isEmpty then some (k, e, rhs) else none
+        | _ => none
+      match atPoint with
+      | some (k, e, rhs) =>
+        match ← Elab.lookupFam k with
+        | some (_, old) =>
+          match old.ty with
+          | .fn t cod => do
+            let (et, ety) ← term F [] none e
+            let et ← Elab.coerce et ety t
+            let (rt, rty) ← term F [] none rhs
+            let rt ← Elab.coerce rt rty cod
+            let p := Tm.lam t .tt (.eq (.loc 0) (shift 1 0 et))
+            let i ← addGlob ⟨k, old.ty, some p :: old.doms.drop 1, true, 1⟩ (Tm.lam t (.app (shift 1 0 p) (.loc 0)) (shift 1 0 rt))
+            pure ([i], [])
+          | _ => constDefs c none defs labels
+        | none => constDefs c none defs labels
+      | none => constDefs c none defs labels
   | .defByFamily b sg pieces labels => do
     let [bi] ← binderInfos b | fail E.unsupported
     defByFamily c bi sg pieces labels
@@ -4508,6 +4599,28 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let [bi] ← binderInfos b | fail E.unsupported
     letDenote bi sym np
   | .defsNamed defs labels np => defsNamed c defs labels np
+  -- the random pair of a result: its joint law is a variable of the result, a probability
+  -- measure on `ℝ × [0,1]` whose second coordinate is uniform (see `St.randomPair`)
+  | .randomVar y integ df cont => do
+    if c.ctx.kind == .text then fail E.prose
+    modify fun st => { st with randomPair := some (st.curEnv, y, none, df, integ, cont) }
+    pure ([], [])
+  | .uniformVar z dom => do
+    if c.ctx.kind == .text then fail E.prose
+    let st ← get
+    let some (e, y, none, df, integ, cont) := st.randomPair | fail E.prose
+    if e != st.curEnv then fail E.prose
+    let some iv ← Elab.intervalType dom | fail E.unsupported
+    let (some pl, some pu, some pi, some pd) := (iv.pairLaw, iv.pairUniform, iv.pairInt, iv.pairDf) | fail E.unsupported
+    let lawTy : Ty := .fn (.fn .real (.fn iv.ty .prop)) .real
+    let law := Tm.loc 0
+    let conds := [Tm.app (.const pl) law, Tm.app (.const pu) law] ++
+      (if integ then [Tm.app (.app (.const pi) law) (Tm.lam .real .tt (Tm.lam iv.ty .tt (.loc 1)))] else []) ++
+      (if cont && df.isSome then
+        [Tm.app (.app (.prim .continuousOn) (Tm.app (.const pd) law)) (Tm.lam .real .tt .tt)] else [])
+    let bi : BindInfo := ⟨w!"\\mathbb{P}", lawTy, some (Tm.lam lawTy .tt (conjAll conds))⟩
+    modify fun st => { st with envBinders := st.envBinders ++ [bi], randomPair := some (e, y, some z, df, integ, cont) }
+    pure ([], [])
   | .weSay sb ph o cond vs d => weSay sb ph o cond vs d
   | .defSteps b sets sym np whereDef => do
     let [bi] ← binderInfos b | fail E.unsupported

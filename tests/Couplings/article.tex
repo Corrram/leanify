@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools,enumitem}
+\usepackage[vocab=unitsquare]{leanify}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\Gam}{\Gamma}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\de}{\,\mathrm{d}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\begin{document}
+
+A coupling is a probability measure on the unit square with uniform marginals: the law of a pair $(X,Z)$ of uniform random variables.
+An expectation with a coupling as its subscript is the integral of a function of the two coordinates, which are written $X$ and $Z$.
+
+Let $\CC$ denote the class of bivariate copulas.
+Let $\Gam$ denote the set of couplings, that is, probability measures $\gamma$ on $[0,1]^2$ with uniform marginals.
+For a copula $C$, Spearman's rho is
+\begin{equation}
+  \rho(C)=12\int_0^1\!\int_0^1 C(u,v)\de u\de v-3.
+\end{equation}
+For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$.
+For a copula $C$, the survival copula of $C$ is $\widehat C(u,v)\coloneqq u+v-1+C(1-u,1-v)$.
+For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma_T$ denote the law of $(X,T(X))$ for $X$ uniformly distributed on $[0,1]$.
+For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma^T$ denote the law of $(T(Z),Z)$ for $Z$ uniformly distributed on $[0,1]$.
+
+\begin{lemma}[Coupling representation]
+\label{lem:coupling}
+Let $C\in\CC$, and let $\gamma$ be the coupling associated with $C$.
+Then
+\begin{equation}
+  \begin{aligned}
+  \rho(C)&=12\,\E_\gamma[XZ]-3,
+  &\rho(C^\top)&=12\,\E_\gamma[ZX]-3.
+  \end{aligned}
+\end{equation}
+Consequently, $\rho$ is affine on $\CC$.
+\end{lemma}
+
+A family of maps of the interval gives a family of copulas, and a family may get one more value.
+
+For $w\in[0,1]$, define the shuffle map $T_w:[0,1]\to[0,1]$ by
+\begin{equation}
+  T_w(x)\coloneqq
+  \begin{cases}
+    1-x, & 0\le x\le1-w,\\
+    x+w-1, & 1-w<x\le1.
+  \end{cases}
+\end{equation}
+For $w\in[0,1]$, let $A_w$ denote the copula associated with $\gamma_{T_w}$.
+For $b\in(0,\frac12)$, let $B_b$ denote the copula associated with $\gamma^{T_b}$.
+We therefore set $B_{1/2}\coloneqq A_{1/2}$.
+For $b\in(0,\frac12)$ and $x\in(1-b,1]$, set
+\begin{equation}
+  z_-(x)\coloneqq\frac{x+b-1}{2(1-b)},
+  \qquad
+  z_+(x)\coloneqq\frac{1-b-(1-2b)x}{2(1-b)}.
+\end{equation}
+
+\begin{lemma}
+\label{lem:values}
+Let $w\in[0,1]$ and $b\in(0,\frac12]$.
+Then $\rho(A_w)=2w^3-1$ and $\rho(B_b)\le1$.
+Moreover, $w\mapsto\rho(A_w)$ increases bijectively from $[0,1]$ onto $[-1,1]$.
+\end{lemma}
+
+\begin{corollary}
+\label{cor:sharp}
+Every $C\in\CC$ satisfies $\rho(C)\le1$.
+The maximum is attained only by $A_1$ and the minimum only by its survival copula, that is, for every $C\in\CC$, $\rho(C)=1$ if and only if $C=A_1$, and $\rho(C)=-1$ if and only if $C=\widehat{A_1}$.
+Likewise, for every $w\in[\frac12,1]$, $\rho(A_w^\top)=2w^3-1$.
+\end{corollary}
+
+\begin{proof}
+Let $r\in[-1,1]$, and let $C\in\CC$ with $\rho(C)=r$.
+Let $\gamma\in\Gam$, and let $D$ be the copula associated with $\gamma$.
+Then $\rho(D)\le1$ and $r\le1$.
+\end{proof}
+
+Potentials certify that a coupling is optimal.
+
+\begin{lemma}[Dual certificates]
+\label{lem:dual-certificate}
+Let $c:[0,1]^2\to\R$ be a continuous function, and let $\varphi,\psi:[0,1]\to\R$ be continuous functions.
+For $x,z\in[0,1]$, set $\Delta(x,z)\coloneqq\varphi(x)+\psi(z)-c(x,z)$.
+Suppose that $\Delta(x,z)\ge0$ for all $x,z\in[0,1]$, and let $K\coloneqq\{(x,z)\in[0,1]^2:\Delta(x,z)=0\}$ be their contact set.
+\begin{enumerate}[label=(\alph*),leftmargin=2em]
+\item
+Every $\gamma\in\Gam$ satisfies
+\[
+  \E_\gamma[c(X,Z)]\le\int_0^1\varphi(t)\de t+\int_0^1\psi(t)\de t,
+\]
+with equality if and only if $\gamma(K)=1$.
+In particular, the maximizers are the couplings concentrated on $K$ when there is one, that is, if there is $\mu\in\Gam$ such that $\mu(K)=1$, then $\sup_{\gamma\in\Gam}\E_\gamma[c(X,Z)]=\int_0^1\varphi(t)\de t+\int_0^1\psi(t)\de t$.
+\item
+Let $T:[0,1]\to[0,1]$ be a Borel measurable map, and let $N_1$ and $N_2$ be finite subsets of $[0,1]$.
+If $K\subseteq\{(x,z)\in[0,1]^2:z=T(x)\}\cup(N_1\times[0,1])\cup([0,1]\times N_2)$, then every $\gamma\in\Gam$ with $\gamma(K)=1$ satisfies $\gamma=\gamma_T$, and $T$ is Lebesgue measure preserving.
+\end{enumerate}
+\end{lemma}
+
+Two random variables of a result are a random pair: the result is about every joint law of such a pair.
+
+\begin{lemma}[Rearrangement inequality with equality case]
+\label{lem:rearrangement}
+Let $Y$ be an integrable random variable with continuous distribution function $F$, and let $Z$ be uniformly distributed on $[0,1]$ and defined on the same probability space.
+Then $\E[YZ]\le\E[Y\,F(Y)]$, with equality if and only if $Z=F(Y)$ almost surely.
+\end{lemma}
+
+\begin{proof}
+Fix $t\in(0,1)$ and set $q_t\coloneqq\sup\{s\in\R:F(s)\le t\}$.
+Then $F(q_t)=t$.
+\end{proof}
+
+\end{document}

@@ -162,6 +162,25 @@ Further forms that the fields use (they are read for any vocabulary):
 | `The boundary of the region is described by the function $\Phi:[-1,1]\to[-1,1]$ given by DISPLAY, which satisfies $2r-\Phi(r)=-\Phi(-r)$ for every $r\in[-1,1]$.` | as `Define $\Phi:[-1,1]\to[-1,1]$ by DISPLAY and observe that …`: the words before `the function` describe it |
 | `For every $C\in\mathcal C$, DISPLAY, and the two reflections satisfy DISPLAY, as well as DISPLAY.` | words that only lead to the next formula (`and … satisfy`, `as well as`); in a display, `,\quad` separates formulas like `,\qquad` |
 
+Couplings and random pairs, with the field `unitsquare` (`tests/Couplings/article.tex` uses
+each form):
+
+| Sentence | Reading |
+| --- | --- |
+| `Let $\Gamma$ denote the set of couplings.` | a *coupling* is a probability measure on `[0,1]^2` with uniform marginals, the law of a pair `(X,Z)` of uniform random variables |
+| `\mathbb{E}_\gamma[XZ(X+Z)]`, `\mathbb{E}_\gamma[c(X,Z)]` | the integral of a function of the two coordinates, written `X` and `Z`, against the coupling `γ`; defined when the function is integrable |
+| `Let $C\in\mathcal C$, and let $\gamma$ be the coupling associated with $C$.`, `let $D_c$ denote the copula associated with $\gamma_{\zeta_c}$` | the coupling of a copula `C` is the law of `(1-U,1-V)` for `(U,V)` with the copula `C`; the copula of a coupling `γ` is the copula of `(1-X,1-Z)`. A real function with values in `[0,1]`, such as `\zeta_c:[0,1]\to[0,1]`, is a map of the interval where one is expected |
+| `Consequently, $\rho$, $\nu$, and $\eta$ are affine on $\mathcal C$.` | what is said of several symbols is said of each; a quantity is *affine* on a class when it respects the convex combinations of its members |
+| `We therefore set $B_{1/2}\coloneqq A_{1/2}$.` | a family at one further parameter: from here on the family is defined there too |
+| `For $b\in(0,\frac12)$ and $x\in(1-b,1]$, set $z_-(x)\coloneqq…$.` | the first variables of the binder that no defined symbol shows are implicit: `z_-(x)` takes `b` from where it is used |
+| `… if and only if $C=D_{1/2}$`, `The maximum is attained only by $D_{1/2}$, that is, for every $C\in\mathcal C$, $\nu(C)-\rho(C)=\frac14$ if and only if $C=D_{1/2}$.` | an equality case as an equivalence; after `, that is,` the formal restatement is what is read |
+| `Let $c:[0,1]^2\to\mathbb{R}$ be a continuous function, and let $\varphi,\psi:[0,1]\to\mathbb{R}$ be continuous functions.` | functions of the points of the interval and of the square as variables of a result, with adjectives of the vocabulary |
+| `Suppose that $\Delta(x,z)\ge0$ for all $x,z\in[0,1]$, and let $K\coloneqq\{(x,z)\in[0,1]^2:\Delta(x,z)=0\}$ be their contact set.` | a set of pairs of points defined in a result (its name is not read); `$\gamma(K)$` is its measure, defined when it is measurable |
+| `Every $\gamma\in\Gamma$ satisfies DISPLAY, with equality if and only if $\gamma(K)=1$.` | the inequality, and: equality in it holds exactly when the condition does |
+| `If there is $\mu\in\Gamma$ such that $\mu(K)=1$, then …` | an existence as a hypothesis |
+| `If $K\subseteq\{(x,z)\in[0,1]^2:z=T(x)\}\cup(N_1\times[0,1])\cup([0,1]\times N_2)$, then every $\gamma\in\Gamma$ with $\gamma(K)=1$ satisfies $\gamma=\gamma_T$, and $T$ is Lebesgue measure preserving.` | sets of pairs of points: unions, products with a *finite subset of `[0,1]`*, inclusion; two couplings are equal when they agree on every measurable set |
+| `Let $Y$ be an integrable random variable with continuous distribution function $F$, and let $Z$ be uniformly distributed on $[0,1]$ and defined on the same probability space. Then $\mathbb{E}[YZ]\le\mathbb{E}[Y\,F(Y)]$, with equality if and only if $Z=F(Y)$ almost surely.` | the two random variables of a result are a random pair: the result is about every joint law of such a pair, a probability measure on `ℝ × [0,1]` whose second coordinate is uniform. `\mathbb{E}[…]` is the expectation for that law, `F` is the distribution function of `Y`, and `almost surely` is for that law. A statement about a pair on any probability space depends only on the joint law, so this is the same statement |
+
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
 `x` and `y`.

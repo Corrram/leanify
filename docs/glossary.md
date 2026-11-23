@@ -38,6 +38,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -46,6 +49,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -60,6 +66,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -69,6 +76,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 
@@ -80,6 +89,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -89,6 +101,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -103,6 +118,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -112,6 +128,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 
@@ -128,6 +146,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -137,6 +158,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -151,6 +175,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -160,6 +185,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 | markov operator of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → ℝ) → $[0,1]$ → ℝ | `(T_C g)(u) = ∫ g(y) K_C(u, dy)` for a copula `C`, with the conditional distribution `K_C(u,·)` of the second coordinate given the first (Mathlib `Measure.condKernel`): `E[g(V) \| U = u]` |

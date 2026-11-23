@@ -151,6 +151,13 @@ srcDir = "tests"
 globs = ["Revision.+"]
 
 [[lean_lib]]
+# Couplings and random pairs with the field unitsquare: expectations of the coordinates,
+# the copula of a coupling, dual certificates, a rearrangement inequality.
+name = "Couplings"
+srcDir = "tests"
+globs = ["Couplings.+"]
+
+[[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.
 name = "Calculus"
 srcDir = "tests"
