@@ -153,6 +153,14 @@ Further forms that the fields use (they are read for any vocabulary):
 | `We write $K$ for the circle with centre $O$ and radius $5$.` | in a notation, a letter that the article has defined (`O`) is that object; the other letters are the notation's parameters |
 | `$S$ is of measure zero` | a modifier of the vocabulary that begins with `of`, after `is` |
 | `the M\"obius function` | TeX accents in words are read as the letters they print (`Möbius`) |
+| `\newif\ifmarked`, `\newcommand{\rev}[1]{\ifmarked{\color{magenta}#1}\else#1\fi}`, `\marginpar{…}` | the marks of a revision: a conditional of the preamble (`\newif`, `\…true`, `\…false`, `\ifdefined`) selects its branch, and colour and margin notes are layout. The sentences are read as in the clean version |
+| `Let $\mathcal C$ denote the class of bivariate copulas, that is, distribution functions on $[0,1]^2$ with uniform marginals, and we refer to … for background.` | a class that is a noun of the vocabulary: when the gloss after `that is,` is not read, the noun is the definition |
+| `The copulas $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq…$, and $\Pi(u,v)\coloneqq uv$ describe comonotonicity, countermonotonicity, and independence, respectively.` | as `Let DEFS denote the comonotonicity, countermonotonicity, and independence copulas.` (`describe`, `represent`, `model`, `correspond to`) |
+| `For a copula $C$, Spearman's rho is \begin{equation}\rho(C)=12\int_0^1\!\int_0^1C(u,v)\,du\,dv-3,\end{equation} as given in \cite{…}, a classical measure of concordance.` | `For a NOUN $x$, the NAME is DISPLAY` defines the symbol also with `=`, when the symbol is new; words without a formula after the display (`, as given in \cite{…}, …`, `, which emphasizes …`) assert nothing |
+| `For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$.` | a definition with its name: `its transpose` is then read |
+| `For a copula $C$, the reflections of $C$ in the first and in the second argument are \[C_{1}^{*}(u,v)\coloneqq v-C(1-u,v)\qquad\text{and}\qquad C_{2}^{*}(u,v)\coloneqq u-C(u,1-v).\]` | a decoration with a star, also with a number below it (`C^{*}`, `C_{1}^{*}`), is an operation on the objects of the noun, like `C^\top` and `\widehat C` |
+| `The boundary of the region is described by the function $\Phi:[-1,1]\to[-1,1]$ given by DISPLAY, which satisfies $2r-\Phi(r)=-\Phi(-r)$ for every $r\in[-1,1]$.` | as `Define $\Phi:[-1,1]\to[-1,1]$ by DISPLAY and observe that …`: the words before `the function` describe it |
+| `For every $C\in\mathcal C$, DISPLAY, and the two reflections satisfy DISPLAY, as well as DISPLAY.` | words that only lead to the next formula (`and … satisfy`, `as well as`); in a display, `,\quad` separates formulas like `,\qquad` |
 
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to

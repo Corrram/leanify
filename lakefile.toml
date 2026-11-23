@@ -144,6 +144,13 @@ srcDir = "tests"
 globs = ["Groups.+"]
 
 [[lean_lib]]
+# A revised article: changes marked by a conditional (`\newif`), definitions inside the
+# sentences of a running text, decorations with a star.
+name = "Revision"
+srcDir = "tests"
+globs = ["Revision.+"]
+
+[[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.
 name = "Calculus"
 srcDir = "tests"

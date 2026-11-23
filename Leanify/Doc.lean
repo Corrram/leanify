@@ -2045,6 +2045,10 @@ def defHead (binder : Codes) : MT → M (Codes × Bool × List Codes)
     match h with
     | .id k => if names == [binder] then pure (k, false, []) else fail E.unsupported k
     | .sup (.id x) (.id d) => if x == binder then pure (w!"^" ++ d, false, names) else fail E.unsupported
+    -- (`C_1^*(u,v)`: a decoration with a number below)
+    | .sup (.sub (.id x) (.num n)) (.id d) =>
+      if x == binder then pure (w!"^" ++ d ++ w!"_" ++ (Nat.toDigits 10 n).map Char.toNat, false, names)
+      else fail E.unsupported
     | .hat (.id x) => if x == binder then pure (w!"\\widehat", false, names) else fail E.unsupported
     | .sub (.id k) (.id x) => if x == binder then pure (k, true, names) else fail E.unsupported
     | _ => fail E.unsupported
@@ -2072,7 +2076,16 @@ def chainClaims (sc : Scope) (first : MT) (rest : List (Rel × MT)) : M (List Tm
 /-- `For a N $x$, the NAME is DEF`. -/
 def defItem (c : SentCtx) (b : BindInfo) (it : DefItem) : M (List Nat × List Nat) := do
   let bty := b.ty
-  match it.defn with
+  -- `For a copula $C$, Spearman's rho is DISPLAY` with `\rho(C)=…` for a symbol `\rho`
+  -- that is not defined: the display defines it
+  let st0 ← get
+  let defn := match it.defn with
+    | .chain (.app (.id f) args) ((.eq, rhs) :: more) =>
+      if !args.isEmpty && args.all (fun a => match a with | .id _ => true | _ => false) &&
+          !(st0.globs.any fun g => g.key == f) && (Elab.builtinConst f).isNone
+      then MT.chain (.app (.id f) args) ((.defeq, rhs) :: more) else it.defn
+    | d => d
+  match defn with
   | .chain lhs ((.defeq, rhs) :: more) => do
     let (key, family, args) ← defHead b.name lhs
     let ats := match bty with
@@ -2316,7 +2329,7 @@ def setDef (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := d
   -- `For a NOUN $C$, set $C^\top(u,v)\coloneqq C(v,u)$`: an operation on the binder's
   -- variable, as `the transpose of $C$ is …`
   let onBinder : MT → Bool := fun h => match h with
-    | .sup (.id x) (.id _) | .hat (.id x) => x == b.name
+    | .sup (.id x) (.id _) | .hat (.id x) | .sup (.sub (.id x) (.num _)) (.id _) => x == b.name
     | _ => false
   match m with
   | .chain (.app h _) ((.defeq, _) :: _) =>
@@ -2732,7 +2745,14 @@ def defClass (sym : MT) (plural : List Codes) (np : List Chunk) : M (List Nat ×
   let key ← match sym with | .id k => pure k | _ => fail E.unsupported
   -- without `that is, NP`, the class is a noun of the vocabulary
   modify fun st => { st with strongConds := plural.isEmpty }
-  let b ← nounPhrase (if np.isEmpty then plural.map Chunk.w else np)
+  let st0 ← get
+  -- (a gloss that is not read, `that is, distribution functions on $[0,1]^2$ with uniform
+  -- marginals, and we refer to …`, when the class itself is a noun of the vocabulary: the
+  -- noun is the definition)
+  let b ← tryCatch (nounPhrase (if np.isEmpty then plural.map Chunk.w else np)) fun e => do
+    if np.isEmpty || plural.isEmpty then throw e
+    set { st0 with strongConds := false }
+    tryCatch (nounPhrase (plural.map Chunk.w)) fun _ => throw e
   modify fun st => { st with strongConds := false }
   -- (a noun phrase with a variable describes the members: `the class of functions
   -- $f:[0,1]\to\mathbb{R}$ with $φ$`; the class then has its symbol only)

@@ -2427,6 +2427,23 @@ where
           | some (s, sty), .fn a _ =>
             return ← (if a == sty then applyAll hd hty hdoms [(s, sty)] else pure (hd, hty))
           | _, _ => return (hd, hty)
+      -- a decoration that the article defines for the objects of a noun: `C^*`, and with a
+      -- number below, `C_1^*` (`For a copula $C$, … $C_1^*(u,v)\coloneqq v-C(1-u,v)$`)
+      let star : Option (Codes × MT) := match b, e with
+        | .sub x (.num n), .id d =>
+          if d == w!"\\top" || d == w!"\\perp" then none
+          else some (w!"^" ++ d ++ w!"_" ++ (Nat.toDigits 10 n).map Char.toNat, x)
+        | x, .id d => if d == [42] then some (w!"^" ++ d, x) else none
+        | _, _ => none
+      if let some (k, x) := star then
+        if let some (h, g) ← lookupGlob k then
+          let st1 ← get
+          let r ← tryCatch (do
+              let xt ← term f sc none x
+              some <$> applyAll (.glob h) g.ty g.doms [xt]) fun _ => do
+            set st1
+            pure none
+          if let some res := r then return res
       -- a family written with a superscript (`\gamma^T`)
       let fam ← match b, e with
         | .id k, .id d => if d == w!"\\top" || d == w!"\\perp" then pure none else lookupGlob (k ++ w!"^")

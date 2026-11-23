@@ -121,7 +121,11 @@ def wDropText : List Codes :=
    w!"smallskip", w!"bigskip", w!"par", w!"newline", w!"protect", w!"relax", w!"null",
    w!"leavevmode", w!"sloppy", w!"fussy", w!"indent", w!"hfill", w!"vfill", w!"allowbreak",
    w!"linebreak", w!"nolinebreak", w!"pagebreak", w!"nopagebreak", w!"goodbreak", w!"newpage",
-   w!"clearpage"]
+   w!"clearpage", w!"raggedright", w!"raggedleft", w!"scriptsize", w!"footnotesize", w!"small",
+   w!"normalsize", w!"large", w!"normalfont", w!"itshape", w!"bfseries", w!"upshape"]
+/-- Layout commands that are dropped with their argument: `\color{magenta}`,
+`\marginpar{…}`; of `\textcolor{red}{text}`, the text stays. -/
+def wDropArg : List Codes := [w!"color", w!"textcolor", w!"marginpar", w!"marginnote", w!"pagecolor"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]
@@ -244,11 +248,18 @@ def readArgs : Nat → Option Codes → Codes → List Codes × Codes × Nat
     (a :: as, r', m + m')
 
 /-- The body of a macro with `#1`…`#9` replaced by its arguments (and `##` by `#`). -/
-def substArgs (as : List Codes) : Codes → Codes
+def substArgs (as : List Codes) (inCs : Bool := false) : Codes → Codes
   | [] => []
-  | 35 :: 35 :: r => 35 :: substArgs as r
-  | 35 :: d :: r => if 49 ≤ d && d ≤ 57 then as.getD (d - 49) [] ++ substArgs as r else 35 :: substArgs as (d :: r)
-  | c :: r => c :: substArgs as r
+  | 35 :: 35 :: r => 35 :: substArgs as false r
+  | 35 :: d :: r =>
+    if 49 ≤ d && d ≤ 57 then
+      -- (an argument after a control word does not join its name: `\else#1`)
+      let a := as.getD (d - 49) []
+      (if inCs && (match a.head? with | some c => isLetter c | none => false) then [32] else []) ++
+        a ++ substArgs as false r
+    else 35 :: substArgs as false (d :: r)
+  | 92 :: c :: r => 92 :: c :: substArgs as (isLetter c) r
+  | c :: r => c :: substArgs as (inCs && isLetter c) r
 
 /-- A macro's expansion at a use: the body with its arguments, the rest of the
 input and the number of code points the arguments took. -/
@@ -257,7 +268,7 @@ def expand (macros : Macros) (name body rest : Codes) : Codes × Codes × Nat :=
   | 35 :: d :: b =>
     if 49 ≤ d && d ≤ 57 then
       let (as, r, k) := readArgs (d - 48) (macros.lookup (name ++ [35])) rest
-      (substArgs as b, r, k)
+      (substArgs as false b, r, k)
     else (body, rest, 0)
   | _ => (body, rest, 0)
 
@@ -311,6 +322,45 @@ def afterItem (out : List PTok) : Bool :=
     | ⟨.cmd i, _, _⟩ :: _ => i == w!"item" && (rest.takeWhile (·.tok != .cmd w!"item")).length ≤ 8
     | _ => false
   | _ => false
+
+/-- The value of a conditional of the article (`\newif\ifmarked`), kept with the macros
+under its name. -/
+def wIfTrue : Codes := w!"\\@iftrue"
+def wIfFalse : Codes := w!"\\@iffalse"
+
+/-- The names of TeX's conditionals and of the article's own (`\newif`), which nest. -/
+def isCond (macros : Macros) (name : Codes) : Bool :=
+  [w!"ifdefined", w!"ifx", w!"ifnum", w!"ifdim", w!"ifmmode", w!"iftrue", w!"iffalse", w!"ifodd"].contains name ||
+  (match macros.lookup name with | some b => b == wIfTrue || b == wIfFalse | none => false)
+
+/-- The two branches of a conditional, from just after its test: `A\else B\fi` gives
+`A`, `B`, the offset of `B`, the text after `\fi` and the number of characters
+through `\fi`. Conditionals inside are kept whole. -/
+def condSplit (macros : Macros) : Codes → Nat → Bool → Codes → Codes → Nat → Nat →
+    Option (Codes × Codes × Nat × Codes × Nat)
+  | [], _, _, _, _, _, _ => none
+  | [_], _, _, _, _, _, _ => none
+  | c :: d :: cs, depth, inElse, th, el, k, elOff =>
+    let push (x : Codes) (th el : Codes) : Codes × Codes :=
+      if inElse then (th, x.reverse ++ el) else (x.reverse ++ th, el)
+    if c == 92 && !isLetter d then
+      -- a control symbol (`\\`, `\{`)
+      let (th, el) := push [c, d] th el
+      condSplit macros cs depth inElse th el (k + 2) elOff
+    else if c == 92 then
+      let (name, rest) := takeWhile isLetter (d :: cs)
+      if depth == 0 && name == w!"fi" then
+        -- (the branch after `\\else` begins with the letters `else`)
+        some (th.reverse, if inElse then el.reverse.drop 4 else [], elOff, rest, k + 3)
+      else if depth == 0 && name == w!"else" && !inElse then
+        condSplit macros (d :: cs) depth true th el (k + 1) (k + 5)
+      else
+        let depth := if name == w!"fi" then depth - 1 else if isCond macros name then depth + 1 else depth
+        let (th, el) := push [c] th el
+        condSplit macros (d :: cs) depth inElse th el (k + 1) elOff
+    else
+      let (th, el) := push [c] th el
+      condSplit macros (d :: cs) depth inElse th el (k + 1) elOff
 
 /-- Lexer state: the remaining input, its offset and the mode stack (`true` entries
 are math modes opened by `$`, `false` by other delimiters). -/
@@ -374,12 +424,27 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
           let n := name.length + 1
           match macros.lookup name with
           | some body0 =>
+            -- a conditional of the article (`\newif`): the branch that its value selects
+            if body0 == wIfTrue || body0 == wIfFalse then
+              match condSplit macros rest 0 false [] [] 0 0 with
+              | some (th, el, elOff, after, k) =>
+                let (br, off) := if body0 == wIfTrue then (th, 0) else (el, elOff)
+                match lexAux macros f br (pos + n + off) st [] with
+                | some (ts, st') => lexAux macros f after (pos + n + k) st' (ts.reverse ++ out)
+                | none => none
+              | none => emit (.cmd name) rest n st
+            else
             let (body, rest, k) := expand macros name body0 rest
             -- (the body without the macro itself: `\let\old\longmapsto` and then
             -- `\renewcommand{\longmapsto}{…\old…}` uses the original `\longmapsto`)
             match lexAux (macros.filter (·.1 != name)) f body pos st [] with
             -- (a macro may open or close a formula: `\newcommand{\be}{\begin{equation}}`)
-            | some (ts, st') => lexAux macros f rest (pos + n + k) st' (ts.reverse ++ out)
+            -- (the tokens of the body lie within the call: a long body, or one whose argument
+            -- is moved back in it, must not place them after what follows the call)
+            | some (ts, st') =>
+              let last := pos + n + k - 1
+              lexAux macros f rest (pos + n + k) st'
+                ((ts.map fun t => if t.pos > last then { t with pos := last } else t).reverse ++ out)
             -- a body the lexer cannot read (layout code with `\makeatletter` internals) is an
             -- unknown command
             | none => lexAux macros f rest (pos + n + k) st (⟨.cmd name, pos, math⟩ :: out)
@@ -462,6 +527,15 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
               if name == w!"tag" then lexAux macros f r (pos + n + k) st out
               else emit (.cmd name) r (n + k) st
             | none, _ => none
+          else if wDropArg.contains name then
+            -- colour and margin notes are layout: the command with its argument
+            let (r1, n1) := optArg rest
+            match r1 with
+            | 123 :: r2 =>
+              match group 100000 0 r2 [] with
+              | some (_, r3, n3) => lexAux macros f r3 (pos + n + n1 + 1 + n3) st out
+              | none => none
+            | _ => lexAux macros f r1 (pos + n + n1) st out
           else if !math && wDropText.contains name then
             -- `\item \emph{$A\ge z$ and $B\le1+z$.}`: the heading of a case, not a claim
             if afterItem out && (name == w!"emph" || name == w!"textit" || name == w!"textbf") then
@@ -626,6 +700,29 @@ def macrosAux : Nat → Codes → Macros → Option Macros
               macrosAux f r'' acc
           | none => macrosAux f r' acc
         | none => macrosAux f rest acc
+      else if name == w!"newif" then
+        -- `\newif\ifmarked`: a conditional, false until `\markedtrue`
+        match csName rest with
+        | some (m, r') => if m.take 2 == w!"if" then macrosAux f r' (define m wIfFalse acc) else macrosAux f r' acc
+        | none => macrosAux f rest acc
+      else if name == w!"ifdefined" || (match acc.lookup name with
+          | some b => b == wIfTrue || b == wIfFalse | none => false) then
+        -- `\ifdefined\cleanversion\markedfalse\else\markedtrue\fi`: the branch taken
+        let (val, r') : Bool × Codes :=
+          if name == w!"ifdefined" then
+            match csName rest with
+            | some (t, r') => (acc.any (·.1 == t), r')
+            | none => (false, rest)
+          else (acc.lookup name == some wIfTrue, rest)
+        match condSplit acc r' 0 false [] [] 0 0 with
+        | some (th, el, _, after, _) => macrosAux f ((if val then th else el) ++ [32] ++ after) acc
+        | none => macrosAux f r' acc
+      else if (name.length > 4 && name.drop (name.length - 4) == w!"true" &&
+            isCond acc (w!"if" ++ name.take (name.length - 4)) ) then
+        macrosAux f rest (define (w!"if" ++ name.take (name.length - 4)) wIfTrue acc)
+      else if (name.length > 5 && name.drop (name.length - 5) == w!"false" &&
+            isCond acc (w!"if" ++ name.take (name.length - 5))) then
+        macrosAux f rest (define (w!"if" ++ name.take (name.length - 5)) wIfFalse acc)
       else if name == w!"def" then
         match csName rest with
         | some (m, r') =>

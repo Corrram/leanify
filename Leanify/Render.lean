@@ -426,7 +426,9 @@ def defNameRaw (d : Doc) (i : Nat) : String :=
   if key.isEmpty then (phrase.map camel).getD s!"def{i}"
   else if key.startsWith "^" || key == "\\widehat" || key == "\\hat" || key == "\\overline" then
     match phrase with
-    | some (w :: _) => w
+    -- (not a word that only joins the name: `the reflections of $C$ in the first and in the
+    -- second argument`)
+    | some (w :: _) => if ["in", "of", "the", "and", "to", "for", "at", "on", "with", "by"].contains w then clean key else w
     | _ => clean key
   -- a decorated symbol: `\overline{\rho}` is `rhoBar`
   else if key.startsWith "\\overline{" || key.startsWith "\\bar{" then

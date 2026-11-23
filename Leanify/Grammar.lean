@@ -2883,6 +2883,22 @@ def clauses : Nat → List Chunk → List CClause → Option (List CClause)
           (match kw [w!"with"] r' with
            | some (.m t :: r'') => some (.m t :: r'')
            | _ => none)) <|> kw [w!"and"] r
+      -- `…, and the two reflections satisfy DISPLAY, as well as DISPLAY`: words that only
+      -- lead to the next formula
+      let lead (r0 : List Chunk) : Option (List Chunk) :=
+        let r1 := optPunct 44 r0
+        (do
+          let r2 ← kw [w!"as", w!"well", w!"as"] r1
+          match r2 with | .m _ :: _ | .d .. :: _ => some r2 | _ => none) <|>
+        (do
+          let r2 ← kw [w!"and"] r1
+          let ws := r2.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
+          if ws.isEmpty || ws.length > 6 then none
+          if !(match ws.getLast? with
+              | some (.w w) => [w!"satisfy", w!"satisfies", w!"obey", w!"obeys", w!"fulfil", w!"fulfill"].contains w
+              | _ => false) then none
+          match r2.drop ws.length with | .m t :: r3 => some (.m t :: r3) | .d t l :: r3 => some (.d t l :: r3) | _ => none)
+      let next := lead r <|> next
       match next with
       | some r'' => clauses f r'' acc
       | none => none
@@ -2916,12 +2932,24 @@ def defItem (cs : List Chunk) : Option (DefItem × List Chunk) := do
 /-- Trailing bibliographic remarks without mathematical content. -/
 def trailer (cs : List Chunk) : List Chunk :=
   let cs' := optPunct 44 cs
+  -- words without a formula to the end of the sentence: a remark that asserts nothing
+  -- (`, which emphasizes the leading ranks of both variables.`)
+  let wordsOnly (r : List Chunk) : Bool :=
+    !r.isEmpty && (r.getLast? matches some (.p 46)) && r.dropLast.all fun c => match c with
+      | .w _ | .p 44 | .p 45 | .r .cite _ => true
+      | _ => false
+  let tail (r : List Chunk) : List Chunk := match r with
+    | .p 44 :: r' => if wordsOnly r' then [.p 46] else r
+    | _ => r
   match kw [w!"as", w!"given", w!"in"] cs' <|> kw [w!"see"] cs' with
-  | some (.r .cite _ :: r) => r
+  | some (.r .cite _ :: r) => tail r
   | _ =>
     match kw [w!"from"] cs' >>= cite with
     | some (_, r) => r
-    | none => cs
+    | none =>
+      match punct 44 cs >>= kw [w!"which"] with
+      | some r => if wordsOnly r then [.p 46] else cs
+      | none => cs
 
 /-- A piece of a definition `define $f:A\to B$ by PIECES`: a defining formula
 (inline or displayed, possibly with its domain), or `on $D$, parametrically by
@@ -4287,6 +4315,52 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
     let (items, ls, r4) ← defList 6 r3 [] []
     if isEnd (trailer r4) && !items.isEmpty && items.all isDefeq then some (.fix b items ls) else none
   | none =>
+  -- `The boundary of the region is described by the function $\Phi:[-1,1]\to[-1,1]$ given by
+  -- DISPLAY[, which satisfies $φ$ for every $r\in[-1,1]$].`: as `Define $sig$ by DISPLAY [and
+  -- observe that …]`; the words before the function describe it
+  match (do
+      let i ← cs.findIdx? fun (c : Chunk) => match c with | .m ts => isSig ts | _ => false
+      let pre := cs.take i
+      if pre.length < 2 || pre.length > 16 || !pre.all (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false) then none
+      if !(match pre.getLast? with
+          | some (.w w) => w == w!"function" || w == w!"map" || w == w!"mapping"
+          | _ => false) then none
+      let (sg, r1) ← sig (cs.drop i)
+      let r2 ← kw [w!"given", w!"by"] r1 <|> kw [w!"defined", w!"by"] r1
+      let (pieces, ls, r3) ← defPieces 6 r2 [] []
+      let pieces := pieces.map piecesDefeq
+      if isEnd r3 then some (Sent.defBy sg pieces ls none)
+      else do
+        let r4 ← kw [w!"which", w!"satisfies"] (optPunct 44 r3)
+        let (φ, r5) ← formula r4
+        let r6 ← kw [w!"for", w!"every"] r5 <|> kw [w!"for", w!"all"] r5
+        let (ts, r7) ← mathChunk r6
+        let (vs, dom) ← binderMath ts
+        if isEnd r7 then some (Sent.defBy sg pieces ls (some (φ, vs, dom))) else none) with
+  | some s => some s
+  | none =>
+  -- `The copulas $M(u,v)\coloneqq…$, $W(u,v)\coloneqq…$, and $\Pi(u,v)\coloneqq uv$ describe
+  -- comonotonicity, countermonotonicity, and independence, respectively.`: as `Let DEFS
+  -- denote the NAME, NAME, and NAME NOUNS.`
+  match (do
+      let r ← kw [w!"the"] cs
+      let ws := r.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
+      if ws.isEmpty || ws.length > 3 then none
+      let (items, ls, r1) ← defList 6 (r.drop ws.length) [] []
+      if items.isEmpty || !items.all isDefeq then none
+      let r2 ← kw [w!"describe"] r1 <|> kw [w!"describes"] r1 <|> kw [w!"represent"] r1 <|>
+        kw [w!"represents"] r1 <|> kw [w!"model"] r1 <|> kw [w!"models"] r1 <|>
+        kw [w!"correspond", w!"to"] r1 <|> kw [w!"corresponds", w!"to"] r1
+      if !(r2.getLast? matches some (.p 46)) then none
+      let body := r2.dropLast
+      let body := match body.reverse with
+        | .w w :: .p 44 :: rest => if w == w!"respectively" then rest.reverse else body
+        | .w w :: rest => if w == w!"respectively" then rest.reverse else body
+        | _ => body
+      if body.isEmpty || !body.all (fun (c : Chunk) => match c with | .w _ | .p 44 | .p 45 => true | _ => false) then none
+      some (Sent.defsNamed items ls (body ++ ws))) with
+  | some s => some s
+  | none =>
   -- We say that a N $x$ is PHRASE of a ADJ $sig$ if $φ$ for all $u,v\in A$.
   match kw [w!"we", w!"say", w!"that", w!"a"] cs with
   | some r => do
@@ -4417,7 +4491,37 @@ where
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
         match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 <|> kw [w!"we", w!"set"] r1 <|>
             kw [w!"we", w!"put"] r1 <|> kw [w!"we", w!"write"] r1 with
-        | some r2 => (do
+        | some r2 =>
+          -- `we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$`: the name is
+          -- not read
+          let r2' := r2
+          let r2 := match r2 with
+            | .m ts :: r3 =>
+              let named := (kw [w!"for", w!"the"] r3 <|> kw [w!"for", w!"its"] r3).isSome &&
+                (r3.getLast? matches some (.p 46)) && r3.dropLast.all (fun c => match c with
+                  | .w _ | .p 45 => true
+                  | .m t => (match Math.parseFormula t with | some (.id _) => true | _ => false)
+                  | _ => false) &&
+                (match Math.parseFormula ts with | some m => isDefeq m | none => false)
+              if named then [Chunk.m ts, .p 46] else r2
+            | _ => r2
+          -- (an operation on the binder's variable keeps its name: `its transpose` is then
+          -- read)
+          let namedOp : Option Sent := match r2', r2 with
+            | .m ts :: r3, [.m _, .p 46] =>
+              match Math.parseFormula ts with
+              | some m =>
+                let onVar := match m with
+                  | .chain (.app h _) _ | .chain h _ => (match h with
+                    | .sup (.id _) (.id _) | .hat (.id _) | .sup (.sub (.id _) (.num _)) (.id _) => true
+                    | _ => false)
+                  | _ => false
+                let name := (r3.drop 2).filterMap fun (c : Chunk) => match c with | .w w => some w | _ => none
+                if onVar && !name.isEmpty then some (.defIs b [⟨name, m, []⟩]) else none
+              | none => none
+            | _, _ => none
+          if let some sn := namedOp then some sn else
+          (do
           let (m, r3) ← formula r2
           let r4 ← kw [w!"and", w!"let"] r3
           letBe b [m] r4) <|> derivAfterSet b r2 <|> constDefsOf (some b) r2

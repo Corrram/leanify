@@ -32,3 +32,4 @@ article-reader/
 /tests/Geometry/article.leanify.*
 /tests/Congruences/article.leanify.*
 /tests/Groups/article.leanify.*
+/tests/Revision/article.leanify.*
