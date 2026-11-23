@@ -1040,7 +1040,8 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     match np.drop ws.length with
     | .m v :: .w p :: post =>
       let isVar := match v with | [.id _] | [.cmd _] => true | _ => subName v
-      if ws.isEmpty || !isVar || ![w!"on", w!"with", w!"of", w!"in"].contains p then none else
+      if ws.isEmpty || !isVar || [w!"satisfies", w!"obeys", w!"is", w!"are", w!"has", w!"have", w!"such", w!"there",
+          w!"we", w!"and", w!"for", w!"where", w!"which", w!"that"].contains p then none else
       if !post.any (fun c => match c with | .m _ => true | _ => false) then none else
       -- (`with $φ$` alone is a condition, read above)
       if p == w!"with" && post.length == 1 then none else
@@ -1328,6 +1329,10 @@ inductive Clause where
   | aliased (pairs : List (MT × MT)) (c : Clause)
   /-- `such that CLAUSE and CLAUSE`: both clauses. -/
   | both (cs : List Clause)
+  /-- `CLAUSE if and only if CLAUSE`. -/
+  | iffC (p q : Clause)
+  /-- `CLAUSE or CLAUSE`. -/
+  | orC (p q : Clause)
   /-- `there are infinitely many NPs [such that CLAUSE]`, `CLAUSE for infinitely many NPs`:
   the numbers the noun phrase (and the clause) describe are not finitely many. -/
   | infinitelyMany (np : List Chunk) (c : Option Clause)
@@ -1758,8 +1763,15 @@ def atPairs : Nat → List Chunk → List (MT × MT) → Option (List (MT × MT)
       | none => some (acc.reverse, r3)
     | none => some (acc.reverse, r3)
 
+/-- `and WORD …`, `, WORD …`: more words of a list follow. -/
+def moreWords (r : List Chunk) : Bool :=
+  match r with
+  | .w w :: .w _ :: _ => w == w!"and"
+  | .p 44 :: .w _ :: _ => true
+  | _ => false
+
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
-def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × List Chunk) :=
   match stmtClause cs with
   | some res => some res
   | none =>
@@ -1873,6 +1885,9 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       let (m, r) ← formula cs
       let r1 ← kw [w!"is"] r
       let (adjs, r2) ← adjectiveList 16 r1 []
+      -- (`strictAdj`: not when a further adjective follows that is not a standard one,
+      -- `compact and perfect`: the vocabulary's adjectives are read below)
+      if strictAdj && moreWords r2 then none
       some (Clause.adjectives m adjs, r2)) with
   | some res => some res
   | none =>
@@ -2214,6 +2229,44 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       | none => some (.scoped f vars dom none, r1)
     | _ => none
   | none => none
+
+/-- The standard adjectives of a clause alone, unless the vocabulary's reading of the
+whole list (`$S$ is compact and perfect`, `compact` a standard adjective and `perfect`
+one of a field) reads further. -/
+def clause2 (cs : List Chunk) : Option (Clause × List Chunk) :=
+  match clause1 cs with
+  | some (.adjectives m adjs, r2) =>
+    if moreWords r2 then
+      match clause1 cs true with
+      | some (c', r') => if r'.length < r2.length then some (c', r') else some (.adjectives m adjs, r2)
+      | none => some (.adjectives m adjs, r2)
+    else some (.adjectives m adjs, r2)
+  | r => r
+
+/-- A clause, or two of them joined by `if and only if` or by `or`
+(`$S$ is compact if and only if $S$ is closed and bounded`, `$G$ is cyclic or $G$ is
+isomorphic to $V$`). -/
+def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+  let iffW := [w!"if", w!"and", w!"only", w!"if"]
+  -- the two clauses around the first `if and only if` (or `or`), each read whole
+  let splitAt (ws : List Codes) (mk : Clause → Clause → Clause) : Option (Clause × List Chunk) := do
+    let i ← (List.range cs.length).find? fun i => (kw ws (cs.drop i)).isSome
+    if i == 0 then none
+    -- (the first clause as a sentence of its own, with its full stop)
+    let (p, r) ← clause2 (cs.take i ++ [.p 46])
+    if !(match r with | [] | [.p 46] => true | _ => false) then none
+    let (q, r2) ← clause2 (cs.drop (i + ws.length))
+    some (mk p q, r2)
+  let split : Option (Clause × List Chunk) := splitAt iffW .iffC <|> splitAt [w!"or"] .orC
+  let hasWord (np : List Chunk) (w : Codes) : Bool := np.any fun c => match c with | .w v => v == w | _ => false
+  match clause2 cs with
+  | some (c, r) =>
+    -- (a clause that stops before the connective, or a noun phrase that has swallowed it)
+    let swallowed := match c with
+      | .isA _ np _ => hasWord np w!"or" || (hasWord np w!"only" && hasWord np w!"if")
+      | _ => false
+    if (kw iffW r).isSome || (kw [w!"or"] r).isSome || swallowed then split <|> some (c, r) else some (c, r)
+  | none => split
 
 /-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
 a formula, `for every $x\in A$`, belongs to the clause itself). -/
@@ -3297,18 +3350,23 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     -- `a graph on $n$ vertices`, `a polynomial of degree $n$`: a phrase with a number after
     -- the noun (a modifier of the vocabulary with an argument), not a noun ending in a fixed
     -- formula; the variable follows the noun
-    let simple (t : List MTok) : Bool := !t.isEmpty && t.all fun x => match x with
-      | .id n => n.length == 1 | .digit _ => true | .sym c => c == 43 || c == 45 | _ => false
-    let preps := [w!"on", w!"of", w!"in", w!"over"]
+    let simple (t : List MTok) : Bool := (!t.isEmpty && t.all fun x => match x with
+      | .id n => n.length == 1 | .digit _ => true | .sym c => c == 43 || c == 45 | _ => false) ||
+      (match t with | [.cmd _] => true | _ => false)
+    let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from", w!"modulo"]
     let lastPrep := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?
     let argPhrase : Option (List Chunk × List Chunk) := match lastPrep, r1.drop ws.length with
       | some (_, i), .m t :: more =>
         -- (after `on` or `in`, a formula that is not a number may end the noun: `on $\mathbb{N}_0$`)
         if i == 0 || (!tail.isEmpty && !simple t) then none else
-        let after := more.takeWhile (fun c => match c with | .w w => !([w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w) | _ => false)
+        -- (`equidistant from $A$ and $B$`: two objects after `from`)
+        let two : List Chunk := match ws[i]?, more with
+          | some (.w p), .w a :: .m u :: _ => if p == w!"from" && a == w!"and" && simple u then [.w a, .m u] else []
+          | _, _ => []
+        let more := more.drop two.length
+        let after := two ++ more.takeWhile (fun c => match c with | .w w => !([w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w) | _ => false)
         -- (`on $n$ vertices`: words after the number; `of degree $n$`: none)
-        if tail.isEmpty || !after.isEmpty then some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop after.length)
-        else none
+        some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop (after.length - two.length))
       | _, _ => none
     match argPhrase with
     | some (np, rest') =>
@@ -3318,7 +3376,20 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
             rest'.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true) else []
         | _ => []
       some (.noun (lead ++ np ++ post'), rest'.drop post'.length)
-    | none => some (.noun (lead ++ ws ++ tail ++ [.m v] ++ post), rest.drop post.length))
+    | none => some (.noun (lead ++ ws ++ tail ++ [.m v] ++ post), rest.drop post.length)) <|>
+  -- `$M$ be the midpoint of $A$ and $B$`: the value of a notion of the vocabulary with its
+  -- arguments (the noun phrase `@the midpoint of $A$ and $B$ $M$`)
+  (do
+    let (v, r) ← mathChunk cs
+    if !(match v with | [.id _] | [.cmd _] => true | _ => subName v) then none
+    let r1 ← kw [w!"be", w!"the"] r
+    let phrase := r1.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+    let cutAt := (phrase.zipIdx.find? fun (c, i) => match c, phrase[i + 1]? with
+      | .w a, some (.w l) => a == w!"and" && l == w!"let"
+      | _, _ => false).map (·.2)
+    let phrase := phrase.take (cutAt.getD phrase.length)
+    if phrase.isEmpty then none
+    some (.noun ([.w w!"@the"] ++ phrase ++ [.m v]), r1.drop phrase.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
@@ -4489,6 +4560,19 @@ def everySatisfies (cs : List Chunk) : Option (List Chunk) := do
   let r2 ← kw [w!"satisfies"] r1 <|> kw [w!"obeys"] r1
   some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44] ++ r2)
 
+/-- `Every NP $x$ is …` as `For every NP $x$, $x$ is …` (`Every cyclic group $G$ is
+abelian.`): the noun phrase ends with its variable. -/
+def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"every"] cs
+  let (np, r1) ← chunksUntil [w!"is"] r []
+  let _ ← kw [w!"is"] r1
+  -- (the variable: the first formula, after the noun; a modifier may follow it, `every point
+  -- $P$ lying on $\Gamma$ is …`)
+  match np.find? (fun c => match c with | .m _ => true | _ => false) with
+  | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
+  | some (.m [.cmd v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.cmd v]] ++ r1)
+  | _ => none
+
 /-- A sentence: an assumption, a contradiction, or one of the other forms, possibly
 ending in a contradiction. -/
 def sentence0 (cs : List Chunk) : Option Sent :=
@@ -4515,7 +4599,10 @@ def sentence (cs : List Chunk) : Option Sent :=
     let (_, body) := marker flat
     match everySatisfies body with
     | some cs' => sentence0 cs'
-    | none => if (joinList cs).isSome then sentence0 flat else none
+    | none =>
+      match (if (joinList cs).isSome then sentence0 flat else none) with
+      | some s => some s
+      | none => everyIsSent body >>= sentence0
 
 /-- `[We] let $L$ denote|be the WORDS [of NP [and|of NP]]`, `[we] write $L$ for the WORDS …`,
 `[we] denote by $L$ the WORDS …`: a symbol for a quantity that the article does not

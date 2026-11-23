@@ -96,7 +96,8 @@ if Lean accepts it. The check reads an article with the files it inputs
 (`\input`, `\include`, the article's own `.sty` files). Articles about probability on the
 unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)); other
 branches have fields of their own (`arithmetic`, `combinatorics`, `polynomials`, `graphs`,
-`permutations`, `matrices`, `special`: [The vocabulary](docs/vocabulary.md#fields)).
+`permutations`, `matrices`, `special`, `topology`, `analysis`, `vectors`, `geometry`,
+`congruences`, `groups`: [The vocabulary](docs/vocabulary.md#fields)).
 
 The same source gives the two readable outputs:
 

@@ -2214,6 +2214,24 @@ where
   opTerm : Nat → Scope → PF → MT → M (Option (Tm × Ty))
     | 0, _, _, _ => pure none
     | f + 1, sc, pf, m => do
+      -- `\lVert x\rVert` and `\langle x,y\rangle` of elements of a type of the vocabulary that
+      -- has them as methods (vectors): the type's norm and inner product
+      let own? (xs : List MT) (key : Codes) : M (Option (Tm × Ty)) := do
+        let st0 ← get
+        let r ← tryCatch (do
+            let ts ← xs.mapM (term f sc pf)
+            match ts with
+            | (a, t) :: rest =>
+              if (← ownTy t) && rest.all (·.2 == t) && (← method t (.fn key)).isSome then
+                pure (some (← callMethod t (.fn key) (a :: rest.map (·.1))))
+              else pure none
+            | [] => pure none) (fun _ => pure none)
+        if r.isNone then set st0
+        pure r
+      match m with
+      | .app (.id n) [x] => if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
+      | .app (.id n) [x, y] => if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+      | _ => pure ()
       let some iv ← hilbertIv | pure none
       let fn1 := Ty.fn iv.ty .real
       let seqT := Ty.fn .real iv.ty

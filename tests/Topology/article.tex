@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={topology}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\overline{S}$ for the closure of $S$.
+We write $S^\circ$ for the interior of $S$.
+We write $\lambda(S)$ for the Lebesgue measure of $S$.
+We write $\delta(S)$ for the diameter of $S$.
+We write $\sigma(S)$ for the supremum of $S$.
+We write $\mathcal{C}$ for the Cantor set.
+We write $Q$ for the set of rational numbers.
+
+\section{Sets of real numbers}
+
+\begin{lemma}\label{heine}
+Let $S$ be a set. Then $S$ is compact if and only if $S$ is closed and bounded.
+\end{lemma}
+
+\begin{lemma}\label{closure}
+For every set $S$, $\overline{S}$ is closed and $S^\circ$ is open.
+\end{lemma}
+
+\begin{lemma}\label{supremum}
+Let $S$ be a nonempty compact set. Then $\sigma(S)\le\sigma(\overline{S})$.
+\end{lemma}
+
+\begin{lemma}\label{rationals}
+$Q$ is dense and countable, and $Q$ is null.
+\end{lemma}
+
+\begin{lemma}\label{cantor}
+$\mathcal{C}$ is compact and perfect and nowhere dense and uncountable. Moreover, $\lambda(\mathcal{C})=0$.
+\end{lemma}
+
+\begin{lemma}\label{countable}
+Let $S$ be a countable set. Then $S$ is a null set.
+\end{lemma}
+
+\begin{lemma}\label{open}
+For every nonempty open subset $U$ of $\mathbb{R}$, $U$ is uncountable.
+\end{lemma}
+
+\begin{lemma}\label{measure}
+Let $S$ be a nonempty bounded measurable set. Then $\lambda(S)\le\delta(S)$.
+\end{lemma}
+
+\begin{lemma}\label{zero}
+Let $S$ be a set of measure zero. Then $S^\circ$ is empty.
+\end{lemma}
+
+\end{document}

@@ -1,5 +1,5 @@
 name = "leanify"
-version = "0.9.0"
+version = "0.10.0"
 description = "Mathematical articles in LaTeX, compiled and checked by Lean"
 license = "Apache-2.0"
 defaultTargets = ["Leanify"]
@@ -106,6 +106,42 @@ globs = ["Matrices.+"]
 name = "Special"
 srcDir = "tests"
 globs = ["Special.+"]
+
+[[lean_lib]]
+# The field topology: sets of real numbers by a noun, adjectives of the core and of the field together.
+name = "Topology"
+srcDir = "tests"
+globs = ["Topology.+"]
+
+[[lean_lib]]
+# The field analysis: real functions by a noun, their properties, `Every NP $x$ is ADJ`.
+name = "Analysis"
+srcDir = "tests"
+globs = ["Analysis.+"]
+
+[[lean_lib]]
+# The field vectors: norms and inner products of a type of the vocabulary, a modifier with a vector.
+name = "Vectors"
+srcDir = "tests"
+globs = ["Vectors.+"]
+
+[[lean_lib]]
+# The field geometry: points of the plane, `let $M$ be the NOTION`, figures as sets of points.
+name = "Geometry"
+srcDir = "tests"
+globs = ["Geometry.+"]
+
+[[lean_lib]]
+# The field congruences: adjectives with numbers after `is` (congruent to $b$ modulo $n$).
+name = "Congruences"
+srcDir = "tests"
+globs = ["Congruences.+"]
+
+[[lean_lib]]
+# The field groups: finite groups up to isomorphism, clauses joined by `or` and `if and only if`.
+name = "Groups"
+srcDir = "tests"
+globs = ["Groups.+"]
 
 [[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.

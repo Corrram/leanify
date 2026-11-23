@@ -37,7 +37,7 @@ def phraseText (p : Phrase) (start : Nat := 0) : String := Id.run do
         s := s ++ toksText seg
         first := false
       out := out ++ ["$" ++ s ++ "$"]
-  return (" ".intercalate out).replace " - " "-"
+  return (" ".intercalate out).replace " - " "-" |>.replace " , " ", "
 
 /-- A type, with the names of the field's own types (`B0` without one). -/
 def tyText (ts : List Codes) : Ty → String

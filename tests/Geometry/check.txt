@@ -1,0 +1,23 @@
+tests/Geometry/article.tex:9:1: info: defines \@n0 (n0)
+tests/Geometry/article.tex:10:1: info: defines \@n1 (n1)
+tests/Geometry/article.tex:11:1: info: defines \@n2 (n2)
+tests/Geometry/article.tex:12:1: info: defines \alpha (alpha)
+tests/Geometry/article.tex:12:1: info: \alpha is well defined if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg (y=x)\land \neg (z=x)
+tests/Geometry/article.tex:13:1: info: defines \@n4 (n4)
+tests/Geometry/article.tex:14:1: info: defines \@n5 (n5)
+tests/Geometry/article.tex:15:1: info: defines \Gamma (Gamma)
+tests/Geometry/article.tex:15:1: info: \Gamma is well defined if: \forall x\in \mathrm{Point},\ \forall y\in \mathbb{R},\ 0<y
+tests/Geometry/article.tex:20:33: info: claim 0: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \@n1(x,z)\le \@n1(x,y)+\@n1(y,z)
+tests/Geometry/article.tex:24:72: info: claim 1: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ z=\operatorname{mid}(x)(y)\Rightarrow \@n1(x,z)=\@n1(z,y)
+tests/Geometry/article.tex:28:1: info: claim 2: \@n1(\@n4,\@n5)=5
+tests/Geometry/article.tex:28:1: info: claim 3: \neg (\@n5=\@n4)
+tests/Geometry/article.tex:32:48: info: claim 4: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ 0<\@n2(x,y,z)\Rightarrow \alpha(x,y,z)+\alpha(y,z,x)+\alpha(z,x,y)=\pi
+tests/Geometry/article.tex:36:33: info: claim 5: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \forall s\in \mathbb{R},\ \alpha(z,x,y)=\frac{s}{2}\Rightarrow {\@n1(x,y)}^{2}={\@n1(x,z)}^{2}+{\@n1(y,z)}^{2}
+tests/Geometry/article.tex:36:33: info: claim 5 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \forall s\in \mathbb{R},\ \neg (2=0)
+tests/Geometry/article.tex:40:21: info: claim 6: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \Gamma(x,2,y)\Rightarrow \neg (y=x)
+tests/Geometry/article.tex:44:21: info: claim 7: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \Gamma(x,2,y)\Rightarrow \@n1(x,y)=2
+tests/Geometry/article.tex:48:81: info: claim 8: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \lvert zx\rvert=\lvert zy\rvert\Rightarrow 0\le \@n2(x,y,z)
+tests/Geometry/article.tex: 7 definitions, 9 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 15 compiled, 0 failed, 0 prose (of 15)
+  all: 22 compiled, 0 failed, 0 prose (of 22)

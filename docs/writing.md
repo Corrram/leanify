@@ -131,6 +131,19 @@ article binds as it binds numbers, and modifiers that take numbers:
 | `$\deg p$`, `$\deg(pq)=\deg p+\deg q$` | `\deg` and `\det` apply to what follows them, as `\sin` does; the product of two real functions, or of a number and a real function, is taken value by value |
 | `$\overline{G}$` | the complement of a graph (a decoration of the field's type) |
 
+Further forms that the fields use (they are read for any vocabulary):
+
+| Sentence | Reading |
+| --- | --- |
+| `Every cyclic group $G$ is abelian.`, `Every point $P$ lying on $\Gamma$ is distinct from $O$.` | `Every NP $x$ is …` is `For every NP $x$, $x$ is …`: adjectives and nouns of the vocabulary about each object of the noun phrase |
+| `$S$ is compact if and only if $S$ is closed and bounded.`, `$G$ is cyclic or $G$ is isomorphic to $V$.`, `$n_3(G)=1$ or $n_3(G)=4$.` | two clauses joined by `if and only if` or by `or`, each a clause of its own (a formula, adjectives, a noun) |
+| `Let $M$ be the midpoint of $A$ and $B$.`, `let $H$ be the direct product of $C_2$ and $C_3$` | a variable that is the value of a notion of the vocabulary with its arguments (a number or an object of a field's type): a hypothesis `M = …` of what follows |
+| `$a$ is congruent to $b$ modulo $n$`, `$x$ is orthogonal to $y$`, `$G$ is isomorphic to $C_4$`, `$S$ is null` | a modifier of the vocabulary after `is`, with its arguments: numbers, or objects of the type the modifier names (a vector, a group, a set of points) |
+| `Let $a$ be an integer coprime to $n$.`, `Let $P$ be a point equidistant from $A$ and $B$.`, `Let $S$ be a set of measure zero.` | a modifier after its noun in a `let`, with or without arguments |
+| `$\mathcal{C}$ is compact and perfect and nowhere dense` | adjectives of the core language (`compact`) and of a field (`perfect`) in one list, joined by `and`: where the core language has no such property of the object, the field's adjective with these words is meant |
+| `$\lVert x+y\rVert\le\lVert x\rVert+\lVert y\rVert$`, `$\langle x,y\rangle$` | the norm and the inner product of objects of a field's type that has them (vectors) |
+| `the area of the triangle with vertices $A$, $B$ and $C$` | a phrase of the vocabulary may have commas |
+
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
 `x` and `y`.

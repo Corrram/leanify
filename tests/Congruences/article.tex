@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers,arithmetic,congruences}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\varphi$ for Euler's totient function.
+We write $\left(\frac{a}{p}\right)$ for the Legendre symbol of $a$ modulo $p$.
+We write $L(a,p)$ for the Legendre symbol of $a$ modulo $p$.
+We write $\operatorname{inv}_n(a)$ for the inverse of $a$ modulo $n$.
+We write $g(n)$ for the least primitive root modulo $n$.
+We write $N(n)$ for the number of quadratic residues modulo $n$.
+
+\section{Congruences}
+
+\begin{lemma}\label{euler}
+Let $n$ be a positive integer and let $a$ be an integer coprime to $n$. Then $a^{\varphi(n)}$ is congruent to $1$ modulo $n$.
+\end{lemma}
+
+\begin{lemma}\label{fermat}
+Let $p$ be a prime and let $a$ be an integer. Then $a^p$ is congruent to $a$ modulo $p$.
+\end{lemma}
+
+\begin{lemma}\label{residues}
+$2$ is a quadratic residue modulo $7$, and $3$ is a quadratic nonresidue modulo $7$. Moreover, $L(2,7)=1$ and $L(3,7)=-1$.
+\end{lemma}
+
+\begin{lemma}\label{count}
+For every prime $p>2$, $N(p)=\frac{p-1}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{roots}
+$3$ is a primitive root modulo $7$, and $g(7)=3$ and $\operatorname{inv}_7(3)=5$.
+\end{lemma}
+
+\begin{lemma}\label{criterion}
+Let $p>2$ be a prime and let $a$ be an integer coprime to $p$. Then $a^{\frac{p-1}{2}}$ is congruent to $L(a,p)$ modulo $p$.
+\end{lemma}
+
+\end{document}

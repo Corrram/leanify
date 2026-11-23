@@ -582,6 +582,8 @@ def phraseOf (s : String) : Except String Phrase := do
       | .punct 39 => go f ts acc
       -- a hyphen (`prime-counting`, `$v$-th`): the word `-`, which matches the hyphen
       | .punct 45 => go f ts (.w [45] :: acc)
+      -- a comma (`with vertices $v$, $v$ and $v$`): the word `,`, which matches the comma
+      | .punct 44 => go f ts (.w [44] :: acc)
       | _ => throw s!"unexpected token in phrase {s}"
   go (toks.length + 1) toks []
 

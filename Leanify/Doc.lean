@@ -388,6 +388,7 @@ def ordinalSuffix (w : Codes) : Bool := w == w!"th" || w == w!"st" || w == w!"nd
 def matchSlots : Phrase → List Chunk → List (List MTok) → Option (List (List MTok))
   | [], [], acc => some acc.reverse
   | .w [45] :: ps, .p 45 :: cs, acc => matchSlots ps cs acc
+  | .w [44] :: ps, .p 44 :: cs, acc => matchSlots ps cs acc
   | .w w :: ps, .p 45 :: .w v :: cs, acc => if v == w && ordinalSuffix w then matchSlots ps cs acc else none
   | .w w :: ps, .w v :: cs, acc => if v == w then matchSlots ps cs acc else none
   | .m t :: ps, .m u :: cs, acc => if t == u then matchSlots ps cs acc else none
@@ -402,6 +403,7 @@ def matchSlots : Phrase → List Chunk → List (List MTok) → Option (List (Li
 def matchPrefix : Phrase → List Chunk → List (List MTok) → Option (List (List MTok) × List Chunk)
   | [], cs, acc => some (acc.reverse, cs)
   | .w [45] :: ps, .p 45 :: cs, acc => matchPrefix ps cs acc
+  | .w [44] :: ps, .p 44 :: cs, acc => matchPrefix ps cs acc
   | .w w :: ps, .p 45 :: .w v :: cs, acc => if v == w && ordinalSuffix w then matchPrefix ps cs acc else none
   | .w w :: ps, .w v :: cs, acc => if v == w then matchPrefix ps cs acc else none
   | .m t :: ps, .m u :: cs, acc => if t == u then matchPrefix ps cs acc else none
@@ -420,6 +422,13 @@ modifier with variables, applied to their values and to the object). -/
 def betaApply : Tm → List Tm → Tm
   | .lam _ .tt b, a :: as => betaApply (Tm.subst a 0 b) as
   | f, as => as.foldl .app f
+
+/-- The types of the first `k` arguments of a predicate (its leading λs): those of the
+variables of a modifier (`$v$-regular`: a number; `orthogonal to $v$`: a vector). -/
+def slotTys : Nat → Tm → List Ty
+  | 0, _ => []
+  | k + 1, .lam t _ b => t :: slotTys k b
+  | k + 1, _ => .real :: slotTys k .tt
 
 def tokTex : Tok → Codes
   | .cmd n => [92] ++ n
@@ -562,6 +571,7 @@ variable chunk (returned) or nothing. -/
 def matchPhrase : Phrase → List Chunk → Option (Option (List MTok) × List Chunk)
   | [], cs => some (none, cs)
   | .w [45] :: ps, .p 45 :: cs => matchPhrase ps cs
+  | .w [44] :: ps, .p 44 :: cs => matchPhrase ps cs
   -- (`$n$-th` for `$n$th`)
   | .w w :: ps, .p 45 :: .w v :: cs => if v == w && Notation.ordinalSuffix w then matchPhrase ps cs else none
   | .w w :: ps, .w v :: cs => if v == w then matchPhrase ps cs else none
@@ -988,7 +998,7 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
     | none => (acc.reverse, cs)
 
 /-- Read a noun phrase (without its determiner). -/
-def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
   -- (`for every fixed real $c>0$`)
   let np := match np with
@@ -1005,6 +1015,28 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       return ⟨v, ty, p.map (shift 1 0)⟩
     | _ => pure ()
   | _ => pure ()
+  -- `Let $M$ be the midpoint of $A$ and $B$` (the binder `@the midpoint of $A$ and $B$ $M$`):
+  -- the variable is the value of a notion of the vocabulary, with its arguments
+  match np with
+  | .w w :: rest =>
+    if w == w!"@the" then
+      let some (.m vts) := rest.getLast? | fail E.unsupported
+      let some v := varName vts | fail E.unsupported
+      let cs := rest.dropLast
+      let V := (← get).vocab
+      let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
+      match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) cs cands with
+      | some ((n, args), _) =>
+        let ts ← args.mapM fun a => do
+          let some m := Math.parseFormula a | fail E.unsupported
+          Elab.term 100000 outer none m
+        let (val, vty) ← applyAll n.value n.ty n.doms ts
+        if !(vty == .real || Elab.isBase vty) then fail E.unsupported
+        -- (the value is in the scope of the variables before this one)
+        let k := if outer.isEmpty then 1 else 2
+        return ⟨v, vty, some (Tm.lam vty .tt (.eq (.loc 0) (shift k 0 val)))⟩
+      | none => fail E.noun ((wordsOf cs).intersperse [32]).flatten
+  | _ => pure ()
   -- `every $M_r$`, `for every fixed $l$`: no noun says what the variable ranges over
   if (wordsOf np).isEmpty then
     fail E.finding w!"a variable without a noun or a domain: say what it ranges over (every integer $n$, every $x\\in A$)"
@@ -1016,6 +1048,26 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     fail E.finding w!"`small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound"
   let st ← get
   let V := st.vocab
+  -- `a set of measure zero $S$` (as `Let $S$ be a set of measure zero` is read): a modifier
+  -- that follows its noun stands after the variable
+  let rec hoist : Nat → List Chunk → List Chunk
+    | 0, np => np
+    | f + 1, np =>
+      match np.getLast? with
+      | some (.m v) =>
+        let ws := np.dropLast
+        if ws.any (fun c => match c with | .w _ => false | _ => true) then np else
+        let hit := V.mods.findSome? fun m =>
+          if m.prenominal || Notation.hasSlots m.phrase || m.phrase.length ≥ ws.length then none else
+          let tail := ws.drop (ws.length - m.phrase.length)
+          match matchPhrase m.phrase tail with
+          | some (none, []) => some m.phrase.length
+          | _ => none
+        match hit with
+        | some k => hoist f (ws.take (ws.length - k) ++ [.m v]) ++ ws.drop (ws.length - k)
+        | none => np
+      | _ => np
+  let np := hoist 3 np
   -- prenominal modifiers
   -- (each is the list of the vocabulary's modifiers with those words: the noun's type
   -- decides between them)
@@ -1136,9 +1188,10 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     if !Notation.hasSlots m.phrase then return m.pred
     let some (args, _) := Notation.matchPrefix m.phrase cs [] | fail E.type
     let sc : Scope := [([], ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer
-    let ts ← args.mapM fun a => do
+    let ts ← (args.zip (Notation.slotTys args.length m.pred)).mapM fun (a, t) => do
       let some mt := Math.parseFormula a | fail E.unsupported
-      Elab.asReal (← Elab.term 100000 sc none mt)
+      let v ← Elab.term 100000 sc none mt
+      if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
     pure (Tm.lam ty .tt (Notation.betaApply m.pred (ts ++ [.loc 0])))
   let pms ← pmGroups.mapM fun (cs, ms) => do
     let ms := ms.filter (·.ty == ty)
@@ -1216,6 +1269,27 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let all := ((preds ++ pms ++ qms ++ memberPred ++ notionPreds ++ condPreds).filter
     (· != Tm.lam ty .tt .tt)).eraseDups
   pure ⟨name, ty, conjPreds ty all⟩
+
+/-- `nounPhrase1Core`; and where words stand between the noun and its variable that are a
+modifier of the noun (`an integer coprime $a$ to $n$`, as `Let $a$ be an integer coprime to
+$n$` is read: the variable is put before the last preposition), the phrase with the
+variable further left, after the noun. -/
+def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  let st0 ← get
+  tryCatch (nounPhrase1Core np outer) fun e => do
+    if !(e.code == E.nounWords || e.code == E.noun) then throw e
+    let k := (np.takeWhile fun c => match c with | .w _ => true | _ => false).length
+    match np[k]? with
+    | some (.m v) =>
+      if k < 2 || !(match np[k + 1]? with | some (.w _) => true | _ => false) then throw e
+      let rec tryAt : Nat → M BindInfo
+        | 0 => throw e
+        | j + 1 => do
+          set st0
+          tryCatch (nounPhrase1Core (np.take (j + 1) ++ [.m v] ++ (np.take k).drop (j + 1) ++ np.drop (k + 1)) outer)
+            fun _ => tryAt j
+      tryAt (k - 1)
+    | _ => throw e
 
 /-- Read a noun phrase (without its determiner). A plural noun with a sequence
 (`positive integers $a_1,\ldots,a_n$`, `integers $a_1,\ldots,a_n\ge1$`) binds the
@@ -1567,6 +1641,8 @@ def clauseMaths : Clause → List MT
   | .thereIs _ c => clauseMaths c
   | .aliased _ c => clauseMaths c
   | .both cs => clauseMathsAll cs
+  | .iffC p q => clauseMaths p ++ clauseMaths q
+  | .orC p q => clauseMaths p ++ clauseMaths q
   | .infinitelyMany np (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .infinitelyMany np none => (mathsOf np).filterMap Math.parseFormula
   | .under _ c => clauseMaths c
@@ -2649,6 +2725,9 @@ def npVars (np : List Chunk) : List Codes :=
 /-- A noun phrase without the formulas that are values of the variables of its modifiers
 (`$n$` in `a graph $G$ on $n$ vertices`): those are not variables that it binds. -/
 def withoutSlotArgs (V : Vocab) (np : List Chunk) : List Chunk := Id.run do
+  -- (`@the midpoint of $A$ and $B$ $M$`: the variable is the last formula)
+  if (match np.head? with | some (.w w) => w == w!"@the" | _ => false) then
+    return (match np.getLast? with | some c => [c] | none => [])
   let mods := V.mods.filter fun m => Notation.hasSlots m.phrase
   if mods.isEmpty then return np
   let mut drop : List Nat := []
@@ -2902,7 +2981,8 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
         let cs := ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some).getD cs
         let cs := (kw [w!"and"] cs).getD cs
         if cs.isEmpty then pure acc.reverse else
-        let cands := V.mods.filterMap fun m => if m.prenominal && m.ty == x.2 then
+        -- (a modifier that follows its noun is stated too: `$x$ is orthogonal to $y$`, `$S$ is of measure zero`)
+        let cands := V.mods.filterMap fun m => if m.ty == x.2 then
             if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
             (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
           else none
@@ -2911,9 +2991,10 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
           -- (`$G$ is $3$-regular`: a modifier with variables, of their values)
           let some (args, _) := (if Notation.hasSlots m.phrase then Notation.matchPrefix m.phrase cs [] else some ([], r))
             | fail E.type
-          let ts ← args.mapM fun a => do
+          let ts ← (args.zip (Notation.slotTys args.length m.pred)).mapM fun (a, t) => do
             let some mt := Math.parseFormula a | fail E.unsupported
-            Elab.asReal (← term F sc none mt)
+            let v ← term F sc none mt
+            if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
           adjs f r ((if Notation.hasSlots m.phrase then Notation.betaApply m.pred (ts ++ [x.1]) else Tm.app m.pred x.1) :: acc)
         | none => fail E.noun ((wordsOf cs).intersperse [32]).flatten
     let ps ← adjs (cs.length + 1) cs []
@@ -2935,7 +3016,7 @@ def within (ty : Ty) (a d : Tm) : Tm :=
 points of the plane, of a real function (on its domain or on `A`), of a quantity of
 functions on the unit square (on the class of its definition, or on `A`), or of a
 class of such functions. -/
-def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
+def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
     (on : Option MT) : M Tm := do
   if ty == .real then
     if on.isSome then fail E.unsupported
@@ -3002,6 +3083,21 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
           let body := Tm.app (.app e.pred t) d
           pure (match defDom with | some dd => .guard (within dom d dd) body | none => body)
     | _ => fail E.ambiguous ((a.intersperse [32]).flatten)
+
+
+/-- `adjectiveTmCore`, and where the core language has no such property of the type, the
+modifier of the vocabulary with these words (`compact` of a set of real numbers in the
+field `topology`, `even` of a real function in `analysis`). -/
+def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
+    (on : Option MT) : M Tm := do
+  let st0 ← get
+  tryCatch (adjectiveTmCore sc t ty defDom a on) fun e => do
+    if on.isSome then throw e
+    let m? := st0.vocab.mods.find? fun m => m.ty == ty && !Notation.hasSlots m.phrase &&
+      m.phrase == a.map PItem.w
+    match m? with
+    | some m => set st0; pure (Tm.app m.pred t)
+    | none => throw e
 
 /-! ## Claim sentences -/
 
@@ -3432,6 +3528,10 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .both cls => do
     let ps ← cls.mapM (clauseTm c sc onVar lastRhs)
     pure (Elab.conjAll ps)
+  | .iffC p q => do
+    pure (.iff (← clauseTm c sc onVar lastRhs p) (← clauseTm c sc onVar lastRhs q))
+  | .orC p q => do
+    pure (.or (← clauseTm c sc onVar lastRhs p) (← clauseTm c sc onVar lastRhs q))
   | .aliased ps cl => do
     -- `Q(\nu)` stands for `Q` in the clause
     let saved := (← get).aliases
@@ -3460,7 +3560,13 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (if neg then .not p else p)
   | .everyIs np names disj => do
     let b ← nounPhrase np
-    let ps ← names.mapM (notionApp (.loc 0, b.ty))
+    let st1 ← get
+    -- (notions of the article; or adjectives and nouns of the vocabulary, `Every cyclic group
+    -- $G$ is abelian`)
+    let ps ← tryCatch (names.mapM (notionApp (.loc 0, b.ty))) fun e => do
+      set st1
+      tryCatch (names.mapM fun nm => vocabPredicate ((b.name, b.ty) :: sc) (.loc 0, b.ty) (nameChunks nm))
+        fun _ => throw e
     pure (wrap [b] (if disj then disjAll ps else conjAll ps))
   | .iff p q => do pure (.iff (← prop sc none p) (← prop sc none q))
   | .compare l r rr => do relTm r (← term F sc none l) (← term F sc none rr)

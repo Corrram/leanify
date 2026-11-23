@@ -26,3 +26,9 @@ article-reader/
 /tests/Permutations/article.leanify.*
 /tests/Polynomials/article.leanify.*
 /tests/Special/article.leanify.*
+/tests/Topology/article.leanify.*
+/tests/Analysis/article.leanify.*
+/tests/Vectors/article.leanify.*
+/tests/Geometry/article.leanify.*
+/tests/Congruences/article.leanify.*
+/tests/Groups/article.leanify.*
