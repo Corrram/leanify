@@ -158,6 +158,13 @@ srcDir = "tests"
 globs = ["Couplings.+"]
 
 [[lean_lib]]
+# The freer wordings of a research article: definitions inside prose, after a colon and after
+# `, where`, letters introduced by earlier definitions, values attained only by an object.
+name = "Wordings"
+srcDir = "tests"
+globs = ["Wordings.+"]
+
+[[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.
 name = "Calculus"
 srcDir = "tests"

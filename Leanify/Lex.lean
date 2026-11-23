@@ -125,7 +125,7 @@ def wDropText : List Codes :=
    w!"normalsize", w!"large", w!"normalfont", w!"itshape", w!"bfseries", w!"upshape"]
 /-- Layout commands that are dropped with their argument: `\color{magenta}`,
 `\marginpar{…}`; of `\textcolor{red}{text}`, the text stays. -/
-def wDropArg : List Codes := [w!"color", w!"textcolor", w!"marginpar", w!"marginnote", w!"pagecolor"]
+def wDropArg : List Codes := [w!"color", w!"textcolor", w!"marginpar", w!"marginnote", w!"pagecolor", w!"footnote"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]

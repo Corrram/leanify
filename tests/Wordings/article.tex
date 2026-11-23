@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools,enumitem}
+\usepackage[vocab=unitsquare]{leanify}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\Gam}{\Gamma}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\de}{\,\mathrm{d}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\begin{document}
+
+This article says in the words of a research article what \texttt{tests/Couplings} says in the plainest forms: definitions inside sentences of prose, after a colon and after \emph{where}, and statements about the letters that earlier definitions introduced.
+
+Let $\CC$ denote the class of bivariate copulas.
+The copulas $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq\max\{u+v-1,0\}$, and $\Pi(u,v)\coloneqq uv$ describe comonotonicity, countermonotonicity, and independence, respectively.
+For a copula $C$, the population version of the weighted coefficient is
+\begin{equation}
+  \label{eq:nu-def}
+  \nu(C)\coloneqq24\int_0^1\!\int_0^1(1-u)\,C(u,v)\de u\de v-2
+\end{equation}
+as given in \cite{genest}, a normalization that makes $\nu(M)=1$, $\nu(W)=-1$, and $\nu(\Pi)=0$.
+Up to its additive constant, $\nu$ arises from Spearman's rho,
+\begin{equation}
+  \label{eq:rho-def}
+  \rho(C)=12\int_0^1\!\int_0^1 C(u,v)\de u\de v-3,
+\end{equation}
+see \cite{nelsen}, by replacing the uniform weight on the unit square with a density.
+Consequently, if $C^\top(u,v)\coloneqq C(v,u)$ denotes the transpose of $C$, then $\nu(C)$ generally differs from $\nu(C^\top)$.
+To remove this dependence on the order of the variables, one introduces the symmetrized coefficient\footnote{Some authors denote it by $\xi$. We write $\eta$ instead.}
+\begin{equation}
+  \label{eq:eta-def}
+  \eta(C)\coloneqq\frac{\nu(C)+\nu(C^\top)}{2},
+\end{equation}
+which emphasizes the leading ranks of both variables.
+For $(U,V)\sim C$, the survival copula $\widehat C(u,v)\coloneqq u+v-1+C(1-u,1-v)$ is the copula of $(1-U,1-V)$.
+
+A coupling is a probability measure on the unit square with uniform marginals.
+We may identify $\CC$ with the set $\Gam$ of all such couplings, and we do so whenever convenient.
+For a Borel measurable $T:[0,1]\to[0,1]$, let $\gamma_T$ denote the law of $(X,T(X))$ for $X$ uniformly distributed on $[0,1]$.
+
+\begin{lemma}[Coupling representation]
+\label{lem:coupling}
+If $(X,Z)$ follows the coupling associated with $C\in\CC$, then
+\begin{equation}
+  \label{eq:moments}
+  \rho(C)=12\,\E[XZ]-3
+  \qquad\text{and}\qquad
+  \nu(C)=12\,\E[X^2Z]-2.
+\end{equation}
+Consequently, $\rho$ and $\nu$ depend affinely on the copula.
+\end{lemma}
+
+The boundary is attained by a copula family that is indexed by $w\in[0,1]$: let $A_w$ be the copula associated with $\gamma_{T_w}$, where
+\begin{equation}
+  \label{eq:Tw-def}
+  T_w(x)\coloneqq
+  \begin{cases}
+    1-x, & 0\le x\le1-w,\\
+    x+w-1, & 1-w<x\le1.
+  \end{cases}
+\end{equation}
+The limiting member is the comonotone one, and we therefore define $B\coloneqq A_1$.
+
+\begin{lemma}[Coefficients along the family]
+\label{lem:values}
+For $w\in[0,1]$,
+\begin{equation}
+  \label{eq:values}
+  \rho(A_w)=2w^3-1.
+\end{equation}
+In particular, $\rho(A_w)\le1$.
+Moreover, $\nu(A_w)\le1$ for the function $\nu$ in \eqref{eq:nu-def}.
+\end{lemma}
+
+\begin{corollary}[Sharp bounds]
+\label{cor:bounds}
+Every $C\in\CC$ satisfies $\rho(C)\le1$.
+The maximum $\rho=1$ is attained only by $M$, which has $\nu=1$.
+The minimum $\rho=-1$ is attained only by its survival copula.
+Both bounds are sharp: the maximum $1$ of $\nu$ is attained only by $M$, at which $(\rho,\eta)=(1,1)$, and the minimum $-1$ only by $W$.
+\end{corollary}
+
+\begin{proof}
+Let $C\in\CC$.
+On the diagonal, $\rho(C)\le t$.
+Consequently $\Pi(u,\cdot)\le1$.
+\end{proof}
+
+\begin{lemma}[Dual certificate]
+\label{lem:dual}
+Let $c:[0,1]^2\to\R$ be a continuous function, and let $K\coloneqq\{(x,z)\in[0,1]^2:c(x,z)=1\}$.
+Suppose that $c(x,z)\le1$ for all $x,z\in[0,1]$.
+Every $\gamma\in\Gam$ satisfies $\E_\gamma[c(X,Z)]\le1$.
+In particular, if some $\gamma^*\in\Gam$ satisfies $\gamma^*(K)=1$, then the maximizers of $\gamma\mapsto\E_\gamma[c(X,Z)]$ over $\Gam$ are exactly the couplings concentrated on $K$.
+\end{lemma}
+
+\end{document}

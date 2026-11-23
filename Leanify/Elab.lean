@@ -214,6 +214,10 @@ structure St where
   far: symbols the article may have introduced in words (`e` is in it when it is not
   only the base of a power). -/
   unreadIds : List Codes := []
+  /-- The introductions of the definitions read so far (`For a copula $C$,`), latest first. -/
+  forPrefixes : List (List PTok) := []
+  /-- The object that the latest sentence says a value is attained by. -/
+  lastAttained : List PTok := []
   globs : List Glob := []
   values : List Tm := []
   claims : List Claim := []

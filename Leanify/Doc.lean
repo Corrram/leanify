@@ -4990,6 +4990,683 @@ def envTable (ss : List Sentence) : List (Codes × Nat) :=
     | .result _ => some (s.ctx.label, s.ctx.env)
     | _ => none
 
+/-! ## Freer wordings
+
+A sentence that has no reading as it stands is read through sentences of the forms above
+that say the same: a definition inside a sentence of prose (`…, if $C^\top(u,v)\coloneqq
+C(v,u)$ denotes the transpose of $C$, then …`), definitions after a colon and after
+`, where` (`… indexed by $w\in[0,1]$: let $A_w$ be …, where \[T_w(x)\coloneqq…\]`), and
+a definition about a letter that an earlier definition introduced (`For a copula $C$, …`). -/
+namespace Flex
+
+def isW (p : PTok) (w : Codes) : Bool :=
+  match p.tok with | .word v => !p.math && Grammar.lower v == w | _ => false
+def isWs (p : PTok) (ws : List Codes) : Bool := ws.any (isW p)
+def W (pos : Nat) (w : Codes) : PTok := ⟨.word w, pos, false⟩
+def comma (pos : Nat) : PTok := ⟨.punct 44, pos, false⟩
+def period (pos : Nat) : PTok := ⟨.punct 46, pos, false⟩
+def isP (p : PTok) (c : Nat) : Bool := !p.math && p.tok == .punct c
+
+structure SegSt where
+  out : List (Bool × List PTok) := []
+  cur : List PTok := []
+  mode : Nat := 0
+  env : Codes := []
+
+def segStep (s : SegSt) (t : PTok) : SegSt :=
+  let flush : List (Bool × List PTok) := if s.cur.isEmpty then s.out else (false, s.cur.reverse) :: s.out
+  match s.mode with
+  | 0 =>
+    match t.tok with
+    | .mopen => { out := flush, cur := [t], mode := 1 }
+    | .begin e =>
+      if Lex.wDisplayEnvs.contains e then { out := flush, cur := [t], mode := 2, env := e }
+      else { s with cur := t :: s.cur }
+    | _ => { s with cur := t :: s.cur }
+  | 1 =>
+    if t.tok == .mclose then { out := (true, (t :: s.cur).reverse) :: s.out }
+    else { s with cur := t :: s.cur }
+  | _ =>
+    if t.tok == .finish s.env then { out := (true, (t :: s.cur).reverse) :: s.out }
+    else { s with cur := t :: s.cur }
+
+/-- The stretches of words and the formulas of a sentence, in order. -/
+def segs (ts : List PTok) : List (Bool × List PTok) :=
+  let s := ts.foldl segStep {}
+  (if s.cur.isEmpty then s.out else (s.mode != 0, s.cur.reverse) :: s.out).reverse
+
+def unsegs (ss : List (Bool × List PTok)) : List PTok := ss.foldr (fun s acc => s.2 ++ acc) []
+
+def isDefSign (p : PTok) : Bool := p.tok == .cmd w!"coloneqq"
+def hasDef (seg : List PTok) : Bool := seg.any isDefSign
+
+/-- The letters of a formula before its first relation sign. -/
+def headVars (seg : List PTok) : List Tok :=
+  let isRel (t : Tok) : Bool := match t with
+    | .msym c => c == 61 | .cmd n => [w!"coloneqq", w!"in", w!"le", w!"ge", w!"to"].contains n | _ => false
+  (seg.takeWhile (fun p => !isRel p.tok)).filterMap fun p => match p.tok with
+    | .mvar c => some (.mvar c)
+    | _ => none
+
+/-- The introduction `For a copula $C$,` or `For $w\in[0,1]$,` that a sentence starts with. -/
+def forPrefix (ts : List PTok) : Option (List PTok) :=
+  match ts with
+  | t :: rest =>
+    if isW t w!"for" then
+      let pre := rest.takeWhile (fun p => !isP p 44)
+      if pre.length == rest.length || pre.any (fun p => isP p 46 || isP p 58 || (match p.tok with | .begin _ => true | _ => false)) then none
+      else if !pre.any (fun p => p.tok == .mopen) then none
+      else some (t :: pre ++ [comma t.pos])
+    else none
+  | [] => none
+
+/-- The letters an introduction introduces. -/
+def prefixVars (pre : List PTok) : List Tok :=
+  ((segs pre).filter (·.1)).flatMap fun s => headVars s.2
+
+/-- The latest introduction of one of the letters `vs`. -/
+def stickyFor (pres : List (List PTok)) (vs : List Tok) : List PTok :=
+  match pres.find? (fun pre => (prefixVars pre).any vs.contains) with
+  | some pre => pre
+  | none => []
+
+/-- The latest introduction of a letter of `vs`, or else of `ws`. -/
+def stickyFor2 (pres : List (List PTok)) (vs ws : List Tok) : List PTok :=
+  let p := stickyFor pres vs
+  if p.isEmpty then stickyFor pres ws else p
+
+def startsDef (ts : List PTok) : Bool :=
+  match ts with
+  | t :: u :: _ => isWs t [w!"let", w!"set", w!"define", w!"put"] ||
+      (isW t w!"we" && isWs u [w!"set", w!"define", w!"put", w!"let", w!"write"])
+  | [t] => isWs t [w!"let", w!"set", w!"define", w!"put"]
+  | [] => false
+
+/-- Split at the words `and let`, `and set`, `and define`, `and put` between formulas. -/
+def andParts : List PTok → List PTok → List (List PTok)
+  | [], cur => [cur.reverse]
+  | t :: rest, cur =>
+    match rest with
+    | u :: _ =>
+      if isW t w!"and" && isWs u [w!"let", w!"set", w!"define", w!"put"] && !cur.isEmpty then
+        cur.reverse :: andParts rest []
+      else andParts rest (t :: cur)
+    | [] => andParts rest (t :: cur)
+
+def dropLast {α : Type} (l : List α) : List α := l.take (l.length - 1)
+
+/-- Words that do not change what a definition says: `the coupling` before the formula
+after `associated with`, a reference `from Section 2`. -/
+def tidy : List PTok → List PTok
+  | a :: b :: c :: d :: e :: rest =>
+    if isW a w!"associated" && isW b w!"with" && isW c w!"the" && (match d.tok with | .word _ => !d.math | _ => false) && e.tok == .mopen then
+      a :: b :: tidy (e :: rest)
+    else if isWs a [w!"from", w!"in", w!"of"] && isWs b [w!"section", w!"lemma", w!"theorem", w!"proposition", w!"corollary", w!"equation", w!"appendix"]
+        && (match c.tok with | .ref _ _ => true | _ => false) then tidy (d :: e :: rest)
+    else a :: tidy (b :: c :: d :: e :: rest)
+  | a :: b :: c :: rest =>
+    if isWs a [w!"from", w!"in", w!"of"] && isWs b [w!"section", w!"lemma", w!"theorem", w!"proposition", w!"corollary", w!"equation", w!"appendix"]
+        && (match c.tok with | .ref _ _ => true | _ => false) then tidy rest
+    else a :: tidy (b :: c :: rest)
+  | ts => ts
+
+/-- The definitions in the rows of an aligned display that says more beside them
+(`z_-(x)&\coloneqq…,&\quad\text{with probability }&…`). -/
+def rowDefs (d : List PTok) : List (List PTok) :=
+  if !d.any (fun p => p.tok == .begin w!"aligned") then [] else
+  let body := d.filter fun p => match p.tok with | .begin _ | .finish _ | .ref _ _ => false | _ => true
+  let rec rows : List PTok → List PTok → List (List PTok)
+    | [], cur => [cur.reverse]
+    | t :: rest, cur => if t.tok == .csym 92 then cur.reverse :: rows rest [] else rows rest (t :: cur)
+  let clean (r : List PTok) : Option (List PTok) :=
+    let r : List PTok := r.filter (fun p => p.tok != .msym 38)
+    -- (an optional argument of the row break: `\\[0.4ex]`)
+    let r : List PTok := match r with
+      | o :: r' => if o.tok == .msym 91 then (r'.dropWhile (·.tok != .msym 93)).drop 1 else r
+      | [] => r
+    let r : List PTok := r.takeWhile fun p => !(p.tok == .cmd w!"quad" || p.tok == .cmd w!"qquad" || p.tok == .cmd w!"text")
+    let r : List PTok := match r.getLast? with
+      | some l => if l.tok == .msym 44 || l.tok == .msym 46 then dropLast r else r
+      | none => r
+    if hasDef r then some r else none
+  let all := rows body []
+  if all.length < 2 then [] else all.filterMap clean
+
+/-- The name in the words before a formula (`the survival copula`, `Spearman's rho,`):
+the words from the nearest `the` on, or else up to three words of which the first is
+capitalized. The words are given latest first. -/
+def nameBefore (rev : List PTok) : List PTok :=
+  let rev := match rev with | c :: r => if isP c 44 then r else rev | [] => rev
+  let run : List PTok := rev.takeWhile fun p => match p.tok with | .word _ => !p.math | _ => false
+  let upTo : List PTok := run.takeWhile (fun p => !isW p w!"the")
+  if upTo.length < run.length then (if upTo.isEmpty || upTo.length > 4 then [] else upTo.reverse)
+  else
+    let cap (p : PTok) : Bool := match p.tok with
+      | .word (c :: _) => 65 ≤ c && c ≤ 90
+      | _ => false
+    match (run.take 3).reverse with
+    | a :: r => if cap a && !r.isEmpty && !r.any cap then a :: r
+        else (match r with | b :: r' => if cap b && !r'.isEmpty then b :: r' else [] | [] => [])
+    | [] => []
+
+/-- The name in the words after a formula (`denotes the transpose of $C$`). -/
+def nameAfter (rest : List PTok) : List PTok :=
+  match rest with
+  | d :: t :: more =>
+    if isWs d [w!"denotes", w!"denote"] && isW t w!"the" then
+      let nm := more.takeWhile (fun p => !isP p 44 && !(match p.tok with | .begin _ => true | _ => false))
+      if nm.isEmpty then [] else t :: nm
+    else []
+  | _ => []
+
+/-- A formula `f(x)=…` that defines the symbol `f`, which no definition has introduced. -/
+def freshEq (known : List Codes) (d : List PTok) : Bool :=
+  let inner := d.filter fun p => match p.tok with
+    | .begin _ | .finish _ | .ref _ _ | .mopen | .mclose => false | _ => true
+  match inner with
+  | h :: o :: rest =>
+    let key : Codes := match h.tok with | .cmd n => 92 :: n | .mvar c => [c] | _ => []
+    let args := rest.takeWhile (fun p => p.tok != .msym 41)
+    !key.isEmpty && o.tok == .msym 40 && !known.contains key &&
+      args.all (fun p => match p.tok with | .mvar _ | .msym 44 => true | _ => false) &&
+      ((rest.drop (args.length + 1)).head?.map (·.tok)) == some (.msym 61)
+  | _ => false
+
+/-- `for the function $\Phi$ in (3)`: the reference to a symbol that is defined. -/
+def tidyRef : List PTok → List PTok
+  | a :: b :: c :: rest =>
+    if isW a w!"for" && isW b w!"the" && isWs c [w!"function", w!"map", w!"constant", w!"functions"] then
+      match segs rest with
+      | (true, m) :: (false, ws) :: more =>
+        (match ws with
+         | i :: r :: ws' =>
+           if m.length == 3 && isWs i [w!"in", w!"from", w!"of"] && (match r.tok with | .ref _ _ => true | _ => false) then
+             ws' ++ unsegs more
+           else a :: tidyRef (b :: c :: rest)
+         | _ => a :: tidyRef (b :: c :: rest))
+      | _ => a :: tidyRef (b :: c :: rest)
+    else a :: tidyRef (b :: c :: rest)
+  | ts => ts
+
+def inner (m : List PTok) : List PTok := m.filter fun p => p.tok != .mopen && p.tok != .mclose
+
+def symKey (t : PTok) : Codes := match t.tok with | .cmd n => 92 :: n | .mvar c => [c] | _ => []
+
+/-- Apply the functionals of a formula (the defined symbols that have no argument) to `x`:
+`\nu-\rho` at `C` is `\nu(C)-\rho(C)`. -/
+def applyTo (fns : List Codes) (x : List PTok) : List PTok → List PTok
+  | [] => []
+  | t :: rest =>
+    let applied := match rest with
+      | u :: _ => u.tok == .msym 40 || u.tok == .msym 95 || u.tok == .msym 94
+      | [] => false
+    if !(symKey t).isEmpty && fns.contains (symKey t) && !applied then
+      t :: ⟨.msym 40, t.pos, true⟩ :: x ++ ⟨.msym 41, t.pos, true⟩ :: applyTo fns x rest
+    else t :: applyTo fns x rest
+
+/-- Split a formula at its first `=` outside brackets. -/
+def splitEq : List PTok → Nat → List PTok → Option (List PTok × List PTok)
+  | [], _, _ => none
+  | t :: rest, d, acc =>
+    if d == 0 && t.tok == .msym 61 then some (acc.reverse, rest)
+    else
+      let d' := match t.tok with
+        | .lbrace | .msym 40 | .msym 91 => d + 1
+        | .rbrace | .msym 41 | .msym 93 => d - 1
+        | _ => d
+      splitEq rest d' (t :: acc)
+
+/-- Split a formula at its commas outside brackets. -/
+def splitCommas : List PTok → Nat → List PTok → List (List PTok)
+  | [], _, acc => [acc.reverse]
+  | t :: rest, d, acc =>
+    if d == 0 && t.tok == .msym 44 then acc.reverse :: splitCommas rest d []
+    else
+      let d' := match t.tok with
+        | .lbrace | .msym 40 | .msym 91 => d + 1
+        | .rbrace | .msym 41 | .msym 93 => d - 1
+        | _ => d
+      splitCommas rest d' (t :: acc)
+
+/-- The operation with the key `key` at `x`: `\widehat{x}`, `x^\top`. -/
+def applyOp (key : Codes) (x : List PTok) : Option (List PTok) :=
+  match Leanify.lex [] ([36] ++ key ++ [36]) with
+  | some ks =>
+    let k := (inner ks).map fun p => { p with math := true }
+    match key with
+    | 92 :: _ => some (k ++ [⟨.lbrace, 0, true⟩] ++ x ++ [⟨.rbrace, 0, true⟩])
+    | 94 :: _ => some (x ++ k)
+    | _ => none
+  | none => none
+
+def wordsOf (ts : List PTok) : List Codes := ts.filterMap fun p => match p.tok with
+  | .word w => if p.math then none else some (Grammar.lower w)
+  | .punct 44 => some [44]
+  | _ => none
+
+/-- `The maximum $\nu-\rho=\frac14$ is attained only by $D_{1/2}$, which has $\rho=0$.`,
+`the maximum $a$ of $\nu-\eta$ is attained only by $A$, at which $(\eta,\nu)=(e,n)$, and the
+minimum $-a$ only by $A^\top$`, `… only by its survival copula`: the sentences `The maximum
+$e=v$ is attained only by $x$.` and the values at `x`. With the object, for `its` in the
+next sentence. -/
+def attained (fns : List Codes) (ops : List (List Codes × Codes)) (it : List PTok) (toks : List PTok) :
+    Option (List (List PTok) × List PTok) :=
+  let pos := (toks.head?.map (·.pos)).getD 0
+  let body := match toks.getLast? with
+    | some l => if isP l 46 then dropLast toks else toks
+    | none => toks
+  -- (`Both constants are sharp: …`)
+  let body :=
+    let head := body.takeWhile (fun p => !isP p 58)
+    if head.length == body.length || head.any (fun p => p.math) then body else body.drop (head.length + 1)
+  let m (ts : List PTok) : List PTok := [⟨.mopen, pos, true⟩] ++ ts ++ [⟨.mclose, pos, true⟩]
+  let eq : PTok := ⟨.msym 61, pos, true⟩
+  -- (the form `The maximum $e=v$ is attained only by $x$.`)
+  let iffSent (mx : Codes) (e v x : List PTok) : List PTok :=
+    [W pos w!"The", W pos mx] ++ m (e ++ [eq] ++ v) ++
+      [W pos w!"is", W pos w!"attained", W pos w!"only", W pos w!"by"] ++ m x ++ [period pos]
+  -- the object after `only by`
+  let object (ws : List Codes) (rest : List (Bool × List PTok)) : Option (List PTok × List (Bool × List PTok)) :=
+    if ws.isEmpty then
+      match rest with
+      | (true, x) :: more => some (inner x, more)
+      | _ => none
+    else
+      match ws with
+      | i :: name =>
+        if i == w!"its" && !it.isEmpty then
+          (ops.lookup name).bind fun key => (applyOp key it).map (·, rest)
+        else none
+      | [] => none
+  let isMax (w : Codes) : Bool := w == w!"maximum" || w == w!"minimum"
+  let headForm : Option (Codes × List PTok × List PTok × List Codes × List (Bool × List PTok)) :=
+    match segs body with
+    | (false, w1) :: (true, f1) :: (false, w2) :: rest =>
+      (match wordsOf w1 with
+       | [t, mx] =>
+         if t == w!"the" && isMax mx then
+           let ws2 := wordsOf w2
+           if ws2.take 4 == [w!"is", w!"attained", w!"only", w!"by"] then
+             (splitEq (inner f1) 0 []).map fun (e, v) => (mx, e, v, ws2.drop 4, rest)
+           else if ws2 == [w!"of"] then
+             match rest with
+             | (true, f2) :: (false, w3) :: rest' =>
+               let ws3 := wordsOf w3
+               if ws3.take 4 == [w!"is", w!"attained", w!"only", w!"by"] then
+                 some (mx, inner f2, inner f1, ws3.drop 4, rest')
+               else none
+             | _ => none
+           else none
+         else none
+       | _ => none)
+    | _ => none
+  match headForm with
+  | none => none
+  | some (mx, e, v, ws, rest) =>
+    -- (the words after `by` up to a comma name the object; the rest starts the tail)
+    let nameWs := ws.takeWhile (· != [44])
+    let tailWs := ws.drop nameWs.length
+    match object nameWs rest with
+    | none => none
+    | some (x, rest) =>
+      let first := iffSent mx e v x
+      let more (x : List PTok) (f : List PTok) : Option (List PTok) :=
+        -- `$\rho=0$`, `$(\eta,\nu)=(a,b)$`
+        (splitEq (inner f) 0 []).bind fun (l, r) =>
+          let strip (ts : List PTok) : List PTok := match ts with
+            | o :: r => if o.tok == .msym 40 then dropLast r else ts
+            | [] => ts
+          let ls := splitCommas (strip l) 0 []
+          let rs := if ls.length == 1 then [r] else splitCommas (strip r) 0 []
+          if ls.length != rs.length then none else
+          let eqs := (ls.zip rs).map fun (a, b) => m (applyTo fns x a ++ [eq] ++ b)
+          let joined := eqs.foldl (fun acc q => if acc.isEmpty then q else acc ++ [W pos w!"and"] ++ q) []
+          some ([W pos w!"Moreover", comma pos] ++ joined ++ [period pos])
+      -- the tail: the words before each further formula
+      let rec tail : Nat → List Codes → List (Bool × List PTok) → List PTok → Option (List (List PTok) × List PTok)
+        | 0, _, _, _ => none
+        | _, [], [], x => some ([], x)
+        | f + 1, ws, (true, g) :: rest, x =>
+          if ws == [[44], w!"which", w!"has"] || ws == [[44], w!"at", w!"which"] then
+            match rest with
+            | (false, w') :: rest' => (more x g).bind fun s => (tail f (wordsOf w') rest' x).map fun (ss, y) => (s :: ss, y)
+            | [] => (more x g).map fun s => ([s], x)
+            | _ => none
+          else if ws.take 3 == [[44], w!"and", w!"the"] && ws.length == 4 && isMax (ws.getD 3 []) then
+            match rest with
+            | (false, w') :: rest' =>
+              let ws' := wordsOf w'
+              if ws'.take 2 == [w!"only", w!"by"] then
+                let nameWs := (ws'.drop 2).takeWhile (· != [44])
+                match object nameWs rest' with
+                | some (y, rest'') =>
+                  (tail f ((ws'.drop 2).drop nameWs.length) rest'' y).map fun (ss, z) => (iffSent (ws.getD 3 []) e (inner g) y :: ss, z)
+                | none => none
+              else none
+            | _ => none
+          else none
+        | _, _, _, _ => none
+      match rest with
+      | [] => if tailWs.isEmpty then some ([first], x) else none
+      | (false, w') :: rest' =>
+        if tailWs.isEmpty then (tail (rest.length + 2) (wordsOf w') rest' x).map fun (ss, y) => (first :: ss, y) else none
+      | _ => (tail (rest.length + 2) tailWs rest x).map fun (ss, y) => (first :: ss, y)
+
+/-- The sentences that an unread sentence is read through: without (`sticky = false`) or
+with the latest introductions of the letters of its definitions, and with (`named`) or
+without the names that the words around a definition give it. -/
+def expand (known : List Codes) (pres : List (List PTok)) (sticky named : Bool) (toks : List PTok) :
+    Option (List (List PTok)) :=
+  let pos := (toks.head?.map (·.pos)).getD 0
+  let body := match toks.getLast? with
+    | some l => if isP l 46 then dropLast toks else toks
+    | none => toks
+  let body := tidyRef (tidy body)
+  -- the introduction the sentence starts with (`For $w\in[0,1]$, …`); `For $(U,V)\sim C$,`
+  -- introduces no letter of a definition
+  let (pre0, body) : List PTok × List PTok :=
+    match forPrefix body with
+    | some p =>
+      if p.any (fun t => t.tok == .cmd w!"sim") then ([], body.drop p.length)
+      else (p, body.drop p.length)
+    | none => ([], body)
+  -- after a colon: the definitions the words before it announce
+  let (pre, tail) : List PTok × List PTok :=
+    let head := body.takeWhile (fun p => !isP p 58)
+    if head.length == body.length then (pre0, body) else
+    let rest := body.drop (head.length + 1)
+    match (segs head).getLast? with
+    | some (true, m) =>
+      if m.any (fun p => p.tok == .cmd w!"in") then (W pos w!"For" :: m ++ [comma pos], rest)
+      else (pre0, body)
+    | _ => (pre0, body)
+  -- `…, where DISPLAY`
+  let ss := segs tail
+  let (main, whereDefs) : List PTok × List (List PTok) :=
+    match ss.reverse with
+    | (true, d) :: (false, ws) :: before =>
+      (match ws.reverse with
+       | w :: c :: wsr =>
+         if isW w w!"where" && isP c 44 && hasDef d then (unsegs before.reverse ++ wsr.reverse, [d])
+         else (tail, [])
+       | _ => (tail, []))
+    | _ => (tail, [])
+  let parts := andParts main []
+  let close (s : List PTok) : List PTok :=
+    match s.getLast? with
+    | some l => (match l.tok with | .finish _ => s | _ => s ++ [period pos])
+    | none => s
+  let preOf (vars : List Tok) : List PTok :=
+    if !pre.isEmpty then pre else if sticky then stickyFor pres vars else []
+  let withPre (vars : List Tok) (s : List PTok) : List PTok :=
+    let p := preOf vars
+    let s := match s with
+      | t :: rest => if p.isEmpty then s else
+          (match t.tok with | .word w => { t with tok := .word (Grammar.lower w) } | _ => t) :: rest
+      | [] => s
+    close (p ++ s)
+  -- a definition inside prose, with the words before and after it
+  let defSent (before after d : List PTok) : List PTok :=
+    -- (the comma that continues the sentence after a display)
+    let d := match d.reverse with
+      | e :: c :: r =>
+        if (match e.tok with | .finish _ => true | _ => false) then
+          if c.tok == .msym 44 then (e :: { c with tok := .msym 46 } :: r).reverse
+          else if c.tok == .msym 46 then d
+          else (e :: { c with tok := .msym 46 } :: c :: r).reverse
+        else d
+      | _ => d
+    let subject : Bool := match before.getLast? with
+      | some l => isWs l [w!"is", w!"are"] && before.all (fun p => !isP p 44) &&
+          (match before.head? with | some h => isW h w!"the" | none => false)
+      | none => false
+    let hasSig : Bool := match ((segs before).filter (·.1)).getLast? with
+      | some (_, m) => m.any (fun p => p.tok == .cmd w!"to")
+      | none => false
+    if named && subject && hasSig then
+      -- `the rank map $\zeta_c:[0,1]\to[0,1]$ is DISPLAY`
+      close (preOf (headVars (d.filter fun p => match p.tok with | .ref _ _ | .begin _ | .mopen => false | _ => true)) ++
+        [W pos w!"define"] ++ dropLast before ++ [W pos w!"by"] ++ d)
+    else if named && subject then
+      close (preOf (headVars (d.filter fun p => match p.tok with | .ref _ _ | .begin _ | .mopen => false | _ => true)) ++
+        (match before with
+         | t :: rest => (match t.tok with | .word w => { t with tok := .word (Grammar.lower w) } | _ => t) :: rest
+         | [] => []) ++ d)
+    else
+    let vars := headVars (d.filter fun p => match p.tok with | .ref _ _ | .begin _ | .mopen => false | _ => true)
+    let na := nameAfter after
+    let nb := nameBefore before.reverse
+    if named && !na.isEmpty then withPre vars ([W pos w!"we", W pos w!"write"] ++ d ++ [W pos w!"for"] ++ na)
+    else if named && !nb.isEmpty then
+      let p := preOf vars
+      let ofVar : List PTok := match ((segs p).filter (·.1)).getLast? with
+        | some (_, m) => if m.length == 3 then [W pos w!"of"] ++ m else []
+        | none => []
+      let cap (p : PTok) : Bool := match p.tok with | .word (c :: _) => 65 ≤ c && c ≤ 90 | _ => false
+      let the : List PTok := if nb.head?.map cap == some true then [] else [W pos w!"the"]
+      let ofVar := if the.isEmpty then [] else ofVar
+      close (p ++ the ++ nb ++ ofVar ++ [W pos w!"is"] ++ d)
+    else withPre vars (W pos w!"set" :: d)
+  let rec partDefs : Nat → List PTok → List (Bool × List PTok) → List (List PTok)
+    | 0, _, _ => []
+    | _, _, [] => []
+    | f + 1, before, (m, d) :: rest =>
+      let here := if m && (hasDef d || (named && freshEq known d && !(nameBefore before.reverse).isEmpty &&
+          (match d.head? with | some t => (match t.tok with | .begin _ => true | _ => false) | none => false)))
+        then (if named || (rowDefs d).isEmpty then [defSent before (unsegs rest) d]
+          else (rowDefs d).map fun r =>
+            let vars := headVars r ++ r.filterMap fun p => match p.tok with | .mvar c => some (Tok.mvar c) | _ => none
+            let p := if !pre.isEmpty then pre else if sticky then stickyFor2 pres (headVars r) vars else []
+            p ++ [W pos w!"set", ⟨.mopen, pos, true⟩] ++ r ++ [⟨.mclose, pos, true⟩, period pos]) else []
+      here ++ partDefs f (before ++ d) rest
+  let partSents (p : List PTok) : Option (List (List PTok)) :=
+    if startsDef p then
+      let vars := match ((segs p).filter (·.1)).head? with | some (_, m) => headVars m | none => []
+      some [withPre vars p]
+    else
+      let sp := segs p
+      let ds := partDefs (sp.length + 1) [] sp
+      -- (words before `, where DISPLAY` that define nothing are not read)
+      if ds.isEmpty then (if whereDefs.isEmpty then none else some []) else some ds
+  match parts.mapM partSents with
+  | none => none
+  | some pss =>
+    let wd := whereDefs.flatMap fun d =>
+      if named || (rowDefs d).isEmpty then [withPre (headVars d) (W pos w!"set" :: d)]
+      else (rowDefs d).map fun r =>
+        withPre (headVars r) ([W pos w!"set", ⟨.mopen, pos, true⟩] ++ r ++ [⟨.mclose, pos, true⟩])
+    match pss.reverse with
+    | last :: initR => some ((initR.reverse.flatMap id) ++ wd ++ last)
+    | [] => none
+
+/-- `…, a normalization that makes $\nu(M)=1$, $\nu(W)=-1$, and $\nu(\Pi)=0$.`: the sentence
+before the comma, and the formulas as its consequences. -/
+def makesSplit : List PTok → List PTok → Option (List (List PTok))
+  | [], _ => none
+  | t :: rest, acc =>
+    let hit : Option (List PTok) :=
+      match rest with
+      | a :: rest' =>
+        if isP t 44 && isWs a [w!"a", w!"an"] then
+          let ws := rest'.takeWhile fun p => match p.tok with | .word _ => !p.math | _ => false
+          match ws.reverse with
+          | v :: th :: nm =>
+            if isWs v [w!"makes", w!"make", w!"gives", w!"yields"] && isW th w!"that" && !nm.isEmpty && nm.length ≤ 3 then
+              some (rest'.drop ws.length)
+            else none
+          | _ => none
+        else none
+      | [] => none
+    match hit with
+    | some after =>
+      if acc.isEmpty || after.isEmpty then none
+      else some [acc.reverse ++ [period t.pos], [W t.pos w!"We", W t.pos w!"have"] ++ after]
+    | none => makesSplit rest (t :: acc)
+
+/-- `… with the set $\Gamma$ of all such couplings, …`: the symbol denotes the set. -/
+def setOf (known : List Codes) : List (Bool × List PTok) → Option (List (List PTok))
+  | (false, w1) :: (true, m) :: (false, w2) :: rest =>
+    let pos := (m.head?.map (·.pos)).getD 0
+    let hit : Option (List (List PTok)) :=
+      match w1.reverse, w2 with
+      | k :: th :: _, o :: w2' =>
+        if isW th w!"the" && isWs k [w!"set", w!"class", w!"family", w!"collection"] && isW o w!"of" &&
+            (inner m).length == 1 && !((inner m).any fun p => known.contains (symKey p)) then
+          let w2' := w2'.dropWhile (fun p => isWs p [w!"all", w!"such", w!"the", w!"these"])
+          let nm := w2'.takeWhile fun p => match p.tok with | .word _ => !p.math | _ => false
+          if nm.isEmpty then none
+          else some [[W pos w!"Let"] ++ m ++ [W pos w!"denote", th, k, o] ++ nm ++ [period pos]]
+        else none
+      | _, _ => none
+    match hit with
+    | some r => some r
+    | none => setOf known ((true, m) :: (false, w2) :: rest)
+  | _ :: rest => setOf known rest
+  | [] => none
+
+/-- `\mathbb{E}[…]` as `\mathbb{E}_\gamma[…]`. -/
+def expUnder (g : PTok) : List PTok → List PTok
+  | a :: b :: c :: d :: e :: rest =>
+    if a.tok == .cmd w!"mathbb" && b.tok == .lbrace && c.tok == .mvar 69 && d.tok == .rbrace && e.tok == .msym 91 then
+      a :: b :: c :: d :: { e with tok := .msym 95 } :: g :: e :: expUnder g rest
+    else a :: expUnder g (b :: c :: d :: e :: rest)
+  | ts => ts
+
+/-- `If $(X,Z)$ follows the coupling associated with $C\in\mathcal{C}$, then …
+\mathbb{E}[XZ] …`: the expectations are those under that coupling. -/
+def followsCoupling (toks : List PTok) : Option (List (List PTok)) :=
+  match segs toks with
+  | (false, [i]) :: (true, _) :: (false, ws) :: (true, m) :: (false, th) :: rest =>
+    let pos := i.pos
+    let g : PTok := ⟨.cmd w!"gamma", pos, true⟩
+    match th with
+    | c :: t :: th' =>
+      if isW i w!"if" && wordsOf ws == [w!"follows", w!"the", w!"coupling", w!"associated", w!"with"] &&
+          isP c 44 && isW t w!"then" && !toks.any (fun p => p.tok == .cmd w!"gamma") &&
+          (inner m).any (fun p => p.tok == .cmd w!"in") then
+        let v := (inner m).take 1
+        some [[W pos w!"Let"] ++ m ++ [comma pos, W pos w!"and", W pos w!"let", ⟨.mopen, pos, true⟩, g, ⟨.mclose, pos, true⟩,
+            W pos w!"be", W pos w!"the", W pos w!"coupling", W pos w!"associated", W pos w!"with",
+            ⟨.mopen, pos, true⟩] ++ v ++ [⟨.mclose, pos, true⟩, period pos],
+          [W pos w!"Then"] ++ expUnder g (th' ++ unsegs rest)]
+      else none
+    | _ => none
+  | _ => none
+
+/-- `[Consequently,] $\rho$, $\nu$, and $\eta$ depend affinely on the copula.`: each of them
+is affine. -/
+def dependAffinely (toks : List PTok) : Option (List (List PTok)) :=
+  let body := match toks.getLast? with
+    | some l => if isP l 46 then dropLast toks else toks
+    | none => toks
+  let body := match body with
+    | a :: c :: r => if (match a.tok with | .word _ => true | _ => false) && isP c 44 then r else body
+    | _ => body
+  let ss := segs body
+  match ss.reverse with
+  | (false, ws) :: before =>
+    let w := wordsOf ws
+    if (w.take 4 == [w!"depend", w!"affinely", w!"on", w!"the"] || w.take 4 == [w!"depends", w!"affinely", w!"on", w!"the"]) && w.length ≤ 6 then
+      let ok := before.all fun (m, ts) => if m then (inner ts).length == 1 else (wordsOf ts).all fun x => x == [44] || x == w!"and"
+      let ms := (before.reverse.filter (·.1)).map (·.2)
+      if ok && !ms.isEmpty then
+        some (ms.map fun m => m ++ [W 0 w!"is", W 0 w!"affine", period 0])
+      else none
+    else none
+  | _ => none
+
+/-- Replace the tokens `old` by `new` in a formula. -/
+def substToks (old new : List Tok) : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _, [] => []
+  | f + 1, t :: rest =>
+    if !old.isEmpty && ((t :: rest).take old.length).map (·.tok) == old then
+      new.map (fun k => { t with tok := k }) ++ substToks old new f ((t :: rest).drop old.length)
+    else t :: substToks old new f rest
+
+/-- `[In particular,] if some $\gamma^*\in\Gamma$ satisfies $\gamma^*(K)=1$, then the
+maximizers of $\gamma\mapsto e$ over $\Gamma$ are exactly the couplings concentrated on $K$.`:
+if there is such an object, then `e` is the supremum exactly for the `\gamma` with
+`\gamma(K)=1`. -/
+def maximizers (toks : List PTok) : Option (List (List PTok)) :=
+  let pos := (toks.head?.map (·.pos)).getD 0
+  let body := match toks.getLast? with
+    | some l => if isP l 46 then dropLast toks else toks
+    | none => toks
+  let ss := segs body
+  let ss := match ss with
+    | (false, w) :: rest =>
+      (match wordsOf w with
+       | [a, b, c, d, e] => if a == w!"in" && b == w!"particular" && c == [44] && d == w!"if" && e == w!"some" then some rest else none
+       | [d, e] => if d == w!"if" && e == w!"some" then some rest else none
+       | _ => none)
+    | _ => none
+  match ss with
+  | some [(true, m), (false, w1), (true, p), (false, w2), (true, f), (false, w3), (true, a), (false, w4), (true, k)] =>
+    let ws2 := wordsOf w2
+    let ws4 := wordsOf w4
+    let isMaxW := ws2 == [[44], w!"then", w!"the", w!"maximizers", w!"of"]
+    let isMinW := ws2 == [[44], w!"then", w!"the", w!"minimizers", w!"of"]
+    if wordsOf w1 == [w!"satisfies"] && (isMaxW || isMinW) && wordsOf w3 == [w!"over"] &&
+        ws4.take 3 == [w!"are", w!"exactly", w!"the"] && ws4.drop (ws4.length - 2) == [w!"concentrated", w!"on"] then
+      let mi := inner m
+      let var0 := (mi.takeWhile (fun t => t.tok != .cmd w!"in")).map (·.tok)
+      let dom0 := mi.drop (var0.length + 1)
+      let fi := inner f
+      match fi with
+      | v :: arrow :: e =>
+        let used (n : Codes) : Bool := body.any fun t => t.tok == .cmd n
+        let fresh := [w!"mu", w!"sigma", w!"tau", w!"theta", w!"chi"].filter (!used ·)
+        if arrow.tok == .cmd w!"mapsto" && !var0.isEmpty && !dom0.isEmpty && fresh.length ≥ 2 then
+          let f1 : Tok := .cmd (fresh.getD 0 [])
+          let f2 : Tok := .cmd (fresh.getD 1 [])
+          let mt (k : Tok) : PTok := ⟨k, pos, true⟩
+          let M (ts : List PTok) : List PTok := [mt .mopen] ++ ts ++ [mt .mclose]
+          let ai := inner a
+          let sup : Tok := .cmd (if isMaxW then w!"sup" else w!"inf")
+          some [[W pos w!"For", W pos w!"every"] ++ M ([v, mt (.cmd w!"in")] ++ ai) ++
+            [comma pos, W pos w!"if", W pos w!"there", W pos w!"is"] ++ M ([mt f1, mt (.cmd w!"in")] ++ dom0) ++
+            [W pos w!"such", W pos w!"that"] ++ M (substToks var0 [f1] (p.length + 1) (inner p)) ++
+            [comma pos, W pos w!"then"] ++
+            M (e ++ [mt (.msym 61), mt sup, mt (.msym 95), mt .lbrace, mt f2, mt (.cmd w!"in")] ++ ai ++ [mt .rbrace] ++
+              substToks [v.tok] [f2] (e.length + 1) e) ++
+            [W pos w!"if", W pos w!"and", W pos w!"only", W pos w!"if"] ++
+            M ([v, mt (.msym 40)] ++ inner k ++ [mt (.msym 41), mt (.msym 61), mt (.mnum 1)]) ++ [period pos]]
+        else none
+      | _ => none
+    else none
+  | _ => none
+
+/-- The readings of an unread sentence to try, in order, each with the object it says a
+value is attained by (for `its` in the next sentence). -/
+def variants (known : List Codes) (ops : List (List Codes × Codes)) (pres : List (List PTok))
+    (it : List PTok) (s : Sentence) : List (List Sentence × List PTok) :=
+  let mk (v : List (List PTok)) : List Sentence := v.map fun ts => { s with toks := ts }
+  let vs := [(false, true), (true, true), (false, false), (true, false)].filterMap fun (st, nm) =>
+    expand known pres st nm s.toks
+  (match attained known ops it s.toks with
+   | some (v, x) => [(mk v, x)]
+   | none => []) ++
+  ([makesSplit s.toks [], setOf known (segs s.toks), followsCoupling s.toks, dependAffinely s.toks,
+      maximizers s.toks].filterMap
+    fun o => o.map fun v => (mk v, [])) ++
+  ((vs.eraseDups.filter (· != [s.toks])).map fun v => (mk v, [])) ++
+  -- a statement about a letter that a definition introduced (`For $c\in[0,1]$, …`): about
+  -- every such value
+  (let base := tidyRef (tidy s.toks)
+   let letters : List Tok := (base.filterMap fun p => match p.tok with
+     | .mvar c => if p.math then some (Tok.mvar c) else none
+     | _ => none).eraseDups
+   let lower (ts : List PTok) : List PTok := match ts with
+     | t :: rest => (match t.tok with | .word w => { t with tok := .word (Grammar.lower w) } | _ => t) :: rest
+     | [] => []
+   let withPre : List (List PTok) :=
+     if (match s.ctx.kind with | .proof => true | _ => false) || (forPrefix base).isSome then [] else
+     ((letters.map fun l => stickyFor pres [l]).filter (!·.isEmpty)).eraseDups.map fun pre => pre ++ lower base
+   ((if base != s.toks then [base] else []) ++ withPre.take 3).map fun v => (mk [v], []))
+
+end Flex
+
 open Compile in
 /-- Compile one sentence. A failing sentence leaves no trace in the state. -/
 def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState :=
@@ -5081,6 +5758,15 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
     | some sent => some [(s, sent)]
     | none => partsOf ()
+  -- (a sentence without a reading, or whose reading does not compile: the sentences of a
+  -- freer wording that it is read through)
+  let flex : Unit → List (List (Sentence × Grammar.Sent) × List PTok) := fun _ =>
+    let ops : List (List Codes × Codes) := st0.ops.filterMap fun (nm, i) => (st0.globs[i]?).map fun g => (nm, g.key)
+    (Flex.variants (st0.globs.map (·.key)) ops st0.forPrefixes st0.lastAttained s).filterMap fun (v, x) =>
+      (v.mapM fun p => (Grammar.parseSentence p).map (p, ·)).map (·, x)
+  let parsed := match parsed with
+    | some p => some p
+    | none => if (flex ()).isEmpty then none else some []
   match parsed with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some parts =>
@@ -5112,6 +5798,12 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
           | none, _ => throw e
         -- a definition made under hypotheses takes those about its variables
         Compile.defsUnderHyps sc ds
+        -- the introduction of a definition (`For a copula $C$, …`), for later definitions
+        -- about its letters
+        if !ds.isEmpty then
+          match Flex.forPrefix part.toks with
+          | some pre => modify fun st => { st with forPrefixes := pre :: st.forPrefixes }
+          | none => pure ()
         match sent with
         | .claims _ _ _ | .claimsContra _ _ _ =>
           -- labels of displays in the sentence, and of the enclosing result, name its claims
@@ -5142,8 +5834,17 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
         ds := ds ++ d
         cs := cs ++ cl
       pure (ds, cs)
+    let tryFlex (e : Err) : M (List Nat × List Nat) := do
+      let st ← get
+      (flex ()).foldr (fun (v, x) next => do
+        set st
+        tryCatch (do
+          let r ← runParts v
+          unless x.isEmpty do modify fun st => { st with lastAttained := x }
+          pure r) fun _ => next) (do set st; throw e)
     let labelled : M (List Nat × List Nat) :=
       match parts with
+      | [] => tryFlex ⟨E.prose, []⟩
       | [(_, sn)] => do
         let st ← get
         tryCatch (one s sn toks0 (undefinedAlt.orElse fun _ => Grammar.thatIsSentence s)) fun e =>
@@ -5152,9 +5853,15 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
             set st
             tryCatch (runParts ps) fun _ => do
               set st
-              throw e
-          | _ => throw e
-      | _ => runParts parts
+              tryFlex e
+          | _ => do
+            set st
+            tryFlex e
+      | _ => do
+        let st ← get
+        tryCatch (runParts parts) fun e => do
+          set st
+          tryFlex e
     let (r, st) := labelled.run.run st0
     match r with
     | .ok (ds, cs) =>
@@ -5215,7 +5922,15 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       let isText : Bool := match s.ctx.kind with | .text => true | _ => false
       let thatIsOnly : Bool := isText && (Grammar.parseSentence s).isSome &&
         (Grammar.parseSentence (noThatIs s)).isNone
-      let o : Outcome := if e.code == E.prose || thatIsOnly then .prose else .failed e
+      -- A step of a proof about a letter that the proof introduces in words (`On this
+      -- rectangle, …`), or with a placeholder (`$\Delta(1-w,\cdot)\ge0$`), is not read.
+      -- (a letter with an argument, `$t(x)$`, is a symbol that should be defined)
+      let applied (c : Nat) (ts : List PTok) : Bool :=
+        (ts.zip (ts.drop 1)).any fun (a, b) => a.tok == .mvar c && b.tok == .msym 40
+      let proofLocal : Bool := (match s.ctx.kind with | .proof => true | _ => false) &&
+        e.code == E.undefined && (e.detail == w!"\\cdot" ||
+          (match e.detail with | [c] => !applied c s.toks | _ => false))
+      let o : Outcome := if e.code == E.prose || thatIsOnly || proofLocal then .prose else .failed e
       { c with st := st0u, idx := c.idx + 1, outcomesRev := o :: c.outcomesRev, proofs := incomplete ps }
 
 /-- Compile a list of sentences, starting from a compiler state. -/

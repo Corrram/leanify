@@ -19,7 +19,14 @@ of the items below as well.
 Items 1 to 4 and 8 are read since version 0.9 (couplings, function variables with
 properties, random pairs through their joint law, equality cases): see the table
 "Couplings and random pairs" in `docs/writing.md` and `tests/Couplings`. The revised
-version of the first article is read in all its results.
+version of the first article is read in all its results. Since then, the wordings of
+that article are read with few changes (table "Freer wordings" in `docs/writing.md`,
+`tests/Wordings`). Not read yet: a map and uniform variables introduced in one sentence and
+used by the definitions of the next (`Let $T$ be …, and let $X$ and $Z$ be uniformly
+distributed on $[0,1]$. Then DISPLAY are couplings …`), hypotheses after a formula (`…
+for a Borel map $T$ and finite sets $N_1,N_2$`), `The same holds with the roles of the two
+coordinates exchanged`, `supported on the graph of`, and a description of extremal objects
+by cases (`the maximizer is … if $n\ge-\frac78$ and … if $n<-\frac78$`).
 
 1. **Random pairs and expectations under a coupling.** "If $(X,Z)$ follows the
    coupling $\gamma$, then $\alpha(F)=12\,\E[XZ]-3$", "Every $\gamma\in\Gamma$

@@ -181,6 +181,30 @@ each form):
 | `If $K\subseteq\{(x,z)\in[0,1]^2:z=T(x)\}\cup(N_1\times[0,1])\cup([0,1]\times N_2)$, then every $\gamma\in\Gamma$ with $\gamma(K)=1$ satisfies $\gamma=\gamma_T$, and $T$ is Lebesgue measure preserving.` | sets of pairs of points: unions, products with a *finite subset of `[0,1]`*, inclusion; two couplings are equal when they agree on every measurable set |
 | `Let $Y$ be an integrable random variable with continuous distribution function $F$, and let $Z$ be uniformly distributed on $[0,1]$ and defined on the same probability space. Then $\mathbb{E}[YZ]\le\mathbb{E}[Y\,F(Y)]$, with equality if and only if $Z=F(Y)$ almost surely.` | the two random variables of a result are a random pair: the result is about every joint law of such a pair, a probability measure on `ℝ × [0,1]` whose second coordinate is uniform. `\mathbb{E}[…]` is the expectation for that law, `F` is the distribution function of `Y`, and `almost surely` is for that law. A statement about a pair on any probability space depends only on the joint law, so this is the same statement |
 
+Freer wordings (`tests/Wordings/article.tex` uses each form). A sentence that has no
+reading as it stands, or whose reading does not compile, is read through sentences of the
+forms above that say the same. What such a sentence says beyond them stays unread:
+
+| Sentence | Reading |
+| --- | --- |
+| `Consequently, if $C^\top(u,v)\coloneqq C(v,u)$ denotes the transpose of $C$, then …`, `For $(U,V)\sim C$, the survival copula $\widehat C(u,v)\coloneqq…$ is the copula of $(1-U,1-V)$.` | a definition (`\coloneqq`) inside a sentence of prose: the definition alone, with the name that the words give it (`denotes the NAME` after it, `the NAME` before it) |
+| `… $\nu$ arises from Spearman's rho, DISPLAY, see \cite{…}, by replacing …` with the display `\rho(C)=…` | a displayed `f(x)=…` after a name defines the symbol `f` if nothing has defined it |
+| `… one introduces the symmetrized coefficient DISPLAY, which emphasizes …` | likewise for a displayed definition; a footnote is not part of the sentence |
+| `\widehat C(u,v)\coloneqq…`, `\rho(C)=…` after `For a copula $C$, …` earlier | a definition about a letter that it does not introduce takes the latest introduction of that letter by a definition (`For a copula $C$,`, `For $w\in[0,1]$,`); so does a statement of the text or of a result that is not read otherwise (`… and $\nu(D_c)=\Phi(\rho(D_c))$.` after `For $c\in[0,1]$, …`) |
+| `… a family indexed by $w\in[0,1]$: let $A_w$ be the copula associated with $\gamma_{T_w}$, where DISPLAY` | after a colon, the definitions that the words before it announce, for the values they give (`For $w\in[0,1]$, …`); the definition after `, where` comes first; `set … and let …` are two definitions |
+| `For $c\in[0,1]$, the corresponding rank map $\zeta_c:[0,1]\to[0,1]$ is DISPLAY, which takes its values in $[0,1]$ by construction.` | as `define the rank map $\zeta_c:[0,1]\to[0,1]$ by DISPLAY` |
+| `…, the conditional law carries two atoms: DISPLAY` with rows `z_-(x)&\coloneqq…,&\quad\text{with probability }&…` | the definitions in the rows of an aligned display; what the rows say beside them is not read |
+| `the copula associated with the coupling $\gamma_{\zeta_c}$ from Section~\ref{…}`, `… for the function $\Phi$ in \eqref{…}` | words that only point to an object (`the coupling` before its symbol, a reference to where it is defined) |
+| `DISPLAY as given in \cite{…}, a normalization that makes $\nu(M)=1$, $\nu(W)=-1$, and $\nu(\Pi)=0$.` | the sentence before the comma, and the formulas as claims |
+| `We may identify $\mathcal C$ with the set $\Gamma$ of all such couplings, …` | `Let $\Gamma$ denote the set of couplings.`, if `\Gamma` is not defined |
+| `If $(X,Z)$ follows the coupling associated with $C\in\mathcal C$, then DISPLAY` with `\mathbb{E}[XZ]` | `Let $C\in\mathcal C$, and let $\gamma$ be the coupling associated with $C$. Then …` with `\mathbb{E}_\gamma[XZ]` |
+| `Consequently, $\rho$, $\nu$, and $\eta$ depend affinely on the copula.` | each of them is affine on its domain |
+| `For $w\in[0,1]$ and $b\in(0,\frac12]$, DISPLAY. In particular, $\nu(A_w)-\eta(A_w)=…$.` | in a result, the values that open a displayed statement are those of the sentences after it |
+| `The maximum $\nu-\rho=\frac14$ is attained only by $D_{1/2}$, which has $\rho=0$.`, `The minimum $\nu-\rho=-\frac14$ is attained only by its survival copula.` | the bound, its value at the object, and uniqueness; `\rho=0` is the value of `\rho` at the object; `its` refers to the object of the sentence before, with an operation that the article names |
+| `Both constants are sharp: the maximum $a$ of $\nu-\eta$ is attained only by $A_{3/4}$, at which $(\eta,\nu)=(e,n)$, and the minimum $-a$ only by $A_{3/4}^\top$.` | as `The maximum $\nu-\eta=a$ is attained only by $A_{3/4}$.`, the two values at `A_{3/4}`, and `The minimum $\nu-\eta=-a$ is attained only by $A_{3/4}^\top$.` |
+| `In particular, if some $\gamma^*\in\Gamma$ satisfies $\gamma^*(K)=1$, then the maximizers of $\gamma\mapsto\mathbb{E}_\gamma[c(X,Z)]$ over $\Gamma$ are exactly the couplings concentrated on $K$.` | if there is such a coupling, then for every `γ∈Γ` the value at `γ` is the supremum over `Γ` if and only if `γ(K)=1` |
+| in a proof: `Hence $\Delta(x,z)\ge\Delta(1-w,z)$.` after `On this rectangle, …`, `$\Delta(1-w,\cdot)\ge0$` | a step about a letter that the proof introduces in words, or with a placeholder, is not read (no warning; the proof is then not read completely). A letter with an argument (`$t(x)$`) is a symbol that must be defined |
+
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
 `x` and `y`.

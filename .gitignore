@@ -34,3 +34,4 @@ article-reader/
 /tests/Groups/article.leanify.*
 /tests/Revision/article.leanify.*
 /tests/Couplings/article.leanify.*
+/tests/Wordings/article.leanify.*
