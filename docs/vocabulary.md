@@ -294,6 +294,15 @@ Further fields cover other branches of mathematics:
 * `markovchains` (loads `matrixnorms`): doubly stochastic, irreducible and primitive
   transition matrices, absorbing states, stationary and reversible distributions,
   `k`-step transition probabilities.
+* `curves`: speed, curvature, length and signed area of parametrized plane curves,
+  curvature of graphs, area and length of polar curves;
+* `continuedfractions`: quotients and convergents of irrational numbers, finite continued
+  fractions; badly approximable and Liouville numbers, quadratic irrationals, best
+  approximations;
+* `digits`: base-`b` digits, their number, reversals and palindromes, digital roots,
+  repunits, Harshad and narcissistic numbers;
+* `branching`: Galton–Watson processes: subcritical, critical and supercritical offspring
+  distributions, generation sizes, extinction probabilities.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

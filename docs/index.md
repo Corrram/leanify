@@ -143,11 +143,12 @@ The vocabularies form a tree: `vocab=math` loads them all, and its seven realms 
 branch, `analysis` (real functions and sets, calculus, series, integration, asymptotics,
 transforms, Fourier series, optimization, dynamics, functional equations, generalized convexity, fractional calculus, special functions), `algebra` (vectors,
 matrices, polynomials, groups), `topology` (topologies and metrics on the line, plane
-geometry and conics), `numerics` (approximation, quadrature, iterative methods, ODE
+geometry, conics and curves), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
-risk measures, stochastic orders, Markov chains, copulas, samples, time series, tests, finance, expected utility), `discrete` (combinatorics, permutations,
-graphs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers);
+risk measures, stochastic orders, Markov chains, branching processes, copulas, samples, time series, tests, finance, expected utility), `discrete` (combinatorics, permutations,
+graphs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, continued
+fractions, digits);
 `leanify fields article.tex` says which ones an article
 needs. Each one gives its words a meaning in mathlib, and some add proved
 facts about them. [All libraries](libraries.md) · [Vocabularies and models](vocabularies.md) ·

@@ -65,7 +65,8 @@ math
 │   ├── topologies                topologies on ℝ: open, compact, Hausdorff, continuous maps
 │   ├── metricspaces              metrics on ℝ: balls, Cauchy sequences, completeness (with topologies)
 │   ├── geometry                  the Euclidean plane
-│   └── planegeometry             lines, triangle centres, conics (with geometry)
+│   ├── planegeometry             lines, triangle centres, conics (with geometry)
+│   └── curves                    curvature, length and area of plane and polar curves
 ├── numerics                      numerical mathematics
 │   ├── approximation             errors, conditioning, difference quotients, quadrature, interpolation
 │   ├── iteration                 Newton's method, fixed-point iteration, orders of convergence
@@ -80,7 +81,8 @@ math
 │   │   │   ├── information       entropy and divergences
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
-│   │   │   └── markovchains      transition matrices, stationary distributions (with matrixnorms)
+│   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
+│   │   │   └── branching         Galton–Watson processes, extinction probabilities
 │   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
 │   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
@@ -99,7 +101,9 @@ math
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
     ├── congruences               arithmetic modulo n
-    └── specialnumbers            twin and Fermat primes, perfect powers, figurate numbers
+    ├── specialnumbers            twin and Fermat primes, perfect powers, figurate numbers
+    ├── continuedfractions        convergents, badly approximable and Liouville numbers
+    └── digits                    base-b digits, palindromes, digital roots, repunits
 ```
 
 A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
@@ -202,6 +206,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`metricspaces`](glossary.md#metricspaces) | metrics, pseudometrics and ultrametrics on `ℝ`: complete, bounded, (strongly) equivalent; Cauchy and convergent sequences, isometries, contractions; the Euclidean and discrete metrics, the induced topology, balls, diameter, distance to a set | loads `topologies` |
 | [`geometry`](glossary.md#geometry) | points of the Euclidean plane: distances, triangles, lines, circles | |
 | [`planegeometry`](glossary.md#planegeometry) | the distance from a point to a line, feet of perpendiculars, reflections; circumcentre, incentre, orthocentre, circumradius and inradius of a triangle; ellipses, hyperbolas and parabolas by their foci, eccentricity | loads `geometry` |
+| [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
 | **Numerical mathematics** (`numerics`) | | |
 | [`approximation`](glossary.md#approximation) | absolute and relative errors, the condition number, rounding, machine epsilon; forward, backward, central and second difference quotients; trapezoidal, midpoint and Simpson's rules (simple and composite), Riemann sums; linear and Lagrange interpolation, Chebyshev nodes | with `realfunctions` |
 | [`iteration`](glossary.md#iteration) | the Newton map, secant step and relaxation; Newton, secant and fixed-point sequences; convergent with order `p`, linearly, superlinearly, quadratically, cubically; contractive maps | with `realfunctions` |
@@ -221,6 +226,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
+| [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | **Discrete mathematics** (`discrete`) | | |
@@ -234,6 +240,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
 | [`congruences`](glossary.md#congruences) | congruences modulo `n`, quadratic residues, the Legendre symbol, primitive roots | |
 | [`specialnumbers`](glossary.md#specialnumbers) | twin, Sophie Germain, safe and Fermat primes, perfect cubes and powers, powers of two, sums of two squares, triangular numbers; Fermat and Mersenne numbers, repunits, pentagonal, tetrahedral, square pyramidal and oblong numbers | with `numbers` |
+| [`continuedfractions`](glossary.md#continuedfractions) | the complete and partial quotients and the convergents (with numerators and denominators) of an irrational number, the value of a finite continued fraction; badly approximable numbers, Liouville numbers, quadratic irrationals, best approximations | |
+| [`digits`](glossary.md#digits) | the `k`th digit and the number of digits in base `b`, digit reversal, palindromes, digital roots, repunits; Harshad (Niven) and narcissistic (Armstrong) numbers | |
 
 ## Not yet
 

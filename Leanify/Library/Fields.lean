@@ -54,6 +54,10 @@ import Leanify.Library.Convexity
 import Leanify.Library.Fractional
 import Leanify.Library.Utility
 import Leanify.Library.MarkovChains
+import Leanify.Library.Curves
+import Leanify.Library.ContinuedFractions
+import Leanify.Library.Digits
+import Leanify.Library.Branching
 
 /-! # The fields of the vocabulary
 
@@ -125,7 +129,11 @@ def all : List (String × Vocab) := [
   ("convexity", Convexity.vocab),
   ("fractional", Fractional.vocab),
   ("utility", Utility.vocab),
-  ("markovchains", MarkovChains.vocab)]
+  ("markovchains", MarkovChains.vocab),
+  ("curves", Curves.vocab),
+  ("continuedfractions", ContinuedFractions.vocab),
+  ("digits", Digits.vocab),
+  ("branching", Branching.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -155,15 +163,15 @@ def bundles : List (String × List String) := [
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
     "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
-  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
+  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
   ("stochastic", ["statistics", "finance", "utility"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences"]),
-  ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
+  ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials"]),
   ("linearalgebra", ["vectors", "matrices"]),
-  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains"]),
+  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains", "branching"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "timeseries", "testing", "dependence"])]
 

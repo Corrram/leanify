@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={branching,distributions}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\delta_m$ for the point mass at $m$.
+We write $m(p)$ for the offspring mean of $p$.
+We write $G_p$ for the offspring generating function of $p$.
+We write $Z_n(p)$ for the expected size of generation $n$ of the branching process with offspring distribution $p$.
+We write $q(p)$ for the extinction probability of the branching process with offspring distribution $p$.
+
+\section{Point masses}
+
+\begin{lemma}\label{classes}
+$\delta_0$ is subcritical, $\delta_1$ is critical and $\delta_2$ is supercritical.
+\end{lemma}
+
+\begin{lemma}\label{mean}
+$m(\delta_2)=2$, $Z_3(\delta_2)=8$ and $G_{\delta_2}(\frac12)=\frac14$.
+\end{lemma}
+
+\begin{lemma}\label{extinction}
+$q(\delta_0)=1$, $q(\delta_1)=0$ and $q(\delta_2)=0$.
+\end{lemma}
+
+\section{Extinction}
+
+\begin{lemma}\label{subcritical}
+Let $p:\mathbb{R}\to\mathbb{R}$ be a function. If $p$ is subcritical, then $q(p)=1$.
+\end{lemma}
+
+\end{document}

@@ -48,6 +48,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `metricspaces`
     * `geometry`
     * `planegeometry`
+    * `curves`
   * `numerics`
     * `approximation`
     * `iteration`
@@ -63,6 +64,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `risk`
         * `stochasticorders`
         * `markovchains`
+        * `branching`
       * `samples`
       * `timeseries`
       * `testing`
@@ -81,22 +83,24 @@ except a notion whose meanings take arguments of different types, which the type
     * `arithmetic`
     * `congruences`
     * `specialnumbers`
+    * `continuedfractions`
+    * `digits`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility` |
+| `stochastic` | `statistics`, `finance`, `utility` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
-| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains` |
+| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas` |
+| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas` |
 
 ## `core`
 
@@ -2031,4 +2035,83 @@ except a notion whose meanings take arguments of different types, which the type
 | $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
 | $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
 | $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+
+## `curves`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| regular point of the curve with coordinates $x$ and $a$ | ℝ | `x`, `y` differentiable at `t` and `x'(t)² + y'(t)² > 0` |
+| singular point of the curve with coordinates $x$ and $a$ | ℝ | `x'(t) = y'(t) = 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| speed of the curve with coordinates $a$ and $b$ at $c$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `√(x'(t)² + y'(t)²)` |
+| curvature of the curve with coordinates $a$ and $b$ at $c$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | the signed curvature `(x'y'' - y'x'')/(x'² + y'²)^{3/2}` at a regular point |
+| length of the curve with coordinates $a$ and $b$ on $[c,d]$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b √(x'² + y'²) dt`, for differentiable `x`, `y` |
+| signed area of the curve with coordinates $a$ and $b$ on $[c,d]$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `½ ∫_a^b (x y' - y x') dt` (Green) |
+| curvature of the graph of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `f''(x)/(1 + f'(x)²)^{3/2}` |
+| radius of curvature of the graph of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `(1 + f'(x)²)^{3/2}/\|f''(x)\|`, where `f''(x) ≠ 0` |
+| area enclosed by the polar curve $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `½ ∫_a^b r(θ)² dθ` |
+| length of the polar curve $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b √(r(θ)² + r'(θ)²) dθ` |
+
+## `continuedfractions`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| liouville number | ℝ | a Liouville number (as the adjective) |
+| quadratic irrational | ℝ | a quadratic irrational (as the adjective) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| badly approximable | ℝ | irrational, and `\|x - p/q\| ≥ c/q²` for all integers `p`, `q ≥ 1`, for some `c > 0` |
+| liouville number | ℝ | irrational, and for every `n` there are `p`, `q ≥ 2` with `0 < \|x - p/q\| < q^{-n}` (Mathlib `Liouville`) |
+| quadratic irrational | ℝ | irrational, and `ax² + bx + c = 0` for integers `a ≠ 0`, `b`, `c` |
+| best approximation of $x$ | ℝ | a rational `p/q`, `q ≥ 1`, with `\|qx - p\| < \|q'x - p'\|` for every other `p'/q'` with `1 ≤ q' ≤ q` (of the second kind) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th complete quotient of $b$ | ℝ → ℝ → ℝ | `x_n`: `x_0 = x`, `x_{k+1} = 1/(x_k - ⌊x_k⌋)`, of an irrational `x` |
+| $a$ th partial quotient of $b$ | ℝ → ℝ → ℝ | `a_n = ⌊x_n⌋`, of an irrational `x` |
+| $a$ th convergent of $b$ | ℝ → ℝ → ℝ | `p_n/q_n`, of an irrational `x` |
+| numerator of the $a$ th convergent of $b$ | ℝ → ℝ → ℝ | `p_n` |
+| denominator of the $a$ th convergent of $b$ | ℝ → ℝ → ℝ | `q_n` |
+| value of the continued fraction with partial quotients $a$ up to $b$ | (ℝ → ℝ) → ℝ → ℝ | `[a_0; a_1, …, a_n] = p_n/q_n`, for `a_k > 0` (`1 ≤ k ≤ n`) |
+
+## `digits`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| harshad number | ℝ | a positive integer divisible by the sum of its decimal digits |
+| niven number | ℝ | a Harshad number |
+| narcissistic number | ℝ | the sum of the `L`th powers of its `L` decimal digits |
+| armstrong number | ℝ | a narcissistic number |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| palindrome in base $x$ | ℝ | a positive integer whose base-`b` digits read the same backwards |
+| harshad number | ℝ | a positive integer divisible by the sum of its decimal digits (a Niven number) |
+| narcissistic number | ℝ | a positive integer equal to the sum of the `L`th powers of its `L` decimal digits (an Armstrong number) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th digit of $b$ in base $c$ | ℝ → ℝ → ℝ → ℝ | `⌊n/b^k⌋ - b⌊n/b^{k+1}⌋`, the digit of `b^k`, counted from `k = 0` |
+| number of digits of $a$ in base $b$ | ℝ → ℝ → ℝ | the `L` with `b^{L-1} ≤ n < b^L`, for `n ≥ 1` |
+| digit reversal of $a$ in base $b$ | ℝ → ℝ → ℝ | the number with the base-`b` digits of `n` in the reverse order |
+| digital root of $a$ | ℝ → ℝ | `n - 9⌊(n-1)/9⌋`: the repeated decimal digit sum, for `n ≥ 1` |
+| $a$ th repunit in base $b$ | ℝ → ℝ → ℝ | `(b^n - 1)/(b - 1)`, the number with `n` digits `1` |
+
+## `branching`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| subcritical | ℝ → ℝ | a distribution on `ℕ₀` with mean `m < 1` |
+| critical | ℝ → ℝ | a distribution on `ℕ₀` with mean `m = 1` |
+| supercritical | ℝ → ℝ | a distribution on `ℕ₀` with finite mean `m > 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| offspring mean of $a$ | (ℝ → ℝ) → ℝ | `m = ∑_k k p(k)`, of a distribution on `ℕ₀` with finite mean |
+| offspring generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∑_k p(k) s^k` (on `[-1,1]`, where the series converges) |
+| expected size of generation $a$ of the branching process with offspring distribution $b$ | ℝ → (ℝ → ℝ) → ℝ | `m^n`, from one ancestor |
+| extinction probability of the branching process with offspring distribution $a$ | (ℝ → ℝ) → ℝ | the least `q ∈ [0,1]` with `G(q) = q` for the offspring generating function `G` |
 

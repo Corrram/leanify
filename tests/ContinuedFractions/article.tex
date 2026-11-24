@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={continuedfractions}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $a_n(x)$ for the $n$th partial quotient of $x$.
+We write $\xi_n(x)$ for the $n$th complete quotient of $x$.
+We write $c_n(x)$ for the $n$th convergent of $x$.
+We write $q_n(x)$ for the denominator of the $n$th convergent of $x$.
+We write $K_n(a)$ for the value of the continued fraction with partial quotients $a$ up to $n$.
+For every real number $k$, let $e(k)\coloneqq 1$.
+
+\section{Expansions}
+
+\begin{lemma}\label{root}
+$a_0(\sqrt2)=1$, $a_1(\sqrt2)=2$, $\xi_0(\sqrt2)=\sqrt2$ and $c_1(\sqrt2)=\frac32$.
+\end{lemma}
+
+\begin{lemma}\label{denominator}
+Let $x$ be an irrational number. Then $q_0(x)=1$.
+\end{lemma}
+
+\begin{lemma}\label{finite}
+$K_2(e)=\frac32$.
+\end{lemma}
+
+\section{Approximation}
+
+\begin{lemma}\label{golden}
+$\frac{1+\sqrt5}{2}$ is a quadratic irrational, and $\frac32$ is a best approximation of $\sqrt2$.
+\end{lemma}
+
+\begin{lemma}\label{lagrange}
+Let $x$ be a real number. If $x$ is a quadratic irrational, then $x$ is badly approximable.
+\end{lemma}
+
+\begin{lemma}\label{liouville}
+Every Liouville number is irrational.
+\end{lemma}
+
+\end{document}

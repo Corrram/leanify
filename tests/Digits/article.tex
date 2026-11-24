@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={digits}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $d_k(n)$ for the $k$th digit of $n$ in base $10$.
+We write $\ell_b(n)$ for the number of digits of $n$ in base $b$.
+We write $R_b(n)$ for the digit reversal of $n$ in base $b$.
+We write $\rho(n)$ for the digital root of $n$.
+We write $U_n$ for the $n$th repunit in base $10$.
+
+\section{Digits}
+
+\begin{lemma}\label{digits}
+$d_0(1234)=4$, $d_2(1234)=2$ and $d_5(1234)=0$.
+\end{lemma}
+
+\begin{lemma}\label{length}
+$\ell_{10}(1234)=4$ and $\ell_2(8)=4$.
+\end{lemma}
+
+\begin{lemma}\label{reversal}
+$R_{10}(1234)=4321$, and $121$ is a palindrome in base $10$ and $5$ is a palindrome in base $2$.
+\end{lemma}
+
+\begin{lemma}\label{root}
+$\rho(1234)=1$ and $U_3=111$.
+\end{lemma}
+
+\begin{lemma}\label{special}
+$18$ is a Harshad number and $153$ is a narcissistic number.
+\end{lemma}
+
+\begin{lemma}\label{harshad}
+Every Harshad number is a positive integer.
+\end{lemma}
+
+\end{document}

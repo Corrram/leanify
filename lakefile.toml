@@ -487,3 +487,27 @@ globs = ["Utility.+"]
 name = "MarkovChains"
 srcDir = "tests"
 globs = ["MarkovChains.+"]
+
+[[lean_lib]]
+# The field curves: plane curves, curvature, length and area.
+name = "Curves"
+srcDir = "tests"
+globs = ["Curves.+"]
+
+[[lean_lib]]
+# The field continuedfractions: continued fractions and Diophantine approximation.
+name = "ContinuedFractions"
+srcDir = "tests"
+globs = ["ContinuedFractions.+"]
+
+[[lean_lib]]
+# The field digits: base-b digits of natural numbers.
+name = "Digits"
+srcDir = "tests"
+globs = ["Digits.+"]
+
+[[lean_lib]]
+# The field branching: Galton-Watson processes.
+name = "Branching"
+srcDir = "tests"
+globs = ["Branching.+"]

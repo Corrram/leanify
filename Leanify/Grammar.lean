@@ -4860,7 +4860,15 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
   match np.find? (fun c => match c with | .m _ => true | _ => false) with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   | some (.m [.cmd v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.cmd v]] ++ r1)
-  | _ => none
+  | some _ => none
+  | none =>
+    -- `Every Harshad number is a positive integer.`: a noun after `is a`, of an object
+    -- that the sentence does not name (a variable of its own)
+    let r2 ← kw [w!"is"] r1
+    let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2
+    if np.isEmpty then none
+    let v : Codes := w!"ve"
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
 
 /-- `[Consequently,] [the functions] $\rho$, $\nu$, and $\eta$ are affine on $\mathcal C$.` as
 `$\rho$ is affine on $\mathcal C$ and $\nu$ is … and $\eta$ is ….`: what is said of several

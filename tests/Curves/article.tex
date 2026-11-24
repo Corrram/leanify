@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={curves}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $v(x,y,t)$ for the speed of the curve with coordinates $x$ and $y$ at $t$.
+We write $\kappa(x,y,t)$ for the curvature of the curve with coordinates $x$ and $y$ at $t$.
+We write $L(x,y,a,b)$ for the length of the curve with coordinates $x$ and $y$ on $[a,b]$.
+We write $A(x,y,a,b)$ for the signed area of the curve with coordinates $x$ and $y$ on $[a,b]$.
+We write $k_f(x)$ for the curvature of the graph of $f$ at $x$.
+We write $\rho_f(x)$ for the radius of curvature of the graph of $f$ at $x$.
+We write $P(r,a,b)$ for the area enclosed by the polar curve $r$ on $[a,b]$.
+We write $Q(r,a,b)$ for the length of the polar curve $r$ on $[a,b]$.
+For every real number $t$, let $c(t)\coloneqq\cos t$.
+For every real number $t$, let $s(t)\coloneqq\sin t$.
+For every real number $t$, let $p(t)\coloneqq t^2$.
+For every real number $t$, let $u(t)\coloneqq t^3$.
+For every real number $t$, let $e(t)\coloneqq 1$.
+
+\section{The circle}
+
+\begin{lemma}\label{circle}
+Let $t\in\mathbb{R}$. Then $v(c,s,t)=1$ and $\kappa(c,s,t)=1$, and $t$ is a regular point of the curve with coordinates $c$ and $s$.
+\end{lemma}
+
+\begin{lemma}\label{length}
+$L(c,s,0,2\pi)=2\pi$ and $A(c,s,0,2\pi)=\pi$.
+\end{lemma}
+
+\begin{lemma}\label{polar}
+$P(e,0,2\pi)=\pi$ and $Q(e,0,2\pi)=2\pi$.
+\end{lemma}
+
+\section{Graphs and cusps}
+
+\begin{lemma}\label{parabola}
+$k_p(0)=2$ and $\rho_p(0)=\frac12$.
+\end{lemma}
+
+\begin{lemma}\label{cusp}
+$0$ is a singular point of the curve with coordinates $p$ and $u$.
+\end{lemma}
+
+\end{document}

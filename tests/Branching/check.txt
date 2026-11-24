@@ -1,0 +1,30 @@
+tests/Branching/article.tex:9:1: info: defines \delta (delta)
+tests/Branching/article.tex:10:1: info: defines \@n1 (n1)
+tests/Branching/article.tex:11:1: info: defines \@n2 (n2)
+tests/Branching/article.tex:12:1: info: defines \@n3 (n3)
+tests/Branching/article.tex:13:1: info: defines \@n4 (n4)
+tests/Branching/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le x(z))\land (\neg z\in \mathbb{N}\Rightarrow x(z)=0))\land \sum_{z=0}^{\infty}x(z)\text{ converges}\land \sum_{z=0}^{\infty}x(z)=1\Rightarrow (\exists y\in \mathbb{R},\ ((0\le y\land y\le 1)\land \sum_{z=0}^{\infty}x(z)\,{y}^{z}=y\land (\forall z\in \mathbb{R},\ (0\le z\land z\le 1)\land \sum_{s=0}^{\infty}x(s)\,{z}^{s}=z\Rightarrow y\le z))\land (\forall z\in \mathbb{R},\ (0\le z\land z\le 1)\land \sum_{s=0}^{\infty}x(s)\,{z}^{s}=z\land (\forall s\in \mathbb{R},\ (0\le s\land s\le 1)\land \sum_{t=0}^{\infty}x(t)\,{s}^{t}=s\Rightarrow z\le s)\Rightarrow z=y))
+tests/Branching/article.tex:18:1: info: claim 0: (((\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(0)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(0)(z)=0))\land \sum_{z=0}^{\infty}\delta(0)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(0)(z)=1)\land \sum_{y=0}^{\infty}y\,\delta(0)(y)\text{ converges})\land \sum_{y=0}^{\infty}y\,\delta(0)(y)<1
+tests/Branching/article.tex:18:1: info: claim 0 is meaningful if: 0\in \mathbb{N}
+tests/Branching/article.tex:18:1: info: claim 1: (((\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(1)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(1)(z)=0))\land \sum_{z=0}^{\infty}\delta(1)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(1)(z)=1)\land \sum_{y=0}^{\infty}y\,\delta(1)(y)\text{ converges})\land \sum_{y=0}^{\infty}y\,\delta(1)(y)=1
+tests/Branching/article.tex:18:1: info: claim 1 is meaningful if: 1\in \mathbb{N}
+tests/Branching/article.tex:18:1: info: claim 2: (((\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(2)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(2)(z)=0))\land \sum_{z=0}^{\infty}\delta(2)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(2)(z)=1)\land \sum_{y=0}^{\infty}y\,\delta(2)(y)\text{ converges})\land 1<\sum_{y=0}^{\infty}y\,\delta(2)(y)
+tests/Branching/article.tex:18:1: info: claim 2 is meaningful if: 2\in \mathbb{N}
+tests/Branching/article.tex:22:1: info: claim 3: \@n1(\delta(2))=2
+tests/Branching/article.tex:22:1: info: claim 3 is meaningful if: 2\in \mathbb{N}\land ((\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(2)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(2)(z)=0))\land \sum_{z=0}^{\infty}\delta(2)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(2)(z)=1)\land \sum_{y=0}^{\infty}y\,\delta(2)(y)\text{ converges}
+tests/Branching/article.tex:22:1: info: claim 4: \@n3(3,\delta(2))=8
+tests/Branching/article.tex:22:1: info: claim 4 is meaningful if: 2\in \mathbb{N}\land (((\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(2)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(2)(z)=0))\land \sum_{z=0}^{\infty}\delta(2)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(2)(z)=1)\land \sum_{y=0}^{\infty}y\,\delta(2)(y)\text{ converges})\land (3\in \mathbb{Z}\land 0\le 3)\land 2\in \mathbb{N}
+tests/Branching/article.tex:22:1: info: claim 5: \@n2(\delta(2),\frac{1}{2})=\frac{1}{4}
+tests/Branching/article.tex:22:1: info: claim 5 is meaningful if: ((2\in \mathbb{N}\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(2)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(2)(z)=0))\land \sum_{z=0}^{\infty}\delta(2)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(2)(z)=1)\land \neg (2=0))\land \neg (4=0)
+tests/Branching/article.tex:26:1: info: claim 6: \@n4(\delta(0))=1
+tests/Branching/article.tex:26:1: info: claim 6 is meaningful if: 0\in \mathbb{N}\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(0)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(0)(z)=0))\land \sum_{z=0}^{\infty}\delta(0)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(0)(z)=1
+tests/Branching/article.tex:26:1: info: claim 7: \@n4(\delta(1))=0
+tests/Branching/article.tex:26:1: info: claim 7 is meaningful if: 1\in \mathbb{N}\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(1)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(1)(z)=0))\land \sum_{z=0}^{\infty}\delta(1)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(1)(z)=1
+tests/Branching/article.tex:26:1: info: claim 8: \@n4(\delta(2))=0
+tests/Branching/article.tex:26:1: info: claim 8 is meaningful if: 2\in \mathbb{N}\land (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \delta(2)(z))\land (\neg z\in \mathbb{N}\Rightarrow \delta(2)(z)=0))\land \sum_{z=0}^{\infty}\delta(2)(z)\text{ converges}\land \sum_{z=0}^{\infty}\delta(2)(z)=1
+tests/Branching/article.tex:32:48: info: claim 9: \forall x\in \mathbb{R}\to \mathbb{R},\ (((\forall s\in \mathbb{R},\ (s\in \mathbb{N}\Rightarrow 0\le x(s))\land (\neg s\in \mathbb{N}\Rightarrow x(s)=0))\land \sum_{s=0}^{\infty}x(s)\text{ converges}\land \sum_{s=0}^{\infty}x(s)=1)\land \sum_{z=0}^{\infty}z\,x(z)\text{ converges})\land \sum_{z=0}^{\infty}z\,x(z)<1\Rightarrow \@n4(x)=1
+tests/Branching/article.tex:32:48: info: claim 9 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ (((\forall s\in \mathbb{R},\ (s\in \mathbb{N}\Rightarrow 0\le x(s))\land (\neg s\in \mathbb{N}\Rightarrow x(s)=0))\land \sum_{s=0}^{\infty}x(s)\text{ converges}\land \sum_{s=0}^{\infty}x(s)=1)\land \sum_{z=0}^{\infty}z\,x(z)\text{ converges})\land \sum_{z=0}^{\infty}z\,x(z)<1\Rightarrow (\forall s\in \mathbb{R},\ (s\in \mathbb{N}\Rightarrow 0\le x(s))\land (\neg s\in \mathbb{N}\Rightarrow x(s)=0))\land \sum_{s=0}^{\infty}x(s)\text{ converges}\land \sum_{s=0}^{\infty}x(s)=1
+tests/Branching/article.tex: 5 definitions, 10 claims
+  text: 5 compiled, 0 failed, 0 prose (of 5)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 10 compiled, 0 failed, 0 prose (of 10)
