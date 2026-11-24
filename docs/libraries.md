@@ -45,6 +45,8 @@ math
 │   ├── fourier                   Fourier series, kernels, cosine and sine transforms
 │   ├── dynamics                  iterates, fixed and periodic points
 │   ├── functionalequations       Cauchy's and Jensen's equations, subadditivity, homogeneity
+│   ├── convexity                 log-, harmonically, s-, h-convex functions; Hermite–Hadamard
+│   ├── fractional                Riemann–Liouville, Hadamard, Caputo; Mittag-Leffler
 │   ├── elementary
 │   │   ├── special               gamma, beta, zeta
 │   │   ├── hyperbolic, trigonometry
@@ -77,14 +79,16 @@ math
 │   │   │   ├── densities         densities on the line
 │   │   │   ├── information       entropy and divergences
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
-│   │   │   └── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
+│   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
+│   │   │   └── markovchains      transition matrices, stationary distributions (with matrixnorms)
 │   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
 │   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
-│   └── finance                   interest, annuities, Black–Scholes
+│   ├── finance                   interest, annuities, Black–Scholes
+│   └── utility                   expected utility, risk aversion, certainty equivalents
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
@@ -180,6 +184,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`fourier`](glossary.md#fourier) | Fourier coefficients, partial sums and Fejér means, Dirichlet and Fejér kernels, cosine and sine transforms | with `realfunctions` |
 | [`dynamics`](glossary.md#dynamics) | iterates, orbits, fixed and periodic points and their stability, least period, Lyapunov exponent | with `realfunctions` |
 | [`functionalequations`](glossary.md#functionalequations) | additive (Cauchy), subadditive and superadditive, midpoint convex and concave, Jensen-affine, multiplicative on the reals, logarithmically additive, involutive, idempotent, homogeneous of degree `k` and positively homogeneous functions; solutions of d'Alembert's equation | |
+| [`convexity`](glossary.md#convexity) | log-convex, harmonically convex and concave, geometrically and GA-convex, star-shaped, quasiconcave, `$s$-convex in the second sense`, `$h$-convex`, Wright-convex functions, P-functions and Godunova–Levin functions; the integral mean on `[a,b]`, the Hermite–Hadamard gap, the Jensen gap | |
+| [`fractional`](glossary.md#fractional) | left- and right-sided Riemann–Liouville fractional integrals, the Hadamard fractional integral, Riemann–Liouville and Caputo fractional derivatives of order in `(0,1)`, the gamma function, the one- and two-parameter Mittag-Leffler functions | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
 | [`hyperbolic`](glossary.md#hyperbolic), [`trigonometry`](glossary.md#trigonometry) | `\sinh`, `\cosh`, `\tanh`; `\arcsin`, `\arccos`, `\arctan`, `\cot` with their domains | |
 | [`orthogonalpolynomials`](glossary.md#orthogonalpolynomials) | the Legendre, Hermite (physicists' and probabilists'), Laguerre and Chebyshev (first and second kind) polynomials of degree `n` | |
@@ -214,7 +220,9 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
+| [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
+| [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |

@@ -27,7 +27,8 @@ block = src[src.index('def bundles'):src.index('def bundleNames')]
 bundles = {m.group(1): re.findall(r'"([a-z]+)"', m.group(2)) for m in re.finditer(r'\("([a-z]+)", \[([^\]]*)\]\)', block)}
 inc = {"hilbert": ["unitsquare"], "markov": ["unitsquare", "hilbert"], "metricspaces": ["topologies"],
        "copulas": ["unitsquare", "hilbert", "markov"],
-       "planegeometry": ["geometry"], "matrixnorms": ["matrices"]}
+       "planegeometry": ["geometry"], "matrixnorms": ["matrices"],
+       "markovchains": ["matrices", "matrixnorms"]}
 def expand(fs):
     out = []
     for f in fs:

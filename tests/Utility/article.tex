@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={utility}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $A_u(x)$ for the Arrow-Pratt coefficient of absolute risk aversion of $u$ at $x$.
+We write $R_u(x)$ for the coefficient of relative risk aversion of $u$ at $x$.
+We write $U_a$ for the exponential utility with risk aversion $a$.
+We write $V_\gamma$ for the power utility with relative risk aversion $\gamma$.
+We write $\mathrm{EU}_u(x,p,y)$ for the expected utility under $u$ of the lottery paying $x$ with probability $p$ and $y$ otherwise.
+We write $\mathrm{EV}(x,p,y)$ for the expected value of the lottery paying $x$ with probability $p$ and $y$ otherwise.
+We write $\mathrm{CE}_u(x,p,y)$ for the certainty equivalent under $u$ of the lottery paying $x$ with probability $p$ and $y$ otherwise.
+We write $\mathrm{RP}_u(x,p,y)$ for the risk premium under $u$ of the lottery paying $x$ with probability $p$ and $y$ otherwise.
+For every real number $x$, let $w(x)\coloneqq x$.
+
+\section{Risk aversion}
+
+\begin{lemma}\label{cara}
+Let $a>0$ be a real number and let $x\in\mathbb{R}$. Then $A_{U_a}(x)=a$.
+\end{lemma}
+
+\begin{lemma}\label{neutral}
+$w$ is a risk neutral utility function, and $\mathrm{CE}_w(4,\frac12,0)=2$ and $\mathrm{RP}_w(4,\frac12,0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{averse}
+Let $u$ be a risk averse utility function, let $x,y\in\mathbb{R}$ and let $p\in[0,1]$. Then $\mathrm{EU}_u(x,p,y)\le u(\mathrm{EV}(x,p,y))$.
+\end{lemma}
+
+\begin{lemma}\label{premium}
+Let $u$ be a risk averse utility function and let $x,y\in\mathbb{R}$ and $p\in[0,1]$. If $u$ is continuous and strictly increasing, then $\mathrm{RP}_u(x,p,y)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{crra}
+Let $\gamma>0$ with $\gamma\ne1$, and let $x>0$. Then $V_\gamma(x)=\frac{x^{1-\gamma}}{1-\gamma}$.
+\end{lemma}
+
+\end{document}

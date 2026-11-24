@@ -1248,6 +1248,13 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             -- `every positive $a\in J$`, `a rational $s\in(a,b)$`: after adjectives of
             -- numbers, a real variable (its domain, if written, says more)
             if implicit && r1.length == r0.length && (Math.parseSig ts).isNone then
+              -- (a formula that is no variable, `a symmetric $2\times2$ matrix`: the
+              -- adjectives belong to a noun after it)
+              let relation := match Math.parseFormula ts with
+                | some (.chain _ (_ :: _)) => true
+                | _ => false
+              let numeral := match ts.head? with | some (.digit _) => true | _ => false
+              if !relation && (numeral || ts.contains (.cmd w!"times")) then fail E.type
               -- (`every positive $n$`: an index name is usually an integer; without a
               -- domain, what it ranges over is not said)
               let stI ← get

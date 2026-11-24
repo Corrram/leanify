@@ -68,3 +68,7 @@ article-reader/
 /tests/Testing/article.leanify.*
 /tests/Descent/article.leanify.*
 /tests/FunctionalEquations/article.leanify.*
+/tests/Convexity/article.leanify.*
+/tests/Fractional/article.leanify.*
+/tests/Utility/article.leanify.*
+/tests/MarkovChains/article.leanify.*

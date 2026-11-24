@@ -50,6 +50,10 @@ import Leanify.Library.TimeSeries
 import Leanify.Library.Testing
 import Leanify.Library.Descent
 import Leanify.Library.FunctionalEquations
+import Leanify.Library.Convexity
+import Leanify.Library.Fractional
+import Leanify.Library.Utility
+import Leanify.Library.MarkovChains
 
 /-! # The fields of the vocabulary
 
@@ -117,18 +121,23 @@ def all : List (String × Vocab) := [
   ("timeseries", TimeSeries.vocab),
   ("testing", Testing.vocab),
   ("descent", Descent.vocab),
-  ("functionalequations", FunctionalEquations.vocab)]
+  ("functionalequations", FunctionalEquations.vocab),
+  ("convexity", Convexity.vocab),
+  ("fractional", Fractional.vocab),
+  ("utility", Utility.vocab),
+  ("markovchains", MarkovChains.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
 /-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
 `hilbert` with more, `copulas` is `markov` with more, `metricspaces` is `topologies` with
-more, `planegeometry` is `geometry` and `matrixnorms` is `matrices` with more. Their entries are tagged with the field that adds
+more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more. Their entries are tagged with the field that adds
 them. -/
 def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
-   ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"])]
+   ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
+   ("markovchains", ["matrices", "matrixnorms"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -144,17 +153,17 @@ def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
-    "transforms", "fourier", "dynamics", "functionalequations", "elementary", "complex", "torus"]),
+    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
-  ("stochastic", ["statistics", "finance"]),
+  ("stochastic", ["statistics", "finance", "utility"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials"]),
   ("linearalgebra", ["vectors", "matrices"]),
-  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders"]),
+  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "timeseries", "testing", "dependence"])]
 

@@ -281,6 +281,19 @@ Further fields cover other branches of mathematics:
 * `functionalequations`: additive (Cauchy), subadditive, midpoint convex, Jensen-affine,
   involutive, idempotent and homogeneous functions, solutions of d'Alembert's equation
   (`$f$ is homogeneous of degree $2$`).
+* `convexity`: generalized convexity as in the literature on Hermite–Hadamard
+  inequalities: log-convex, harmonically convex, geometrically and GA-convex,
+  `$s$-convex in the second sense`, `$h$-convex`, P-functions, Godunova–Levin functions;
+  the integral mean and the Hermite–Hadamard gap on `[a,b]`;
+* `fractional`: Riemann–Liouville (left- and right-sided) and Hadamard fractional
+  integrals, Riemann–Liouville and Caputo fractional derivatives, the gamma function and
+  the Mittag-Leffler functions;
+* `utility`: utility functions that are risk averse, risk seeking or risk neutral; the
+  Arrow–Pratt coefficients, CARA and CRRA utilities, expected utility, certainty
+  equivalents and risk premia of a two-outcome lottery;
+* `markovchains` (loads `matrixnorms`): doubly stochastic, irreducible and primitive
+  transition matrices, absorbing states, stationary and reversible distributions,
+  `k`-step transition probabilities.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

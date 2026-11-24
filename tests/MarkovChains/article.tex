@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={markovchains}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $p^{(k)}_{i,j}(P)$ for the transition probability from $i$ to $j$ in $k$ steps under $P$.
+We write $\mu P^k$ for the distribution after $k$ steps under $P$ from $\mu$.
+We write $s_i(P)$ for the stationary probability of $i$ under $P$.
+We write $I_n$ for the $n\times n$ identity matrix.
+
+\section{Transition matrices}
+
+\begin{lemma}\label{identity}
+Let $n$ be a positive integer and let $i$ be an integer with $1\le i\le n$. Then $I_n$ is doubly stochastic, and $i$ is an absorbing state of $I_n$.
+\end{lemma}
+
+\begin{lemma}\label{primitive}
+Let $P$ be a square matrix. If $P$ is primitive, then $P$ is irreducible.
+\end{lemma}
+
+\begin{lemma}\label{steps}
+Let $P$ be a $2\times2$ stochastic matrix. Then $p^{(0)}_{1,2}(P)=0$ and $p^{(1)}_{1,2}(P)\ge0$.
+\end{lemma}
+
+\section{Stationary distributions}
+
+\begin{lemma}\label{reversible}
+Let $P$ be a stochastic matrix and let $\pi:\mathbb{R}\to\mathbb{R}$ be a function. If $\pi$ is a reversible distribution for $P$, then $\pi$ is a stationary distribution of $P$.
+\end{lemma}
+
+\begin{lemma}\label{uniform}
+Let $n$ be a positive integer and let $\pi:\mathbb{R}\to\mathbb{R}$ be a function. If $\pi$ is a stationary distribution of $I_n$, then $\pi$ is a probability distribution on $n$ states.
+\end{lemma}
+
+\begin{lemma}\label{unique}
+Let $P$ be an irreducible $2\times2$ stochastic matrix and let $\pi:\mathbb{R}\to\mathbb{R}$ be a function. If $\pi$ is a stationary distribution of $P$, then $s_1(P)=\pi(1)$.
+\end{lemma}
+
+\end{document}

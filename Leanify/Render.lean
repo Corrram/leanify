@@ -229,6 +229,15 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   -- a function of several variables: `f(x,y)` (definedness guards are not shown)
   -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
   | .app (.app f x) y =>
+    -- a constant of three arguments whose name places them (`#1_{#2,#3}`)
+    let three : Option String := match f with
+      | .app (.const i) w =>
+        let n := cs.getD i s!"c_{i}"
+        if (n.splitOn "#3").length > 1 then
+          some (((n.replace "#1" (w.tex cs gs ls)).replace "#2" (x.tex cs gs ls)).replace "#3" (y.tex cs gs ls))
+        else none
+      | _ => none
+    if let some s := three then s else
     let rec mspine : Nat → Tm → List Tm → Option (Nat × Tm × List Tm)
       | 0, _, _ => none
       | k + 1, .app g a, acc => mspine k g (a :: acc)

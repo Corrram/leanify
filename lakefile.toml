@@ -463,3 +463,27 @@ globs = ["Descent.+"]
 name = "FunctionalEquations"
 srcDir = "tests"
 globs = ["FunctionalEquations.+"]
+
+[[lean_lib]]
+# The field convexity: generalized convexity and Hermite-Hadamard.
+name = "Convexity"
+srcDir = "tests"
+globs = ["Convexity.+"]
+
+[[lean_lib]]
+# The field fractional: fractional integrals and derivatives.
+name = "Fractional"
+srcDir = "tests"
+globs = ["Fractional.+"]
+
+[[lean_lib]]
+# The field utility: expected utility and risk aversion.
+name = "Utility"
+srcDir = "tests"
+globs = ["Utility.+"]
+
+[[lean_lib]]
+# The field markovchains: finite Markov chains by transition matrices.
+name = "MarkovChains"
+srcDir = "tests"
+globs = ["MarkovChains.+"]

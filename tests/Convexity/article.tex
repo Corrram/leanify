@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={convexity}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For every real number $x$, let $f(x)\coloneqq x^2$.
+For every real number $x$, let $e(x)\coloneqq\exp(x)$.
+For every real number $x$, let $h(x)\coloneqq x$.
+We write $M_{a,b}(g)$ for the integral mean of $g$ on $[a,b]$.
+We write $H_{a,b}(g)$ for the Hermite-Hadamard gap of $g$ on $[a,b]$.
+
+\section{Classes of functions}
+
+\begin{lemma}\label{exponential}
+$e$ is log-convex and GA-convex, and $f$ is $1$-convex in the second sense.
+\end{lemma}
+
+\begin{lemma}\label{logconvex}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is log-convex, then $g$ is convex.
+\end{lemma}
+
+\begin{lemma}\label{harmonic}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is convex and nondecreasing, then $g$ is harmonically convex.
+\end{lemma}
+
+\begin{lemma}\label{hconvex}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is nonnegative and convex, then $g$ is $h$-convex.
+\end{lemma}
+
+\begin{lemma}\label{pfunction}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is a P-function, then $g$ is a Godunova-Levin function.
+\end{lemma}
+
+\begin{lemma}\label{wright}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is convex, then $g$ is Wright-convex.
+\end{lemma}
+
+\begin{lemma}\label{starshaped}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is convex and $g(0)\le0$, then $g$ is star-shaped.
+\end{lemma}
+
+\begin{lemma}\label{quasiconcave}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. If $g$ is concave, then $g$ is quasiconcave.
+\end{lemma}
+
+\section{Means}
+
+\begin{lemma}\label{mean}
+$M_{0,1}(f)=\frac13$ and $H_{0,1}(f)=\frac16$.
+\end{lemma}
+
+\begin{lemma}\label{hermite}
+Let $g:\mathbb{R}\to\mathbb{R}$ be a function. Let $a,b$ be real numbers with $a<b$. If $g$ is convex, then $H_{a,b}(g)\ge0$.
+\end{lemma}
+
+\end{document}

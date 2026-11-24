@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={fractional}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $G(s)$ for the gamma function at $s$.
+We write $J^{\alpha}_{a}(g,x)$ for the left-sided Riemann-Liouville fractional integral of order $\alpha$ of $g$ from $a$ at $x$.
+We write $K^{\alpha}_{b}(g,x)$ for the right-sided Riemann-Liouville fractional integral of order $\alpha$ of $g$ up to $b$ at $x$.
+We write $H^{\alpha}_{a}(g,x)$ for the Hadamard fractional integral of order $\alpha$ of $g$ from $a$ at $x$.
+We write $D^{\alpha}_{a}(g,x)$ for the Riemann-Liouville fractional derivative of order $\alpha$ of $g$ from $a$ at $x$.
+We write $C^{\alpha}_{a}(g,x)$ for the Caputo fractional derivative of order $\alpha$ of $g$ from $a$ at $x$.
+We write $E_\alpha$ for the Mittag-Leffler function with parameter $\alpha$.
+We write $L_{\alpha,\beta}$ for the Mittag-Leffler function with parameters $\alpha$ and $\beta$.
+For every real number $t$, let $k(t)\coloneqq1$.
+
+\section{Fractional integrals}
+
+\begin{lemma}\label{gamma}
+$G(1)=1$.
+\end{lemma}
+
+\begin{lemma}\label{left}
+Let $x>0$ be a real number. Then $J^{1}_{0}(k,x)=x$ and $K^{1}_{x}(k,0)=x$.
+\end{lemma}
+
+\begin{lemma}\label{hadamard}
+Let $x>1$ be a real number. Then $H^{1}_{1}(k,x)=\log x$.
+\end{lemma}
+
+\section{Fractional derivatives}
+
+\begin{lemma}\label{caputo}
+Let $\alpha\in(0,1)$ and let $x>0$. Then $C^{\alpha}_{0}(k,x)=0$.
+\end{lemma}
+
+\begin{lemma}\label{riemann}
+Let $x>0$ be a real number. Then $D^{1/2}_{0}(k,x)=\frac{1}{\sqrt{\pi x}}$.
+\end{lemma}
+
+\section{The Mittag-Leffler function}
+
+\begin{lemma}\label{mittag}
+$E_1(0)=1$ and $L_{1,1}(0)=1$.
+\end{lemma}
+
+\end{document}

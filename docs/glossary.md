@@ -26,6 +26,8 @@ except a notion whose meanings take arguments of different types, which the type
     * `fourier`
     * `dynamics`
     * `functionalequations`
+    * `convexity`
+    * `fractional`
     * `elementary`
       * `special`
       * `hyperbolic`
@@ -60,12 +62,14 @@ except a notion whose meanings take arguments of different types, which the type
         * `information`
         * `risk`
         * `stochasticorders`
+        * `markovchains`
       * `samples`
       * `timeseries`
       * `testing`
       * `dependence`
         * `copulas`
     * `finance`
+    * `utility`
   * `discrete`
     * `combinatorics`
     * `counting`
@@ -80,19 +84,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas`, `finance` |
+| `stochastic` | `statistics`, `finance`, `utility` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
-| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
+| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas` |
+| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `samples`, `timeseries`, `testing`, `copulas` |
 
 ## `core`
 
@@ -1877,4 +1881,154 @@ except a notion whose meanings take arguments of different types, which the type
 | positively homogeneous | ℝ → ℝ | `f(tx) = t f(x)` for `t > 0` |
 | logarithmically additive | ℝ → ℝ | `f(xy) = f(x) + f(y)` for `x, y > 0` |
 | solution of d'alembert's equation | ℝ → ℝ | `f(x+y) + f(x-y) = 2f(x)f(y)` |
+
+## `convexity`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| log-convex | ℝ → ℝ | `f > 0` and `f(tx + (1-t)y) ≤ f(x)^t f(y)^{1-t}`, `log f` convex |
+| harmonically convex | ℝ → ℝ | on `(0,∞)`: `f(xy/(tx + (1-t)y)) ≤ t f(y) + (1-t) f(x)` (İşcan) |
+| harmonically concave | ℝ → ℝ | on `(0,∞)`: `f(xy/(tx + (1-t)y)) ≥ t f(y) + (1-t) f(x)` |
+| geometrically convex | ℝ → ℝ | on `(0,∞)`, positive: `f(x^t y^{1-t}) ≤ f(x)^t f(y)^{1-t}` (multiplicatively convex) |
+| ga-convex | ℝ → ℝ | on `(0,∞)`: `f(x^t y^{1-t}) ≤ t f(x) + (1-t) f(y)` |
+| star-shaped | ℝ → ℝ | on `[0,∞)`: `f(tx) ≤ t f(x)` for `t ∈ [0,1]` |
+| quasiconcave | ℝ → ℝ | `f(tx + (1-t)y) ≥ min(f(x), f(y))` |
+| $x$-convex in the second sense | ℝ → ℝ | on `[0,∞)`, `0 < s ≤ 1`: `f(tx + (1-t)y) ≤ t^s f(x) + (1-t)^s f(y)` (Breckner) |
+| $x$-convex | ℝ → ℝ | for a function `h`: `f ≥ 0`, `f(tx + (1-t)y) ≤ h(t) f(x) + h(1-t) f(y)` for `t ∈ (0,1)` (Varošanec) |
+| p-function | ℝ → ℝ | `f ≥ 0`, `f(tx + (1-t)y) ≤ f(x) + f(y)` (Dragomir, Pečarić, Persson) |
+| godunova-levin function | ℝ → ℝ | `f ≥ 0`, `f(tx + (1-t)y) ≤ f(x)/t + f(y)/(1-t)` for `t ∈ (0,1)` |
+| wright-convex | ℝ → ℝ | `f(x + δ) - f(x)` is nondecreasing in `x` for every `δ > 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| integral mean of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/(b-a)) ∫_a^b f`, for `a < b` and `f` integrable on `[a,b]`; `[a,b]` is written as the interval |
+| hermite-hadamard gap of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(f(a) + f(b))/2 - (1/(b-a)) ∫_a^b f`, nonnegative for a convex `f` |
+| jensen gap of $a$ at $b$ and $c$ with weight $d$ | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `t f(x) + (1-t) f(y) - f(tx + (1-t)y)` |
+
+## `fractional`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| gamma function at $a$ | ℝ → ℝ | `Γ(s) = ∫_0^∞ t^{s-1} e^{-t} dt`, `s > 0` (Mathlib `Real.Gamma`) |
+| left-sided riemann-liouville fractional integral of order $a$ of $b$ from $c$ at $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/Γ(α)) ∫_a^x (x-t)^{α-1} f(t) dt`, `α > 0`, `x > a`, the integrand integrable |
+| right-sided riemann-liouville fractional integral of order $a$ of $b$ up to $c$ at $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/Γ(α)) ∫_x^b (t-x)^{α-1} f(t) dt`, `α > 0`, `x < b` |
+| hadamard fractional integral of order $a$ of $b$ from $c$ at $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/Γ(α)) ∫_a^x (log(x/t))^{α-1} f(t)/t dt`, `α > 0`, `0 < a < x` |
+| riemann-liouville fractional derivative of order $a$ of $b$ from $c$ at $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `d/dx J^{1-α}_a f(x)`, `0 < α < 1`, where the integral of order `1-α` is differentiable at `x` |
+| caputo fractional derivative of order $a$ of $b$ from $c$ at $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/Γ(1-α)) ∫_a^x (x-t)^{-α} f'(t) dt`, `0 < α < 1`, `f` differentiable on `[a,x]` |
+| mittag-leffler function with parameter $a$ | ℝ → ℝ → ℝ | `E_α(z) = ∑_{k≥0} z^k/Γ(αk+1)`, `α > 0` (where the series converges, which it does for every `z`) |
+| mittag-leffler function with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `E_{α,β}(z) = ∑_{k≥0} z^k/Γ(αk+β)`, `α, β > 0` |
+
+## `utility`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| utility function | ℝ → ℝ | a real function on the line |
+| bernoulli utility function | ℝ → ℝ | a real function on the line |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| risk averse | ℝ → ℝ | concave (Mathlib `ConcaveOn`) |
+| strictly risk averse | ℝ → ℝ | strictly concave |
+| risk seeking | ℝ → ℝ | convex |
+| risk neutral | ℝ → ℝ | affine: `u(x) = a + bx` |
+| with decreasing absolute risk aversion | ℝ → ℝ | twice differentiable, `u' > 0`, and `-u''/u'` nonincreasing (DARA) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| arrow-pratt coefficient of absolute risk aversion of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `-u''(x)/u'(x)`, where `u` is twice differentiable at `x` and `u'(x) ≠ 0` |
+| coefficient of relative risk aversion of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `-x u''(x)/u'(x)` |
+| exponential utility with risk aversion $a$ | ℝ → ℝ → ℝ | `x ↦ (1 - e^{-ax})/a`, `a > 0` (CARA) |
+| power utility with relative risk aversion $a$ | ℝ → ℝ → ℝ | `x ↦ x^{1-γ}/(1-γ)` (for `x > 0`), `γ > 0`, `γ ≠ 1` (CRRA) |
+| expected utility under $a$ of the lottery paying $b$ with probability $c$ and $d$ otherwise | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `p u(x) + (1-p) u(y)` |
+| expected value of the lottery paying $a$ with probability $b$ and $c$ otherwise | ℝ → ℝ → ℝ → ℝ | `p x + (1-p) y` |
+| certainty equivalent under $a$ of the lottery paying $b$ with probability $c$ and $d$ otherwise | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | the `c` with `u(c) = p u(x) + (1-p) u(y)`, for a continuous strictly increasing `u` |
+| risk premium under $a$ of the lottery paying $b$ with probability $c$ and $d$ otherwise | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `p x + (1-p) y` minus the certainty equivalent |
+
+## `markovchains`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| square | $\mathrm{Mat}$ | `n × n` |
+| symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
+| skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
+| orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
+| invertible | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| nonsingular | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| singular | $\mathrm{Mat}$ | square, with `det A = 0` |
+| positive definite | $\mathrm{Mat}$ | `xᵀAx > 0` for `x ≠ 0`, and symmetric (Mathlib `Matrix.PosDef`) |
+| positive semidefinite | $\mathrm{Mat}$ | `xᵀAx ≥ 0`, and symmetric (Mathlib `Matrix.PosSemidef`) |
+| diagonal | $\mathrm{Mat}$ | square, zero off the diagonal |
+| upper triangular | $\mathrm{Mat}$ | square, zero below the diagonal |
+| lower triangular | $\mathrm{Mat}$ | square, zero above the diagonal |
+| nilpotent | $\mathrm{Mat}$ | square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`) |
+| idempotent | $\mathrm{Mat}$ | square, `A² = A` |
+| stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
+| $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
+| of size $x\timesa$ | $\mathrm{Mat}$ | `m × n` |
+| of order $x$ | $\mathrm{Mat}$ | `n × n` |
+| of rank $x$ | $\mathrm{Mat}$ | (Mathlib `Matrix.rank`) |
+| strictly diagonally dominant | $\mathrm{Mat}$ | square, `\|a_ii\| > ∑_{j≠i} \|a_ij\|` in every row |
+| diagonally dominant | $\mathrm{Mat}$ | square, `\|a_ii\| ≥ ∑_{j≠i} \|a_ij\|` in every row |
+| tridiagonal | $\mathrm{Mat}$ | square, `a_ij = 0` for `\|i - j\| > 1` |
+| upper hessenberg | $\mathrm{Mat}$ | square, `a_ij = 0` for `i > j + 1` |
+| entrywise nonnegative | $\mathrm{Mat}$ | `a_ij ≥ 0` |
+| with bandwidth $x$ | $\mathrm{Mat}$ | `a_ij = 0` for `\|i - j\| > k` |
+| doubly stochastic | $\mathrm{Mat}$ | stochastic, and the columns sum to `1` |
+| irreducible | $\mathrm{Mat}$ | square, and for all states `i`, `j` some `(P^k)_{ij} > 0` with `k ≥ 1` |
+| primitive | $\mathrm{Mat}$ | square, and some power `P^k`, `k ≥ 1`, has positive entries |
+| absorbing state of $x$ | ℝ | a state `i` with `P_{ii} = 1` |
+| stationary distribution of $x$ | ℝ → ℝ | `π_i ≥ 0`, `∑ π_i = 1`, `∑_i π_i P_{ij} = π_j` for the states `1, …, n` |
+| reversible distribution for $x$ | ℝ → ℝ | stationary, and `π_i P_{ij} = π_j P_{ji}` (detailed balance) |
+| probability distribution on $x$ states | ℝ → ℝ | `p_i ≥ 0` for `1 ≤ i ≤ n` and `∑ p_i = 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of rows of $a$ | $\mathrm{Mat}$ → ℝ | `m` |
+| number of columns of $a$ | $\mathrm{Mat}$ → ℝ | `n` |
+| entry of $a$ in row $b$ and column $c$ | $\mathrm{Mat}$ → ℝ → ℝ → ℝ | `A i j`, for `1 ≤ i ≤ m`, `1 ≤ j ≤ n` |
+| determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
+| trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
+| rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
+| inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
+| identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| identity matrix of order $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ identity matrix | ℝ → ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
+| set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| frobenius norm of $a$ | $\mathrm{Mat}$ → ℝ | `√(∑ a_ij²)` (Mathlib `Matrix.frobeniusNorm`) |
+| maximum absolute row sum of $a$ | $\mathrm{Mat}$ → ℝ | `‖A‖_∞ = max_i ∑_j \|a_ij\|` (Mathlib `Matrix.linfty_opNorm`) |
+| maximum absolute column sum of $a$ | $\mathrm{Mat}$ → ℝ | `‖A‖_1 = max_j ∑_i \|a_ij\|` |
+| condition number of $a$ in the frobenius norm | $\mathrm{Mat}$ → ℝ | `‖A‖_F ‖A⁻¹‖_F`, of an invertible matrix |
+| condition number of $a$ in the maximum norm | $\mathrm{Mat}$ → ℝ | `‖A‖_∞ ‖A⁻¹‖_∞`, of an invertible matrix |
+| condition number of $a$ in the column sum norm | $\mathrm{Mat}$ → ℝ | `‖A‖_1 ‖A⁻¹‖_1`, of an invertible matrix |
+| transition probability from $a$ to $b$ in $c$ steps under $d$ | ℝ → ℝ → ℝ → $\mathrm{Mat}$ → ℝ | `(P^k)_{ij}`, for a square `P` and states `i`, `j` |
+| distribution after $a$ steps under $b$ from $c$ | ℝ → $\mathrm{Mat}$ → (ℝ → ℝ) → ℝ → ℝ | `j ↦ ∑_i μ_i (P^k)_{ij}` |
+| stationary probability of $a$ under $b$ | ℝ → $\mathrm{Mat}$ → ℝ | `π_i` for the stationary distribution `π` of an irreducible stochastic `P` (there is exactly one) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
+| $+$ | $\mathrm{Mat}$ | `A + B`, of the same size |
+| $-$ | $\mathrm{Mat}$ | `A - B`, of the same size |
+| $-$ (sign) | $\mathrm{Mat}$ | `-A` |
+| $\cdot$ | $\mathrm{Mat}$ | `AB` (`cA` for a `1 × 1` matrix `c`) |
+| $/$ | $\mathrm{Mat}$ | `A B⁻¹`, for an invertible `B` (`1/A = A⁻¹`) |
+| $x^n$ | $\mathrm{Mat}$ | `A^k` of a square matrix, `k` natural |
+| $x^\top$ | $\mathrm{Mat}$ | `Aᵀ` (also `A^T`, `A^\intercal`) |
+| $\det$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{det}$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
+| $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
 
