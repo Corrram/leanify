@@ -1505,6 +1505,10 @@ def freeIds : Nat → List Codes → MT → List Codes
       let v := [92] ++ w!"hat{" ++ k ++ [125]
       (if bound.contains v then [] else [v]) ++ (if bound.contains k then [] else [k])
     | .hat x | .neg x | .abs x => freeIds f bound x
+    -- (the operations on sets are no identifiers: `A\cup(N\times[0,1])`)
+    | .app (.id op) [x, y] =>
+      (if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\times" || op == w!"\\setminus" then []
+        else freeIds f bound (.id op)) ++ freeIds f bound x ++ freeIds f bound y
     | .app h as => freeIds f bound h ++ (as.flatMap (freeIds f bound))
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => freeIds f bound x ++ freeIds f bound y
     | .minm xs | .maxm xs | .tuple xs | .conj xs => xs.flatMap (freeIds f bound)
