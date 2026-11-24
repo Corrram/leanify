@@ -108,6 +108,63 @@ srcDir = "tests"
 globs = ["Special.+"]
 
 [[lean_lib]]
+# The field topology: sets of real numbers by a noun, adjectives of the core and of the field together.
+name = "Topology"
+srcDir = "tests"
+globs = ["Topology.+"]
+
+[[lean_lib]]
+# The field analysis: real functions by a noun, their properties, `Every NP $x$ is ADJ`.
+name = "Analysis"
+srcDir = "tests"
+globs = ["Analysis.+"]
+
+[[lean_lib]]
+# The field vectors: norms and inner products of a type of the vocabulary, a modifier with a vector.
+name = "Vectors"
+srcDir = "tests"
+globs = ["Vectors.+"]
+
+[[lean_lib]]
+# The field geometry: points of the plane, `let $M$ be the NOTION`, figures as sets of points.
+name = "Geometry"
+srcDir = "tests"
+globs = ["Geometry.+"]
+
+[[lean_lib]]
+# The field congruences: adjectives with numbers after `is` (congruent to $b$ modulo $n$).
+name = "Congruences"
+srcDir = "tests"
+globs = ["Congruences.+"]
+
+[[lean_lib]]
+# The field groups: finite groups up to isomorphism, clauses joined by `or` and `if and only if`.
+name = "Groups"
+srcDir = "tests"
+globs = ["Groups.+"]
+
+[[lean_lib]]
+# A revised article: changes marked by a conditional (`\newif`), definitions inside the
+# sentences of a running text, decorations with a star.
+name = "Revision"
+srcDir = "tests"
+globs = ["Revision.+"]
+
+[[lean_lib]]
+# Couplings and random pairs with the field unitsquare: expectations of the coordinates,
+# the copula of a coupling, dual certificates, a rearrangement inequality.
+name = "Couplings"
+srcDir = "tests"
+globs = ["Couplings.+"]
+
+[[lean_lib]]
+# The freer wordings of a research article: definitions inside prose, after a colon and after
+# `, where`, letters introduced by earlier definitions, values attained only by an object.
+name = "Wordings"
+srcDir = "tests"
+globs = ["Wordings.+"]
+
+[[lean_lib]]
 # Functions of several variables and partial derivatives, compiled by the kernel.
 name = "Calculus"
 srcDir = "tests"
@@ -190,6 +247,13 @@ globs = ["Steps.+"]
 name = "Operators"
 srcDir = "tests"
 globs = ["Operators.+"]
+
+[[lean_lib]]
+# The steps of `definedness` and the facts of the unit square about couplings, each on a
+# leaf in the form the compiled statements have it.
+name = "TacticSteps"
+srcDir = "tests"
+globs = ["TacticSteps"]
 
 [[lean_exe]]
 name = "leanify"

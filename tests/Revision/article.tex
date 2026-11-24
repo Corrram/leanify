@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools,xcolor}
+\usepackage[vocab=unitsquare]{leanify}
+% A revision: the changes are printed in colour unless \cleanversion is defined.
+\newif\ifmarked
+\ifdefined\cleanversion\markedfalse\else\markedtrue\fi
+\newcommand{\rev}[1]{\ifmarked{\color{magenta}#1}\else#1\fi}
+\newcommand{\revon}{\ifmarked\color{magenta}\fi}
+\newcommand{\moved}[1]{\ifmarked\marginpar{\raggedright\scriptsize\color{magenta}#1}\fi}
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\de}{\,\mathrm{d}}
+\newcommand{\rone}[1]{#1_{1}^{*}}
+\newcommand{\rtwo}[1]{#1_{2}^{*}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\begin{document}
+
+Let $\CC$ denote the class of bivariate copulas, that is, distribution functions on $[0,1]^2$ with uniform marginals, and we refer to the literature for background.
+The copulas $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq\max\{u+v-1,0\}$, and $\Pi(u,v)\coloneqq uv$ describe comonotonicity, countermonotonicity, and independence, respectively.
+For a copula $C$, Spearman's rho is
+\begin{equation}
+  \label{eq:rho}
+  \rho(C)=12\int_0^1\!\int_0^1 C(u,v)\de u\de v-3,
+\end{equation}
+as given in \cite[Sec.~5]{nelsen}, a classical measure of concordance.
+For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$.
+\rev{For a copula $C$, the survival copula of $C$ is $\widehat C(u,v)\coloneqq u+v-1+C(1-u,1-v)$.
+For a copula $C$, the reflections of $C$ in the first and in the second argument are
+\[
+  \rone{C}(u,v)\coloneqq v-C(1-u,v)
+  \qquad\text{and}\qquad
+  \rtwo{C}(u,v)\coloneqq u-C(u,1-v).
+\]}
+
+\moved{Moved here from the introduction.}%
+\rev{The boundary of the region is described by the function} $\Phi:[-1,1]\to[-1,1]$ \rev{given} by
+\begin{equation}
+  \label{eq:Phi}
+  \Phi(r)\coloneqq
+  \begin{cases}
+    2r+1-\frac34(1+r)^{4/3}, & -1\le r\le0,\\[0.3ex]
+    1-\frac34(1-r)^{4/3}, & 0\le r\le1,
+  \end{cases}
+\end{equation}
+\rev{which satisfies} $2r-\Phi(r)=-\Phi(-r)$ for every $r\in[-1,1]$.
+
+\begin{lemma}[\rev{Survival and reflections}]
+\label{lem:symmetries}
+For every $C\in\CC$,
+\begin{equation}
+  \rho(\widehat C)=\rho(C),\qquad
+  \rho(C^\top)=\rho(C),
+\end{equation}
+\rev{and the two reflections satisfy}
+\begin{equation}
+  \revon
+  \rho(\rone{C})=-\rho(C),\quad\;
+  \rho(\rtwo{C})=-\rho(C),
+\end{equation}
+\rev{as well as}
+\begin{equation}
+  \revon
+  \rho(\rone{C})+\rho(\rtwo{C})=-2\rho(C).
+\end{equation}
+\end{lemma}
+
+\end{document}

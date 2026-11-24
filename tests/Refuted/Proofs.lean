@@ -50,7 +50,9 @@ theorem refute2 : meaningful2 ∧ ¬ claim2 := by
 
 /-- Claim 3, proof step (proof at line 69; no premises):
 `\forall x\in \mathbb{R},\ 0<x\Rightarrow 0\le \frac{{(x-1)}^{2}}{x}` -/
-theorem proof3 : obligation3 := by
+-- (justified as a companion proof: `companionK` takes the step out of the audit of the
+-- claims that the text derives, and the report says so)
+theorem companion3 : obligation3 := by
   intro_premises
   refine ⟨by unfold meaningful3; definedness [], fun x hx => ?_⟩
   positivity

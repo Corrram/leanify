@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={groups}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $|G|$ for the order of $G$.
+We write $o(G)$ for the order of $G$.
+We write $C_n$ for the cyclic group of order $n$.
+We write $S_n$ for the symmetric group of degree $n$.
+We write $A_n$ for the alternating group of degree $n$.
+We write $V$ for the Klein four-group.
+We write $n_p(G)$ for the number of Sylow $p$-subgroups of $G$.
+We write $k(G)$ for the number of conjugacy classes of $G$.
+
+\section{Finite groups}
+
+\begin{lemma}\label{prime}
+Let $p$ be a positive integer and let $G$ be a group of order $p$. If $p=7$, then $G$ is cyclic.
+\end{lemma}
+
+\begin{lemma}\label{cyclic}
+Every cyclic group $G$ is abelian. Moreover, every abelian group $G$ is nilpotent.
+\end{lemma}
+
+\begin{lemma}\label{symmetric}
+For every positive integer $n$, $o(S_n)=n!$. Moreover, $S_3$ is solvable and $A_5$ is simple.
+\end{lemma}
+
+\begin{lemma}\label{four}
+Let $G$ be a group of order $4$. Then $G$ is isomorphic to $C_4$ or $G$ is isomorphic to $V$.
+\end{lemma}
+
+\begin{lemma}\label{classes}
+Let $G$ be a group. Then $G$ is abelian if and only if $k(G)=o(G)$.
+\end{lemma}
+
+\begin{lemma}\label{sylow}
+Let $G$ be a group of order $12$. Then $n_3(G)=1$ or $n_3(G)=4$.
+\end{lemma}
+
+\begin{lemma}\label{product}
+Let $H$ be the direct product of $C_2$ and $C_3$. Then $H$ is isomorphic to $C_6$ and $H$ is cyclic.
+\end{lemma}
+
+\end{document}

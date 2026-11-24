@@ -38,6 +38,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -46,6 +49,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -60,6 +66,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -69,6 +76,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 
@@ -80,6 +89,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -89,6 +101,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -103,6 +118,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -112,6 +128,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 
@@ -128,6 +146,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
 | copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
 | sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
 | kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
 | statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
@@ -137,6 +158,9 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
 | borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
 | borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
@@ -151,6 +175,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
 | continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
 | convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
 | compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
 | closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
@@ -160,6 +185,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
 | standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
 | conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
 | markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
 | markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
 | markov operator of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → ℝ) → $[0,1]$ → ℝ | `(T_C g)(u) = ∫ g(y) K_C(u, dy)` for a copula `C`, with the conditional distribution `K_C(u,·)` of the second coordinate given the first (Mathlib `Measure.condKernel`): `E[g(V) \| U = u]` |
@@ -567,4 +594,267 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | $\Gamma$ | ℝ → ℝ | the gamma function, except at `0, -1, -2, …` (Mathlib `Real.Gamma`) |
 | $\zeta$ | ℝ → ℝ | the Riemann zeta function `∑ n^{-s}`, for `s > 1` (Mathlib `riemannZeta`) |
+
+## `topology`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| set | ℝ → Prop | a set of real numbers (Mathlib `Set ℝ`) |
+| set of real numbers | ℝ → Prop | (Mathlib `Set ℝ`) |
+| subset $x$ of $\mathbb{R}$ | ℝ → Prop | (Mathlib `Set ℝ`) |
+| null set | ℝ → Prop | of Lebesgue measure zero |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| open | ℝ → Prop | (Mathlib `IsOpen`) |
+| closed | ℝ → Prop | (Mathlib `IsClosed`) |
+| compact | ℝ → Prop | (Mathlib `IsCompact`) |
+| bounded | ℝ → Prop | bounded above and below (Mathlib `Bornology.IsBounded`) |
+| bounded above | ℝ → Prop | (Mathlib `BddAbove`) |
+| bounded below | ℝ → Prop | (Mathlib `BddBelow`) |
+| connected | ℝ → Prop | an interval, possibly empty (Mathlib `IsPreconnected`) |
+| dense | ℝ → Prop | (Mathlib `Dense`) |
+| nowhere dense | ℝ → Prop | the closure has empty interior (Mathlib `IsNowhereDense`) |
+| perfect | ℝ → Prop | closed, without isolated points (Mathlib `Perfect`) |
+| discrete | ℝ → Prop | every point is isolated |
+| finite | ℝ → Prop | (Mathlib `Set.Finite`) |
+| infinite | ℝ → Prop | (Mathlib `Set.Infinite`) |
+| countable | ℝ → Prop | finite or countably infinite (Mathlib `Set.Countable`) |
+| uncountable | ℝ → Prop | not countable |
+| nonempty | ℝ → Prop | (Mathlib `Set.Nonempty`) |
+| empty | ℝ → Prop | `∅` |
+| convex | ℝ → Prop | an interval (Mathlib `Convex ℝ`) |
+| measurable | ℝ → Prop | Lebesgue measurable (Mathlib `NullMeasurableSet`) |
+| null | ℝ → Prop | of Lebesgue measure zero |
+| of measure zero | ℝ → Prop | Lebesgue measure zero |
+| of finite measure | ℝ → Prop | measurable, of finite Lebesgue measure |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| closure of $a$ | (ℝ → Prop) → ℝ → Prop | (Mathlib `closure`) |
+| interior of $a$ | (ℝ → Prop) → ℝ → Prop | (Mathlib `interior`) |
+| boundary of $a$ | (ℝ → Prop) → ℝ → Prop | (Mathlib `frontier`) |
+| complement of $a$ | (ℝ → Prop) → ℝ → Prop | `ℝ ∖ S` |
+| set of limit points of $a$ | (ℝ → Prop) → ℝ → Prop | the accumulation points (Mathlib `derivedSet`) |
+| set of accumulation points of $a$ | (ℝ → Prop) → ℝ → Prop | (Mathlib `derivedSet`) |
+| set of isolated points of $a$ | (ℝ → Prop) → ℝ → Prop | the points of `S` that are not limit points of `S` |
+| supremum of $a$ | (ℝ → Prop) → ℝ | of a nonempty set that is bounded above (Mathlib `sSup`) |
+| infimum of $a$ | (ℝ → Prop) → ℝ | of a nonempty set that is bounded below (Mathlib `sInf`) |
+| diameter of $a$ | (ℝ → Prop) → ℝ | of a nonempty bounded set (Mathlib `Metric.diam`) |
+| lebesgue measure of $a$ | (ℝ → Prop) → ℝ | of a measurable set of finite measure (Mathlib `MeasureTheory.volume`) |
+| measure of $a$ | (ℝ → Prop) → ℝ | the Lebesgue measure, of a measurable set of finite measure |
+| number of elements of $a$ | (ℝ → Prop) → ℝ | of a finite set (Mathlib `Set.ncard`) |
+| cardinality of $a$ | (ℝ → Prop) → ℝ | of a finite set (Mathlib `Set.ncard`) |
+| distance from $a$ to $b$ | ℝ → (ℝ → Prop) → ℝ | `inf {\|x - y\| : y ∈ S}`, for a nonempty set (Mathlib `Metric.infDist`) |
+| cantor set | ℝ → Prop | the middle-thirds Cantor set (Mathlib `cantorSet`) |
+| set of rational numbers | ℝ → Prop | `ℚ ⊆ ℝ` |
+| set of irrational numbers | ℝ → Prop | `ℝ ∖ ℚ` |
+| set of integers | ℝ → Prop | `ℤ ⊆ ℝ` |
+
+## `analysis`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| function | ℝ → ℝ | a real function on the line (`ℝ → ℝ`) |
+| real function | ℝ → ℝ | `ℝ → ℝ` |
+| bijection | ℝ → ℝ | of the line (Mathlib `Function.Bijective`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| continuous | ℝ → ℝ | (Mathlib `Continuous`) |
+| uniformly continuous | ℝ → ℝ | (Mathlib `UniformContinuous`) |
+| lipschitz | ℝ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L` (Mathlib `LipschitzWith`) |
+| lipschitz continuous | ℝ → ℝ | (Mathlib `LipschitzWith`) |
+| $x$-lipschitz | ℝ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` (Mathlib `LipschitzWith`) |
+| differentiable | ℝ → ℝ | at every point (Mathlib `Differentiable`) |
+| continuously differentiable | ℝ → ℝ | (Mathlib `ContDiff ℝ 1`) |
+| smooth | ℝ → ℝ | infinitely differentiable (Mathlib `ContDiff ℝ ⊤`) |
+| infinitely differentiable | ℝ → ℝ | (Mathlib `ContDiff ℝ ⊤`) |
+| analytic | ℝ → ℝ | real analytic at every point (Mathlib `AnalyticOnNhd`) |
+| bounded | ℝ → ℝ | `\|f\| ≤ M` for some `M` |
+| increasing | ℝ → ℝ | `x ≤ y → f(x) ≤ f(y)` (Mathlib `Monotone`) |
+| nondecreasing | ℝ → ℝ | (Mathlib `Monotone`) |
+| decreasing | ℝ → ℝ | `x ≤ y → f(y) ≤ f(x)` (Mathlib `Antitone`) |
+| nonincreasing | ℝ → ℝ | (Mathlib `Antitone`) |
+| strictly increasing | ℝ → ℝ | (Mathlib `StrictMono`) |
+| strictly decreasing | ℝ → ℝ | (Mathlib `StrictAnti`) |
+| monotone | ℝ → ℝ | increasing or decreasing |
+| convex | ℝ → ℝ | (Mathlib `ConvexOn`) |
+| concave | ℝ → ℝ | (Mathlib `ConcaveOn`) |
+| strictly convex | ℝ → ℝ | (Mathlib `StrictConvexOn`) |
+| strictly concave | ℝ → ℝ | (Mathlib `StrictConcaveOn`) |
+| even | ℝ → ℝ | `f(-x) = f(x)` |
+| odd | ℝ → ℝ | `f(-x) = -f(x)` |
+| periodic | ℝ → ℝ | `f(x + T) = f(x)` for some `T > 0` (Mathlib `Function.Periodic`) |
+| $x$-periodic | ℝ → ℝ | `f(x + T) = f(x)` (Mathlib `Function.Periodic`) |
+| injective | ℝ → ℝ | (Mathlib `Function.Injective`) |
+| surjective | ℝ → ℝ | onto `ℝ` (Mathlib `Function.Surjective`) |
+| bijective | ℝ → ℝ | (Mathlib `Function.Bijective`) |
+| constant | ℝ → ℝ | `f(x) = f(y)` |
+| measurable | ℝ → ℝ | (Mathlib `Measurable`) |
+| integrable | ℝ → ℝ | Lebesgue integrable on the line (Mathlib `MeasureTheory.Integrable`) |
+| of bounded variation on $[x,a]$ | ℝ → ℝ | (Mathlib `BoundedVariationOn`) |
+| hölder continuous with exponent $x$ | ℝ → ℝ | `\|f(x) - f(y)\| ≤ C\|x - y\|^α` (Mathlib `HolderWith`) |
+| holder continuous with exponent $x$ | ℝ → ℝ | (Mathlib `HolderWith`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| derivative of $a$ | (ℝ → ℝ) → ℝ → ℝ | of a differentiable function (Mathlib `deriv`) |
+| supremum norm of $a$ | (ℝ → ℝ) → ℝ | `sup \|f\|`, of a bounded function |
+| lipschitz constant of $a$ | (ℝ → ℝ) → ℝ | the least `L`, of a Lipschitz function |
+| total variation of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | of a function of bounded variation there (Mathlib `eVariationOn`) |
+| integral of $a$ over $\mathbb{R}$ | (ℝ → ℝ) → ℝ | of an integrable function (Mathlib `MeasureTheory.integral`) |
+| inverse of $a$ | (ℝ → ℝ) → ℝ → ℝ | of a bijection (Mathlib `Function.invFun`) |
+| composition of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `f ∘ g` |
+| range of $a$ | (ℝ → ℝ) → ℝ → Prop | `f(ℝ)` (Mathlib `Set.range`) |
+| image of $a$ | (ℝ → ℝ) → ℝ → Prop | `f(ℝ)` (Mathlib `Set.range`) |
+| set of zeros of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f(x) = 0}` |
+| set of fixed points of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f(x) = x}` |
+| set of critical points of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f'(x) = 0}`, of a differentiable function |
+
+## `vectors`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| vector | $\mathrm{Vec}$ | a real vector of some dimension (Mathlib `Fin n → ℝ`) |
+| unit vector | $\mathrm{Vec}$ | of norm 1 |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| nonzero | $\mathrm{Vec}$ | not the zero vector |
+| unit | $\mathrm{Vec}$ | of norm 1 |
+| in $\mathbb{R}^x$ | $\mathrm{Vec}$ | of dimension `n` |
+| in $\mathbb{R}^{x}$ | $\mathrm{Vec}$ | of dimension `n` |
+| of dimension $x$ | $\mathrm{Vec}$ | in `ℝⁿ` |
+| orthogonal to $x$ | $\mathrm{Vec}$ | of the same dimension, with inner product 0 |
+| parallel to $x$ | $\mathrm{Vec}$ | of the same dimension, one a multiple of the other |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| dimension of $a$ | $\mathrm{Vec}$ → ℝ | `n`, for a vector in `ℝⁿ` |
+| norm of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm (Mathlib `EuclideanSpace`) |
+| length of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm |
+| inner product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension (Mathlib `inner`) |
+| dot product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension |
+| $a$ th coordinate of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `xᵢ`, for `1 ≤ i ≤ n` |
+| distance between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `‖x - y‖`, of vectors of the same dimension |
+| angle between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | in `[0, π]`, of nonzero vectors of the same dimension (Mathlib `InnerProductGeometry.angle`) |
+| cross product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → $\mathrm{Vec}$ | of vectors of dimension 3 (Mathlib `crossProduct`) |
+| zero vector of dimension $a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| zero vector in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| $a$ th standard basis vector of dimension $b$ | ℝ → ℝ → $\mathrm{Vec}$ | `eᵢ ∈ ℝⁿ`, for `1 ≤ i ≤ n` |
+| sum of the coordinates of $a$ | $\mathrm{Vec}$ → ℝ | `∑ xᵢ` |
+| set of vectors in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| set of vectors of dimension $a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Vec}$ | a real number `c` as the vector `(c)` of dimension 1 |
+| $+$ | $\mathrm{Vec}$ | `x + y`, of the same dimension |
+| $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
+| $-$ (sign) | $\mathrm{Vec}$ | `-x` |
+| $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
+| $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
+
+## `geometry`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| point | $\mathrm{Point}$ | a point of the Euclidean plane (`ℝ × ℝ`) |
+| point of the plane | $\mathrm{Point}$ | `ℝ × ℝ` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| lying on $x$ | $\mathrm{Point}$ | a point of the figure |
+| collinear with $x$ and $a$ | $\mathrm{Point}$ | on a line with them |
+| equidistant from $x$ and $a$ | $\mathrm{Point}$ | `\|PA\| = \|PB\|` |
+| distinct from $x$ | $\mathrm{Point}$ | `P ≠ A` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| point $(a,b)$ | ℝ → ℝ → $\mathrm{Point}$ | with these coordinates |
+| origin | $\mathrm{Point}$ | `(0,0)` |
+| $x$-coordinate of $a$ | $\mathrm{Point}$ → ℝ | the first coordinate |
+| $y$-coordinate of $a$ | $\mathrm{Point}$ → ℝ | the second coordinate |
+| abscissa of $a$ | $\mathrm{Point}$ → ℝ | the first coordinate |
+| ordinate of $a$ | $\mathrm{Point}$ → ℝ | the second coordinate |
+| distance between $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | the Euclidean distance |
+| distance from $a$ to $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | the Euclidean distance |
+| midpoint of $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `(A + B)/2` |
+| area of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `0` for collinear points |
+| perimeter of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `\|AB\| + \|BC\| + \|CA\|` |
+| centroid of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `(A + B + C)/3` |
+| angle at $a$ between $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `∠ABC` in `[0, π]`, for `A ≠ B` and `C ≠ B` |
+| slope of the line through $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | for points with different first coordinates |
+| line through $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | of two distinct points |
+| segment from $a$ to $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | the points between them: `\|AP\| + \|PB\| = \|AB\|` |
+| perpendicular bisector of $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | the points equidistant from two distinct points |
+| circle with centre $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| = r}`, `r > 0` |
+| circle with center $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| = r}`, `r > 0` |
+| disc with centre $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
+| disk with center $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
+
+## `congruences`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| congruent to $x$ modulo $a$ | ℝ | `n ∣ a - b`, for integers `a`, `b` and `n ≥ 1` (Mathlib `Int.ModEq`) |
+| coprime to $x$ | ℝ | no common divisor but `±1` (Mathlib `IsCoprime`) |
+| relatively prime to $x$ | ℝ | (Mathlib `IsCoprime`) |
+| divisible by $x$ | ℝ | `d ∣ a` |
+| invertible modulo $x$ | ℝ | coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`) |
+| unit modulo $x$ | ℝ | coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`) |
+| quadratic residue modulo $x$ | ℝ | coprime to `n`, and a square modulo `n` (Mathlib `IsSquare` in `ZMod n`) |
+| quadratic nonresidue modulo $x$ | ℝ | coprime to `n`, and not a square modulo `n` |
+| primitive root modulo $x$ | ℝ | its powers are all units modulo `n` (Mathlib `orderOf` in `ZMod n` is `φ(n)`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| legendre symbol of $a$ modulo $b$ | ℝ → ℝ → ℝ | `1`, `-1` or `0`, for an integer `a` and an odd prime `p` (Mathlib `legendreSym`) |
+| inverse of $a$ modulo $b$ | ℝ → ℝ → ℝ | the `b` in `[0, n)` with `ab ≡ 1`, for `a` coprime to `n ≥ 1` (Mathlib `ZMod.inv`) |
+| least primitive root modulo $a$ | ℝ → ℝ | for a modulus that has a primitive root |
+| number of quadratic residues modulo $a$ | ℝ → ℝ | among the units modulo `n` |
+| number of primitive roots modulo $a$ | ℝ → ℝ | in `[0, n)` |
+| set of units modulo $a$ | ℝ → ℝ → Prop | the integers in `[0, n)` coprime to `n` (Mathlib `(ZMod n)ˣ`) |
+
+## `groups`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| group | $\mathrm{Grp}$ | a finite group (Mathlib `Group (Fin n)`) |
+| finite group | $\mathrm{Grp}$ | (Mathlib `Group (Fin n)`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| abelian | $\mathrm{Grp}$ | `ab = ba` (Mathlib `CommGroup`) |
+| commutative | $\mathrm{Grp}$ | `ab = ba` |
+| cyclic | $\mathrm{Grp}$ | generated by one element (Mathlib `IsCyclic`) |
+| simple | $\mathrm{Grp}$ | nontrivial, without proper normal subgroups (Mathlib `IsSimpleGroup`) |
+| solvable | $\mathrm{Grp}$ | (Mathlib `IsSolvable`) |
+| nilpotent | $\mathrm{Grp}$ | (Mathlib `Group.IsNilpotent`) |
+| trivial | $\mathrm{Grp}$ | of order 1 |
+| nontrivial | $\mathrm{Grp}$ | of order at least 2 |
+| of order $x$ | $\mathrm{Grp}$ | with `n` elements |
+| isomorphic to $x$ | $\mathrm{Grp}$ | (Mathlib `MulEquiv`) |
+| $x$-group | $\mathrm{Grp}$ | every element has order a power of `p` (Mathlib `IsPGroup`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| order of $a$ | $\mathrm{Grp}$ → ℝ | the number of elements (Mathlib `Nat.card`) |
+| exponent of $a$ | $\mathrm{Grp}$ → ℝ | the least `e ≥ 1` with `g^e = 1` for all `g` (Mathlib `Monoid.exponent`) |
+| number of subgroups of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup`) |
+| number of normal subgroups of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.Normal`) |
+| number of conjugacy classes of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `ConjClasses`) |
+| order of the centre of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.center`) |
+| order of the center of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.center`) |
+| number of elements of order $a$ in $b$ | ℝ → $\mathrm{Grp}$ → ℝ | (Mathlib `orderOf`) |
+| number of sylow $a$-subgroups of $b$ | ℝ → $\mathrm{Grp}$ → ℝ | for a prime `p` (Mathlib `Sylow`) |
+| cyclic group of order $a$ | ℝ → $\mathrm{Grp}$ | `C_n` (Mathlib `Multiplicative (ZMod n)`) |
+| symmetric group of degree $a$ | ℝ → $\mathrm{Grp}$ | `S_n` (Mathlib `Equiv.Perm (Fin n)`) |
+| alternating group of degree $a$ | ℝ → $\mathrm{Grp}$ | `A_n` (Mathlib `alternatingGroup`) |
+| dihedral group of order $a$ | ℝ → $\mathrm{Grp}$ | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
+| klein four-group | $\mathrm{Grp}$ | `C_2 × C_2` |
+| trivial group | $\mathrm{Grp}$ | of order 1 |
+| direct product of $a$ and $b$ | $\mathrm{Grp}$ → $\mathrm{Grp}$ → $\mathrm{Grp}$ | `G × H` (Mathlib `Prod`) |
 

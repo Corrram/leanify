@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={analysis}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\|f\|_\infty$ for the supremum norm of $f$.
+We write $\operatorname{Lip}(f)$ for the Lipschitz constant of $f$.
+We write $V(f)$ for the total variation of $f$ on $[0,1]$.
+We write $Z(f)$ for the set of zeros of $f$.
+
+\section{Real functions}
+
+\begin{lemma}\label{lipschitz}
+Let $f$ be a Lipschitz function. Then $f$ is uniformly continuous.
+\end{lemma}
+
+\begin{lemma}\label{derivative}
+Let $f$ be a differentiable function. If $|f'(x)|\le1$ for every $x\in\mathbb{R}$, then $f$ is $1$-Lipschitz and $\operatorname{Lip}(f)\le1$.
+\end{lemma}
+
+\begin{lemma}\label{periodic}
+Let $f$ be a continuous periodic function. Then $f$ is bounded and uniformly continuous.
+\end{lemma}
+
+\begin{lemma}\label{even}
+Let $f$ be an even differentiable function. Then $f'(0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{monotone}
+Let $f$ be an increasing function. Then $V(f)=f(1)-f(0)$.
+\end{lemma}
+
+\begin{lemma}\label{convex}
+Let $f$ be a convex function. Then $f$ is continuous.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+For every bounded function $f$ and every $x\in\mathbb{R}$, $|f(x)|\le\|f\|_\infty$.
+\end{lemma}
+
+\begin{lemma}\label{injective}
+Let $f$ be a continuous injective function. Then $f$ is strictly increasing or $f$ is strictly decreasing.
+\end{lemma}
+
+\begin{lemma}\label{zeros}
+Let $f$ be a strictly increasing function, and let $a\in Z(f)$ and $b\in Z(f)$. Then $a=b$.
+\end{lemma}
+
+\begin{lemma}\label{lipschitzconstant}
+Every odd function $f$ satisfies $f(0)=0$. Moreover, every odd function $f$ is bounded or surjective.
+\end{lemma}
+
+\begin{lemma}\label{parity}
+Let $f$ be a function. Then $f$ is constant if and only if $f$ is even and $f$ is monotone.
+\end{lemma}
+
+\end{document}

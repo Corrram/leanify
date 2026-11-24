@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={geometry}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $|PQ|$ for the distance between $P$ and $Q$.
+We write $d(P,Q)$ for the distance between $P$ and $Q$.
+We write $[ABC]$ for the area of the triangle with vertices $A$, $B$ and $C$.
+We write $\alpha(A,B,C)$ for the angle at $A$ between $B$ and $C$.
+We write $O$ for the origin.
+We write $E$ for the point $(3,4)$.
+We write $\Gamma(A,r)$ for the circle with centre $A$ and radius $r$.
+We write $K$ for the circle with centre $O$ and radius $5$.
+
+\section{The plane}
+
+\begin{lemma}\label{triangle}
+Let $A$, $B$ and $C$ be points. Then $d(A,C)\le d(A,B)+d(B,C)$.
+\end{lemma}
+
+\begin{lemma}\label{midpoint}
+Let $A$ and $B$ be points with $A\ne B$, let $M$ be the midpoint of $A$ and $B$, and let $\ell$ denote the line through $A$ and $B$. Then $d(A,M)=d(M,B)$ and $M\in\ell$.
+\end{lemma}
+
+\begin{lemma}\label{coordinates}
+$d(O,E)=5$ and $E\in K$, and $E$ is distinct from $O$.
+\end{lemma}
+
+\begin{lemma}\label{angles}
+Let $A$, $B$ and $C$ be points with $[ABC]>0$. Then $\alpha(A,B,C)+\alpha(B,C,A)+\alpha(C,A,B)=\pi$.
+\end{lemma}
+
+\begin{lemma}\label{pythagoras}
+Let $A$, $B$ and $C$ be points. If $\alpha(C,A,B)=\frac{\pi}{2}$, then $d(A,B)^2=d(A,C)^2+d(B,C)^2$.
+\end{lemma}
+
+\begin{lemma}\label{circle}
+Let $A$ be a point. Every point $P$ lying on $\Gamma(A,2)$ is distinct from $A$.
+\end{lemma}
+
+\begin{lemma}\label{radius}
+Let $A$ be a point. For every point $P$ lying on $\Gamma(A,2)$, $d(A,P)=2$.
+\end{lemma}
+
+\begin{lemma}\label{bisector}
+Let $A$ and $B$ be points, and let $P$ be a point equidistant from $A$ and $B$. Then $[ABP]\ge0$.
+\end{lemma}
+
+\end{document}

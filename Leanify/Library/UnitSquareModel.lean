@@ -210,6 +210,81 @@ def probMeasure2 (γ : (I → I → Prop) → ℝ) : Prop :=
 def measUniformMarginals (γ : (I → I → Prop) → ℝ) : Prop :=
   (∀ u : I, γ (fun x _ => x ≤ u) = u) ∧ ∀ v : I, γ (fun _ z => z ≤ v) = v
 
+/-! ## Couplings
+
+A coupling is a probability measure on `[0,1]^2` with uniform marginals, as a set function
+(`probMeasure2`, `measUniformMarginals`): the law of a pair `(X,Z)` of uniform random
+variables. -/
+
+/-- The measure on `[0,1]^2` that the set function `γ` agrees with on measurable sets (the
+zero measure when there is none; the compiler asks for `couplingIntegrable`, which says
+that there is one). It is the only one. -/
+noncomputable def measureOfSetFn (γ : (I → I → Prop) → ℝ) : Measure (I × I) := by
+  classical
+  exact if h : probMeasure2 γ then Classical.choose h else 0
+
+/-- `\mathbb{E}_\gamma[f(X,Z)]`: the integral of `f` against the measure of `γ`. -/
+noncomputable def couplingExpectation (γ : (I → I → Prop) → ℝ) (f : I → I → ℝ) : ℝ :=
+  ∫ p, f p.1 p.2 ∂(measureOfSetFn γ)
+
+/-- `γ` is a probability measure on `[0,1]^2`, and `f` is integrable for it. -/
+def couplingIntegrable (γ : (I → I → Prop) → ℝ) (f : I → I → ℝ) : Prop :=
+  probMeasure2 γ ∧ Integrable (fun p : I × I => f p.1 p.2) (measureOfSetFn γ)
+
+/-- The coupling associated with a copula `C`: the law of `(X,Z) = (1-U,1-V)` for a pair
+`(U,V)` with the distribution function `C`. -/
+noncomputable def couplingOfCopula (C : I → I → ℝ) : (I → I → Prop) → ℝ := fun A =>
+  ((measureOf C) {p : I × I | A (unitInterval.symm p.1) (unitInterval.symm p.2)}).toReal
+
+/-- The copula associated with a coupling `γ`: the distribution function of
+`(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the law `γ`. -/
+noncomputable def copulaOfCoupling (γ : (I → I → Prop) → ℝ) : I → I → ℝ := fun u v =>
+  γ (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm v ≤ z)
+
+/-! ## Random pairs
+
+A pair `(Y,Z)` of a real random variable and a random point of `[0,1]`, on any probability
+space, enters a statement only through its joint law, a probability measure on
+`ℝ × [0,1]`: a statement about all such pairs is a statement about all such laws. The law
+is a set function, like a coupling. -/
+
+/-- The set function `P` agrees with a probability measure on `ℝ × [0,1]` on measurable sets. -/
+def jointLaw (P : (ℝ → I → Prop) → ℝ) : Prop :=
+  ∃ μ : Measure (ℝ × I), IsProbabilityMeasure μ ∧
+    ∀ A : ℝ → I → Prop, MeasurableSet {p : ℝ × I | A p.1 p.2} →
+      P A = (μ {p : ℝ × I | A p.1 p.2}).toReal
+
+/-- The measure of a joint law (the zero measure when `P` is none). -/
+noncomputable def measureOfJoint (P : (ℝ → I → Prop) → ℝ) : Measure (ℝ × I) := by
+  classical
+  exact if h : jointLaw P then Classical.choose h else 0
+
+/-- `\mathbb{E}[f(Y,Z)]` for a pair with the joint law `P`. -/
+noncomputable def jointExpectation (P : (ℝ → I → Prop) → ℝ) (f : ℝ → I → ℝ) : ℝ :=
+  ∫ p, f p.1 p.2 ∂(measureOfJoint P)
+
+/-- `P` is a joint law, and `f(Y,Z)` is integrable. -/
+def jointIntegrable (P : (ℝ → I → Prop) → ℝ) (f : ℝ → I → ℝ) : Prop :=
+  jointLaw P ∧ Integrable (fun p : ℝ × I => f p.1 p.2) (measureOfJoint P)
+
+/-- A condition on `(Y,Z)` holds almost surely. -/
+def jointAlmostSurely (P : (ℝ → I → Prop) → ℝ) (q : ℝ → I → Prop) : Prop :=
+  Filter.Eventually (fun p : ℝ × I => q p.1 p.2) (MeasureTheory.ae (measureOfJoint P))
+
+/-- The distribution function of `Y`: `t ↦ P(Y ≤ t)`. -/
+noncomputable def jointDistFn (P : (ℝ → I → Prop) → ℝ) (t : ℝ) : ℝ := P (fun y _ => y ≤ t)
+
+/-- `Z` is uniformly distributed on `[0,1]`: `P(Z ≤ v) = v`. -/
+def jointUniformSecond (P : (ℝ → I → Prop) → ℝ) : Prop := ∀ v : I, P (fun _ z => z ≤ v) = v
+
+/-- Continuous real functions on `[0,1]` and on `[0,1]^2`, and finite sets of points. -/
+def continuousOnInterval (f : I → ℝ) : Prop := Continuous f
+def continuousOnSquare (f : I → I → ℝ) : Prop := Continuous (fun p : I × I => f p.1 p.2)
+def finiteSet1 (A : I → Prop) : Prop := Set.Finite {x : I | A x}
+
+/-- A Borel measurable map of `[0,1]` that preserves Lebesgue measure. -/
+def lebesguePreserving (T : I → I) : Prop := MeasurePreserving T volume volume
+
 /-! ## Facts about distribution functions, their measures and samples
 
 What the proofs of an article use about the meanings above, and what `definedness`
@@ -812,11 +887,65 @@ def uscUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) 
   UpperSemicontinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
 def continuousUniform (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
   ContinuousOn (fun g => F (ofUniform g)) {g | D (ofUniform g)}
+/-- `F` is affine on the class `D`: it respects the convex combinations of two of its
+members. -/
+def affineOnSq (F : (I → I → ℝ) → ℝ) (D : (I → I → ℝ) → Prop) : Prop :=
+  ∀ C₁ C₂ : I → I → ℝ, D C₁ → D C₂ → ∀ t : ℝ, 0 ≤ t → t ≤ 1 →
+    F ((1 - t) • C₁ + t • C₂) = (1 - t) * F C₁ + t * F C₂
 def convexClass (D : (I → I → ℝ) → Prop) : Prop := Convex ℝ {C | D C}
 def compactUniform (D : (I → I → ℝ) → Prop) : Prop :=
   IsCompact {g : UniformFun (I × I) ℝ | D (ofUniform g)}
 def closedUniform (D : (I → I → ℝ) → Prop) : Prop :=
   IsClosed {g : UniformFun (I × I) ℝ | D (ofUniform g)}
+
+/-- The limit at `a` within `D \ {a}` is the limit along that set. -/
+theorem limAt_eq {D : ℝ → Prop} {f : ℝ → ℝ} {S : Set ℝ} {a L : ℝ} (hS : {x | D x} \ {a} = S)
+    [Filter.NeBot (nhdsWithin a S)] (h : Filter.Tendsto f (nhdsWithin a S) (nhds L)) :
+    limAt a D f = L := by
+  subst hS
+  exact h.limUnder_eq
+
+theorem limAtConv_of {D : ℝ → Prop} {f : ℝ → ℝ} {S : Set ℝ} {a L : ℝ} (hS : {x | D x} \ {a} = S)
+    [Filter.NeBot (nhdsWithin a S)] (h : Filter.Tendsto f (nhdsWithin a S) (nhds L)) :
+    limAtConv a D f := by
+  subst hS
+  exact ⟨inferInstance, L, h⟩
+
+/-- A function given by cases on a Borel condition is interval integrable when its cases are. -/
+theorem intervalIntegrable_ite {P : ℝ → Prop} {inst : DecidablePred P} (hP : MeasurableSet {x | P x})
+    {p q : ℝ → ℝ} (hp : ∀ a b : ℝ, IntervalIntegrable p volume a b)
+    (hq : ∀ a b : ℝ, IntervalIntegrable q volume a b) (a b : ℝ) :
+    IntervalIntegrable (fun x => @ite ℝ (P x) (inst x) (p x) (q x)) volume a b := by
+  classical
+  rw [intervalIntegrable_iff]
+  have he : (fun x => @ite ℝ (P x) (inst x) (p x) (q x)) = Set.piecewise {x | P x} p q := by
+    funext x
+    by_cases h : P x <;> simp [Set.piecewise, h]
+  rw [he]
+  exact Integrable.piecewise hP (intervalIntegrable_iff.mp (hp a b)).integrableOn
+    (intervalIntegrable_iff.mp (hq a b)).integrableOn
+
+theorem measurableSet_and {α : Type*} [MeasurableSpace α] {p q : α → Prop}
+    (hp : MeasurableSet {x | p x}) (hq : MeasurableSet {x | q x}) : MeasurableSet {x | p x ∧ q x} :=
+  hp.inter hq
+
+/-- `leanify_piecewise` proves that a function given by cases on comparisons, with continuous
+cases, is interval integrable. -/
+syntax "leanify_piecewise" : tactic
+
+macro_rules
+  | `(tactic| leanify_piecewise) => `(tactic|
+      (unfold Leanify.Prelude.intervalIntegrable
+       try leanify_unfold
+       repeat' (first
+         | (refine intervalIntegrable_ite ?_ (fun _ _ => ?_) (fun _ _ => ?_) _ _)
+         | exact Continuous.intervalIntegrable (by fun_prop) _ _
+         | (refine measurableSet_and ?_ ?_)
+         | exact measurableSet_lt (by fun_prop) (by fun_prop)
+         | exact measurableSet_le (by fun_prop) (by fun_prop))))
+
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic| leanify_piecewise)
 
 end Leanify.Prelude
 
@@ -846,5 +975,477 @@ noncomputable def model : Model where
     ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .real, sampleProbability⟩, ⟨sq ⟶ (seq ⟶ seq ⟶ .prop) ⟶ .prop, sampleHasProbability⟩,
     ⟨(seq ⟶ .real) ⟶ .prop, isKernel⟩, ⟨(seq ⟶ seq ⟶ .real) ⟶ .prop, isStatistic⟩,
     ⟨sq ⟶ .prop, hasBoundedDensity⟩, ⟨sq ⟶ sq, conditionalDF⟩, ⟨I01 ⟶ .real, normalQuantile⟩]
+
+section Couplings
+open MeasureTheory
+open scoped unitInterval
+
+/-! ## Facts about couplings
+
+What the proofs of an article use about couplings and about the laws of `(X,T(X))`: a
+finite measure on the square is determined by the rectangles `[0,u] × [0,v]`, the coupling
+associated with a copula is a coupling and the copula associated with a coupling is a
+copula, each is recovered from the other, the law of `(X,T(X))` is a coupling exactly when
+`T` preserves Lebesgue measure, and expectations under these couplings are integrals. -/
+
+/-- Two finite measures on the square that agree on the rectangles `[0,u] × [0,v]` are equal. -/
+theorem measure_ext_Iic_prod {μ ν : Measure (I × I)} [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+    (h : ∀ u v : I, μ (Set.Iic u ×ˢ Set.Iic v) = ν (Set.Iic u ×ˢ Set.Iic v)) : μ = ν := by
+  have hcs : IsCountablySpanning (Set.range (Set.Iic : I → Set I)) :=
+    ⟨fun _ => Set.Iic 1, fun _ => Set.mem_range_self _, by
+      ext x; simp [unitInterval.le_one' (t := x)]⟩
+  have hgen : (inferInstance : MeasurableSpace (I × I)) =
+      MeasurableSpace.generateFrom (Set.image2 (· ×ˢ ·) (Set.range (Set.Iic : I → Set I)) (Set.range Set.Iic)) := by
+    rw [← generateFrom_prod_eq hcs hcs, ← borel_eq_generateFrom_Iic, ← BorelSpace.measurable_eq]
+  refine ext_of_generate_finite _ hgen (isPiSystem_Iic.prod isPiSystem_Iic) ?_ ?_
+  · rintro _ ⟨_, ⟨u, rfl⟩, _, ⟨v, rfl⟩, rfl⟩
+    exact h u v
+  · have h1 : (Set.univ : Set (I × I)) = Set.Iic 1 ×ˢ Set.Iic 1 := by
+      ext p
+      simp only [Set.mem_univ, Set.mem_prod, Set.mem_Iic, true_iff]
+      exact ⟨unitInterval.le_one', unitInterval.le_one'⟩
+    rw [h1]
+    exact h 1 1
+
+/-- The measure of a probability measure on the square, as a set function. -/
+theorem measureOfSetFn_prob {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) :
+    IsProbabilityMeasure (measureOfSetFn γ) := by
+  unfold measureOfSetFn
+  rw [dite_eq_left h]
+  exact (Classical.choose_spec h).1
+
+/-- A set function that is a probability measure is the measure `measureOfSetFn` on
+measurable sets. -/
+theorem measureOfSetFn_apply {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) (A : I → I → Prop)
+    (hA : MeasurableSet {p : I × I | A p.1 p.2}) :
+    γ A = ((measureOfSetFn γ) {p : I × I | A p.1 p.2}).toReal := by
+  have h1 : measureOfSetFn γ = Classical.choose h := by
+    unfold measureOfSetFn
+    rw [dite_eq_left h]
+  rw [h1]
+  exact (Classical.choose_spec h).2 A hA
+
+/-- The measure of a set function is the probability measure that it agrees with. -/
+theorem measureOfSetFn_eq {γ : (I → I → Prop) → ℝ} {μ : Measure (I × I)} [IsProbabilityMeasure μ]
+    (h : ∀ A : I → I → Prop, MeasurableSet {p : I × I | A p.1 p.2} → γ A = (μ {p : I × I | A p.1 p.2}).toReal) :
+    measureOfSetFn γ = μ := by
+  have hp : probMeasure2 γ := ⟨μ, inferInstance, h⟩
+  have := measureOfSetFn_prob hp
+  refine measure_ext_Iic_prod fun u v => ?_
+  have hm : MeasurableSet {p : I × I | (fun x z => x ≤ u ∧ z ≤ v) p.1 p.2} :=
+    (measurableSet_Iic.preimage measurable_fst).inter (measurableSet_Iic.preimage measurable_snd)
+  have e1 := measureOfSetFn_apply hp (fun x z => x ≤ u ∧ z ≤ v) hm
+  have e2 := h (fun x z => x ≤ u ∧ z ≤ v) hm
+  have hs : (Set.Iic u ×ˢ Set.Iic v : Set (I × I)) = {p : I × I | (fun x z => x ≤ u ∧ z ≤ v) p.1 p.2} := by
+    ext p; exact Set.mem_prod
+  rw [hs]
+  rw [e2] at e1
+  exact ((ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp e1).symm
+
+/-- A probability measure on the square is a probability measure as a set function. -/
+theorem probMeasure2_of_measure (μ : Measure (I × I)) [IsProbabilityMeasure μ] :
+    probMeasure2 (fun A => (μ {p : I × I | A p.1 p.2}).toReal) :=
+  ⟨μ, inferInstance, fun _ _ => rfl⟩
+
+/-- The law of `(X, T(X))` for a uniform `X` and a Borel map `T` is a probability measure. -/
+theorem graph_probMeasure2 {T : I → I} (hT : Measurable T) :
+    probMeasure2 (fun A => Leanify.Prelude.leb (fun x => A x (T x))) := by
+  have hm : Measurable (fun x : I => (x, T x)) := measurable_id.prodMk hT
+  refine ⟨Measure.map (fun x : I => (x, T x)) volume, (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).mpr inferInstance, fun A hA => ?_⟩
+  rw [Measure.map_apply hm hA]
+  rfl
+
+/-- The law of `(T(Z), Z)` for a uniform `Z` and a Borel map `T` is a probability measure. -/
+theorem graph_probMeasure2' {T : I → I} (hT : Measurable T) :
+    probMeasure2 (fun A => Leanify.Prelude.leb (fun z => A (T z) z)) := by
+  have hm : Measurable (fun z : I => (T z, z)) := hT.prodMk measurable_id
+  refine ⟨Measure.map (fun z : I => (T z, z)) volume, (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).mpr inferInstance, fun A hA => ?_⟩
+  rw [Measure.map_apply hm hA]
+  rfl
+
+theorem leb_le (u : I) : Leanify.Prelude.leb (fun x => x ≤ u) = u := by
+  unfold Leanify.Prelude.leb
+  have : {x : I | x ≤ u} = Set.Iic u := rfl
+  rw [this, unitInterval.volume_Iic, ENNReal.toReal_ofReal u.2.1]
+
+/-- The law of `(X, T(X))` has uniform marginals when `T` preserves Lebesgue measure. -/
+theorem graph_measUniformMarginals {T : I → I} (hT : lebesguePreserving T) :
+    measUniformMarginals (fun A => Leanify.Prelude.leb (fun x => A x (T x))) := by
+  refine ⟨fun u => leb_le u, fun v => ?_⟩
+  show (volume (T ⁻¹' Set.Iic v)).toReal = v
+  rw [hT.measure_preimage measurableSet_Iic.nullMeasurableSet, unitInterval.volume_Iic,
+    ENNReal.toReal_ofReal v.2.1]
+
+theorem graph_measUniformMarginals' {T : I → I} (hT : lebesguePreserving T) :
+    measUniformMarginals (fun A => Leanify.Prelude.leb (fun z => A (T z) z)) := by
+  refine ⟨fun u => ?_, fun v => leb_le v⟩
+  show (volume (T ⁻¹' Set.Iic u)).toReal = u
+  rw [hT.measure_preimage measurableSet_Iic.nullMeasurableSet, unitInterval.volume_Iic,
+    ENNReal.toReal_ofReal u.2.1]
+
+/-- If the law of `(X, T(X))` has uniform marginals, then `T` preserves Lebesgue measure. -/
+theorem lebesguePreserving_of_graph {T : I → I} (hT : Measurable T)
+    (h : measUniformMarginals (fun A => Leanify.Prelude.leb (fun x => A x (T x)))) :
+    lebesguePreserving T := by
+  refine ⟨hT, ?_⟩
+  have := Measure.isFiniteMeasure_map (volume : Measure I) T
+  refine Measure.ext_of_Iic _ _ fun v => ?_
+  rw [Measure.map_apply hT measurableSet_Iic, unitInterval.volume_Iic]
+  have h2 : (volume (T ⁻¹' Set.Iic v)).toReal = v := h.2 v
+  rw [← h2, ENNReal.ofReal_toReal (measure_ne_top _ _)]
+
+/-- The measure of a distribution function is the probability measure whose rectangles
+`[0,u] × [0,v]` it measures. -/
+theorem measureOf_eq {F : I → I → ℝ} {μ : Measure (I × I)} [IsProbabilityMeasure μ]
+    (h : ∀ u v : I, F u v = (μ (Set.Iic u ×ˢ Set.Iic v)).toReal) : measureOf F = μ := by
+  have hF : distFn2 F := ⟨μ, inferInstance, h⟩
+  have := measureOf_prob hF
+  refine measure_ext_Iic_prod fun u v => ?_
+  have e1 := measureOf_apply hF u v
+  rw [h u v] at e1
+  exact ((ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp e1).symm
+
+/-- The reflection `(x,z) ↦ (1-x,1-z)` of the square. -/
+noncomputable def reflectSq : I × I ≃ᵐ I × I :=
+  unitInterval.symmMeasurableEquiv.prodCongr unitInterval.symmMeasurableEquiv
+
+theorem reflectSq_apply (p : I × I) : reflectSq p = (unitInterval.symm p.1, unitInterval.symm p.2) := rfl
+
+theorem volume_Ici_symm (u : I) : (volume (Set.Ici (unitInterval.symm u))).toReal = u := by
+  rw [unitInterval.volume_Ici]
+  have : (1 : ℝ) - ((unitInterval.symm u : I) : ℝ) = u := by
+    rw [unitInterval.coe_symm_eq]; ring
+  rw [this, ENNReal.toReal_ofReal u.2.1]
+
+/-- The coupling associated with a copula is the reflected measure of the copula. -/
+theorem couplingOfCopula_eq_map (C : I → I → ℝ) (A : I → I → Prop) :
+    couplingOfCopula C A = (((measureOf C).map reflectSq) {p : I × I | A p.1 p.2}).toReal := by
+  rw [MeasurableEquiv.map_apply]
+  rfl
+
+/-- The coupling associated with a copula is a coupling. -/
+theorem couplingOfCopula_isCoupling {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    probMeasure2 (couplingOfCopula C) ∧ measUniformMarginals (couplingOfCopula C) := by
+  have := measureOf_prob h.1
+  refine ⟨⟨(measureOf C).map reflectSq, (Measure.isProbabilityMeasure_map_iff reflectSq.measurable.aemeasurable).mpr inferInstance,
+    fun A _ => couplingOfCopula_eq_map C A⟩, fun u => ?_, fun v => ?_⟩
+  · have hs : {p : I × I | unitInterval.symm p.1 ≤ u} = Prod.fst ⁻¹' Set.Ici (unitInterval.symm u) := by
+      ext p
+      simp only [Set.mem_preimage, Set.mem_Ici, Set.mem_ofPred_eq]
+      exact unitInterval.symm_le_comm
+    show ((measureOf C) {p : I × I | unitInterval.symm p.1 ≤ u}).toReal = u
+    rw [hs, ← Measure.map_apply measurable_fst measurableSet_Ici, measureOf_map_fst h, volume_Ici_symm]
+  · have hs : {p : I × I | unitInterval.symm p.2 ≤ v} = Prod.snd ⁻¹' Set.Ici (unitInterval.symm v) := by
+      ext p
+      simp only [Set.mem_preimage, Set.mem_Ici, Set.mem_ofPred_eq]
+      exact unitInterval.symm_le_comm
+    show ((measureOf C) {p : I × I | unitInterval.symm p.2 ≤ v}).toReal = v
+    rw [hs, ← Measure.map_apply measurable_snd measurableSet_Ici, measureOf_map_snd h, volume_Ici_symm]
+
+/-- The measure of the coupling associated with a copula. -/
+theorem measureOfSetFn_couplingOfCopula {C : I → I → ℝ} (h : distFn2 C) :
+    measureOfSetFn (couplingOfCopula C) = (measureOf C).map reflectSq := by
+  have := measureOf_prob h
+  have : IsProbabilityMeasure ((measureOf C).map reflectSq) :=
+    (Measure.isProbabilityMeasure_map_iff reflectSq.measurable.aemeasurable).mpr inferInstance
+  exact measureOfSetFn_eq fun A _ => couplingOfCopula_eq_map C A
+
+/-- The first marginal of a coupling is Lebesgue measure. -/
+theorem measureOfSetFn_map_fst {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ ∧ measUniformMarginals γ) :
+    (measureOfSetFn γ).map Prod.fst = volume := by
+  have := measureOfSetFn_prob h.1
+  have := Measure.isFiniteMeasure_map (measureOfSetFn γ) (Prod.fst : I × I → I)
+  refine Measure.ext_of_Iic _ _ (fun a => ?_)
+  rw [Measure.map_apply measurable_fst measurableSet_Iic, unitInterval.volume_Iic]
+  have hm : MeasurableSet ((Prod.fst : I × I → I) ⁻¹' Set.Iic a) := measurableSet_Iic.preimage measurable_fst
+  have h2 := measureOfSetFn_apply h.1 (fun x _ => x ≤ a) hm
+  rw [h.2.1 a] at h2
+  have h3 : ((Prod.fst : I × I → I) ⁻¹' Set.Iic a) = {p : I × I | (fun x _ => x ≤ a) p.1 p.2} := rfl
+  rw [h3, h2, ENNReal.ofReal_toReal (measure_ne_top _ _)]
+
+/-- The second marginal of a coupling is Lebesgue measure. -/
+theorem measureOfSetFn_map_snd {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ ∧ measUniformMarginals γ) :
+    (measureOfSetFn γ).map Prod.snd = volume := by
+  have := measureOfSetFn_prob h.1
+  have := Measure.isFiniteMeasure_map (measureOfSetFn γ) (Prod.snd : I × I → I)
+  refine Measure.ext_of_Iic _ _ (fun a => ?_)
+  rw [Measure.map_apply measurable_snd measurableSet_Iic, unitInterval.volume_Iic]
+  have hm : MeasurableSet ((Prod.snd : I × I → I) ⁻¹' Set.Iic a) := measurableSet_Iic.preimage measurable_snd
+  have h2 := measureOfSetFn_apply h.1 (fun _ z => z ≤ a) hm
+  rw [h.2.2 a] at h2
+  have h3 : ((Prod.snd : I × I → I) ⁻¹' Set.Iic a) = {p : I × I | (fun _ z => z ≤ a) p.1 p.2} := rfl
+  rw [h3, h2, ENNReal.ofReal_toReal (measure_ne_top _ _)]
+
+/-- The copula associated with a coupling is the distribution function of the reflected
+measure. -/
+theorem copulaOfCoupling_apply {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) (u v : I) :
+    copulaOfCoupling γ u v = (((measureOfSetFn γ).map reflectSq) (Set.Iic u ×ˢ Set.Iic v)).toReal := by
+  rw [MeasurableEquiv.map_apply]
+  have hm : MeasurableSet {p : I × I | (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm v ≤ z) p.1 p.2} :=
+    (measurableSet_Ici.preimage measurable_fst).inter (measurableSet_Ici.preimage measurable_snd)
+  have e := measureOfSetFn_apply h (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm v ≤ z) hm
+  have hs : (reflectSq ⁻¹' (Set.Iic u ×ˢ Set.Iic v)) =
+      {p : I × I | (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm v ≤ z) p.1 p.2} := by
+    ext p
+    simp only [Set.mem_preimage, reflectSq_apply, Set.mem_prod, Set.mem_Iic, Set.mem_ofPred_eq]
+    exact and_congr unitInterval.symm_le_comm unitInterval.symm_le_comm
+  rw [hs]
+  exact e
+
+/-- The copula associated with a coupling is a copula. -/
+theorem copulaOfCoupling_isCopula {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ ∧ measUniformMarginals γ) :
+    distFn2 (copulaOfCoupling γ) ∧ dfUniformMarginals (copulaOfCoupling γ) := by
+  have := measureOfSetFn_prob h.1
+  have hp : IsProbabilityMeasure ((measureOfSetFn γ).map reflectSq) :=
+    (Measure.isProbabilityMeasure_map_iff reflectSq.measurable.aemeasurable).mpr inferInstance
+  refine ⟨⟨_, hp, fun u v => copulaOfCoupling_apply h.1 u v⟩, fun u => ?_, fun v => ?_⟩
+  · have hm : MeasurableSet {p : I × I | (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm (1 : I) ≤ z) p.1 p.2} :=
+      (measurableSet_Ici.preimage measurable_fst).inter (measurableSet_Ici.preimage measurable_snd)
+    have e := measureOfSetFn_apply h.1 (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm (1 : I) ≤ z) hm
+    have hs : {p : I × I | (fun x z => unitInterval.symm u ≤ x ∧ unitInterval.symm (1 : I) ≤ z) p.1 p.2} =
+        Prod.fst ⁻¹' Set.Ici (unitInterval.symm u) := by
+      ext p
+      simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_Ici, unitInterval.symm_one]
+      exact ⟨fun hp => hp.1, fun hp => ⟨hp, unitInterval.nonneg'⟩⟩
+    show copulaOfCoupling γ u 1 = u
+    unfold copulaOfCoupling
+    rw [e, hs, ← Measure.map_apply measurable_fst measurableSet_Ici, measureOfSetFn_map_fst h, volume_Ici_symm]
+  · have hm : MeasurableSet {p : I × I | (fun x z => unitInterval.symm (1 : I) ≤ x ∧ unitInterval.symm v ≤ z) p.1 p.2} :=
+      (measurableSet_Ici.preimage measurable_fst).inter (measurableSet_Ici.preimage measurable_snd)
+    have e := measureOfSetFn_apply h.1 (fun x z => unitInterval.symm (1 : I) ≤ x ∧ unitInterval.symm v ≤ z) hm
+    have hs : {p : I × I | (fun x z => unitInterval.symm (1 : I) ≤ x ∧ unitInterval.symm v ≤ z) p.1 p.2} =
+        Prod.snd ⁻¹' Set.Ici (unitInterval.symm v) := by
+      ext p
+      simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_Ici, unitInterval.symm_one]
+      exact ⟨fun hp => hp.2, fun hp => ⟨unitInterval.nonneg', hp⟩⟩
+    show copulaOfCoupling γ 1 v = v
+    unfold copulaOfCoupling
+    rw [e, hs, ← Measure.map_apply measurable_snd measurableSet_Ici, measureOfSetFn_map_snd h, volume_Ici_symm]
+
+/-- The measure of the copula associated with a coupling. -/
+theorem measureOf_copulaOfCoupling {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) :
+    measureOf (copulaOfCoupling γ) = (measureOfSetFn γ).map reflectSq := by
+  have := measureOfSetFn_prob h
+  have : IsProbabilityMeasure ((measureOfSetFn γ).map reflectSq) :=
+    (Measure.isProbabilityMeasure_map_iff reflectSq.measurable.aemeasurable).mpr inferInstance
+  exact measureOf_eq fun u v => copulaOfCoupling_apply h u v
+
+theorem reflectSq_reflectSq (p : I × I) : reflectSq (reflectSq p) = p := by
+  simp [reflectSq_apply]
+
+/-- A copula is the copula associated with its coupling. -/
+theorem copulaOfCoupling_couplingOfCopula {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    copulaOfCoupling (couplingOfCopula C) = C := by
+  funext u v
+  rw [copulaOfCoupling_apply (couplingOfCopula_isCoupling h).1, measureOfSetFn_couplingOfCopula h.1,
+    Measure.map_map reflectSq.measurable reflectSq.measurable]
+  have : (reflectSq ∘ reflectSq : I × I → I × I) = id := funext reflectSq_reflectSq
+  rw [this, Measure.map_id, ← measureOf_apply h.1]
+
+/-- A coupling is the coupling associated with its copula, on measurable sets. -/
+theorem couplingOfCopula_copulaOfCoupling {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ ∧ measUniformMarginals γ)
+    (A : I → I → Prop) (hA : MeasurableSet {p : I × I | A p.1 p.2}) :
+    couplingOfCopula (copulaOfCoupling γ) A = γ A := by
+  rw [couplingOfCopula_eq_map, measureOf_copulaOfCoupling h.1,
+    Measure.map_map reflectSq.measurable reflectSq.measurable]
+  have : (reflectSq ∘ reflectSq : I × I → I × I) = id := funext reflectSq_reflectSq
+  rw [this, Measure.map_id, ← measureOfSetFn_apply h.1 A hA]
+
+/-- An expectation under the coupling associated with a copula is an integral against the
+measure of the copula: `E_γ[f(X,Z)] = ∫ f(1-u,1-v) dC(u,v)`. -/
+theorem couplingExpectation_couplingOfCopula {C : I → I → ℝ} (h : distFn2 C) (f : I → I → ℝ) :
+    couplingExpectation (couplingOfCopula C) f =
+      ∫ p, f (unitInterval.symm p.1) (unitInterval.symm p.2) ∂(measureOf C) := by
+  unfold couplingExpectation
+  rw [measureOfSetFn_couplingOfCopula h, integral_map_equiv]
+  rfl
+
+/-- An expectation under the law of `(X, T(X))`: `E[f(X,T(X))] = ∫ f(x,T(x)) dx`. -/
+theorem couplingExpectation_graph {T : I → I} (hT : Measurable T) (f : I → I → ℝ)
+    (hf : Measurable (fun p : I × I => f p.1 p.2)) :
+    couplingExpectation (fun A => Leanify.Prelude.leb (fun x => A x (T x))) f = ∫ x, f x (T x) := by
+  have hm : Measurable (fun x : I => (x, T x)) := measurable_id.prodMk hT
+  have : IsProbabilityMeasure (Measure.map (fun x : I => (x, T x)) volume) :=
+    (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).mpr inferInstance
+  have e : measureOfSetFn (fun A => Leanify.Prelude.leb (fun x => A x (T x))) = Measure.map (fun x : I => (x, T x)) volume :=
+    measureOfSetFn_eq fun A hA => by rw [Measure.map_apply hm hA]; rfl
+  unfold couplingExpectation
+  rw [e, integral_map hm.aemeasurable hf.aestronglyMeasurable]
+
+/-- An expectation under the law of `(T(Z), Z)`: `E[f(T(Z),Z)] = ∫ f(T(z),z) dz`. -/
+theorem couplingExpectation_graph' {T : I → I} (hT : Measurable T) (f : I → I → ℝ)
+    (hf : Measurable (fun p : I × I => f p.1 p.2)) :
+    couplingExpectation (fun A => Leanify.Prelude.leb (fun z => A (T z) z)) f = ∫ z, f (T z) z := by
+  have hm : Measurable (fun z : I => (T z, z)) := hT.prodMk measurable_id
+  have : IsProbabilityMeasure (Measure.map (fun z : I => (T z, z)) volume) :=
+    (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).mpr inferInstance
+  have e : measureOfSetFn (fun A => Leanify.Prelude.leb (fun z => A (T z) z)) = Measure.map (fun z : I => (T z, z)) volume :=
+    measureOfSetFn_eq fun A hA => by rw [Measure.map_apply hm hA]; rfl
+  unfold couplingExpectation
+  rw [e, integral_map hm.aemeasurable hf.aestronglyMeasurable]
+
+/-- A bounded Borel function is integrable for a coupling. -/
+theorem couplingIntegrable_of_bounded {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) {f : I → I → ℝ}
+    (hf : Measurable (fun p : I × I => f p.1 p.2)) (B : ℝ) (hB : ∀ x z, |f x z| ≤ B) :
+    couplingIntegrable γ f := by
+  have := measureOfSetFn_prob h
+  exact ⟨h, integrable_of_bounded hf B fun p => hB p.1 p.2⟩
+
+/-- A continuous function on the square is integrable for a coupling. -/
+theorem couplingIntegrable_of_continuous {γ : (I → I → Prop) → ℝ} (h : probMeasure2 γ) {f : I → I → ℝ}
+    (hf : continuousOnSquare f) : couplingIntegrable γ f := by
+  have := measureOfSetFn_prob h
+  exact ⟨h, hf.integrable_of_hasCompactSupport (HasCompactSupport.of_compactSpace _)⟩
+
+/-- A continuous function on `[0,1]` is integrable. -/
+theorem integrable_of_continuous {f : I → ℝ} (h : Continuous f) : Leanify.Prelude.integrable f :=
+  h.integrable_of_hasCompactSupport (HasCompactSupport.of_compactSpace _)
+
+/-- The integral over one variable of a continuous function on the square is integrable in
+the other variable. -/
+theorem integrable_integral_of_continuous {g : I → I → ℝ} (hg : Continuous fun p : I × I => g p.1 p.2) :
+    Leanify.Prelude.integrable (fun y : I => ∫ x : I, g x y) := by
+  have hc : Continuous (fun y : I => ∫ x in (Set.univ : Set I), (fun y x => g x y) y x) :=
+    continuous_parametric_integral_of_continuous (f := fun y x => g x y)
+      (hg.comp continuous_swap) isCompact_univ
+  simp only [Measure.restrict_univ] at hc
+  exact integrable_of_continuous hc
+
+/-- The set of the `x` with `(x, T(x))` in a Borel set is a Borel set, for a Borel map `T`. -/
+theorem measurableSet1_graph {T : I → I} (hT : Measurable T) {A : I → I → Prop}
+    (hA : Leanify.Prelude.measurableSet2 A) : Leanify.Prelude.measurableSet1 (fun x => A x (T x)) :=
+  (measurable_id.prodMk hT) hA
+
+theorem measurableSet1_graph' {T : I → I} (hT : Measurable T) {A : I → I → Prop}
+    (hA : Leanify.Prelude.measurableSet2 A) : Leanify.Prelude.measurableSet1 (fun z => A (T z) z) :=
+  (hT.prodMk measurable_id) hA
+
+/-- (for `definedness`) An expression in a copula and the coordinates is integrable on
+`[0,1]`, and so is its integral over one variable: the hypotheses give the copula, which is
+continuous, and `fun_prop` the continuity of the expression. -/
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic|
+      (first
+        | (with_reducible refine integrable_integral_of_continuous ?_)
+        | (with_reducible refine integrable_of_continuous ?_)
+       try (have hc := distFn2_continuous (by first | assumption | leanify_part))
+       fun_prop))
+
+/-- (for `definedness`) The points `x` with `(x,T(x))` in a Borel set, and a comparison of
+two Borel expressions in a point of `[0,1]`, are Borel sets. -/
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic|
+      first
+        | exact measurableSet1_graph (by assumption) (by assumption)
+        | exact measurableSet1_graph' (by assumption) (by assumption)
+        | (unfold Leanify.Prelude.measurableSet1; exact measurableSet_le (by fun_prop) (by fun_prop))
+        | (unfold Leanify.Prelude.measurableSet1; exact measurableSet_lt (by fun_prop) (by fun_prop)))
+
+
+/-- A copula with its arguments exchanged is a copula. -/
+theorem isCopula_swap {C : I → I → ℝ} (h : distFn2 C ∧ dfUniformMarginals C) :
+    distFn2 (fun u v => C v u) ∧ dfUniformMarginals (fun u v => C v u) := by
+  obtain ⟨⟨μ, hμ, hC⟩, h1, h2⟩ := h
+  refine ⟨⟨μ.map Prod.swap, (Measure.isProbabilityMeasure_map_iff measurable_swap.aemeasurable).mpr hμ, fun u v => ?_⟩, h2, h1⟩
+  rw [Measure.map_apply measurable_swap (measurableSet_Iic.prod measurableSet_Iic), Set.preimage_swap_prod]
+  exact hC v u
+
+/-- (for `definedness`) A copula with its arguments exchanged (the transpose that an
+article defines) is a copula. -/
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic|
+      exact isCopula_swap (by first | assumption | leanify_part))
+
+/-- If the law of `(T(Z), Z)` has a uniform first marginal, then `T` preserves Lebesgue
+measure. -/
+theorem lebesguePreserving_of_graph' {T : I → I} (hT : Measurable T)
+    (h : ∀ u : I, Leanify.Prelude.leb (fun z => T z ≤ u) = u) : lebesguePreserving T := by
+  refine ⟨hT, ?_⟩
+  have := Measure.isFiniteMeasure_map (volume : Measure I) T
+  refine Measure.ext_of_Iic _ _ fun v => ?_
+  rw [Measure.map_apply hT measurableSet_Iic, unitInterval.volume_Iic]
+  have h2 : (volume (T ⁻¹' Set.Iic v)).toReal = v := h v
+  rw [← h2, ENNReal.ofReal_toReal (measure_ne_top _ _)]
+
+/-- A set function that agrees with the coupling of a copula is a probability measure. -/
+theorem probMeasure2_of_eq {γ : (I → I → Prop) → ℝ} {C : I → I → ℝ}
+    (hC : distFn2 C ∧ dfUniformMarginals C) (h : ∀ A, γ A = couplingOfCopula C A) : probMeasure2 γ := by
+  have : γ = couplingOfCopula C := funext h
+  rw [this]; exact (couplingOfCopula_isCoupling hC).1
+
+/-! ### Joint laws of a real variable and a point of `[0,1]` -/
+
+theorem measureOfJoint_prob {P : (ℝ → I → Prop) → ℝ} (h : jointLaw P) :
+    IsProbabilityMeasure (measureOfJoint P) := by
+  unfold measureOfJoint
+  rw [dite_eq_left h]
+  exact (Classical.choose_spec h).1
+
+theorem measureOfJoint_apply {P : (ℝ → I → Prop) → ℝ} (h : jointLaw P) (A : ℝ → I → Prop)
+    (hA : MeasurableSet {p : ℝ × I | A p.1 p.2}) :
+    P A = ((measureOfJoint P) {p : ℝ × I | A p.1 p.2}).toReal := by
+  have h1 : measureOfJoint P = Classical.choose h := by
+    unfold measureOfJoint
+    rw [dite_eq_left h]
+  rw [h1]
+  exact (Classical.choose_spec h).2 A hA
+
+/-- The distribution function of the first variable is the distribution function of its law. -/
+theorem jointDistFn_eq_cdf {P : (ℝ → I → Prop) → ℝ} (h : jointLaw P) :
+    jointDistFn P = ProbabilityTheory.cdf ((measureOfJoint P).map Prod.fst) := by
+  have := measureOfJoint_prob h
+  funext t
+  have : IsProbabilityMeasure ((measureOfJoint P).map (Prod.fst : ℝ × I → ℝ)) :=
+    (Measure.isProbabilityMeasure_map_iff measurable_fst.aemeasurable).mpr inferInstance
+  rw [ProbabilityTheory.cdf_eq_real, measureReal_def, Measure.map_apply measurable_fst measurableSet_Iic]
+  exact measureOfJoint_apply h (fun y _ => y ≤ t) (measurableSet_Iic.preimage measurable_fst)
+
+/-- The second variable preserves measure when it is uniformly distributed. -/
+theorem jointUniformSecond_measurePreserving {P : (ℝ → I → Prop) → ℝ} (h : jointLaw P)
+    (hu : jointUniformSecond P) : MeasurePreserving (Prod.snd : ℝ × I → I) (measureOfJoint P) volume := by
+  have := measureOfJoint_prob h
+  refine ⟨measurable_snd, ?_⟩
+  have := Measure.isFiniteMeasure_map (measureOfJoint P) (Prod.snd : ℝ × I → I)
+  refine Measure.ext_of_Iic _ _ fun v => ?_
+  rw [Measure.map_apply measurable_snd measurableSet_Iic, unitInterval.volume_Iic]
+  have h2 := measureOfJoint_apply h (fun _ z => z ≤ v) (measurableSet_le measurable_snd measurable_const)
+  rw [hu v] at h2
+  rw [h2]
+  exact (ENNReal.ofReal_toReal (measure_ne_top _ _)).symm
+
+/-- `Y Z` is integrable when `Y` is: `Z` takes values in `[0,1]`. -/
+theorem jointIntegrable_mul_snd {P : (ℝ → I → Prop) → ℝ} (hi : jointIntegrable P fun y _ => y) :
+    jointIntegrable P fun y z => y * (z : ℝ) := by
+  refine ⟨hi.1, hi.2.mul_bdd (c := 1) (by fun_prop) (Filter.Eventually.of_forall fun p => ?_)⟩
+  rw [Real.norm_eq_abs, abs_le]
+  exact ⟨by linarith [p.2.2.1], p.2.2.2⟩
+
+/-- `Y F_Y(Y)` is integrable when `Y` is. -/
+theorem jointIntegrable_mul_distFn {P : (ℝ → I → Prop) → ℝ} (hi : jointIntegrable P fun y _ => y) :
+    jointIntegrable P fun y _ => y * jointDistFn P y := by
+  rw [jointDistFn_eq_cdf hi.1]
+  refine ⟨hi.1, hi.2.mul_bdd (c := 1)
+    ((ProbabilityTheory.monotone_cdf _).measurable.comp measurable_fst).aestronglyMeasurable
+    (Filter.Eventually.of_forall fun p => ?_)⟩
+  rw [Real.norm_eq_abs, abs_le]
+  exact ⟨by linarith [ProbabilityTheory.cdf_nonneg ((measureOfJoint P).map Prod.fst) p.1],
+    ProbabilityTheory.cdf_le_one _ _⟩
+
+/-- (for `definedness`) Integrability of a continuous function on `[0,1]`, of a continuous
+function on the square for a coupling, and of `Y Z` and `Y F_Y(Y)` for a joint law with an
+integrable `Y`. -/
+macro_rules
+  | `(tactic| leanify_facts) => `(tactic| first
+      | exact integrable_of_continuous (by assumption)
+      | (refine couplingIntegrable_of_continuous ?_ ?_
+         · first
+           | assumption
+           | exact probMeasure2_of_eq (by first | assumption | leanify_part) (by assumption)
+           | leanify_part
+         · first | assumption | (unfold continuousOnSquare; fun_prop))
+      | exact jointIntegrable_mul_snd (by first | assumption | leanify_part)
+      | exact jointIntegrable_mul_distFn (by first | assumption | leanify_part))
+
+end Couplings
 
 end Leanify.UnitSquare

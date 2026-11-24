@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={vectors}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $x\times y$ for the cross product of $x$ and $y$.
+We write $\theta(x,y)$ for the angle between $x$ and $y$.
+We write $x_i$ for the $i$th coordinate of $x$.
+
+\section{Vectors}
+
+\begin{lemma}\label{cauchy}
+Let $n$ be a positive integer, and let $x$ and $y$ be vectors in $\mathbb{R}^n$. Then $|\langle x,y\rangle|\le\|x\|\,\|y\|$.
+\end{lemma}
+
+\begin{lemma}\label{triangle}
+Let $n$ be a positive integer, and let $x$ and $y$ be vectors in $\mathbb{R}^n$. Then $\|x+y\|\le\|x\|+\|y\|$.
+\end{lemma}
+
+\begin{lemma}\label{parallelogram}
+Let $n$ be a positive integer, and let $x$ and $y$ be vectors in $\mathbb{R}^n$. Then $\|x+y\|^2+\|x-y\|^2=2\|x\|^2+2\|y\|^2$.
+\end{lemma}
+
+\begin{lemma}\label{pythagoras}
+Let $x$ and $y$ be vectors of dimension $3$. If $x$ is orthogonal to $y$, then $\|x+y\|^2=\|x\|^2+\|y\|^2$.
+\end{lemma}
+
+\begin{lemma}\label{scalar}
+For every vector $x$ and every real number $c$, $\|cx\|=|c|\,\|x\|$.
+\end{lemma}
+
+\begin{lemma}\label{cross}
+Let $x$ and $y$ be vectors of dimension $3$. Then $\langle x\times y,x\rangle=0$ and $\|x\times y\|\le\|x\|\,\|y\|$.
+\end{lemma}
+
+\begin{lemma}\label{angle}
+Let $x$ and $y$ be nonzero vectors of dimension $2$. Then $\langle x,y\rangle=\|x\|\,\|y\|\cos\theta(x,y)$.
+\end{lemma}
+
+\begin{lemma}\label{unit}
+Every unit vector $u$ in $\mathbb{R}^2$ satisfies $u_1^2+u_2^2=1$.
+\end{lemma}
+
+\end{document}

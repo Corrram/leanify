@@ -125,6 +125,13 @@ modifier are terms in the scope of the sentence (`n` a variable of the result), 
 variables that the noun phrase binds. A phrase may have a hyphen (`prime-counting
 function`, `triangle-free`), and `$v$th` also matches `$n$-th`.
 
+The variables of a modifier have the types of the first arguments of its predicate: a
+number, or an object (`orthogonal to $v$` in `vectors` takes a vector, `isomorphic to $v$`
+in `groups` a group, `lying on $v$` in `geometry` a set of points). A modifier is also
+stated after `is` (`$x$ is orthogonal to $y$`, `$S$ is of measure zero` as `$S$ is null`),
+and a phrase may have a comma (`with vertices $v$, $v$ and $v$`). The methods
+`fn "@norm"` and `fn "@inner"` of a type are `\lVert x\rVert` and `\langle x,y\rangle`.
+
 An *adjective* is a property of objects of one type that a sentence states with
 `$X$ is ADJ [on $A$]`: the unit square's field has `convex`, `concave` and
 `lower semicontinuous with respect to uniform convergence` for a quantity of

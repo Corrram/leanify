@@ -1,0 +1,25 @@
+tests/Vectors/article.tex:9:1: info: defines \@n0 (n0)
+tests/Vectors/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathrm{Vec},\ \forall y\in \mathrm{Vec},\ \dim(x)=3\land \dim(y)=3
+tests/Vectors/article.tex:10:1: info: defines \theta (theta)
+tests/Vectors/article.tex:10:1: info: \theta is well defined if: \forall x\in \mathrm{Vec},\ \forall y\in \mathrm{Vec},\ \dim x=\dim y\land \neg (\lVert x\rVert=0)\land \neg (\lVert y\rVert=0)
+tests/Vectors/article.tex:11:1: info: defines \@n2 (n2)
+tests/Vectors/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Vec},\ x\in \mathbb{Z}\land 1\le x\land x\le \dim(y)
+tests/Vectors/article.tex:16:82: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \lvert \langle y,z\rangle\rvert\le \lVert y\rVert\,\lVert z\rVert))
+tests/Vectors/article.tex:16:82: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \dim y=\dim z))
+tests/Vectors/article.tex:20:82: info: claim 1: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \lVert y+z\rVert\le \lVert y\rVert+\lVert z\rVert))
+tests/Vectors/article.tex:20:82: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \dim y=\dim z))
+tests/Vectors/article.tex:24:82: info: claim 2: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow {\lVert y+z\rVert}^{2}+{\lVert y-z\rVert}^{2}=2\,{\lVert y\rVert}^{2}+2\,{\lVert z\rVert}^{2}))
+tests/Vectors/article.tex:24:82: info: claim 2 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \dim y=\dim z\land \dim y=\dim z))
+tests/Vectors/article.tex:28:46: info: claim 3: \forall x\in \mathrm{Vec},\ \dim(x)=3\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=3\Rightarrow \dim x=\dim y\land \langle x,y\rangle=0\Rightarrow {\lVert x+y\rVert}^{2}={\lVert x\rVert}^{2}+{\lVert y\rVert}^{2})
+tests/Vectors/article.tex:32:1: info: claim 4: \forall x\in \mathrm{Vec},\ \forall y\in \mathbb{R},\ \lVert y\,x\rVert=\lvert y\rvert\,\lVert x\rVert
+tests/Vectors/article.tex:32:1: info: claim 4 is meaningful if: \forall x\in \mathrm{Vec},\ \forall y\in \mathbb{R},\ \operatorname{Scalable}(y,x)
+tests/Vectors/article.tex:36:46: info: claim 5: \forall x\in \mathrm{Vec},\ \dim(x)=3\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=3\Rightarrow \langle \@n0(x,y),x\rangle=0)
+tests/Vectors/article.tex:36:46: info: claim 5 is meaningful if: \forall x\in \mathrm{Vec},\ \dim(x)=3\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=3\Rightarrow \dim \@n0(x,y)=\dim x)
+tests/Vectors/article.tex:36:46: info: claim 6: \forall x\in \mathrm{Vec},\ \dim(x)=3\Rightarrow (\forall y\in \mathrm{Vec},\ \dim(y)=3\Rightarrow \lVert \@n0(x,y)\rVert\le \lVert x\rVert\,\lVert y\rVert)
+tests/Vectors/article.tex:40:54: info: claim 7: \forall x\in \mathrm{Vec},\ \neg (\lVert x\rVert=0)\land \dim(x)=2\Rightarrow (\forall y\in \mathrm{Vec},\ \neg (\lVert y\rVert=0)\land \dim(y)=2\Rightarrow \langle x,y\rangle=\lVert x\rVert\,\lVert y\rVert\,\cos(\theta(x,y)))
+tests/Vectors/article.tex:40:54: info: claim 7 is meaningful if: \forall x\in \mathrm{Vec},\ \neg (\lVert x\rVert=0)\land \dim(x)=2\Rightarrow (\forall y\in \mathrm{Vec},\ \neg (\lVert y\rVert=0)\land \dim(y)=2\Rightarrow \dim x=\dim y)
+tests/Vectors/article.tex:44:1: info: claim 8: \forall x\in \mathrm{Vec},\ \lVert x\rVert=1\land \dim(x)=2\Rightarrow {\@n2(1,x)}^{2}+{\@n2(2,x)}^{2}=1
+tests/Vectors/article.tex: 3 definitions, 9 claims
+  text: 3 compiled, 0 failed, 0 prose (of 3)
+  results: 14 compiled, 0 failed, 0 prose (of 14)
+  all: 17 compiled, 0 failed, 0 prose (of 17)

@@ -1,0 +1,63 @@
+tests/Wordings/article.tex:16:1: info: defines \mathcal{C} (copulas)
+tests/Wordings/article.tex:17:1: info: defines M (M)
+tests/Wordings/article.tex:17:1: info: defines W (W)
+tests/Wordings/article.tex:17:1: info: defines \Pi (Pi)
+tests/Wordings/article.tex:17:1: info: claim 0: \operatorname{DistFn}_{[0,1]^2}(M)\land \operatorname{UnifMarg}(M)
+tests/Wordings/article.tex:17:1: info: claim 1: \operatorname{DistFn}_{[0,1]^2}(W)\land \operatorname{UnifMarg}(W)
+tests/Wordings/article.tex:17:1: info: claim 2: \operatorname{DistFn}_{[0,1]^2}(\Pi)\land \operatorname{UnifMarg}(\Pi)
+tests/Wordings/article.tex:18:1: info: defines \nu (nu)
+tests/Wordings/article.tex:18:1: info: \nu is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \operatorname{Int}((y\in [0,1]\,[\operatorname{Int}((z\in [0,1]\mapsto (1-z)\,x(z,y)))]\mapsto \int_0^1 (1-z)\,x(z,y)\,dz))\land \text{for almost every }y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \operatorname{Int}((s\in [0,1]\mapsto (1-s)\,x(s,\langle y\rangle_{[0,1]})))
+tests/Wordings/article.tex:18:1: info: claim 3: \nu(M)=1
+tests/Wordings/article.tex:18:1: info: claim 3 is meaningful if: \mathcal{C}(M)
+tests/Wordings/article.tex:18:1: info: claim 4: \nu(W)=-1
+tests/Wordings/article.tex:18:1: info: claim 4 is meaningful if: \mathcal{C}(W)
+tests/Wordings/article.tex:18:1: info: claim 5: \nu(\Pi)=0
+tests/Wordings/article.tex:18:1: info: claim 5 is meaningful if: \mathcal{C}(\Pi)
+tests/Wordings/article.tex:24:1: info: defines \rho (rho)
+tests/Wordings/article.tex:24:1: info: \rho is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \operatorname{Int}((y\in [0,1]\,[\operatorname{Int}((z\in [0,1]\mapsto x(z,y)))]\mapsto \int_0^1 x(z,y)\,dz))\land \text{for almost every }y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \operatorname{Int}((s\in [0,1]\mapsto x(s,\langle y\rangle_{[0,1]})))
+tests/Wordings/article.tex:30:1: info: defines ^\top (transpose)
+tests/Wordings/article.tex:31:1: info: defines \eta (eta)
+tests/Wordings/article.tex:31:1: info: \eta is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\mathcal{C}(x)\land \mathcal{C}(x)\land \mathcal{C}({x}^\top))\land \neg (2=0)
+tests/Wordings/article.tex:37:1: info: defines \widehat (survival)
+tests/Wordings/article.tex:37:1: info: \widehat is well defined if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ (0\le 1-y\land 1-y\le 1)\land 0\le 1-z\land 1-z\le 1)
+tests/Wordings/article.tex:40:1: info: defines \Gamma (Gamma)
+tests/Wordings/article.tex:41:1: info: defines \gamma_{\cdot} (gamma)
+tests/Wordings/article.tex:41:1: info: \gamma_{\cdot} is well defined if: \forall x\in [0,1]\to [0,1],\ \operatorname{Borel}(x)\Rightarrow (\forall y\in [0,1]\to [0,1]\to \mathrm{Prop},\ \operatorname{Meas}(y)\Rightarrow \operatorname{Meas}((z\in [0,1]\mapsto y(z,x(z)))))
+tests/Wordings/article.tex:45:1: info: claim 6: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ (\forall s\in [0,1]\to [0,1]\to \mathrm{Prop},\ y(s)=\operatorname{coupling}(x)(s))\Rightarrow \rho(x)=12\,\mathbb{E}_{y}\bigl[(z\in [0,1]\mapsto (s\in [0,1]\mapsto z\,s))\bigr]-3\land \nu(x)=12\,\mathbb{E}_{y}\bigl[(z\in [0,1]\mapsto (s\in [0,1]\mapsto {z}^{2}\,s))\bigr]-2)
+tests/Wordings/article.tex:45:1: info: claim 6 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ (\forall z\in [0,1]\to [0,1]\to \mathrm{Prop},\ \operatorname{DistFn}_{[0,1]^2}(x)\land \operatorname{UnifMarg}(x))\land ((\forall s\in [0,1]\to [0,1]\to \mathrm{Prop},\ y(s)=\operatorname{coupling}(x)(s))\Rightarrow (\mathcal{C}(x)\land \operatorname{Int}_{y}((z\in [0,1]\mapsto (s\in [0,1]\mapsto z\,s))))\land (\rho(x)=12\,\mathbb{E}_{y}\bigl[(z\in [0,1]\mapsto (s\in [0,1]\mapsto z\,s))\bigr]-3\Rightarrow \mathcal{C}(x)\land \operatorname{Int}_{y}((z\in [0,1]\mapsto (s\in [0,1]\mapsto {z}^{2}\,s))))))
+tests/Wordings/article.tex:52:1: info: claim 7: \operatorname{affine}(\rho)\text{ on }\mathcal{C}
+tests/Wordings/article.tex:52:1: info: claim 8: \operatorname{affine}(\nu)\text{ on }\mathcal{C}
+tests/Wordings/article.tex:55:1: info: defines T_{\cdot} (T)
+tests/Wordings/article.tex:55:1: info: T_{\cdot} is well defined if: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ 0\le y\land y\le 1-x\lor 1-x<y\land y\le 1\Rightarrow (0\le y\land y\le 1-x\Rightarrow 1-x<y\land y\le 1\Rightarrow y+x-1=1-y)\land (\neg (0\le y\land y\le 1-x)\Rightarrow \neg (1-x<y\land y\le 1)\Rightarrow \bot)
+tests/Wordings/article.tex:55:1: info: defines A_{\cdot} (A)
+tests/Wordings/article.tex:55:1: info: A_{\cdot} is well defined if: \forall x\in [0,1],\ ((\forall y\in [0,1],\ 0\le T_{x}(y)\land T_{x}(y)\le 1)\land \operatorname{Borel}((y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})))\land \operatorname{Prob}_{[0,1]^2}(\gamma_{(y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})})\land \operatorname{UnifMarg}(\gamma_{(y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})})
+tests/Wordings/article.tex:64:1: info: defines B (B)
+tests/Wordings/article.tex:64:1: info: B is well defined if: 0\le 1\land 1\le 1
+tests/Wordings/article.tex:68:1: info: claim 9: \forall x\in [0,1],\ \rho(A_{x})=2\,{x}^{3}-1
+tests/Wordings/article.tex:68:1: info: claim 9 is meaningful if: \forall x\in [0,1],\ \mathcal{C}(A_{x})
+tests/Wordings/article.tex:73:1: info: claim 10: \forall x\in [0,1],\ \rho(A_{x})\le 1
+tests/Wordings/article.tex:73:1: info: claim 10 is meaningful if: \forall x\in [0,1],\ \mathcal{C}(A_{x})
+tests/Wordings/article.tex:74:1: info: claim 11: \forall x\in [0,1],\ \nu(A_{x})\le 1
+tests/Wordings/article.tex:74:1: info: claim 11 is meaningful if: \forall x\in [0,1],\ \mathcal{C}(A_{x})
+tests/Wordings/article.tex:79:1: info: claim 12: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \rho(x)\le 1
+tests/Wordings/article.tex:80:1: info: claim 13: ((\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \rho(x)\le 1)\land (\mathcal{C}(M)\land \rho(M)=1)\land (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \rho(x)=1\Rightarrow x=M))\land \nu(M)=1
+tests/Wordings/article.tex:81:1: info: claim 14: (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow -1\le \rho(x))\land (\mathcal{C}(\widehat{M})\land \rho(\widehat{M})=-1)\land (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \rho(x)=-1\Rightarrow x=\widehat{M})
+tests/Wordings/article.tex:81:1: info: claim 14 is meaningful if: (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow -1\le \rho(x))\Rightarrow (\mathcal{C}(M)\land (\mathcal{C}(\widehat{M})\Rightarrow \mathcal{C}(M)\land \mathcal{C}(\widehat{M})))\land (\mathcal{C}(\widehat{M})\land \rho(\widehat{M})=-1\Rightarrow (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \mathcal{C}(x)\land (\rho(x)=-1\Rightarrow \mathcal{C}(M))))
+tests/Wordings/article.tex:82:1: info: claim 15: (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \nu(x)\le 1)\land (\mathcal{C}(M)\land \nu(M)=1)\land (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \nu(x)=1\Rightarrow x=M)
+tests/Wordings/article.tex:82:1: info: claim 16: \rho(M)=1
+tests/Wordings/article.tex:82:1: info: claim 16 is meaningful if: \mathcal{C}(M)
+tests/Wordings/article.tex:82:1: info: claim 17: \eta(M)=1
+tests/Wordings/article.tex:82:1: info: claim 17 is meaningful if: \mathcal{C}(M)
+tests/Wordings/article.tex:82:1: info: claim 18: (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow -1\le \nu(x))\land (\mathcal{C}(W)\land \nu(W)=-1)\land (\forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \mathcal{C}(x)\Rightarrow \nu(x)=-1\Rightarrow x=W)
+tests/Wordings/article.tex:86:1: info: the proof of cor:bounds is not read completely (Leanify cannot read 2 of its 3 sentences): cor:bounds can be checked, but it is not derived from this proof
+tests/Wordings/article.tex:93:1: info: defines K (K)
+tests/Wordings/article.tex:95:1: info: claim 19: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \operatorname{Continuous}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ x(y,z)\le 1)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(y)\Rightarrow \mathbb{E}_{y}\bigl[(z\in [0,1]\mapsto (s\in [0,1]\mapsto x(z,s)))\bigr]\le 1)
+tests/Wordings/article.tex:95:1: info: claim 19 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \operatorname{Continuous}(x)\Rightarrow (\forall y\in [0,1],\ \forall z\in [0,1],\ x(y,z)\le 1)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(y)\Rightarrow \operatorname{Int}_{y}((z\in [0,1]\mapsto (s\in [0,1]\mapsto x(z,s)))))
+tests/Wordings/article.tex:96:1: info: claim 20: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \operatorname{Continuous}(x)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(y)\Rightarrow (\forall z\in [0,1],\ \forall s\in [0,1],\ x(z,s)\le 1)\Rightarrow (\exists z\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(z)\land z(K(x))=1)\Rightarrow (\mathbb{E}_{y}\bigl[(z\in [0,1]\mapsto (s\in [0,1]\mapsto x(z,s)))\bigr]=(\sup\{z\in \mathbb{R} : \exists a\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(a)\land \mathbb{E}_{a}\bigl[(b\in [0,1]\mapsto (p\in [0,1]\mapsto x(b,p)))\bigr]=z\})\Leftrightarrow y(K(x))=1))
+tests/Wordings/article.tex:96:1: info: claim 20 is meaningful if: \forall x\in [0,1]\to [0,1]\to \mathbb{R},\ \operatorname{Continuous}(x)\Rightarrow (\forall y\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(y)\Rightarrow (\forall z\in [0,1],\ \forall s\in [0,1],\ x(z,s)\le 1)\Rightarrow (\forall z\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(z)\Rightarrow \operatorname{Continuous}(x)\land \operatorname{Meas}(K(x)))\land ((\exists z\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(z)\land z(K(x))=1)\Rightarrow (\operatorname{Int}_{y}((z\in [0,1]\mapsto (s\in [0,1]\mapsto x(z,s))))\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ \forall t\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(t)\Rightarrow \operatorname{Int}_{t}((a\in [0,1]\mapsto (b\in [0,1]\mapsto x(a,b)))))\land ((\forall s\in \mathbb{R},\ (\exists a\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(a)\land \mathbb{E}_{a}\bigl[(b\in [0,1]\mapsto (p\in [0,1]\mapsto x(b,p)))\bigr]=s)\Rightarrow s\le z)\Rightarrow (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ \forall a\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(a)\Rightarrow \operatorname{Int}_{a}((b\in [0,1]\mapsto (p\in [0,1]\mapsto x(b,p)))))))\land (\exists z\in \mathbb{R},\ ((\forall s\in \mathbb{R},\ (\exists a\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(a)\land \mathbb{E}_{a}\bigl[(b\in [0,1]\mapsto (p\in [0,1]\mapsto x(b,p)))\bigr]=s)\Rightarrow s\le z)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ (\exists b\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(b)\land \mathbb{E}_{b}\bigl[(p\in [0,1]\mapsto (q\in [0,1]\mapsto x(p,q)))\bigr]=t)\Rightarrow t\le s)\Rightarrow z\le s))\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ (\exists b\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(b)\land \mathbb{E}_{b}\bigl[(p\in [0,1]\mapsto (q\in [0,1]\mapsto x(p,q)))\bigr]=t)\Rightarrow t\le s)\land (\forall t\in \mathbb{R},\ (\forall a\in \mathbb{R},\ (\exists p\in ([0,1]\to [0,1]\to \mathrm{Prop})\to \mathbb{R},\ \Gamma(p)\land \mathbb{E}_{p}\bigl[(q\in [0,1]\mapsto (w\in [0,1]\mapsto x(q,w)))\bigr]=a)\Rightarrow a\le t)\Rightarrow s\le t)\Rightarrow s=z)))\land \operatorname{Continuous}(x)\land \operatorname{Meas}(K(x))))
+tests/Wordings/article.tex: 15 definitions, 21 claims
+  text: 11 compiled, 0 failed, 2 prose (of 13)
+  results: 13 compiled, 0 failed, 0 prose (of 13)
+  proofs: 1 compiled, 0 failed, 2 prose (of 3)
+  all: 25 compiled, 0 failed, 4 prose (of 29)
+  complete proofs: 0 of 1 (a result is derived from a proof that is read completely)

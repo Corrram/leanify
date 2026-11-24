@@ -588,6 +588,12 @@ def run : Nat → Mode → List MTok → R
             if !isE && !cond then none else
             some (.app (.id (if isE then w!"@sexp" else w!"@sprob"))
               [c, .mapsto (.tuple [.id [85], .id [86]]) body], r5)
+          -- `\mathbb{E}[e]`: the expectation for the random pair of the result
+          | .sym 91 :: r1 =>
+            if n != w!"\\mathbb{E}" then none else do
+            let (body, r2) ← run f .top r1
+            let r3 ← expect (.sym 93) r2
+            some (.app (.id w!"@rexp") [body], r3)
           | _ => none
         else none
       match sample with
@@ -892,6 +898,10 @@ def run : Nat → Mode → List MTok → R
     | _ => some (.num acc, ts)
   | f + 1, .group, ts =>
     match ts with
+    -- `x^{*}`, `C_{1}^{*}`, `R^{+}`: a braced star or sign, as without the braces
+    | .lb :: .sym 42 :: .rb :: rest => some (.id [42], rest)
+    | .lb :: .sym 45 :: .rb :: rest => some (.id [45], rest)
+    | .lb :: .sym 43 :: .rb :: rest => some (.id [43], rest)
     | .lb :: rest =>
       (do
         let (x, r1) ← run f .top rest
@@ -1093,7 +1103,9 @@ def splitTop : Nat → List MTok → List MTok → Nat → List (List MTok) → 
       | .lb | .setl | .sym 40 | .sym 91 | .begin _ => depth + 1
       | .rb | .setr | .sym 41 | .sym 93 | .finish _ => depth - 1
       | _ => depth
-    if depth == 0 && (t == .row || t == .cmd w!"qquad") then
+    -- (`,\quad` separates formulas too; a `\quad` without a comma is only space)
+    if depth == 0 && (t == .row || t == .cmd w!"qquad" ||
+        (t == .cmd w!"quad" && (match cur with | .sym 44 :: _ => true | _ => false))) then
       let cur' := match cur with | .sym 44 :: c => c | c => c
       if cur'.isEmpty then splitTop f [] ts depth' acc
       else splitTop f [] ts depth' (cur'.reverse :: acc)

@@ -131,6 +131,80 @@ article binds as it binds numbers, and modifiers that take numbers:
 | `$\deg p$`, `$\deg(pq)=\deg p+\deg q$` | `\deg` and `\det` apply to what follows them, as `\sin` does; the product of two real functions, or of a number and a real function, is taken value by value |
 | `$\overline{G}$` | the complement of a graph (a decoration of the field's type) |
 
+Further forms that the fields use (they are read for any vocabulary):
+
+| Sentence | Reading |
+| --- | --- |
+| `Every cyclic group $G$ is abelian.`, `Every point $P$ lying on $\Gamma$ is distinct from $O$.` | `Every NP $x$ is …` is `For every NP $x$, $x$ is …`: adjectives and nouns of the vocabulary about each object of the noun phrase |
+| `$S$ is compact if and only if $S$ is closed and bounded.`, `$G$ is cyclic or $G$ is isomorphic to $V$.`, `$n_3(G)=1$ or $n_3(G)=4$.` | two clauses joined by `if and only if` or by `or`, each a clause of its own (a formula, adjectives, a noun) |
+| `Let $M$ be the midpoint of $A$ and $B$.`, `let $H$ be the direct product of $C_2$ and $C_3$` | a variable that is the value of a notion of the vocabulary with its arguments (a number or an object of a field's type): a hypothesis `M = …` of what follows |
+| `$a$ is congruent to $b$ modulo $n$`, `$x$ is orthogonal to $y$`, `$G$ is isomorphic to $C_4$`, `$S$ is null` | a modifier of the vocabulary after `is`, with its arguments: numbers, or objects of the type the modifier names (a vector, a group, a set of points) |
+| `Let $a$ be an integer coprime to $n$.`, `Let $P$ be a point equidistant from $A$ and $B$.`, `Let $S$ be a set of measure zero.` | a modifier after its noun in a `let`, with or without arguments |
+| `$\mathcal{C}$ is compact and perfect and nowhere dense` | adjectives of the core language (`compact`) and of a field (`perfect`) in one list, joined by `and`: where the core language has no such property of the object, the field's adjective with these words is meant |
+| `$\lVert x+y\rVert\le\lVert x\rVert+\lVert y\rVert$`, `$\langle x,y\rangle$` | the norm and the inner product of objects of a field's type that has them (vectors) |
+| `the area of the triangle with vertices $A$, $B$ and $C$` | a phrase of the vocabulary may have commas |
+| `$C_n$ is connected, Hamiltonian and $2$-regular.` | a list of adjectives with commas is the list joined by `and`; an adjective may begin with a formula and a hyphen (`$1$-Lipschitz`, `$2$-regular`), also after `is` (`$f$ is $1$-Lipschitz`) |
+| `If $|f'(x)|\le1$ for every $x\in\mathbb{R}$, then …`, `If $a\le\varepsilon$ for every $\varepsilon>0$, then …` | a hypothesis that binds its own variable: `(∀ x, …) → …` |
+| `If $\alpha(C,A,B)=\frac{\pi}{2}$, then …` | a standard constant (`\pi`, `\mathbb{R}`) in a hypothesis is the constant, never a new variable |
+| `$f'(0)=0$`, `$|f'(x)|\le1$` | the derivative of a real function bound by a noun (`a differentiable function $f$`) |
+| `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |
+| `Let $T$ be the closure of $S$.`, `let $\ell$ denote the line through $A$ and $B$` | `be the` and `denote the` alike; the value of the notion may be a set or a function (then the variable is that set: `$M\in\ell$`) |
+| `Let $\varphi$ denote Euler's totient function.` | as `We write $\varphi$ for Euler's totient function.`: a symbol for a notion of the vocabulary |
+| `We write $K$ for the circle with centre $O$ and radius $5$.` | in a notation, a letter that the article has defined (`O`) is that object; the other letters are the notation's parameters |
+| `$S$ is of measure zero` | a modifier of the vocabulary that begins with `of`, after `is` |
+| `the M\"obius function` | TeX accents in words are read as the letters they print (`Möbius`) |
+| `\newif\ifmarked`, `\newcommand{\rev}[1]{\ifmarked{\color{magenta}#1}\else#1\fi}`, `\marginpar{…}` | the marks of a revision: a conditional of the preamble (`\newif`, `\…true`, `\…false`, `\ifdefined`) selects its branch, and colour and margin notes are layout. The sentences are read as in the clean version |
+| `Let $\mathcal C$ denote the class of bivariate copulas, that is, distribution functions on $[0,1]^2$ with uniform marginals, and we refer to … for background.` | a class that is a noun of the vocabulary: when the gloss after `that is,` is not read, the noun is the definition |
+| `The copulas $M(u,v)\coloneqq\min\{u,v\}$, $W(u,v)\coloneqq…$, and $\Pi(u,v)\coloneqq uv$ describe comonotonicity, countermonotonicity, and independence, respectively.` | as `Let DEFS denote the comonotonicity, countermonotonicity, and independence copulas.` (`describe`, `represent`, `model`, `correspond to`) |
+| `For a copula $C$, Spearman's rho is \begin{equation}\rho(C)=12\int_0^1\!\int_0^1C(u,v)\,du\,dv-3,\end{equation} as given in \cite{…}, a classical measure of concordance.` | `For a NOUN $x$, the NAME is DISPLAY` defines the symbol also with `=`, when the symbol is new; words without a formula after the display (`, as given in \cite{…}, …`, `, which emphasizes …`) assert nothing |
+| `For a copula $C$, we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$.` | a definition with its name: `its transpose` is then read |
+| `For a copula $C$, the reflections of $C$ in the first and in the second argument are \[C_{1}^{*}(u,v)\coloneqq v-C(1-u,v)\qquad\text{and}\qquad C_{2}^{*}(u,v)\coloneqq u-C(u,1-v).\]` | a decoration with a star, also with a number below it (`C^{*}`, `C_{1}^{*}`), is an operation on the objects of the noun, like `C^\top` and `\widehat C` |
+| `The boundary of the region is described by the function $\Phi:[-1,1]\to[-1,1]$ given by DISPLAY, which satisfies $2r-\Phi(r)=-\Phi(-r)$ for every $r\in[-1,1]$.` | as `Define $\Phi:[-1,1]\to[-1,1]$ by DISPLAY and observe that …`: the words before `the function` describe it |
+| `For every $C\in\mathcal C$, DISPLAY, and the two reflections satisfy DISPLAY, as well as DISPLAY.` | words that only lead to the next formula (`and … satisfy`, `as well as`); in a display, `,\quad` separates formulas like `,\qquad` |
+
+Couplings and random pairs, with the field `unitsquare` (`tests/Couplings/article.tex` uses
+each form):
+
+| Sentence | Reading |
+| --- | --- |
+| `Let $\Gamma$ denote the set of couplings.` | a *coupling* is a probability measure on `[0,1]^2` with uniform marginals, the law of a pair `(X,Z)` of uniform random variables |
+| `\mathbb{E}_\gamma[XZ(X+Z)]`, `\mathbb{E}_\gamma[c(X,Z)]` | the integral of a function of the two coordinates, written `X` and `Z`, against the coupling `γ`; defined when the function is integrable |
+| `Let $C\in\mathcal C$, and let $\gamma$ be the coupling associated with $C$.`, `let $D_c$ denote the copula associated with $\gamma_{\zeta_c}$` | the coupling of a copula `C` is the law of `(1-U,1-V)` for `(U,V)` with the copula `C`; the copula of a coupling `γ` is the copula of `(1-X,1-Z)`. A real function with values in `[0,1]`, such as `\zeta_c:[0,1]\to[0,1]`, is a map of the interval where one is expected |
+| `Consequently, $\rho$, $\nu$, and $\eta$ are affine on $\mathcal C$.` | what is said of several symbols is said of each; a quantity is *affine* on a class when it respects the convex combinations of its members |
+| `We therefore set $B_{1/2}\coloneqq A_{1/2}$.` | a family at one further parameter: from here on the family is defined there too |
+| `For $b\in(0,\frac12)$ and $x\in(1-b,1]$, set $z_-(x)\coloneqq…$.` | the first variables of the binder that no defined symbol shows are implicit: `z_-(x)` takes `b` from where it is used |
+| `… if and only if $C=D_{1/2}$`, `The maximum is attained only by $D_{1/2}$, that is, for every $C\in\mathcal C$, $\nu(C)-\rho(C)=\frac14$ if and only if $C=D_{1/2}$.` | an equality case as an equivalence; after `, that is,` the formal restatement is what is read |
+| `Let $c:[0,1]^2\to\mathbb{R}$ be a continuous function, and let $\varphi,\psi:[0,1]\to\mathbb{R}$ be continuous functions.` | functions of the points of the interval and of the square as variables of a result, with adjectives of the vocabulary |
+| `Suppose that $\Delta(x,z)\ge0$ for all $x,z\in[0,1]$, and let $K\coloneqq\{(x,z)\in[0,1]^2:\Delta(x,z)=0\}$ be their contact set.` | a set of pairs of points defined in a result (its name is not read); `$\gamma(K)$` is its measure, defined when it is measurable |
+| `Every $\gamma\in\Gamma$ satisfies DISPLAY, with equality if and only if $\gamma(K)=1$.` | the inequality, and: equality in it holds exactly when the condition does |
+| `If there is $\mu\in\Gamma$ such that $\mu(K)=1$, then …` | an existence as a hypothesis |
+| `If $K\subseteq\{(x,z)\in[0,1]^2:z=T(x)\}\cup(N_1\times[0,1])\cup([0,1]\times N_2)$, then every $\gamma\in\Gamma$ with $\gamma(K)=1$ satisfies $\gamma=\gamma_T$, and $T$ is Lebesgue measure preserving.` | sets of pairs of points: unions, products with a *finite subset of `[0,1]`*, inclusion; two couplings are equal when they agree on every measurable set |
+| `Let $Y$ be an integrable random variable with continuous distribution function $F$, and let $Z$ be uniformly distributed on $[0,1]$ and defined on the same probability space. Then $\mathbb{E}[YZ]\le\mathbb{E}[Y\,F(Y)]$, with equality if and only if $Z=F(Y)$ almost surely.` | the two random variables of a result are a random pair: the result is about every joint law of such a pair, a probability measure on `ℝ × [0,1]` whose second coordinate is uniform. `\mathbb{E}[…]` is the expectation for that law, `F` is the distribution function of `Y`, and `almost surely` is for that law. A statement about a pair on any probability space depends only on the joint law, so this is the same statement |
+
+Freer wordings (`tests/Wordings/article.tex` uses each form). A sentence that has no
+reading as it stands, or whose reading does not compile, is read through sentences of the
+forms above that say the same. What such a sentence says beyond them stays unread:
+
+| Sentence | Reading |
+| --- | --- |
+| `Consequently, if $C^\top(u,v)\coloneqq C(v,u)$ denotes the transpose of $C$, then …`, `For $(U,V)\sim C$, the survival copula $\widehat C(u,v)\coloneqq…$ is the copula of $(1-U,1-V)$.` | a definition (`\coloneqq`) inside a sentence of prose: the definition alone, with the name that the words give it (`denotes the NAME` after it, `the NAME` before it) |
+| `… $\nu$ arises from Spearman's rho, DISPLAY, see \cite{…}, by replacing …` with the display `\rho(C)=…` | a displayed `f(x)=…` after a name defines the symbol `f` if nothing has defined it |
+| `… one introduces the symmetrized coefficient DISPLAY, which emphasizes …` | likewise for a displayed definition; a footnote is not part of the sentence |
+| `\widehat C(u,v)\coloneqq…`, `\rho(C)=…` after `For a copula $C$, …` earlier | a definition about a letter that it does not introduce takes the latest introduction of that letter by a definition (`For a copula $C$,`, `For $w\in[0,1]$,`); so does a statement of the text or of a result that is not read otherwise (`… and $\nu(D_c)=\Phi(\rho(D_c))$.` after `For $c\in[0,1]$, …`) |
+| `… a family indexed by $w\in[0,1]$: let $A_w$ be the copula associated with $\gamma_{T_w}$, where DISPLAY` | after a colon, the definitions that the words before it announce, for the values they give (`For $w\in[0,1]$, …`); the definition after `, where` comes first; `set … and let …` are two definitions |
+| `For $c\in[0,1]$, the corresponding rank map $\zeta_c:[0,1]\to[0,1]$ is DISPLAY, which takes its values in $[0,1]$ by construction.` | as `define the rank map $\zeta_c:[0,1]\to[0,1]$ by DISPLAY` |
+| `…, the conditional law carries two atoms: DISPLAY` with rows `z_-(x)&\coloneqq…,&\quad\text{with probability }&…` | the definitions in the rows of an aligned display; what the rows say beside them is not read |
+| `the copula associated with the coupling $\gamma_{\zeta_c}$ from Section~\ref{…}`, `… for the function $\Phi$ in \eqref{…}` | words that only point to an object (`the coupling` before its symbol, a reference to where it is defined) |
+| `DISPLAY as given in \cite{…}, a normalization that makes $\nu(M)=1$, $\nu(W)=-1$, and $\nu(\Pi)=0$.` | the sentence before the comma, and the formulas as claims |
+| `We may identify $\mathcal C$ with the set $\Gamma$ of all such couplings, …` | `Let $\Gamma$ denote the set of couplings.`, if `\Gamma` is not defined |
+| `If $(X,Z)$ follows the coupling associated with $C\in\mathcal C$, then DISPLAY` with `\mathbb{E}[XZ]` | `Let $C\in\mathcal C$, and let $\gamma$ be the coupling associated with $C$. Then …` with `\mathbb{E}_\gamma[XZ]` |
+| `Consequently, $\rho$, $\nu$, and $\eta$ depend affinely on the copula.` | each of them is affine on its domain |
+| `For $w\in[0,1]$ and $b\in(0,\frac12]$, DISPLAY. In particular, $\nu(A_w)-\eta(A_w)=…$.` | in a result, the values that open a displayed statement are those of the sentences after it |
+| `The maximum $\nu-\rho=\frac14$ is attained only by $D_{1/2}$, which has $\rho=0$.`, `The minimum $\nu-\rho=-\frac14$ is attained only by its survival copula.` | the bound, its value at the object, and uniqueness; `\rho=0` is the value of `\rho` at the object; `its` refers to the object of the sentence before, with an operation that the article names |
+| `Both constants are sharp: the maximum $a$ of $\nu-\eta$ is attained only by $A_{3/4}$, at which $(\eta,\nu)=(e,n)$, and the minimum $-a$ only by $A_{3/4}^\top$.` | as `The maximum $\nu-\eta=a$ is attained only by $A_{3/4}$.`, the two values at `A_{3/4}`, and `The minimum $\nu-\eta=-a$ is attained only by $A_{3/4}^\top$.` |
+| `In particular, if some $\gamma^*\in\Gamma$ satisfies $\gamma^*(K)=1$, then the maximizers of $\gamma\mapsto\mathbb{E}_\gamma[c(X,Z)]$ over $\Gamma$ are exactly the couplings concentrated on $K$.` | if there is such a coupling, then for every `γ∈Γ` the value at `γ` is the supremum over `Γ` if and only if `γ(K)=1` |
+| in a proof: `Hence $\Delta(x,z)\ge\Delta(1-w,z)$.` after `On this rectangle, …`, `$\Delta(1-w,\cdot)\ge0$` | a step about a letter that the proof introduces in words, or with a placeholder, is not read (no warning; the proof is then not read completely). A letter with an argument (`$t(x)$`) is a symbol that must be defined |
+
 Functions of several variables are curried: `f:\mathbb R^2\to\mathbb R` (or
 `\mathbb R\times\mathbb R\to\mathbb R`) has type `ℝ → ℝ → ℝ`, and `f(x,y)` applies it to
 `x` and `y`.
@@ -229,6 +303,13 @@ fields of the vocabulary and what happens when a word has several meanings.
 5. **Give every map its signature.** "where $T_w:[0,1]\to[0,1]$ is given by
    …", "define $\Phi:[-1,1]\to[-1,1]$ by …". A parametrized piece states its
    parameter range on the same line: `e_b\coloneqq…,\qquad b\in(0,\tfrac12]`.
+   An argument whose domain the article does not state has its natural domain:
+   `$T_w(x)\coloneqq\begin{cases}…\end{cases}$` is defined at the `x` where one of its
+   cases applies, and `$\Delta(x,z)\coloneqq\varphi(x)+\psi(z)-c(x,z)$` at the points
+   where the functions on its right side are. A use of the symbol outside this domain is
+   a definedness condition that fails, so a formula `$e_b\coloneqq…$` with a range
+   `$b\in(0,\tfrac12)$` cannot be used at `$b=\tfrac12$`: state the range the article
+   uses.
 6. **Make every quantifier explicit.** "for every $r\in[-1,1]$" instead of a
    free $r$. A variable bound at the start of a result ("For $w\in[0,1]$, …")
    stays bound in the result's later sentences that use it.

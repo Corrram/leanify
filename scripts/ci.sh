@@ -162,6 +162,11 @@ proofs() {
   grep -q "error: statement (claim 2) is false as stated" "$TMP/refuted.txt" || fail "tests/Refuted: the false statement"
   grep -q "(claim 5) compiled but not verified: it rests on claim 2, which is refuted" "$TMP/refuted.txt" ||
     fail "tests/Refuted: the claim that rests on it"
+  $PYTHON - <<'PY' || fail "tests/Refuted: a step justified by companionK is reported as companion"
+import json, sys
+c = json.load(open("tests/Refuted/article.leanify.json"))["claims"][3]
+sys.exit(0 if c["status"] == "companion" and c["justification"].endswith("companion3") else 1)
+PY
   endgroup
 }
 

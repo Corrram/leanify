@@ -96,6 +96,8 @@ vocab=FIELDS & The fields of the article's vocabulary, for instance
   of its own) or \texttt{vocab=\{numbers,hyperbolic\}}. Other fields:
   \texttt{arithmetic}, \texttt{combinatorics}, \texttt{polynomials},
   \texttt{graphs}, \texttt{permutations}, \texttt{matrices}, \texttt{special},
+  \texttt{topology}, \texttt{analysis}, \texttt{vectors}, \texttt{geometry},
+  \texttt{congruences}, \texttt{groups},
   \texttt{trigonometry}, \texttt{complex}, \texttt{torus}, \texttt{distributions},
   \texttt{hilbert}, \texttt{markov}. The core vocabulary (real
   numbers, integers, their signs) is always there. \\
@@ -172,9 +174,13 @@ article go there when its certificate is first built, by the option
 \opt{certify} or by \texttt{leanify certify}, from the article as it is then.
 The option \opt{project=false} leaves the article without a project.
 
-Without shell escape nothing runs, and in a Lean project a warning says so.
-An article in no Lean project compiles without a warning on a machine that has
-no checker: one line of the terminal says that it was not checked.
+The package is never silent about an article that it did not check. Without
+shell escape nothing runs, and a warning says so. With shell escape on a machine
+where the checker does not run, a warning says what to install. If the article
+has changed since the status file was written and Leanify did not run, a
+warning says that the status is that of an earlier version. The option
+\opt{check=false} is for an article that need not be checked (a submission):
+no warning then.
 
 \section{Notions that the article does not define}\label{sec:notions}
 

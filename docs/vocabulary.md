@@ -166,6 +166,27 @@ Further fields cover other branches of mathematics:
   `(1,∞)`, the Bernoulli numbers, the sinc function, the Euler–Mascheroni constant and
   the golden ratio.
 
+* `topology`: sets of real numbers by a noun (`a nonempty compact set $S$`, `every open
+  subset $U$ of $\mathbb{R}$`): open, closed, compact, bounded, connected, dense, nowhere
+  dense, perfect, countable, measurable and null sets; closure, interior, boundary, limit
+  points, supremum, infimum, diameter, Lebesgue measure; the Cantor set;
+* `analysis`: real functions by a noun (`a continuous periodic function $f$`): uniformly
+  continuous, Lipschitz, differentiable, smooth, analytic, monotone, convex, even, odd,
+  periodic, injective, surjective, measurable and integrable functions; the derivative,
+  the supremum norm, the Lipschitz constant, the total variation, the range and the zeros;
+* `vectors`: real vectors of some dimension, a type of its own: `x+y`, `cx`,
+  `\lVert x\rVert`, `\langle x,y\rangle`, coordinates, the cross product, angles;
+  unit, orthogonal and parallel vectors;
+* `geometry`: points of the Euclidean plane, a type of its own: distances, midpoints,
+  areas, perimeters and centroids of triangles, angles, slopes; lines, segments,
+  perpendicular bisectors, circles and discs as sets of points;
+* `congruences`: `congruent to $b$ modulo $n$`, `coprime to $n$`, quadratic residues and
+  the Legendre symbol, primitive roots, inverses modulo `n`;
+* `groups`: finite groups, a type of its own, up to isomorphism (`isomorphic to $H$`):
+  abelian, cyclic, simple, solvable and nilpotent groups; the order, the exponent, the
+  numbers of subgroups, of conjugacy classes and of Sylow subgroups; cyclic, symmetric,
+  alternating and dihedral groups, the Klein four-group, direct products.
+
 Their notions take arguments (`the $n$th Catalan number`, `the degree of $v$ in $G$`),
 and an article gives them its notation (`We write $C_n$ for the $n$th Catalan number.`,
 `We write $\deg_G(v)$ for the degree of $v$ in $G$.`). A modifier may take a number too:

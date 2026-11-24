@@ -1,0 +1,30 @@
+tests/Groups/article.tex:9:1: info: defines \@n0 (n0)
+tests/Groups/article.tex:10:1: info: defines \@n1 (n1)
+tests/Groups/article.tex:11:1: info: defines \@n2 (n2)
+tests/Groups/article.tex:12:1: info: defines \@n3 (n3)
+tests/Groups/article.tex:13:1: info: defines \@n4 (n4)
+tests/Groups/article.tex:14:1: info: defines \@n5 (n5)
+tests/Groups/article.tex:15:1: info: defines \@n6 (n6)
+tests/Groups/article.tex:16:1: info: defines \@n7 (n7)
+tests/Groups/article.tex:21:68: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Grp},\ \lvert y\rvert=x\Rightarrow x=7\Rightarrow \operatorname{Cyclic}(y))
+tests/Groups/article.tex:25:1: info: claim 1: \forall x\in \mathrm{Grp},\ \operatorname{Cyclic}(x)\Rightarrow \operatorname{Abelian}(x)
+tests/Groups/article.tex:25:36: info: claim 2: \forall x\in \mathrm{Grp},\ \operatorname{Abelian}(x)\Rightarrow \operatorname{Nilpotent}(x)
+tests/Groups/article.tex:29:1: info: claim 3: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \@n1(\@n3(x))=x!
+tests/Groups/article.tex:29:1: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 0\le x)\land x\in \mathbb{N}
+tests/Groups/article.tex:29:46: info: claim 4: \operatorname{Solvable}(\@n3(3))
+tests/Groups/article.tex:29:46: info: claim 4 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
+tests/Groups/article.tex:29:46: info: claim 5: \operatorname{Simple}(\@n4(5))
+tests/Groups/article.tex:29:46: info: claim 5 is meaningful if: 5\in \mathbb{Z}\land 0\le 5
+tests/Groups/article.tex:33:34: info: claim 6: \forall x\in \mathrm{Grp},\ \lvert x\rvert=4\Rightarrow x\cong \@n2(4)\lor x\cong \@n5
+tests/Groups/article.tex:33:34: info: claim 6 is meaningful if: \forall x\in \mathrm{Grp},\ \lvert x\rvert=4\Rightarrow 4\in \mathbb{Z}\land 0<4
+tests/Groups/article.tex:37:21: info: claim 7: \forall x\in \mathrm{Grp},\ \operatorname{Abelian}(x)\Leftrightarrow \@n7(x)=\@n1(x)
+tests/Groups/article.tex:41:35: info: claim 8: \forall x\in \mathrm{Grp},\ \lvert x\rvert=12\Rightarrow \@n6(3,x)=1\lor \@n6(3,x)=4
+tests/Groups/article.tex:41:35: info: claim 8 is meaningful if: \forall x\in \mathrm{Grp},\ \lvert x\rvert=12\Rightarrow (3\in \mathbb{Z}\land 0<3)\land (\neg (\@n6(3,x)=1)\Rightarrow 3\in \mathbb{Z}\land 0<3)
+tests/Groups/article.tex:45:51: info: claim 9: \forall x\in \mathrm{Grp},\ x=\times(\@n2(2))(\@n2(3))\Rightarrow x\cong \@n2(6)
+tests/Groups/article.tex:45:51: info: claim 9 is meaningful if: \forall x\in \mathrm{Grp},\ ((2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3)\land (x=\times(\@n2(2))(\@n2(3))\Rightarrow 6\in \mathbb{Z}\land 0<6)
+tests/Groups/article.tex:45:51: info: claim 10: \forall x\in \mathrm{Grp},\ x=\times(\@n2(2))(\@n2(3))\Rightarrow \operatorname{Cyclic}(x)
+tests/Groups/article.tex:45:51: info: claim 10 is meaningful if: \forall x\in \mathrm{Grp},\ (2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3
+tests/Groups/article.tex: 8 definitions, 11 claims
+  text: 8 compiled, 0 failed, 0 prose (of 8)
+  results: 14 compiled, 0 failed, 0 prose (of 14)
+  all: 22 compiled, 0 failed, 0 prose (of 22)

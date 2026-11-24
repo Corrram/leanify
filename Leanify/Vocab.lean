@@ -190,6 +190,22 @@ structure IntervalType where
   /-- `T is a function of the first n observations`: a function of two sequences that depends
   only on their terms below `n`. -/
   firstObs : Option Nat := none
+  /-- A coupling: a probability measure on the square of the type, as a set function. The
+  expectation `\mathbb{E}_\gamma[e]` of a function of its two coordinates, written `X` and
+  `Z`, and the condition under which it is defined (each constant takes `γ`, then the
+  function of the two points). -/
+  couplingExp : Option Nat := none
+  couplingInt : Option Nat := none
+  /-- A random pair `(Y,Z)` with a real first and a point of the type as second coordinate,
+  given by its joint law (a set function on pairs): that it is a law, the expectation of a
+  function of the pair and its integrability, a condition that holds almost surely, the
+  distribution function of `Y`, and that `Z` is uniformly distributed on the type. -/
+  pairLaw : Option Nat := none
+  pairExp : Option Nat := none
+  pairInt : Option Nat := none
+  pairAe : Option Nat := none
+  pairDf : Option Nat := none
+  pairUniform : Option Nat := none
   /-- Square-integrable functions on the interval (the field `hilbert`): the class `L^2`
   (measurable, with an integrable square) and its functions with integral zero
   (`L^2_0`), the inner product `\langle f,g\rangle = ∫ f g` and the norm
@@ -326,6 +342,10 @@ def append (V W : Vocab) : Vocab :=
                markovDom := i.markovDom.map tm, sampleExp := i.sampleExp.map (· + kc),
                sampleInt := i.sampleInt.map (· + kc), sampleProb := i.sampleProb.map (· + kc),
                sampleEvent := i.sampleEvent.map (· + kc), firstObs := i.firstObs.map (· + kc),
+               couplingExp := i.couplingExp.map (· + kc), couplingInt := i.couplingInt.map (· + kc),
+               pairLaw := i.pairLaw.map (· + kc), pairExp := i.pairExp.map (· + kc),
+               pairInt := i.pairInt.map (· + kc), pairAe := i.pairAe.map (· + kc),
+               pairDf := i.pairDf.map (· + kc), pairUniform := i.pairUniform.map (· + kc),
                memL2 := i.memL2.map (· + kc), memL20 := i.memL20.map (· + kc),
                inner1 := i.inner1.map (· + kc), norm1 := i.norm1.map (· + kc),
                innerSeq := i.innerSeq.map (· + kc), normSeq := i.normSeq.map (· + kc),
@@ -582,6 +602,8 @@ def phraseOf (s : String) : Except String Phrase := do
       | .punct 39 => go f ts acc
       -- a hyphen (`prime-counting`, `$v$-th`): the word `-`, which matches the hyphen
       | .punct 45 => go f ts (.w [45] :: acc)
+      -- a comma (`with vertices $v$, $v$ and $v$`): the word `,`, which matches the comma
+      | .punct 44 => go f ts (.w [44] :: acc)
       | _ => throw s!"unexpected token in phrase {s}"
   go (toks.length + 1) toks []
 
