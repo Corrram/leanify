@@ -25,6 +25,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `transforms`
     * `fourier`
     * `dynamics`
+    * `functionalequations`
     * `elementary`
       * `special`
       * `hyperbolic`
@@ -50,6 +51,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `iteration`
     * `odesolvers`
     * `matrixnorms`
+    * `descent`
   * `stochastic`
     * `statistics`
       * `probability`
@@ -59,6 +61,8 @@ except a notion whose meanings take arguments of different types, which the type
         * `risk`
         * `stochasticorders`
       * `samples`
+      * `timeseries`
+      * `testing`
       * `dependence`
         * `copulas`
     * `finance`
@@ -76,19 +80,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas`, `finance`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
-| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` |
-| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas`, `finance` |
+| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
+| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas`, `finance` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
 | `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas` |
+| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `timeseries`, `testing`, `copulas` |
 
 ## `core`
 
@@ -1814,4 +1818,63 @@ except a notion whose meanings take arguments of different types, which the type
 | sample correlation coefficient of the first $a$ terms of $b$ and $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ | Pearson's `r`, where neither sample is constant |
 | slope of the least-squares line of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑(x_i - x̄)(y_i - ȳ)/∑(x_i - x̄)²`, where `x_1, …, x_n` are not all equal |
 | intercept of the least-squares line of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `ȳ - b x̄` with the slope `b`, where `x_1, …, x_n` are not all equal |
+
+## `timeseries`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| autoregressive sequence of order one with coefficient $x$ | ℝ → ℝ | `x(t+1) = φ x(t)` for every `t ≥ 0` |
+| random walk with steps $x$ | ℝ → ℝ | `x(t+1) = x(t) + e(t+1)` for every `t ≥ 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| sample autocovariance at lag $a$ of the first $b$ terms of $c$ | ℝ → ℝ → (ℝ → ℝ) → ℝ | `(1/n) ∑_{t=1}^{n-h} (x_t - x̄)(x_{t+h} - x̄)`, `0 ≤ h < n` |
+| sample autocorrelation at lag $a$ of the first $b$ terms of $c$ | ℝ → ℝ → (ℝ → ℝ) → ℝ | the autocovariance at lag `h` over that at lag `0`, where the terms are not all equal |
+| moving average of order $a$ of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `t ↦ (1/k) ∑_{i=0}^{k-1} x(t-i)` |
+| cumulative sum of $a$ | (ℝ → ℝ) → ℝ → ℝ | `t ↦ ∑_{i=1}^{t} x(i)` |
+| difference sequence of $a$ | (ℝ → ℝ) → ℝ → ℝ | `t ↦ x(t) - x(t-1)` |
+| seasonal difference at lag $a$ of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `t ↦ x(t) - x(t-s)` |
+| exponential smoothing of $a$ with parameter $b$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `t ↦ ∑_{i=0}^{t-1} α(1-α)^i x(t-i) + (1-α)^t x(0)`: `s_t = α x_t + (1-α) s_{t-1}`, `s_0 = x_0`; `0 < α ≤ 1` |
+
+## `testing`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| z-statistic of the first $a$ terms of $b$ for the mean $c$ and the standard deviation $d$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `√n (x̄ - μ₀)/σ`, `σ > 0` |
+| t-statistic of the first $a$ terms of $b$ for the mean $c$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `√n (x̄ - μ₀)/s` with the sample standard deviation `s`, where the terms are not all equal |
+| one-sided p-value of $a$ | ℝ → ℝ | `1 - Φ(z)` |
+| two-sided p-value of $a$ | ℝ → ℝ | `2(1 - Φ(\|z\|))` |
+| standard normal quantile of order $a$ | ℝ → ℝ | the `z` with `Φ(z) = α`, `0 < α < 1` |
+| margin of error at confidence level $a$ for $b$ observations with standard deviation $c$ | ℝ → ℝ → ℝ → ℝ | `z_{(1+γ)/2} σ/√n` |
+| chi-squared statistic of $a$ against $b$ over $c$ cells | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑_{i=1}^{k} (o_i - e_i)²/e_i`, `e_i > 0` (Pearson) |
+
+## `descent`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| armijo step for $x$ at $a$ in direction $b$ with constant $c$ | ℝ | `t > 0` and `f(x + td) ≤ f(x) + c t f'(x) d`, for a differentiable `f` |
+| wolfe step for $x$ at $a$ in direction $b$ with constants $c$ and $d$ | ℝ | the Armijo condition with `c₁` and `f'(x + td) d ≥ c₂ f'(x) d` |
+| descent direction for $x$ at $a$ | ℝ | `f'(x) d < 0` |
+| gradient descent sequence for $x$ with step size $a$ | ℝ → ℝ | `x_{n+1} = x_n - h f'(x_n)`, for a differentiable `f` |
+| heavy-ball sequence for $x$ with step size $a$ and momentum $b$ | ℝ → ℝ | `x_{n+2} = x_{n+1} - h f'(x_{n+1}) + β(x_{n+1} - x_n)` (Polyak) |
+| proximal point sequence for $x$ with parameter $a$ | ℝ → ℝ | `x_{n+1}` minimizes `f(z) + (z - x_n)²/(2λ)`, `λ > 0` |
+
+## `functionalequations`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| additive | ℝ → ℝ | `f(x+y) = f(x) + f(y)` (Cauchy's equation; Mathlib `AddMonoidHom`) |
+| cauchy-additive | ℝ → ℝ | `f(x+y) = f(x) + f(y)` |
+| subadditive | ℝ → ℝ | `f(x+y) ≤ f(x) + f(y)` |
+| superadditive | ℝ → ℝ | `f(x+y) ≥ f(x) + f(y)` |
+| midpoint convex | ℝ → ℝ | `f((x+y)/2) ≤ (f(x)+f(y))/2` (Jensen-convex) |
+| midpoint concave | ℝ → ℝ | `f((x+y)/2) ≥ (f(x)+f(y))/2` |
+| jensen-affine | ℝ → ℝ | `f((x+y)/2) = (f(x)+f(y))/2` (Jensen's equation) |
+| multiplicative on the reals | ℝ → ℝ | `f(xy) = f(x)f(y)` for all real `x`, `y` |
+| involutive | ℝ → ℝ | `f(f(x)) = x` |
+| idempotent | ℝ → ℝ | `f(f(x)) = f(x)` |
+| homogeneous of degree $x$ | ℝ → ℝ | `f(tx) = t^k f(x)` for `t > 0` |
+| positively homogeneous | ℝ → ℝ | `f(tx) = t f(x)` for `t > 0` |
+| logarithmically additive | ℝ → ℝ | `f(xy) = f(x) + f(y)` for `x, y > 0` |
+| solution of d'alembert's equation | ℝ → ℝ | `f(x+y) + f(x-y) = 2f(x)f(y)` |
 

@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={functionalequations}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Examples}
+
+For every real number $x$, let $g(x)\coloneqq 3x$.
+For every real number $x$, let $h(x)\coloneqq |x|$.
+For every real number $x$, let $q(x)\coloneqq x^2$.
+For every real number $x$, let $s(x)\coloneqq -x$.
+For every real number $x$, let $k(x)\coloneqq 1$.
+
+\begin{lemma}\label{examples}
+$g$ is additive and positively homogeneous, and $h$ is subadditive and idempotent.
+\end{lemma}
+
+\begin{lemma}\label{square}
+$q$ is homogeneous of degree $2$ and multiplicative on the reals.
+\end{lemma}
+
+\begin{lemma}\label{involution}
+$s$ is involutive, and $k$ is a solution of d'Alembert's equation.
+\end{lemma}
+
+\section{Cauchy's and Jensen's equations}
+
+\begin{lemma}\label{zero}
+Let $f:\mathbb{R}\to\mathbb{R}$ be a function. If $f$ is additive, then $f(0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{jensen}
+Let $f:\mathbb{R}\to\mathbb{R}$ be a function. If $f$ is additive, then $f$ is Jensen-affine.
+\end{lemma}
+
+\begin{lemma}\label{midpoint}
+Let $f:\mathbb{R}\to\mathbb{R}$ be a function. If $f$ is midpoint convex and midpoint concave, then $f$ is Jensen-affine.
+\end{lemma}
+
+\begin{lemma}\label{subadditive}
+Let $f:\mathbb{R}\to\mathbb{R}$ be a function. If $f$ is Cauchy-additive, then $f$ is subadditive and superadditive.
+\end{lemma}
+
+\begin{lemma}\label{logarithmic}
+Let $f:\mathbb{R}\to\mathbb{R}$ be a function. If $f$ is logarithmically additive, then $f(1)=0$.
+\end{lemma}
+
+\end{document}

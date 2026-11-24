@@ -270,6 +270,17 @@ Further fields cover other branches of mathematics:
   paths, multinomial coefficients;
 * `samples`: descriptive statistics of the first `n` terms of a sequence (sample mean and
   variance, order statistics, median, correlation, least-squares line).
+* `timeseries`: the sample autocovariance and autocorrelation at a lag, moving averages,
+  cumulative sums, differences and exponential smoothing of a sequence; autoregressive
+  sequences of order one and random walks;
+* `testing`: z- and t-statistics, one- and two-sided p-values, standard normal quantiles,
+  margins of error and Pearson's chi-squared statistic;
+* `descent`: Armijo and Wolfe steps and descent directions of a differentiable function;
+  gradient descent, heavy-ball and proximal point sequences
+  (`$a$ is a gradient descent sequence for $f$ with step size $h$`);
+* `functionalequations`: additive (Cauchy), subadditive, midpoint convex, Jensen-affine,
+  involutive, idempotent and homogeneous functions, solutions of d'Alembert's equation
+  (`$f$ is homogeneous of degree $2$`).
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

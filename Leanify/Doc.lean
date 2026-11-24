@@ -4125,6 +4125,17 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   modify fun st => { st with topic := if topic == .none then st.topic else topic }
   -- (`Hence the statement holds for $n+1$.`)
   let cls ← cls.mapM fun cl => do pure { cl with clause := ← expandStmt c cl.clause }
+  -- `If CLAUSE, then A and B`: the hypothesis that the grammar read with the first clause is
+  -- one of every later clause too, unless a later clause has its own (as for a hypothesis
+  -- written as a binder below)
+  let cls := match cls with
+    | first :: rest =>
+      if laterIfC cls then cls else
+      match first.clause with
+      | .ifClause h _ => first :: rest.map fun cl => { cl with clause := Clause.ifClause h cl.clause }
+      | .ifThen φ _ => first :: rest.map fun cl => { cl with clause := Clause.ifThen φ cl.clause }
+      | _ => cls
+    | [] => []
   -- `If $φ$, …` about variables that are already bound (by the result or a fixed
   -- variable) is a hypothesis: of the first clause when a later clause has its own,
   -- otherwise of every clause

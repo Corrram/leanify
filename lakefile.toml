@@ -439,3 +439,27 @@ globs = ["Samples.+"]
 name = "MoreDistributions"
 srcDir = "tests"
 globs = ["MoreDistributions.+"]
+
+[[lean_lib]]
+# The field timeseries: autocovariance, moving averages, differences, smoothing.
+name = "TimeSeries"
+srcDir = "tests"
+globs = ["TimeSeries.+"]
+
+[[lean_lib]]
+# The field testing: test statistics, p-values, quantiles, margins of error.
+name = "Testing"
+srcDir = "tests"
+globs = ["Testing.+"]
+
+[[lean_lib]]
+# The field descent: line searches and descent sequences.
+name = "Descent"
+srcDir = "tests"
+globs = ["Descent.+"]
+
+[[lean_lib]]
+# The field functionalequations: Cauchy's and Jensen's equations and inequalities.
+name = "FunctionalEquations"
+srcDir = "tests"
+globs = ["FunctionalEquations.+"]

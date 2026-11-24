@@ -44,6 +44,7 @@ math
 │   ├── transforms                Laplace, Mellin, Stieltjes transforms; convolution
 │   ├── fourier                   Fourier series, kernels, cosine and sine transforms
 │   ├── dynamics                  iterates, fixed and periodic points
+│   ├── functionalequations       Cauchy's and Jensen's equations, subadditivity, homogeneity
 │   ├── elementary
 │   │   ├── special               gamma, beta, zeta
 │   │   ├── hyperbolic, trigonometry
@@ -67,7 +68,8 @@ math
 │   ├── approximation             errors, conditioning, difference quotients, quadrature, interpolation
 │   ├── iteration                 Newton's method, fixed-point iteration, orders of convergence
 │   ├── odesolvers                initial value problems; Euler, Heun, Runge–Kutta
-│   └── matrixnorms               matrix norms, condition numbers, diagonal dominance (with matrices)
+│   ├── matrixnorms               matrix norms, condition numbers, diagonal dominance (with matrices)
+│   └── descent                   Armijo and Wolfe steps; gradient descent, heavy-ball, proximal point
 ├── stochastic                    probability and statistics
 │   ├── statistics
 │   │   ├── probability
@@ -77,6 +79,8 @@ math
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   └── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   ├── samples               sample mean, variance, order statistics, correlation
+│   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
+│   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
@@ -175,6 +179,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`transforms`](glossary.md#transforms) | Laplace, Mellin and Stieltjes transforms, convolution, cross-correlation, autocorrelation; of exponential order, causal | with `realfunctions` |
 | [`fourier`](glossary.md#fourier) | Fourier coefficients, partial sums and Fejér means, Dirichlet and Fejér kernels, cosine and sine transforms | with `realfunctions` |
 | [`dynamics`](glossary.md#dynamics) | iterates, orbits, fixed and periodic points and their stability, least period, Lyapunov exponent | with `realfunctions` |
+| [`functionalequations`](glossary.md#functionalequations) | additive (Cauchy), subadditive and superadditive, midpoint convex and concave, Jensen-affine, multiplicative on the reals, logarithmically additive, involutive, idempotent, homogeneous of degree `k` and positively homogeneous functions; solutions of d'Alembert's equation | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
 | [`hyperbolic`](glossary.md#hyperbolic), [`trigonometry`](glossary.md#trigonometry) | `\sinh`, `\cosh`, `\tanh`; `\arcsin`, `\arccos`, `\arctan`, `\cot` with their domains | |
 | [`orthogonalpolynomials`](glossary.md#orthogonalpolynomials) | the Legendre, Hermite (physicists' and probabilists'), Laguerre and Chebyshev (first and second kind) polynomials of degree `n` | |
@@ -196,12 +201,15 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`iteration`](glossary.md#iteration) | the Newton map, secant step and relaxation; Newton, secant and fixed-point sequences; convergent with order `p`, linearly, superlinearly, quadratically, cubically; contractive maps | with `realfunctions` |
 | [`odesolvers`](glossary.md#odesolvers) | right-hand sides `f(t, y)`, Lipschitz in the second variable; solutions of a differential equation and of an initial value problem, of linear equations of order two with constant coefficients and of the logistic equation; Euler, Heun, midpoint and Runge–Kutta steps and sequences | with `realfunctions` |
 | [`matrixnorms`](glossary.md#matrixnorms) | Frobenius norm, maximum absolute row and column sums, condition numbers; strictly diagonally dominant, tridiagonal, upper Hessenberg, banded and entrywise nonnegative matrices | loads `matrices` |
+| [`descent`](glossary.md#descent) | Armijo and Wolfe steps, descent directions; gradient descent, heavy-ball (Polyak) and proximal point sequences of a differentiable function | |
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
 | [`copulas`](glossary.md#copulas) | the independence, comonotonicity and countermonotonicity copulas; Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian copulas; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's gamma, Chatterjee's xi, tail dependence coefficients; positively and negatively quadrant dependent, radially symmetric, left tail decreasing, max-stable; the concordance order | loads `markov` |
 | [`distributions`](glossary.md#distributions) | probability distributions on `ℕ₀`: Poisson, binomial, negative binomial, geometric, Bernoulli, discrete uniform, hypergeometric, point masses; the mean, the variance, the probability generating function | |
 | [`samples`](glossary.md#samples) | the first `n` terms of a sequence as a sample: sample mean, variance and standard deviation, moments, the empirical distribution function, order statistics, median and range, sample covariance and correlation, least-squares slope and intercept | |
+| [`timeseries`](glossary.md#timeseries) | the sample autocovariance and autocorrelation at a lag, moving averages, cumulative sums, difference sequences and seasonal differences, exponential smoothing; autoregressive sequences of order one and random walks | |
+| [`testing`](glossary.md#testing) | the z- and t-statistics of a sample for a mean, one- and two-sided p-values, standard normal quantiles, the margin of error at a confidence level, Pearson's chi-squared statistic | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |

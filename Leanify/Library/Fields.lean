@@ -46,6 +46,10 @@ import Leanify.Library.Copulas
 import Leanify.Library.OrthogonalPolynomials
 import Leanify.Library.Counting
 import Leanify.Library.Samples
+import Leanify.Library.TimeSeries
+import Leanify.Library.Testing
+import Leanify.Library.Descent
+import Leanify.Library.FunctionalEquations
 
 /-! # The fields of the vocabulary
 
@@ -109,7 +113,11 @@ def all : List (String × Vocab) := [
   ("copulas", Copulas.vocab),
   ("orthogonalpolynomials", OrthogonalPolynomials.vocab),
   ("counting", Counting.vocab),
-  ("samples", Samples.vocab)]
+  ("samples", Samples.vocab),
+  ("timeseries", TimeSeries.vocab),
+  ("testing", Testing.vocab),
+  ("descent", Descent.vocab),
+  ("functionalequations", FunctionalEquations.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -136,10 +144,10 @@ def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
-    "transforms", "fourier", "dynamics", "elementary", "complex", "torus"]),
+    "transforms", "fourier", "dynamics", "functionalequations", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
-  ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms"]),
+  ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
   ("stochastic", ["statistics", "finance"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
@@ -148,7 +156,7 @@ def bundles : List (String × List String) := [
   ("linearalgebra", ["vectors", "matrices"]),
   ("probability", ["distributions", "densities", "information", "risk", "stochasticorders"]),
   ("dependence", ["copulas"]),
-  ("statistics", ["probability", "samples", "dependence"])]
+  ("statistics", ["probability", "samples", "timeseries", "testing", "dependence"])]
 
 /-- The realms: the bundles that `math` names, each a branch of mathematics. -/
 def realms : List String := (bundles.lookup "math").getD []

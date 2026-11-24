@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={testing}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $Z_n(x,\mu,\sigma)$ for the z-statistic of the first $n$ terms of $x$ for the mean $\mu$ and the standard deviation $\sigma$.
+We write $T_n(x,\mu)$ for the t-statistic of the first $n$ terms of $x$ for the mean $\mu$.
+We write $p(z)$ for the one-sided p-value of $z$.
+We write $P(z)$ for the two-sided p-value of $z$.
+We write $q_\alpha$ for the standard normal quantile of order $\alpha$.
+We write $E_\gamma(n,\sigma)$ for the margin of error at confidence level $\gamma$ for $n$ observations with standard deviation $\sigma$.
+We write $C_k(o,e)$ for the chi-squared statistic of $o$ against $e$ over $k$ cells.
+For every real number $i$, let $u(i)\coloneqq i$.
+
+\section{Test statistics}
+
+\begin{lemma}\label{z}
+$Z_3(u,2,1)=0$ and $Z_4(u,2,1)=1$.
+\end{lemma}
+
+\begin{lemma}\label{t}
+$T_3(u,2)=0$.
+\end{lemma}
+
+\begin{lemma}\label{chisquared}
+Let $e:\mathbb{R}\to\mathbb{R}$ be a function. Suppose that $e(i)>0$ for every $i\in\mathbb{R}$. Then $C_3(e,e)=0$.
+\end{lemma}
+
+\section{p-values and quantiles}
+
+\begin{lemma}\label{pvalue}
+Let $z\ge0$ be a real number. Then $P(z)=2p(z)$.
+\end{lemma}
+
+\begin{lemma}\label{half}
+$p(0)=\frac12$ and $q_{1/2}=0$.
+\end{lemma}
+
+\begin{lemma}\label{margin}
+Let $\sigma>0$ be a real number and let $\gamma\in(0,1)$. Then $E_\gamma(4,\sigma)=\frac{\sigma}{2}q_{(1+\gamma)/2}$.
+\end{lemma}
+
+\end{document}

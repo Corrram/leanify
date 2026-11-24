@@ -64,3 +64,7 @@ article-reader/
 /tests/Counting/article.leanify.*
 /tests/Samples/article.leanify.*
 /tests/MoreDistributions/article.leanify.*
+/tests/TimeSeries/article.leanify.*
+/tests/Testing/article.leanify.*
+/tests/Descent/article.leanify.*
+/tests/FunctionalEquations/article.leanify.*

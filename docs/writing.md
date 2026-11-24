@@ -179,6 +179,7 @@ each form):
 | `Every $\gamma\in\Gamma$ satisfies DISPLAY, with equality if and only if $\gamma(K)=1$.` | the inequality, and: equality in it holds exactly when the condition does |
 | `If there is $\mu\in\Gamma$ such that $\mu(K)=1$, then …` | an existence as a hypothesis |
 | `If $f$ is negligible compared to $g$ and $g$ is dominated by $h$, then …`, `Suppose that $y$ is a solution of … and that $z$ is …` | several clauses as the hypothesis, each read on its own |
+| `If $a$ is a gradient descent sequence for $f$ with step size $h$ and $a(0)=4$, then $a(1)=2$ and $a(2)=1$.` | the hypothesis is one of every claim after `then` (`A and B`, `A, and B`), unless a later claim has an `if` of its own |
 | `$f$ is bounded below`, `$f$ is bounded at infinity`, `$f$ is Lipschitz with respect to $d$`, `$U$ is open in $\tau$`, `$f$ is continuous from $\tau$ to $\sigma$`, `$f$ is Lipschitz in the second variable` | an adjective of the vocabulary that begins with a standard one (`bounded`, `Lipschitz`, `open`, `continuous`) and goes on |
 | `$f$ is smaller than $g$ in the hazard rate order` | a stochastic order (field `stochasticorders`), not a comparison of numbers |
 | `Let $f$ be a $3$ times differentiable function.`, `an $n$ times continuously differentiable function` | a number of times before the noun, the argument of a modifier (field `calculus`) |

@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={timeseries}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $c_{h,n}(x)$ for the sample autocovariance at lag $h$ of the first $n$ terms of $x$.
+We write $r_{h,n}(x)$ for the sample autocorrelation at lag $h$ of the first $n$ terms of $x$.
+For every real number $i$, let $u(i)\coloneqq i$.
+
+\section{Autocovariance}
+
+\begin{lemma}\label{autocovariance}
+$c_{0,3}(u)=\frac23$ and $c_{1,3}(u)=0$.
+\end{lemma}
+
+\begin{lemma}\label{autocorrelation}
+$r_{0,3}(u)=1$ and $r_{1,3}(u)=0$.
+\end{lemma}
+
+\section{Transformations}
+
+\begin{lemma}\label{average}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function and let $m$ be the moving average of order $2$ of $x$. Then $m(t)=\frac{x(t)+x(t-1)}{2}$ for every real number $t$.
+\end{lemma}
+
+\begin{lemma}\label{cumulative}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function and let $y$ be the cumulative sum of $x$. Then $y(2)=x(1)+x(2)$.
+\end{lemma}
+
+\begin{lemma}\label{seasonal}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function, let $d$ be the seasonal difference at lag $1$ of $x$ and let $e$ be the difference sequence of $x$. Then $d=e$.
+\end{lemma}
+
+\begin{lemma}\label{smoothing}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function and let $s$ be the exponential smoothing of $x$ with parameter $1$. Then $s(2)=x(2)$.
+\end{lemma}
+
+\section{Models}
+
+\begin{lemma}\label{autoregressive}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function. If $x$ is an autoregressive sequence of order one with coefficient $\frac12$ and $x(0)=4$, then $x(2)=1$.
+\end{lemma}
+
+\begin{lemma}\label{walk}
+Let $x,e:\mathbb{R}\to\mathbb{R}$ be functions. If $x$ is a random walk with steps $e$, then $x(2)=x(0)+e(1)+e(2)$.
+\end{lemma}
+
+\end{document}
