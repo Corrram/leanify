@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,transforms}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\mathcal{L}f$ for the Laplace transform of $f$.
+We write $\mathcal{M}f$ for the Mellin transform of $f$.
+We write $\mathcal{S}f$ for the Stieltjes transform of $f$.
+We write $f\ast g$ for the convolution of $f$ and $g$.
+We write $R_f$ for the autocorrelation of $f$.
+For every real number $x$, let $u(x)\coloneqq e^{-x^2}$.
+
+\section{Transforms}
+
+\begin{lemma}\label{laplace}
+Let $f$ be a bounded increasing continuous function and let $s>0$. If $f(0)\ge0$, then $\mathcal{L}f(s)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{stieltjes}
+Let $f$ be an increasing continuous integrable function and let $s>0$. Then $\mathcal{S}f(s)\le0$.
+\end{lemma}
+
+\begin{lemma}\label{gauss}
+$\mathcal{M}u(1)>0$ and $\mathcal{L}u(1)>0$.
+\end{lemma}
+
+\begin{lemma}\label{commutative}
+Let $f$ and $g$ be bounded continuous integrable functions. Then $(f\ast g)(x)=(g\ast f)(x)$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{even}
+Let $f$ be a bounded continuous integrable function. Then $R_f(x)=R_f(-x)$ for every real number $x$.
+\end{lemma}
+
+\section{Growth}
+
+\begin{lemma}\label{order}
+$u$ is of exponential order.
+\end{lemma}
+
+\begin{lemma}\label{causal}
+Let $f$ be a causal function. Then $f(-1)=0$.
+\end{lemma}
+
+\end{document}

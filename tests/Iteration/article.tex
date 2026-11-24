@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,iteration}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $N_f$ for the Newton map of $f$.
+We write $g_\omega$ for the relaxation of $g$ with parameter $\omega$.
+For every real number $x$, let $q(x)\coloneqq x^2-2$.
+
+\section{Newton's method}
+
+\begin{lemma}\label{newton}
+Let $x\ne0$. Then $N_q(x)=\frac{x}{2}+\frac{1}{x}$.
+\end{lemma}
+
+\begin{lemma}\label{sequence}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function. If $x$ is a Newton sequence for $q$ and $x(0)>0$, then $x$ is quadratically convergent to $\sqrt2$.
+\end{lemma}
+
+\begin{lemma}\label{orders}
+Let $x:\mathbb{R}\to\mathbb{R}$ be a function and let $y$ be a real number. If $x$ is quadratically convergent to $y$, then $x$ is superlinearly convergent to $y$ and $x$ is convergent to $y$ with order $2$.
+\end{lemma}
+
+\section{Fixed points}
+
+\begin{lemma}\label{banach}
+Let $g$ be a contractive function and let $x:\mathbb{R}\to\mathbb{R}$ be a function. If $x$ is a fixed-point sequence of $g$, then there is a real number $y$ such that $g(y)=y$.
+\end{lemma}
+
+\begin{lemma}\label{relaxation}
+Let $g$ be a function and let $y$ be a real number with $g(y)=y$. Then $g_\omega(y)=y$ for every real number $\omega$.
+\end{lemma}
+
+\begin{lemma}\label{constant}
+Let $L$ be a real number with $0\le L<1$ and let $g$ be an $L$-contractive function. Then $g$ is contractive.
+\end{lemma}
+
+\end{document}

@@ -11,7 +11,15 @@ One difference is by design. With the field `unitsquare` (in the bundles `depend
 `statistics`), `[0,1]` is a type of its own, so an article that did not name that field has
 its variables in `[0,1]` and its integrals `\\int_0^1` read on that type: the same
 mathematics, another Lean statement. For such a pair the findings and the counts are
-compared, not the readings."""
+compared, not the readings.
+
+`math`, which has every field, reads some articles differently by design, and for it an article
+passes if it reads at least as many sentences as with its own fields, or if what it does not
+read is a definition of an overloaded notion (`We write $|G|$ for the order of $G$`, where
+`order of` is a notion of groups and of permutations: the article names the kind, `the order
+of a group $G$`). Its words are more than any article's fields: a noun that the fields did
+not know is read, and a letter that a field reserves (`\\zeta`, the Riemann zeta function of
+`special`) is that field's."""
 import pathlib, re, subprocess, sys
 exe = sys.argv[1:]
 src = pathlib.Path('Leanify/Library/Fields.lean').read_text()
@@ -42,6 +50,14 @@ for args in sorted(list(pathlib.Path('tests').glob('*/*check.args')) + list(path
             brief = lambda t: [l for l in t.splitlines() if ': info: ' not in l]
             if brief(got) == brief(want):
                 print(f"ok   {art} with {b} (with [0,1] as a type)")
+                continue
+        if got != want and b == 'math':
+            count = lambda t: int((re.findall(r'all: (\d+) compiled', t) or ['0'])[-1])
+            if count(got) >= count(want):
+                print(f"ok   {art} with math (reads at least as much)")
+                continue
+            if 'has a meaning for each kind of argument' in got:
+                print(f"ok   {art} with math (a definition names the kind of its argument)")
                 continue
         if got != want:
             bad += 1

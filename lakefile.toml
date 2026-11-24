@@ -108,13 +108,13 @@ srcDir = "tests"
 globs = ["Special.+"]
 
 [[lean_lib]]
-# The field topology: sets of real numbers by a noun, adjectives of the core and of the field together.
+# The field realsets: sets of real numbers by a noun, adjectives of the core and of the field together.
 name = "Topology"
 srcDir = "tests"
 globs = ["Topology.+"]
 
 [[lean_lib]]
-# The field analysis: real functions by a noun, their properties, `Every NP $x$ is ADJ`.
+# The field realfunctions: real functions by a noun, their properties, `Every NP $x$ is ADJ`.
 name = "Analysis"
 srcDir = "tests"
 globs = ["Analysis.+"]
@@ -301,3 +301,69 @@ root = "LeanifyCli"
 # `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
 name = "glossary"
 root = "GlossaryMain"
+
+[[lean_lib]]
+# The field asymptotics: `$f$ is dominated by $g$`, `of the same order as`, regular variation.
+name = "Asymptotics"
+srcDir = "tests"
+globs = ["Asymptotics.+"]
+
+[[lean_lib]]
+# The field transforms: Laplace, Mellin and Stieltjes transforms, convolution, defined where integrable.
+name = "Transforms"
+srcDir = "tests"
+globs = ["Transforms.+"]
+
+[[lean_lib]]
+# The field calculus: higher derivatives, Taylor polynomials, arc length, average value, areas.
+name = "CalculusField"
+srcDir = "tests"
+globs = ["CalculusField.+"]
+
+[[lean_lib]]
+# The field risk: survival function, hazard rate, quantiles, value at risk, expected shortfall.
+name = "Risk"
+srcDir = "tests"
+globs = ["Risk.+"]
+
+[[lean_lib]]
+# The field stochasticorders: `$f$ is smaller than $g$ in the likelihood ratio order`.
+name = "StochasticOrders"
+srcDir = "tests"
+globs = ["StochasticOrders.+"]
+
+[[lean_lib]]
+# The field finance: interest, annuities, Black-Scholes prices with five arguments.
+name = "Finance"
+srcDir = "tests"
+globs = ["Finance.+"]
+
+[[lean_lib]]
+# The field topologies: topologies on R, `$\tau$-open`, the cofinite and lower limit topologies.
+name = "Topologies"
+srcDir = "tests"
+globs = ["Topologies.+"]
+
+[[lean_lib]]
+# The field metricspaces: metrics on R, induced topologies, Cauchy sequences, contractions.
+name = "MetricSpaces"
+srcDir = "tests"
+globs = ["MetricSpaces.+"]
+
+[[lean_lib]]
+# The field approximation: errors, difference quotients, quadrature rules, interpolation.
+name = "Approximation"
+srcDir = "tests"
+globs = ["Approximation.+"]
+
+[[lean_lib]]
+# The field iteration: Newton's method, fixed-point sequences, orders of convergence.
+name = "Iteration"
+srcDir = "tests"
+globs = ["Iteration.+"]
+
+[[lean_lib]]
+# The field odesolvers: initial value problems, Euler, Heun and Runge-Kutta steps.
+name = "OdeSolvers"
+srcDir = "tests"
+globs = ["OdeSolvers.+"]

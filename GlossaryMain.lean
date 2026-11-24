@@ -81,18 +81,28 @@ def fieldSection (name : String) (V : Vocab) : List String :=
     ["| Notation | On | Meaning |", "| --- | --- | --- |"] ++
     V.methods.map (fun m => s!"| {cell (opText m.op)} | {tyText V.types m.ty} | {cell m.doc} |") ++ [""])
 
-/-- The bundles: each with its fields, and the bundles it is made of. -/
+/-- The tree of the bundles, from `math` down, as nested list items. -/
+partial def bundleTree (b : String) (depth : Nat) : List String :=
+  let pad := String.mk (List.replicate (2 * depth) ' ')
+  match Fields.bundles.lookup b with
+  | some ms => s!"{pad}* `{b}`" :: ms.flatMap fun m => bundleTree m (depth + 1)
+  | none => [s!"{pad}* `{b}`"]
+
+/-- The bundles: the tree, and each with its fields. -/
 def bundleSection : List String :=
   ["## Bundles", "",
-   "A bundle is a name for the fields of one area: `\\usepackage[vocab=statistics]{leanify}`",
-   "reads an article with all of them. No two fields of a bundle give a phrase different",
-   "meanings (`lake exe glossary --bundles` checks this).", "",
-   "| Bundle | Made of | Its fields |", "| --- | --- | --- |"] ++
+   "A bundle is a name for several fields: `\\usepackage[vocab=analysis]{leanify}` reads an",
+   "article with all of them, and `vocab=math` with every field. The realms are the bundles",
+   "that `math` is made of. No two fields of a bundle give a phrase different meanings,",
+   "except a notion whose meanings take arguments of different types, which the types decide",
+   "(`lake exe glossary --bundles` checks this).", ""] ++
+  bundleTree "math" 0 ++ [""] ++
+  ["| Bundle | Made of | Its fields |", "| --- | --- | --- |"] ++
   Fields.bundles.map (fun (b, ms) =>
     s!"| `{b}` | {", ".intercalate (ms.map fun m => s!"`{m}`")} | {", ".intercalate ((Fields.expand [b]).map fun f => s!"`{f}`")} |") ++ [""]
 
 /-- `glossary --bundles`: the phrases that two fields of a bundle read differently (none,
-or the exit status is 1). -/
+or the exit status is 1), and the notions that the types of their arguments tell apart. -/
 def checkBundles : IO UInt32 := do
   let mut bad := 0
   for (b, _) in Fields.bundles do
@@ -100,9 +110,22 @@ def checkBundles : IO UInt32 := do
     unless unknown.isEmpty do
       IO.println s!"{b}: unknown field {", ".intercalate unknown}"
       bad := bad + 1
+    if Fields.names.contains b then
+      IO.println s!"{b}: a bundle and a field have this name"
+      bad := bad + 1
     for (p, fs) in Fields.bundleCollisions b do
       IO.println s!"{b}: \"{phraseText p}\" has several meanings (in {", ".intercalate (fs.map Codes.toString)})"
       bad := bad + 1
+  -- every field is in `math`
+  let inMath := Fields.expand ["math"]
+  let covered (f : String) : Bool :=
+    inMath.contains f || inMath.any fun g => ((Fields.includes.lookup g).getD []).contains f
+  for f in Fields.names do
+    unless covered f do
+      IO.println s!"math: the field {f} is in no realm"
+      bad := bad + 1
+  for (p, fs) in Fields.bundleOverloads "math" do
+    IO.println s!"math: \"{phraseText p}\" has a meaning for each type of its arguments (in {", ".intercalate (fs.map Codes.toString)})"
   if bad == 0 then IO.println s!"{Fields.bundles.length} bundles: no phrase with several meanings"
   pure (if bad == 0 then 0 else 1)
 

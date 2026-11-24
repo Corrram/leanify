@@ -5,7 +5,7 @@ import Leanify.Library.Core
 The real Fourier analysis of a real function: the Fourier coefficients of a function on
 `[-π, π]` (of a `2π`-periodic one), the partial sums of its Fourier series and their Fejér
 means, the Dirichlet and Fejér kernels, and the Fourier cosine and sine transforms of an
-integrable function on the line. The functions are those of the field `analysis`
+integrable function on the line. The functions are those of the field `realfunctions`
 (`Let $f$ be a $2\pi$-periodic continuous function.`); an article fixes its notation itself
 (`We write $a_n(f)$ for the $n$th Fourier cosine coefficient of $f$.`).
 

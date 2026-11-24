@@ -1,6 +1,6 @@
 import Leanify.Library.Core
 
-/-! # Vocabulary: sets of real numbers
+/-! # Vocabulary: sets of real numbers (the field `realsets`)
 
 The topology and measure of the real line. A set is a set of real numbers (a predicate of
 real numbers, as everywhere in Leanify), so that an article binds sets by a noun (`Let $S$

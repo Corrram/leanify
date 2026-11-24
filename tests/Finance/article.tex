@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={finance}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\Phi$ for the standard normal distribution function.
+We write $C(K,T,S,\sigma,r)$ for the Black-Scholes price of a call with strike $K$ and maturity $T$ on a stock with price $S$ and volatility $\sigma$ at the interest rate $r$.
+We write $P(K,T,S,\sigma,r)$ for the Black-Scholes price of a put with strike $K$ and maturity $T$ on a stock with price $S$ and volatility $\sigma$ at the interest rate $r$.
+We write $\Delta(K,T,S,\sigma,r)$ for the delta of a call with strike $K$ and maturity $T$ on a stock with price $S$ and volatility $\sigma$ at the interest rate $r$.
+We write $\mathrm{PV}(c,t,r)$ for the present value of $c$ due in $t$ years at the interest rate $r$.
+We write $\mathrm{FV}(c,t,r)$ for the future value of $c$ after $t$ years at the interest rate $r$.
+We write $V(c,t,r)$ for the continuously compounded value of $c$ after $t$ years at the rate $r$.
+We write $A(c,n,r)$ for the present value of an annuity paying $c$ for $n$ periods at the interest rate $r$.
+
+\section{Interest}
+
+\begin{lemma}\label{discount}
+Let $c$ and $t$ be real numbers and let $r>-1$. Then $\mathrm{PV}(\mathrm{FV}(c,t,r),t,r)=c$.
+\end{lemma}
+
+\begin{lemma}\label{continuous}
+Let $c$, $t$ and $r$ be real numbers. Then $V(c,t,r)=c\,e^{rt}$.
+\end{lemma}
+
+\begin{lemma}\label{annuity}
+Let $c$ be a real number and let $r>0$. Then $A(c,1,r)=\frac{c}{1+r}$.
+\end{lemma}
+
+\section{Black--Scholes}
+
+\begin{lemma}\label{parity}
+Let $K$, $T$, $S$ and $\sigma$ be positive real numbers and let $r$ be a real number. Then $C(K,T,S,\sigma,r)-P(K,T,S,\sigma,r)=S-K\,e^{-rT}$.
+\end{lemma}
+
+\begin{lemma}\label{delta}
+Let $K$, $T$, $S$ and $\sigma$ be positive real numbers and let $r$ be a real number. Then $0<\Delta(K,T,S,\sigma,r)<1$ and $C(K,T,S,\sigma,r)\le S$.
+\end{lemma}
+
+\begin{lemma}\label{phi}
+$\Phi(0)=\frac12$ and $\Phi(x)+\Phi(-x)=1$ for every real number $x$.
+\end{lemma}
+
+\end{document}

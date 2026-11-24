@@ -139,12 +139,15 @@ from a *vocabulary*, which the article loads as a program loads a library:
 \usepackage[vocab=unitsquare]{leanify}   % copulas and couplings on the unit square
 ```
 
-There are vocabularies for number theory, combinatorics, complex numbers, special
-functions, real analysis and topology, vectors and matrices, plane geometry, polynomials,
-graphs, groups, permutations, probability on the unit square, on the natural numbers and by
-densities on the line, information theory, Fourier series, optimization, one-dimensional
-dynamics, means, and functions on the torus; `leanify fields article.tex` says which ones an
-article needs. Each one gives its words a meaning in mathlib, and some add proved
+The vocabularies form a tree: `vocab=math` loads them all, and its seven realms load a
+branch, `analysis` (real functions and sets, calculus, asymptotics, transforms, Fourier
+series, optimization, dynamics, special functions), `algebra` (vectors, matrices,
+polynomials, groups), `topology` (topologies and metrics on the line, plane geometry),
+`numerics` (approximation, quadrature, iterative methods, ODE solvers), `stochastic`
+(probability on the unit square, on the natural numbers and by densities, information,
+risk measures, stochastic orders, finance), `discrete` (combinatorics, permutations,
+graphs) and `numbertheory`; `leanify fields article.tex` says which ones an article
+needs. Each one gives its words a meaning in mathlib, and some add proved
 facts about them. [All libraries](libraries.md) · [Vocabularies and models](vocabularies.md) ·
 [Glossary](glossary.md)
 

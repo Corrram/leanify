@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={densities,risk}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S_f$ for the survival function of $f$.
+We write $h_f$ for the hazard rate of $f$.
+We write $H_f$ for the cumulative hazard function of $f$.
+We write $Q_f$ for the quantile function of $f$.
+We write $\pi_f$ for the stop-loss transform of $f$.
+We write $e_f$ for the mean excess function of $f$.
+We write $\mathrm{VaR}_\alpha(f)$ for the value at risk of $f$ at level $\alpha$.
+We write $\mathrm{ES}_\alpha(f)$ for the expected shortfall of $f$ at level $\alpha$.
+
+\section{Survival and hazard}
+
+\begin{lemma}\label{survival}
+Let $f$ be a probability density. Then $0\le S_f(x)\le1$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{hazard}
+Let $f$ be a probability density and let $x$ be a real number with $S_f(x)>0$. Then $h_f(x)\ge0$ and $H_f(x)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{exponential}
+Let $\lambda>0$ and let $f$ be the density of the exponential distribution with rate $\lambda$. Then $h_f(x)=\lambda$ for every real number $x\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{ifr}
+Let $f$ be a probability density with increasing failure rate. Then $f$ is light-tailed.
+\end{lemma}
+
+\begin{lemma}\label{pareto}
+Let $a>0$ and let $f$ be the density of the Pareto distribution with scale $1$ and shape $a$. Then $f$ is heavy-tailed.
+\end{lemma}
+
+\section{Risk measures}
+
+\begin{lemma}\label{quantile}
+Let $f$ be a probability density and let $0<u<1$. Then $Q_f(u)=\mathrm{VaR}_u(f)$.
+\end{lemma}
+
+\begin{lemma}\label{shortfall}
+Let $f$ be a probability density with finite mean and let $0<\alpha<1$. Then $\mathrm{ES}_\alpha(f)\ge\mathrm{VaR}_\alpha(f)$.
+\end{lemma}
+
+\begin{lemma}\label{stoploss}
+Let $f$ be a probability density with finite mean. Then $\pi_f(d)\ge0$ for every real number $d$, and $e_f(u)\,S_f(u)=\pi_f(u)$ for every real number $u$ with $S_f(u)>0$.
+\end{lemma}
+
+\end{document}

@@ -12,8 +12,8 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-/-- The vocabulary of the article: the core and the fields `analysis` and `dynamics`. -/
+/-- The vocabulary of the article: the core and the fields `realfunctions` and `dynamics`. -/
 def Dynamics.vocabulary : Leanify.Vocab :=
-  Leanify.Fields.select ["analysis", "dynamics"]
+  Leanify.Fields.select ["realfunctions", "dynamics"]
 
-#leanify_article Dynamics "article.tex" "fnv1a64:9926447d276e43fc" with Dynamics.vocabulary
+#leanify_article Dynamics "article.tex" "fnv1a64:fe061b7445b4a479" with Dynamics.vocabulary

@@ -609,6 +609,42 @@ def theMeaning {α β : Type} [BEq β] (key : α → β) (field : α → Codes) 
       fail E.ambiguous (quoted ws ++ w!" has several meanings (in " ++
         fieldsText (distinct.map (field ·.1)) ++ [41])
 
+/-- `theMeaning`, where the entries with the words that the type of their arguments does
+not fit are left out first (`fits` elaborates them; nothing it changes is kept): `the
+inverse of $A$` is the inverse of a matrix for a matrix `A` and of a permutation for a
+permutation, in a vocabulary that has both. Several meanings that fit are an error. -/
+def theMeaningBy {α β : Type} [BEq β] (key : α → β) (field : α → Codes) (fits : α → M Unit)
+    (cs : List Chunk) (cands : List (α × List Chunk)) (defn : Bool := false) : M (Option (α × List Chunk)) := do
+  match (cands.map (·.2.length)).min? with
+  | none => pure none
+  | some k =>
+    let best := cands.filter (·.2.length == k)
+    let distinct := best.foldl (fun acc c => if acc.any (fun d => key d.1 == key c.1) then acc else acc ++ [c]) []
+    match distinct with
+    | [c] => pure (some c)
+    | _ =>
+      let st ← get
+      let fit ← distinct.filterM fun c => do
+        let ok ← tryCatch (do fits c.1; pure true) fun _ => pure false
+        set st
+        pure ok
+      match fit with
+      | [c] => pure (some c)
+      | [] =>
+        let ws := wordsOf (cs.take (cs.length - k))
+        -- (a definition whose letters have no type yet: the noun before a letter gives it)
+        if defn then
+          fail E.finding (quoted ws ++ w!" has a meaning for each kind of argument (in " ++
+            fieldsText (distinct.map (field ·.1)) ++
+            w!"): say the kind of the argument with a noun before its letter (… of a permutation $\\sigma$)")
+        else
+          fail E.ambiguous (quoted ws ++ w!" has several meanings (in " ++
+            fieldsText (distinct.map (field ·.1)) ++ [41])
+      | _ =>
+        let ws := wordsOf (cs.take (cs.length - k))
+        fail E.ambiguous (quoted ws ++ w!" has several meanings (in " ++
+          fieldsText (distinct.map (field ·.1)) ++ [41])
+
 /-- Words of a noun, matched against the article's noun table (longest first). -/
 def matchWords (tbl : List (List Codes × Nat)) (cs : List Chunk) : Option (Nat × List Chunk) :=
   let ws := cs.takeWhile (fun c => match c with | .w _ => true | _ => false)
@@ -1077,11 +1113,14 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let cs := rest.dropLast
       let V := (← get).vocab
       let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
-      match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) cs cands with
+      let elabArgs (args : List (List MTok)) : M (List (Tm × Ty)) := args.mapM fun a => do
+        let some m := Math.parseFormula a | fail E.unsupported
+        Elab.term 100000 outer none m
+      let fits (na : Notion × List (List MTok)) : M Unit := do
+        let _ ← applyAll na.1.value na.1.ty na.1.doms (← elabArgs na.2)
+      match ← theMeaningBy (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) fits cs cands with
       | some ((n, args), _) =>
-        let ts ← args.mapM fun a => do
-          let some m := Math.parseFormula a | fail E.unsupported
-          Elab.term 100000 outer none m
+        let ts ← elabArgs args
         let (val, vty) ← applyAll n.value n.ty n.doms ts
         -- (the value is in the scope of the variables before this one)
         let k := if outer.isEmpty then 1 else 2
@@ -1125,7 +1164,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       match np.getLast? with
       | some (.m v) =>
         let ws := np.dropLast
-        if ws.any (fun c => match c with | .w _ => false | _ => true) then np else
+        -- (a noun with a hyphen, `right-hand side Lipschitz in the second variable`)
+        if ws.any (fun c => match c with | .w _ | .p 45 => false | _ => true) then np else
         let hit := V.mods.findSome? fun m =>
           if m.prenominal || Notation.hasSlots m.phrase || m.phrase.length ≥ ws.length then none else
           let tail := ws.drop (ws.length - m.phrase.length)
@@ -1180,7 +1220,13 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           if (Math.parseSig ts).isSome then fail E.unsupported else pure (a, [.glob i], some ts, r')
         | _ => pure (a, [.glob i], none, r)
       | none =>
-        let cands := V.nouns.filterMap (fun n =>
+        -- (`a function $A:\CC\to\mathbb{R}$`: the signature says what the function is a
+        -- function of, whatever noun `function` a field has)
+        let sigAhead : Bool := match r0 with
+          | .w w :: .m ts :: _ =>
+            (w == w!"map" || w == w!"function" || w == w!"maps" || w == w!"functions") && (Math.parseSig ts).isSome
+          | _ => false
+        let cands := if sigAhead then [] else V.nouns.filterMap (fun n =>
             ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => ((n, v), r))
         match ← theMeaning (fun (nv : Noun × Option (List MTok)) => (nv.1.ty, nv.1.pred, nv.2))
             (·.1.field) r0 cands with
@@ -2782,11 +2828,14 @@ def letDenote (b : BindInfo) (sym : MT) (np : List Chunk) : M (List Nat × List 
         let vocabNotion : M (Tm × Ty) := do
           let V := (← get).vocab
           let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name rest []).map fun a => ((n, a), [])
-          match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) rest cands with
+          let elabArgs (args : List (List MTok)) : M (List (Tm × Ty)) := args.mapM fun a => do
+            let some m := Math.parseFormula a | fail E.unsupported
+            term F sc none m
+          let fits (na : Notion × List (List MTok)) : M Unit := do
+            let _ ← applyAll na.1.value na.1.ty na.1.doms (← elabArgs na.2)
+          match ← theMeaningBy (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) fits rest cands with
           | some ((n, args), _) =>
-            let ts ← args.mapM fun a => do
-              let some m := Math.parseFormula a | fail E.unsupported
-              term F sc none m
+            let ts ← elabArgs args
             applyAll n.value n.ty n.doms ts
           | none => fail E.noun ((ws.intersperse [32]).flatten)
         match mathsOf rest with
@@ -3140,11 +3189,15 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   -- a notion with its arguments: `$X$ is the Poisson distribution with mean $\lambda$`
   let notion ← if np.isSome then pure none else do
     let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
-    match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) cs cands with
+    let elabArgs (args : List (List MTok)) : M (List (Tm × Ty)) := args.mapM fun a => do
+      let some m := Math.parseFormula a | fail E.unsupported
+      term F sc none m
+    let fits (na : Notion × List (List MTok)) : M Unit := do
+      let (_, vty) ← applyAll na.1.value na.1.ty na.1.doms (← elabArgs na.2)
+      if vty != x.2 then fail E.type
+    match ← theMeaningBy (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) fits cs cands with
     | some ((n, args), _) => do
-      let ts ← args.mapM fun a => do
-        let some m := Math.parseFormula a | fail E.unsupported
-        term F sc none m
+      let ts ← elabArgs args
       let (v, vty) ← applyAll n.value n.ty n.doms ts
       if vty != x.2 then fail E.type
       if vty == .real then pure (some (Tm.eq x.1 v))
@@ -3274,7 +3327,7 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
 
 /-- `adjectiveTmCore`, and where the core language has no such property of the type, the
 modifier of the vocabulary with these words (`compact` of a set of real numbers in the
-field `topology`, `even` of a real function in `analysis`). -/
+field `realsets`, `even` of a real function in `realfunctions`). -/
 def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
     (on : Option MT) : M Tm := do
   let st0 ← get
@@ -4849,10 +4902,44 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
     if !tpl.pat.any (fun it => match it with | .fixed _ => true | _ => false) then fail E.unsupported
     modify fun st => { st with templates := st.templates ++ [tpl] }
   if kind == 2 then
+    -- (`if $C^\top(u,v)\coloneqq C(v,u)$ denotes the transpose of $C$`: a formula that defines
+    -- the symbol itself is the article's definition, whatever notion of the vocabulary has
+    -- these words)
+    if toks.any (·.tok == .cmd w!"coloneqq") then fail E.unsupported
     let key : Codes := w!"@n" ++ (toString st.templates.length).toList.map Char.toNat
     let V := st.vocab
-    let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name rhs []).map fun a => ((n, a), [])
-    match ← theMeaning (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) rhs cands with
+    -- `We write $\operatorname{ord}(\sigma)$ for the order of a permutation $\sigma$`: a
+    -- noun before a letter gives its type, which decides between notions with these words
+    -- (of a permutation, of a group); the letter stays the argument
+    let rec typed : Nat → List Chunk → List Chunk × List (List MTok × Ty)
+      | 0, cs => (cs, [])
+      | _ + 1, [] => ([], [])
+      | f + 1, c :: cs =>
+        let art := match c with | .w a => a == w!"a" || a == w!"an" | _ => false
+        let hit := if !art then none else V.nouns.findSome? fun n =>
+          match matchPhrase n.sing cs with
+          | some (none, .m ts :: rest) => if (Notation.varTok ts).isSome then some (ts, n.ty, rest) else none
+          | _ => none
+        match hit with
+        | some (ts, ty, rest) => let (r, acc) := typed f rest; (.m ts :: r, (ts, ty) :: acc)
+        | none => let (r, acc) := typed f cs; (c :: r, acc)
+    let (rhsT, typedVars) := typed (rhs.length + 1) rhs
+    let candsOf (cs : List Chunk) := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
+    -- (only where the words with the nouns are a notion of the vocabulary: otherwise they are
+    -- read as before, `the maximum degree of a graph $G$` as a quantity of the article)
+    let (rhs, typedVars) := if typedVars.isEmpty || (candsOf rhsT).isEmpty then (rhs, []) else (rhsT, typedVars)
+    let cands := candsOf rhs
+    let rec tysOf : Ty → List Ty
+      | .fn a b => a :: tysOf b
+      | _ => []
+    let fits (na : Notion × List (List MTok)) : M Unit := do
+      if typedVars.isEmpty then fail E.type
+      let tys := tysOf na.1.ty
+      for (ts, ty) in typedVars do
+        match na.2.findIdx? (· == ts) with
+        | some i => if tys.getD i .prop != ty then fail E.type
+        | none => fail E.type
+    match ← theMeaningBy (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) fits rhs cands true with
     | some ((n, args), _) => do
       -- each argument is a variable of the pattern, or a fixed value
       -- (`We write $NF$ for the derivative of $F$ in the direction $(\sqrt2-1,1)$.`)
@@ -5863,12 +5950,20 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     let one (part : Sentence) (sent : Grammar.Sent) (ptoks0 : List PTok) (alt : Option Grammar.Sent) :
         M (List Nat × List Nat) := do
         let before ← get
+        let explicit := ptoks0.any (·.tok == .cmd w!"coloneqq")
         let primary : M (List Nat × List Nat) := match sent with
           | .notation k rhs => Compile.notationDef ptoks0 k rhs
           -- `We write $L$ for the WORDS`: a notation for an operation of the vocabulary, or
           -- else a description
           | .defDesc _ _ _ _ _ (some (k, rhs)) => do
             let st ← get
+            -- (`$C^\top(u,v)\coloneqq C(v,u)$ denotes the transpose of $C$`: the article's own
+            -- formula comes first, whatever notion of the vocabulary has these words)
+            if explicit then
+              tryCatch (Compile.sentence sc sent) fun e => do
+                set st
+                tryCatch (Compile.notationDef ptoks0 k rhs) fun _ => do set st; throw e
+            else
             tryCatch (Compile.notationDef ptoks0 k rhs) fun _ => do
               set st
               Compile.sentence sc sent

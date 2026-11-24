@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realsets,topologies}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\mathcal{E}$ for the usual topology on $\mathbb{R}$.
+We write $\mathcal{D}$ for the discrete topology on $\mathbb{R}$.
+We write $\mathcal{C}$ for the cofinite topology on $\mathbb{R}$.
+We write $\mathcal{S}$ for the lower limit topology on $\mathbb{R}$.
+We write $\mathrm{cl}_\tau(U)$ for the closure of $U$ in $\tau$.
+
+\section{Topologies}
+
+\begin{lemma}\label{finer}
+$\mathcal{S}$ is finer than $\mathcal{E}$, and $\mathcal{D}$ is finer than $\mathcal{S}$.
+\end{lemma}
+
+\begin{lemma}\label{discrete}
+$\mathcal{D}$ is a Hausdorff topology and $\mathcal{D}$ is discrete.
+\end{lemma}
+
+\begin{lemma}\label{cofinite}
+$\mathcal{C}$ is a topology on $\mathbb{R}$, and $\mathcal{E}$ is finer than $\mathcal{C}$.
+\end{lemma}
+
+\begin{lemma}\label{coarser}
+Let $\tau$ and $\sigma$ be topologies on $\mathbb{R}$ and let $U$ be a $\tau$-open set. If $\tau$ is coarser than $\sigma$, then $U$ is $\sigma$-open.
+\end{lemma}
+
+\section{Sets and maps}
+
+\begin{lemma}\label{closed}
+Let $\tau$ be a topology on $\mathbb{R}$ and let $U$ be a $\tau$-open set. Then $\mathbb{R}\setminus U$ is $\tau$-closed.
+\end{lemma}
+
+\begin{lemma}\label{compact}
+Let $K$ be a compact set. Then $K$ is $\mathcal{E}$-compact.
+\end{lemma}
+
+\begin{lemma}\label{closure}
+Let $\tau$ be a topology on $\mathbb{R}$ and let $U$ be a set. Then $U\subseteq\mathrm{cl}_\tau(U)$.
+\end{lemma}
+
+\begin{lemma}\label{identity}
+Let $\tau$ be a topology on $\mathbb{R}$. For every real number $x$, let $i(x)\coloneqq x$. Then $i$ is a homeomorphism from $\tau$ to $\tau$.
+\end{lemma}
+
+\begin{lemma}\label{continuous}
+Let $\tau$ be a topology on $\mathbb{R}$ and let $f:\mathbb{R}\to\mathbb{R}$ be a function. Then $f$ is continuous from $\mathcal{D}$ to $\tau$.
+\end{lemma}
+
+\end{document}

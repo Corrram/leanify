@@ -41,3 +41,14 @@ article-reader/
 /tests/Information/article.leanify.*
 /tests/Optimization/article.leanify.*
 /tests/Dynamics/article.leanify.*
+/tests/Asymptotics/article.leanify.*
+/tests/Transforms/article.leanify.*
+/tests/CalculusField/article.leanify.*
+/tests/Risk/article.leanify.*
+/tests/StochasticOrders/article.leanify.*
+/tests/Finance/article.leanify.*
+/tests/Topologies/article.leanify.*
+/tests/MetricSpaces/article.leanify.*
+/tests/Approximation/article.leanify.*
+/tests/Iteration/article.leanify.*
+/tests/OdeSolvers/article.leanify.*

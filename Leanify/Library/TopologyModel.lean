@@ -5,7 +5,7 @@ import Mathlib.Topology.Instances.CantorSet
 import Mathlib.Topology.MetricSpace.HausdorffDistance
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
-/-! # The meaning of the field `topology`
+/-! # The meaning of the field `realsets`
 
 Sets of real numbers are predicates; each notion is Mathlib's, of the set `{x | S x}`. -/
 

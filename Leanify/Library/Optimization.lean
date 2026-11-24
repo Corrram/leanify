@@ -3,7 +3,7 @@ import Leanify.Library.Core
 /-! # Vocabulary: optimization of real functions
 
 Minimizers, extreme values and the convex analysis of a real function on the line. The
-functions are those of the field `analysis` (`Let $f$ be a convex function.`), and the
+functions are those of the field `realfunctions` (`Let $f$ be a convex function.`), and the
 points are real numbers (`$x$ is a local minimizer of $f$`).
 
 * adjectives of functions: `strongly convex`, `$\mu$-strongly convex`, `$L$-smooth`,
@@ -13,7 +13,7 @@ points are real numbers (`$x$ is a local minimizer of $f$`).
   `minimizer of $f$ on $[a,b]$`, `stationary point of $f$`;
 * notions: the minimum and maximum of a function (where they are attained), on the line and
   on `[a,b]`, its infimum and supremum (where bounded: `the infimum of the function $f$`; of
-  a set, the field `topology` has `the infimum of $S$`), the minimizer (where there is exactly
+  a set, the field `realsets` has `the infimum of $S$`), the minimizer (where there is exactly
   one), the set of minimizers, the convex conjugate `f^*(y) = sup_x (xy - f(x))` (where the
   supremum is finite), the Moreau envelope and the proximal operator with a parameter
   `λ > 0`.

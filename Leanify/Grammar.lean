@@ -1096,7 +1096,7 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   -- (`$n\times n$ matrices`, `$k$-regular graphs`: a formula before the noun)
   let lead : List Chunk := match r with
     | .m t :: .p 45 :: .w _ :: _ => [.m t, .p 45]
-    | .m t :: .w _ :: _ => if t.contains (.cmd w!"times") then [.m t] else []
+    | .m t :: .w w :: _ => if t.contains (.cmd w!"times") || w == w!"times" then [.m t] else []
     | _ => []
   let r := r.drop lead.length
   let ws := r.takeWhile fun c => match c with
@@ -1131,7 +1131,18 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
     if together.isEmpty then none else
     let (vs, d) ← binderMath ts
     return (.many (.every vs d :: together), r1)
-  let nouns := vars.map fun v => Bind.noun (lead ++ ws ++ [.m v])
+  -- `$f$ and $g$ be probability densities with finite mean`: words after the noun (a
+  -- modifier of the vocabulary), said of each of them
+  let post : List Chunk := match r1 with
+    | .w w :: .w _ :: _ =>
+      if w != w!"with" then [] else
+      r1.takeWhile fun c => match c with
+        | .w w' => w' != w!"and" && w' != w!"then"
+        | .p 45 => true
+        | _ => false
+    | _ => []
+  let r1 := r1.drop post.length
+  let nouns := vars.map fun v => Bind.noun (lead ++ ws ++ [.m v] ++ post)
   match withConds r1 with
   | some (c, r2) => some (.many (nouns ++ together ++ [.ifCond c]), r2)
   | none => some (.many (nouns ++ together), r1)
@@ -1553,6 +1564,8 @@ def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk ×
       -- (not `and $2$-regular`: a formula and a hyphen begin an adjective)
       | .w _ :: .m _ :: .p 45 :: .w _ :: _ => false
       | .w w :: .m _ :: _ => w == w!"and"
+      -- (`… and that $g$ is …`, in an assumption)
+      | .w w :: .w t :: _ => w == w!"and" && t == w!"that"
       | _ => false
     if clauseEnd cs || (nextClause && !acc.isEmpty) then some (acc.reverse, cs) else
     match cs with
@@ -1780,9 +1793,18 @@ def atPairs : Nat → List Chunk → List (MT × MT) → Option (List (MT × MT)
 /-- `and WORD …`, `, WORD …`: more words of a list follow. -/
 def moreWords (r : List Chunk) : Bool :=
   match r with
-  | .w w :: .w _ :: _ => w == w!"and"
+  -- (`bounded below`, `bounded at infinity`: an adjective of the vocabulary that begins
+  -- with a standard one)
+  -- (`Lipschitz with respect to $d$`)
+  | .w w :: .w w2 :: _ =>
+    w == w!"and" || w == w!"at" || w == w!"below" || w == w!"above" || (w == w!"with" && w2 == w!"respect") ||
+      -- (`Lipschitz in the second variable`)
+      (w == w!"in" && w2 == w!"the")
   | .w w :: .m _ :: .p 45 :: .w _ :: _ => w == w!"and"
+  -- (`open in $\tau$`, `continuous from $\tau$ to $\sigma$`: with a topology of the vocabulary)
+  | .w w :: .m _ :: _ => w == w!"in" || w == w!"from"
   | .p 44 :: .w _ :: _ => true
+  | .w w :: _ => w == w!"below" || w == w!"above"
   | _ => false
 
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
@@ -2161,6 +2183,12 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let (l, r) ← namedTerm cs
       let (rel, r1) ← compareRel r
       let (rr, r2) ← namedTerm r1
+      -- (`$f$ is smaller than $g$ in the hazard rate order`: a stochastic order of the
+      -- vocabulary, an adjective below)
+      let isOrder := (do
+        let r3 ← kw [w!"in", w!"the"] r2
+        (r3.take 6).find? fun (c : Chunk) => match c with | .w w => w == w!"order" | _ => false).isSome
+      if isOrder then none
       some (Clause.compare l rel rr, r2)) with
   | some res => some res
   | none =>
@@ -2188,11 +2216,15 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       -- vocabulary, below)
       match (do
           let (phrase, r2) ← wordsUntil [w!"of"] 8 r1 []
+          -- (`is of the same order as $g$`: an adjective that begins with `of`, below)
+          if phrase.isEmpty then none
           let r3 ← kw [w!"of"] r2
           let (o, r4) ← obj r3
           -- (a phrase that goes on after its object, `is a periodic point of $f$ of period
           -- $n$`, `is a minimizer of $f$ on $[a,b]$`, is a noun phrase of the vocabulary, below)
           if (kw [w!"of"] r4 <|> kw [w!"on"] r4 <|> kw [w!"with"] r4).isSome then none
+          -- (`… with right-hand side $f$`: the object stopped at a hyphen)
+          if (match r4 with | .p 45 :: _ => true | _ => false) then none
           some (Clause.pred s phrase o, r4)) with
       | some res => some res
       | none =>
@@ -2288,6 +2320,19 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       | _ => false
     if (kw iffW r).isSome || (kw [w!"or"] r).isSome || swallowed then split <|> some (c, r) else some (c, r)
   | none => split
+
+/-- `CLAUSE and CLAUSE [and CLAUSE]`, the hypothesis of `if …, then …`: each clause read on
+its own (`if $f$ is continuous and $g$ is dominated by $f$, then …`). -/
+def andClauses (cs : List Chunk) : Option (Clause × List Chunk) := do
+  let (c, r) ← clause cs
+  let rec more : Nat → List Chunk → List Clause → List Clause × List Chunk
+    | 0, r, acc => (acc.reverse, r)
+    | f + 1, r, acc =>
+      match (do let r1 ← kw [w!"and"] r; clause r1) with
+      | some (c', r2) => more f r2 (c' :: acc)
+      | none => (acc.reverse, r)
+  let (rest, r') := more 4 r []
+  some (if rest.isEmpty then c else .both (c :: rest), r')
 
 /-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
 a formula, `for every $x\in A$`, belongs to the clause itself). -/
@@ -2761,7 +2806,7 @@ def cclause (cs : List Chunk) : Option (CClause × List Chunk) :=
           let r ← kw [w!"if"] r0
           -- (`if there is $\mu\in\Gamma$ such that $\mu(K)=1$, then …`: an existence as a
           -- hypothesis)
-          let (h, rest) ← clause r <|> thereIs r
+          let (h, rest) ← andClauses r <|> thereIs r
           let r' ← punct 44 rest
           some (h, (kw [w!"then"] r').getD r')) with
       | some (h, r) => (some h, r)
@@ -3341,8 +3386,8 @@ def isCondition : MT → Bool
   | _ => false
 
 /-- The words of a noun phrase before its variable, with the formulas of its modifiers
-(`invertible $n\times n$ matrix`, `$k$-regular graph`): a formula before a hyphen, or a
-product `$m\times n$` before a word. -/
+(`invertible $n\times n$ matrix`, `$k$-regular graph`): a formula before a hyphen, a
+product `$m\times n$` before a word, or a number before `times`. -/
 def prenominalWords (cs : List Chunk) : List Chunk :=
   let rec go : Nat → List Chunk → List Chunk → List Chunk
     | 0, _, acc => acc.reverse
@@ -3352,7 +3397,9 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
       | .w w, _ => if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
       | .p 45, _ => go f rest (c :: acc)
       | .m _, .p 45 :: _ => go f rest (c :: acc)
-      | .m t, .w _ :: _ => if t.contains (.cmd w!"times") then go f rest (c :: acc) else acc.reverse
+      -- (`$n$ times differentiable function`: a number of times)
+      | .m t, .w w :: _ =>
+        if t.contains (.cmd w!"times") || w == w!"times" then go f rest (c :: acc) else acc.reverse
       | _, _ => acc.reverse
   go (cs.length + 1) cs []
 

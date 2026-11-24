@@ -49,14 +49,18 @@ most general; all of them are printed.
 3. **The type of what the phrase is about.** An adjective applies to objects of
    one type: `$n$ is even` about an integer and `$f$ is even` about a real
    function are different entries, and the declared type of `n` or `f` (printed:
-   `Let $f:\mathbb R\to\mathbb R$ …`) decides.
+   `Let $f:\mathbb R\to\mathbb R$ …`) decides. So does the type of a notion's
+   argument: `the inverse of $A$` is the inverse of a matrix for a matrix `A` and of a
+   permutation for a permutation. A definition whose letter has no type yet says it with a
+   noun: `We write $|G|$ for the order of a group $G$.`
 
 4. **The fields the article names.** The vocabulary is divided into fields
    (`numbers`, `unitsquare`, `distributions`, …); within a field every phrase has at
    most one meaning. The article names the fields it uses in its preamble,
-   `\usepackage[vocab={numbers,analysis}]{leanify}`, and `\leanifyreport` prints
-   them with the verification summary (`Leanify (vocabulary: core, numbers,
-   analysis): …`), so the printed article states its dictionary. The core
+   `\usepackage[vocab={numbers,realfunctions}]{leanify}` (or a bundle of them,
+   `vocab=analysis`, `vocab=math`), and `\leanifyreport` prints them with the
+   verification summary (`Leanify (vocabulary: core, numbers, realfunctions): …`), so
+   the printed article states its dictionary. The core
    vocabulary is always used.
 
 5. **Otherwise Leanify refuses.** If the article's fields give a phrase two
@@ -166,11 +170,11 @@ Further fields cover other branches of mathematics:
   `(1,∞)`, the Bernoulli numbers, the sinc function, the Euler–Mascheroni constant and
   the golden ratio.
 
-* `topology`: sets of real numbers by a noun (`a nonempty compact set $S$`, `every open
+* `realsets` (formerly `topology`): sets of real numbers by a noun (`a nonempty compact set $S$`, `every open
   subset $U$ of $\mathbb{R}$`): open, closed, compact, bounded, connected, dense, nowhere
   dense, perfect, countable, measurable and null sets; closure, interior, boundary, limit
   points, supremum, infimum, diameter, Lebesgue measure; the Cantor set;
-* `analysis`: real functions by a noun (`a continuous periodic function $f$`): uniformly
+* `realfunctions` (formerly `analysis`): real functions by a noun (`a continuous periodic function $f$`): uniformly
   continuous, Lipschitz, differentiable, smooth, analytic, monotone, convex, even, odd,
   periodic, injective, surjective, measurable and integrable functions; the derivative,
   the supremum norm, the Lipschitz constant, the total variation, the range and the zeros;
@@ -194,30 +198,65 @@ Further fields cover other branches of mathematics:
   variance; the normal, exponential, uniform, gamma, beta, chi-squared, Cauchy, Laplace,
   logistic, Pareto and Weibull densities with their parameters; the distribution function,
   mean, variance, moments, moment generating function, median and differential entropy;
-* `fourier` (with `analysis`): the Fourier cosine and sine coefficients of a function
+* `fourier` (with `realfunctions`): the Fourier cosine and sine coefficients of a function
   integrable on `[-π, π]`, the partial sums of its Fourier series and their Fejér means,
   the Dirichlet and Fejér kernels, the Fourier cosine and sine transforms, trigonometric
   polynomials;
 * `information` (with `distributions`): the entropy, Rényi and binary entropy, the
   Kullback–Leibler and χ² divergences, the total variation and Hellinger distances and the
   Bhattacharyya coefficient of distributions on `ℕ₀`;
-* `optimization` (with `analysis`): `$x$ is a [local] minimizer of $f$`, a stationary point,
+* `optimization` (with `realfunctions`): `$x$ is a [local] minimizer of $f$`, a stationary point,
   a minimizer on `[a,b]`; strongly convex, `$L$-smooth`, coercive and quasiconvex functions,
   functions bounded below or above; the minimum, maximum, infimum and supremum (where they
   exist), the unique minimizer, the convex conjugate, the Moreau envelope and the proximal
   operator;
-* `dynamics` (with `analysis`): the iterates `f^n` of a map, orbits, fixed and periodic
+* `dynamics` (with `realfunctions`): the iterates `f^n` of a map, orbits, fixed and periodic
   points (attracting, repelling, of least period `n`, eventually periodic), the least period
-  and the Lyapunov exponent.
+  and the Lyapunov exponent;
+* `calculus` (with `realfunctions`): `$n$ times (continuously) differentiable` functions,
+  the `n`th derivative and the Taylor polynomial of degree `n` at `a`, antiderivatives,
+  critical and inflection points; the arc length, the average value, the area between two
+  graphs and the volume of revolution on `[a,b]`;
+* `asymptotics` (with `realfunctions`): `asymptotically equivalent to $g$`, `dominated by
+  $g$`, `negligible compared to $g$`, `of the same order as $g$`, growth classes, slow and
+  regular variation, the limit at infinity;
+* `transforms` (with `realfunctions`): the Laplace, Mellin and Stieltjes transforms, the
+  convolution and correlations, each defined where its integrand is integrable;
+* `topologies`: topologies on `ℝ` by a noun (`Let $\tau$ be a topology on $\mathbb{R}$.`),
+  sets that are `$\tau$-open`, `$\tau$-compact`, `dense in $\tau$`; Hausdorff, second
+  countable, separable, metrizable topologies, finer and coarser ones; maps continuous
+  from `τ` to `σ`, open maps and homeomorphisms; the usual, discrete, indiscrete, cofinite
+  and lower limit topologies, generated and subspace topologies, closure and interior;
+* `metricspaces` (loads `topologies`): metrics on `ℝ` by a noun, complete, bounded and
+  equivalent metrics, sequences `Cauchy with respect to $d$`, isometries and contractions;
+  the Euclidean and discrete metrics, the topology a metric induces, balls, the diameter
+  and the distance to a set;
+* `approximation`: absolute and relative errors, the condition number, rounding, difference
+  quotients, the trapezoidal, midpoint and Simpson's rules and Riemann sums, linear and
+  Lagrange interpolation, Chebyshev nodes;
+* `iteration`: the Newton map, Newton, secant and fixed-point sequences, orders of
+  convergence (`quadratically convergent to $y$`), contractive maps;
+* `odesolvers`: right-hand sides `f(t, y)`, solutions of an initial value problem, the
+  Euler, Heun, midpoint and Runge–Kutta steps and sequences;
+* `risk` (with `densities`): the survival function, hazard rate and quantile function of a
+  density, the value at risk and the expected shortfall, heavy tails, monotone failure
+  rates;
+* `stochasticorders` (with `densities`): `$f$ is smaller than $g$ in the hazard rate order`
+  and the other classical stochastic orders;
+* `finance`: interest and annuities, the Black–Scholes prices and the delta.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.
 
-A *bundle* names the fields of one area (`vocab=statistics`, `vocab=realanalysis`,
-`vocab=algebra`, …; [Libraries](libraries.md#bundles) has the tree). It has no words of its
-own: the article is read with its fields. No two fields of a bundle give a phrase
-different meanings (`lake exe glossary --bundles` checks it, and `tests/bundles.py` that
-every test article is read with a bundle as with its fields).
+A *bundle* names several fields (`vocab=probability`, `vocab=algebra`, …), and the bundles
+form a tree ([Libraries](libraries.md#the-tree-of-libraries) draws it): `math` has every
+field, and its seven *realms* are the branches of mathematics, `analysis`, `algebra`,
+`topology`, `numerics`, `stochastic`, `discrete` and `numbertheory`. A bundle has no words
+of its own: the article is read with its fields. No two fields of a bundle give a phrase
+different meanings, except a notion whose meanings take arguments of different types
+(`the inverse of $v$`: of a function, a matrix, a permutation), where the type of the
+argument decides (step 3 above); `lake exe glossary --bundles` checks it, and
+`tests/bundles.py` that every test article is read with a bundle as with its fields.
 
 Their notions take arguments (`the $n$th Catalan number`, `the degree of $v$ in $G$`),
 and an article gives them its notation (`We write $C_n$ for the $n$th Catalan number.`,
@@ -231,6 +270,6 @@ An article may use several such fields. A field can declare a type of
 its own and say what notation means on it (`complex`: `z+w`, `|z|`, `\overline{z}` on
 `\mathbb{C}`), as `docs/vocabularies.md` explains.
 
-On the command line, `leanify check article.tex --vocab numbers,analysis` and
-`leanify init article.tex --vocab numbers,analysis` use the same fields;
+On the command line, `leanify check article.tex --vocab numbers,realfunctions` and
+`leanify init article.tex --vocab numbers,realfunctions` use the same fields;
 `leanify.sty` passes its `vocab` option on.

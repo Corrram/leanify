@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,approximation}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $D_h^+f(x)$ for the forward difference quotient of $f$ at $x$ with step $h$.
+We write $D_hf(x)$ for the central difference quotient of $f$ at $x$ with step $h$.
+We write $T_n(f,a,b)$ for the trapezoidal rule for $f$ on $[a,b]$ with $n$ subintervals.
+We write $M_n(f,a,b)$ for the midpoint rule for $f$ on $[a,b]$ with $n$ subintervals.
+We write $S_n(f,a,b)$ for Simpson's rule for $f$ on $[a,b]$ with $n$ subintervals.
+We write $L(f,a,b)$ for the linear interpolant of $f$ on $[a,b]$.
+We write $\kappa_f(x)$ for the condition number of $f$ at $x$.
+We write $e_{\mathrm{abs}}(x,y)$ for the absolute error of the approximation $x$ of $y$.
+We write $e_{\mathrm{rel}}(x,y)$ for the relative error of the approximation $x$ of $y$.
+We write $\operatorname{rd}_k(x)$ for the rounding of $x$ to $k$ decimal places.
+We write $\epsilon$ for the machine epsilon of double precision.
+For every real number $x$, let $q(x)\coloneqq x^2$.
+
+\section{Errors}
+
+\begin{lemma}\label{error}
+Let $x$ and $y$ be real numbers with $y\ne0$. Then $e_{\mathrm{rel}}(x,y)\,|y|=e_{\mathrm{abs}}(x,y)$.
+\end{lemma}
+
+\begin{lemma}\label{condition}
+$\kappa_q(1)=2$ and $0<\epsilon<1$.
+\end{lemma}
+
+\begin{lemma}\label{rounding}
+$\operatorname{rd}_2(\frac{2}{3})=\frac{67}{100}$.
+\end{lemma}
+
+\section{Difference quotients}
+
+\begin{lemma}\label{forward}
+Let $x$ be a real number and let $h\ne0$. Then $D_h^+q(x)=2x+h$ and $D_hq(x)=2x$.
+\end{lemma}
+
+\section{Quadrature and interpolation}
+
+\begin{lemma}\label{quadrature}
+Let $a$ and $b$ be real numbers. Then $T_1(q,a,b)=\frac{(b-a)(a^2+b^2)}{2}$ and $S_2(q,a,b)=\frac{b^3-a^3}{3}$.
+\end{lemma}
+
+\begin{lemma}\label{midpoint}
+Let $f$ be a convex function, let $a$ and $b$ be real numbers with $a<b$, and let $n$ be a positive integer. Then $M_n(f,a,b)\le T_n(f,a,b)$.
+\end{lemma}
+
+\begin{lemma}\label{interpolant}
+Let $f$ be a function and let $a$ and $b$ be real numbers with $a<b$. Then $L(f,a,b)(a)=f(a)$ and $L(f,a,b)(b)=f(b)$.
+\end{lemma}
+
+\end{document}

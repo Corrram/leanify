@@ -7,22 +7,79 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 
 ## Bundles
 
-A bundle is a name for the fields of one area: `\usepackage[vocab=statistics]{leanify}`
-reads an article with all of them. No two fields of a bundle give a phrase different
-meanings (`lake exe glossary --bundles` checks this).
+A bundle is a name for several fields: `\usepackage[vocab=analysis]{leanify}` reads an
+article with all of them, and `vocab=math` with every field. The realms are the bundles
+that `math` is made of. No two fields of a bundle give a phrase different meanings,
+except a notion whose meanings take arguments of different types, which the types decide
+(`lake exe glossary --bundles` checks this).
+
+* `math`
+  * `analysis`
+    * `realfunctions`
+    * `realsets`
+    * `calculus`
+    * `optimization`
+    * `asymptotics`
+    * `transforms`
+    * `fourier`
+    * `dynamics`
+    * `elementary`
+      * `special`
+      * `hyperbolic`
+      * `trigonometry`
+      * `means`
+    * `complex`
+    * `torus`
+  * `algebra`
+    * `linearalgebra`
+      * `vectors`
+      * `matrices`
+    * `polynomials`
+    * `groups`
+  * `topology`
+    * `realsets`
+    * `topologies`
+    * `metricspaces`
+    * `geometry`
+  * `numerics`
+    * `approximation`
+    * `iteration`
+    * `odesolvers`
+  * `stochastic`
+    * `statistics`
+      * `probability`
+        * `distributions`
+        * `densities`
+        * `information`
+        * `risk`
+        * `stochasticorders`
+      * `dependence`
+        * `markov`
+    * `finance`
+  * `discrete`
+    * `combinatorics`
+    * `permutations`
+    * `graphs`
+  * `numbertheory`
+    * `numbers`
+    * `arithmetic`
+    * `congruences`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `probability` | `distributions`, `densities`, `information` | `distributions`, `densities`, `information` |
-| `dependence` | `markov` | `markov` |
-| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `markov` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences` | `numbers`, `arithmetic`, `congruences` |
-| `discrete` | `combinatorics`, `permutations`, `graphs` | `combinatorics`, `permutations`, `graphs` |
-| `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `approximation`, `iteration`, `odesolvers`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance`, `combinatorics`, `permutations`, `graphs`, `numbers`, `arithmetic`, `congruences` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
-| `functions` | `analysis`, `optimization`, `fourier`, `dynamics` | `analysis`, `optimization`, `fourier`, `dynamics` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry` | `realsets`, `topologies`, `metricspaces`, `geometry` |
+| `numerics` | `approximation`, `iteration`, `odesolvers` | `approximation`, `iteration`, `odesolvers` |
+| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance` |
+| `discrete` | `combinatorics`, `permutations`, `graphs` | `combinatorics`, `permutations`, `graphs` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences` | `numbers`, `arithmetic`, `congruences` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means` | `special`, `hyperbolic`, `trigonometry`, `means` |
-| `realanalysis` | `functions`, `topology`, `elementary` | `analysis`, `optimization`, `fourier`, `dynamics`, `topology`, `special`, `hyperbolic`, `trigonometry`, `means` |
+| `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
+| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
+| `dependence` | `markov` | `markov` |
+| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov` |
 
 ## `core`
 
@@ -32,6 +89,7 @@ meanings (`lake exe glossary --bundles` checks this).
 | real | ℝ | a real number (`ℝ`), as in `for every real $x$` |
 | integer | ℝ | an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number) |
 | nonnegative integer | ℝ | `x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`) |
+| non-negative integer | ℝ | a nonnegative integer |
 | positive integer | ℝ | `x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`) |
 | negative integer | ℝ | `x ∈ ℤ`, `x < 0` |
 | natural number | ℝ | with 0, as in Mathlib (`ℕ`) |
@@ -615,7 +673,7 @@ meanings (`lake exe glossary --bundles` checks this).
 | $\Gamma$ | ℝ → ℝ | the gamma function, except at `0, -1, -2, …` (Mathlib `Real.Gamma`) |
 | $\zeta$ | ℝ → ℝ | the Riemann zeta function `∑ n^{-s}`, for `s > 1` (Mathlib `riemannZeta`) |
 
-## `topology`
+## `realsets`
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
@@ -671,7 +729,7 @@ meanings (`lake exe glossary --bundles` checks this).
 | set of irrational numbers | ℝ → Prop | `ℝ ∖ ℚ` |
 | set of integers | ℝ → Prop | `ℤ ⊆ ℝ` |
 
-## `analysis`
+## `realfunctions`
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
@@ -1039,4 +1097,329 @@ meanings (`lake exe glossary --bundles` checks this).
 | set of periodic points of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f^n(x) = x for some n ≥ 1}` (Mathlib `Function.periodicPts`) |
 | least period of $a$ under $b$ | ℝ → (ℝ → ℝ) → ℝ | the least `n ≥ 1` with `f^n(x) = x`, of a periodic point (Mathlib `Function.minimalPeriod`) |
 | lyapunov exponent of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `lim_{n→∞} (1/n) log \|(f^n)'(x)\|`, where every `f^n` is differentiable at `x` and the limit exists |
+
+## `asymptotics`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| asymptotically equivalent to $x$ | ℝ → ℝ | `f(x)/g(x) → 1` as `x → ∞`: `\|f - g\| ≤ ε\|g\|` eventually, for every `ε > 0` (Mathlib `Asymptotics.IsEquivalent`) |
+| dominated by $x$ | ℝ → ℝ | `\|f\| ≤ C\|g\|` eventually: `f = O(g)` (Mathlib `Asymptotics.IsBigO`) |
+| negligible compared to $x$ | ℝ → ℝ | `\|f\| ≤ ε\|g\|` eventually, for every `ε > 0`: `f = o(g)` (Mathlib `Asymptotics.IsLittleO`) |
+| of the same order as $x$ | ℝ → ℝ | `c\|g\| ≤ \|f\| ≤ C\|g\|` eventually, `c, C > 0`: `f = Θ(g)` (Mathlib `Asymptotics.IsTheta`) |
+| eventually positive | ℝ → ℝ | `f(x) > 0` for all large `x` |
+| bounded at infinity | ℝ → ℝ | `\|f(x)\| ≤ C` for all large `x` |
+| bounded at infinity | ℝ → ℝ | after the noun |
+| of polynomial growth | ℝ → ℝ | `\|f(x)\| ≤ C x^k` for all large `x` |
+| of at most exponential growth | ℝ → ℝ | `\|f(x)\| ≤ C e^{ax}` for all large `x` |
+| slowly varying | ℝ → ℝ | eventually positive, `f(tx)/f(x) → 1` for every `t > 0` (Karamata; Mathlib has no counterpart) |
+| regularly varying with index $x$ | ℝ → ℝ | eventually positive, `f(tx)/f(x) → t^α` for every `t > 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| limit of $a$ at infinity | (ℝ → ℝ) → ℝ | `lim_{x→∞} f(x)`, of a function that has one (Mathlib `Filter.Tendsto f atTop`) |
+| limit of $a$ at minus infinity | (ℝ → ℝ) → ℝ | `lim_{x→-∞} f(x)`, of a function that has one |
+| index of regular variation of $a$ | (ℝ → ℝ) → ℝ | the `α` with `f(tx)/f(x) → t^α`, of a regularly varying function |
+
+## `transforms`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| of exponential order | ℝ → ℝ | `\|f(x)\| ≤ M e^{cx}` for all `x ≥ T`, for some `M`, `c`, `T` |
+| causal | ℝ → ℝ | `f(x) = 0` for `x < 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| laplace transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∫_0^∞ e^{-sx} f(x) dx`, at the `s` where the integrand is integrable |
+| mellin transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∫_0^∞ x^{s-1} f(x) dx`, at the `s` where the integrand is integrable (Mathlib `mellin`) |
+| stieltjes transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∫_0^∞ f(x)/(x+s) dx`, at the `s > 0` where the integrand is integrable |
+| convolution of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫ f(y) g(x-y) dy`, at the `x` where the integrand is integrable (Mathlib `convolution`) |
+| cross-correlation of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫ f(y) g(y+x) dy`, at the `x` where the integrand is integrable |
+| autocorrelation of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫ f(y) f(y+x) dy`, where integrable |
+
+## `calculus`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| $x$ times differentiable | ℝ → ℝ | the derivatives of order `k < n` are differentiable (Mathlib `iteratedDeriv`) |
+| twice differentiable | ℝ → ℝ | `f` and `f'` are differentiable |
+| $x$ times continuously differentiable | ℝ → ℝ | of class `C^n` (Mathlib `ContDiff ℝ n`) |
+| twice continuously differentiable | ℝ → ℝ | of class `C²` (Mathlib `ContDiff ℝ 2`) |
+| antiderivative of $x$ | ℝ → ℝ | `F'(x) = f(x)` for every `x` (Mathlib `HasDerivAt`) |
+| primitive of $x$ | ℝ → ℝ | `F'(x) = f(x)` for every `x` |
+| critical point of $x$ | ℝ | `f'(x) = 0` |
+| inflection point of $x$ | ℝ | `f` is convex on `(x-δ, x]` and concave on `[x, x+δ)`, or the other way round, for some `δ > 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th derivative of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `f^{(n)}`, of an `n` times differentiable function (Mathlib `iteratedDeriv`) |
+| second derivative of $a$ | (ℝ → ℝ) → ℝ → ℝ | `f''`, of a twice differentiable function |
+| third derivative of $a$ | (ℝ → ℝ) → ℝ → ℝ | `f'''`, of a three times differentiable function |
+| taylor polynomial of degree $a$ of $b$ at $c$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ | `x ↦ ∑_{k=0}^{n} f^{(k)}(a)/k! (x-a)^k` (Mathlib `taylorWithinEval`) |
+| arc length of the graph of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b √(1 + f'(x)²) dx`, `a ≤ b`, of a continuously differentiable function |
+| average value of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(1/(b-a)) ∫_a^b f`, `a < b`, of a function integrable on `[a,b]` |
+| area between the graphs of $a$ and $b$ on $[c,d]$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b \|f - g\|`, `a ≤ b`, where `\|f - g\|` is integrable on `[a,b]` |
+| volume of the solid of revolution of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `π ∫_a^b f²`, `a ≤ b`, where `f²` is integrable on `[a,b]` |
+
+## `risk`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| heavy-tailed | ℝ → ℝ | `e^{tx} f(x)` is not integrable on `[0,∞)` for any `t > 0` |
+| light-tailed | ℝ → ℝ | `e^{tx} f(x)` is integrable on `[0,∞)` for some `t > 0` |
+| with increasing failure rate | ℝ → ℝ | `f(x) S(y) ≤ f(y) S(x)` for `x ≤ y`: `f/S` is nondecreasing (IFR) |
+| with decreasing failure rate | ℝ → ℝ | `f(y) S(x) ≤ f(x) S(y)` for `x ≤ y`: `f/S` is nonincreasing (DFR) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| survival function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫_x^∞ f`, `1 - F(x)` |
+| hazard rate of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ f(x)/S(x)`, where `S(x) > 0` |
+| hazard function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ f(x)/S(x)`, where `S(x) > 0` |
+| failure rate of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ f(x)/S(x)`, where `S(x) > 0` |
+| cumulative hazard function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ -log S(x)`, where `S(x) > 0` |
+| quantile function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `u ↦ inf {x : F(x) ≥ u}`, `0 < u < 1` (Mathlib `ProbabilityTheory.quantile`) |
+| stop-loss transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `d ↦ ∫_d^∞ (x-d) f(x) dx`, of a density with a finite mean |
+| mean excess function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `u ↦ ∫_u^∞ (x-u) f(x) dx / S(u)`, of a density with a finite mean, where `S(u) > 0` |
+| value at risk of $a$ at level $b$ | (ℝ → ℝ) → ℝ → ℝ | the `α`-quantile `inf {x : F(x) ≥ α}`, `0 < α < 1` |
+| expected shortfall of $a$ at level $b$ | (ℝ → ℝ) → ℝ → ℝ | `(1/(1-α)) ∫_{VaR_α}^∞ x f(x) dx`, `0 < α < 1`, of a density with a finite mean |
+| tail value at risk of $a$ at level $b$ | (ℝ → ℝ) → ℝ → ℝ | `(1/(1-α)) ∫_{VaR_α}^∞ x f(x) dx`, `0 < α < 1`, of a density with a finite mean |
+| conditional value at risk of $a$ at level $b$ | (ℝ → ℝ) → ℝ → ℝ | `(1/(1-α)) ∫_{VaR_α}^∞ x f(x) dx`, `0 < α < 1`, of a density with a finite mean |
+
+## `stochasticorders`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| stochastically smaller than $x$ | ℝ → ℝ | `S_f(x) ≤ S_g(x)` for every `x` (`f ≤_st g`) |
+| smaller than $x$ in the usual stochastic order | ℝ → ℝ | `S_f(x) ≤ S_g(x)` for every `x` (`f ≤_st g`) |
+| stochastically larger than $x$ | ℝ → ℝ | `S_g(x) ≤ S_f(x)` for every `x` (`g ≤_st f`) |
+| larger than $x$ in the usual stochastic order | ℝ → ℝ | `g ≤_st f` |
+| smaller than $x$ in the hazard rate order | ℝ → ℝ | `S_f(y) S_g(x) ≤ S_f(x) S_g(y)` for `x ≤ y`: `S_g/S_f` is nondecreasing (`f ≤_hr g`) |
+| smaller than $x$ in the likelihood ratio order | ℝ → ℝ | `f(y) g(x) ≤ f(x) g(y)` for `x ≤ y`: `g/f` is nondecreasing (`f ≤_lr g`) |
+| smaller than $x$ in the increasing convex order | ℝ → ℝ | finite means, `π_f(d) ≤ π_g(d)` for every `d` (`f ≤_icx g`) |
+| smaller than $x$ in the convex order | ℝ → ℝ | finite and equal means, `π_f(d) ≤ π_g(d)` for every `d` (`f ≤_cx g`) |
+
+## `finance`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| standard normal distribution function | ℝ → ℝ | `Φ(x) = ∫_{-∞}^x e^{-y²/2}/√(2π) dy` (Mathlib `ProbabilityTheory.gaussianReal`) |
+| present value of $a$ due in $b$ years at the interest rate $c$ | ℝ → ℝ → ℝ → ℝ | `C (1+r)^{-t}`, `r > -1` |
+| future value of $a$ after $b$ years at the interest rate $c$ | ℝ → ℝ → ℝ → ℝ | `C (1+r)^t`, `r > -1` |
+| continuously compounded value of $a$ after $b$ years at the rate $c$ | ℝ → ℝ → ℝ → ℝ | `C e^{rt}` |
+| present value of an annuity paying $a$ for $b$ periods at the interest rate $c$ | ℝ → ℝ → ℝ → ℝ | `C (1 - (1+r)^{-n})/r`, `n` a positive integer, `r > 0` |
+| black-scholes price of a call with strike $a$ and maturity $b$ on a stock with price $c$ and volatility $d$ at the interest rate $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `S Φ(d₁) - K e^{-rT} Φ(d₂)`; `K, T, S, σ > 0` |
+| black-scholes price of a put with strike $a$ and maturity $b$ on a stock with price $c$ and volatility $d$ at the interest rate $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `K e^{-rT} Φ(-d₂) - S Φ(-d₁)`; `K, T, S, σ > 0` |
+| delta of a call with strike $a$ and maturity $b$ on a stock with price $c$ and volatility $d$ at the interest rate $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `Φ(d₁)`, the derivative of the call price in `S`; `K, T, S, σ > 0` |
+
+## `topologies`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| topology $x$ on $\mathbb{R}$ | (ℝ → Prop) → Prop | a family of sets of real numbers with `ℝ`, finite intersections and arbitrary unions (Mathlib `TopologicalSpace ℝ`) |
+| topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | (after `is`: `$\tau$ is a topology on $\mathbb{R}$`) |
+| topology | (ℝ → Prop) → Prop | a topology on `ℝ` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| $x$-open | ℝ → Prop | `U ∈ τ` (Mathlib `IsOpen`) |
+| $x$-closed | ℝ → Prop | `ℝ ∖ U ∈ τ` (Mathlib `IsClosed`) |
+| $x$-clopen | ℝ → Prop | open and closed (Mathlib `IsClopen`) |
+| $x$-compact | ℝ → Prop | every open cover has a finite subcover (Mathlib `IsCompact`) |
+| $x$-connected | ℝ → Prop | nonempty and not the union of two disjoint relatively open sets (Mathlib `IsConnected`) |
+| $x$-dense | ℝ → Prop | its closure is `ℝ` (Mathlib `Dense`) |
+| open in $x$ | ℝ → Prop | `U ∈ τ` |
+| closed in $x$ | ℝ → Prop | `ℝ ∖ U ∈ τ` |
+| compact in $x$ | ℝ → Prop | (Mathlib `IsCompact`) |
+| connected in $x$ | ℝ → Prop | (Mathlib `IsConnected`) |
+| dense in $x$ | ℝ → Prop | (Mathlib `Dense`) |
+| hausdorff | (ℝ → Prop) → Prop | two distinct points have disjoint neighbourhoods (Mathlib `T2Space`) |
+| discrete | (ℝ → Prop) → Prop | every set is open (Mathlib `DiscreteTopology`) |
+| indiscrete | (ℝ → Prop) → Prop | only `∅` and `ℝ` are open |
+| compact | (ℝ → Prop) → Prop | `ℝ` is compact for `τ` (Mathlib `CompactSpace`) |
+| connected | (ℝ → Prop) → Prop | `ℝ` is connected for `τ` (Mathlib `ConnectedSpace`) |
+| second countable | (ℝ → Prop) → Prop | with a countable basis (Mathlib `SecondCountableTopology`) |
+| second-countable | (ℝ → Prop) → Prop | (Mathlib `SecondCountableTopology`) |
+| separable | (ℝ → Prop) → Prop | with a countable dense set (Mathlib `SeparableSpace`) |
+| metrizable | (ℝ → Prop) → Prop | induced by a metric (Mathlib `MetrizableSpace`) |
+| finer than $x$ | (ℝ → Prop) → Prop | every `σ`-open set is `τ`-open |
+| coarser than $x$ | (ℝ → Prop) → Prop | every `τ`-open set is `σ`-open |
+| strictly finer than $x$ | (ℝ → Prop) → Prop | finer, and not the same |
+| limit point of $x$ in $a$ | ℝ | every open set around `x` meets `U` outside `x` (Mathlib `AccPt`) |
+| isolated point of $x$ in $a$ | ℝ | `x ∈ U` and some open set meets `U` only in `x` |
+| interior point of $x$ in $a$ | ℝ | some open set around `x` lies in `U` (Mathlib `interior`) |
+| continuous from $x$ to $a$ | ℝ → ℝ | preimages of `σ`-open sets are `τ`-open (Mathlib `Continuous`) |
+| open from $x$ to $a$ | ℝ → ℝ | images of `τ`-open sets are `σ`-open (Mathlib `IsOpenMap`) |
+| homeomorphism from $x$ to $a$ | ℝ → ℝ | bijective, continuous and open (Mathlib `Homeomorph`) |
+| convergent to $x$ in $a$ | ℝ → ℝ | `a_n → l` for `τ`, `n ∈ ℕ` (Mathlib `Filter.Tendsto … (nhds l)`) |
+| convergent in $x$ | ℝ → ℝ | `a_n → l` for `τ`, for some `l` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| usual topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the sets with an interval around each of their points (Mathlib `UniformSpace.toTopologicalSpace`) |
+| standard topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the usual topology |
+| euclidean topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the usual topology |
+| discrete topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | every set (Mathlib `⊥`) |
+| indiscrete topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | `∅` and `ℝ` (Mathlib `⊤`) |
+| trivial topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the indiscrete topology |
+| cofinite topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | `∅` and the sets with a finite complement (Mathlib `CofiniteTopology`) |
+| lower limit topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | generated by the intervals `[a, b)` (the Sorgenfrey line) |
+| topology generated by $a$ | ((ℝ → Prop) → Prop) → (ℝ → Prop) → Prop | the coarsest topology in which the sets of `B` are open (Mathlib `TopologicalSpace.generateFrom`) |
+| subspace topology on $a$ induced by $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → (ℝ → Prop) → Prop | the sets `U ∩ A` with `U` open, as sets of real numbers (Mathlib `TopologicalSpace.induced`) |
+| closure of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the least `τ`-closed set containing `U` (Mathlib `closure`) |
+| interior of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the largest `τ`-open set in `U` (Mathlib `interior`) |
+| boundary of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the closure without the interior (Mathlib `frontier`) |
+
+## `metricspaces`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| topology $x$ on $\mathbb{R}$ | (ℝ → Prop) → Prop | a family of sets of real numbers with `ℝ`, finite intersections and arbitrary unions (Mathlib `TopologicalSpace ℝ`) |
+| topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | (after `is`: `$\tau$ is a topology on $\mathbb{R}$`) |
+| topology | (ℝ → Prop) → Prop | a topology on `ℝ` |
+| metric $x$ on $\mathbb{R}$ | ℝ → ℝ → ℝ | `d(x,x) = 0`, symmetric, the triangle inequality, `d(x,y) = 0 → x = y` (Mathlib `MetricSpace`) |
+| metric on $\mathbb{R}$ | ℝ → ℝ → ℝ | (after `is`) |
+| metric | ℝ → ℝ → ℝ | a metric on `ℝ` |
+| pseudometric $x$ on $\mathbb{R}$ | ℝ → ℝ → ℝ | a metric that may vanish between distinct points (Mathlib `PseudoMetricSpace`) |
+| pseudometric | ℝ → ℝ → ℝ | a pseudometric on `ℝ` |
+| ultrametric $x$ on $\mathbb{R}$ | ℝ → ℝ → ℝ | a metric with `d(x,z) ≤ max(d(x,y), d(y,z))` (Mathlib `IsUltrametricDist`) |
+| ultrametric | ℝ → ℝ → ℝ | an ultrametric on `ℝ` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| $x$-open | ℝ → Prop | `U ∈ τ` (Mathlib `IsOpen`) |
+| $x$-closed | ℝ → Prop | `ℝ ∖ U ∈ τ` (Mathlib `IsClosed`) |
+| $x$-clopen | ℝ → Prop | open and closed (Mathlib `IsClopen`) |
+| $x$-compact | ℝ → Prop | every open cover has a finite subcover (Mathlib `IsCompact`) |
+| $x$-connected | ℝ → Prop | nonempty and not the union of two disjoint relatively open sets (Mathlib `IsConnected`) |
+| $x$-dense | ℝ → Prop | its closure is `ℝ` (Mathlib `Dense`) |
+| open in $x$ | ℝ → Prop | `U ∈ τ` |
+| closed in $x$ | ℝ → Prop | `ℝ ∖ U ∈ τ` |
+| compact in $x$ | ℝ → Prop | (Mathlib `IsCompact`) |
+| connected in $x$ | ℝ → Prop | (Mathlib `IsConnected`) |
+| dense in $x$ | ℝ → Prop | (Mathlib `Dense`) |
+| hausdorff | (ℝ → Prop) → Prop | two distinct points have disjoint neighbourhoods (Mathlib `T2Space`) |
+| discrete | (ℝ → Prop) → Prop | every set is open (Mathlib `DiscreteTopology`) |
+| indiscrete | (ℝ → Prop) → Prop | only `∅` and `ℝ` are open |
+| compact | (ℝ → Prop) → Prop | `ℝ` is compact for `τ` (Mathlib `CompactSpace`) |
+| connected | (ℝ → Prop) → Prop | `ℝ` is connected for `τ` (Mathlib `ConnectedSpace`) |
+| second countable | (ℝ → Prop) → Prop | with a countable basis (Mathlib `SecondCountableTopology`) |
+| second-countable | (ℝ → Prop) → Prop | (Mathlib `SecondCountableTopology`) |
+| separable | (ℝ → Prop) → Prop | with a countable dense set (Mathlib `SeparableSpace`) |
+| metrizable | (ℝ → Prop) → Prop | induced by a metric (Mathlib `MetrizableSpace`) |
+| finer than $x$ | (ℝ → Prop) → Prop | every `σ`-open set is `τ`-open |
+| coarser than $x$ | (ℝ → Prop) → Prop | every `τ`-open set is `σ`-open |
+| strictly finer than $x$ | (ℝ → Prop) → Prop | finer, and not the same |
+| limit point of $x$ in $a$ | ℝ | every open set around `x` meets `U` outside `x` (Mathlib `AccPt`) |
+| isolated point of $x$ in $a$ | ℝ | `x ∈ U` and some open set meets `U` only in `x` |
+| interior point of $x$ in $a$ | ℝ | some open set around `x` lies in `U` (Mathlib `interior`) |
+| continuous from $x$ to $a$ | ℝ → ℝ | preimages of `σ`-open sets are `τ`-open (Mathlib `Continuous`) |
+| open from $x$ to $a$ | ℝ → ℝ | images of `τ`-open sets are `σ`-open (Mathlib `IsOpenMap`) |
+| homeomorphism from $x$ to $a$ | ℝ → ℝ | bijective, continuous and open (Mathlib `Homeomorph`) |
+| convergent to $x$ in $a$ | ℝ → ℝ | `a_n → l` for `τ`, `n ∈ ℕ` (Mathlib `Filter.Tendsto … (nhds l)`) |
+| convergent in $x$ | ℝ → ℝ | `a_n → l` for `τ`, for some `l` |
+| complete | ℝ → ℝ → ℝ | every Cauchy sequence converges (Mathlib `CompleteSpace`) |
+| bounded | ℝ → ℝ → ℝ | `d(x,y) ≤ M` for all `x`, `y` (Mathlib `BoundedSpace`) |
+| translation-invariant | ℝ → ℝ → ℝ | `d(x+z, y+z) = d(x,y)` |
+| strongly equivalent to $x$ | ℝ → ℝ → ℝ | `c d ≤ d' ≤ C d` for some `c, C > 0` |
+| equivalent to $x$ | ℝ → ℝ → ℝ | the same open sets |
+| cauchy with respect to $x$ | ℝ → ℝ | `d(a_m, a_n) < ε` for all large natural `m`, `n` (Mathlib `CauchySeq`) |
+| convergent to $x$ with respect to $a$ | ℝ → ℝ | `d(a_n, l) → 0`, `n ∈ ℕ` (Mathlib `Filter.Tendsto`) |
+| convergent with respect to $x$ | ℝ → ℝ | `d(a_n, l) → 0` for some `l` |
+| bounded with respect to $x$ | ℝ → ℝ | the terms `a_n`, `n ∈ ℕ`, lie in a ball |
+| isometry of $x$ | ℝ → ℝ | `d(f(x), f(y)) = d(x,y)` (Mathlib `Isometry`) |
+| contraction with respect to $x$ | ℝ → ℝ | `d(f(x), f(y)) ≤ L d(x,y)` for some `L < 1` (Mathlib `ContractingWith`) |
+| lipschitz with respect to $x$ | ℝ → ℝ | `d(f(x), f(y)) ≤ L d(x,y)` for some `L` (Mathlib `LipschitzWith`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| usual topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the sets with an interval around each of their points (Mathlib `UniformSpace.toTopologicalSpace`) |
+| standard topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the usual topology |
+| euclidean topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the usual topology |
+| discrete topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | every set (Mathlib `⊥`) |
+| indiscrete topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | `∅` and `ℝ` (Mathlib `⊤`) |
+| trivial topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | the indiscrete topology |
+| cofinite topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | `∅` and the sets with a finite complement (Mathlib `CofiniteTopology`) |
+| lower limit topology on $\mathbb{R}$ | (ℝ → Prop) → Prop | generated by the intervals `[a, b)` (the Sorgenfrey line) |
+| topology generated by $a$ | ((ℝ → Prop) → Prop) → (ℝ → Prop) → Prop | the coarsest topology in which the sets of `B` are open (Mathlib `TopologicalSpace.generateFrom`) |
+| subspace topology on $a$ induced by $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → (ℝ → Prop) → Prop | the sets `U ∩ A` with `U` open, as sets of real numbers (Mathlib `TopologicalSpace.induced`) |
+| closure of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the least `τ`-closed set containing `U` (Mathlib `closure`) |
+| interior of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the largest `τ`-open set in `U` (Mathlib `interior`) |
+| boundary of $a$ in $b$ | (ℝ → Prop) → ((ℝ → Prop) → Prop) → ℝ → Prop | the closure without the interior (Mathlib `frontier`) |
+| euclidean metric on $\mathbb{R}$ | ℝ → ℝ → ℝ | `\|x - y\|` (Mathlib `dist`) |
+| usual metric on $\mathbb{R}$ | ℝ → ℝ → ℝ | `\|x - y\|` |
+| discrete metric on $\mathbb{R}$ | ℝ → ℝ → ℝ | `0` if `x = y`, `1` else |
+| standard bounded metric of $a$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ | `min(d(x,y), 1)` |
+| topology induced by $a$ | (ℝ → ℝ → ℝ) → (ℝ → Prop) → Prop | the sets with a ball around each of their points (Mathlib `PseudoMetricSpace.toUniformSpace`) |
+| open ball of radius $a$ about $b$ with respect to $c$ | ℝ → ℝ → (ℝ → ℝ → ℝ) → ℝ → Prop | `{y : d(x,y) < r}` (Mathlib `Metric.ball`) |
+| closed ball of radius $a$ about $b$ with respect to $c$ | ℝ → ℝ → (ℝ → ℝ → ℝ) → ℝ → Prop | `{y : d(x,y) ≤ r}` (Mathlib `Metric.closedBall`) |
+| diameter of $a$ with respect to $b$ | (ℝ → Prop) → (ℝ → ℝ → ℝ) → ℝ | `sup {d(x,y) : x, y ∈ U}`, of a nonempty set with bounded distances (Mathlib `Metric.diam`) |
+| distance from $a$ to $b$ with respect to $c$ | ℝ → (ℝ → Prop) → (ℝ → ℝ → ℝ) → ℝ | `inf {d(x,y) : y ∈ U}`, of a nonempty set (Mathlib `Metric.infDist`) |
+
+## `approximation`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| absolute error of the approximation $a$ of $b$ | ℝ → ℝ → ℝ | `\|x̃ - x\|` |
+| relative error of the approximation $a$ of $b$ | ℝ → ℝ → ℝ | `\|x̃ - x\|/\|x\|`, `x ≠ 0` |
+| condition number of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `\|x f'(x)/f(x)\|`, where `f` is differentiable and `f(x) ≠ 0` |
+| rounding of $a$ to $b$ decimal places | ℝ → ℝ → ℝ | `⌊10^k x + 1/2⌋/10^k` (to nearest, halves up) |
+| machine epsilon of double precision | ℝ | `2^{-52}` (IEEE 754 binary64) |
+| unit roundoff of double precision | ℝ | `2^{-53}` (IEEE 754 binary64) |
+| forward difference quotient of $a$ at $b$ with step $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(f(x+h) - f(x))/h`, `h ≠ 0` |
+| backward difference quotient of $a$ at $b$ with step $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(f(x) - f(x-h))/h`, `h ≠ 0` |
+| central difference quotient of $a$ at $b$ with step $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(f(x+h) - f(x-h))/(2h)`, `h ≠ 0` |
+| second difference quotient of $a$ at $b$ with step $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(f(x+h) - 2f(x) + f(x-h))/h²`, `h ≠ 0` |
+| trapezoidal rule for $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(b-a)(f(a) + f(b))/2` |
+| midpoint rule for $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(b-a) f((a+b)/2)` |
+| simpson's rule for $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `(b-a)(f(a) + 4f((a+b)/2) + f(b))/6` |
+| trapezoidal rule for $a$ on $[b,c]$ with $d$ subintervals | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `h (f(a)/2 + f(a+h) + … + f(b-h) + f(b)/2)`, `h = (b-a)/n` |
+| midpoint rule for $a$ on $[b,c]$ with $d$ subintervals | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `h ∑_{k<n} f(a + (k + 1/2)h)` |
+| simpson's rule for $a$ on $[b,c]$ with $d$ subintervals | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(h/3)(f(x_0) + 4f(x_1) + 2f(x_2) + … + 4f(x_{n-1}) + f(x_n))`, `n` even |
+| left riemann sum of $a$ on $[b,c]$ with $d$ subintervals | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `h ∑_{k<n} f(a + kh)` |
+| right riemann sum of $a$ on $[b,c]$ with $d$ subintervals | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `h ∑_{k=1}^{n} f(a + kh)` |
+| linear interpolant of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `x ↦ f(a) + (f(b) - f(a))(x - a)/(b - a)`, `a < b` |
+| interpolation polynomial of degree $a$ of $b$ at equally spaced nodes on $[c,d]$ | ℝ → (ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | the polynomial of degree `≤ n` equal to `f` at `a + k(b-a)/n`, `k = 0, …, n` (Lagrange form) |
+| $a$ th chebyshev node of order $b$ | ℝ → ℝ → ℝ | `cos((2k+1)π/(2n))`, `0 ≤ k < n` |
+
+## `iteration`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| newton sequence for $x$ | ℝ → ℝ | `x_{n+1} = x_n - f(x_n)/f'(x_n)`, `f'(x_n) ≠ 0`, for every `n` |
+| secant sequence for $x$ | ℝ → ℝ | `x_{n+2} = x_{n+1} - f(x_{n+1})(x_{n+1} - x_n)/(f(x_{n+1}) - f(x_n))`, with nonzero denominators |
+| fixed-point sequence of $x$ | ℝ → ℝ | `x_{n+1} = g(x_n)` for every `n` |
+| convergent to $x$ with order $a$ | ℝ → ℝ | `\|x_n - y\| → 0` and `\|x_{n+1} - y\| ≤ C\|x_n - y\|^p` for some `C > 0`, `p ≥ 1` |
+| linearly convergent to $x$ | ℝ → ℝ | `\|x_{n+1} - y\| ≤ c\|x_n - y\|` for some `0 < c < 1` |
+| superlinearly convergent to $x$ | ℝ → ℝ | `\|x_n - y\| → 0` and `\|x_{n+1} - y\| ≤ ε\|x_n - y\|` eventually, for every `ε > 0` |
+| quadratically convergent to $x$ | ℝ → ℝ | `\|x_n - y\| → 0` and `\|x_{n+1} - y\| ≤ C\|x_n - y\|²` |
+| cubically convergent to $x$ | ℝ → ℝ | `\|x_n - y\| → 0` and `\|x_{n+1} - y\| ≤ C\|x_n - y\|³` |
+| contractive | ℝ → ℝ | `\|g(x) - g(y)\| ≤ L\|x - y\|` for some `L < 1` (Mathlib `ContractingWith`) |
+| $x$-contractive | ℝ → ℝ | `\|g(x) - g(y)\| ≤ L\|x - y\|`, `0 ≤ L < 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| newton map of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ x - f(x)/f'(x)`, where `f` is differentiable and `f'(x) ≠ 0` |
+| secant step of $a$ from $b$ and $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `x - f(x)(x - y)/(f(x) - f(y))`, `f(x) ≠ f(y)` |
+| relaxation of $a$ with parameter $b$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `x ↦ (1-ω)x + ω g(x)` |
+
+## `odesolvers`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| right-hand side | ℝ → ℝ → ℝ | a real function `f(t, y)` of two real variables |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| lipschitz in the second variable | ℝ → ℝ → ℝ | `\|f(t,y) - f(t,z)\| ≤ L\|y - z\|` for some `L` |
+| lipschitz in the second variable with constant $x$ | ℝ → ℝ → ℝ | `\|f(t,y) - f(t,z)\| ≤ L\|y - z\|` |
+| solution of the differential equation with right-hand side $x$ | ℝ → ℝ | `y'(t) = f(t, y(t))` for every `t` (Mathlib `HasDerivAt`) |
+| solution of the initial value problem with right-hand side $x$ and initial value $a$ at $b$ | ℝ → ℝ | `y'(t) = f(t, y(t))` for every `t` and `y(t_0) = y_0` |
+| euler sequence for $x$ with step size $a$ | ℝ → ℝ | `y_{n+1} = y_n + h f(nh, y_n)` |
+| runge-kutta sequence for $x$ with step size $a$ | ℝ → ℝ | `y_{n+1}` is the classical Runge–Kutta step from `(nh, y_n)` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| euler step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(t, y) ↦ y + h f(t, y)` (explicit Euler) |
+| heun step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(t, y) ↦ y + (h/2)(f(t,y) + f(t+h, y + h f(t,y)))` |
+| midpoint step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(t, y) ↦ y + h f(t + h/2, y + (h/2) f(t,y))` |
+| runge-kutta step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | the classical fourth-order Runge–Kutta step |
 

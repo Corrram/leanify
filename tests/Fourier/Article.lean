@@ -4,7 +4,7 @@ import Leanify.Library.AnalysisModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 
-The article draws on the fields `analysis` and `fourier`, whose constants are interpreted in Mathlib by the
+The article draws on the fields `realfunctions` and `fourier`, whose constants are interpreted in Mathlib by the
 declarations that the vocabulary names. For every definition, a Lean definition with the
 symbol's name, and for every claim `K`: `claimK` (what the sentence says), `meaningfulK`
 (every term in it is defined) and `obligationK` (its premises imply both). Each is tied to

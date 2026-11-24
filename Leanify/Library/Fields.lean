@@ -25,6 +25,17 @@ import Leanify.Library.Fourier
 import Leanify.Library.Information
 import Leanify.Library.Optimization
 import Leanify.Library.Dynamics
+import Leanify.Library.Asymptotics
+import Leanify.Library.Transforms
+import Leanify.Library.Calculus
+import Leanify.Library.Risk
+import Leanify.Library.StochasticOrders
+import Leanify.Library.Finance
+import Leanify.Library.Topologies
+import Leanify.Library.MetricSpaces
+import Leanify.Library.Approximation
+import Leanify.Library.Iteration
+import Leanify.Library.OdeSolvers
 
 /-! # The fields of the vocabulary
 
@@ -56,8 +67,8 @@ def all : List (String × Vocab) := [
   ("permutations", Permutations.vocab),
   ("matrices", Matrices.vocab),
   ("special", Special.vocab),
-  ("topology", Topology.vocab),
-  ("analysis", Analysis.vocab),
+  ("realsets", Topology.vocab),
+  ("realfunctions", Analysis.vocab),
   ("vectors", Vectors.vocab),
   ("geometry", Geometry.vocab),
   ("congruences", Congruences.vocab),
@@ -67,33 +78,58 @@ def all : List (String × Vocab) := [
   ("fourier", Fourier.vocab),
   ("information", Information.vocab),
   ("optimization", Optimization.vocab),
-  ("dynamics", Dynamics.vocab)]
+  ("dynamics", Dynamics.vocab),
+  ("asymptotics", Asymptotics.vocab),
+  ("transforms", Transforms.vocab),
+  ("calculus", Calculus.vocab),
+  ("risk", Risk.vocab),
+  ("stochasticorders", StochasticOrders.vocab),
+  ("finance", Finance.vocab),
+  ("topologies", Topologies.vocab),
+  ("metricspaces", MetricSpaces.vocab),
+  ("approximation", Approximation.vocab),
+  ("iteration", Iteration.vocab),
+  ("odesolvers", OdeSolvers.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
-/-- The fields that a field includes: `hilbert` is `unitsquare` with more words, and `markov`
-is `hilbert` with more. Their entries are tagged with the field that adds them. -/
+/-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
+`hilbert` with more, and `metricspaces` is `topologies` with more. Their entries are tagged
+with the field that adds them. -/
 def includes : List (String × List String) :=
-  [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"])]
+  [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"])]
 
-/-- Bundles: a name for several fields of one area, so that an article names the area
-(`\usepackage[vocab=statistics]{leanify}`) and not each of its fields. A bundle may name
-other bundles, so they form a tree, and a field may be in several. A bundle has no words
-of its own: the article is read with its fields, in this order, exactly as if it had
-named them. The fields of a bundle read no phrase in two ways (`scripts/ci.sh` reads the
-test article of every member with the bundle and compares). -/
+/-- Bundles: a name for several fields, so that an article names a branch of mathematics
+(`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
+other bundles, so they form a tree: `math` has every field, its seven realms are the
+branches of mathematics, and inside them are areas (`probability`, `linearalgebra`). A field
+may be in several (`realsets` is in `analysis` and in `topology`). A bundle has no words of
+its own: the article is read with its fields, in this order, exactly as if it had named
+them. The fields of a bundle read no phrase in two ways, except a notion whose meanings take
+arguments of different types (`resolvedByType`), where the type of the argument decides
+(`lake exe glossary --bundles` checks this, and `scripts/ci.sh` reads the test article of
+every member with the bundle and compares). `docs/libraries.md` draws the tree. -/
 def bundles : List (String × List String) := [
-  ("probability", ["distributions", "densities", "information"]),
-  ("dependence", ["markov"]),
-  ("statistics", ["probability", "dependence"]),
-  ("numbertheory", ["numbers", "arithmetic", "congruences"]),
-  ("discrete", ["combinatorics", "permutations", "graphs"]),
-  ("linearalgebra", ["vectors", "matrices"]),
+  -- the realms, and `math` with all of them
+  ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
+  ("analysis", ["realfunctions", "realsets", "calculus", "optimization", "asymptotics", "transforms", "fourier",
+    "dynamics", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
-  ("functions", ["analysis", "optimization", "fourier", "dynamics"]),
+  ("topology", ["realsets", "topologies", "metricspaces", "geometry"]),
+  ("numerics", ["approximation", "iteration", "odesolvers"]),
+  ("stochastic", ["statistics", "finance"]),
+  ("discrete", ["combinatorics", "permutations", "graphs"]),
+  ("numbertheory", ["numbers", "arithmetic", "congruences"]),
+  -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means"]),
-  ("realanalysis", ["functions", "topology", "elementary"])]
+  ("linearalgebra", ["vectors", "matrices"]),
+  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders"]),
+  ("dependence", ["markov"]),
+  ("statistics", ["probability", "dependence"])]
+
+/-- The realms: the bundles that `math` names, each a branch of mathematics. -/
+def realms : List String := (bundles.lookup "math").getD []
 
 /-- The names of the bundles. -/
 def bundleNames : List String := bundles.map (·.1)
@@ -138,11 +174,39 @@ def collisions (V : Vocab) : List (Phrase × List Codes) :=
     if same.length > 1 then some ([PItem.m [.cmd (n.sym.drop 1)]], fields (·.field) same) else none
   (ns ++ ms ++ nouns ++ syms).eraseDups
 
+/-- The types of the first `k` arguments of a type. -/
+def argTys : Nat → Ty → List Ty
+  | k + 1, .fn a b => a :: argTys k b
+  | _, _ => []
+
+/-- The number of arguments of a phrase (its formulas). -/
+def slots (p : Phrase) : Nat :=
+  p.foldl (fun k i => match i with | .v => k + 1 | .f segs => k + segs.length - 1 | _ => k) 0
+
+/-- A notion phrase whose meanings take arguments of different types (`the inverse of
+$v$`: of a permutation, a matrix, a real function). In a formula or a sentence the types of
+the arguments decide between them, as the type of the object decides between adjectives;
+only a definition `We write … for the inverse of $\sigma$`, whose letter has no type yet,
+has to say which one it means. -/
+def resolvedByType (V : Vocab) (p : Phrase) : Bool :=
+  let ns := V.notions.filter (·.name == p)
+  let keys := (ns.map fun n => argTys (slots p) n.ty).eraseDups
+  !ns.isEmpty && slots p > 0 && keys.length == (ns.map fun n => (n.ty, n.value)).eraseDups.length &&
+    V.mods.all (·.phrase != p) && V.nouns.all (·.sing != p)
+
 /-- The collisions of a bundle: those of its fields with one another (not the two meanings
-of *natural number* in the core, which every article has to choose between). -/
+of *natural number* in the core, which every article has to choose between, nor a notion
+whose meanings the types of its arguments tell apart). -/
 def bundleCollisions (b : String) : List (Phrase × List Codes) :=
   let coreKeys := (collisions Vocab.core).map (·.1)
-  (collisions (select [b])).filter fun (p, _) => !coreKeys.contains p
+  let V := select [b]
+  (collisions V).filter fun (p, _) => !coreKeys.contains p && !resolvedByType V p
+
+/-- The notion phrases of a bundle that the types of their arguments resolve. -/
+def bundleOverloads (b : String) : List (Phrase × List Codes) :=
+  let coreKeys := (collisions Vocab.core).map (·.1)
+  let V := select [b]
+  (collisions V).filter fun (p, _) => !coreKeys.contains p && resolvedByType V p
 
 /-- The named fields that do not exist. -/
 def unknown (fs : List String) : List String := (expand fs).filter fun f => (all.lookup f).isNone

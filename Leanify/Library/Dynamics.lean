@@ -4,7 +4,7 @@ import Leanify.Library.Core
 
 One-dimensional discrete dynamics: the iterates `f^n = f ∘ … ∘ f` of a real function, the
 orbits of points, fixed and periodic points and their stability. The maps are the
-functions of the field `analysis` (`Let $f$ be a continuous function.`), the points real
+functions of the field `realfunctions` (`Let $f$ be a continuous function.`), the points real
 numbers (`$p$ is an attracting fixed point of $f$`).
 
 * adjectives of points, with the map: `fixed point of $f$`, `periodic point of $f$`,

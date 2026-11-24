@@ -6,7 +6,7 @@ import Mathlib.Topology.MetricSpace.Holder
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
-/-! # The meaning of the field `analysis`
+/-! # The meaning of the field `realfunctions`
 
 The properties of real functions that the core language does not have, as Mathlib's. -/
 

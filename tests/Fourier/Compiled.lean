@@ -12,8 +12,8 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-/-- The vocabulary of the article: the core and the fields `analysis` and `fourier`. -/
+/-- The vocabulary of the article: the core and the fields `realfunctions` and `fourier`. -/
 def Fourier.vocabulary : Leanify.Vocab :=
-  Leanify.Fields.select ["analysis", "fourier"]
+  Leanify.Fields.select ["realfunctions", "fourier"]
 
-#leanify_article Fourier "article.tex" "fnv1a64:4c2d19f15586d656" with Fourier.vocabulary
+#leanify_article Fourier "article.tex" "fnv1a64:b5d659a1c6dcb6e5" with Fourier.vocabulary

@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,realsets,metricspaces}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $e$ for the Euclidean metric on $\mathbb{R}$.
+We write $\delta$ for the discrete metric on $\mathbb{R}$.
+We write $\tau_d$ for the topology induced by $d$.
+We write $B_d(x,r)$ for the open ball of radius $r$ about $x$ with respect to $d$.
+We write $\operatorname{diam}_d(U)$ for the diameter of $U$ with respect to $d$.
+We write $\rho_d$ for the standard bounded metric of $d$.
+
+\section{Metrics}
+
+\begin{lemma}\label{metrics}
+$e$ is a metric on $\mathbb{R}$, $\delta$ is an ultrametric on $\mathbb{R}$, and $e$ is translation-invariant.
+\end{lemma}
+
+\begin{lemma}\label{complete}
+$e$ is complete and $\delta$ is bounded.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+Let $d$ be a metric on $\mathbb{R}$. Then $\rho_d$ is a bounded metric, and $\rho_d$ is equivalent to $d$.
+\end{lemma}
+
+\begin{lemma}\label{induced}
+Let $d$ be a metric on $\mathbb{R}$ and let $x$ and $r$ be real numbers. Then $\tau_d$ is a Hausdorff topology on $\mathbb{R}$, and $B_d(x,r)$ is $\tau_d$-open.
+\end{lemma}
+
+\begin{lemma}\label{discrete}
+$\tau_\delta$ is discrete.
+\end{lemma}
+
+\section{Sequences and maps}
+
+\begin{lemma}\label{cauchy}
+Let $d$ be a metric on $\mathbb{R}$ and let $a:\mathbb{R}\to\mathbb{R}$ be a function. If $a$ is convergent with respect to $d$, then $a$ is Cauchy with respect to $d$.
+\end{lemma}
+
+\begin{lemma}\label{banach}
+Let $d$ be a complete metric on $\mathbb{R}$ and let $f$ be a function. If $f$ is a contraction with respect to $d$, then $f$ is Lipschitz with respect to $d$.
+\end{lemma}
+
+\begin{lemma}\label{isometry}
+For every real number $x$, let $s(x)\coloneqq -x$. Then $s$ is an isometry of $e$.
+\end{lemma}
+
+\begin{lemma}\label{diameter}
+Let $U$ be a set with $0\in U$. Then $\operatorname{diam}_\delta(U)\le1$.
+\end{lemma}
+
+\end{document}

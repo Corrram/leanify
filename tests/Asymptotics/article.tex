@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,asymptotics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $L(f)$ for the limit of $f$ at infinity.
+We write $\rho(f)$ for the index of regular variation of $f$.
+For every real number $x$, let $q(x)\coloneqq x^2+1$.
+
+\section{Comparisons}
+
+\begin{lemma}\label{equivalent}
+Let $f$ and $g$ be functions. If $f$ is asymptotically equivalent to $g$, then $f$ is dominated by $g$.
+\end{lemma}
+
+\begin{lemma}\label{negligible}
+Let $f$, $g$ and $h$ be functions. If $f$ is negligible compared to $g$ and $g$ is dominated by $h$, then $f$ is negligible compared to $h$.
+\end{lemma}
+
+\begin{lemma}\label{order}
+Let $f$ and $g$ be functions. If $f$ is of the same order as $g$, then $g$ is of the same order as $f$.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+Let $f$ be a function bounded at infinity. Then $f$ is of polynomial growth.
+\end{lemma}
+
+\begin{lemma}\label{dominated}
+Let $f$ and $g$ be functions. If $f$ is dominated by $g$ and $g$ is bounded at infinity, then $f$ is bounded at infinity.
+\end{lemma}
+
+\begin{lemma}\label{polynomial}
+$q$ is of polynomial growth and $q$ is of at most exponential growth.
+\end{lemma}
+
+\section{Regular variation and limits}
+
+\begin{lemma}\label{slow}
+Every slowly varying function is eventually positive.
+\end{lemma}
+
+\begin{lemma}\label{regular}
+Let $\alpha$ be a real number and let $f$ be a function regularly varying with index $\alpha$. Then $\rho(f)=\alpha$.
+\end{lemma}
+
+\begin{lemma}\label{limit}
+Let $f$ and $g$ be functions. Suppose that $f$ is asymptotically equivalent to $g$ and that $L(g)=1$. Then $L(f)=1$.
+\end{lemma}
+
+\end{document}

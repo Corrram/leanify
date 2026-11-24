@@ -95,4 +95,12 @@ def dom3 (t : Ty) (p : B → B → B → B) : Option Tm :=
   | .lam _ _ (.lam _ _ (.lam _ _ inner)) => some inner
   | _ => none
 
+/-- The domain of an argument that speaks about the three arguments before it:
+`p first second third self`. -/
+def dom4 (t : Ty) (p : B → B → B → B → B) : Option Tm :=
+  match close (lamR fun a => lamR fun b => lamR fun c => lamR fun _ =>
+      lamT t (fun _ => tt) fun self => p a b c self) with
+  | .lam _ _ (.lam _ _ (.lam _ _ (.lam _ _ inner))) => some inner
+  | _ => none
+
 end Leanify.Build

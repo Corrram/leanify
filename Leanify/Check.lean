@@ -1082,8 +1082,15 @@ def suggestFields (path : System.FilePath) (given : Option (List String)) (extra
       let line := kept ++ fresh
       IO.println s!"{path}: {have_} of {total} with \\usepackage[vocab=\{{String.intercalate "," line}}]\{leanify}"
       -- a bundle that has all the new fields and more of the same area
-      match Fields.bundles.filter fun (_, ms) => fresh.length ≥ 2 && fresh.all (Fields.expand ms).contains with
-      | (b, _) :: _ => IO.println s!"(the bundle {b} has {String.intercalate ", " fresh} and the other fields of its area: vocab=\{{String.intercalate "," (kept ++ [b])}})"
+      -- (the smallest such bundle: a realm before `math`, an area before its realm)
+      let fits := Fields.bundles.filter fun (_, ms) => fresh.length ≥ 2 && fresh.all (Fields.expand ms).contains
+      let fits := fits.mergeSort fun a b => (Fields.expand a.2).length ≤ (Fields.expand b.2).length
+      match fits with
+      | (b, _) :: _ =>
+        if b == "math" then
+          IO.println s!"(these fields are in different realms; vocab=\{{String.intercalate "," (kept ++ [b])}} has them and every other field)"
+        else
+          IO.println s!"(the bundle {b} has {String.intercalate ", " fresh} and the other fields of its area: vocab=\{{String.intercalate "," (kept ++ [b])}})"
       | [] => pure ()
       IO.println s!"(a field changes how words are read: compare the readings with `leanify check {path} --vocab \
         {String.intercalate "," line} --claims`; docs/libraries.md lists the fields)"

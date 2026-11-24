@@ -106,12 +106,10 @@ sentences Leanify cannot read, and keeps one only if the check then reads it;
 if Lean accepts it. The check reads an article with the files it inputs
 (`\input`, `\include`, the article's own `.sty` files). Articles about probability on the
 unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)); other
-branches have fields of their own (`arithmetic`, `combinatorics`, `polynomials`, `graphs`,
-`permutations`, `matrices`, `special`, `topology`, `analysis`, `vectors`, `geometry`,
-`congruences`, `groups`, `means`, `densities`, `fourier`, `information`, `optimization`,
-`dynamics`: [Libraries](docs/libraries.md)), and bundles name a whole area
-(`vocab=statistics`, `vocab=realanalysis`, `vocab=algebra`). `leanify fields article.tex`
-names the fields that read more of an article.
+subjects have fields of their own, grouped into a tree of bundles ([Libraries](docs/libraries.md)):
+`vocab=math` loads every field, and seven realms load a branch of mathematics,
+`analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete` and `numbertheory`.
+`leanify fields article.tex` names the fields that read more of an article.
 
 The same source gives the two readable outputs:
 

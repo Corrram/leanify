@@ -40,6 +40,7 @@ def numbers : Vocab where
     noun phrase!"real" phrase!"reals" (predR fun _ => tt) "a real number (`ℝ`), as in `for every real $x$`",
     noun phrase!"integer" phrase!"integers" integer "an integer: `x ∈ ℤ` (Mathlib `Int`, as a real number)",
     noun phrase!"nonnegative integer" phrase!"nonnegative integers" nonnegInt "`x ∈ ℤ`, `0 ≤ x` (Mathlib `ℕ`)",
+    noun phrase!"non-negative integer" phrase!"non-negative integers" nonnegInt "a nonnegative integer",
     noun phrase!"positive integer" phrase!"positive integers" posInt "`x ∈ ℤ`, `0 < x` (Mathlib `ℕ+`)",
     noun phrase!"negative integer" phrase!"negative integers" negInt "`x ∈ ℤ`, `x < 0`",
     { noun phrase!"natural number" phrase!"natural numbers" nonnegInt "with 0, as in Mathlib (`ℕ`)" with

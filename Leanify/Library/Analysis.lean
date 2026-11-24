@@ -1,6 +1,6 @@
 import Leanify.Library.Core
 
-/-! # Vocabulary: real functions
+/-! # Vocabulary: real functions (the field `realfunctions`)
 
 Functions of a real variable by their noun, with the properties of real analysis. A
 function is a real function on the whole line, so that an article writes `Let $f$ be a

@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={densities,risk,stochasticorders}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S_f$ for the survival function of $f$.
+We write $\pi_f$ for the stop-loss transform of $f$.
+
+\section{Orders}
+
+\begin{lemma}\label{lr}
+Let $f$ and $g$ be probability densities. If $f$ is smaller than $g$ in the likelihood ratio order, then $f$ is smaller than $g$ in the hazard rate order.
+\end{lemma}
+
+\begin{lemma}\label{hr}
+Let $f$ and $g$ be probability densities. If $f$ is smaller than $g$ in the hazard rate order, then $f$ is stochastically smaller than $g$.
+\end{lemma}
+
+\begin{lemma}\label{st}
+Let $f$ and $g$ be probability densities. Suppose that $S_f(x)\le S_g(x)$ for every $x\in\mathbb{R}$. Then $f$ is smaller than $g$ in the usual stochastic order and $g$ is stochastically larger than $f$.
+\end{lemma}
+
+\begin{lemma}\label{icx}
+Let $f$ and $g$ be probability densities with finite mean. If $f$ is smaller than $g$ in the convex order, then $f$ is smaller than $g$ in the increasing convex order.
+\end{lemma}
+
+\begin{lemma}\label{exponential}
+Let $\lambda$ and $\mu$ be real numbers with $0<\mu\le\lambda$. Let $f$ be the density of the exponential distribution with rate $\lambda$ and let $g$ be the density of the exponential distribution with rate $\mu$. Then $f$ is smaller than $g$ in the likelihood ratio order.
+\end{lemma}
+
+\begin{lemma}\label{reflexive}
+Let $f$ be a probability density with finite mean. Then $f$ is smaller than $f$ in the convex order, and $\pi_f(d)\ge0$ for every real number $d$.
+\end{lemma}
+
+\end{document}

@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,optimization,calculus}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $D^n f$ for the $n$th derivative of $f$.
+We write $S(f)$ for the second derivative of $f$.
+We write $T_n(f,a)$ for the Taylor polynomial of degree $n$ of $f$ at $a$.
+We write $\ell(f,a,b)$ for the arc length of the graph of $f$ on $[a,b]$.
+We write $\mu(f,a,b)$ for the average value of $f$ on $[a,b]$.
+We write $A(f,g,a,b)$ for the area between the graphs of $f$ and $g$ on $[a,b]$.
+We write $V(f,a,b)$ for the volume of the solid of revolution of $f$ on $[a,b]$.
+For every real number $x$, let $p(x)\coloneqq x^3$.
+
+\section{Derivatives}
+
+\begin{lemma}\label{second}
+Let $f$ be a twice differentiable function. Then $S(f)(x)=D^2f(x)$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{times}
+Every twice continuously differentiable function is twice differentiable.
+\end{lemma}
+
+\begin{lemma}\label{taylor}
+Let $f$ be a $3$ times differentiable function and let $a$ be a real number. Then $T_0(f,a)(x)=f(a)$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{critical}
+Let $f$ be a differentiable function and let $x$ be a real number. If $x$ is a local minimizer of $f$, then $x$ is a critical point of $f$.
+\end{lemma}
+
+\begin{lemma}\label{inflection}
+$0$ is an inflection point of $p$.
+\end{lemma}
+
+\begin{lemma}\label{antiderivative}
+Let $f$ and $F$ be functions. If $F$ is an antiderivative of $f$, then $F$ is differentiable.
+\end{lemma}
+
+\section{Integrals}
+
+\begin{lemma}\label{length}
+Let $f$ be a continuously differentiable function and let $a$ and $b$ be real numbers with $a\le b$. Then $\ell(f,a,b)\ge b-a$.
+\end{lemma}
+
+\begin{lemma}\label{average}
+Let $f$ be a continuous function and let $a$ and $b$ be real numbers with $a<b$. Then there is $c\in[a,b]$ such that $f(c)=\mu(f,a,b)$.
+\end{lemma}
+
+\begin{lemma}\label{area}
+Let $f$ and $g$ be continuous functions and let $a$ and $b$ be real numbers with $a\le b$. Then $A(f,g,a,b)=A(g,f,a,b)$ and $V(f,a,b)\ge0$.
+\end{lemma}
+
+\end{document}

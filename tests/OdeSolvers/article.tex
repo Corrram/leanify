@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,odesolvers}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\Phi^E_h(f)$ for the Euler step of $f$ with step size $h$.
+We write $\Phi^H_h(f)$ for the Heun step of $f$ with step size $h$.
+We write $\Phi^{RK}_h(f)$ for the Runge-Kutta step of $f$ with step size $h$.
+For all real numbers $t$ and $y$, let $\lambda(t,y)\coloneqq y$.
+For every real number $t$, let $u(t)\coloneqq e^t$.
+
+\section{The equation}
+
+\begin{lemma}\label{exp}
+$u$ is a solution of the initial value problem with right-hand side $\lambda$ and initial value $1$ at $0$.
+\end{lemma}
+
+\begin{lemma}\label{lipschitz}
+$\lambda$ is Lipschitz in the second variable with constant $1$.
+\end{lemma}
+
+\begin{lemma}\label{unique}
+Let $f$ be a right-hand side Lipschitz in the second variable, and let $y$ and $z$ be functions. Suppose that $y$ is a solution of the differential equation with right-hand side $f$ and that $z$ is a solution of the differential equation with right-hand side $f$. If $y(0)=z(0)$, then $y(t)=z(t)$ for every real number $t$.
+\end{lemma}
+
+\section{One-step methods}
+
+\begin{lemma}\label{euler}
+Let $h$ be a real number. Then $\Phi^E_h(\lambda)(t,y)=(1+h)y$ for all $t,y\in\mathbb{R}$.
+\end{lemma}
+
+\begin{lemma}\label{heun}
+Let $h$ be a real number. Then $\Phi^H_h(\lambda)(0,1)=1+h+\frac{h^2}{2}$ and $\Phi^{RK}_h(\lambda)(0,1)=1+h+\frac{h^2}{2}+\frac{h^3}{6}+\frac{h^4}{24}$.
+\end{lemma}
+
+\begin{lemma}\label{sequence}
+Let $h$ be a real number and let $y:\mathbb{R}\to\mathbb{R}$ be a function. If $y$ is an Euler sequence for $\lambda$ with step size $h$ and $y(0)=1$, then $y(n)=(1+h)^n$ for every nonnegative integer $n$.
+\end{lemma}
+
+\end{document}
