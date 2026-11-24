@@ -767,6 +767,56 @@ def lamWrap : List Ty → Tm → Tm
   | [], b => b
   | t :: ts, b => .lam t .tt (lamWrap ts b)
 
+/-- Functions of arguments with the given domains (a predicate each, or none). -/
+def lamWrapD : List (Ty × Option Tm) → Tm → Tm
+  | [], b => b
+  | (t, p) :: ts, b => .lam t (match p with | some p => .app p (.loc 0) | none => .tt) (lamWrapD ts b)
+
+/-! ### Natural domains
+
+`T_w(x)\coloneqq\begin{cases}…\end{cases}` and `\Delta(x,z)\coloneqq\varphi(x)+\psi(z)-c(x,z)`
+say nothing about `x` and `z`. An argument without a stated domain ranges over the values
+at which the definition says something: where one of its cases applies, and where the
+functions on its right side are defined. -/
+
+/-- The conditions of a definition by cases without an `otherwise`. -/
+def caseConds : Tm → Option (List Tm)
+  | .cases c _ rest => (caseConds rest).map (c :: ·)
+  | .undef _ => some []
+  | _ => none
+
+/-- What the body of a definition asks of its arguments. -/
+def naturalConds (v : Tm) : List Tm :=
+  match caseConds v with
+  | some (c :: cs) => [cs.foldl (fun acc q => Tm.or acc q) c]
+  | _ => (Tm.conjuncts (Tm.defined v)).filter fun c => match c with
+      | .imp _ _ | .all _ _ | .not .tt => false
+      | _ => true
+
+/-- Remove the `l` innermost variables from a term that does not mention them. -/
+def lowerBy : Nat → Tm → Tm
+  | 0, t => t
+  | l + 1, t => lowerBy l (Tm.subst (.num 0) 0 t)
+
+/-- The natural domains of the `n` innermost variables of the body `v` (the arguments of a
+definition, the last one innermost), for those that have none in `given`: a condition of
+`v` is a condition on the last argument that it mentions. -/
+def naturalPreds (given : List (Ty × Option Tm)) (v : Tm) : List (Ty × Option Tm) :=
+  let n := given.length
+  let conds := naturalConds v
+  given.zipIdx.map fun ((ty, p), j) =>
+    match p with
+    | some _ => (ty, p)
+    | none =>
+      if ty != .real then (ty, none) else
+      let l := n - 1 - j
+      let mine := conds.filterMap fun c =>
+        let low := lowerBy l c
+        -- (it mentions none of the later arguments, and it mentions this one)
+        if Tm.shift l 0 low == c && Tm.shift 1 0 (Tm.subst (.num 0) 0 low) != low then some low else none
+      if mine.isEmpty then (ty, none)
+      else (ty, some (.lam ty .tt (Tm.shift 1 1 (Elab.conjAll mine))))
+
 def tyWrap : List Ty → Ty → Ty
   | [], r => r
   | t :: ts, r => .fn t (tyWrap ts r)
@@ -2397,8 +2447,9 @@ where setDefMain (m : MT) : M (List Nat × List Nat) := do
     let ats := names.map fun _ => Ty.real
     let sc : Scope := (names.zip ats).reverse ++ [(b.name, b.ty)]
     let (v, vty) ← term F sc none rhs
-    let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (lamWrap ats v)
-    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: ats.map (fun _ => none), family, 1⟩ value
+    let argDoms := naturalPreds (ats.map (·, none)) v
+    let value := Tm.lam b.ty (holdsAt b.pred (.loc 0)) (lamWrapD argDoms v)
+    let i ← addGlob ⟨key, .fn b.ty (tyWrap ats vty), b.pred :: argDoms.map (·.2), family, 1⟩ value
     if !family then modify fun st => { st with implicits := st.implicits ++ [(i, [b.name])] }
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let sc1 : Scope := [(b.name, b.ty)]
@@ -2470,6 +2521,11 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
         fail E.finding (w!"the domain of a variable of this definition depends on a variable before it, and the arguments of " ++ key ++ w!" are not in that order: define it without arguments (Set $" ++ key ++ w!"\\coloneqq …$), or state the variables with it")
     | none => pure ()
     let (v, vty) ← term F (scopeOf all) none rhs
+    -- (an argument that no binder introduces has its natural domain)
+    let argInfo : List BindInfo :=
+      let nat := naturalPreds (argInfo.map fun b => (b.ty, if (bs.any (·.name == b.name)) then some (b.pred.getD (.lam b.ty .tt .tt)) else b.pred)) v
+      (argInfo.zip nat).map fun (b, (_, p)) => if bs.any (·.name == b.name) then b else { b with pred := p }
+    let all := imp ++ argInfo
     let value := all.foldr (fun b acc => Tm.lam b.ty (holdsAt b.pred (.loc 0)) acc) v
     let ty := all.foldr (fun b acc => Ty.fn b.ty acc) vty
     let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value

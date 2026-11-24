@@ -383,7 +383,7 @@ def write_back(lines, blocks, proofs):
 
 def add_stubs(lines, report, ns):
     """The proofs file with a stub for every definition it has no `definedI` for, every claim
-    it has no `proofK` or `refuteK` for, and every set of hypotheses it has no `satisfiedK`
+    it has no `proofK`, `companionK` or `refuteK` for, and every set of hypotheses it has no `satisfiedK`
     for (before `end NS.Proofs`)."""
     text = "\n".join(lines)
     new = []
@@ -395,7 +395,7 @@ def add_stubs(lines, report, ns):
                     f"theorem defined{i} : wellDefined{i} := by", f"  unfold wellDefined{i}", "  definedness []", ""]
     for k, c in enumerate(report["claims"]):
         reading = c["reading"].replace("-/", "- /").replace("/-", "/ -")
-        if not re.search(rf"^theorem (proof|refute){k} ", text, re.M):
+        if not re.search(rf"^theorem (proof|companion|refute){k} ", text, re.M):
             new += [f"/-- Claim {k}, {c['role']}:", f"`{reading}` -/", f"theorem proof{k} : obligation{k} := by",
                     "  intro_premises", f"  refine ⟨by unfold meaningful{k}; definedness [], ?_⟩", "  sorry", ""]
         if c.get("hypothesesOf") == k and not re.search(rf"^theorem satisfied{k} ", text, re.M):

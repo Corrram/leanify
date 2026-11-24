@@ -17,6 +17,10 @@ namespace `J`: `J.definedI : Foo.wellDefinedI` for every definition,
   themselves audited, and never the justification of a claim that is not among
   its premises, so a proof sentence cannot be justified by a result the sentence
   does not cite;
+* takes `J.companionK : Foo.obligationK` instead of `J.proofK` as the justification of a
+  claim that the text derives when the derivation is not the one of the text (a step that
+  rests on sentences which are not read, proved from a formalization of the result): the
+  claim is then reported as justified by a companion proof, and it is not audited;
 * tries the standard tactic `leanify_step` on the obligation of each such claim
   and records whether it closes it (`set_option leanify.steps false` skips this):
   a step that needs a Lean argument beyond it is larger than it looks in the text;
@@ -140,8 +144,16 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
     if d.quotedClaims.contains k && env.contains n then some n else none
   let mut justified : Array (Option Name) := #[]
   let mut notes : Array String := Array.replicate d.claims.length ""
+  -- (a claim that the text derives and that `J.companionK` justifies is justified by a
+  -- companion proof: it is not audited against its citations, and it is reported so)
+  let mut byCompanion : Array Bool := Array.replicate d.claims.length false
   for k in [0:d.claims.length] do
-    let n := jn ++ nm s!"proof{k}"
+    let nProof := jn ++ nm s!"proof{k}"
+    let nComp := jn ++ nm s!"companion{k}"
+    if env.contains nProof && env.contains nComp then
+      throwError "{nProof} and {nComp}: give claim {k} one justification"
+    let n := if env.contains nProof then nProof else nComp
+    if !env.contains nProof && env.contains nComp then byCompanion := byCompanion.set! k true
     match env.find? n with
     | some ci =>
       unless ci.type == Lean.mkConst (ns ++ nm s!"obligation{k}") do
@@ -217,6 +229,7 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
   let permitted (m : Name) : Bool := articleMods.contains m || permittedRoots.any (·.isPrefixOf m)
   let isLocal (m : Name) : Bool := localMods.contains m
   let fromText (k : Nat) : Bool :=
+    !byCompanion[k]! &&
     match d.claims[k]!.role with
     | .step _ => true
     | _ => !d.claims[k]!.premises.isEmpty
@@ -228,7 +241,8 @@ syntax (name := leanifyCertify) "#leanify_certify " ident str " using " ident : 
       let premises := d.claims[k]!.premises
       let others : List (Name × Nat) := (List.range d.claims.length).flatMap fun j =>
         if j == k || premises.contains j then []
-        else [(jn ++ nm s!"proof{j}", j), (jn ++ nm s!"refute{j}", j), (ns ++ `Quoted ++ nm s!"claim{j}", j)]
+        else [(jn ++ nm s!"proof{j}", j), (jn ++ nm s!"companion{j}", j), (jn ++ nm s!"refute{j}", j),
+          (ns ++ `Quoted ++ nm s!"claim{j}", j)]
       let (_, (_, bad)) := (auditConst env permitted isLocal n (fun c => others.any (·.1 == c))).run ({}, #[])
       let uncited := (bad.toList.filterMap fun (c, _) => others.lookup c).eraseDups
       unless uncited.isEmpty do

@@ -303,6 +303,13 @@ fields of the vocabulary and what happens when a word has several meanings.
 5. **Give every map its signature.** "where $T_w:[0,1]\to[0,1]$ is given by
    …", "define $\Phi:[-1,1]\to[-1,1]$ by …". A parametrized piece states its
    parameter range on the same line: `e_b\coloneqq…,\qquad b\in(0,\tfrac12]`.
+   An argument whose domain the article does not state has its natural domain:
+   `$T_w(x)\coloneqq\begin{cases}…\end{cases}$` is defined at the `x` where one of its
+   cases applies, and `$\Delta(x,z)\coloneqq\varphi(x)+\psi(z)-c(x,z)$` at the points
+   where the functions on its right side are. A use of the symbol outside this domain is
+   a definedness condition that fails, so a formula `$e_b\coloneqq…$` with a range
+   `$b\in(0,\tfrac12)$` cannot be used at `$b=\tfrac12$`: state the range the article
+   uses.
 6. **Make every quantifier explicit.** "for every $r\in[-1,1]$" instead of a
    free $r$. A variable bound at the start of a result ("For $w\in[0,1]$, …")
    stays bound in the result's later sentences that use it.

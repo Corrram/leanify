@@ -455,6 +455,9 @@ theorem satisfied{k} : satisfiable{k} := by
   results). A claim the text derives (a proof step, or a result with a compiled
   proof) may use only its premises, Mathlib and the article: `#leanify_certify`
   audits this.
+* `companionK : obligationK` instead of `proofK` justifies a claim the text derives by a
+  proof that is not the derivation of the text (from a formalization of the result, say):
+  the claim is reported as justified by a companion proof, and it is not audited.
 * `refuteK : meaningfulK ∧ ¬ claimK` instead records that claim `K` is false as
   stated; readers and the PDF margin then mark it.
 * `satisfiedK : satisfiableK`: the hypotheses of claim `K` can hold together (give

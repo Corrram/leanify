@@ -28,7 +28,7 @@ tests/Wordings/article.tex:45:1: info: claim 6 is meaningful if: \forall x\in [0
 tests/Wordings/article.tex:52:1: info: claim 7: \operatorname{affine}(\rho)\text{ on }\mathcal{C}
 tests/Wordings/article.tex:52:1: info: claim 8: \operatorname{affine}(\nu)\text{ on }\mathcal{C}
 tests/Wordings/article.tex:55:1: info: defines T_{\cdot} (T)
-tests/Wordings/article.tex:55:1: info: T_{\cdot} is well defined if: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ (0\le y\land y\le 1-x\Rightarrow 1-x<y\land y\le 1\Rightarrow y+x-1=1-y)\land (\neg (0\le y\land y\le 1-x)\Rightarrow \neg (1-x<y\land y\le 1)\Rightarrow \bot)
+tests/Wordings/article.tex:55:1: info: T_{\cdot} is well defined if: \forall x\in [0,1],\ \forall y\in \mathbb{R},\ 0\le y\land y\le 1-x\lor 1-x<y\land y\le 1\Rightarrow (0\le y\land y\le 1-x\Rightarrow 1-x<y\land y\le 1\Rightarrow y+x-1=1-y)\land (\neg (0\le y\land y\le 1-x)\Rightarrow \neg (1-x<y\land y\le 1)\Rightarrow \bot)
 tests/Wordings/article.tex:55:1: info: defines A_{\cdot} (A)
 tests/Wordings/article.tex:55:1: info: A_{\cdot} is well defined if: \forall x\in [0,1],\ ((\forall y\in [0,1],\ 0\le T_{x}(y)\land T_{x}(y)\le 1)\land \operatorname{Borel}((y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})))\land \operatorname{Prob}_{[0,1]^2}(\gamma_{(y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})})\land \operatorname{UnifMarg}(\gamma_{(y\in [0,1]\mapsto \langle T_{x}(y)\rangle_{[0,1]})})
 tests/Wordings/article.tex:64:1: info: defines B (B)

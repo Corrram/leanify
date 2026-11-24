@@ -196,6 +196,7 @@ In namespace `J`:
 | --- | --- | --- |
 | `J.definedI` | `NS.wellDefinedI` | for every definition whose well-definedness is to be shown; a definition without it (or with `sorry` in it) is *assumed* to be well defined |
 | `J.proofK` | `NS.obligationK` | for each claim to verify |
+| `J.companionK` | `NS.obligationK` | instead of `J.proofK`, for a claim that the text derives (a proof sentence, a result with a compiled proof) and that is proved otherwise: from a formalization of the result, when the sentences it rests on are not read. The claim is reported as `companion`, and its justification is not audited against its citations |
 | `J.refuteK` | `NS.meaningfulK ∧ ¬ NS.claimK` | for a claim that is false as stated |
 | `J.satisfiedK` | `NS.satisfiableK` | for a result to be *derived*: the hypotheses of claim `K` can hold together |
 
@@ -277,13 +278,33 @@ reservation that the report names.
 | Tactic | Does |
 | --- | --- |
 | `intro_premises` | Unfolds `obligationK` and introduces every premise `J` as `mJ : meaningfulJ` and `cJ : claimJ`. |
-| `definedness [h₁, …]` | Proves a definedness condition (`meaningfulK`, `wellDefinedI`): divisions by nonzero terms, arguments in their domains. Give it the facts it cannot find. |
+| `definedness [h₁, …]` | Proves a definedness condition (`meaningfulK`, `wellDefinedI`): divisions by nonzero terms, arguments in their domains. Its leaves are hypotheses, numeric side conditions, bounds of points of an interval, products and powers that are not zero, a strict case or its endpoint (from the weak inequality), a witness that a hypothesis gives, a value of a definition of the article in each of its cases, and the facts of the vocabulary (`leanify_facts`). Give it the facts it cannot find. |
 | `leanify_part` | Closes a goal that is a side of a hypothesis: of the conjunction that the hypothesis is once its definitions are unfolded (that `C` is a distribution function, from the hypothesis that `C` is a copula of the article). `definedness` uses it. |
-| `leanify_facts` | Closes a leaf of a definedness condition with a fact of the model of the vocabulary. A library gives its rules with `macro_rules`; `definedness` uses it. For the unit square: an integral against a distribution function `F` of an expression in `F` and the coordinates that `fun_prop` finds measurable and `nlinarith` bounds by `4`, and the probability of a comparison of two expressions in the terms of a sample (`leanify_sample_event`). |
+| `leanify_facts` | Closes a leaf of a definedness condition with a fact of the model of the vocabulary. A library gives its rules with `macro_rules`; `definedness` uses it. For the unit square: an integral against a distribution function `F` of an expression in `F` and the coordinates that `fun_prop` finds measurable and `nlinarith` bounds by `4`, and the probability of a comparison of two expressions in the terms of a sample (`leanify_sample_event`). Also for the unit square: a continuous function on `[0,1]` is integrable, a continuous function on the square is integrable for a coupling, `Y Z` and `Y F_Y(Y)` are integrable for a joint law with an integrable `Y`, a graph `{x : (x, T(x)) ∈ A}` of a Borel map is a Borel set, and a function given by cases on comparisons with continuous cases is interval integrable (`leanify_piecewise`). An article adds its own rules the same way (that its named copulas are copulas, say). |
+| `leanify_points`, `leanify_pinch`, `leanify_neq`, `leanify_unfold`, `leanify_arith` | The steps of `definedness` for arithmetic leaves: the bounds `0 ≤ x ≤ 1` of the points of an interval with `linarith`; two cases that meet in a point (`x ≤ c` and `c ≤ x` give `x = c`, then computation); an excluded point that the bounds force; the definitions of the article unfolded one level; and `linarith`, `positivity`, or `nlinarith` with the quotients cleared. |
 | `leanify_sample_fun`, `leanify_sample_event` | (unit square) Prove that an expression in the terms `U_i`, `V_i` of a sample is a measurable function of the sample, and that a comparison (`<`, `≤`) of two such expressions is a measurable set of samples: sums, differences, products, quotients, maxima, minima, absolute values, powers, finite sums and case distinctions between such expressions. |
 | `leanify_values v₁ v₂ …` | Proves `satisfiableK` with these values for the variables of the statement, in the order of the text (the last value serves every further variable), if its hypotheses then follow by computation. |
 | `leanify_step` | Proves an obligation whose claim follows from its premises by routine steps: it introduces the premises and the variables and hypotheses of the claim, takes each premise at them (a lemma about every positive `x` at `x` and at `y`), splits conjunctions, adds what a reader uses about integers without saying so (sums, differences and products of integers are integers, and `a < b` gives `a + 1 ≤ b`), uses a hypothesis `A → B` whose `A` follows at once, and closes the goal with `assumption`, `linarith`, `positivity`, `ring`, `field_simp; ring`, `norm_num` or `simp` with the article's definitions, the two directions of an equivalence by `linarith` or `nlinarith`, `nlinarith`, `grind`, `aesop` or `tauto`. It uses no other lemma of mathlib by name: a step that needs one (a rule for real powers, a named inequality) is an `argument`. Every closer has a budget of its own, so what the tactic proves does not depend on the limits of the file it is used in. It is the measure of a `standard` step, so it is fixed for a version of Leanify. |
 | `leanify_int` | Proves that a real number is an integer: a hypothesis, a numeral, or a sum, difference, product, negative or power of integers. |
+
+### Facts of the unit square for proofs
+
+`Leanify/Library/UnitSquareModel.lean` proves what the proofs of an article about copulas
+and couplings use about the meanings of the vocabulary, so that a proof (or a bridge to a
+formalization of the results) does not unfold them:
+
+| Fact | Says |
+| --- | --- |
+| `measureOfSetFn_prob`, `measureOfSetFn_apply`, `measureOfSetFn_eq` | a set function that is a probability measure is the measure `measureOfSetFn` on Borel sets, and that measure is unique |
+| `measureOfSetFn_map_fst`, `measureOfSetFn_map_snd` | the marginals of a coupling are Lebesgue measure |
+| `couplingOfCopula_isCoupling`, `copulaOfCoupling_isCopula` | the coupling of a copula is a coupling, the copula of a coupling is a copula |
+| `copulaOfCoupling_couplingOfCopula`, `couplingOfCopula_copulaOfCoupling` | the two determine each other |
+| `couplingExpectation_couplingOfCopula` | an expectation for the coupling of `C` is an integral against the measure of `C` at the reflected point |
+| `graph_probMeasure2`, `graph_measUniformMarginals`, `lebesguePreserving_of_graph` (and `'` for `(T(Z), Z)`) | the law of `(X, T(X))` for a Borel map `T` is a probability measure; it is a coupling exactly when `T` preserves Lebesgue measure |
+| `couplingExpectation_graph` | an expectation for the law of `(X, T(X))` is `∫ f(x, T(x)) dx` |
+| `measureOfJoint_prob`, `measureOfJoint_apply`, `jointDistFn_eq_cdf`, `jointUniformSecond_measurePreserving` | a joint law of a real variable and a point of `[0,1]`: its measure, the distribution function of the first variable as a `cdf`, and the uniform second variable as a measure-preserving map |
+| `Leanify.Prelude.limAt_eq`, `limAtConv_of` | a limit at a point from a limit along the punctured domain |
+| `Leanify.Prelude.intervalIntegrable_ite` | a function given by cases on a Borel condition is interval integrable when its cases are |
 
 ### Options
 

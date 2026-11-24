@@ -69,6 +69,161 @@ elab "leanify_part" : tactic => withMainContext do
         return
   throwError "leanify_part: the goal is not a part of a hypothesis"
 
+/-- `leanify_points` closes an inequality with what the points of an interval in the
+context are: a variable `x` of a subtype whose condition is a conjunction (`0 ≤ x ∧ x ≤ 1`
+for a point of `[0,1]`) gives its two sides, and `linarith` concludes. -/
+elab "leanify_points" : tactic => do
+  let g ← getMainGoal
+  let g' ← g.withContext do
+    let mut g := g
+    let mut n := 0
+    for d in ← getLCtx do
+      if d.isImplementationDetail then continue
+      let ty ← whnfR (← instantiateMVars d.type)
+      unless ty.isAppOf ``Subtype do continue
+      let pf ← mkAppM ``Subtype.property #[d.toExpr]
+      let p ← whnf (← inferType pf)
+      match p.and? with
+      | some (a, b) =>
+        let (_, g1) ← (← g.assert `hp a (mkApp3 (Lean.mkConst ``And.left) a b pf)).intro1P
+        let (_, g2) ← (← g1.assert `hp b (mkApp3 (Lean.mkConst ``And.right) a b pf)).intro1P
+        g := g2
+        n := n + 1
+      | none => pure ()
+    if n == 0 then throwError "leanify_points: no point of an interval in the context"
+    pure g
+  replaceMainGoal [g']
+  evalTactic (← `(tactic| linarith))
+
+/-- `leanify_pinch` uses two hypotheses `a ≤ b` and `b ≤ a` (the conditions of two cases
+that meet in a point): `a = b`, which is substituted, and `norm_num` concludes. -/
+elab "leanify_pinch" : tactic => do
+  let g ← getMainGoal
+  let r ← g.withContext do
+    let hyps := (← getLCtx).foldl (init := #[]) fun acc d =>
+      if d.isImplementationDetail then acc else acc.push d
+    let mut found : Option MVarId := none
+    for d1 in hyps do
+      if found.isSome then break
+      let t1 ← instantiateMVars d1.type
+      unless t1.isAppOfArity ``LE.le 4 do continue
+      for d2 in hyps do
+        let t2 ← instantiateMVars d2.type
+        unless t2.isAppOfArity ``LE.le 4 do continue
+        if d1.fvarId == d2.fvarId then continue
+        if (← withReducible (isDefEq (t1.getArg! 2) (t2.getArg! 3))) &&
+            (← withReducible (isDefEq (t1.getArg! 3) (t2.getArg! 2))) then
+          let pf ← mkAppM ``le_antisymm #[d1.toExpr, d2.toExpr]
+          let (_, g1) ← (← g.assert `hpinch (← inferType pf) pf).intro1P
+          found := some g1
+          break
+    pure found
+  match r with
+  | none => throwError "leanify_pinch: no two cases that meet in a point"
+  | some g1 =>
+    replaceMainGoal [g1]
+    let hp := mkIdent `hpinch
+    evalTactic (← `(tactic| ((try subst_vars); (first | (norm_num; done) | (simp only [$hp:ident]; norm_num; done) | (simp_all; done)))))
+
+/-- `leanify_neq` closes a goal whose hypotheses contain `a ≠ b` for two terms that
+`linarith` proves equal: a case and its endpoint, when the endpoint is excluded and the
+bounds leave nothing else. -/
+elab "leanify_neq" : tactic => do
+  let g ← getMainGoal
+  let hyps ← g.withContext do
+    let mut out : Array Expr := #[]
+    for d in ← getLCtx do
+      if d.isImplementationDetail then continue
+      let t ← instantiateMVars d.type
+      if t.isAppOfArity ``Ne 3 || (t.isAppOfArity ``Not 1 && (t.getArg! 0).isAppOfArity ``Eq 3) then
+        out := out.push d.toExpr
+    pure out
+  for h in hyps do
+    let s ← saveState
+    try
+      let hs ← (← getMainGoal).withContext (Term.exprToSyntax h)
+      evalTactic (← `(tactic| (exfalso; apply $hs; linarith)))
+      if (← getUnsolvedGoals).isEmpty then return
+      s.restore
+    catch _ => s.restore
+  throwError "leanify_neq: no excluded point that the bounds force"
+
+/-- `leanify_unfold` unfolds the definitions of the article (the constants of a namespace
+that holds the compiled statements of an article) in the goal and in the hypotheses, one
+level: a leaf about `\kappa_w` becomes a leaf about `\frac{3-2w}{2w}`. It fails when there
+is none. -/
+elab "leanify_unfold" : tactic => do
+  let g ← getMainGoal
+  let env ← getEnv
+  let names ← g.withContext do
+    let mut cs : Array Name := (← instantiateMVars (← g.getType)).getUsedConstants
+    for d in ← getLCtx do
+      if d.isImplementationDetail then continue
+      cs := cs ++ (← instantiateMVars d.type).getUsedConstants
+    let article (n : Name) : Bool :=
+      match n with
+      | .str p s =>
+        !p.isAnonymous && (env.contains (p ++ `obligation0) || env.contains (p ++ `wellDefined0)) &&
+          !(s.startsWith "wellDefined" || s.startsWith "meaningful" || s.startsWith "claim" ||
+            s.startsWith "obligation" || s.startsWith "satisfiable")
+      | _ => false
+    pure ((cs.filter fun n => article n && (match env.find? n with | some (.defnInfo _) => true | _ => false)).toList.eraseDups)
+  if names.isEmpty then throwError "leanify_unfold: no definition of the article"
+  for n in names do
+    evalTactic (← `(tactic| try unfold $(mkIdent n):ident at *))
+
+/-- `leanify_denoms` adds, for each denominator in the goal and in the hypotheses, that it
+is positive, when `positivity` or `linarith` proves it. -/
+elab "leanify_denoms" : tactic => do
+  let g ← getMainGoal
+  let dens ← g.withContext do
+    let mut es : Array Expr := #[← instantiateMVars (← g.getType)]
+    for d in ← getLCtx do
+      if d.isImplementationDetail then continue
+      es := es.push (← instantiateMVars d.type)
+    let mut out : Array Expr := #[]
+    for e in es do
+      let subs : Array Expr := Id.run do
+        let mut acc : Array Expr := #[]
+        let mut todo : List Expr := [e]
+        let mut fuel := 4000
+        while fuel > 0 do
+          fuel := fuel - 1
+          match todo with
+          | [] => break
+          | t :: rest =>
+            todo := rest
+            if t.isAppOfArity ``HDiv.hDiv 6 then
+              let c := t.getArg! 5
+              if !c.hasLooseBVars then acc := acc.push c
+            match t with
+            | .app f x => todo := f :: x :: todo
+            | .lam _ d b _ | .forallE _ d b _ => todo := d :: b :: todo
+            | .mdata _ b => todo := b :: todo
+            | _ => pure ()
+        pure acc
+      for c in subs do
+        unless out.contains c do out := out.push c
+    pure out
+  for c in dens do
+    (← getMainGoal).withContext do
+      let cs ← Term.exprToSyntax c
+      evalTactic (← `(tactic| try (have : 0 < $cs := by first | positivity | linarith)))
+
+/-- `leanify_arith` closes a leaf of arithmetic: by `linarith` or `positivity`, as a quotient
+or product of positive terms, from case conditions that contradict each other, or, with the
+quotients in the hypotheses cleared, by `nlinarith`. -/
+macro "leanify_arith" : tactic => `(tactic|
+  first
+    | (linarith; done)
+    | (positivity; done)
+    | ((first | apply div_pos | apply div_nonneg | apply mul_pos | apply mul_nonneg) <;> linarith)
+    | (exfalso; (try simp only [not_and_or, not_le, not_lt] at *); (try casesm* _ ∨ _) <;> linarith)
+    | (exfalso;
+        leanify_denoms;
+        (try simp (disch := assumption) only [le_div_iff₀, div_le_iff₀, lt_div_iff₀, div_lt_iff₀] at *);
+        nlinarith))
+
 /-- `leanify_facts` closes a leaf of a definedness condition with the facts of the model of
 a vocabulary: a library gives its rules with `macro_rules` (the unit square: an integral
 against a distribution function of a bounded expression). Without a rule that applies,
@@ -80,8 +235,10 @@ macro_rules
 
 /-- `definedness [t₁, …]` proves a definedness condition (`meaningfulK`, `wellDefinedI`):
 a tree of `∧`, `→` and `∀` whose leaves are hypotheses, numeric side conditions,
-signs that `positivity` proves, or the given facts, and whose impossible branches (contradictory case
-conditions) are closed by `linarith` or `tauto`. A condition on almost every point of an
+signs that `positivity` proves, bounds of points of an interval, products and powers that
+are not zero, or the given facts, and whose impossible branches (contradictory case
+conditions) are closed by `linarith` or `tauto`. Two cases that meet in a point agree there
+(`leanify_pinch`). A condition on almost every point of an
 interval (that an integrand is defined there) is proved for every point. A hypothesis `∃ z, φ` (what a hypothesis
 about another variable says about the variables of a definition) is opened, and a leaf
 that follows from the hypotheses by rewriting is closed by `simp_all`. A leaf that is a
@@ -102,9 +259,25 @@ elab "definedness" " [" ts:term,* "]" : tactic => do
     | (intro _; try casesm* _ ∧ _, ∃ _, _)
     -- a fact of the model of the vocabulary
     | (leanify_facts; done)
-    | refine ⟨?_, ?_⟩
+    -- a witness that a hypothesis gives
+    | (apply Exists.intro; assumption; done)
+    | refine And.intro ?_ ?_
     | (linarith; done)
     | (positivity; done)
+    -- a bound of a point of an interval
+    | (leanify_points; done)
+    -- a product or a power that is not zero
+    | (exfalso; simp only [mul_eq_zero, pow_eq_zero_iff, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
+        false_or, or_false, sub_eq_zero] at *; (try casesm* _ ∨ _) <;> linarith)
+    -- two cases that meet in a point agree there
+    | (leanify_pinch; done)
+    -- a leaf about a definition of the article: about its value, in each of its cases
+    | (leanify_unfold; (try split_ifs) <;> (try leanify_unfold) <;> leanify_arith)
+    -- one of the cases of a definition applies: otherwise their negations contradict the domain
+    | (apply Classical.byContradiction; intro _;
+        (try simp only [not_or, not_and_or, not_le, not_lt] at *);
+        (try casesm* _ ∧ _); (try casesm* _ ∨ _) <;>
+          first | (linarith; done) | (leanify_points; done) | (leanify_neq; done))
     -- a branch whose case conditions contradict each other
     | (exfalso; tauto; done)
     -- uncovered cases: the negated case conditions contradict the domain

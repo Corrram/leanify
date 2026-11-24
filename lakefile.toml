@@ -248,6 +248,13 @@ name = "Operators"
 srcDir = "tests"
 globs = ["Operators.+"]
 
+[[lean_lib]]
+# The steps of `definedness` and the facts of the unit square about couplings, each on a
+# leaf in the form the compiled statements have it.
+name = "TacticSteps"
+srcDir = "tests"
+globs = ["TacticSteps"]
+
 [[lean_exe]]
 name = "leanify"
 root = "LeanifyCli"
