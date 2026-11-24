@@ -234,6 +234,11 @@ def uncertified(article, check, source, a):
         "certified so far (probability, analysis) that was most of the steps.",
         a.width, initial_indent="  ", subsequent_indent="  "))
     print()
+    print(textwrap.fill(
+        f"If nouns or notations of your subject are not read: `leanify fields {article.name}` tries every field "
+        "of the vocabulary on the article and names those that read more of it.",
+        a.width, initial_indent="  ", subsequent_indent="  "))
+    print()
     findings = [f for f in check.get("findings", []) if f.get("severity") in ("warning", "error")]
     print("What is left to do before that" if findings else "Every sentence of a result is read.")
     for f in findings if a.all else findings[:a.limit]:

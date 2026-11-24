@@ -59,6 +59,30 @@ square ([Vocabularies and models](vocabularies.md)).
 with its file, place, text and outcome, the definitions, the claims with their
 readings, the proofs, and the version of Leanify.
 
+### `leanify fields`
+
+```sh
+lake exe leanify fields ARTICLE.tex [--vocab FIELDS] [--notions NOUNS] [--quantities WORDS]
+```
+
+Says which fields of the vocabulary the article needs. Nothing is guessed from
+its words: every field is tried on the article, and the fields that make Leanify
+read more of its sentences are named, the one that adds the most first, then the
+one that adds the most to it, up to four.
+
+```
+note.tex: 1 of 19 sentences are read as mathematics with the core vocabulary alone
+  graphs: 18 more sentences
+note.tex: 19 of 19 with \usepackage[vocab={graphs}]{leanify}
+```
+
+It starts from the fields that the article names in its preamble (or from
+`--vocab`; `--vocab core` starts from none). A field changes how words are read,
+so compare the readings before you keep it: `leanify check ARTICLE.tex --vocab
+FIELDS --claims`. If no field reads more, what is not read is a wording or a
+notion that no field has, and `leanify check` names each. A single finding of the
+check also names the field that has its noun or its notation.
+
 ### `leanify flatten`
 
 ```sh

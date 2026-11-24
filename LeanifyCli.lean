@@ -10,6 +10,8 @@ import Leanify.Library.Fields
   diagnostics (fast; certifies nothing); `--json` prints them for tools, with every
   sentence, its place and its text. Projects with their own vocabulary define a
   three-line executable calling `Leanify.checkArticle`.
+* `leanify fields ARTICLE.tex [--vocab FIELDS]` tries every field of the vocabulary on
+  the article and names the fields that read more of its sentences.
 * `leanify certify ARTICLE.tex [--vocab FIELDS] [--name NAME]` goes from the article to
   its certificate: it writes the Lean files and makes the project if there are none,
   fetches the packages if they are missing, updates the pin and runs `lake build`.
@@ -40,6 +42,7 @@ open Leanify
 
 def usage : String :=
   "usage: leanify check ARTICLE.tex [--vocab FIELD,FIELD,…] [--notions NOUN,NOUN,…] [--quantities WORD,…] [--prose] [--claims] [--defined] [--json]\n" ++
+  "       leanify fields ARTICLE.tex [--vocab FIELD,FIELD,…] (the fields of the vocabulary that read more of it)\n" ++
   "       leanify certify ARTICLE.tex [--vocab FIELD,FIELD,…] [--name NAME] [--leanify REV|PATH]\n" ++
   "       leanify tex ARTICLE.tex [--vocab FIELD,FIELD,…] [--certify] [--status] [--no-project] (for leanify.sty)\n" ++
   "       leanify flatten ARTICLE.tex [OUT.tex]\n" ++
@@ -870,6 +873,16 @@ def main (args : List String) : IO UInt32 := do
     let failed ← checkArticle vocab path (opts.contains "--prose") (opts.contains "--claims")
       (opts.contains "--json") (opts.contains "--defined") extra
     pure (if failed == 0 then 0 else 1)
+  | "fields" :: path :: opts =>
+    if let .error e := vocabOf (fieldsOf opts) then
+      IO.eprintln s!"leanify fields: {e}"
+      return 2
+    let extra := (((optArg opts "--notions").getD "").splitOn ",").filterMap (fun e =>
+      Declared.ofEntry (Codes.ofString e)) ++
+      (((optArg opts "--quantities").getD "").splitOn ",").filterMap fun e =>
+        (Declared.ofEntry (Codes.ofString e)).map fun d => { d with number := true }
+    let code ← suggestFields path (if opts.contains "--vocab" then some (fieldsOf opts) else none) extra
+    pure code.toUInt32
   | "tex" :: path :: opts => texCommand path opts
   | "certify" :: path :: opts => certifyCommand path opts
   | "audit" :: path :: opts => auditCommand path opts

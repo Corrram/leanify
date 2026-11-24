@@ -1000,4 +1000,83 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
         IO.println s!"{path}: not read: {String.intercalate ", " src.skipped.toList} (input, but not a .tex file of the article)"
     pure (d.outcomes.filter (fun o => match o with | .failed _ => true | _ => false)).length
 
+/-! ## Which fields of the vocabulary an article needs
+
+A field is a library of words and notations (`\usepackage[vocab=markov]{leanify}`). Which
+fields an article needs is not guessed from its words: every field is tried on the
+article, and the fields that make Leanify read more of its sentences are named, the one
+that reads the most first, then the one that adds the most to it, and so on. -/
+
+/-- The sentences of the article that are read with the vocabulary (compiled), by index. -/
+def readWith (V : Vocab) (lines : List (List Nat)) (extra : List Declared) : Option (List Nat) :=
+  (compileArticle ((V.forArticle lines).declare extra) lines).map fun d =>
+    (d.outcomes.zipIdx.filter fun (o, _) => match o with | .compiled _ _ => true | _ => false).map (·.2)
+
+/-- The fields named by the option `vocab` of `\usepackage[…]{leanify}` in the preamble. -/
+def preambleFields (lines : List (List Nat)) : List String := Id.run do
+  let k := (lines.findIdx? isBeginDocument).getD lines.length
+  for l in lines.take k do
+    let t := Codes.toString l
+    if (t.splitOn "{leanify}").length > 1 then
+      match t.splitOn "vocab=" with
+      | _ :: rest :: _ =>
+        let rest := rest.toList
+        let value := match rest with
+          | '{' :: more => more.takeWhile (· != '}')
+          | _ => rest.takeWhile fun c => c != ',' && c != ']'
+        return ((String.ofList value).splitOn ",").map (fun n => String.ofList (n.toList.filter (· != ' ')))
+          |>.filter fun n => n != "" && n != "core"
+      | _ => pure ()
+  return []
+
+/-- `leanify fields`: the fields that read more of the article than `fs` (the fields it
+names now), greedily, at most `k` of them. -/
+def suggestFields (path : System.FilePath) (given : Option (List String)) (extra : List Declared := [])
+    (k : Nat := 4) : IO Nat := do
+  let src ← readSource path
+  let lines := src.lines.toList
+  let now := given.getD (preambleFields lines)
+  let voc (fs : List String) : Vocab :=
+    if fs == ["unitsquare"] then UnitSquare.withCore else if fs.isEmpty then Vocab.core else Fields.select fs
+  match readWith (voc now) lines extra with
+  | none =>
+    IO.eprintln s!"{path}: error: the article could not be read (no \\begin\{document}, or unbalanced math)"
+    pure 1
+  | some base =>
+    let total := ((compileArticle (voc now) lines).map (·.sentences.length)).getD 0
+    let shown (fs : List String) := if fs.isEmpty then "the core vocabulary alone" else s!"vocab={String.intercalate "," fs}"
+    IO.println s!"{path}: {base.length} of {total} sentences are read as mathematics with {shown now}"
+    let mut cur := now
+    let mut have_ := base.length
+    let mut added : List (String × Nat) := []
+    for _ in [0:k] do
+      -- (a field that a named field includes adds nothing)
+      let cands := Fields.names.filter fun f => !cur.contains f &&
+        !(cur.any fun g => ((Fields.includes.lookup g).getD []).contains f)
+      let gains := cands.filterMap fun f =>
+        (readWith (voc (cur ++ [f])) lines extra).map fun r => (f, r.length)
+      match gains.foldl (fun best (f, n) => match best with
+          | some (_, m) => if n > m then some (f, n) else best
+          | none => some (f, n)) none with
+      | some (f, n) =>
+        if n > have_ then
+          added := added ++ [(f, n - have_)]
+          -- (a field that includes fields named so far replaces them)
+          cur := (cur.filter fun g => !((Fields.includes.lookup f).getD []).contains g) ++ [f]
+          have_ := n
+        else break
+      | none => break
+    if added.isEmpty then
+      IO.println s!"{path}: no other field of the vocabulary reads more of it. What is not read is a wording \
+        (docs/writing.md lists the forms that are read) or a notion that no field has \
+        (\\usepackage[notions=\{…}]\{leanify} declares it): `leanify check` names each."
+      pure 0
+    else
+      for (f, n) in added do
+        IO.println s!"  {f}: {n} more sentence{if n == 1 then "" else "s"}"
+      IO.println s!"{path}: {have_} of {total} with \\usepackage[vocab=\{{String.intercalate "," cur}}]\{leanify}"
+      IO.println s!"(a field changes how words are read: compare the readings with `leanify check {path} --vocab \
+        {String.intercalate "," cur} --claims`; docs/vocabularies.md describes the fields)"
+      pure 0
+
 end Leanify

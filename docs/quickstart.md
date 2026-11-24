@@ -53,9 +53,18 @@ article.tex:64:1: info: claim 2: \forall x\in \mathbb{R},\ 0<x\Rightarrow 2<f(x)
 
 This line is the formal statement of the theorem at line 64. It is computed from your
 sentence, so it cannot drift away from the paper, and it is short enough to read.
-[Writing for Leanify](writing.md) lists the wordings that are read. If your subject has
-words of its own (a copula, a graph, a prime), load its
-[vocabulary](vocabularies.md): `\usepackage[vocab=unitsquare]{leanify}`.
+[Writing for Leanify](writing.md) lists the wordings that are read.
+
+If the article uses the words of a subject (a copula, a graph, a Markov chain), it
+needs the [field of the vocabulary](vocabularies.md) that has them. You do not have to
+know which:
+
+```sh
+leanify fields article.tex
+```
+
+tries every field on the article and names those that read more of its sentences, with
+the line for your preamble (`\usepackage[vocab={graphs}]{leanify}`).
 
 ## 3. Have the statements proved
 

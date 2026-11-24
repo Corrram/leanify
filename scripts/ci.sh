@@ -90,6 +90,14 @@ checks() {
   [ ! -e "$lone/plain/lean" ] || fail "--no-project made a project"
   endgroup
 
+  group "The fields that an article needs are found by trying them"
+  $LEANIFY fields tests/Graphs/article.tex --vocab core > "$TMP/fields.txt" || fail "leanify fields"
+  grep -q "^  graphs: 18 more sentences" "$TMP/fields.txt" || { cat "$TMP/fields.txt"; fail "tests/Graphs: the field graphs is not suggested"; }
+  $LEANIFY fields tests/Graphs/article.tex > "$TMP/fields.txt" || fail "leanify fields"
+  grep -q "with vocab=graphs" "$TMP/fields.txt" || fail "tests/Graphs: the field of the preamble is not read"
+  grep -q "no other field of the vocabulary reads more" "$TMP/fields.txt" || fail "tests/Graphs: a further field is suggested"
+  endgroup
+
   group "The glossary of the vocabulary is up to date"
   lake exe glossary > "$TMP/glossary.md"
   if [ "${UPDATE:-}" = 1 ]; then cp "$TMP/glossary.md" docs/glossary.md; echo "wrote docs/glossary.md"
