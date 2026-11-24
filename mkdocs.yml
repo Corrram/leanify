@@ -20,6 +20,7 @@ nav:
   - Quick start: quickstart.md
   - Tutorial: getting-started.md
   - Live demo: demo.md
+  - Libraries: libraries.md
   - Guide:
       - Writing for Leanify: writing.md
       - Vocabularies and models: vocabularies.md

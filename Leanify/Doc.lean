@@ -1747,6 +1747,8 @@ def clauseMaths : Clause → List MT
   | .dependsFirst g m => [g, m]
   | .hasProps sm _ ms => sm :: ms
   | .firstObs g m => [g, m]
+  -- (`$x$ is a minimizer of $f$`: the subject and the object)
+  | .pred s _ o => (match s with | .math m => [m] | _ => []) ++ (match o with | .math m => [m] | _ => [])
   | _ => []
 
 /-- The formulas of several clauses (structural, so that the kernel evaluates it). -/
@@ -1998,8 +2000,27 @@ def object (sc : Scope) (ty : Ty) : Obj → M Tm
     | _ => fail E.type
   | _ => fail E.unsupported
 
+/-- `$x$ is [a|an] PHRASE of $y$` with a modifier of the vocabulary whose phrase is
+`PHRASE of $v$` (`$x$ is a local minimizer of $f$`, of the field `optimization`): its
+predicate of `y` and `x`. -/
+def vocabOf (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm := do
+  let ws := match phrase with
+    | a :: r => if a == w!"a" || a == w!"an" then r else phrase
+    | [] => []
+  let target : Phrase := ws.map PItem.w ++ [.w w!"of", .v]
+  let cands := (← get).vocab.mods.filter fun m => !m.prenominal && m.ty == s.2 && m.phrase == target
+  let cs : List Chunk := ws.map Chunk.w
+  match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (cands.map (·, [])) with
+  | some (m, _) =>
+    let .math mt := o | fail E.noun ((phrase.intersperse [32]).flatten)
+    let t := (Notation.slotTys 1 m.pred).headD .real
+    let v ← term F sc none mt
+    let a ← if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
+    pure (Notation.betaApply m.pred [a, s.1])
+  | none => fail E.noun ((phrase.intersperse [32]).flatten)
+
 def predicate (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm := do
-  let some i := lookupWords (← get).preds phrase | fail E.noun ((phrase.intersperse [32]).flatten)
+  let some i := lookupWords (← get).preds phrase | vocabOf sc s phrase o
   let g := ((← get).globs[i]?).getD default
   match g.ty with
   | .fn _ (.fn b .prop) => do
@@ -4884,7 +4905,12 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         | .fixed (.mvar c) :: .slot _ :: _ => if st.globs.any (·.key == [c]) then none else some c
         | _ => none
       let gkey := match letter with | some c => [c] | none => [92] ++ key
-      let i ← addGlob ⟨gkey, gty, varDoms, false, 1⟩ (if fixedArgs.all (·.isNone) && ts.length == tsAll.length then n.value else value)
+      let whole := fixedArgs.all (·.isNone) && ts.length == tsAll.length
+      -- (the notion's value is a function of more arguments than its phrase names, `the moment
+      -- generating function of $f$` at `t`: their domains go with the definition, so that
+      -- `M_f(t)` asks for the domain of `t` too)
+      let moreDoms : List (Option Tm) := if whole then n.doms.drop varPos.length else []
+      let i ← addGlob ⟨gkey, gty, varDoms ++ moreDoms, false, 1⟩ (if whole then n.value else value)
       let slots := (List.range ts.length).map TItem.slot
       let call : List TItem := if slots.isEmpty then [] else
         [.fixed (.msym 40)] ++ (slots.intersperse (.fixed (.msym 44))) ++ [.fixed (.msym 41)]

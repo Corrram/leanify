@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={densities}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\phi_{\mu,v}$ for the normal density with mean $\mu$ and variance $v$.
+We write $\phi$ for the standard normal density.
+We write $e_\lambda$ for the density of the exponential distribution with rate $\lambda$.
+We write $U_{a,b}$ for the uniform density on $[a,b]$.
+We write $\Phi_f$ for the distribution function of $f$.
+We write $m(f)$ for the mean of $f$.
+We write $V(f)$ for the variance of $f$.
+We write $M_f$ for the moment generating function of $f$.
+We write $h(f)$ for the differential entropy of $f$.
+
+\section{Densities}
+
+\begin{lemma}\label{normal}
+For every real number $\mu$ and every positive real number $v$, $\phi_{\mu,v}$ is a probability density, and $\phi_{0,1}(x)=\phi(x)$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{exponential}
+Let $\lambda>0$. Then $m(e_\lambda)=\frac{1}{\lambda}$ and $V(e_\lambda)=\frac{1}{\lambda^2}$.
+\end{lemma}
+
+\begin{lemma}\label{uniform}
+Let $a$ and $b$ be real numbers with $a<b$. Then $m(U_{a,b})=\frac{a+b}{2}$ and $\Phi_{U_{a,b}}(b)=1$.
+\end{lemma}
+
+\begin{lemma}\label{mgf}
+Let $\lambda>0$ and let $t<\lambda$. Then $M_{e_\lambda}(t)=\frac{\lambda}{\lambda-t}$.
+\end{lemma}
+
+\begin{lemma}\label{symmetric}
+Let $f$ be a symmetric probability density with finite mean. Then $m(f)=0$.
+\end{lemma}
+
+\begin{lemma}\label{entropy}
+$h(\phi)=\frac{1}{2}\log(2\pi)+\frac{1}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{cdf}
+Let $f$ be a probability density. Then $\lim_{x\to\infty}\Phi_f(x)=1$.
+\end{lemma}
+
+\end{document}

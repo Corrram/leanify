@@ -35,3 +35,9 @@ article-reader/
 /tests/Revision/article.leanify.*
 /tests/Couplings/article.leanify.*
 /tests/Wordings/article.leanify.*
+/tests/MeansField/article.leanify.*
+/tests/Densities/article.leanify.*
+/tests/Fourier/article.leanify.*
+/tests/Information/article.leanify.*
+/tests/Optimization/article.leanify.*
+/tests/Dynamics/article.leanify.*

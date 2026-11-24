@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={analysis,fourier}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $a_n(f)$ for the $n$th Fourier cosine coefficient of $f$.
+We write $b_n(f)$ for the $n$th Fourier sine coefficient of $f$.
+We write $S_N f$ for the $N$th partial sum of the Fourier series of $f$.
+We write $D_N$ for the Dirichlet kernel of order $N$.
+We write $F_N$ for the Fejér kernel of order $N$.
+We write $T_f$ for the Fourier cosine transform of $f$.
+
+\section{Coefficients}
+
+\begin{lemma}\label{even}
+Let $f$ be a continuous even function. Then $b_n(f)=0$ for every positive integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{constant}
+Let $f$ be a constant function. Then $a_0(f)=2f(0)$ and $a_n(f)=0$ for every positive integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{dirichlet}
+For every nonnegative integer $N$, $D_N(0)=N+\frac{1}{2}$. Moreover, $F_N(x)\ge0$ for every nonnegative integer $N$ and every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{partial}
+Let $f$ be a continuous function. Then $S_0 f(x)=\frac{a_0(f)}{2}$ for every real number $x$.
+\end{lemma}
+
+\begin{lemma}\label{bessel}
+Let $f$ be a continuous function. For every positive integer $N$, $\frac{a_0(f)^2}{2}+\sum_{n=1}^{N}(a_n(f)^2+b_n(f)^2)\le\frac{1}{\pi}\int_{-\pi}^{\pi}f(x)^2\,dx$.
+\end{lemma}
+
+\begin{lemma}\label{transform}
+Let $f$ be an even integrable function. Then $T_f(0)=\int_{-\infty}^{\infty}f(x)\,dx$.
+\end{lemma}
+
+\begin{lemma}\label{trig}
+Every trigonometric polynomial $p$ is continuous.
+\end{lemma}
+
+\end{document}

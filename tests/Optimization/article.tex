@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={analysis,optimization}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\min f$ for the minimum of $f$.
+We write $m(f)$ for the minimum of $f$.
+We write $x^*(f)$ for the unique minimizer of $f$.
+We write $f^*$ for the convex conjugate of $f$.
+We write $e(f,\lambda)$ for the Moreau envelope of $f$ with parameter $\lambda$.
+For every real number $x$, let $q(x)\coloneqq\frac{x^2}{2}$.
+
+\section{Minimizers}
+
+\begin{lemma}\label{local}
+Let $f$ be a convex function. For every real number $x$, if $x$ is a local minimizer of $f$, then $x$ is a minimizer of $f$.
+\end{lemma}
+
+\begin{lemma}\label{stationary}
+Let $f$ be a differentiable convex function. For every real number $x$, $x$ is a minimizer of $f$ if and only if $x$ is a stationary point of $f$.
+\end{lemma}
+
+\begin{lemma}\label{strong}
+Let $\mu>0$ and let $f$ be a $\mu$-strongly convex function. Then $f$ is coercive.
+\end{lemma}
+
+\begin{lemma}\label{coercive}
+Every coercive continuous function $f$ is bounded below.
+\end{lemma}
+
+\begin{lemma}\label{unique}
+Let $f$ be a continuous strongly convex function. Then $f(x^*(f))=m(f)$.
+\end{lemma}
+
+\begin{lemma}\label{interval}
+Let $a$ and $b$ be real numbers with $a\le b$, and let $f$ be a continuous function. Then there is a real number $x$ such that $x$ is a minimizer of $f$ on $[a,b]$.
+\end{lemma}
+
+\begin{lemma}\label{square}
+$q^*(y)=\frac{y^2}{2}$ for every real number $y$, and $m(q)=0$.
+\end{lemma}
+
+\begin{lemma}\label{fenchel}
+Let $f$ be a function and let $x$ and $y$ be real numbers such that $xy-f(x)\le f^*(y)$. Then $f(x)+f^*(y)\ge xy$.
+\end{lemma}
+
+\begin{lemma}\label{envelope}
+Let $f$ be a function bounded below and let $\lambda>0$. Then $e(f,\lambda)(x)\le f(x)$ for every real number $x$.
+\end{lemma}
+
+\end{document}

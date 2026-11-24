@@ -64,6 +64,14 @@ by cases (`the maximizer is … if $n\ge-\frac78$ and … if $n<-\frac78$`).
    subgraph of $G$`), notation of the subject (`\otimes`, `\dim`), the kind of a
    quantity from its domain (`$d(G)\in\mathbb N$`), and a sentence that names the
    source of a notion (`a matroid in the sense of \cite{oxley}`).
+10. **Sequences of real numbers.** `Let $(a_n)$ be a convergent sequence.`, `every bounded
+    monotone sequence $a$`, with `a_n` as the term of the sequence and `\lim_{n\to\infty}a_n`,
+    `\sum_{n=1}^\infty a_n` about it. The core reads limits and series, and a finite
+    sequence `x_1,\ldots,x_n`, but no noun binds an infinite sequence whose terms are written
+    with a subscript; a field `sequences` (convergent, Cauchy, bounded, monotone sequences,
+    `\limsup`, summable and absolutely summable series) waits for this construction. In the
+    same way, `$f$ is bounded below` is read of a set but not yet of a function (`every
+    function $f$ bounded below` is).
 
 Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence

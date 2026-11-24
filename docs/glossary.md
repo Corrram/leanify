@@ -858,3 +858,163 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | trivial group | $\mathrm{Grp}$ | of order 1 |
 | direct product of $a$ and $b$ | $\mathrm{Grp}$ → $\mathrm{Grp}$ → $\mathrm{Grp}$ | `G × H` (Mathlib `Prod`) |
 
+## `means`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| arithmetic mean of $a$ and $b$ | ℝ → ℝ → ℝ | `(x + y)/2` |
+| geometric mean of $a$ and $b$ | ℝ → ℝ → ℝ | `√(xy)`, for `x, y ≥ 0` |
+| harmonic mean of $a$ and $b$ | ℝ → ℝ → ℝ | `2xy/(x + y)`, for `x, y > 0` |
+| quadratic mean of $a$ and $b$ | ℝ → ℝ → ℝ | `√((x² + y²)/2)` |
+| root mean square of $a$ and $b$ | ℝ → ℝ → ℝ | `√((x² + y²)/2)` |
+| contraharmonic mean of $a$ and $b$ | ℝ → ℝ → ℝ | `(x² + y²)/(x + y)`, for `x, y > 0` |
+| heronian mean of $a$ and $b$ | ℝ → ℝ → ℝ | `(x + √(xy) + y)/3`, for `x, y ≥ 0` |
+| centroidal mean of $a$ and $b$ | ℝ → ℝ → ℝ | `2(x² + xy + y²)/(3(x + y))`, for `x, y > 0` |
+| logarithmic mean of $a$ and $b$ | ℝ → ℝ → ℝ | `(x - y)/(log x - log y)`, and `x` for `x = y`; for `x, y > 0` |
+| identric mean of $a$ and $b$ | ℝ → ℝ → ℝ | `e^{-1} (x^x / y^y)^{1/(x - y)}`, and `x` for `x = y`; for `x, y > 0` |
+| power mean of order $a$ of $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `((x^p + y^p)/2)^{1/p}`, and `√(xy)` for `p = 0`; for `x, y > 0` |
+| lehmer mean of order $a$ of $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `(x^p + y^p)/(x^{p-1} + y^{p-1})`, for `x, y > 0` |
+
+## `densities`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| probability density | ℝ → ℝ | `f ≥ 0`, integrable, `∫ f = 1` (Mathlib `MeasureTheory.pdf`) |
+| probability density function | ℝ → ℝ | a probability density |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| symmetric | ℝ → ℝ | `f(-x) = f(x)` |
+| symmetric about $x$ | ℝ → ℝ | `f(μ - x) = f(μ + x)` |
+| supported on $[x,a]$ | ℝ → ℝ | `f(x) = 0` outside `[a,b]` |
+| with finite mean | ℝ → ℝ | `x f(x)` is integrable |
+| with finite variance | ℝ → ℝ | `x² f(x)` is integrable |
+| with mean $x$ | ℝ → ℝ | `∫ x f(x) dx = μ` |
+| unimodal | ℝ → ℝ | nondecreasing up to a mode `m`, nonincreasing after it |
+| log-concave | ℝ → ℝ | `f(tx + (1-t)y) ≥ f(x)^t f(y)^{1-t}` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| normal density with mean $a$ and variance $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-(x-μ)²/(2σ²)}/√(2πσ²)`, `σ² > 0` (Mathlib `ProbabilityTheory.gaussianPDFReal`) |
+| density of the normal distribution with mean $a$ and variance $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-(x-μ)²/(2σ²)}/√(2πσ²)`, `σ² > 0` |
+| standard normal density | ℝ → ℝ | `e^{-x²/2}/√(2π)` |
+| density of the exponential distribution with rate $a$ | ℝ → ℝ → ℝ | `λ e^{-λx}` for `x ≥ 0`, `0` else; `λ > 0` (Mathlib `ProbabilityTheory.exponentialPDFReal`) |
+| exponential density with rate $a$ | ℝ → ℝ → ℝ | `λ e^{-λx}` for `x ≥ 0` |
+| density of the uniform distribution on $[a,b]$ | ℝ → ℝ → ℝ → ℝ | `1/(b - a)` on `[a,b]`, `0` else; `a < b` |
+| uniform density on $[a,b]$ | ℝ → ℝ → ℝ → ℝ | `1/(b - a)` on `[a,b]`, `0` else; `a < b` |
+| density of the gamma distribution with shape $a$ and rate $b$ | ℝ → ℝ → ℝ → ℝ | `β^k x^{k-1} e^{-βx}/Γ(k)` for `x > 0`; `k, β > 0` (Mathlib `ProbabilityTheory.gammaPDFReal`) |
+| density of the beta distribution with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `x^{a-1}(1-x)^{b-1} Γ(a+b)/(Γ(a)Γ(b))` on `(0,1)`; `a, b > 0` |
+| density of the chi-squared distribution with $a$ degrees of freedom | ℝ → ℝ → ℝ | the gamma density with shape `k/2` and rate `1/2`, `k` a positive integer |
+| density of the cauchy distribution with location $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `1/(πγ(1 + ((x-x₀)/γ)²))`, `γ > 0` |
+| standard cauchy density | ℝ → ℝ | `1/(π(1 + x²))` |
+| density of the laplace distribution with location $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-\|x-μ\|/b}/(2b)`, `b > 0` |
+| density of the logistic distribution with location $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-(x-μ)/s}/(s(1 + e^{-(x-μ)/s})²)`, `s > 0` |
+| density of the pareto distribution with scale $a$ and shape $b$ | ℝ → ℝ → ℝ → ℝ | `α x_m^α / x^{α+1}` for `x ≥ x_m`; `x_m, α > 0` |
+| density of the weibull distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `(k/λ)(x/λ)^{k-1} e^{-(x/λ)^k}` for `x > 0`; `k, λ > 0` |
+| distribution function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫_{-∞}^{x} f` |
+| mean of $a$ | (ℝ → ℝ) → ℝ | `∫ x f(x) dx`, of a density with a finite mean |
+| variance of $a$ | (ℝ → ℝ) → ℝ | `∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance |
+| $a$ th moment of $b$ | ℝ → (ℝ → ℝ) → ℝ | `∫ x^k f(x) dx`, where `x^k f(x)` is integrable |
+| moment generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `t ↦ ∫ e^{tx} f(x) dx`, at the `t` where `e^{tx} f(x)` is integrable |
+| median of $a$ | (ℝ → ℝ) → ℝ | the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one |
+| differential entropy of $a$ | (ℝ → ℝ) → ℝ | `-∫ f log f` (`0 log 0 = 0`), where `f log f` is integrable |
+
+## `fourier`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| trigonometric polynomial | ℝ → ℝ | `x ↦ ∑_{n=0}^{N} (a_n cos(nx) + b_n sin(nx))` for some `N` and coefficients |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th fourier cosine coefficient of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(1/π) ∫_{-π}^{π} f(x) cos(nx) dx`, of a function integrable on `[-π, π]` (Mathlib `fourierCoeff`, in real form) |
+| $a$ th fourier sine coefficient of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(1/π) ∫_{-π}^{π} f(x) sin(nx) dx`, of a function integrable on `[-π, π]` |
+| $a$ th partial sum of the fourier series of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `a_0/2 + ∑_{n=1}^{N} (a_n cos(nx) + b_n sin(nx))` |
+| $a$ th fejér mean of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `(S_0 f + … + S_N f)/(N + 1)` |
+| $a$ th fejer mean of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `(S_0 f + … + S_N f)/(N + 1)` |
+| dirichlet kernel of order $a$ | ℝ → ℝ → ℝ | `1/2 + ∑_{n=1}^{N} cos(nx)` |
+| fejér kernel of order $a$ | ℝ → ℝ → ℝ | `(D_0 + … + D_N)/(N + 1)` |
+| fejer kernel of order $a$ | ℝ → ℝ → ℝ | `(D_0 + … + D_N)/(N + 1)` |
+| fourier cosine transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `ξ ↦ ∫ f(x) cos(ξx) dx`, of a function integrable on the line |
+| fourier sine transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | `ξ ↦ ∫ f(x) sin(ξx) dx`, of a function integrable on the line |
+
+## `information`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| entropy of $a$ | (ℝ → ℝ) → ℝ | `-∑ p(k) log p(k)` (`0 log 0 = 0`), where the series converges |
+| shannon entropy of $a$ | (ℝ → ℝ) → ℝ | `-∑ p(k) log p(k)` |
+| rényi entropy of order $a$ of $b$ | ℝ → (ℝ → ℝ) → ℝ | `log(∑ p(k)^α)/(1 - α)`, `α > 0`, `α ≠ 1`, where the series converges |
+| binary entropy of $a$ | ℝ → ℝ | `-t log t - (1-t) log(1-t)`, for `t ∈ [0,1]` (Mathlib `Real.binEntropy`) |
+| kullback-leibler divergence of $a$ from $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `∑ p(k) log(p(k)/q(k))`, where `q(k) = 0` only if `p(k) = 0` and the series converges (Mathlib `InformationTheory.klDiv`) |
+| relative entropy of $a$ with respect to $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | the Kullback–Leibler divergence `D(p‖q)` |
+| chi-squared divergence of $a$ from $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `∑ (p(k) - q(k))²/q(k)`, where `q(k) = 0` only if `p(k) = 0` and the series converges |
+| total variation distance between $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `(1/2) ∑ \|p(k) - q(k)\|` |
+| hellinger distance between $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `√((1/2) ∑ (√p(k) - √q(k))²)` |
+| bhattacharyya coefficient of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `∑ √(p(k) q(k))` |
+
+## `optimization`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| strongly convex | ℝ → ℝ | `f - (μ/2)x²` is convex for some `μ > 0` (Mathlib `StrongConvexOn`) |
+| $x$-strongly convex | ℝ → ℝ | `f - (μ/2)x²` is convex, `μ > 0` (Mathlib `StrongConvexOn`) |
+| $x$-smooth | ℝ → ℝ | differentiable, with an `L`-Lipschitz derivative |
+| coercive | ℝ → ℝ | `f(x) → ∞` as `\|x\| → ∞` |
+| quasiconvex | ℝ → ℝ | `f(tx + (1-t)y) ≤ max(f(x), f(y))` (Mathlib `QuasiconvexOn`) |
+| bounded below | ℝ → ℝ | `m ≤ f(x)` for some `m` (Mathlib `BddBelow (Set.range f)`) |
+| bounded below | ℝ → ℝ | after the noun: `a function $f$ bounded below` |
+| bounded above | ℝ → ℝ | `f(x) ≤ M` for some `M` |
+| bounded above | ℝ → ℝ | after the noun |
+| minimizer of $x$ | ℝ | `f(x) ≤ f(y)` for every `y` (Mathlib `IsMinOn`) |
+| global minimizer of $x$ | ℝ | `f(x) ≤ f(y)` for every `y` |
+| maximizer of $x$ | ℝ | `f(y) ≤ f(x)` for every `y` (Mathlib `IsMaxOn`) |
+| global maximizer of $x$ | ℝ | `f(y) ≤ f(x)` for every `y` |
+| local minimizer of $x$ | ℝ | `f(x) ≤ f(y)` for `y` near `x` (Mathlib `IsLocalMin`) |
+| local maximizer of $x$ | ℝ | `f(y) ≤ f(x)` for `y` near `x` (Mathlib `IsLocalMax`) |
+| strict local minimizer of $x$ | ℝ | `f(x) < f(y)` for `y ≠ x` near `x` |
+| stationary point of $x$ | ℝ | `f'(x) = 0` |
+| minimizer of $x$ on $[a,b]$ | ℝ | `x ∈ [a,b]` and `f(x) ≤ f(y)` for every `y ∈ [a,b]` |
+| maximizer of $x$ on $[a,b]$ | ℝ | `x ∈ [a,b]` and `f(y) ≤ f(x)` for every `y ∈ [a,b]` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| minimum of $a$ | (ℝ → ℝ) → ℝ | the least value of `f`, of a function that attains it |
+| maximum of $a$ | (ℝ → ℝ) → ℝ | the greatest value of `f`, of a function that attains it |
+| infimum of $a$ | (ℝ → ℝ) → ℝ | the greatest lower bound of the values, of a function bounded below (Mathlib `iInf`) |
+| supremum of $a$ | (ℝ → ℝ) → ℝ | the least upper bound of the values, of a function bounded above (Mathlib `iSup`) |
+| minimum of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | the least value of `f` on `[a,b]`, `a ≤ b`, where it is attained |
+| maximum of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | the greatest value of `f` on `[a,b]`, `a ≤ b`, where it is attained |
+| unique minimizer of $a$ | (ℝ → ℝ) → ℝ | the point where `f` is least, of a function with exactly one such point (Mathlib `argmin`) |
+| set of minimizers of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f(x) ≤ f(y) for every y}` |
+| set of maximizers of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f(y) ≤ f(x) for every y}` |
+| convex conjugate of $a$ | (ℝ → ℝ) → ℝ → ℝ | `y ↦ sup_x (xy - f(x))`, at the `y` where the supremum is finite (the Legendre–Fenchel transform) |
+| legendre transform of $a$ | (ℝ → ℝ) → ℝ → ℝ | the convex conjugate `y ↦ sup_x (xy - f(x))` |
+| moreau envelope of $a$ with parameter $b$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `y ↦ inf_z (f(z) + (y - z)²/(2λ))`, `λ > 0`, where the infimum is finite |
+| proximal operator of $a$ with parameter $b$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `y ↦ argmin_z (f(z) + (y - z)²/(2λ))`, `λ > 0`, where there is exactly one minimizer |
+
+## `dynamics`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| fixed point of $x$ | ℝ | `f(x) = x` (Mathlib `Function.IsFixedPt`) |
+| periodic point of $x$ | ℝ | `f^n(x) = x` for some `n ≥ 1` (Mathlib `Function.IsPeriodicPt`) |
+| periodic point of $x$ of period $a$ | ℝ | `f^n(x) = x`, `n ≥ 1` (Mathlib `Function.IsPeriodicPt`) |
+| periodic point of $x$ of least period $a$ | ℝ | `f^n(x) = x` and `f^k(x) ≠ x` for `1 ≤ k < n` (Mathlib `Function.minimalPeriod`) |
+| periodic point of $x$ of minimal period $a$ | ℝ | `n` is the least period |
+| periodic point of $x$ of prime period $a$ | ℝ | `n` is the least period |
+| eventually periodic point of $x$ | ℝ | `f^m(x)` is periodic for some `m ≥ 0` |
+| attracting fixed point of $x$ | ℝ | `f(x) = x`, `\|f'(x)\| < 1` |
+| superattracting fixed point of $x$ | ℝ | `f(x) = x`, `f'(x) = 0` |
+| repelling fixed point of $x$ | ℝ | `f(x) = x`, `\|f'(x)\| > 1` |
+| neutral fixed point of $x$ | ℝ | `f(x) = x`, `\|f'(x)\| = 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th iterate of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `f ∘ … ∘ f`, `n` times; the identity for `n = 0` (Mathlib `Nat.iterate`) |
+| orbit of $a$ under $b$ | ℝ → (ℝ → ℝ) → ℝ → Prop | `{f^n(x) : n ≥ 0}` (Mathlib `Set.range (fun n => f^[n] x)`) |
+| set of fixed points of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f(x) = x}` (Mathlib `Function.fixedPoints`) |
+| set of periodic points of $a$ | (ℝ → ℝ) → ℝ → Prop | `{x : f^n(x) = x for some n ≥ 1}` (Mathlib `Function.periodicPts`) |
+| least period of $a$ under $b$ | ℝ → (ℝ → ℝ) → ℝ | the least `n ≥ 1` with `f^n(x) = x`, of a periodic point (Mathlib `Function.minimalPeriod`) |
+| lyapunov exponent of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `lim_{n→∞} (1/n) log \|(f^n)'(x)\|`, where every `f^n` is differentiable at `x` and the limit exists |
+

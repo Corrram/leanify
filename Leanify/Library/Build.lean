@@ -69,4 +69,30 @@ def divides (a b : B) : B := exInt fun k => eq b (mul a k)
 /-- A predicate on real numbers. -/
 def predR (p : B → B) : Tm := close (lamR p)
 
+/-! ### The domains of a notion's arguments
+
+A notion's `doms` are read by `Elab.applyAllD`: the domain of an argument is a predicate
+of it, in which the arguments before it are free (the one just before at `loc 2` inside
+the predicate, the one before that at `loc 3`). The same condition belongs in the value,
+as the domain of the argument's `lamT`, so that a definition made from the notion (`We
+write $H(x,y)$ for …`) is well defined there, and each use of it asks for it. -/
+
+/-- The domain of an argument of type `t` that speaks about the argument alone. -/
+def dom1 (t : Ty) (p : B → B) : Option Tm := some (close (lamT t (fun _ => tt) p))
+
+/-- The domain of an argument of type `t` that also speaks about the argument before it:
+`p prev self`. -/
+def dom2 (t : Ty) (p : B → B → B) : Option Tm :=
+  match close (lamR fun prev => lamR fun _ => lamT t (fun _ => tt) fun self => p prev self) with
+  | .lam _ _ (.lam _ _ inner) => some inner
+  | _ => none
+
+/-- The domain of an argument that speaks about the two arguments before it:
+`p first second self`. -/
+def dom3 (t : Ty) (p : B → B → B → B) : Option Tm :=
+  match close (lamR fun a => lamR fun b => lamR fun _ =>
+      lamT t (fun _ => tt) fun self => p a b self) with
+  | .lam _ _ (.lam _ _ (.lam _ _ inner)) => some inner
+  | _ => none
+
 end Leanify.Build

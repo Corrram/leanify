@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={analysis,dynamics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $f^{[n]}$ for the $n$th iterate of $f$.
+We write $O_f(x)$ for the orbit of $x$ under $f$.
+We write $\operatorname{per}_f(x)$ for the least period of $x$ under $f$.
+We write $\lambda_f(x)$ for the Lyapunov exponent of $f$ at $x$.
+For every real number $x$, let $T(x)\coloneqq 4x(1-x)$.
+For every real number $x$, let $D(x)\coloneqq 2x$.
+
+\section{Fixed and periodic points}
+
+\begin{lemma}\label{iterate}
+Let $f$ be a function. For all nonnegative integers $m$ and $n$ and every real number $x$, $f^{[m+n]}(x)=f^{[m]}(f^{[n]}(x))$.
+\end{lemma}
+
+\begin{lemma}\label{fixed}
+Let $f$ be a function. For every real number $x$, if $x$ is a fixed point of $f$, then $x$ is a periodic point of $f$ of least period $1$.
+\end{lemma}
+
+\begin{lemma}\label{attracting}
+$0$ is a fixed point of $T$, and $\frac{3}{4}$ is a repelling fixed point of $T$.
+\end{lemma}
+
+\begin{lemma}\label{period}
+Let $f$ be a function. For every real number $x$ and every positive integer $n$, if $x$ is a periodic point of $f$ of period $n$, then $f^{[n]}(x)=x$.
+\end{lemma}
+
+\begin{lemma}\label{least}
+Let $f$ be a function. For every real number $x$, if $x$ is a periodic point of $f$, then $\operatorname{per}_f(x)\ge1$.
+\end{lemma}
+
+\begin{lemma}\label{orbit}
+Let $f$ be a continuous function. For every real number $x$, $x\in O_f(x)$ and $f(x)\in O_f(x)$.
+\end{lemma}
+
+\begin{lemma}\label{lyapunov}
+$\lambda_D(0)=\log 2$.
+\end{lemma}
+
+\end{document}

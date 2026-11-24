@@ -127,10 +127,23 @@ function`, `triangle-free`), and `$v$th` also matches `$n$-th`.
 
 The variables of a modifier have the types of the first arguments of its predicate: a
 number, or an object (`orthogonal to $v$` in `vectors` takes a vector, `isomorphic to $v$`
-in `groups` a group, `lying on $v$` in `geometry` a set of points). A modifier is also
-stated after `is` (`$x$ is orthogonal to $y$`, `$S$ is of measure zero` as `$S$ is null`),
+in `groups` a group, `lying on $v$` in `geometry` a set of points, `local minimizer of $v$`
+in `optimization` a real function). A modifier is also
+stated after `is` (`$x$ is orthogonal to $y$`, `$S$ is of measure zero` as `$S$ is null`,
+`$x$ is a local minimizer of $f$`),
 and a phrase may have a comma (`with vertices $v$, $v$ and $v$`). The methods
 `fn "@norm"` and `fn "@inner"` of a type are `\lVert x\rVert` and `\langle x,y\rangle`.
+
+The *domains* of a notion's arguments are its `doms`: a predicate of each argument, in
+which the arguments before it may occur (`a < b` for the uniform density on `[a,b]`). The
+same condition belongs in the notion's value, as the domain of the argument's `lamT`: a
+definition made from the notion (`We write $H(x,y)$ for the harmonic mean of $x$ and
+$y$.`) is then well defined on its domain, and each use asks for it. `Build.dom1`,
+`dom2` and `dom3` write such a predicate for an argument that speaks about itself, about the
+argument before it, or about the two before it. A notion whose value is a function may
+give a domain to the argument of that function too (`the moment generating function of
+$f$`, of type `F ⟶ F`, has a domain for `t`): `K_f(t)` after `We write $K_f$ for …` asks
+for it.
 
 An *adjective* is a property of objects of one type that a sentence states with
 `$X$ is ADJ [on $A$]`: the unit square's field has `convex`, `concave` and

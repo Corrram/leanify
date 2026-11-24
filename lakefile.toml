@@ -144,6 +144,44 @@ srcDir = "tests"
 globs = ["Groups.+"]
 
 [[lean_lib]]
+# The field means: means of two numbers, each with its domain in the value and at each use.
+name = "MeansField"
+srcDir = "tests"
+globs = ["MeansField.+"]
+
+[[lean_lib]]
+# The field densities: probability densities, standard densities with parameters, `M_f(t)`
+# with the domain of `t`.
+name = "Densities"
+srcDir = "tests"
+globs = ["Densities.+"]
+
+[[lean_lib]]
+# The field fourier: Fourier coefficients, partial sums, kernels, transforms.
+name = "Fourier"
+srcDir = "tests"
+globs = ["Fourier.+"]
+
+[[lean_lib]]
+# The field information: entropy and divergences of distributions on ℕ₀.
+name = "Information"
+srcDir = "tests"
+globs = ["Information.+"]
+
+[[lean_lib]]
+# The field optimization: `$x$ is a local minimizer of $f$` (a modifier with a function),
+# extreme values as descriptions, the convex conjugate.
+name = "Optimization"
+srcDir = "tests"
+globs = ["Optimization.+"]
+
+[[lean_lib]]
+# The field dynamics: iterates, fixed and periodic points, the least period.
+name = "Dynamics"
+srcDir = "tests"
+globs = ["Dynamics.+"]
+
+[[lean_lib]]
 # A revised article: changes marked by a conditional (`\newif`), definitions inside the
 # sentences of a running text, decorations with a star.
 name = "Revision"

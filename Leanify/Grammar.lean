@@ -2190,6 +2190,9 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           let (phrase, r2) ← wordsUntil [w!"of"] 8 r1 []
           let r3 ← kw [w!"of"] r2
           let (o, r4) ← obj r3
+          -- (a phrase that goes on after its object, `is a periodic point of $f$ of period
+          -- $n$`, `is a minimizer of $f$ on $[a,b]$`, is a noun phrase of the vocabulary, below)
+          if (kw [w!"of"] r4 <|> kw [w!"on"] r4 <|> kw [w!"with"] r4).isSome then none
           some (Clause.pred s phrase o, r4)) with
       | some res => some res
       | none =>

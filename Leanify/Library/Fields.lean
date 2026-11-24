@@ -19,6 +19,12 @@ import Leanify.Library.Vectors
 import Leanify.Library.Geometry
 import Leanify.Library.Congruences
 import Leanify.Library.Groups
+import Leanify.Library.Means
+import Leanify.Library.Densities
+import Leanify.Library.Fourier
+import Leanify.Library.Information
+import Leanify.Library.Optimization
+import Leanify.Library.Dynamics
 
 /-! # The fields of the vocabulary
 
@@ -55,7 +61,13 @@ def all : List (String × Vocab) := [
   ("vectors", Vectors.vocab),
   ("geometry", Geometry.vocab),
   ("congruences", Congruences.vocab),
-  ("groups", Groups.vocab)]
+  ("groups", Groups.vocab),
+  ("means", Means.vocab),
+  ("densities", Densities.vocab),
+  ("fourier", Fourier.vocab),
+  ("information", Information.vocab),
+  ("optimization", Optimization.vocab),
+  ("dynamics", Dynamics.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)

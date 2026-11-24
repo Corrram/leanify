@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={distributions,information}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $H(p)$ for the entropy of $p$.
+We write $D(p,q)$ for the Kullback-Leibler divergence of $p$ from $q$.
+We write $\delta(p,q)$ for the total variation distance between $p$ and $q$.
+We write $h(t)$ for the binary entropy of $t$.
+We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.
+We write $\delta_m$ for the point mass at $m$.
+
+\section{Entropy and divergences}
+
+\begin{lemma}\label{gibbs}
+Let $p$ and $q$ be probability distributions on $\mathbb{N}_0$. Then $D(p,q)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{pinsker}
+Let $p$ and $q$ be probability distributions on $\mathbb{N}_0$. Then $\delta(p,q)\le\sqrt{\frac{D(p,q)}{2}}$.
+\end{lemma}
+
+\begin{lemma}\label{binary}
+$h(\frac{1}{2})=\log 2$, and $h(t)\le\log 2$ for every $t\in[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{point}
+For every nonnegative integer $m$, $H(\delta_m)=0$.
+\end{lemma}
+
+\begin{lemma}\label{tv}
+Let $p$ and $q$ be probability distributions on $\mathbb{N}_0$. Then $0\le\delta(p,q)\le1$.
+\end{lemma}
+
+\begin{lemma}\label{poisson}
+For all positive real numbers $\lambda$ and $\mu$, $D(\mathrm{Poi}(\lambda),\mathrm{Poi}(\mu))=\lambda\log\frac{\lambda}{\mu}+\mu-\lambda$.
+\end{lemma}
+
+\end{document}

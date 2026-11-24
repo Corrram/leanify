@@ -2675,6 +2675,17 @@ where
         if !gl.family then fail E.unsupported k
         let a ← term g sc none i
         applyAllD (.glob h) gl.ty gl.doms [a]
+      -- a definition applied to some of its arguments, and the result to the others
+      -- (`K_f(t)` for `We write $K_f$ for the moment generating function of $f$.`): the
+      -- domains of the arguments that follow come with it
+      | .app (.id n) as => do
+        if (lookupLocal sc n).isNone && (← lookupGlob n).isSome then
+          let (h, hty, doms) ← head g sc (.id n)
+          let xs ← as.mapM (term g sc none)
+          applyAllD h hty doms xs
+        else
+          let (t, ty) ← term g sc none hd
+          pure (t, ty, [])
       | _ => do
         let (t, ty) ← term g sc none hd
         pure (t, ty, [])

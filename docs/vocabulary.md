@@ -185,7 +185,33 @@ Further fields cover other branches of mathematics:
 * `groups`: finite groups, a type of its own, up to isomorphism (`isomorphic to $H$`):
   abelian, cyclic, simple, solvable and nilpotent groups; the order, the exponent, the
   numbers of subgroups, of conjugacy classes and of Sylow subgroups; cyclic, symmetric,
-  alternating and dihedral groups, the Klein four-group, direct products.
+  alternating and dihedral groups, the Klein four-group, direct products;
+* `means`: the arithmetic, geometric, harmonic, quadratic, contraharmonic, Heronian,
+  centroidal, logarithmic and identric means of two numbers, the power and Lehmer means of
+  order `p`, each defined for the numbers its formula needs;
+* `densities`: probability densities on the line by a noun (`Let $f$ be a probability
+  density.`), symmetric, unimodal and log-concave densities, densities with a finite mean or
+  variance; the normal, exponential, uniform, gamma, beta, chi-squared, Cauchy, Laplace,
+  logistic, Pareto and Weibull densities with their parameters; the distribution function,
+  mean, variance, moments, moment generating function, median and differential entropy;
+* `fourier` (with `analysis`): the Fourier cosine and sine coefficients of a function
+  integrable on `[-π, π]`, the partial sums of its Fourier series and their Fejér means,
+  the Dirichlet and Fejér kernels, the Fourier cosine and sine transforms, trigonometric
+  polynomials;
+* `information` (with `distributions`): the entropy, Rényi and binary entropy, the
+  Kullback–Leibler and χ² divergences, the total variation and Hellinger distances and the
+  Bhattacharyya coefficient of distributions on `ℕ₀`;
+* `optimization` (with `analysis`): `$x$ is a [local] minimizer of $f$`, a stationary point,
+  a minimizer on `[a,b]`; strongly convex, `$L$-smooth`, coercive and quasiconvex functions,
+  functions bounded below or above; the minimum, maximum, infimum and supremum (where they
+  exist), the unique minimizer, the convex conjugate, the Moreau envelope and the proximal
+  operator;
+* `dynamics` (with `analysis`): the iterates `f^n` of a map, orbits, fixed and periodic
+  points (attracting, repelling, of least period `n`, eventually periodic), the least period
+  and the Lyapunov exponent.
+
+`leanify fields article.tex` tries every field on an article and names those that read
+more of it, with the line for the preamble.
 
 Their notions take arguments (`the $n$th Catalan number`, `the degree of $v$ in $G$`),
 and an article gives them its notation (`We write $C_n$ for the $n$th Catalan number.`,

@@ -141,9 +141,11 @@ from a *vocabulary*, which the article loads as a program loads a library:
 
 There are vocabularies for number theory, combinatorics, complex numbers, special
 functions, real analysis and topology, vectors and matrices, plane geometry, polynomials,
-graphs, groups, permutations, probability on the unit square and on the natural numbers,
-and functions on the torus. Each one gives its words a meaning in mathlib, and some add proved
-facts about them. [Vocabularies and models](vocabularies.md) ·
+graphs, groups, permutations, probability on the unit square, on the natural numbers and by
+densities on the line, information theory, Fourier series, optimization, one-dimensional
+dynamics, means, and functions on the torus; `leanify fields article.tex` says which ones an
+article needs. Each one gives its words a meaning in mathlib, and some add proved
+facts about them. [All libraries](libraries.md) · [Vocabularies and models](vocabularies.md) ·
 [Glossary](glossary.md)
 
 ## On the command line

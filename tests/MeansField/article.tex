@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={means}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $A(x,y)$ for the arithmetic mean of $x$ and $y$.
+We write $G(x,y)$ for the geometric mean of $x$ and $y$.
+We write $H(x,y)$ for the harmonic mean of $x$ and $y$.
+We write $Q(x,y)$ for the quadratic mean of $x$ and $y$.
+We write $L(x,y)$ for the logarithmic mean of $x$ and $y$.
+We write $I(x,y)$ for the identric mean of $x$ and $y$.
+We write $M_p(x,y)$ for the power mean of order $p$ of $x$ and $y$.
+We write $C(x,y)$ for the contraharmonic mean of $x$ and $y$.
+
+\section{Inequalities between means}
+
+\begin{lemma}\label{chain}
+For all positive real numbers $x$ and $y$, $H(x,y)\le G(x,y)\le A(x,y)\le Q(x,y)$.
+\end{lemma}
+
+\begin{lemma}\label{log}
+For all positive real numbers $x$ and $y$, $G(x,y)\le L(x,y)\le I(x,y)\le A(x,y)$.
+\end{lemma}
+
+\begin{lemma}\label{product}
+For all positive real numbers $x$ and $y$, $A(x,y)H(x,y)=G(x,y)^2$.
+\end{lemma}
+
+\begin{lemma}\label{power}
+For all positive real numbers $x$ and $y$, $M_1(x,y)=A(x,y)$, $M_0(x,y)=G(x,y)$ and $M_{-1}(x,y)=H(x,y)$.
+\end{lemma}
+
+\begin{lemma}\label{equal}
+For every positive real number $x$, $L(x,x)=x$ and $C(x,x)=x$.
+\end{lemma}
+
+\end{document}

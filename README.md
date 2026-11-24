@@ -108,7 +108,9 @@ if Lean accepts it. The check reads an article with the files it inputs
 unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularies.md)); other
 branches have fields of their own (`arithmetic`, `combinatorics`, `polynomials`, `graphs`,
 `permutations`, `matrices`, `special`, `topology`, `analysis`, `vectors`, `geometry`,
-`congruences`, `groups`: [The vocabulary](docs/vocabulary.md#fields)).
+`congruences`, `groups`, `means`, `densities`, `fourier`, `information`, `optimization`,
+`dynamics`: [The vocabulary](docs/vocabulary.md#fields)). `leanify fields article.tex`
+names the fields that read more of an article.
 
 The same source gives the two readable outputs:
 

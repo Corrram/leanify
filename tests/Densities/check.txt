@@ -1,0 +1,35 @@
+tests/Densities/article.tex:9:1: info: defines \phi_{ (phi)
+tests/Densities/article.tex:9:1: info: \phi_{ is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \neg (2\,y=0)\land \neg (2=0)\land \neg ({(2\,\pi\,y)}^{\frac{1}{2}}=0))
+tests/Densities/article.tex:10:1: info: defines \phi (phi1)
+tests/Densities/article.tex:10:1: info: \phi is well defined if: \forall x\in \mathbb{R},\ \neg (2\,1=0)\land \neg (2=0)\land \neg ({(2\,\pi\,1)}^{\frac{1}{2}}=0)
+tests/Densities/article.tex:11:1: info: defines \@n2 (n2)
+tests/Densities/article.tex:12:1: info: defines \@n3 (n3)
+tests/Densities/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R},\ x\le z\land z\le y\Rightarrow \neg (y-x=0))
+tests/Densities/article.tex:13:1: info: defines \Phi (Phi)
+tests/Densities/article.tex:14:1: info: defines \@n5 (n5)
+tests/Densities/article.tex:15:1: info: defines \@n6 (n6)
+tests/Densities/article.tex:16:1: info: defines \@n7 (n7)
+tests/Densities/article.tex:17:1: info: defines \@n8 (n8)
+tests/Densities/article.tex:22:1: info: claim 0: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall s\in \mathbb{R},\ 0\le \phi_{(x,y)(s))\land \operatorname{Int}(\phi_{(x,y))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\phi_{(x,y))=1
+tests/Densities/article.tex:22:1: info: claim 1: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \phi_{(0,1,z)=\phi(z))
+tests/Densities/article.tex:22:1: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<1)
+tests/Densities/article.tex:26:18: info: claim 2: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n5(\@n2(x))=\frac{1}{x}
+tests/Densities/article.tex:26:18: info: claim 2 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (0<x\land ((\forall z\in \mathbb{R},\ 0\le \@n2(x)(z))\land \operatorname{Int}(\@n2(x))((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(\@n2(x))=1)\land \operatorname{Int}((z\in \mathbb{R}\mapsto z\,\@n2(x)(z)))((z\in \mathbb{R}\mapsto \top)))\land \neg (x=0)
+tests/Densities/article.tex:26:18: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n6(\@n2(x))=\frac{1}{{x}^{2}}
+tests/Densities/article.tex:26:18: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (0<x\land ((\forall z\in \mathbb{R},\ 0\le \@n2(x)(z))\land \operatorname{Int}(\@n2(x))((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(\@n2(x))=1)\land \operatorname{Int}((z\in \mathbb{R}\mapsto z\,z\,\@n2(x)(z)))((z\in \mathbb{R}\mapsto \top)))\land \neg ({x}^{2}=0)
+tests/Densities/article.tex:30:45: info: claim 4: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow \@n5(\@n3(x,y))=\frac{x+y}{2}
+tests/Densities/article.tex:30:45: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (x<y\land ((\forall s\in \mathbb{R},\ 0\le \@n3(x,y)(s))\land \operatorname{Int}(\@n3(x,y))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\@n3(x,y))=1)\land \operatorname{Int}((s\in \mathbb{R}\mapsto s\,\@n3(x,y)(s)))((s\in \mathbb{R}\mapsto \top)))\land \neg (2=0)
+tests/Densities/article.tex:30:45: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow \Phi(\@n3(x,y),y)=1
+tests/Densities/article.tex:30:45: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow x<y\land (\forall s\in \mathbb{R},\ 0\le \@n3(x,y)(s))\land \operatorname{Int}(\@n3(x,y))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\@n3(x,y))=1
+tests/Densities/article.tex:34:38: info: claim 6: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow \@n7(\@n2(x),y)=\frac{x}{x-y})
+tests/Densities/article.tex:34:38: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ y<x\Rightarrow ((\forall z\in \mathbb{R},\ 0<x)\land \operatorname{Int}((s\in \mathbb{R}\mapsto \exp(y\,s)\,\@n2(x,s)))((s\in \mathbb{R}\mapsto \top))\land 0<x\land (\forall s\in \mathbb{R},\ 0\le \@n2(x)(s))\land \operatorname{Int}(\@n2(x))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\@n2(x))=1)\land \neg (x-y=0))
+tests/Densities/article.tex:38:62: info: claim 7: \forall x\in \mathbb{R}\to \mathbb{R},\ ((\forall s\in \mathbb{R},\ 0\le x(s))\land \operatorname{Int}(x)((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(x)=1)\land (\forall s\in \mathbb{R},\ x(-s)=x(s))\land \operatorname{Int}((s\in \mathbb{R}\mapsto s\,x(s)))((s\in \mathbb{R}\mapsto \top))\Rightarrow \@n5(x)=0
+tests/Densities/article.tex:38:62: info: claim 7 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ ((\forall s\in \mathbb{R},\ 0\le x(s))\land \operatorname{Int}(x)((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(x)=1)\land (\forall s\in \mathbb{R},\ x(-s)=x(s))\land \operatorname{Int}((s\in \mathbb{R}\mapsto s\,x(s)))((s\in \mathbb{R}\mapsto \top))\Rightarrow ((\forall z\in \mathbb{R},\ 0\le x(z))\land \operatorname{Int}(x)((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(x)=1)\land \operatorname{Int}((z\in \mathbb{R}\mapsto z\,x(z)))((z\in \mathbb{R}\mapsto \top))
+tests/Densities/article.tex:42:1: info: claim 8: \@n8(\phi)=\frac{1}{2}\,\log(2\,\pi)+\frac{1}{2}
+tests/Densities/article.tex:42:1: info: claim 8 is meaningful if: (((\forall y\in \mathbb{R},\ 0\le \phi(y))\land \operatorname{Int}(\phi)((y\in \mathbb{R}\mapsto \top))\land \int((y\in \mathbb{R}\mapsto \top))(\phi)=1)\land \operatorname{Int}((y\in \mathbb{R}\mapsto \begin{cases}0&\phi(y)=0\\\end{cases}))((y\in \mathbb{R}\mapsto \top)))\land (\neg (2=0)\land 0<2\,\pi)\land \neg (2=0)
+tests/Densities/article.tex:46:35: info: claim 9: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ 0\le x(z))\land \operatorname{Int}(x)((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(x)=1\Rightarrow \lim_{y\to\infty}\Phi(x,y)=1
+tests/Densities/article.tex:46:35: info: claim 9 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ 0\le x(z))\land \operatorname{Int}(x)((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(x)=1\Rightarrow \lim_{y\to\infty}\Phi(x,y)\text{ exists}
+tests/Densities/article.tex: 9 definitions, 10 claims
+  text: 9 compiled, 0 failed, 0 prose (of 9)
+  results: 12 compiled, 0 failed, 0 prose (of 12)
+  all: 21 compiled, 0 failed, 0 prose (of 21)
