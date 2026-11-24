@@ -6,9 +6,19 @@ name: Release the checker
 on:
   push:
     tags: ["v*"]
+  # by hand, for a tag whose release lacks an executable: the checker is built from the
+  # tag with the workflow of the branch, so the tag stays where it is (without a tag, the
+  # executables are built and tried, and attached to nothing)
   workflow_dispatch:
+    inputs:
+      tag:
+        description: The version tag whose release gets the executables (e.g. v0.9.0)
+        type: string
+        default: ''
 permissions:
   contents: write
+env:
+  TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
 jobs:
   checker:
     strategy:
@@ -27,23 +37,30 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: leanprover/lean-action@v1
         with:
           build: 'false'
           test: 'false'
           use-mathlib-cache: 'false'
+      # (in bash, with elan's folder on the PATH by hand: on Windows the default shell is
+      # PowerShell, which does not find the `lake` that the action installed)
       - name: Build the checker
-        run: lake build leanify
+        shell: bash
+        run: |
+          export PATH="$HOME/.elan/bin:$PATH"
+          lake build leanify
       # A project that `leanify init` of a released checker creates requires the tag
       # `v` + the checker's version: a tag with another name would publish a checker
       # whose new projects do not resolve.
       - name: The tag is the version of the checker
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.TAG != ''
         shell: bash
         run: |
           version="$(".lake/build/bin/${{ matrix.exe }}" --version | tr -d '\r' | awk '{print $NF}')"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::the tag is $GITHUB_REF_NAME, the checker is version $version: tag v$version, or set the version in lakefile.toml and Leanify/Check.lean"
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::the tag is $TAG, the checker is version $version: tag v$version, or set the version in lakefile.toml and Leanify/Check.lean"
             exit 1
           fi
       - name: The executable gives the findings of the guide's draft
@@ -54,12 +71,12 @@ jobs:
           "./${{ matrix.name }}" check examples/Demo/draft.tex > "$RUNNER_TEMP/draft.check.txt" || true
           diff --strip-trailing-cr examples/Demo/draft.check.txt "$RUNNER_TEMP/draft.check.txt"
       - name: Attach it to the release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.TAG != ''
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+          gh release view "$TAG" > /dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TAG" --generate-notes \
             || true
-          gh release upload "$GITHUB_REF_NAME" "${{ matrix.name }}" --clobber
+          gh release upload "$TAG" "${{ matrix.name }}" --clobber
