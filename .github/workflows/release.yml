@@ -32,8 +32,13 @@ jobs:
           build: 'false'
           test: 'false'
           use-mathlib-cache: 'false'
+      # (in bash, with elan's folder on the PATH by hand: on Windows the default shell is
+      # PowerShell, which does not find the `lake` that the action installed)
       - name: Build the checker
-        run: lake build leanify
+        shell: bash
+        run: |
+          export PATH="$HOME/.elan/bin:$PATH"
+          lake build leanify
       # A project that `leanify init` of a released checker creates requires the tag
       # `v` + the checker's version: a tag with another name would publish a checker
       # whose new projects do not resolve.
