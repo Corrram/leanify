@@ -367,3 +367,33 @@ globs = ["Iteration.+"]
 name = "OdeSolvers"
 srcDir = "tests"
 globs = ["OdeSolvers.+"]
+
+[[lean_lib]]
+# The field series: summability, sums of series and power series, limits of sequences.
+name = "Series"
+srcDir = "tests"
+globs = ["Series.+"]
+
+[[lean_lib]]
+# The field integration: L^p norms, essential supremum, improper integrals, integrals on sets.
+name = "Integration"
+srcDir = "tests"
+globs = ["Integration.+"]
+
+[[lean_lib]]
+# The field planegeometry: lines, triangle centres, conics by their foci.
+name = "PlaneGeometry"
+srcDir = "tests"
+globs = ["PlaneGeometry.+"]
+
+[[lean_lib]]
+# The field matrixnorms: matrix norms, condition numbers, diagonal dominance.
+name = "MatrixNorms"
+srcDir = "tests"
+globs = ["MatrixNorms.+"]
+
+[[lean_lib]]
+# The field specialnumbers: kinds of primes and integers, Fermat and Mersenne numbers.
+name = "SpecialNumbers"
+srcDir = "tests"
+globs = ["SpecialNumbers.+"]

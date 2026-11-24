@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,realsets,integration}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\|f\|_p$ for the $L^p$ norm of $f$.
+We write $M(f)$ for the essential supremum of $f$.
+We write $N(f)$ for the supremum norm of $f$.
+We write $p^*$ for the Hölder conjugate of $p$.
+We write $I_a(f)$ for the improper integral of $f$ from $a$ to infinity.
+We write $J(f)$ for the improper integral of $f$ over the real line.
+We write $\Lambda(f,S)$ for the integral of $f$ on the set $S$.
+For every real number $x$, let $u(x)\coloneqq e^{-|x|}$.
+
+\section{Integrability}
+
+\begin{lemma}\label{lp}
+Let $p\ge1$ and let $f$ be a $p$-integrable function. Then $\|f\|_p\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{conjugate}
+Let $p>1$. Then $\frac{1}{p}+\frac{1}{p^*}=1$.
+\end{lemma}
+
+\begin{lemma}\label{local}
+Every continuous function is locally integrable.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+Let $f$ be a bounded measurable function. Then $f$ is essentially bounded and $M(f)\le N(f)$.
+\end{lemma}
+
+\section{Improper integrals}
+
+\begin{lemma}\label{exp}
+$u$ is improperly integrable from $0$ to infinity, $I_0(u)=1$ and $J(u)=2$.
+\end{lemma}
+
+\begin{lemma}\label{set}
+Let $f$ be a $1$-integrable function and let $S$ be a measurable set. Then $|\Lambda(f,S)|\le\|f\|_1$.
+\end{lemma}
+
+\end{document}

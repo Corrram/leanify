@@ -243,7 +243,20 @@ Further fields cover other branches of mathematics:
   rates;
 * `stochasticorders` (with `densities`): `$f$ is smaller than $g$ in the hazard rate order`
   and the other classical stochastic orders;
-* `finance`: interest and annuities, the Black–Scholes prices and the delta.
+* `finance`: interest and annuities, the Black–Scholes prices and the delta;
+* `series` (with `realfunctions`): summable and absolutely summable sequences of terms
+  (`a(k)` at the natural numbers), the sum of a series and of a power series, the radius of
+  convergence, geometric series, and the limit, limit superior and limit inferior of a
+  sequence;
+* `integration` (with `realfunctions`): `$p$-integrable` functions and their `L^p` norms,
+  locally integrable and essentially bounded functions, improper integrals, the integral
+  on a set;
+* `planegeometry` (loads `geometry`): distances to lines, perpendiculars and reflections,
+  the circumcentre, incentre and orthocentre of a triangle, conics by their foci;
+* `matrixnorms` (loads `matrices`): matrix norms and condition numbers, diagonal
+  dominance and band structure;
+* `specialnumbers` (with `numbers`): twin, Sophie Germain, safe and Fermat primes, perfect
+  powers, sums of two squares, Fermat and Mersenne numbers, figurate numbers.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

@@ -36,6 +36,11 @@ import Leanify.Library.MetricSpaces
 import Leanify.Library.Approximation
 import Leanify.Library.Iteration
 import Leanify.Library.OdeSolvers
+import Leanify.Library.Series
+import Leanify.Library.Integration
+import Leanify.Library.PlaneGeometry
+import Leanify.Library.MatrixNorms
+import Leanify.Library.SpecialNumbers
 
 /-! # The fields of the vocabulary
 
@@ -89,16 +94,23 @@ def all : List (String × Vocab) := [
   ("metricspaces", MetricSpaces.vocab),
   ("approximation", Approximation.vocab),
   ("iteration", Iteration.vocab),
-  ("odesolvers", OdeSolvers.vocab)]
+  ("odesolvers", OdeSolvers.vocab),
+  ("series", Series.vocab),
+  ("integration", Integration.vocab),
+  ("planegeometry", PlaneGeometry.vocab),
+  ("matrixnorms", MatrixNorms.vocab),
+  ("specialnumbers", SpecialNumbers.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
 /-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
-`hilbert` with more, and `metricspaces` is `topologies` with more. Their entries are tagged
-with the field that adds them. -/
+`hilbert` with more, `metricspaces` is `topologies` with more, `planegeometry` is `geometry`
+and `matrixnorms` is `matrices` with more. Their entries are tagged with the field that adds
+them. -/
 def includes : List (String × List String) :=
-  [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"])]
+  [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
+   ("matrixnorms", ["matrices"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -113,14 +125,14 @@ every member with the bundle and compares). `docs/libraries.md` draws the tree. 
 def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
-  ("analysis", ["realfunctions", "realsets", "calculus", "optimization", "asymptotics", "transforms", "fourier",
-    "dynamics", "elementary", "complex", "torus"]),
+  ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
+    "transforms", "fourier", "dynamics", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
-  ("topology", ["realsets", "topologies", "metricspaces", "geometry"]),
-  ("numerics", ["approximation", "iteration", "odesolvers"]),
+  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
+  ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms"]),
   ("stochastic", ["statistics", "finance"]),
   ("discrete", ["combinatorics", "permutations", "graphs"]),
-  ("numbertheory", ["numbers", "arithmetic", "congruences"]),
+  ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means"]),
   ("linearalgebra", ["vectors", "matrices"]),

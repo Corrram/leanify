@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={matrixnorms}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\|A\|_F$ for the Frobenius norm of $A$.
+We write $\|A\|_\infty$ for the maximum absolute row sum of $A$.
+We write $I_n$ for the $n\times n$ identity matrix.
+We write $\kappa(A)$ for the condition number of $A$ in the maximum norm.
+
+\section{Norms}
+
+\begin{lemma}\label{frobenius}
+Let $n$ be a positive integer and let $A$ be an $n\times n$ matrix. Then $\|A\|_F\ge0$ and $\|A\|_\infty\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{identity}
+Let $n$ be a positive integer. Then $\|I_n\|_F\le n$.
+\end{lemma}
+
+\begin{lemma}\label{condition}
+Let $A$ be an invertible matrix. Then $\kappa(A)\ge1$.
+\end{lemma}
+
+\section{Structure}
+
+\begin{lemma}\label{dominant}
+Every strictly diagonally dominant matrix is invertible, and every strictly diagonally dominant matrix is diagonally dominant.
+\end{lemma}
+
+\begin{lemma}\label{tridiagonal}
+Let $A$ be a tridiagonal matrix. Then $A$ is upper Hessenberg.
+\end{lemma}
+
+\begin{lemma}\label{band}
+Let $A$ be a matrix with bandwidth $1$. Then $A$ is entrywise nonnegative or $A$ is not entrywise nonnegative.
+\end{lemma}
+
+\end{document}

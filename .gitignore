@@ -52,3 +52,8 @@ article-reader/
 /tests/Approximation/article.leanify.*
 /tests/Iteration/article.leanify.*
 /tests/OdeSolvers/article.leanify.*
+/tests/Series/article.leanify.*
+/tests/Integration/article.leanify.*
+/tests/PlaneGeometry/article.leanify.*
+/tests/MatrixNorms/article.leanify.*
+/tests/SpecialNumbers/article.leanify.*

@@ -1563,7 +1563,15 @@ def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk ×
     let nextClause := match cs with
       -- (not `and $2$-regular`: a formula and a hyphen begin an adjective)
       | .w _ :: .m _ :: .p 45 :: .w _ :: _ => false
-      | .w w :: .m _ :: _ => w == w!"and"
+      -- (a formula that a word follows, `and $9$ is …`, or that states something, `and
+      -- $x>0$`; not the last argument of a phrase, `collinear with $B$ and $C$.`)
+      | .w w :: .m ts :: rest =>
+        w == w!"and" && (match rest with
+          | .w _ :: _ => true
+          | _ => match Math.parseFormula ts with
+            | some (.chain _ (_ :: _)) => true
+            | some _ => false
+            | none => true)
       -- (`… and that $g$ is …`, in an assumption)
       | .w w :: .w t :: _ => w == w!"and" && t == w!"that"
       | _ => false

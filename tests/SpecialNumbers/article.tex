@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={numbers,specialnumbers}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $F_n$ for the $n$th Fermat number.
+We write $M_n$ for the $n$th Mersenne number.
+We write $R_n$ for the $n$th repunit.
+We write $P_n$ for the $n$th pentagonal number.
+We write $T_n$ for the $n$th tetrahedral number.
+
+\section{Kinds of integers}
+
+\begin{lemma}\label{fermat}
+$F_0=3$, $F_1=5$ and $F_2=17$. Every Fermat prime is odd.
+\end{lemma}
+
+\begin{lemma}\label{mersenne}
+Let $n$ be a positive integer. If $M_n$ is prime, then $n$ is prime.
+\end{lemma}
+
+\begin{lemma}\label{twin}
+$5$ is a twin prime, $11$ is a Sophie Germain prime and $23$ is a safe prime.
+\end{lemma}
+
+\begin{lemma}\label{squares}
+$13$ is a sum of two squares, $64$ is a perfect cube, $27$ is a perfect power and $10$ is triangular.
+\end{lemma}
+
+\begin{lemma}\label{powers}
+$16$ is a power of two and $81$ is a power of $3$. Every power of two $x>1$ is even.
+\end{lemma}
+
+\begin{lemma}\label{figurate}
+$R_3=111$, $P_3=12$ and $T_3=10$. For every nonnegative integer $n$, $P_n\ge0$.
+\end{lemma}
+
+\end{document}

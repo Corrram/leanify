@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={realfunctions,series}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\Sigma(a)$ for the sum of the series with terms $a$.
+We write $G(q)$ for the sum of the geometric series with ratio $q$.
+We write $R(a)$ for the radius of convergence of the power series with coefficients $a$.
+We write $s_n(a)$ for the $n$th partial sum of the series with terms $a$.
+We write $a\ast b$ for the Cauchy product of $a$ and $b$.
+We write $P_a(x)$ for the sum of the power series with coefficients $a$ at $x$.
+We write $L(a)$ for the limit of the sequence $a$.
+We write $L^+(a)$ for the limit superior of the sequence $a$.
+For every real number $k$, let $g(k)\coloneqq 2^{-k}$.
+For every real number $k$, let $c(k)\coloneqq 1$.
+
+\section{Series}
+
+\begin{lemma}\label{absolute}
+Let $a:\mathbb{R}\to\mathbb{R}$ be a function. If $a$ is absolutely summable, then $a$ is summable.
+\end{lemma}
+
+\begin{lemma}\label{geometric}
+$g$ is summable, $\Sigma(g)=2$ and $G(\frac12)=2$.
+\end{lemma}
+
+\begin{lemma}\label{partial}
+Let $a:\mathbb{R}\to\mathbb{R}$ be a function. Then $s_0(a)=a(0)$ and $(a\ast c)(0)=a(0)$.
+\end{lemma}
+
+\begin{lemma}\label{square}
+Let $a:\mathbb{R}\to\mathbb{R}$ be a function. If $a$ is absolutely summable, then $a$ is square-summable.
+\end{lemma}
+
+\section{Power series and limits}
+
+\begin{lemma}\label{power}
+Let $x$ be a real number with $|x|<1$. Then $P_c(x)=\frac{1}{1-x}$, and $R(c)=1$.
+\end{lemma}
+
+\begin{lemma}\label{limit}
+Let $a:\mathbb{R}\to\mathbb{R}$ be a function. If $a$ is summable, then $L(a)=0$ and $L^+(a)=0$.
+\end{lemma}
+
+\end{document}

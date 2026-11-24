@@ -1,0 +1,35 @@
+tests/Series/article.tex:9:1: info: defines \Sigma (Sigma)
+tests/Series/article.tex:10:1: info: defines \@n1 (n1)
+tests/Series/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ \lvert x\rvert<1\Rightarrow \neg (1-x=0)
+tests/Series/article.tex:11:1: info: defines \@n2 (n2)
+tests/Series/article.tex:12:1: info: defines \@n3 (n3)
+tests/Series/article.tex:13:1: info: defines \@n4 (n4)
+tests/Series/article.tex:14:1: info: defines \@n5 (n5)
+tests/Series/article.tex:15:1: info: defines \@n6 (n6)
+tests/Series/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R}\to \mathbb{R},\ (\exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (t\in \mathbb{Z}\land 0\le t)\land s\le t\Rightarrow \lvert x(t)-y\rvert<z))\Rightarrow (\exists y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (t\in \mathbb{Z}\land 0\le t)\land s\le t\Rightarrow \lvert x(t)-y\rvert<z))\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (a\in \mathbb{Z}\land 0\le a)\land t\le a\Rightarrow \lvert x(a)-z\rvert<s))\Rightarrow z=y))
+tests/Series/article.tex:16:1: info: defines \@n7 (n7)
+tests/Series/article.tex:17:1: info: defines g (g)
+tests/Series/article.tex:17:1: info: g is well defined if: \forall x\in \mathbb{R},\ -x\in \mathbb{Z}\land (\neg (2=0)\lor 0\le -x)
+tests/Series/article.tex:18:1: info: defines c (c)
+tests/Series/article.tex:23:48: info: claim 0: \forall x\in \mathbb{R}\to \mathbb{R},\ \sum_{z=0}^{\infty}\lvert x(z)\rvert\text{ converges}\Rightarrow \operatorname{converges}(0)(x)
+tests/Series/article.tex:27:1: info: claim 1: \operatorname{converges}(0)(g)
+tests/Series/article.tex:27:1: info: claim 2: \Sigma(g)=2
+tests/Series/article.tex:27:1: info: claim 2 is meaningful if: \operatorname{converges}(0)(g)
+tests/Series/article.tex:27:1: info: claim 3: \@n1(\frac{1}{2})=2
+tests/Series/article.tex:27:1: info: claim 3 is meaningful if: \neg (2=0)\land \lvert \frac{1}{2}\rvert<1
+tests/Series/article.tex:31:48: info: claim 4: \forall x\in \mathbb{R}\to \mathbb{R},\ \@n3(0,x)=x(0)
+tests/Series/article.tex:31:48: info: claim 4 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ 0\in \mathbb{Z}\land 0\le 0
+tests/Series/article.tex:31:48: info: claim 5: \forall x\in \mathbb{R}\to \mathbb{R},\ \@n4(x,c,0)=x(0)
+tests/Series/article.tex:35:48: info: claim 6: \forall x\in \mathbb{R}\to \mathbb{R},\ \sum_{z=0}^{\infty}\lvert x(z)\rvert\text{ converges}\Rightarrow \sum_{z=0}^{\infty}x(z)\,x(z)\text{ converges}
+tests/Series/article.tex:41:40: info: claim 7: \forall x\in \mathbb{R},\ \lvert x\rvert<1\Rightarrow \@n5(c,x)=\frac{1}{1-x}
+tests/Series/article.tex:41:40: info: claim 7 is meaningful if: \forall x\in \mathbb{R},\ \lvert x\rvert<1\Rightarrow \sum_{z=0}^{\infty}c(z)\,{x}^{z}\text{ converges}\land \neg (1-x=0)
+tests/Series/article.tex:41:40: info: claim 8: \@n2(c)=1
+tests/Series/article.tex:41:40: info: claim 8 is meaningful if: \exists y\in \mathbb{R},\ (0\le y\land (\forall z\in \mathbb{R},\ 0\le z\land z<y\Rightarrow (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ t\in \mathbb{Z}\land 0\le t\Rightarrow \lvert c(t)\,{z}^{t}\rvert\le s))\land (\forall z\in \mathbb{R},\ y<z\Rightarrow \neg (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ t\in \mathbb{Z}\land 0\le t\Rightarrow \lvert c(t)\,{z}^{t}\rvert\le s)))\land (\forall z\in \mathbb{R},\ 0\le z\land (\forall s\in \mathbb{R},\ 0\le s\land s<z\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ a\in \mathbb{Z}\land 0\le a\Rightarrow \lvert c(a)\,{s}^{a}\rvert\le t))\land (\forall s\in \mathbb{R},\ z<s\Rightarrow \neg (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ a\in \mathbb{Z}\land 0\le a\Rightarrow \lvert c(a)\,{s}^{a}\rvert\le t))\Rightarrow z=y)
+tests/Series/article.tex:45:48: info: claim 9: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{converges}(0)(x)\Rightarrow \@n6(x)=0
+tests/Series/article.tex:45:48: info: claim 9 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{converges}(0)(x)\Rightarrow (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (a\in \mathbb{Z}\land 0\le a)\land t\le a\Rightarrow \lvert x(a)-z\rvert<s))
+tests/Series/article.tex:45:48: info: claim 10: \forall x\in \mathbb{R}\to \mathbb{R},\ \@n7(x)=0
+tests/Series/article.tex:45:48: info: claim 10 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \exists z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (a\in \mathbb{Z}\land 0\le a)\land t\le a\Rightarrow x(a)<z+s)\land (\forall t\in \mathbb{R},\ \exists a\in \mathbb{R},\ ((a\in \mathbb{Z}\land 0\le a)\land t\le a)\land z-s<x(a)))\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ 0<t\Rightarrow (\exists a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (b\in \mathbb{Z}\land 0\le b)\land a\le b\Rightarrow x(b)<s+t)\land (\forall a\in \mathbb{R},\ \exists b\in \mathbb{R},\ ((b\in \mathbb{Z}\land 0\le b)\land a\le b)\land s-t<x(b)))\Rightarrow s=z)
+tests/Series/article.tex: 10 definitions, 11 claims
+  text: 10 compiled, 0 failed, 0 prose (of 10)
+  results: 11 compiled, 0 failed, 0 prose (of 11)
+  all: 21 compiled, 0 failed, 0 prose (of 21)

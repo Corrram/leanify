@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={planegeometry}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\delta(P,Q)$ for the distance between $P$ and $Q$.
+We write $d(P,AB)$ for the distance from $P$ to the line through $A$ and $B$.
+We write $H(P,AB)$ for the foot of the perpendicular from $P$ to the line through $A$ and $B$.
+We write $O(A,B,C)$ for the circumcentre of the triangle with vertices $A$, $B$ and $C$.
+We write $R(A,B,C)$ for the circumradius of the triangle with vertices $A$, $B$ and $C$.
+We write $r(A,B,C)$ for the inradius of the triangle with vertices $A$, $B$ and $C$.
+We write $E(F,G,a)$ for the ellipse with foci $F$ and $G$ and semi-major axis $a$.
+We write $e(F,G,a)$ for the eccentricity of the ellipse with foci $F$ and $G$ and semi-major axis $a$.
+
+\section{Lines and triangles}
+
+\begin{lemma}\label{foot}
+Let $A$, $B$ and $P$ be points with $A\ne B$. Then $\delta(P,H(P,AB))=d(P,AB)$.
+\end{lemma}
+
+\begin{lemma}\label{circumcentre}
+Let $A$, $B$ and $C$ be points. Suppose that $A$ is not collinear with $B$ and $C$. Then $\delta(O(A,B,C),A)=R(A,B,C)$ and $r(A,B,C)\le R(A,B,C)$.
+\end{lemma}
+
+\section{Conics}
+
+\begin{lemma}\label{ellipse}
+Let $F$ and $G$ be points and let $a$ be a real number with $\delta(F,G)<2a$. Then $e(F,G,a)<1$, and $F$ is not lying on $E(F,G,a)$.
+\end{lemma}
+
+\end{document}

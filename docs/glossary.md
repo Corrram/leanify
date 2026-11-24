@@ -18,6 +18,8 @@ except a notion whose meanings take arguments of different types, which the type
     * `realfunctions`
     * `realsets`
     * `calculus`
+    * `series`
+    * `integration`
     * `optimization`
     * `asymptotics`
     * `transforms`
@@ -41,10 +43,12 @@ except a notion whose meanings take arguments of different types, which the type
     * `topologies`
     * `metricspaces`
     * `geometry`
+    * `planegeometry`
   * `numerics`
     * `approximation`
     * `iteration`
     * `odesolvers`
+    * `matrixnorms`
   * `stochastic`
     * `statistics`
       * `probability`
@@ -64,17 +68,18 @@ except a notion whose meanings take arguments of different types, which the type
     * `numbers`
     * `arithmetic`
     * `congruences`
+    * `specialnumbers`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `approximation`, `iteration`, `odesolvers`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance`, `combinatorics`, `permutations`, `graphs`, `numbers`, `arithmetic`, `congruences` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance`, `combinatorics`, `permutations`, `graphs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry` | `realsets`, `topologies`, `metricspaces`, `geometry` |
-| `numerics` | `approximation`, `iteration`, `odesolvers` | `approximation`, `iteration`, `odesolvers` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
+| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` |
 | `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance` |
 | `discrete` | `combinatorics`, `permutations`, `graphs` | `combinatorics`, `permutations`, `graphs` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences` | `numbers`, `arithmetic`, `congruences` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means` | `special`, `hyperbolic`, `trigonometry`, `means` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
 | `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
@@ -1422,4 +1427,207 @@ except a notion whose meanings take arguments of different types, which the type
 | heun step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(t, y) ↦ y + (h/2)(f(t,y) + f(t+h, y + h f(t,y)))` |
 | midpoint step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `(t, y) ↦ y + h f(t + h/2, y + (h/2) f(t,y))` |
 | runge-kutta step of $a$ with step size $b$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | the classical fourth-order Runge–Kutta step |
+
+## `series`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| summable | ℝ → ℝ | `∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability) |
+| absolutely summable | ℝ → ℝ | `∑ \|a_k\|` converges (Mathlib `Summable`) |
+| conditionally summable | ℝ → ℝ | `∑ a_k` converges, `∑ \|a_k\|` does not |
+| square-summable | ℝ → ℝ | `∑ a_k²` converges (`ℓ²`) |
+| alternating | ℝ → ℝ | consecutive terms have opposite signs or vanish: `a_k a_{k+1} ≤ 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| sum of the series with terms $a$ | (ℝ → ℝ) → ℝ | `∑_{k=0}^∞ a_k`, where it converges (Mathlib `tsum`) |
+| $a$ th partial sum of the series with terms $b$ | ℝ → (ℝ → ℝ) → ℝ | `∑_{k=0}^{n} a_k` |
+| cauchy product of $a$ and $b$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `n ↦ ∑_{k=0}^{n} a_k b_{n-k}` |
+| sum of the power series with coefficients $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `∑_{k=0}^∞ a_k x^k`, where it converges (Mathlib `FormalMultilinearSeries.sum`) |
+| radius of convergence of the power series with coefficients $a$ | (ℝ → ℝ) → ℝ | the `R ≥ 0` with `a_k s^k` bounded for `s < R` and unbounded for `s > R`, where it is finite (Mathlib `FormalMultilinearSeries.radius`) |
+| sum of the geometric series with ratio $a$ | ℝ → ℝ | `1/(1-q)`, `\|q\| < 1` |
+| sum of the geometric series with first term $a$ and ratio $b$ | ℝ → ℝ → ℝ | `a/(1-q)`, `\|q\| < 1` |
+| limit of the sequence $a$ | (ℝ → ℝ) → ℝ | `lim_{n→∞} a_n`, where the sequence converges (Mathlib `Filter.Tendsto … atTop`) |
+| limit superior of the sequence $a$ | (ℝ → ℝ) → ℝ | `limsup a_n`, where it is finite (Mathlib `Filter.limsup`) |
+| limit inferior of the sequence $a$ | (ℝ → ℝ) → ℝ | `liminf a_n`, where it is finite (Mathlib `Filter.liminf`) |
+
+## `integration`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| $x$-integrable | ℝ → ℝ | `p ≥ 1` and `\|f\|^p` is integrable on the line (Mathlib `MeasureTheory.Memℒp`) |
+| locally integrable | ℝ → ℝ | integrable on every bounded interval (Mathlib `LocallyIntegrable`) |
+| essentially bounded | ℝ → ℝ | `\|f\| ≤ M` almost everywhere (Mathlib `MeasureTheory.Memℒp f ∞`) |
+| improperly integrable from $x$ to infinity | ℝ → ℝ | locally integrable, and `∫_a^b f` has a limit as `b → ∞` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $L^a$ norm of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(∫\|f\|^p)^{1/p}`, `p ≥ 1`, of a `p`-integrable function (Mathlib `MeasureTheory.eLpNorm`) |
+| essential supremum of $a$ | (ℝ → ℝ) → ℝ | the least `M` with `\|f\| ≤ M` almost everywhere, of an essentially bounded function (Mathlib `essSup`) |
+| hölder conjugate of $a$ | ℝ → ℝ | `p/(p-1)`, `p > 1` (Mathlib `Real.conjExponent`) |
+| holder conjugate of $a$ | ℝ → ℝ | `p/(p-1)`, `p > 1` |
+| improper integral of $a$ from $b$ to infinity | (ℝ → ℝ) → ℝ → ℝ | `lim_{b→∞} ∫_a^b f`, of a locally integrable function where the limit exists |
+| improper integral of $a$ from minus infinity to $b$ | (ℝ → ℝ) → ℝ → ℝ | `lim_{a→-∞} ∫_a^b f`, where the limit exists |
+| improper integral of $a$ over the real line | (ℝ → ℝ) → ℝ | `lim ∫_a^b f` as `a → -∞` and `b → ∞` independently, where the limit exists |
+| integral of $a$ on the set $b$ | (ℝ → ℝ) → (ℝ → Prop) → ℝ | `∫_S f`, where `f` is integrable on `S` (Mathlib `MeasureTheory.integral` on `S`) |
+
+## `planegeometry`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| point | $\mathrm{Point}$ | a point of the Euclidean plane (`ℝ × ℝ`) |
+| point of the plane | $\mathrm{Point}$ | `ℝ × ℝ` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| lying on $x$ | $\mathrm{Point}$ | a point of the figure |
+| collinear with $x$ and $a$ | $\mathrm{Point}$ | on a line with them |
+| equidistant from $x$ and $a$ | $\mathrm{Point}$ | `\|PA\| = \|PB\|` |
+| distinct from $x$ | $\mathrm{Point}$ | `P ≠ A` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| point $(a,b)$ | ℝ → ℝ → $\mathrm{Point}$ | with these coordinates |
+| origin | $\mathrm{Point}$ | `(0,0)` |
+| $x$-coordinate of $a$ | $\mathrm{Point}$ → ℝ | the first coordinate |
+| $y$-coordinate of $a$ | $\mathrm{Point}$ → ℝ | the second coordinate |
+| abscissa of $a$ | $\mathrm{Point}$ → ℝ | the first coordinate |
+| ordinate of $a$ | $\mathrm{Point}$ → ℝ | the second coordinate |
+| distance between $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | the Euclidean distance |
+| distance from $a$ to $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | the Euclidean distance |
+| midpoint of $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `(A + B)/2` |
+| area of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `0` for collinear points |
+| perimeter of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `\|AB\| + \|BC\| + \|CA\|` |
+| centroid of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `(A + B + C)/3` |
+| angle at $a$ between $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `∠ABC` in `[0, π]`, for `A ≠ B` and `C ≠ B` |
+| slope of the line through $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | for points with different first coordinates |
+| line through $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | of two distinct points |
+| segment from $a$ to $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | the points between them: `\|AP\| + \|PB\| = \|AB\|` |
+| perpendicular bisector of $a$ and $b$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | the points equidistant from two distinct points |
+| circle with centre $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| = r}`, `r > 0` |
+| circle with center $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| = r}`, `r > 0` |
+| disc with centre $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
+| disk with center $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
+| distance from $a$ to the line through $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `2 area(A,B,P)/\|AB\|`, `A ≠ B` |
+| foot of the perpendicular from $a$ to the line through $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the point of the line nearest to `P`, `A ≠ B` |
+| reflection of $a$ in the line through $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `2F - P` with `F` the foot of the perpendicular, `A ≠ B` |
+| circumcentre of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the point equidistant from the vertices, of a triangle that is not degenerate |
+| circumcenter of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the circumcentre |
+| circumradius of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | the distance from the circumcentre to a vertex |
+| incentre of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | `(aA + bB + cC)/(a + b + c)` with the side lengths opposite the vertices |
+| incenter of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the incentre |
+| inradius of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ | `2 area/perimeter` |
+| orthocentre of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the common point of the altitudes |
+| orthocenter of the triangle with vertices $a$, $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ | the orthocentre |
+| ellipse with foci $a$ and $b$ and semi-major axis $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PF₁\| + \|PF₂\| = 2a}`, `2a > \|F₁F₂\|` |
+| hyperbola with foci $a$ and $b$ and semi-major axis $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|\|PF₁\| - \|PF₂\|\| = 2a}`, `0 < 2a < \|F₁F₂\|` |
+| parabola with focus $a$ and directrix through $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | `{P : \|PF\| = dist(P, AB)}`, `F` not on the line `AB` |
+| eccentricity of the ellipse with foci $a$ and $b$ and semi-major axis $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ → ℝ | `\|F₁F₂\|/(2a)` |
+
+## `matrixnorms`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| square | $\mathrm{Mat}$ | `n × n` |
+| symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
+| skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
+| orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
+| invertible | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| nonsingular | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| singular | $\mathrm{Mat}$ | square, with `det A = 0` |
+| positive definite | $\mathrm{Mat}$ | `xᵀAx > 0` for `x ≠ 0`, and symmetric (Mathlib `Matrix.PosDef`) |
+| positive semidefinite | $\mathrm{Mat}$ | `xᵀAx ≥ 0`, and symmetric (Mathlib `Matrix.PosSemidef`) |
+| diagonal | $\mathrm{Mat}$ | square, zero off the diagonal |
+| upper triangular | $\mathrm{Mat}$ | square, zero below the diagonal |
+| lower triangular | $\mathrm{Mat}$ | square, zero above the diagonal |
+| nilpotent | $\mathrm{Mat}$ | square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`) |
+| idempotent | $\mathrm{Mat}$ | square, `A² = A` |
+| stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
+| $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
+| of size $x\timesa$ | $\mathrm{Mat}$ | `m × n` |
+| of order $x$ | $\mathrm{Mat}$ | `n × n` |
+| of rank $x$ | $\mathrm{Mat}$ | (Mathlib `Matrix.rank`) |
+| strictly diagonally dominant | $\mathrm{Mat}$ | square, `\|a_ii\| > ∑_{j≠i} \|a_ij\|` in every row |
+| diagonally dominant | $\mathrm{Mat}$ | square, `\|a_ii\| ≥ ∑_{j≠i} \|a_ij\|` in every row |
+| tridiagonal | $\mathrm{Mat}$ | square, `a_ij = 0` for `\|i - j\| > 1` |
+| upper hessenberg | $\mathrm{Mat}$ | square, `a_ij = 0` for `i > j + 1` |
+| entrywise nonnegative | $\mathrm{Mat}$ | `a_ij ≥ 0` |
+| with bandwidth $x$ | $\mathrm{Mat}$ | `a_ij = 0` for `\|i - j\| > k` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of rows of $a$ | $\mathrm{Mat}$ → ℝ | `m` |
+| number of columns of $a$ | $\mathrm{Mat}$ → ℝ | `n` |
+| entry of $a$ in row $b$ and column $c$ | $\mathrm{Mat}$ → ℝ → ℝ → ℝ | `A i j`, for `1 ≤ i ≤ m`, `1 ≤ j ≤ n` |
+| determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
+| trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
+| rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
+| inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
+| identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| identity matrix of order $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ identity matrix | ℝ → ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
+| set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| frobenius norm of $a$ | $\mathrm{Mat}$ → ℝ | `√(∑ a_ij²)` (Mathlib `Matrix.frobeniusNorm`) |
+| maximum absolute row sum of $a$ | $\mathrm{Mat}$ → ℝ | `‖A‖_∞ = max_i ∑_j \|a_ij\|` (Mathlib `Matrix.linfty_opNorm`) |
+| maximum absolute column sum of $a$ | $\mathrm{Mat}$ → ℝ | `‖A‖_1 = max_j ∑_i \|a_ij\|` |
+| condition number of $a$ in the frobenius norm | $\mathrm{Mat}$ → ℝ | `‖A‖_F ‖A⁻¹‖_F`, of an invertible matrix |
+| condition number of $a$ in the maximum norm | $\mathrm{Mat}$ → ℝ | `‖A‖_∞ ‖A⁻¹‖_∞`, of an invertible matrix |
+| condition number of $a$ in the column sum norm | $\mathrm{Mat}$ → ℝ | `‖A‖_1 ‖A⁻¹‖_1`, of an invertible matrix |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
+| $+$ | $\mathrm{Mat}$ | `A + B`, of the same size |
+| $-$ | $\mathrm{Mat}$ | `A - B`, of the same size |
+| $-$ (sign) | $\mathrm{Mat}$ | `-A` |
+| $\cdot$ | $\mathrm{Mat}$ | `AB` (`cA` for a `1 × 1` matrix `c`) |
+| $/$ | $\mathrm{Mat}$ | `A B⁻¹`, for an invertible `B` (`1/A = A⁻¹`) |
+| $x^n$ | $\mathrm{Mat}$ | `A^k` of a square matrix, `k` natural |
+| $x^\top$ | $\mathrm{Mat}$ | `Aᵀ` (also `A^T`, `A^\intercal`) |
+| $\det$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{det}$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
+| $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+
+## `specialnumbers`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| perfect cube | ℝ | `m³` for an integer `m` |
+| perfect power | ℝ | `m^k` for integers `m` and `k ≥ 2` |
+| twin prime | ℝ | a prime `p` with `p - 2` or `p + 2` prime |
+| sophie germain prime | ℝ | a prime `p` with `2p + 1` prime |
+| safe prime | ℝ | a prime `p` with `(p - 1)/2` prime |
+| fermat prime | ℝ | a prime of the form `2^{2^n} + 1` |
+| power of two | ℝ | `2^k`, `k ≥ 0` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| sum of two squares | ℝ | `a² + b²` for integers `a`, `b` |
+| triangular | ℝ | `k(k+1)/2` for some `k ≥ 0` |
+| power of $x$ | ℝ | `b^k`, `k ≥ 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th fermat number | ℝ → ℝ | `2^{2^n} + 1` |
+| $a$ th mersenne number | ℝ → ℝ | `2^n - 1` |
+| $a$ th repunit | ℝ → ℝ | `(10^n - 1)/9`: `n` digits `1` |
+| $a$ th square number | ℝ → ℝ | `n²` |
+| $a$ th pentagonal number | ℝ → ℝ | `n(3n-1)/2` |
+| $a$ th tetrahedral number | ℝ → ℝ | `n(n+1)(n+2)/6` |
+| $a$ th square pyramidal number | ℝ → ℝ | `n(n+1)(2n+1)/6` |
+| $a$ th oblong number | ℝ → ℝ | `n(n+1)` |
 

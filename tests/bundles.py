@@ -25,7 +25,8 @@ exe = sys.argv[1:]
 src = pathlib.Path('Leanify/Library/Fields.lean').read_text()
 block = src[src.index('def bundles'):src.index('def bundleNames')]
 bundles = {m.group(1): re.findall(r'"([a-z]+)"', m.group(2)) for m in re.finditer(r'\("([a-z]+)", \[([^\]]*)\]\)', block)}
-inc = {"hilbert": ["unitsquare"], "markov": ["unitsquare", "hilbert"]}
+inc = {"hilbert": ["unitsquare"], "markov": ["unitsquare", "hilbert"], "metricspaces": ["topologies"],
+       "planegeometry": ["geometry"], "matrixnorms": ["matrices"]}
 def expand(fs):
     out = []
     for f in fs:

@@ -37,6 +37,8 @@ math
 │   ├── realfunctions             real functions: continuity, derivatives, integrals
 │   ├── realsets                  sets of real numbers: open, compact, measure
 │   ├── calculus                  higher derivatives, Taylor polynomials, arc length, areas
+│   ├── series                    summability, sums of series and power series, limits of sequences
+│   ├── integration               L^p norms, essential supremum, improper integrals
 │   ├── optimization              minimizers, convex conjugates, proximal operators
 │   ├── asymptotics               O, o, ~ at infinity; regular variation
 │   ├── transforms                Laplace, Mellin, Stieltjes transforms; convolution
@@ -58,11 +60,13 @@ math
 │   ├── realsets                  (also in analysis)
 │   ├── topologies                topologies on ℝ: open, compact, Hausdorff, continuous maps
 │   ├── metricspaces              metrics on ℝ: balls, Cauchy sequences, completeness (with topologies)
-│   └── geometry                  the Euclidean plane
+│   ├── geometry                  the Euclidean plane
+│   └── planegeometry             lines, triangle centres, conics (with geometry)
 ├── numerics                      numerical mathematics
 │   ├── approximation             errors, conditioning, difference quotients, quadrature, interpolation
 │   ├── iteration                 Newton's method, fixed-point iteration, orders of convergence
-│   └── odesolvers                initial value problems; Euler, Heun, Runge–Kutta
+│   ├── odesolvers                initial value problems; Euler, Heun, Runge–Kutta
+│   └── matrixnorms               matrix norms, condition numbers, diagonal dominance (with matrices)
 ├── stochastic                    probability and statistics
 │   ├── statistics
 │   │   ├── probability
@@ -81,7 +85,8 @@ math
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
-    └── congruences               arithmetic modulo n
+    ├── congruences               arithmetic modulo n
+    └── specialnumbers            twin and Fermat primes, perfect powers, figurate numbers
 ```
 
 A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
@@ -158,6 +163,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`realfunctions`](glossary.md#realfunctions) | real functions by a noun: continuous, Lipschitz, differentiable, smooth, monotone, convex, periodic, integrable; derivative, supremum norm, total variation, inverse | |
 | [`realsets`](glossary.md#realsets) | sets of real numbers: open, closed, compact, connected, dense, countable, null; closure, interior, supremum, Lebesgue measure | |
 | [`calculus`](glossary.md#calculus) | `$n$ times (continuously) differentiable`; the `n`th, second and third derivative, Taylor polynomials, antiderivatives, critical and inflection points; arc length, average value, area between graphs, volume of revolution | with `realfunctions` |
+| [`series`](glossary.md#series) | summable, absolutely and conditionally summable, square-summable and alternating sequences of terms; the sum and partial sums of a series, the Cauchy product, power series and their radius of convergence, geometric series; the limit, limit superior and limit inferior of a sequence | with `realfunctions` |
+| [`integration`](glossary.md#integration) | `$p$-integrable`, locally integrable and essentially bounded functions; the `L^p` norm, the essential supremum, the Hölder conjugate, improper integrals to infinity and over the line, the integral on a set | with `realfunctions`, `realsets` |
 | [`optimization`](glossary.md#optimization) | minimizers and stationary points, strongly convex and `L`-smooth functions; minimum, infimum, convex conjugate, Moreau envelope, proximal operator | with `realfunctions` |
 | [`asymptotics`](glossary.md#asymptotics) | asymptotically equivalent, dominated by (`O`), negligible compared to (`o`), of the same order (`Θ`); polynomial and exponential growth; slowly and regularly varying; the limit at infinity | with `realfunctions` |
 | [`transforms`](glossary.md#transforms) | Laplace, Mellin and Stieltjes transforms, convolution, cross-correlation, autocorrelation; of exponential order, causal | with `realfunctions` |
@@ -177,10 +184,12 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`topologies`](glossary.md#topologies) | topologies on `ℝ`: `$\tau$-open`, `-closed`, `-compact`, `-connected`, `-dense`; Hausdorff, second countable, separable, metrizable, finer and coarser; continuous, open maps and homeomorphisms between topologies; convergent sequences; the usual, discrete, indiscrete, cofinite and lower limit topologies, generated and subspace topologies; closure, interior, boundary | |
 | [`metricspaces`](glossary.md#metricspaces) | metrics, pseudometrics and ultrametrics on `ℝ`: complete, bounded, (strongly) equivalent; Cauchy and convergent sequences, isometries, contractions; the Euclidean and discrete metrics, the induced topology, balls, diameter, distance to a set | loads `topologies` |
 | [`geometry`](glossary.md#geometry) | points of the Euclidean plane: distances, triangles, lines, circles | |
+| [`planegeometry`](glossary.md#planegeometry) | the distance from a point to a line, feet of perpendiculars, reflections; circumcentre, incentre, orthocentre, circumradius and inradius of a triangle; ellipses, hyperbolas and parabolas by their foci, eccentricity | loads `geometry` |
 | **Numerical mathematics** (`numerics`) | | |
 | [`approximation`](glossary.md#approximation) | absolute and relative errors, the condition number, rounding, machine epsilon; forward, backward, central and second difference quotients; trapezoidal, midpoint and Simpson's rules (simple and composite), Riemann sums; linear and Lagrange interpolation, Chebyshev nodes | with `realfunctions` |
 | [`iteration`](glossary.md#iteration) | the Newton map, secant step and relaxation; Newton, secant and fixed-point sequences; convergent with order `p`, linearly, superlinearly, quadratically, cubically; contractive maps | with `realfunctions` |
 | [`odesolvers`](glossary.md#odesolvers) | right-hand sides `f(t, y)`, Lipschitz in the second variable; solutions of a differential equation and of an initial value problem; Euler, Heun, midpoint and Runge–Kutta steps and sequences | with `realfunctions` |
+| [`matrixnorms`](glossary.md#matrixnorms) | Frobenius norm, maximum absolute row and column sums, condition numbers; strictly diagonally dominant, tridiagonal, upper Hessenberg, banded and entrywise nonnegative matrices | loads `matrices` |
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
@@ -198,6 +207,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
 | [`congruences`](glossary.md#congruences) | congruences modulo `n`, quadratic residues, the Legendre symbol, primitive roots | |
+| [`specialnumbers`](glossary.md#specialnumbers) | twin, Sophie Germain, safe and Fermat primes, perfect cubes and powers, powers of two, sums of two squares, triangular numbers; Fermat and Mersenne numbers, repunits, pentagonal, tetrahedral, square pyramidal and oblong numbers | with `numbers` |
 
 ## Not yet
 
