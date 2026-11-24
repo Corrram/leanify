@@ -207,7 +207,7 @@ These hold for every change. A feature that cannot meet them is not added.
 | `Leanify/Grammar.lean` | the sentence constructions (each with one reading) |
 | `Leanify/Elab.lean`, `Doc.lean` | the readings: formulas and clauses to core terms, the article to a document |
 | `Leanify/Syntax.lean`, `Denote.lean` | the core language and its Mathlib meaning |
-| `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the core vocabulary (`Library/Core.lean`), the Lean meanings of the fields' constants, the field registry. A notion's argument domains go both in `doms` and in its value's `lamT` (`Build.dom1/2/3`), so that a definition made from it is well defined and each use asks for them |
+| `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the core vocabulary (`Library/Core.lean`), the Lean meanings of the fields' constants, the field registry. A notion's argument domains go both in `doms` and in its value's `lamT` (`Build.dom1/2/3`), so that a definition made from it is well defined and each use asks for them. `Fields.bundles` names the fields of an area (a tree); a bundle may not contain two fields that give a phrase different meanings (`lake exe glossary --bundles`, `tests/bundles.py`) |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the commands `#leanify_article` (with the kernel audit), `#leanify_semantics`, `#leanify_certify` |
 | `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/certify/audit/init/prepare/flatten/tex`; `Leanify.version` |
 | `Leanify/Tactic.lean`, `Integers.lean` | `intro_premises`, `definedness`, `leanify_values`, `leanify_counter`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |

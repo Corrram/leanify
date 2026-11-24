@@ -77,7 +77,9 @@ note.tex: 19 of 19 with \usepackage[vocab={graphs}]{leanify}
 ```
 
 It starts from the fields that the article names in its preamble (or from
-`--vocab`; `--vocab core` starts from none). A field changes how words are read,
+`--vocab`; `--vocab core` starts from none). When the fields it finds belong to one
+[bundle](libraries.md#bundles), it names the bundle too (`vocab={probability}` for
+`distributions` and `information`). A field changes how words are read,
 so compare the readings before you keep it: `leanify check ARTICLE.tex --vocab
 FIELDS --claims`. If no field reads more, what is not read is a wording or a
 notion that no field has, and `leanify check` names each. A single finding of the

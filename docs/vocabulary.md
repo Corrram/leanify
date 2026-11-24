@@ -213,6 +213,12 @@ Further fields cover other branches of mathematics:
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.
 
+A *bundle* names the fields of one area (`vocab=statistics`, `vocab=realanalysis`,
+`vocab=algebra`, …; [Libraries](libraries.md#bundles) has the tree). It has no words of its
+own: the article is read with its fields. No two fields of a bundle give a phrase
+different meanings (`lake exe glossary --bundles` checks it, and `tests/bundles.py` that
+every test article is read with a bundle as with its fields).
+
 Their notions take arguments (`the $n$th Catalan number`, `the degree of $v$ in $G$`),
 and an article gives them its notation (`We write $C_n$ for the $n$th Catalan number.`,
 `We write $\deg_G(v)$ for the degree of $v$ in $G$.`). A modifier may take a number too:

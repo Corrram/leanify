@@ -12,7 +12,8 @@ points are real numbers (`$x$ is a local minimizer of $f$`).
   `local minimizer of $f$`, `local maximizer of $f$`, `strict local minimizer of $f$`,
   `minimizer of $f$ on $[a,b]$`, `stationary point of $f$`;
 * notions: the minimum and maximum of a function (where they are attained), on the line and
-  on `[a,b]`, its infimum and supremum (where bounded), the minimizer (where there is exactly
+  on `[a,b]`, its infimum and supremum (where bounded: `the infimum of the function $f$`; of
+  a set, the field `topology` has `the infimum of $S$`), the minimizer (where there is exactly
   one), the set of minimizers, the convex conjugate `f^*(y) = sup_x (xy - f(x))` (where the
   supremum is finite), the Moreau envelope and the proximal operator with a parameter
   `λ > 0`.
@@ -133,9 +134,9 @@ def vocab : Vocab where
     ofF phrase!"maximum of $v$" .real (some attainsMax)
       (fun f => theR fun m => and (exR fun x => eq (app f x) m) (allR fun y => le (app f y) m))
       "the greatest value of `f`, of a function that attains it",
-    ofF phrase!"infimum of $v$" .real (some boundedBelow) inf
+    ofF phrase!"infimum of the function $v$" .real (some boundedBelow) inf
       "the greatest lower bound of the values, of a function bounded below (Mathlib `iInf`)",
-    ofF phrase!"supremum of $v$" .real (some boundedAbove) sup
+    ofF phrase!"supremum of the function $v$" .real (some boundedAbove) sup
       "the least upper bound of the values, of a function bounded above (Mathlib `iSup`)",
     ofFab phrase!"minimum of $v$ on $[v,v]$" attainsMinOn
       (fun f a b => theR fun m => and (exR fun x => and (inI a b x) (eq (app f x) m))

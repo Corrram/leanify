@@ -1035,7 +1035,9 @@ def suggestFields (path : System.FilePath) (given : Option (List String)) (extra
     (k : Nat := 4) : IO Nat := do
   let src ← readSource path
   let lines := src.lines.toList
-  let now := given.getD (preambleFields lines)
+  let named := given.getD (preambleFields lines)
+  -- (a bundle of the preamble stands for its fields)
+  let now := Fields.expand named
   let voc (fs : List String) : Vocab :=
     if fs == ["unitsquare"] then UnitSquare.withCore else if fs.isEmpty then Vocab.core else Fields.select fs
   match readWith (voc now) lines extra with
@@ -1045,7 +1047,7 @@ def suggestFields (path : System.FilePath) (given : Option (List String)) (extra
   | some base =>
     let total := ((compileArticle (voc now) lines).map (·.sentences.length)).getD 0
     let shown (fs : List String) := if fs.isEmpty then "the core vocabulary alone" else s!"vocab={String.intercalate "," fs}"
-    IO.println s!"{path}: {base.length} of {total} sentences are read as mathematics with {shown now}"
+    IO.println s!"{path}: {base.length} of {total} sentences are read as mathematics with {shown named}"
     let mut cur := now
     let mut have_ := base.length
     let mut added : List (String × Nat) := []
@@ -1074,9 +1076,17 @@ def suggestFields (path : System.FilePath) (given : Option (List String)) (extra
     else
       for (f, n) in added do
         IO.println s!"  {f}: {n} more sentence{if n == 1 then "" else "s"}"
-      IO.println s!"{path}: {have_} of {total} with \\usepackage[vocab=\{{String.intercalate "," cur}}]\{leanify}"
+      -- (the fields of the article by the names it used, and the new ones)
+      let kept := named.filter fun n => (Fields.expand [n]).any cur.contains
+      let fresh := cur.filter fun f => !(Fields.expand kept).contains f
+      let line := kept ++ fresh
+      IO.println s!"{path}: {have_} of {total} with \\usepackage[vocab=\{{String.intercalate "," line}}]\{leanify}"
+      -- a bundle that has all the new fields and more of the same area
+      match Fields.bundles.filter fun (_, ms) => fresh.length ≥ 2 && fresh.all (Fields.expand ms).contains with
+      | (b, _) :: _ => IO.println s!"(the bundle {b} has {String.intercalate ", " fresh} and the other fields of its area: vocab=\{{String.intercalate "," (kept ++ [b])}})"
+      | [] => pure ()
       IO.println s!"(a field changes how words are read: compare the readings with `leanify check {path} --vocab \
-        {String.intercalate "," cur} --claims`; docs/vocabularies.md describes the fields)"
+        {String.intercalate "," line} --claims`; docs/libraries.md lists the fields)"
       pure 0
 
 end Leanify

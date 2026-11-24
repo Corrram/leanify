@@ -98,6 +98,8 @@ def vocab : Vocab where
       doc := "`k ↦ C(k+r-1,k) p^r (1-p)^k`: failures before the `r`-th success" },
     { name := phrase!"point mass at $v$", value := pointMass, ty := .real ⟶ Ty.rfun,
       doms := [dom (isNat (.loc 0))], doc := "`k ↦ 1` if `k = m`, else `0` (Mathlib `PMF.pure`)" },
+    { name := phrase!"mean of the distribution $v$", value := mean, ty := Ty.rfun ⟶ .real, doms := [none],
+      doc := "`∑ k x(k)`, defined when the series converges" },
     { name := phrase!"mean of $v$", value := mean, ty := Ty.rfun ⟶ .real, doms := [none],
       doc := "`∑ k x(k)`, defined when the series converges" }]
 

@@ -109,7 +109,8 @@ unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularie
 branches have fields of their own (`arithmetic`, `combinatorics`, `polynomials`, `graphs`,
 `permutations`, `matrices`, `special`, `topology`, `analysis`, `vectors`, `geometry`,
 `congruences`, `groups`, `means`, `densities`, `fourier`, `information`, `optimization`,
-`dynamics`: [The vocabulary](docs/vocabulary.md#fields)). `leanify fields article.tex`
+`dynamics`: [Libraries](docs/libraries.md)), and bundles name a whole area
+(`vocab=statistics`, `vocab=realanalysis`, `vocab=algebra`). `leanify fields article.tex`
 names the fields that read more of an article.
 
 The same source gives the two readable outputs:

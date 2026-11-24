@@ -13,8 +13,8 @@ density.`) and writes `f(x)` and its integrals.
 * the standard densities, with their parameters: normal (`with mean $\mu$ and variance
   $\sigma^2$`, and the standard normal density), exponential, uniform on `[a,b]`, gamma,
   beta, chi-squared, Cauchy, Laplace, logistic, Pareto and Weibull densities;
-* notions of a density: its distribution function, mean, variance, `k`th moment, moment
-  generating function, median and differential entropy.
+* notions of a density: its distribution function, mean (`the mean of the density $f$`),
+  variance, `k`th moment, moment generating function, median and differential entropy.
 
 The densities are terms of the core language (exponentials, powers, integrals over the
 line); the gamma function, in the gamma, beta and chi-squared densities, is Mathlib's
@@ -172,8 +172,12 @@ def vocab : Vocab where
       "`(k/λ)(x/λ)^{k-1} e^{-(x/λ)^k}` for `x > 0`; `k, λ > 0`",
     ofD phrase!"distribution function of $v$" F (fun f => lamR fun x => integralTo x f) none
       "`x ↦ ∫_{-∞}^{x} f`",
-    ofD phrase!"mean of $v$" .real mean (some finiteMean) "`∫ x f(x) dx`, of a density with a finite mean",
+    -- (`mean of $v$` alone is the mean of a distribution on `ℕ₀`, in the field `distributions`:
+    -- the two fields are read together in the bundle `probability`)
+    ofD phrase!"mean of the density $v$" .real mean (some finiteMean) "`∫ x f(x) dx`, of a density with a finite mean",
     ofD phrase!"variance of $v$" .real (fun f => sub (integral (x2f f)) (mul (mean f) (mean f))) (some finiteVariance)
+      "`∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance",
+    ofD phrase!"variance of the density $v$" .real (fun f => sub (integral (x2f f)) (mul (mean f) (mean f))) (some finiteVariance)
       "`∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance",
     { name := phrase!"$v$th moment of $v$", ty := .real ⟶ F ⟶ .real,
       doms := [dom1 .real natP, dom2 F fun k f => and (isDensity f) (integrable (moment k f))],
@@ -187,6 +191,10 @@ def vocab : Vocab where
         lamT .real (fun t => integrable (lamR fun x => mul (exp (mul t x)) (app f x)))
           fun t => integral (lamR fun x => mul (exp (mul t x)) (app f x)) },
     ofD phrase!"median of $v$" .real
+      (fun f => theR fun m => eq (integralTo m f) (div (num 1) (num 2)))
+      (some fun f => exUnique fun m => eq (integralTo m f) (div (num 1) (num 2)))
+      "the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one",
+    ofD phrase!"median of the density $v$" .real
       (fun f => theR fun m => eq (integralTo m f) (div (num 1) (num 2)))
       (some fun f => exUnique fun m => eq (integralTo m f) (div (num 1) (num 2)))
       "the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one",

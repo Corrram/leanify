@@ -5,6 +5,25 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 (`docs/vocabulary.md`). `$x$` is the object a noun or adjective is about;
 `$a$`, `$b$`, … are the arguments of a notion.
 
+## Bundles
+
+A bundle is a name for the fields of one area: `\usepackage[vocab=statistics]{leanify}`
+reads an article with all of them. No two fields of a bundle give a phrase different
+meanings (`lake exe glossary --bundles` checks this).
+
+| Bundle | Made of | Its fields |
+| --- | --- | --- |
+| `probability` | `distributions`, `densities`, `information` | `distributions`, `densities`, `information` |
+| `dependence` | `markov` | `markov` |
+| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `markov` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences` | `numbers`, `arithmetic`, `congruences` |
+| `discrete` | `combinatorics`, `permutations`, `graphs` | `combinatorics`, `permutations`, `graphs` |
+| `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
+| `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
+| `functions` | `analysis`, `optimization`, `fourier`, `dynamics` | `analysis`, `optimization`, `fourier`, `dynamics` |
+| `elementary` | `special`, `hyperbolic`, `trigonometry`, `means` | `special`, `hyperbolic`, `trigonometry`, `means` |
+| `realanalysis` | `functions`, `topology`, `elementary` | `analysis`, `optimization`, `fourier`, `dynamics`, `topology`, `special`, `hyperbolic`, `trigonometry`, `means` |
+
 ## `core`
 
 | Noun | Of | Meaning |
@@ -210,6 +229,7 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | binomial distribution with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `k ↦ C(n,k) p^k (1-p)^{n-k}` for `k ≤ n` (Mathlib `PMF.binomial`) |
 | negative binomial distribution with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `k ↦ C(k+r-1,k) p^r (1-p)^k`: failures before the `r`-th success |
 | point mass at $a$ | ℝ → ℝ → ℝ | `k ↦ 1` if `k = m`, else `0` (Mathlib `PMF.pure`) |
+| mean of the distribution $a$ | (ℝ → ℝ) → ℝ | `∑ k x(k)`, defined when the series converges |
 | mean of $a$ | (ℝ → ℝ) → ℝ | `∑ k x(k)`, defined when the series converges |
 
 ## `numbers`
@@ -912,11 +932,13 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | density of the pareto distribution with scale $a$ and shape $b$ | ℝ → ℝ → ℝ → ℝ | `α x_m^α / x^{α+1}` for `x ≥ x_m`; `x_m, α > 0` |
 | density of the weibull distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `(k/λ)(x/λ)^{k-1} e^{-(x/λ)^k}` for `x > 0`; `k, λ > 0` |
 | distribution function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫_{-∞}^{x} f` |
-| mean of $a$ | (ℝ → ℝ) → ℝ | `∫ x f(x) dx`, of a density with a finite mean |
+| mean of the density $a$ | (ℝ → ℝ) → ℝ | `∫ x f(x) dx`, of a density with a finite mean |
 | variance of $a$ | (ℝ → ℝ) → ℝ | `∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance |
+| variance of the density $a$ | (ℝ → ℝ) → ℝ | `∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance |
 | $a$ th moment of $b$ | ℝ → (ℝ → ℝ) → ℝ | `∫ x^k f(x) dx`, where `x^k f(x)` is integrable |
 | moment generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `t ↦ ∫ e^{tx} f(x) dx`, at the `t` where `e^{tx} f(x)` is integrable |
 | median of $a$ | (ℝ → ℝ) → ℝ | the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one |
+| median of the density $a$ | (ℝ → ℝ) → ℝ | the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one |
 | differential entropy of $a$ | (ℝ → ℝ) → ℝ | `-∫ f log f` (`0 log 0 = 0`), where `f log f` is integrable |
 
 ## `fourier`
@@ -981,8 +1003,8 @@ An article chooses its fields with `\usepackage[vocab={…}]{leanify}`
 | --- | --- | --- |
 | minimum of $a$ | (ℝ → ℝ) → ℝ | the least value of `f`, of a function that attains it |
 | maximum of $a$ | (ℝ → ℝ) → ℝ | the greatest value of `f`, of a function that attains it |
-| infimum of $a$ | (ℝ → ℝ) → ℝ | the greatest lower bound of the values, of a function bounded below (Mathlib `iInf`) |
-| supremum of $a$ | (ℝ → ℝ) → ℝ | the least upper bound of the values, of a function bounded above (Mathlib `iSup`) |
+| infimum of the function $a$ | (ℝ → ℝ) → ℝ | the greatest lower bound of the values, of a function bounded below (Mathlib `iInf`) |
+| supremum of the function $a$ | (ℝ → ℝ) → ℝ | the least upper bound of the values, of a function bounded above (Mathlib `iSup`) |
 | minimum of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | the least value of `f` on `[a,b]`, `a ≤ b`, where it is attained |
 | maximum of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | the greatest value of `f` on `[a,b]`, `a ≤ b`, where it is attained |
 | unique minimizer of $a$ | (ℝ → ℝ) → ℝ | the point where `f` is least, of a function with exactly one such point (Mathlib `argmin`) |

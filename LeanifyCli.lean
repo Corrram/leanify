@@ -67,7 +67,8 @@ def vocabOf (fs : List String) : Except String Vocab :=
   | [] => .ok (if fs == ["unitsquare"] then UnitSquare.withCore
       else if fs.isEmpty then Vocab.core else Fields.select fs)
   | bad => .error s!"unknown vocabulary field {String.intercalate ", " bad}; the fields are \
-      {String.intercalate ", " Fields.names}"
+      {String.intercalate ", " Fields.names}; the bundles of fields are \
+      {String.intercalate ", " Fields.bundleNames}"
 
 def fnvHex (s : String) : String :=
   let h := s.toUTF8.foldl (fun (h : UInt64) b => (h ^^^ b.toUInt64) * 0x100000001b3) 0xcbf29ce484222325

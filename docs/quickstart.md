@@ -65,7 +65,7 @@ leanify fields article.tex
 
 tries every field on the article and names those that read more of its sentences, with
 the line for your preamble (`\usepackage[vocab={graphs}]{leanify}`). [Libraries](libraries.md)
-lists them all.
+lists them all, and the bundles that name a whole area (`vocab=statistics`).
 
 ## 3. Have the statements proved
 

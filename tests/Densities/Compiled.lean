@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Densities.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["densities"]
 
-#leanify_article Densities "article.tex" "fnv1a64:70f298cb43c3b31a" with Densities.vocabulary
+#leanify_article Densities "article.tex" "fnv1a64:60803cd208fffd6d" with Densities.vocabulary

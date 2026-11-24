@@ -98,6 +98,14 @@ checks() {
   grep -q "no other field of the vocabulary reads more" "$TMP/fields.txt" || fail "tests/Graphs: a further field is suggested"
   endgroup
 
+  group "A bundle of fields reads an article as its fields do"
+  lake exe glossary --bundles || fail "two fields of a bundle give a phrase different meanings"
+  $PYTHON tests/bundles.py $LEANIFY > "$TMP/bundles.txt" || { grep -v "^ok" "$TMP/bundles.txt"; fail "a bundle reads a test article differently"; }
+  tail -1 "$TMP/bundles.txt"
+  $LEANIFY fields tests/Information/article.tex --vocab core > "$TMP/fields.txt" || fail "leanify fields"
+  grep -q "the bundle probability has distributions, information" "$TMP/fields.txt" || fail "tests/Information: the bundle is not named"
+  endgroup
+
   group "The glossary of the vocabulary is up to date"
   lake exe glossary > "$TMP/glossary.md"
   if [ "${UPDATE:-}" = 1 ]; then cp "$TMP/glossary.md" docs/glossary.md; echo "wrote docs/glossary.md"
