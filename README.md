@@ -5,6 +5,17 @@
 One LaTeX source, read twice: typeset as the paper you submit, and compiled by
 Lean into kernel-checked statements and proofs.
 
+1. **Compile the article as it is**, with `\usepackage{leanify}`: every sentence of a
+   result without a single reading, and every undefined symbol, is a LaTeX warning at its
+   line.
+2. **Remove the ambiguities**, with small edits. The article stays ordinary mathematical
+   English, and you can read what each theorem says formally.
+3. **Have the statements proved**, by you or by a model: Lean accepts a proof or it does
+   not, and a theorem that is false as stated is refuted.
+
+The first two steps need no knowledge of Lean:
+[quick start](https://corrram.github.io/leanify/quickstart/).
+
 Leanify compiles an ordinary mathematical article, written in good
 mathematical English, to Lean. Every symbol must be defined in the article
 before it is used, every sentence has one fixed reading, and a proof step may

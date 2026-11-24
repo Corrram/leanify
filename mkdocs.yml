@@ -17,6 +17,7 @@ site_dir: _site
 
 nav:
   - Home: index.md
+  - Quick start: quickstart.md
   - Tutorial: getting-started.md
   - Live demo: demo.md
   - Guide:

@@ -8,21 +8,52 @@ hide:
 
 # Leanify
 
-<p class="pr-lead">One LaTeX source, read twice: typeset as the paper you submit, and compiled by
-Lean into kernel-checked statements and proofs.</p>
+<p class="pr-lead">Add one line to your LaTeX article. Leanify reads its definitions, theorems and
+proofs as Lean statements, tells you where a sentence is ambiguous, and has Lean's kernel
+check the rest.</p>
 
-[Get started](getting-started.md){ .md-button .md-button--primary }
+[Quick start](quickstart.md){ .md-button .md-button--primary }
 [See the live demo](demo.md){ .md-button }
 
 </div>
 
-Leanify compiles an ordinary mathematical article, written in good
-mathematical English, to Lean. Every symbol must be defined in the article
-before it is used, every sentence has one fixed reading, and a proof step may
-use only the results it cites. The Lean kernel checks every definition, every
-claim and every step of every compiled proof, and on request the compilation
-itself. There is no
-second, hand-written formal version that could drift away from the paper.
+A formalization usually lives next to a paper: someone translates the theorems to Lean by
+hand, and a reader has to trust that the Lean statement is the theorem of the paper.
+Leanify removes the second text. The formal statement is computed from the sentence of
+the article, by a fixed grammar, so the paper you submit is the thing that is checked.
+
+## Three steps
+
+<div class="grid cards" markdown>
+
+-   :material-numeric-1-circle:{ .lg .middle } **Compile the article as it is**
+
+    ---
+
+    `\usepackage{leanify}`, and compile. Every sentence of a result that has no
+    single reading, and every symbol that nothing defines, is a LaTeX warning at
+    its line.
+
+-   :material-numeric-2-circle:{ .lg .middle } **Remove the ambiguities**
+
+    ---
+
+    Small edits: a missing domain, a quantifier, a typo. The article stays
+    ordinary mathematical English, and you can read what each theorem now says
+    formally.
+
+-   :material-numeric-3-circle:{ .lg .middle } **Have the statements proved**
+
+    ---
+
+    Leanify writes one Lean obligation per definition and claim. You, or a
+    model, prove them. Lean accepts a proof or it does not, and a false theorem
+    is refuted.
+
+</div>
+
+The first two steps need no knowledge of Lean, and they already find mistakes: the
+[tutorial](getting-started.md) draft has four, of the kind that reach referees.
 
 ## From a sentence to a theorem
 
@@ -70,9 +101,9 @@ the diagnostics and the margin of the PDF mark it false.
 
     ---
 
-    `lake exe leanify check` reads the article in about a second: undefined
-    symbols, statements without a reading, and the formal reading of every
-    claim.
+    Every compile checks the article in about a second: undefined symbols,
+    statements without a reading, and the formal reading of every claim, as
+    warnings in your editor.
 
 -   :material-certificate-outline:{ .lg .middle } **A certificate**
 
@@ -99,19 +130,32 @@ the diagnostics and the margin of the PDF mark it false.
 
 </div>
 
-## In three commands
+## Words of your subject
 
-```sh
-lake exe leanify check Note/article.tex --claims   # what Leanify reads, in a second
-lake exe leanify init Note/article.tex             # the Lean files, with a stub proof per claim
-lake build Note.Certified                            # the kernel checks the statements and your proofs
+An article does not define a probability measure, a prime or a graph. Such words come
+from a *vocabulary*, which the article loads as a program loads a library:
+
+```latex
+\usepackage[vocab=unitsquare]{leanify}   % copulas and couplings on the unit square
 ```
 
-Or one: `leanify certify article.tex` makes a Lean project for the article (the
-folder `lean` next to it), writes the Lean files and builds the certificate.
+There are vocabularies for number theory, combinatorics, complex numbers, special
+functions, real analysis and topology, vectors and matrices, plane geometry, polynomials,
+graphs, groups, permutations, probability on the unit square and on the natural numbers,
+and functions on the torus. Each one gives its words a meaning in mathlib, and some add proved
+facts about them. [Vocabularies and models](vocabularies.md) ·
+[Glossary](glossary.md)
 
-The [tutorial](getting-started.md) takes a one-page note from a draft with four
-mistakes to a certificate, with the real output of every step.
+## On the command line
+
+```sh
+leanify check article.tex --claims   # what Leanify reads, in a second
+leanify certify article.tex          # the Lean project, the obligations, the certificate
+```
+
+The [quick start](quickstart.md) is the short way in. The [tutorial](getting-started.md)
+takes a one-page note from a draft with four mistakes to a certificate, with the real
+output of every step.
 
 ## Research articles
 
