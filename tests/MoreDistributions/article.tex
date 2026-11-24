@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={distributions}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\mathrm{Geo}(p)$ for the geometric distribution with parameter $p$.
+We write $\mathrm{Ber}(p)$ for the Bernoulli distribution with parameter $p$.
+We write $\mathrm{U}_n$ for the discrete uniform distribution on $n$ points.
+We write $\mu(q)$ for the mean of $q$.
+We write $\mathrm{Var}(q)$ for the variance of the distribution $q$.
+We write $G_q$ for the probability generating function of $q$.
+
+\section{Distributions}
+
+\begin{lemma}\label{geometric}
+Let $0<p\le1$. Then $\mathrm{Geo}(p)$ is a probability distribution on $\mathbb N_0$, and $\mu(\mathrm{Geo}(p))=\frac{1-p}{p}$.
+\end{lemma}
+
+\begin{lemma}\label{bernoulli}
+Let $0\le p\le1$. Then $\mathrm{Var}(\mathrm{Ber}(p))=p(1-p)$.
+\end{lemma}
+
+\begin{lemma}\label{uniform}
+Let $n$ be a positive integer. Then $\mathrm{U}_n(0)=\frac1n$, and $G_{\mathrm{U}_n}(1)=1$.
+\end{lemma}
+
+\end{document}

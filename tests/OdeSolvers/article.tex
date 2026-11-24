@@ -11,6 +11,7 @@ We write $\Phi^H_h(f)$ for the Heun step of $f$ with step size $h$.
 We write $\Phi^{RK}_h(f)$ for the Runge-Kutta step of $f$ with step size $h$.
 For all real numbers $t$ and $y$, let $\lambda(t,y)\coloneqq y$.
 For every real number $t$, let $u(t)\coloneqq e^t$.
+For every real number $t$, let $w(t)\coloneqq\cos t$.
 
 \section{The equation}
 
@@ -38,6 +39,12 @@ Let $h$ be a real number. Then $\Phi^H_h(\lambda)(0,1)=1+h+\frac{h^2}{2}$ and $\
 
 \begin{lemma}\label{sequence}
 Let $h$ be a real number and let $y:\mathbb{R}\to\mathbb{R}$ be a function. If $y$ is an Euler sequence for $\lambda$ with step size $h$ and $y(0)=1$, then $y(n)=(1+h)^n$ for every nonnegative integer $n$.
+\end{lemma}
+
+\section{Equations of order two}
+
+\begin{lemma}\label{oscillator}
+$w$ is a solution of the linear equation with constant coefficients $0$ and $1$, and $u$ is a solution of the linear equation with constant coefficients $-2$ and $1$.
 \end{lemma}
 
 \end{document}

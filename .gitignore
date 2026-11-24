@@ -60,3 +60,7 @@ article-reader/
 /tests/Recurrences/article.leanify.*
 /tests/Copulas/article.leanify.*
 /tests/MoreDensities/article.leanify.*
+/tests/OrthogonalPolynomials/article.leanify.*
+/tests/Counting/article.leanify.*
+/tests/Samples/article.leanify.*
+/tests/MoreDistributions/article.leanify.*

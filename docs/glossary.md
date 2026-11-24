@@ -30,6 +30,7 @@ except a notion whose meanings take arguments of different types, which the type
       * `hyperbolic`
       * `trigonometry`
       * `means`
+      * `orthogonalpolynomials`
     * `complex`
     * `torus`
   * `algebra`
@@ -57,11 +58,13 @@ except a notion whose meanings take arguments of different types, which the type
         * `information`
         * `risk`
         * `stochasticorders`
+      * `samples`
       * `dependence`
         * `copulas`
     * `finance`
   * `discrete`
     * `combinatorics`
+    * `counting`
     * `permutations`
     * `graphs`
     * `recurrences`
@@ -73,19 +76,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas`, `finance`, `combinatorics`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas`, `finance`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` |
-| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas`, `finance` |
-| `discrete` | `combinatorics`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `permutations`, `graphs`, `recurrences` |
+| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas`, `finance` |
+| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
-| `elementary` | `special`, `hyperbolic`, `trigonometry`, `means` | `special`, `hyperbolic`, `trigonometry`, `means` |
+| `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
 | `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas` |
+| `statistics` | `probability`, `samples`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `samples`, `copulas` |
 
 ## `core`
 
@@ -295,6 +298,12 @@ except a notion whose meanings take arguments of different types, which the type
 | point mass at $a$ | ℝ → ℝ → ℝ | `k ↦ 1` if `k = m`, else `0` (Mathlib `PMF.pure`) |
 | mean of the distribution $a$ | (ℝ → ℝ) → ℝ | `∑ k x(k)`, defined when the series converges |
 | mean of $a$ | (ℝ → ℝ) → ℝ | `∑ k x(k)`, defined when the series converges |
+| geometric distribution with parameter $a$ | ℝ → ℝ → ℝ | `p(1-p)^k`, the number of failures before the first success; `0 < p ≤ 1` |
+| bernoulli distribution with parameter $a$ | ℝ → ℝ → ℝ | `1 - p` at `0`, `p` at `1`; `0 ≤ p ≤ 1` |
+| discrete uniform distribution on $a$ points | ℝ → ℝ → ℝ | `1/n` at `0, …, n-1`; `n ≥ 1` |
+| hypergeometric distribution with parameters $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | `\binom{K}{k}\binom{N-K}{n-k}/\binom{N}{n}`: `k` marked in a sample of `n` from `N` with `K` marked |
+| variance of the distribution $a$ | (ℝ → ℝ) → ℝ | `∑ k² x(k) - (∑ k x(k))²`, where `∑ k² x(k)` converges |
+| probability generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∑ x(k) s^k`, where the series converges |
 
 ## `numbers`
 
@@ -1432,6 +1441,9 @@ except a notion whose meanings take arguments of different types, which the type
 | lipschitz in the second variable with constant $x$ | ℝ → ℝ → ℝ | `\|f(t,y) - f(t,z)\| ≤ L\|y - z\|` |
 | solution of the differential equation with right-hand side $x$ | ℝ → ℝ | `y'(t) = f(t, y(t))` for every `t` (Mathlib `HasDerivAt`) |
 | solution of the initial value problem with right-hand side $x$ and initial value $a$ at $b$ | ℝ → ℝ | `y'(t) = f(t, y(t))` for every `t` and `y(t_0) = y_0` |
+| solution of the linear equation with constant coefficients $x$ and $a$ | ℝ → ℝ | `y'' + a y' + b y = 0`: `y` and `y'` differentiable everywhere |
+| solution of the linear equation with constant coefficients $x$ and $a$ and forcing $b$ | ℝ → ℝ | `y'' + a y' + b y = h` |
+| solution of the logistic equation with rate $x$ and capacity $a$ | ℝ → ℝ | `y' = r y (1 - y/K)` |
 | euler sequence for $x$ with step size $a$ | ℝ → ℝ | `y_{n+1} = y_n + h f(nh, y_n)` |
 | runge-kutta sequence for $x$ with step size $a$ | ℝ → ℝ | `y_{n+1}` is the classical Runge–Kutta step from `(nh, y_n)` |
 
@@ -1755,4 +1767,51 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | $L^2$ | ($[0,1]$ → ℝ) → Prop | the square-integrable functions on `[0,1]`: measurable, with an integrable square (Mathlib `MemLp f 2`) |
 | $L^2_0$ | ($[0,1]$ → ℝ) → Prop | the functions of `L^2` with integral zero |
+
+## `orthogonalpolynomials`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| legendre polynomial of degree $a$ | ℝ → ℝ → ℝ | `P_n`, orthogonal on `[-1,1]` (Mathlib `Polynomial.shiftedLegendre`, shifted) |
+| hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `H_n` (physicists'), orthogonal for `e^{-x²}` |
+| physicists' hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `H_n` |
+| probabilists' hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `He_n`, orthogonal for `e^{-x²/2}` (Mathlib `Polynomial.hermite`) |
+| laguerre polynomial of degree $a$ | ℝ → ℝ → ℝ | `L_n`, orthogonal for `e^{-x}` on `[0,∞)` |
+| chebyshev polynomial of the first kind of degree $a$ | ℝ → ℝ → ℝ | `T_n`, `T_n(cos θ) = cos(nθ)` (Mathlib `Polynomial.Chebyshev.T`) |
+| chebyshev polynomial of the second kind of degree $a$ | ℝ → ℝ → ℝ | `U_n`, `U_n(cos θ) sin θ = sin((n+1)θ)` (Mathlib `Polynomial.Chebyshev.U`) |
+
+## `counting`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of $a$-element subsets of a set of $b$ elements | ℝ → ℝ → ℝ | `\\binom{n}{k}` |
+| number of subsets of a set of $a$ elements | ℝ → ℝ | `2^n` |
+| number of $a$-permutations of $b$ elements | ℝ → ℝ → ℝ | `n!/(n-k)!`, `k ≤ n` |
+| number of permutations of $a$ elements | ℝ → ℝ | `n!` |
+| number of $a$-element multisets of $b$ elements | ℝ → ℝ → ℝ | `\\binom{n+k-1}{k}` |
+| number of maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `n^k` |
+| number of injective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `n!/(n-k)!` for `k ≤ n`, `0` else |
+| number of surjective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `∑_{j=0}^{n} (-1)^j \\binom{n}{j} (n-j)^k` (inclusion–exclusion) |
+| number of compositions of $a$ into $b$ positive parts | ℝ → ℝ → ℝ | `\\binom{n-1}{k-1}` for `1 ≤ k ≤ n`, `0` else |
+| number of compositions of $a$ into $b$ nonnegative parts | ℝ → ℝ → ℝ | `\\binom{n+k-1}{k-1}`, `k ≥ 1` |
+| number of lattice paths from $(0,0)$ to $(a,b)$ | ℝ → ℝ → ℝ | `\\binom{m+n}{m}`, with unit steps right and up |
+| multinomial coefficient of $a$ over $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `n!/(a! b! c!)`, `a + b + c = n` |
+
+## `samples`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| sample mean of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(1/n) ∑_{i=1}^{n} x_i` |
+| sample variance of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(1/(n-1)) ∑ (x_i - x̄)²`, `n ≥ 2` (unbiased) |
+| empirical variance of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(1/n) ∑ (x_i - x̄)²` |
+| sample standard deviation of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `√((1/(n-1)) ∑ (x_i - x̄)²)`, `n ≥ 2` |
+| $a$ th sample moment of the first $b$ terms of $c$ | ℝ → ℝ → (ℝ → ℝ) → ℝ | `(1/n) ∑ x_i^k` |
+| empirical distribution function of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `t ↦ #{i ≤ n : x_i ≤ t}/n` |
+| $a$ th order statistic of the first $b$ terms of $c$ | ℝ → ℝ → (ℝ → ℝ) → ℝ | the `k`th smallest of `x_1, …, x_n`, counted with multiplicity; `1 ≤ k ≤ n` |
+| sample median of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | the middle order statistic (`n` odd), the mean of the two middle ones (`n` even) |
+| range of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | the largest minus the smallest of `x_1, …, x_n` |
+| sample covariance of the first $a$ terms of $b$ and $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `(1/(n-1)) ∑ (x_i - x̄)(y_i - ȳ)`, `n ≥ 2` |
+| sample correlation coefficient of the first $a$ terms of $b$ and $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ | Pearson's `r`, where neither sample is constant |
+| slope of the least-squares line of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑(x_i - x̄)(y_i - ȳ)/∑(x_i - x̄)²`, where `x_1, …, x_n` are not all equal |
+| intercept of the least-squares line of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `ȳ - b x̄` with the slope `b`, where `x_1, …, x_n` are not all equal |
 

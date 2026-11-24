@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={orthogonalpolynomials}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $P_n$ for the Legendre polynomial of degree $n$.
+We write $H_n$ for the Hermite polynomial of degree $n$.
+We write $L_n$ for the Laguerre polynomial of degree $n$.
+We write $T_n$ for the Chebyshev polynomial of the first kind of degree $n$.
+We write $U_n$ for the Chebyshev polynomial of the second kind of degree $n$.
+
+\section{Values}
+
+\begin{lemma}\label{legendre}
+$P_2(x)=\frac{3x^2-1}{2}$ for every real number $x$, and $P_n(1)=1$ for every nonnegative integer $n$.
+\end{lemma}
+
+\begin{lemma}\label{hermite}
+For every real number $x$, $H_2(x)=4x^2-2$ and $L_1(x)=1-x$.
+\end{lemma}
+
+\begin{lemma}\label{chebyshev}
+For every real number $x$, $T_2(x)=2x^2-1$ and $U_2(x)=4x^2-1$. For every nonnegative integer $n$, $T_n(1)=1$.
+\end{lemma}
+
+\end{document}

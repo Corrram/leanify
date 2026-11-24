@@ -5,17 +5,20 @@ tests/OdeSolvers/article.tex:11:1: info: defines \Phi^{RK} (PhiRK)
 tests/OdeSolvers/article.tex:11:1: info: \Phi^{RK} is well defined if: \forall x\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \neg (6=0)\land (\neg (2=0)\land \neg (2=0))\land (\neg (2=0)\land \neg (2=0)\land \neg (2=0)\land \neg (2=0))\land \neg (2=0)\land \neg (2=0)\land \neg (2=0)\land \neg (2=0)
 tests/OdeSolvers/article.tex:12:1: info: defines \lambda (lambda)
 tests/OdeSolvers/article.tex:13:1: info: defines u (u)
-tests/OdeSolvers/article.tex:18:1: info: claim 0: (\forall x\in \mathbb{R},\ (u)'(x)=\lambda(x,u(x))\text{ within }(y\in \mathbb{R}\mapsto \top))\land u(0)=1
-tests/OdeSolvers/article.tex:22:1: info: claim 1: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \lvert \lambda(x,y)-\lambda(x,z)\rvert\le 1\,\lvert y-z\rvert
-tests/OdeSolvers/article.tex:26:265: info: claim 2: \forall x\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ \lvert x(s,t)-x(s,a)\rvert\le z\,\lvert t-a\rvert)\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ (y)'(s)=x(s,y(s))\text{ within }(t\in \mathbb{R}\mapsto \top))\Rightarrow (\forall s\in \mathbb{R},\ (z)'(s)=x(s,z(s))\text{ within }(t\in \mathbb{R}\mapsto \top))\Rightarrow y(0)=z(0)\Rightarrow (\forall s\in \mathbb{R},\ y(s)=z(s)))
-tests/OdeSolvers/article.tex:32:27: info: claim 3: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \Phi^E(\lambda,x,y,z)=(1+x)\,z
-tests/OdeSolvers/article.tex:36:27: info: claim 4: \forall x\in \mathbb{R},\ \Phi^H(\lambda,x,0,1)=1+x+\frac{{x}^{2}}{2}
-tests/OdeSolvers/article.tex:36:27: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ \neg (2=0)
-tests/OdeSolvers/article.tex:36:27: info: claim 5: \forall x\in \mathbb{R},\ \Phi^{RK}(\lambda,x,0,1)=1+x+\frac{{x}^{2}}{2}+\frac{{x}^{3}}{6}+\frac{{x}^{4}}{24}
-tests/OdeSolvers/article.tex:36:27: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ (\neg (2=0)\land \neg (6=0))\land \neg (24=0)
-tests/OdeSolvers/article.tex:40:77: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{N}\Rightarrow y(z+1)=y(z)+x\,\lambda(z\,x,y(z)))\land y(0)=1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow y(z)={(1+x)}^{z})
-tests/OdeSolvers/article.tex:40:77: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{N}\Rightarrow y(z+1)=y(z)+x\,\lambda(z\,x,y(z)))\land y(0)=1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow z\in \mathbb{Z}\land (\neg (1+x=0)\lor 0\le z))
-tests/OdeSolvers/article.tex: 5 definitions, 7 claims
-  text: 5 compiled, 0 failed, 0 prose (of 5)
-  results: 11 compiled, 0 failed, 0 prose (of 11)
-  all: 16 compiled, 0 failed, 0 prose (of 16)
+tests/OdeSolvers/article.tex:14:1: info: defines w (w)
+tests/OdeSolvers/article.tex:19:1: info: claim 0: (\forall x\in \mathbb{R},\ (u)'(x)=\lambda(x,u(x))\text{ within }(y\in \mathbb{R}\mapsto \top))\land u(0)=1
+tests/OdeSolvers/article.tex:23:1: info: claim 1: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \lvert \lambda(x,y)-\lambda(x,z)\rvert\le 1\,\lvert y-z\rvert
+tests/OdeSolvers/article.tex:27:265: info: claim 2: \forall x\in \mathbb{R}\to \mathbb{R}\to \mathbb{R},\ (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ \lvert x(s,t)-x(s,a)\rvert\le z\,\lvert t-a\rvert)\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ (y)'(s)=x(s,y(s))\text{ within }(t\in \mathbb{R}\mapsto \top))\Rightarrow (\forall s\in \mathbb{R},\ (z)'(s)=x(s,z(s))\text{ within }(t\in \mathbb{R}\mapsto \top))\Rightarrow y(0)=z(0)\Rightarrow (\forall s\in \mathbb{R},\ y(s)=z(s)))
+tests/OdeSolvers/article.tex:33:27: info: claim 3: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \Phi^E(\lambda,x,y,z)=(1+x)\,z
+tests/OdeSolvers/article.tex:37:27: info: claim 4: \forall x\in \mathbb{R},\ \Phi^H(\lambda,x,0,1)=1+x+\frac{{x}^{2}}{2}
+tests/OdeSolvers/article.tex:37:27: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ \neg (2=0)
+tests/OdeSolvers/article.tex:37:27: info: claim 5: \forall x\in \mathbb{R},\ \Phi^{RK}(\lambda,x,0,1)=1+x+\frac{{x}^{2}}{2}+\frac{{x}^{3}}{6}+\frac{{x}^{4}}{24}
+tests/OdeSolvers/article.tex:37:27: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ (\neg (2=0)\land \neg (6=0))\land \neg (24=0)
+tests/OdeSolvers/article.tex:41:77: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{N}\Rightarrow y(z+1)=y(z)+x\,\lambda(z\,x,y(z)))\land y(0)=1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow y(z)={(1+x)}^{z})
+tests/OdeSolvers/article.tex:41:77: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{N}\Rightarrow y(z+1)=y(z)+x\,\lambda(z\,x,y(z)))\land y(0)=1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow z\in \mathbb{Z}\land (\neg (1+x=0)\lor 0\le z))
+tests/OdeSolvers/article.tex:47:1: info: claim 7: \exists x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ (w)'(y)=x(y)\text{ within }(z\in \mathbb{R}\mapsto \top))\land (\forall y\in \mathbb{R},\ (x)'(y)=0-0\,x(y)-1\,w(y)\text{ within }(z\in \mathbb{R}\mapsto \top))
+tests/OdeSolvers/article.tex:47:1: info: claim 8: \exists x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ (u)'(y)=x(y)\text{ within }(z\in \mathbb{R}\mapsto \top))\land (\forall y\in \mathbb{R},\ (x)'(y)=0--2\,x(y)-1\,u(y)\text{ within }(z\in \mathbb{R}\mapsto \top))
+tests/OdeSolvers/article.tex: 6 definitions, 9 claims
+  text: 6 compiled, 0 failed, 0 prose (of 6)
+  results: 12 compiled, 0 failed, 0 prose (of 12)
+  all: 18 compiled, 0 failed, 0 prose (of 18)

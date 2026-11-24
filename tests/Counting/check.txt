@@ -1,0 +1,25 @@
+tests/Counting/article.tex:9:1: info: defines \binom{[ (binom)
+tests/Counting/article.tex:10:1: info: defines \mathrm{Surj} (mathrmSurj)
+tests/Counting/article.tex:11:1: info: defines \@n2 (n2)
+tests/Counting/article.tex:12:1: info: defines \@n3 (n3)
+tests/Counting/article.tex:13:1: info: defines \@n4 (n4)
+tests/Counting/article.tex:18:1: info: claim 0: \@n3(3)=8
+tests/Counting/article.tex:18:1: info: claim 0 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
+tests/Counting/article.tex:18:1: info: claim 1: \binom{[(2,5)=10
+tests/Counting/article.tex:18:1: info: claim 1 is meaningful if: ((5\in \mathbb{Z}\land 0\le 5)\land \top)\land 2\in \mathbb{Z}\land 0\le 2
+tests/Counting/article.tex:22:1: info: claim 2: \mathrm{Surj}(3,2)=6
+tests/Counting/article.tex:22:1: info: claim 2 is meaningful if: ((2\in \mathbb{Z}\land 0\le 2)\land \top)\land 3\in \mathbb{Z}\land 0\le 3
+tests/Counting/article.tex:22:25: info: claim 3: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow \mathrm{Surj}(x,x)=x!
+tests/Counting/article.tex:22:25: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (((x\in \mathbb{Z}\land 0\le x)\land \top)\land x\in \mathbb{Z}\land 0\le x)\land x\in \mathbb{N}
+tests/Counting/article.tex:26:1: info: claim 4: \@n2(2,2)=6
+tests/Counting/article.tex:26:1: info: claim 4 is meaningful if: ((2\in \mathbb{Z}\land 0\le 2)\land \top)\land 2\in \mathbb{Z}\land 0\le 2
+tests/Counting/article.tex:26:13: info: claim 5: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{N}\Rightarrow \@n2(x,y)=\@n2(y,x))
+tests/Counting/article.tex:26:13: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{N}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{N}\Rightarrow (((y\in \mathbb{Z}\land 0\le y)\land \top)\land x\in \mathbb{Z}\land 0\le x)\land ((x\in \mathbb{Z}\land 0\le x)\land \top)\land y\in \mathbb{Z}\land 0\le y)
+tests/Counting/article.tex:30:32: info: claim 6: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \@n4(x,1)=1
+tests/Counting/article.tex:30:32: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow ((1\in \mathbb{Z}\land 0\le 1)\land \top)\land x\in \mathbb{Z}\land 0\le x
+tests/Counting/article.tex:30:32: info: claim 7: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \@n4(x,x)=1
+tests/Counting/article.tex:30:32: info: claim 7 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow ((x\in \mathbb{Z}\land 0\le x)\land \top)\land x\in \mathbb{Z}\land 0\le x
+tests/Counting/article.tex: 5 definitions, 8 claims
+  text: 5 compiled, 0 failed, 0 prose (of 5)
+  results: 7 compiled, 0 failed, 0 prose (of 7)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

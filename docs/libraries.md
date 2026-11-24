@@ -47,7 +47,8 @@ math
 │   ├── elementary
 │   │   ├── special               gamma, beta, zeta
 │   │   ├── hyperbolic, trigonometry
-│   │   └── means                 the classical means of two numbers
+│   │   ├── means                 the classical means of two numbers
+│   │   └── orthogonalpolynomials Legendre, Hermite, Laguerre, Chebyshev
 │   ├── complex                   the complex numbers
 │   └── torus                     functions on the torus
 ├── algebra
@@ -70,17 +71,19 @@ math
 ├── stochastic                    probability and statistics
 │   ├── statistics
 │   │   ├── probability
-│   │   │   ├── distributions     distributions on ℕ₀
+│   │   │   ├── distributions     distributions on ℕ₀ (Poisson, binomial, geometric, …)
 │   │   │   ├── densities         densities on the line
 │   │   │   ├── information       entropy and divergences
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   └── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
+│   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   └── finance                   interest, annuities, Black–Scholes
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
+│   ├── counting                  subsets, maps, surjections, compositions, lattice paths
 │   ├── permutations
 │   ├── graphs
 │   └── recurrences               progressions, Fibonacci and linear recurrences
@@ -174,6 +177,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`dynamics`](glossary.md#dynamics) | iterates, orbits, fixed and periodic points and their stability, least period, Lyapunov exponent | with `realfunctions` |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
 | [`hyperbolic`](glossary.md#hyperbolic), [`trigonometry`](glossary.md#trigonometry) | `\sinh`, `\cosh`, `\tanh`; `\arcsin`, `\arccos`, `\arctan`, `\cot` with their domains | |
+| [`orthogonalpolynomials`](glossary.md#orthogonalpolynomials) | the Legendre, Hermite (physicists' and probabilists'), Laguerre and Chebyshev (first and second kind) polynomials of degree `n` | |
 | [`means`](glossary.md#means) | arithmetic, geometric, harmonic, quadratic, logarithmic, identric, power and Lehmer means of two numbers | |
 | [`complex`](glossary.md#complex) | the complex numbers, a type of its own with its arithmetic | |
 | [`torus`](glossary.md#torus) | smooth functions on `𝕋²`, `C^m` norms, directional derivatives | |
@@ -190,13 +194,14 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | **Numerical mathematics** (`numerics`) | | |
 | [`approximation`](glossary.md#approximation) | absolute and relative errors, the condition number, rounding, machine epsilon; forward, backward, central and second difference quotients; trapezoidal, midpoint and Simpson's rules (simple and composite), Riemann sums; linear and Lagrange interpolation, Chebyshev nodes | with `realfunctions` |
 | [`iteration`](glossary.md#iteration) | the Newton map, secant step and relaxation; Newton, secant and fixed-point sequences; convergent with order `p`, linearly, superlinearly, quadratically, cubically; contractive maps | with `realfunctions` |
-| [`odesolvers`](glossary.md#odesolvers) | right-hand sides `f(t, y)`, Lipschitz in the second variable; solutions of a differential equation and of an initial value problem; Euler, Heun, midpoint and Runge–Kutta steps and sequences | with `realfunctions` |
+| [`odesolvers`](glossary.md#odesolvers) | right-hand sides `f(t, y)`, Lipschitz in the second variable; solutions of a differential equation and of an initial value problem, of linear equations of order two with constant coefficients and of the logistic equation; Euler, Heun, midpoint and Runge–Kutta steps and sequences | with `realfunctions` |
 | [`matrixnorms`](glossary.md#matrixnorms) | Frobenius norm, maximum absolute row and column sums, condition numbers; strictly diagonally dominant, tridiagonal, upper Hessenberg, banded and entrywise nonnegative matrices | loads `matrices` |
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
 | [`copulas`](glossary.md#copulas) | the independence, comonotonicity and countermonotonicity copulas; Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian copulas; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's gamma, Chatterjee's xi, tail dependence coefficients; positively and negatively quadrant dependent, radially symmetric, left tail decreasing, max-stable; the concordance order | loads `markov` |
-| [`distributions`](glossary.md#distributions) | probability distributions on `ℕ₀`: Poisson, binomial, negative binomial, point masses, the mean | |
+| [`distributions`](glossary.md#distributions) | probability distributions on `ℕ₀`: Poisson, binomial, negative binomial, geometric, Bernoulli, discrete uniform, hypergeometric, point masses; the mean, the variance, the probability generating function | |
+| [`samples`](glossary.md#samples) | the first `n` terms of a sequence as a sample: sample mean, variance and standard deviation, moments, the empirical distribution function, order statistics, median and range, sample covariance and correlation, least-squares slope and intercept | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
@@ -204,6 +209,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
+| [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
 | [`permutations`](glossary.md#permutations) | permutations of `{1, …, n}`: sign, order, cycles, inversions | |
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
 | [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |

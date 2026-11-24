@@ -1,0 +1,21 @@
+tests/MoreDistributions/article.tex:9:1: info: defines \mathrm{Geo} (mathrmGeo)
+tests/MoreDistributions/article.tex:10:1: info: defines \mathrm{Ber} (mathrmBer)
+tests/MoreDistributions/article.tex:11:1: info: defines \mathrm{U} (mathrmU)
+tests/MoreDistributions/article.tex:11:1: info: \mathrm{U} is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 0\le y)\land y<x\Rightarrow \neg (x=0))
+tests/MoreDistributions/article.tex:12:1: info: defines \mu (mu)
+tests/MoreDistributions/article.tex:12:1: info: \mu is well defined if: \forall x\in \mathbb{R}\to \mathbb{R},\ \sum_{y=0}^{\infty}y\,x(y)\text{ converges}
+tests/MoreDistributions/article.tex:13:1: info: defines \mathrm{Var} (mathrmVar)
+tests/MoreDistributions/article.tex:14:1: info: defines \@n5 (n5)
+tests/MoreDistributions/article.tex:19:16: info: claim 0: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \mathrm{Geo}(x)(z))\land (\neg z\in \mathbb{N}\Rightarrow \mathrm{Geo}(x)(z)=0))\land \sum_{z=0}^{\infty}\mathrm{Geo}(x)(z)\text{ converges}\land \sum_{z=0}^{\infty}\mathrm{Geo}(x)(z)=1
+tests/MoreDistributions/article.tex:19:16: info: claim 1: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow \mu(\mathrm{Geo}(x))=\frac{1-x}{x}
+tests/MoreDistributions/article.tex:19:16: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ 0<x\land x\le 1\Rightarrow (0<x\land x\le 1)\land \neg (x=0)
+tests/MoreDistributions/article.tex:23:19: info: claim 2: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \mathrm{Var}(\mathrm{Ber}(x))=x\,(1-x)
+tests/MoreDistributions/article.tex:23:19: info: claim 2 is meaningful if: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow (0\le x\land x\le 1)\land ((\forall s\in \mathbb{R},\ (s\in \mathbb{N}\Rightarrow 0\le \mathrm{Ber}(x)(s))\land (\neg s\in \mathbb{N}\Rightarrow \mathrm{Ber}(x)(s)=0))\land \sum_{s=0}^{\infty}\mathrm{Ber}(x)(s)\text{ converges}\land \sum_{s=0}^{\infty}\mathrm{Ber}(x)(s)=1)\land \sum_{z=0}^{\infty}{z}^{2}\,\mathrm{Ber}(x)(z)\text{ converges}
+tests/MoreDistributions/article.tex:27:32: info: claim 3: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \mathrm{U}(x,0)=\frac{1}{x}
+tests/MoreDistributions/article.tex:27:32: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 0<x)\land \neg (x=0)
+tests/MoreDistributions/article.tex:27:32: info: claim 4: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \@n5(\mathrm{U}(x),1)=1
+tests/MoreDistributions/article.tex:27:32: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x)\land \sum_{z=0}^{\infty}\mathrm{U}(x,z)\,{1}^{z}\text{ converges}\land (x\in \mathbb{Z}\land 0<x)\land (\forall s\in \mathbb{R},\ (s\in \mathbb{N}\Rightarrow 0\le \mathrm{U}(x)(s))\land (\neg s\in \mathbb{N}\Rightarrow \mathrm{U}(x)(s)=0))\land \sum_{s=0}^{\infty}\mathrm{U}(x)(s)\text{ converges}\land \sum_{s=0}^{\infty}\mathrm{U}(x)(s)=1
+tests/MoreDistributions/article.tex: 6 definitions, 5 claims
+  text: 6 compiled, 0 failed, 0 prose (of 6)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def OdeSolvers.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["realfunctions", "odesolvers"]
 
-#leanify_article OdeSolvers "article.tex" "fnv1a64:8ce9bdd80e68af75" with OdeSolvers.vocabulary
+#leanify_article OdeSolvers "article.tex" "fnv1a64:e15b602e8b0e02bb" with OdeSolvers.vocabulary

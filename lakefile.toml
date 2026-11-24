@@ -415,3 +415,27 @@ globs = ["Copulas.+"]
 name = "MoreDensities"
 srcDir = "tests"
 globs = ["MoreDensities.+"]
+
+[[lean_lib]]
+# The field orthogonalpolynomials: Legendre, Hermite, Laguerre, Chebyshev.
+name = "OrthogonalPolynomials"
+srcDir = "tests"
+globs = ["OrthogonalPolynomials.+"]
+
+[[lean_lib]]
+# The field counting: subsets, maps, surjections, compositions, lattice paths.
+name = "Counting"
+srcDir = "tests"
+globs = ["Counting.+"]
+
+[[lean_lib]]
+# The field samples: descriptive statistics of the first n terms of a sequence.
+name = "Samples"
+srcDir = "tests"
+globs = ["Samples.+"]
+
+[[lean_lib]]
+# More of the field distributions: geometric, Bernoulli, uniform; variance and generating function.
+name = "MoreDistributions"
+srcDir = "tests"
+globs = ["MoreDistributions.+"]

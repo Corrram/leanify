@@ -263,7 +263,13 @@ Further fields cover other branches of mathematics:
   Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian
   families; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's
   gamma, Chatterjee's xi and the tail dependence coefficients of a copula; quadrant
-  dependence, radial symmetry, left tail decrease, max-stability, the concordance order.
+  dependence, radial symmetry, left tail decrease, max-stability, the concordance order;
+* `orthogonalpolynomials`: the Legendre, Hermite, Laguerre and Chebyshev polynomials of
+  degree `n`;
+* `counting`: subsets, permutations, multisets, maps, surjections, compositions and lattice
+  paths, multinomial coefficients;
+* `samples`: descriptive statistics of the first `n` terms of a sequence (sample mean and
+  variance, order statistics, median, correlation, least-squares line).
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

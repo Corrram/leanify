@@ -43,6 +43,9 @@ import Leanify.Library.MatrixNorms
 import Leanify.Library.SpecialNumbers
 import Leanify.Library.Recurrences
 import Leanify.Library.Copulas
+import Leanify.Library.OrthogonalPolynomials
+import Leanify.Library.Counting
+import Leanify.Library.Samples
 
 /-! # The fields of the vocabulary
 
@@ -103,7 +106,10 @@ def all : List (String × Vocab) := [
   ("matrixnorms", MatrixNorms.vocab),
   ("specialnumbers", SpecialNumbers.vocab),
   ("recurrences", Recurrences.vocab),
-  ("copulas", Copulas.vocab)]
+  ("copulas", Copulas.vocab),
+  ("orthogonalpolynomials", OrthogonalPolynomials.vocab),
+  ("counting", Counting.vocab),
+  ("samples", Samples.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -135,14 +141,14 @@ def bundles : List (String × List String) := [
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms"]),
   ("stochastic", ["statistics", "finance"]),
-  ("discrete", ["combinatorics", "permutations", "graphs", "recurrences"]),
+  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
   -- the areas inside them
-  ("elementary", ["special", "hyperbolic", "trigonometry", "means"]),
+  ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials"]),
   ("linearalgebra", ["vectors", "matrices"]),
   ("probability", ["distributions", "densities", "information", "risk", "stochasticorders"]),
   ("dependence", ["copulas"]),
-  ("statistics", ["probability", "dependence"])]
+  ("statistics", ["probability", "samples", "dependence"])]
 
 /-- The realms: the bundles that `math` names, each a branch of mathematics. -/
 def realms : List String := (bundles.lookup "math").getD []

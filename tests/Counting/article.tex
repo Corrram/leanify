@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={counting}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\binom{[n]}{k}$ for the number of $k$-element subsets of a set of $n$ elements.
+We write $\mathrm{Surj}(k,n)$ for the number of surjective maps from a set of $k$ elements to a set of $n$ elements.
+We write $L(m,n)$ for the number of lattice paths from $(0,0)$ to $(m,n)$.
+We write $S(n)$ for the number of subsets of a set of $n$ elements.
+We write $c(n,k)$ for the number of compositions of $n$ into $k$ positive parts.
+
+\section{Counts}
+
+\begin{lemma}\label{subsets}
+$S(3)=8$ and $\binom{[5]}{2}=10$.
+\end{lemma}
+
+\begin{lemma}\label{surjections}
+$\mathrm{Surj}(3,2)=6$. For every nonnegative integer $n$, $\mathrm{Surj}(n,n)=n!$.
+\end{lemma}
+
+\begin{lemma}\label{paths}
+$L(2,2)=6$. For all $m,n\in\mathbb{N}$, $L(m,n)=L(n,m)$.
+\end{lemma}
+
+\begin{lemma}\label{compositions}
+Let $n$ be a positive integer. Then $c(n,1)=1$ and $c(n,n)=1$.
+\end{lemma}
+
+\end{document}
