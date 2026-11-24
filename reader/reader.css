@@ -64,3 +64,7 @@ body.lm-hide-failed .lm-dot.lm-failed[data-sentence], body.lm-hide-prose .lm-dot
 }
 .lm-proved { font-size: .9rem; }
 .lm-proved .lm-jump { text-transform: capitalize; }
+.lm-proof pre { max-height: 22rem; overflow: auto; }
+.lm-proof-lemma { margin: 6px 0 6px 10px; padding-left: 8px; border-left: 2px solid var(--lm-line); }
+.lm-lemma { font: inherit; background: none; border: 1px solid var(--lm-line); border-radius: 5px; padding: 0 5px; margin: 1px 0; cursor: pointer; }
+.lm-lemma:disabled { opacity: .55; cursor: default; }

@@ -171,7 +171,8 @@ The examples are short papers in the usual style, each certified by CI:
 | `tex/leanify.sty` | The check on every compile (with shell escape), the certificate with `certify`, and margin marks with `status` |
 | `docs/`, `mkdocs.yml` | The documentation site, https://corrram.github.io/leanify/ |
 | `scripts/leanify_diagnostics.py` | Findings from the certificate report, for editors and CI |
-| `scripts/leanify_suggest.py`, `scripts/leanify_prove.py` | A hook proposes rewrites of unread sentences, or proofs of open obligations; the checker and Lean decide |
+| `scripts/leanify_suggest.py`, `scripts/leanify_prove.py` | A hook proposes rewrites of unread sentences, or proofs of open obligations; the checker and Lean decide. `leanify_prove.py` also finds values at which an open claim fails |
+| `scripts/leanify_auto.py`, `scripts/leanify_hook.py`, `scripts/leanify_status.py` | From the article to its certificate in one command, with a model behind a ready hook; and where the article stands, in the words of its author |
 
 ## Build
 

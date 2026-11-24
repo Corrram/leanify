@@ -135,8 +135,12 @@ export function markSentences(source, report) {
   const wordEnd = pos => {
     const m = src.slice(Math.max(0, pos - 40), pos).match(/\\[A-Za-z]*$/);
     if (!m) return pos;
+    const from = pos - m[0].length;
     if (m[0] === '\\') pos++;
     while (pos < src.length && /[A-Za-z]/.test(src[pos])) pos++;
+    // the end of an environment (of a list that ends the sentence) is not cut either:
+    // the sentence ends before it
+    if (/^\\(?:begin|end)\{/.test(src.slice(from, pos + 1))) return from;
     return pos;
   };
   const inserts = [];
@@ -255,7 +259,7 @@ export function renderCompiledReader({title, source, bibliography, report, confi
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escape(title)} · Leanify</title>
 ${assets.icon ? `<link rel="icon" href="${escape(assets.icon)}" type="image/svg+xml">` : ''}${assets.styles.map(href => `<link rel="stylesheet" href="${escape(href)}">`).join('')}
-<script defer src="${escape(assets.script)}"></script></head>
+${assets.proofs ? `<script defer src="${escape(assets.proofs)}"></script>` : ''}<script defer src="${escape(assets.script)}"></script></head>
 <body class="lm-compiled"><a class="lm-skip" href="#lm-article">Skip to article</a>
 <header class="lm-bar"><span class="lm-brand">Leanify</span><span class="lm-title">${escape(title)}</span>
 <nav class="lm-links">${links.map(l => `<a href="${escape(l.href)}">${escape(l.label)}</a>`).join('')}</nav></header>

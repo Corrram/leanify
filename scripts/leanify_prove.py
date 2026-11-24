@@ -197,7 +197,7 @@ def lean_file(module, ns, items, tag, goal="obligation"):
     ranges = []
     for n, (k, label, script) in enumerate(items):
         start = len(lines) + 1
-        lines.append(f"theorem try{n} : {goal}{k} := by")
+        lines.append(f"theorem try{n} : {goal.format(k=k) if '{k}' in goal else goal + str(k)} := by")
         lines += ["  " + l for l in script.splitlines()]
         lines.append("")
         ranges.append((k, label, script, start, len(lines)))
@@ -260,6 +260,58 @@ def check(root, module, ns, items, tag, timeout, workdir, goal="obligation"):
         elif k not in found:
             found[k] = (label, script)
     return found, errors
+
+
+# --- a claim that is false as it is read ---------------------------------------------------
+
+REFUTE = "meaningful{k} ∧ ¬ claim{k}"
+
+
+def variables(lean):
+    """The variables of a claim, in the order of the text (without its hypotheses)."""
+    return [v for v in shape(lean) if not re.fullmatch(r"h_\d+", v)]
+
+
+def counter_candidates(claim):
+    """Values at which a claim may fail: simple ones, and the numbers of its statement (the
+    ends of its ranges). The tactic `leanify_counter` checks the hypotheses and the failure
+    of the conclusion at them by computation."""
+    n = len(variables(claim["lean"]))
+    if n == 0:
+        return []
+    own = [f"({a} / {b})" if b else a for a, b in re.findall(r"(?<![\w.])(\d+)(?:\s*/\s*(\d+))?(?![\w.])", claim["lean"])]
+    vals = list(dict.fromkeys(["1", "0", "2", *own, "(1 / 2)", "(-1)", "3"]))[:10]
+    out = [v for v in vals]
+    if n >= 2:
+        out += [f"{a} {b}" for a in vals[:4] for b in vals[:4] if a != b]
+    return [(f"counterexample {v}", f"leanify_counter {v}") for v in out]
+
+
+def counter_text(claim, script):
+    """`x = 1, y = 2` for the values of a `leanify_counter` script."""
+    vals = re.findall(r"\([^()]*\)|\S+", script.split("leanify_counter", 1)[1])
+    names = variables(claim["lean"])
+    return ", ".join(f"{x} = {(vals[i] if i < len(vals) else vals[-1]).strip('()').replace(' / ', '/')}" for i, x in enumerate(names))
+
+
+def refute(a, root, module, ns, report, todo, workdir):
+    """{k: script} for the open claims that fail at simple values."""
+    items = [(k, label, script) for k in todo for label, script in counter_candidates(report["claims"][k])]
+    if not items:
+        return {}
+    found, _ = check(root, module, ns, items, "R", a.timeout, workdir, REFUTE)
+    return {k: script for k, (_, script) in found.items()}
+
+
+def write_refutations(lines, blocks, refuted, report):
+    """The stub `proofK` becomes `refuteK`, with the values in a comment."""
+    out = list(lines)
+    for k in sorted(refuted, key=lambda k: blocks[k][0], reverse=True):
+        a, b = blocks[k]
+        out[a:b] = [f"theorem refute{k} : meaningful{k} ∧ ¬ claim{k} := by",
+                    f"  -- false as it is read: at {counter_text(report['claims'][k], refuted[k])}",
+                    "  " + refuted[k]]
+    return out
 
 
 # --- the hypotheses of a statement can hold together ------------------------------------
@@ -422,6 +474,7 @@ def main(argv=None):
     ap.add_argument("--rounds", type=int, default=1, help="tries of the hook per obligation")
     ap.add_argument("--timeout", type=int, default=900, help="seconds for one Lean run")
     ap.add_argument("--hook-timeout", type=int, default=600)
+    ap.add_argument("--no-refute", action="store_true", help="do not look for values at which an open claim fails")
     ap.add_argument("--no-build", action="store_true", help="do not run `lake build` of the article module first")
     ap.add_argument("--dry-run", action="store_true", help="report what would be proved, change nothing")
     a = ap.parse_args(argv)
@@ -468,7 +521,7 @@ def main(argv=None):
     if not todo:
         return 0 if not open_witnesses else 1
 
-    proved, errors = {}, {}
+    proved, errors, how = {}, {}, {}
     for phase in (0, 1):
         items = []
         for k in todo:
@@ -483,10 +536,16 @@ def main(argv=None):
         for k, (label, script) in found.items():
             print(f"  claim {k}: {label}")
             proved[k] = script
+            how[k] = "standard" if label == "leanify_step" else "cache" if label == "cache" else "tactics"
         for k, e in errs.items():
             errors.setdefault(k, e)
 
-    rest = [k for k in todo if k not in proved]
+    # a claim that no tactic proves may be false: values at which it fails
+    refuted = {} if a.no_refute else refute(a, root, module, ns, report, [k for k in todo if k not in proved], workdir)
+    for k, script in sorted(refuted.items()):
+        s = report["sentences"][report["claims"][k]["sentence"]]
+        print(f"  claim {k} (line {s['line']}) is false as it is read: at {counter_text(report['claims'][k], script)}")
+    rest = [k for k in todo if k not in proved and k not in refuted]
     if a.hook and rest:
         last = {k: [f"{lab}: {msgs[0]}" for lab, msgs in [errors.get(k, ("", [""]))]] for k in rest}
         for r in range(a.rounds):
@@ -501,20 +560,32 @@ def main(argv=None):
             for k, (_, s) in ok.items():
                 print(f"  claim {k}: proved by the hook")
                 proved[k] = s
+                how[k] = "hook"
             last = {k: errs.get(k, ("hook", ["no answer"]))[1][:3] for k in rest if k not in ok}
             rest = [k for k in rest if k not in ok]
 
     for k, s in proved.items():
         cache[key_of(report["claims"][k], report)] = s
-    open_left = [k for k in todo if k not in proved]
-    print(f"proved {len(proved)} of {len(todo)}; open: " + (", ".join(f"claim {k}" for k in open_left) or "none"))
+    open_left = [k for k in todo if k not in proved and k not in refuted]
+    by = lambda w: sum(1 for v in how.values() if v == w)
+    parts = [f"{by('standard')} by the standard tactic", f"{by('tactics')} by other tactics"]
+    parts += [f"{by('cache')} from the cache"] if by("cache") else []
+    parts += [f"{by('hook')} by the hook"] if a.hook else []
+    print(f"proved {len(proved)} of {len(todo)} ({', '.join(parts)}); false as read: "
+          + (", ".join(f"claim {k}" for k in sorted(refuted)) or "none")
+          + "; open: " + (", ".join(f"claim {k}" for k in open_left) or "none"))
+    if open_left and not a.hook:
+        print("the open claims need a proof by hand or by a model (--hook CMD); "
+              "`leanify_status.py` says what each of them is")
     if a.dry_run:
         return 0
     cache_path.write_text(json.dumps(cache, indent=1, ensure_ascii=False), encoding="utf-8")
-    if proved:
-        proofs_path.write_text("\n".join(write_back(lines, blocks, proved)) + "\n", encoding="utf-8")
+    if proved or refuted:
+        new = write_back(lines, blocks, proved)
+        new = write_refutations(new, stub_blocks(new), refuted, report)
+        proofs_path.write_text("\n".join(new) + "\n", encoding="utf-8")
         print(f"wrote {proofs_path}; now `lake build` the certificate")
-    return 0 if not open_left and not open_witnesses else 1
+    return 0 if not open_left and not open_witnesses and not refuted else 1
 
 
 if __name__ == "__main__":

@@ -66,8 +66,19 @@ leanify certify article.tex
 makes a Lean project for the article (the folder `lean` next to it), writes one proof
 obligation for every definition and claim, and builds the certificate. For this step you
 need Lean ([elan](https://github.com/leanprover/elan) installs it). The obligations can
-be proved by you, or by a model: `scripts/leanify_prove.py --hook CMD` gives every open
-obligation to a command of yours and keeps a proof only if Lean accepts it.
+be proved by you, or by a model. One command does what goes without you:
+
+```sh
+python lean/.lake/packages/leanify/scripts/leanify_auto.py article.tex --model "claude -p"
+```
+
+It proves the routine steps by tactics, looks for values at which an open claim fails,
+gives what is left to the model (any command that reads a prompt and prints an answer;
+without `--model`, only tactics are tried), has Lean's kernel check every proof, and
+ends with the status of the article in plain words: what is proved, what is false as
+read and at which values, and what is left for you, each with its line and its sentence.
+Expect the model to matter: in a research article certified this way, the standard
+tactic closed 12 of the 130 steps that are derived from the text.
 
 A proof that is missing leaves its claim *unverified*, and a claim that is false as
 stated can be *refuted*. The draft's theorem says `$f(x)>2$`, which fails at `x = 1`.
@@ -81,6 +92,8 @@ theorem:
 * [The tutorial](getting-started.md) takes the same note through every step, with the
   real output of each.
 * [The live demo](demo.md) shows the web reader of a certified article: every sentence
-  with its status, its formal reading and its Lean statement.
+  with its status, its formal reading, its Lean statement and its Lean proof.
+* No Lean on your computer, or writing on Overleaf: [a GitHub workflow certifies the
+  article](reference.md#editors-and-ci) and hands the marks of the PDF back.
 * [What a certificate guarantees](getting-started.md#what-a-certificate-guarantees), and
   [what it does not say](reference.md#what-a-verified-claim-does-not-say).

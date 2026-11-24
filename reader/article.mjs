@@ -6,6 +6,12 @@ export const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':
 const envPattern = /\\(begin|end)\{([^}]+)\}/g;
 const mathEnvs = new Set(['equation','equation*','align','align*','gather','gather*','gathering','multline','multline*']);
 const results = new Set(['theorem','lemma','proposition','corollary','remark','definition','example','optimizationproblem','optimisationproblem']);
+// The reader refuses what it cannot render, so that nothing of an article is dropped
+// unseen. `lenient(true)` (the standalone reader of an author's own article) shows a
+// command or an environment that it does not know as its source instead, and lists it
+// in `lenient.skipped`.
+export function lenient(on) { lenient.on = !!on; lenient.skipped = []; }
+lenient.on = false; lenient.skipped = [];
 export function brace(text, offset) {
   if(text[offset] !== '{') throw new Error(`Expected brace at ${offset}`);
   let depth=1, at=offset+1;
@@ -256,7 +262,7 @@ export function parseArticle(source,bibliography='',{referenceChoices={}}={}) {
           const name=declarations[env.kind]?.title??env.kind[0].toUpperCase()+env.kind.slice(1);
           const normalized=name.toLowerCase().replace(/\s/g,'');
           block={kind:results.has(normalized)?normalized:'result',isResult:true,resultName:name,title:env.title,number:resultNumber(env.kind),ownLabels:labels(prefix),children:parse(env.body.slice(prefix.length),base+start+text.slice(start,at).indexOf(env.body)+prefix.length)};
-        } else if(['proof','abstract','center','samepage','centering'].includes(env.kind)) {
+        } else if(['proof','abstract','center','samepage','centering','quote','quotation'].includes(env.kind)) {
           block={kind:env.kind,title:env.title,children:parse(env.body,base+start+text.slice(start,at).indexOf(env.body))};
         } else if(env.kind==='minipage') {
           const width=argument(env.body,0);
@@ -301,6 +307,9 @@ export function parseArticle(source,bibliography='',{referenceChoices={}}={}) {
         } else if(env.kind==='enumerate'||env.kind==='itemize') {
           const parts=listItems(env.body);
           block={kind:'list',style:env.kind==='itemize'?'bullet':env.title.includes('alph')?'alpha':env.title.includes('roman')?'roman':env.title.includes('Q')?'question':'decimal',itemLabels:parts.map(p=>p.label),items:parts.map(p=>parse(p.body,base+start+text.slice(start,at).indexOf(env.body)+p.start))};
+        } else if(lenient.on) {
+          lenient.skipped.push(`environment ${env.kind}`);
+          block={kind:'unsupported',source:text.slice(start,at)};
         } else throw new Error(`Unsupported article environment ${env.kind}`);
       } else if(text.startsWith('$$',at)) {
         const close=text.indexOf('$$',at+2);if(close<0)throw new Error('Unclosed display');
@@ -470,6 +479,12 @@ export function renderArticle(article,{annotations={},evidence={},definitions={}
         if(cmd==='textendash'||cmd==='textemdash'){out+=cmd==='textendash'?'–':'—';continue;}
         if(cmd==='and'){out+=' and ';continue;}
         if(Object.hasOwn(article.macros,'\\'+cmd)&&!/#\d/.test(article.macros['\\'+cmd])){out+=m('\\'+cmd);continue;}
+        if(lenient.on){
+          let shown='\\'+cmd;
+          while(tex[at]==='['||tex[at]==='{'){const arg=tex[at]==='['?optional(tex,at):brace(tex,at);shown+=tex.slice(at,arg.end);at=arg.end;}
+          lenient.skipped.push('\\'+cmd);
+          out+=`<code class="article-unsupported" title="not rendered by the reader">${escape(shown)}</code>`;continue;
+        }
         throw new Error(`Unsupported article prose command \\${cmd}: ${tex.slice(at-30,at+45)}`);
       }
       const char=tex[at++];if(char==='{'||char==='}')continue;
@@ -512,11 +527,13 @@ export function renderArticle(article,{annotations={},evidence={},definitions={}
     if(b.kind==='center')return `<div class="article-affiliation" ${attrs}>${blocksHTML(b.children)}</div>`;
     if(b.kind==='wide'||b.kind==='figureGroup')return `<div class="article-wide-title" ${attrs}>${blocksHTML(b.children)}</div>`;
     if(['samepage','centering','minipage'].includes(b.kind))return `<div ${attrs}>${blocksHTML(b.children)}</div>`;
+    if(b.kind==='quote'||b.kind==='quotation')return `<blockquote ${attrs}>${blocksHTML(b.children)}</blockquote>`;
     if(b.kind==='figure') {
       const rows=Object.values(Object.groupBy(b.images,image=>image.row??0));
       return `<figure ${attrs}>${extraAnchors}<div class="article-figure-images">${rows.map(row=>`<div class="article-figure-row" style="display:flex;justify-content:center;gap:8px">${row.map(image=>{const width=image.options.match(/width\s*=\s*([.\d]+)\\(?:textwidth|linewidth)/);const percent=width?Math.min(100,Number(width[1])*100):100/row.length;return `<img src="${escape(figureURL(image.image))}" alt="Figure ${b.number}${b.images.length>1?' panel '+(b.images.indexOf(image)+1):''}" loading="lazy" style="width:${percent}%;min-width:0">`;}).join('')}</div>`).join('')}</div><figcaption><strong>Figure ${b.number}.</strong> ${inline(b.caption)}</figcaption>${checked(b)}</figure>`;
     }
     if(b.kind==='list')return `<${b.style==='bullet'?'ul':'ol'} class="article-list ${b.style}"${b.style==='roman'?' style="list-style-type:lower-roman"':''} ${attrs}>${b.items.map((item,i)=>`<li${b.itemLabels[i]?' style="list-style-type:none"':''}>${b.itemLabels[i]?'<span class="article-item-label">'+inline(b.itemLabels[i])+'</span> ':''}${blocksHTML(item)}</li>`).join('')}</${b.style==='bullet'?'ul':'ol'}>`;
+    if(b.kind==='unsupported')return `<pre class="article-unsupported" title="not rendered by the reader" ${attrs}><code>${escape(b.source)}</code></pre>`;
     throw new Error(`Unsupported block ${b.kind}`);
   }).join('\n');}
   // A contents entry is one link; references inside its title retain their text.

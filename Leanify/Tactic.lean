@@ -547,4 +547,64 @@ elab_rules : tactic
     valuesLoop leaf vals
     unless (← getGoals).isEmpty do throwError "leanify_values: the conditions do not follow for these values"
 
+/-! ## A counterexample to a claim
+
+`refuteK : meaningfulK ∧ ¬ claimK` records that claim `K` is false as it is read.
+`leanify_counter 1 2` proves it with these values for the variables of the claim, in the
+order of the text (the last value is used for every further variable), if the hypotheses
+of the claim then hold and its conclusion fails, both by computation. -/
+
+/-- `h` is the claim: its variables take the values, its hypotheses go to `leaf`. -/
+partial def counterLoop (h : Ident) (leaf : TSyntax `tactic) (vals : IO.Ref (List Term)) : TacticM Unit :=
+  withMainContext do
+    let some d := (← getLCtx).findFromUserName? h.getId | throwError "leanify_counter: no claim"
+    let ty ← Meta.whnfR (← instantiateMVars d.type)
+    match ty with
+    | .forallE _ dom _ _ =>
+      if ← Meta.isProp dom then
+        evalTactic (← `(tactic| specialize $h:ident (by $leaf:tactic)))
+      else
+        let v ← match ← vals.get with
+          | [v] => pure v
+          | v :: more => vals.set more; pure v
+          | [] => throwError "leanify_counter: no value"
+        evalTactic (← `(tactic| specialize $h:ident $v))
+      counterLoop h leaf vals
+    | _ => pure ()
+
+syntax "leanify_counter" (ppSpace colGt term:max)+ : tactic
+
+elab_rules : tactic
+  | `(tactic| leanify_counter $vs*) => do
+    let ty ← instantiateMVars (← (← getMainGoal).getType)
+    let (m, c) ← match ty.and? with
+      | some (.const m _, e) => match e.not? with
+        | some (.const c _) => pure (m, c)
+        | _ => throwError "leanify_counter: the goal is not `meaningfulK ∧ ¬ claimK`"
+      | _ => throwError "leanify_counter: the goal is not `meaningfulK ∧ ¬ claimK`"
+    let ns := c.getPrefix
+    let lems : Array (TSyntax ``Lean.Parser.Tactic.simpLemma) ←
+      (← liftM (m := MetaM) (articleDefs ns)).mapM fun d => `(Lean.Parser.Tactic.simpLemma| $(mkIdent d):ident)
+    evalTactic (← `(tactic| refine ⟨?_, ?_⟩))
+    evalTactic (← `(tactic| focus (first
+      | (unfold $(mkIdent m):ident; definedness []; done)
+      | (unfold $(mkIdent m):ident; simp only [$lems,*]; definedness []; done))))
+    let h := mkIdent `hclaim
+    evalTactic (← `(tactic| intro $h:ident))
+    evalTactic (← `(tactic| unfold $(mkIdent c):ident at $h:ident))
+    -- a hypothesis of the claim at the values: by computation
+    let leaf ← `(tactic| first
+      | exact trivial | (norm_num [$lems,*]; done) | (positivity; done) | (linarith; done)
+      | (simp [$lems,*]; done))
+    let vals ← IO.mkRef (vs.toList.map fun v => (⟨v.raw⟩ : Term))
+    counterLoop h leaf vals
+    -- the conclusion at the values is false: by computation
+    evalTactic (← `(tactic| first
+      | (norm_num [$lems,*] at $h:ident; done)
+      | (simp [$lems,*] at $h:ident; done)
+      | (exact absurd $h:ident (by norm_num [$lems,*]))
+      | (simp only [$lems,*] at $h:ident; linarith)
+      | (simp only [$lems,*] at $h:ident; norm_num at $h:ident; linarith)))
+    unless (← getGoals).isEmpty do throwError "leanify_counter: the claim does not fail at these values"
+
 end Leanify

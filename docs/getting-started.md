@@ -390,14 +390,18 @@ a✝ : f x ≤ 2
 ```
 
 The proof gives `f(x) - 2 ≥ 0`, and the theorem claims `f(x) > 2`. At `x = 1`
-the two sides are equal, so the theorem is false as stated. Record that in Lean:
+the two sides are equal, so the theorem is false as stated. Record that in Lean,
+with the value at which it fails:
 
 ```lean
 theorem refute2 : meaningful2 ∧ ¬ claim2 := by
-  refine ⟨by unfold meaningful2; definedness [], fun h => ?_⟩
-  have h1 := h 1 one_pos
-  norm_num [f] at h1
+  -- false as it is read: at x = 1
+  leanify_counter 1
 ```
+
+(`leanify_prove.py` finds such a value by itself: it tries simple values and the
+ends of the ranges of the statement on every claim that no tactic proves, and
+writes `refuteK` for a claim that fails there.)
 
 ```
 info: Note/Certified.lean:12:0: claim 2 is false: Note.refuted2

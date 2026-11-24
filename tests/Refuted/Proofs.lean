@@ -43,10 +43,8 @@ theorem proof1 : obligation1 := by
 /-- Claim 2, statement (theorem at line 64; premises: claim 3, claim 4, claim 0):
 `\forall x\in \mathbb{R},\ 0<x\Rightarrow 2<f(x)` -/
 theorem refute2 : meaningful2 ∧ ¬ claim2 := by
-  refine ⟨by unfold meaningful2; definedness [], fun h => ?_⟩
-  -- at x = 1 the two sides are equal
-  have h1 := h 1 one_pos
-  norm_num [f] at h1
+  -- false as it is read: at x = 1
+  leanify_counter 1
 
 /-- Claim 3, proof step (proof at line 69; no premises):
 `\forall x\in \mathbb{R},\ 0<x\Rightarrow 0\le \frac{{(x-1)}^{2}}{x}` -/

@@ -2,17 +2,22 @@
 // Build the single-text reader of a certified article:
 //
 //   node reader/build.mjs path/to/article.tex [--bbl article.bbl] [--title "…"] [--out dir] [--home URL]
+//       [--proofs FILE.lean,FILE.lean | --no-proofs]
 //
 // reads `article.tex` and the report `article.leanify.json` that
 // `#leanify_certify` wrote next to it, and writes `dir/index.html` (default
 // `article-reader/` next to the article) with its stylesheets, script and KaTeX
 // fonts. The page renders the article from its source, with the status of every
 // sentence; nothing in it is written by hand. `--home` adds a link back to a
-// page of yours (the documentation site links its demos to itself).
+// page of yours (the documentation site links its demos to itself). The Lean proofs
+// are read from `Proofs.lean` of the article's project and the files beside it (or
+// from `--proofs`): the inspector shows the proof of each claim and the lemmas it uses.
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {renderCompiledReader} from './reader.mjs';
+import {proofFiles, proofsOf} from './proofs.mjs';
+import {lenient} from './article.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -22,10 +27,11 @@ const option = name => {
 };
 const texPath = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
 if (!texPath) {
-  console.error('usage: node reader/build.mjs ARTICLE.tex [--bbl FILE.bbl] [--title TITLE] [--date YYYY-MM-DD] [--out DIR] [--home URL]');
+  console.error('usage: node reader/build.mjs ARTICLE.tex [--bbl FILE.bbl] [--title TITLE] [--date YYYY-MM-DD] [--out DIR] [--home URL] [--proofs FILES | --no-proofs] [--strict]');
   process.exit(2);
 }
-const source = fs.readFileSync(texPath, 'utf8');
+// (the offsets of the report count the text with LF line ends, as its pin does)
+const source = fs.readFileSync(texPath, 'utf8').replace(/\r\n/g, '\n');
 const reportPath = texPath.replace(/\.tex$/, '.leanify.json');
 if (!fs.existsSync(reportPath)) {
   console.error(`${reportPath} not found: build the module with #leanify_certify first`);
@@ -36,11 +42,19 @@ const bblPath = option('--bbl') ?? texPath.replace(/\.tex$/, '.bbl');
 const bibliography = fs.existsSync(bblPath) ? fs.readFileSync(bblPath, 'utf8') : '';
 const title = option('--title') ?? (source.match(/\\title\{([^}]*)\}/)?.[1] ?? path.basename(texPath));
 const out = option('--out') ?? path.join(path.dirname(texPath), 'article-reader');
+const leanFiles = args.includes('--no-proofs') ? []
+  : option('--proofs') ? option('--proofs').split(',') : proofFiles(texPath, report.namespace);
+const proofs = proofsOf(report, leanFiles);
+const hasProofs = Object.keys(proofs).length > 0;
 
+// an author's article: what the reader does not render is shown as its source, and
+// `\today` is the day of the last change of the file (`--strict` refuses both)
+if (!args.includes('--strict')) lenient(true);
+const sourceDate = option('--date') ?? (args.includes('--strict') ? '' : fs.statSync(texPath).mtime.toISOString().slice(0, 10));
 const html = renderCompiledReader({
-  title, source, bibliography, report, config: {}, sourceDate: option('--date') ?? '',
+  title, source, bibliography, report, config: {}, sourceDate,
   figureURL: image => image, sourceURL: path.basename(texPath),
-  assets: {styles: ['katex/katex.min.css', 'reader.css', 'standalone.css'], script: 'reader.js'},
+  assets: {styles: ['katex/katex.min.css', 'reader.css', 'standalone.css'], script: 'reader.js', proofs: hasProofs ? 'proofs.js' : null},
   links: [...(option('--home') ? [{href: option('--home'), label: 'Documentation'}] : []),
     {href: path.basename(texPath), label: 'Source'}, {href: path.basename(reportPath), label: 'Report'}],
   declarationURL: () => null,
@@ -55,7 +69,11 @@ fs.copyFileSync(reportPath, path.join(out, path.basename(reportPath)));
 fs.copyFileSync(path.join(here, 'reader.css'), path.join(out, 'reader.css'));
 fs.copyFileSync(path.join(here, 'standalone.css'), path.join(out, 'standalone.css'));
 fs.copyFileSync(path.join(here, 'reader.js'), path.join(out, 'reader.js'));
+// (a script, not JSON to fetch: the page also opens from the file system)
+if (hasProofs) fs.writeFileSync(path.join(out, 'proofs.js'), `window.lmProofs = ${JSON.stringify(proofs).replaceAll('<', '\\u003c')};\n`);
+else fs.rmSync(path.join(out, 'proofs.js'), {force: true});
 const katex = path.join(here, '..', 'node_modules', 'katex', 'dist');
 fs.copyFileSync(path.join(katex, 'katex.min.css'), path.join(out, 'katex', 'katex.min.css'));
 fs.cpSync(path.join(katex, 'fonts'), path.join(out, 'katex', 'fonts'), {recursive: true});
-console.log(`wrote ${path.join(out, 'index.html')}`);
+if (lenient.skipped.length) console.warn(`shown as source, not rendered: ${[...new Set(lenient.skipped)].join(', ')}`);
+console.log(`wrote ${path.join(out, 'index.html')}` + (hasProofs ? ` (with ${Object.keys(proofs).length} Lean declarations of ${leanFiles.map(f => path.basename(f)).join(', ')})` : ''));

@@ -1,0 +1,103 @@
+name: Certify an article
+# A workflow for the repository of an article (not for this one): it builds the
+# certificate, fails if a claim is refuted or not verified, and keeps the report, the
+# status file of leanify.sty and the web reader as an artifact. An author needs no Lean
+# on the own computer for it:
+#
+#   jobs:
+#     certify:
+#       uses: Corrram/leanify/.github/workflows/certify.yml@main
+#       with:
+#         article: paper/article.tex
+#         module: Note.Certified
+#
+# With `commit-status: true` the report and the status file are committed back, so that
+# a copy of the repository that cannot run Lean (Overleaf, through its GitHub
+# synchronization) shows the margin marks of the last certified text; the calling job
+# then needs `permissions: contents: write`.
+on:
+  workflow_call:
+    inputs:
+      article:
+        description: The article, from the root of the repository (paper/article.tex)
+        required: true
+        type: string
+      module:
+        description: The Lean module that certifies it (Note.Certified)
+        required: true
+        type: string
+      project:
+        description: The folder of the Lean project (the one with lakefile.toml)
+        type: string
+        default: "."
+      require-verified:
+        description: Fail if a claim that is read has no proof
+        type: boolean
+        default: true
+      reader:
+        description: Build the web reader
+        type: boolean
+        default: true
+      commit-status:
+        description: Commit the report and the status file back to the branch
+        type: boolean
+        default: false
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    env:
+      ARTICLE: ${{ inputs.article }}
+      MODULE: ${{ inputs.module }}
+      PROJECT: ${{ inputs.project }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: leanprover/lean-action@v1
+        with:
+          build: 'false'
+          test: 'false'
+          use-mathlib-cache: 'true'
+          lake-package-directory: ${{ inputs.project }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: The certificate
+        run: |
+          export PATH="$HOME/.elan/bin:$PATH"
+          cd "$PROJECT" && lake build "$MODULE"
+      - name: Where the article stands
+        if: always()
+        run: |
+          python "$PROJECT/.lake/packages/leanify/scripts/leanify_status.py" "$ARTICLE" --all | tee -a "$GITHUB_STEP_SUMMARY" || true
+      - name: No claim is refuted, and every claim that is read is verified
+        run: |
+          python "$PROJECT/.lake/packages/leanify/scripts/leanify_diagnostics.py" "${ARTICLE%.tex}.leanify.json" \
+            ${{ inputs.require-verified && '--verified' || '' }}
+      - uses: actions/setup-node@v6
+        if: inputs.reader
+        with:
+          node-version: "24"
+      - name: The web reader
+        if: inputs.reader
+        run: |
+          npm ci --ignore-scripts --prefix "$PROJECT/.lake/packages/leanify"
+          node "$PROJECT/.lake/packages/leanify/reader/build.mjs" "$ARTICLE" --out leanify-reader
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: leanify
+          if-no-files-found: ignore
+          path: |
+            ${{ inputs.article }}
+            *.leanify.json
+            **/*.leanify.json
+            **/*.leanify.tex
+            leanify-reader
+            !**/.lake/**
+      - name: Commit the report and the status file
+        if: inputs.commit-status && github.event_name == 'push'
+        run: |
+          base="${ARTICLE%.tex}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f "$base.leanify.json" "$base.leanify.tex"
+          git diff --cached --quiet || { git commit -m "Leanify: the status of $ARTICLE [skip ci]" && git push; }

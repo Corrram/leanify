@@ -284,6 +284,7 @@ reservation that the report names.
 | `leanify_points`, `leanify_pinch`, `leanify_neq`, `leanify_unfold`, `leanify_arith` | The steps of `definedness` for arithmetic leaves: the bounds `0 ≤ x ≤ 1` of the points of an interval with `linarith`; two cases that meet in a point (`x ≤ c` and `c ≤ x` give `x = c`, then computation); an excluded point that the bounds force; the definitions of the article unfolded one level; and `linarith`, `positivity`, or `nlinarith` with the quotients cleared. |
 | `leanify_sample_fun`, `leanify_sample_event` | (unit square) Prove that an expression in the terms `U_i`, `V_i` of a sample is a measurable function of the sample, and that a comparison (`<`, `≤`) of two such expressions is a measurable set of samples: sums, differences, products, quotients, maxima, minima, absolute values, powers, finite sums and case distinctions between such expressions. |
 | `leanify_values v₁ v₂ …` | Proves `satisfiableK` with these values for the variables of the statement, in the order of the text (the last value serves every further variable), if its hypotheses then follow by computation. |
+| `leanify_counter v₁ v₂ …` | Proves `refuteK : meaningfulK ∧ ¬ claimK` with these values for the variables of the claim, in the order of the text (the last value serves every further variable), if its hypotheses then hold and its conclusion fails, both by computation: the claim is false as it is read, at these values. |
 | `leanify_step` | Proves an obligation whose claim follows from its premises by routine steps: it introduces the premises and the variables and hypotheses of the claim, takes each premise at them (a lemma about every positive `x` at `x` and at `y`), splits conjunctions, adds what a reader uses about integers without saying so (sums, differences and products of integers are integers, and `a < b` gives `a + 1 ≤ b`), uses a hypothesis `A → B` whose `A` follows at once, and closes the goal with `assumption`, `linarith`, `positivity`, `ring`, `field_simp; ring`, `norm_num` or `simp` with the article's definitions, the two directions of an equivalence by `linarith` or `nlinarith`, `nlinarith`, `grind`, `aesop` or `tauto`. It uses no other lemma of mathlib by name: a step that needs one (a rule for real powers, a named inequality) is an `argument`. Every closer has a budget of its own, so what the tactic proves does not depend on the limits of the file it is used in. It is the measure of a `standard` step, so it is fixed for a version of Leanify. |
 | `leanify_int` | Proves that a real number is an integer: a hypothesis, a numeral, or a sum, difference, product, negative or power of integers. |
 
@@ -433,6 +434,18 @@ leaves the file as it is).
   model behind `CMD` proves single steps with their premises in context, not
   whole theorems.
 
+* **Counterexamples.** A claim that no tactic proves may be false. The script
+  tries `leanify_counter` on it with simple values and with the numbers of its
+  statement (the ends of its ranges), and for a claim that fails there it writes
+  `refuteK` in place of the stub, with the values in a comment:
+  `claim 2 (line 64) is false as it is read: at x = 1`. Lean checks the
+  refutation like a proof (`--no-refute` skips this). A claim that fails as it is
+  read is either false or read with a hypothesis missing: both are for the author
+  to see.
+
+The last line counts what was proved by the standard tactic, by other tactics and
+by the hook, what is false as read, and what is still open.
+
 The stubs `satisfiedK` are filled in the same way: the script tries a few values
 for the variables of the statement (`leanify_values 1`, `0`, `2`, `1 2`, …) and,
 with a hook, asks it for values (`"kind": "witness"` in the JSON).
@@ -441,7 +454,77 @@ A candidate counts only if Lean says that its theorem is proved without `sorry`
 (`#print axioms`), so a run that stops early accepts nothing. Nothing is written that Lean has not accepted, and `lake build` checks every
 proof again, with the citation audit. Proofs are cached by the statement they
 prove (`.lake/leanify-prove/cache.json`), so after an edit only what changed is
-proved again. The exit status is 1 if a claim is still open.
+proved again. The exit status is 1 if a claim is still open or false as read.
+
+### `leanify_hook.py`
+
+```sh
+python .lake/packages/leanify/scripts/leanify_prove.py ARTICLE.tex \
+    --hook "python .lake/packages/leanify/scripts/leanify_hook.py --model 'claude -p'"
+```
+
+A ready hook for `leanify_prove.py` and `leanify_suggest.py`. It writes the task
+that the script gives it as a prompt and passes it to `--model CMD` (or
+`$LEANIFY_MODEL`): any command that reads a prompt on its standard input and
+prints the answer of a model, such as `claude -p`, `llm -m MODEL`,
+`ollama run MODEL`, or a script around the API you use. `--show` prints the
+prompt instead. What the model answers is not trusted: Lean checks every proof,
+and the check reads every suggested sentence.
+
+### `leanify_auto.py`
+
+```sh
+python .lake/packages/leanify/scripts/leanify_auto.py ARTICLE.tex [--model CMD | --hook CMD] \
+    [--vocab FIELDS] [--name NAME] [--leanify EXE] [--jobs 4] [--rounds 2]
+```
+
+From the article to its certificate in one command, as far as that goes without
+you: `leanify certify` (the project and the statements of the present text),
+`leanify_prove.py` (tactics, counterexamples and, with `--model` or `--hook`, a
+model), `leanify certify` again (the kernel checks every proof that was written),
+and `leanify_status.py`. A second run continues where the first stopped. The exit
+status is 0 if nothing is left to do.
+
+### `leanify_status.py`
+
+```sh
+python .lake/packages/leanify/scripts/leanify_status.py ARTICLE.tex [--all] [--leanify EXE] [--vocab FIELDS]
+```
+
+Where the article stands, in the words of its author, not of Lean:
+
+```
+article.tex: read by Leanify 0.9.0
+
+What Leanify reads
+  50 sentences: 10 read as mathematics, 0 with a finding, 40 running text
+  1 definition, 7 claims (3 statements of results, 4 steps of proofs)
+
+Where the claims stand
+     3 proved from exactly the sentences and results they cite (3 by routine steps, 0 by a longer Lean argument)
+     1 proved by a Lean proof that the text does not spell out
+     1 false as read
+     2 without a proof
+     1 of 1 definition shown to be well defined
+
+What is left to do
+  line 64    Theorem thm:bound: the statement is false as Leanify reads it: it fails at x = 1.
+             “For every $x\in(0,\infty)$, $f(x)>2$.”
+             → Correct the statement (a strict inequality, the end of a range, a missing
+             hypothesis). If you meant something else, compare the reading: `leanify check --claims`
+             shows claim 2.
+  line 77    Corollary cor:min: the statement has no proof yet (claim 5).
+             “For every $x\in(0,\infty)$, $f(1)\le f(x)$.”
+             → Nothing to do here: it uses claim 2, which is false as read. Correct that one first.
+```
+
+Every item names its line, quotes its sentence and says what the author can do.
+The steps that are verified but not routine are listed last: nothing is wrong
+with them, and an intermediate sentence in the printed proof would make each
+routine. For an article without a certificate of its present text, the script
+runs the quick check instead (no Lean needed) and says what a certificate would
+have to prove: how many claims and definitions, and which sentences are not read
+yet. The exit status is 0 if nothing is left to do.
 
 ## The PDF: `leanify.sty`
 
@@ -532,7 +615,8 @@ article without it.
 ```sh
 npm ci --prefix .lake/packages/leanify
 node .lake/packages/leanify/reader/build.mjs ARTICLE.tex \
-    [--out DIR] [--title TITLE] [--bbl FILE.bbl] [--date YYYY-MM-DD] [--home URL]
+    [--out DIR] [--title TITLE] [--bbl FILE.bbl] [--date YYYY-MM-DD] [--home URL] \
+    [--proofs FILE.lean,FILE.lean | --no-proofs] [--strict]
 ```
 
 Writes `DIR/index.html` (default `article-reader/` next to the article) with its
@@ -541,7 +625,51 @@ renders the article from its source, with the status of every sentence. It
 refuses a report whose pin does not match the article. `--home` adds a link
 back to a page of yours.
 
+The inspector of a sentence shows, for each of its claims, the formal reading,
+the Lean statement and the Lean proof: the declaration that justifies the claim,
+with the file and the line, and each lemma of the article's Lean files that it
+uses, which opens in place with the lemmas it uses in turn. So a reader gets
+from a sentence of the article to the proof that Lean checked without a search.
+The proofs are read from `Proofs.lean` of the article's project and the Lean
+files beside it (or from `--proofs`). For a refuted claim the inspector says at
+which values it fails, if its refutation is by `leanify_counter`.
+
+A command or an environment that the reader does not render is shown as its
+source, and named on the terminal; `\today` is the day of the last change of the
+file. With `--strict` the reader refuses both instead, as the documentation
+site does for its demos.
+
 ## Editors and CI
+
+A repository of an article can be certified on GitHub, without Lean on your own
+computer, by the workflow that this repository provides:
+
+```yaml
+name: Leanify
+on: [push, pull_request]
+jobs:
+  certify:
+    uses: Corrram/leanify/.github/workflows/certify.yml@main
+    with:
+      article: paper/article.tex
+      module: Note.Certified
+      project: paper/lean        # the folder with lakefile.toml (default: the root)
+```
+
+It builds the certificate, prints the status of the article on the summary page
+of the run, fails if a claim is refuted or (unless `require-verified: false`)
+not verified, and keeps the report, the status file and the web reader as the
+artifact `leanify`. With `commit-status: true` (and `permissions: contents:
+write` for the job) it commits the report and the status file back to the
+branch.
+
+**Overleaf.** Overleaf runs neither Lean nor the checker. The margin marks and `\leanifyreadings` need
+neither: `leanify.sty` reads them from `ARTICLE.leanify.tex`. So keep the
+article in a GitHub repository, let the workflow above commit the status file
+(`commit-status: true`), and synchronize the Overleaf project with the
+repository: after a pull in Overleaf, `\usepackage[status,check=false]{leanify}`
+shows the marks of the last certified text, and warns if the article has changed
+since.
 
 `editors/vscode/tasks.json` has two VS Code tasks, *quick check* (the native
 check of the open file) and *certify* (update the pin, build, report), whose

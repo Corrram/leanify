@@ -149,3 +149,57 @@ test('a statement quoted from the literature is an assumption, and a verified cl
   bad.axioms = [...bad.axioms, 'Note.Quoted.claim1'];
   assert.throws(() => validateReport(bad, source), /nonstandard axiom/);
 });
+
+test('a sentence that ends at the end of a list ends before \\end', async () => {
+  const src = String.raw`\begin{document}
+\begin{theorem}
+Then
+\begin{enumerate}
+\item $a\le b$,
+\item $b\le c$.
+\end{enumerate}
+\end{theorem}
+\end{document}`;
+  const start = src.indexOf('Then'), stop = src.indexOf('\\end{enumerate}') + 1; // one character into \end
+  const r = {article: 'n.tex', sourceHash: sourcePin(src), verified: [], axioms: [], definitions: [],
+    claims: [{index: 0, sentence: 0, role: 'statement', cites: [], premises: [], status: 'unverified', rank: 0, reading: 'a', lean: 'a', meaningful: 'True', justification: '', module: ''}],
+    sentences: [{index: 0, start, stop, line: 3, column: 1, environment: 'theorem', env: 1, label: '', outcome: 'compiled', definitions: [], claims: [0]}]};
+  const marked = markSentences(src, r);
+  assert.match(marked, /c\$\.\n[^\\\s]*0[^\\\s]*\\end\{enumerate\}/);
+  assert.match(renderCompiledArticle({source: src, bibliography: '', report: r, config: {}, figureURL: x => x, sourceURL: 'n.tex', sourceDate: ''}), /data-sentence="0"/);
+});
+
+test('the proofs of the reader: the justification of a claim and the lemmas it uses', async () => {
+  const {declarations, proofsOf} = await import('../reader/proofs.mjs');
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const lean = `import M\n\nnamespace J\n\n/-- A helper. -/\nprivate lemma sq_nonneg' (x : ℝ) : 0 ≤ x ^ 2 := by\n  positivity\n\n@[simp] theorem unused : True := trivial\n\n/-- Claim 1. -/\ntheorem proof1 : obligation1 := by\n  intro_premises\n  exact ⟨trivial, sq_nonneg' _⟩\n\ntheorem proof0 : obligation0 := by\n  intro_premises\n  exact c1\n\nend J\n`;
+  const ds = declarations(lean, 'Proofs.lean');
+  assert.deepEqual(ds.map(d => d.name), ["sq_nonneg'", 'unused', 'proof1', 'proof0']);
+  assert.equal(ds[2].line, 12);
+  assert.doesNotMatch(ds[2].code, /Claim 1|end J/);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lm-proofs-'));
+  fs.writeFileSync(path.join(dir, 'Proofs.lean'), lean);
+  const p = proofsOf(report(), [path.join(dir, 'Proofs.lean')]);
+  // what justifies a claim, and what that uses; not a declaration nothing refers to
+  assert.deepEqual(Object.keys(p).sort(), ['proof0', 'proof1', "sq_nonneg'"]);
+  assert.deepEqual(p.proof1.uses, ["sq_nonneg'"]);
+  fs.rmSync(dir, {recursive: true});
+});
+
+test('the lenient reader shows what it does not render as its source', async () => {
+  const {lenient, parseArticle, renderArticle} = await import('../reader/article.mjs');
+  const src = String.raw`\title{T}\begin{document}\maketitle
+A \mycommand{x} here.
+\begin{myenv}
+body
+\end{myenv}
+\end{document}`;
+  assert.throws(() => renderArticle(parseArticle(src)), /Unsupported/);
+  lenient(true);
+  try {
+    const html = renderArticle(parseArticle(src));
+    assert.match(html, /article-unsupported[^>]*>\\mycommand\{x\}</);
+    assert.match(html, /\\begin\{myenv\}/);
+    assert.deepEqual([...new Set(lenient.skipped)].sort(), ['\\mycommand', 'environment myenv']);
+  } finally { lenient(false); }
+});

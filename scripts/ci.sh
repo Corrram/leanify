@@ -162,6 +162,16 @@ proofs() {
   grep -q "error: statement (claim 2) is false as stated" "$TMP/refuted.txt" || fail "tests/Refuted: the false statement"
   grep -q "(claim 5) compiled but not verified: it rests on claim 2, which is refuted" "$TMP/refuted.txt" ||
     fail "tests/Refuted: the claim that rests on it"
+  # (in the words of the author: the values at which it fails, and what to do first)
+  if $PYTHON scripts/leanify_status.py tests/Refuted/article.tex > "$TMP/status.txt"; then
+    fail "tests/Refuted: the status says that nothing is left to do"; fi
+  grep -q "the statement is false as Leanify reads it: it fails at x = 1" "$TMP/status.txt" ||
+    fail "tests/Refuted: the status does not name the values at which the theorem fails"
+  grep -q "it uses claim 2, which is false as read. Correct that one first" "$TMP/status.txt" ||
+    fail "tests/Refuted: the status of the claims that rest on the false theorem"
+  $PYTHON scripts/leanify_status.py examples/Demo/article.tex > "$TMP/status.txt" ||
+    { cat "$TMP/status.txt"; fail "examples/Demo: the status of a certified article lists something to do"; }
+  grep -q "Nothing is left to do" "$TMP/status.txt" || fail "examples/Demo: the status"
   $PYTHON - <<'PY' || fail "tests/Refuted: a step justified by companionK is reported as companion"
 import json, sys
 c = json.load(open("tests/Refuted/article.leanify.json"))["claims"][3]

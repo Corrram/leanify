@@ -210,8 +210,8 @@ These hold for every change. A feature that cannot meet them is not added.
 | `Leanify/Vocab.lean`, `Library/` | vocabulary fields (data), the core vocabulary (`Library/Core.lean`), the Lean meanings of the fields' constants, the field registry |
 | `Leanify/Meta.lean`, `Readable.lean`, `Certify.lean` | the commands `#leanify_article` (with the kernel audit), `#leanify_semantics`, `#leanify_certify` |
 | `Leanify/Check.lean`, `LeanifyCli.lean` | `lake exe leanify check/certify/audit/init/prepare/flatten/tex`; `Leanify.version` |
-| `Leanify/Tactic.lean`, `Integers.lean` | `intro_premises`, `definedness`, `leanify_values`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |
-| `scripts/` | `ci.sh` (the checks of the repository, which CI runs), `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides), `leanify_diagnostics.py` |
+| `Leanify/Tactic.lean`, `Integers.lean` | `intro_premises`, `definedness`, `leanify_values`, `leanify_counter`, and `leanify_step`, the measure of a standard step (a change of it changes the reports) |
+| `scripts/` | `ci.sh` (the checks of the repository, which CI runs), `leanify_suggest.py`, `leanify_prove.py` (a hook proposes, the checker or Lean decides; counterexamples by `leanify_counter`), `leanify_hook.py` (a model behind a hook), `leanify_auto.py` (certify, prove, certify, status), `leanify_status.py` (what is left, for the author), `leanify_diagnostics.py` |
 | `tex/leanify.sty` | the LaTeX package |
 | `tests/`, `examples/` | test articles, each compiled and audited by the kernel in CI |
 

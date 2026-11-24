@@ -25,6 +25,23 @@
   const premise = p => `<li><button type="button" class="lm-jump" data-sentence="${p.sentence}"><span class="lm-dot lm-${p.status}" aria-hidden="true"></span>Claim ${p.claim} · sentence ${p.sentence + 1}</button></li>`;
   const declaration = (name, url) => url ? `<a href="${esc(url)}"><code>${esc(name)}</code></a>` : `<code>${esc(name)}</code>`;
 
+  // the Lean proof of a justification, and the lemmas of the article's files that it uses
+  // (`proofs.js`, if the reader was built with the proofs)
+  const proofs = window.lmProofs || {};
+  const short = name => String(name ?? '').split('.').pop();
+  function proofBody(name) {
+    const p = proofs[name];
+    return `<p class="lm-small">${esc(p.file)}, line ${p.line}</p><pre><code>${esc(p.code)}</code></pre>
+      ${p.uses.length ? `<p class="lm-small">Uses ${p.uses.map(u => `<button type="button" class="lm-lemma" data-lemma="${esc(u)}"><code>${esc(u)}</code></button>`).join(' ')}</p>` : ''}`;
+  }
+  // the values at which a refuted claim fails, if its refutation names them
+  const failsAt = name => {
+    const m = /-- false as it is read: at ([^\n]*)/.exec(proofs[short(name)]?.code ?? '');
+    return m ? `<p class="lm-small">It fails at <code>${esc(m[1].trim())}</code>.</p>` : '';
+  };
+  const proofHTML = (name, what) => proofs[short(name)]
+    ? `<details class="lm-proof"><summary>${what}</summary>${proofBody(short(name))}</details>` : '';
+
   function claimHTML(c) {
     return `<section class="lm-claim"><h3>Claim ${c.index} <span class="lm-role">${esc(c.role)}</span></h3>
       <p class="lm-status lm-${c.status}">${esc(c.statusText)}</p>
@@ -38,14 +55,16 @@
         : `<p class="lm-small">${c.status === 'companion' ? 'Stated without a compiled proof in the text; proved in Lean from the companion development.' : 'No premises.'}</p>`}
       <details><summary>Lean statement</summary><pre><code>${esc(c.lean)}</code></pre></details>
       <details><summary>Definedness condition</summary><pre><code>${esc(c.meaningful)}</code></pre></details>
-      ${c.justification ? `<p class="lm-small">${c.status === 'refuted' ? 'Refutation' : 'Justification'}: ${declaration(c.justification, c.justificationURL)}</p>` : ''}</section>`;
+      ${c.justification ? `<p class="lm-small">${c.status === 'refuted' ? 'Refutation' : 'Justification'}: ${declaration(c.justification, c.justificationURL)}</p>` : ''}
+      ${c.status === 'refuted' ? failsAt(c.justification) : ''}${proofHTML(c.justification, c.status === 'refuted' ? 'Lean refutation' : 'Lean proof')}</section>`;
   }
   function definitionHTML(d) {
     return `<section class="lm-claim"><h3>Definition of <span class="lm-symbol">${d.symbol}</span></h3>
       <p class="lm-status lm-definition">Well defined</p>
       <details open><summary>Lean value</summary><pre><code>${esc(d.lean)}</code></pre></details>
       <details><summary>Well-definedness condition</summary><pre><code>${esc(d.wellDefined)}</code></pre></details>
-      <p class="lm-small">Justification: ${declaration(d.justification, d.justificationURL)}</p></section>`;
+      <p class="lm-small">Justification: ${declaration(d.justification, d.justificationURL)}</p>
+      ${proofHTML(d.justification, 'Lean proof')}</section>`;
   }
 
   let selected = null;
@@ -70,6 +89,17 @@
   document.addEventListener('click', e => {
     const b = e.target.closest('.lm-dot[data-sentence], .lm-jump');
     if (b) { select(b.dataset.sentence, b.classList.contains('lm-jump')); return; }
+    // a lemma that a proof uses opens in its place, with the lemmas it uses in turn
+    const lemma = e.target.closest('.lm-lemma');
+    if (lemma && proofs[lemma.dataset.lemma]) {
+      const d = document.createElement('details');
+      d.className = 'lm-proof lm-proof-lemma';
+      d.open = true;
+      d.innerHTML = `<summary><code>${esc(lemma.dataset.lemma)}</code></summary>${proofBody(lemma.dataset.lemma)}`;
+      lemma.closest('p').after(d);
+      lemma.disabled = true;
+      return;
+    }
     if (e.target.closest('.lm-close')) {
       panel.classList.remove('lm-open'); mark('lm-active', null); selected = null;
       panel.innerHTML = '<div class="lm-inspector-empty"><p>Select a sentence marker.</p></div>';
