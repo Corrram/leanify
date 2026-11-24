@@ -2231,8 +2231,12 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           -- (a phrase that goes on after its object, `is a periodic point of $f$ of period
           -- $n$`, `is a minimizer of $f$ on $[a,b]$`, is a noun phrase of the vocabulary, below)
           if (kw [w!"of"] r4 <|> kw [w!"on"] r4 <|> kw [w!"with"] r4).isSome then none
-          -- (`… with right-hand side $f$`: the object stopped at a hyphen)
-          if (match r4 with | .p 45 :: _ => true | _ => false) then none
+          -- (`… with right-hand side $f$`: the object stopped at a hyphen; `… with coefficients
+          -- $1$ and $1$`: the last argument of the phrase follows)
+          if (match r4 with
+              | .p 45 :: _ => true
+              | .w a :: .m _ :: rest => a == w!"and" && (match rest with | .w _ :: _ => false | _ => true)
+              | _ => false) then none
           some (Clause.pred s phrase o, r4)) with
       | some res => some res
       | none =>

@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={densities}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\ell_{\mu,s}$ for the density of the lognormal distribution with parameters $\mu$ and $s$.
+We write $t_\nu$ for the density of the Student t distribution with $\nu$ degrees of freedom.
+We write $r_\sigma$ for the density of the Rayleigh distribution with scale $\sigma$.
+We write $g_{\mu,\beta}$ for the density of the Gumbel distribution with location $\mu$ and scale $\beta$.
+We write $p_{\sigma,\xi}$ for the density of the generalized Pareto distribution with scale $\sigma$ and shape $\xi$.
+We write $T_{a,b,c}$ for the density of the triangular distribution on $[a,b]$ with mode $c$.
+We write $\gamma_1(f)$ for the skewness of $f$.
+We write $\varphi$ for the standard normal density.
+
+\section{Densities}
+
+\begin{lemma}\label{lognormal}
+Let $\mu$ be a real number and let $s>0$. Then $\ell_{\mu,s}$ is a probability density, and $\ell_{\mu,s}(x)=0$ for every real number $x\le0$.
+\end{lemma}
+
+\begin{lemma}\label{student}
+Let $\nu>0$. Then $t_\nu$ is a symmetric probability density.
+\end{lemma}
+
+\begin{lemma}\label{rayleigh}
+Let $\sigma>0$. Then $r_\sigma$ is a probability density and $r_\sigma(\sigma)=\frac{e^{-1/2}}{\sigma}$.
+\end{lemma}
+
+\begin{lemma}\label{gumbel}
+Let $\beta>0$. Then $g_{0,\beta}(0)=\frac{e^{-1}}{\beta}$.
+\end{lemma}
+
+\begin{lemma}\label{pareto}
+Let $\sigma>0$. Then $p_{\sigma,0}(x)=\frac{e^{-x/\sigma}}{\sigma}$ for every real number $x\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{triangular}
+$T_{0,2,1}(1)=1$ and $T_{0,2,1}$ is a probability density.
+\end{lemma}
+
+\begin{lemma}\label{skewness}
+$\gamma_1(\varphi)=0$.
+\end{lemma}
+
+\end{document}

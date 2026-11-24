@@ -76,12 +76,14 @@ math
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   └── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   └── dependence
-│   │       └── markov            copulas, L², Markov operators (with unitsquare and hilbert)
+│   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
+│   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   └── finance                   interest, annuities, Black–Scholes
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── permutations
-│   └── graphs
+│   ├── graphs
+│   └── recurrences               progressions, Fibonacci and linear recurrences
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
@@ -136,7 +138,7 @@ the report:
   `\zeta` for a number of its own names the realms it needs instead of `math`. (A letter
   that the article defines by a formula, `$C^\top(u,v)\coloneqq C(v,u)$`, stays the
   article's.)
-* **`[0,1]` is a type.** `math` contains `unitsquare` (through `stochastic`), with which a
+* **`[0,1]` is a type.** `math` contains `unitsquare` (through `stochastic` and `copulas`), with which a
   variable in `[0,1]` is a point of that interval and `\int_0^1` its integral, as copulas
   need. The mathematics is the same, the Lean statements differ. The same holds for
   `stochastic`, `statistics` and `dependence`; an article without copulas loads
@@ -193,8 +195,9 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
+| [`copulas`](glossary.md#copulas) | the independence, comonotonicity and countermonotonicity copulas; Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian copulas; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's gamma, Chatterjee's xi, tail dependence coefficients; positively and negatively quadrant dependent, radially symmetric, left tail decreasing, max-stable; the concordance order | loads `markov` |
 | [`distributions`](glossary.md#distributions) | probability distributions on `ℕ₀`: Poisson, binomial, negative binomial, point masses, the mean | |
-| [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull; distribution function, mean, variance, moments, moment generating function, median, differential entropy | |
+| [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
@@ -203,6 +206,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`permutations`](glossary.md#permutations) | permutations of `{1, …, n}`: sign, order, cycles, inversions | |
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
+| [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |
 | **Number theory** (`numbertheory`) | | |
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |

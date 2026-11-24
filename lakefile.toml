@@ -397,3 +397,21 @@ globs = ["MatrixNorms.+"]
 name = "SpecialNumbers"
 srcDir = "tests"
 globs = ["SpecialNumbers.+"]
+
+[[lean_lib]]
+# The field recurrences: progressions, the Fibonacci and linear recurrences.
+name = "Recurrences"
+srcDir = "tests"
+globs = ["Recurrences.+"]
+
+[[lean_lib]]
+# The field copulas: copula families, measures of concordance and dependence.
+name = "Copulas"
+srcDir = "tests"
+globs = ["Copulas.+"]
+
+[[lean_lib]]
+# More of the field densities: lognormal, Student t, Rayleigh, Gumbel, generalized Pareto, triangular.
+name = "MoreDensities"
+srcDir = "tests"
+globs = ["MoreDensities.+"]

@@ -12,9 +12,12 @@ density.`) and writes `f(x)` and its integrals.
   mean`, `with finite variance`, `with mean $\mu$`, `unimodal`, `log-concave`;
 * the standard densities, with their parameters: normal (`with mean $\mu$ and variance
   $\sigma^2$`, and the standard normal density), exponential, uniform on `[a,b]`, gamma,
-  beta, chi-squared, Cauchy, Laplace, logistic, Pareto and Weibull densities;
+  beta, chi-squared, Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F,
+  Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang and triangular
+  densities;
 * notions of a density: its distribution function, mean (`the mean of the density $f$`),
-  variance, `k`th moment, moment generating function, median and differential entropy.
+  variance, `k`th moment, moment generating function, median, differential entropy,
+  skewness and excess kurtosis.
 
 The densities are terms of the core language (exponentials, powers, integrals over the
 line); the gamma function, in the gamma, beta and chi-squared densities, is Mathlib's
@@ -80,6 +83,10 @@ def normal (m v x : B) : B := div (exp (neg (div (sq (sub x m)) (mul (num 2) v))
 /-- The gamma density with shape `k` and rate `β`. -/
 def gammaD (k r x : B) : B :=
   cases (lt (num 0) x) (div (mul (mul (rpow r k) (rpow x (sub k (num 1)))) (exp (neg (mul r x)))) (gamma k)) (num 0)
+
+def cube (x : B) : B := mul x (mul x x)
+/-- `∫ x² f - (∫ x f)²`. -/
+def centralVar (f : B) : B := sub (integral (x2f f)) (mul (mean f) (mean f))
 
 /-- A notion of a density with the condition `c` (a finite mean, …), in its domain. -/
 def ofD (name : Phrase) (ty : Ty) (body : B → B) (c : Option (B → B)) (doc : String) : Notion :=
@@ -170,6 +177,52 @@ def vocab : Vocab where
       (fun k l x => cases (lt (num 0) x)
         (mul (mul (div k l) (rpow (div x l) (sub k (num 1)))) (exp (neg (rpow (div x l) k)))) (num 0))
       "`(k/λ)(x/λ)^{k-1} e^{-(x/λ)^k}` for `x > 0`; `k, λ > 0`",
+    dens2 phrase!"density of the lognormal distribution with parameters $v$ and $v$" none (some posP)
+      (fun m v x => cases (lt (num 0) x) (div (exp (neg (div (sq (sub (log x) m)) (mul (num 2) v)))) (mul x (sqrt (mul (mul (num 2) pi) v)))) (num 0))
+      "`e^{-(log x - μ)²/(2σ²)}/(x√(2πσ²))` for `x > 0`; `σ² > 0`",
+    dens1 phrase!"density of the Student t distribution with $v$ degrees of freedom" (some posP)
+      (fun n x => mul (div (gamma (div (add n (num 1)) (num 2))) (mul (sqrt (mul n pi)) (gamma (div n (num 2)))))
+        (rpow (add (num 1) (div (sq x) n)) (neg (div (add n (num 1)) (num 2)))))
+      "`Γ((ν+1)/2)/(√(νπ) Γ(ν/2)) (1 + x²/ν)^{-(ν+1)/2}`, `ν > 0`",
+    dens2 phrase!"density of the F distribution with $v$ and $v$ degrees of freedom" (some posP) (some posP)
+      (fun a b x => cases (lt (num 0) x)
+        (div (mul (mul (rpow (div a b) (div a (num 2))) (rpow x (sub (div a (num 2)) (num 1))))
+            (rpow (add (num 1) (div (mul a x) b)) (neg (div (add a b) (num 2)))))
+          (div (mul (gamma (div a (num 2))) (gamma (div b (num 2)))) (gamma (div (add a b) (num 2))))) (num 0))
+      "`(d₁/d₂)^{d₁/2} x^{d₁/2-1}(1 + d₁x/d₂)^{-(d₁+d₂)/2}/B(d₁/2, d₂/2)` for `x > 0`",
+    dens1 phrase!"density of the Rayleigh distribution with scale $v$" (some posP)
+      (fun s x => cases (le (num 0) x) (mul (div x (sq s)) (exp (neg (div (sq x) (mul (num 2) (sq s)))))) (num 0))
+      "`(x/σ²) e^{-x²/(2σ²)}` for `x ≥ 0`; `σ > 0`",
+    dens2 phrase!"density of the Gumbel distribution with location $v$ and scale $v$" none (some posP)
+      (fun m b x => div (exp (neg (add (div (sub x m) b) (exp (neg (div (sub x m) b)))))) b)
+      "`(1/β) e^{-(z + e^{-z})}`, `z = (x-μ)/β`, `β > 0`",
+    dens2 phrase!"density of the Fréchet distribution with shape $v$ and scale $v$" (some posP) (some posP)
+      (fun a s x => cases (lt (num 0) x)
+        (mul (mul (div a s) (rpow (div x s) (sub (neg (num 1)) a))) (exp (neg (rpow (div x s) (neg a))))) (num 0))
+      "`(α/s)(x/s)^{-1-α} e^{-(x/s)^{-α}}` for `x > 0`; `α, s > 0`",
+    dens2 phrase!"density of the Frechet distribution with shape $v$ and scale $v$" (some posP) (some posP)
+      (fun a s x => cases (lt (num 0) x)
+        (mul (mul (div a s) (rpow (div x s) (sub (neg (num 1)) a))) (exp (neg (rpow (div x s) (neg a))))) (num 0))
+      "the Fréchet density",
+    dens2 phrase!"density of the generalized Pareto distribution with scale $v$ and shape $v$" (some posP) (some fun k => le (num 0) k)
+      (fun s k x => cases (le (num 0) x)
+        (cases (eq k (num 0)) (div (exp (neg (div x s))) s)
+          (div (rpow (add (num 1) (div (mul k x) s)) (sub (neg (div (num 1) k)) (num 1))) s)) (num 0))
+      "`(1/σ)(1 + ξx/σ)^{-1/ξ-1}` for `x ≥ 0` (`e^{-x/σ}/σ` for `ξ = 0`); `σ > 0`, `ξ ≥ 0`",
+    dens2 phrase!"density of the inverse Gaussian distribution with mean $v$ and shape $v$" (some posP) (some posP)
+      (fun m l x => cases (lt (num 0) x)
+        (mul (sqrt (div l (mul (mul (num 2) pi) (mul x (mul x x))))) (exp (neg (div (mul l (sq (sub x m))) (mul (mul (num 2) (sq m)) x)))))
+        (num 0))
+      "`√(λ/(2πx³)) e^{-λ(x-μ)²/(2μ²x)}` for `x > 0`; `μ, λ > 0`",
+    dens2 phrase!"density of the Erlang distribution with shape $v$ and rate $v$" (some posIntP) (some posP) gammaD
+      "the gamma density with a positive integer shape `k`",
+    { name := phrase!"density of the triangular distribution on $[v,v]$ with mode $v$", ty := .real ⟶ .real ⟶ .real ⟶ F,
+      doms := [none, dom2 .real fun a b => lt a b, dom3 .real fun a b c => and (le a c) (le c b)],
+      doc := "rising linearly from `a` to the mode `c` and falling to `b`; `a < b`, `a ≤ c ≤ b`",
+      value := close <| lamR fun a => lamT .real (fun b => lt a b) fun b => lamT .real (fun c => and (le a c) (le c b)) fun c =>
+        lamR fun x => cases (and (le a x) (lt x c)) (div (mul (num 2) (sub x a)) (mul (sub b a) (sub c a)))
+          (cases (and (le c x) (le x b))
+            (cases (eq c b) (div (num 2) (sub b a)) (div (mul (num 2) (sub b x)) (mul (sub b a) (sub b c)))) (num 0)) },
     ofD phrase!"distribution function of $v$" F (fun f => lamR fun x => integralTo x f) none
       "`x ↦ ∫_{-∞}^{x} f`",
     -- (`mean of $v$` alone is the mean of a distribution on `ℕ₀`, in the field `distributions`:
@@ -198,6 +251,14 @@ def vocab : Vocab where
       (fun f => theR fun m => eq (integralTo m f) (div (num 1) (num 2)))
       (some fun f => exUnique fun m => eq (integralTo m f) (div (num 1) (num 2)))
       "the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one",
+    ofD phrase!"skewness of $v$" .real
+      (fun f => div (integral (lamR fun x => mul (cube (sub x (mean f))) (app f x))) (rpow (centralVar f) (div (num 3) (num 2))))
+      (some fun f => and (integrable (moment (num 3) f)) (ne (centralVar f) (num 0)))
+      "`∫(x-μ)³f(x)dx/σ³`, of a density with a finite third moment and `σ > 0`",
+    ofD phrase!"excess kurtosis of $v$" .real
+      (fun f => sub (div (integral (lamR fun x => mul (sq (sq (sub x (mean f)))) (app f x))) (sq (centralVar f))) (num 3))
+      (some fun f => and (integrable (moment (num 4) f)) (ne (centralVar f) (num 0)))
+      "`∫(x-μ)⁴f(x)dx/σ⁴ - 3`, of a density with a finite fourth moment and `σ > 0`",
     ofD phrase!"differential entropy of $v$" .real
       (fun f => neg (integral (lamR fun x => cases (eq (app f x) (num 0)) (num 0) (mul (app f x) (log (app f x))))))
       (some fun f => integrable (lamR fun x => cases (eq (app f x) (num 0)) (num 0) (mul (app f x) (log (app f x)))))

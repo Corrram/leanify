@@ -2053,6 +2053,22 @@ def vocabOf (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm :
   let ws := match phrase with
     | a :: r => if a == w!"a" || a == w!"an" then r else phrase
     | [] => []
+  -- `$a$ is a solution of the Fibonacci recurrence`: a modifier whose phrase goes on with
+  -- the words of the object (and its formula, if it has one)
+  if let .named nws om := o then
+    let target : Phrase := ws.map PItem.w ++ [.w w!"of", .w w!"the"] ++ nws.map PItem.w ++ (if om.isSome then [.v] else [])
+    let cands := (← get).vocab.mods.filter fun m => !m.prenominal && m.ty == s.2 && m.phrase == target
+    let cs : List Chunk := (ws ++ [w!"of", w!"the"] ++ nws).map Chunk.w
+    match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (cands.map (·, [])) with
+    | some (m, _) =>
+      match om with
+      | none => return Tm.app m.pred s.1
+      | some mt =>
+        let t := (Notation.slotTys 1 m.pred).headD .real
+        let v ← term F sc none mt
+        let a ← if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
+        return Notation.betaApply m.pred [a, s.1]
+    | none => pure ()
   let target : Phrase := ws.map PItem.w ++ [.w w!"of", .v]
   let cands := (← get).vocab.mods.filter fun m => !m.prenominal && m.ty == s.2 && m.phrase == target
   let cs : List Chunk := ws.map Chunk.w

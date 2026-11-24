@@ -1,0 +1,23 @@
+tests/Recurrences/article.tex:9:1: info: defines \@n0 (n0)
+tests/Recurrences/article.tex:10:1: info: defines \@n1 (n1)
+tests/Recurrences/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \neg (2=0))
+tests/Recurrences/article.tex:11:1: info: defines \@n2 (n2)
+tests/Recurrences/article.tex:12:1: info: defines \lambda (lambda)
+tests/Recurrences/article.tex:12:1: info: \lambda is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0\le x\,x+4\,y\Rightarrow \neg (2=0)\land \neg (2=0)
+tests/Recurrences/article.tex:13:1: info: defines u (u)
+tests/Recurrences/article.tex:18:1: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow u(x+1)=u(x)+3
+tests/Recurrences/article.tex:18:1: info: claim 1: \@n0(4,1,3)=13
+tests/Recurrences/article.tex:18:1: info: claim 1 is meaningful if: 4\in \mathbb{Z}\land 0\le 4
+tests/Recurrences/article.tex:22:35: info: claim 2: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow \@n1(x,1,2)={x}^{2}
+tests/Recurrences/article.tex:26:77: info: claim 3: \forall x\in \mathbb{R}\to \mathbb{R},\ \forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow x(z+1)=y\,x(z))\Rightarrow x(2)={y}^{2}\,x(0)
+tests/Recurrences/article.tex:26:77: info: claim 4: \forall x\in \mathbb{R},\ \@n2(2,1,x)={x}^{2}
+tests/Recurrences/article.tex:26:77: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 2\in \mathbb{Z}\land 0\le 2
+tests/Recurrences/article.tex:32:48: info: claim 5: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\Rightarrow x(z+2)=x(z+1)+x(z))\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0\le y\Rightarrow x(y+2)=1\,x(y+1)+1\,x(y))
+tests/Recurrences/article.tex:36:1: info: claim 6: \lambda(1,1)=\frac{1+{5}^{\frac{1}{2}}}{2}
+tests/Recurrences/article.tex:36:1: info: claim 6 is meaningful if: 0\le 1\,1+4\,1\land (0\le 5\land \neg (2=0))\land \neg (2=0)
+tests/Recurrences/article.tex:36:1: info: claim 7: {\lambda(1,1)}^{2}=\lambda(1,1)+1
+tests/Recurrences/article.tex:36:1: info: claim 7 is meaningful if: 0\le 1\,1+4\,1\land 0\le 1\,1+4\,1
+tests/Recurrences/article.tex: 5 definitions, 8 claims
+  text: 5 compiled, 0 failed, 0 prose (of 5)
+  results: 8 compiled, 0 failed, 0 prose (of 8)
+  all: 13 compiled, 0 failed, 0 prose (of 13)

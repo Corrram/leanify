@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={copulas}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\Pi$ for the independence copula.
+We write $M$ for the comonotonicity copula.
+We write $W$ for the countermonotonicity copula.
+We write $K_\theta$ for the Clayton copula with parameter $\theta$.
+We write $G_\theta$ for the Gumbel copula with parameter $\theta$.
+We write $F_\theta$ for the Farlie-Gumbel-Morgenstern copula with parameter $\theta$.
+We write $N_\rho$ for the Gaussian copula with correlation $\rho$.
+We write $\rho_S(C)$ for Spearman's rho of $C$.
+We write $\tau(C)$ for Kendall's tau of $C$.
+We write $\beta(C)$ for Blomqvist's beta of $C$.
+We write $\xi(C)$ for Chatterjee's xi of $C$.
+We write $\lambda_L(C)$ for the lower tail dependence coefficient of $C$.
+
+\section{The bounds}
+
+\begin{lemma}\label{bounds}
+Let $C$ be a copula. Then $C$ is more concordant than $W$ and $M$ is more concordant than $C$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$\rho_S(\Pi)=0$, $\rho_S(M)=1$, $\beta(W)=-1$ and $\tau(M)=1$.
+\end{lemma}
+
+\section{Families}
+
+\begin{lemma}\label{clayton}
+Let $\theta>0$. Then $K_\theta$ is a positively quadrant dependent copula, and $\lambda_L(K_\theta)=2^{-1/\theta}$.
+\end{lemma}
+
+\begin{lemma}\label{gumbel}
+Let $\theta\ge1$. Then $G_\theta$ is max-stable.
+\end{lemma}
+
+\begin{lemma}\label{fgm}
+Let $\theta$ be a real number with $|\theta|\le1$. Then $\rho_S(F_\theta)=\frac{\theta}{3}$.
+\end{lemma}
+
+\begin{lemma}\label{gauss}
+$N_0(u,v)=\Pi(u,v)$ for all $u,v\in[0,1]$.
+\end{lemma}
+
+\section{Measures}
+
+\begin{lemma}\label{pqd}
+Let $C$ be a positively quadrant dependent copula. Then $\rho_S(C)\ge0$.
+\end{lemma}
+
+\begin{lemma}\label{xi}
+Let $C$ be a copula. Then $0\le\xi(C)\le1$. $\Pi$ is radially symmetric.
+\end{lemma}
+
+\end{document}

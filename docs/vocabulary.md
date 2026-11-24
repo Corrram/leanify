@@ -256,7 +256,14 @@ Further fields cover other branches of mathematics:
 * `matrixnorms` (loads `matrices`): matrix norms and condition numbers, diagonal
   dominance and band structure;
 * `specialnumbers` (with `numbers`): twin, Sophie Germain, safe and Fermat primes, perfect
-  powers, sums of two squares, Fermat and Mersenne numbers, figurate numbers.
+  powers, sums of two squares, Fermat and Mersenne numbers, figurate numbers;
+* `recurrences`: arithmetic and geometric progressions, solutions of the Fibonacci and of
+  linear recurrences (`$a$ is a solution of the Fibonacci recurrence`);
+* `copulas` (loads `markov`): the Fréchet–Hoeffding bounds, the independence copula and the
+  Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian
+  families; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's
+  gamma, Chatterjee's xi and the tail dependence coefficients of a copula; quadrant
+  dependence, radial symmetry, left tail decrease, max-stability, the concordance order.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

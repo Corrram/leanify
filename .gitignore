@@ -57,3 +57,6 @@ article-reader/
 /tests/PlaneGeometry/article.leanify.*
 /tests/MatrixNorms/article.leanify.*
 /tests/SpecialNumbers/article.leanify.*
+/tests/Recurrences/article.leanify.*
+/tests/Copulas/article.leanify.*
+/tests/MoreDensities/article.leanify.*

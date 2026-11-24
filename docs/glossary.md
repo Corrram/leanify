@@ -58,12 +58,13 @@ except a notion whose meanings take arguments of different types, which the type
         * `risk`
         * `stochasticorders`
       * `dependence`
-        * `markov`
+        * `copulas`
     * `finance`
   * `discrete`
     * `combinatorics`
     * `permutations`
     * `graphs`
+    * `recurrences`
   * `numbertheory`
     * `numbers`
     * `arithmetic`
@@ -72,19 +73,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance`, `combinatorics`, `permutations`, `graphs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas`, `finance`, `combinatorics`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `special`, `hyperbolic`, `trigonometry`, `means`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` | `approximation`, `iteration`, `odesolvers`, `matrixnorms` |
-| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov`, `finance` |
-| `discrete` | `combinatorics`, `permutations`, `graphs` | `combinatorics`, `permutations`, `graphs` |
+| `stochastic` | `statistics`, `finance` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas`, `finance` |
+| `discrete` | `combinatorics`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `permutations`, `graphs`, `recurrences` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` | `numbers`, `arithmetic`, `congruences`, `specialnumbers` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means` | `special`, `hyperbolic`, `trigonometry`, `means` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
 | `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` | `distributions`, `densities`, `information`, `risk`, `stochasticorders` |
-| `dependence` | `markov` | `markov` |
-| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markov` |
+| `dependence` | `copulas` | `copulas` |
+| `statistics` | `probability`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `copulas` |
 
 ## `core`
 
@@ -994,6 +995,17 @@ except a notion whose meanings take arguments of different types, which the type
 | density of the logistic distribution with location $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-(x-μ)/s}/(s(1 + e^{-(x-μ)/s})²)`, `s > 0` |
 | density of the pareto distribution with scale $a$ and shape $b$ | ℝ → ℝ → ℝ → ℝ | `α x_m^α / x^{α+1}` for `x ≥ x_m`; `x_m, α > 0` |
 | density of the weibull distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `(k/λ)(x/λ)^{k-1} e^{-(x/λ)^k}` for `x > 0`; `k, λ > 0` |
+| density of the lognormal distribution with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `e^{-(log x - μ)²/(2σ²)}/(x√(2πσ²))` for `x > 0`; `σ² > 0` |
+| density of the student t distribution with $a$ degrees of freedom | ℝ → ℝ → ℝ | `Γ((ν+1)/2)/(√(νπ) Γ(ν/2)) (1 + x²/ν)^{-(ν+1)/2}`, `ν > 0` |
+| density of the f distribution with $a$ and $b$ degrees of freedom | ℝ → ℝ → ℝ → ℝ | `(d₁/d₂)^{d₁/2} x^{d₁/2-1}(1 + d₁x/d₂)^{-(d₁+d₂)/2}/B(d₁/2, d₂/2)` for `x > 0` |
+| density of the rayleigh distribution with scale $a$ | ℝ → ℝ → ℝ | `(x/σ²) e^{-x²/(2σ²)}` for `x ≥ 0`; `σ > 0` |
+| density of the gumbel distribution with location $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `(1/β) e^{-(z + e^{-z})}`, `z = (x-μ)/β`, `β > 0` |
+| density of the fréchet distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `(α/s)(x/s)^{-1-α} e^{-(x/s)^{-α}}` for `x > 0`; `α, s > 0` |
+| density of the frechet distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | the Fréchet density |
+| density of the generalized pareto distribution with scale $a$ and shape $b$ | ℝ → ℝ → ℝ → ℝ | `(1/σ)(1 + ξx/σ)^{-1/ξ-1}` for `x ≥ 0` (`e^{-x/σ}/σ` for `ξ = 0`); `σ > 0`, `ξ ≥ 0` |
+| density of the inverse gaussian distribution with mean $a$ and shape $b$ | ℝ → ℝ → ℝ → ℝ | `√(λ/(2πx³)) e^{-λ(x-μ)²/(2μ²x)}` for `x > 0`; `μ, λ > 0` |
+| density of the erlang distribution with shape $a$ and rate $b$ | ℝ → ℝ → ℝ → ℝ | the gamma density with a positive integer shape `k` |
+| density of the triangular distribution on $[a,b]$ with mode $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | rising linearly from `a` to the mode `c` and falling to `b`; `a < b`, `a ≤ c ≤ b` |
 | distribution function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `x ↦ ∫_{-∞}^{x} f` |
 | mean of the density $a$ | (ℝ → ℝ) → ℝ | `∫ x f(x) dx`, of a density with a finite mean |
 | variance of $a$ | (ℝ → ℝ) → ℝ | `∫ x² f(x) dx - (∫ x f(x) dx)²`, of a density with a finite variance |
@@ -1002,6 +1014,8 @@ except a notion whose meanings take arguments of different types, which the type
 | moment generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `t ↦ ∫ e^{tx} f(x) dx`, at the `t` where `e^{tx} f(x)` is integrable |
 | median of $a$ | (ℝ → ℝ) → ℝ | the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one |
 | median of the density $a$ | (ℝ → ℝ) → ℝ | the `m` with `∫_{-∞}^{m} f = 1/2`, if there is exactly one |
+| skewness of $a$ | (ℝ → ℝ) → ℝ | `∫(x-μ)³f(x)dx/σ³`, of a density with a finite third moment and `σ > 0` |
+| excess kurtosis of $a$ | (ℝ → ℝ) → ℝ | `∫(x-μ)⁴f(x)dx/σ⁴ - 3`, of a density with a finite fourth moment and `σ > 0` |
 | differential entropy of $a$ | (ℝ → ℝ) → ℝ | `-∫ f log f` (`0 log 0 = 0`), where `f log f` is integrable |
 
 ## `fourier`
@@ -1630,4 +1644,115 @@ except a notion whose meanings take arguments of different types, which the type
 | $a$ th tetrahedral number | ℝ → ℝ | `n(n+1)(n+2)/6` |
 | $a$ th square pyramidal number | ℝ → ℝ | `n(n+1)(2n+1)/6` |
 | $a$ th oblong number | ℝ → ℝ | `n(n+1)` |
+
+## `recurrences`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| arithmetic progression with difference $x$ | ℝ → ℝ | `a(n+1) = a(n) + d` for every `n ≥ 0` |
+| geometric progression with ratio $x$ | ℝ → ℝ | `a(n+1) = q a(n)` for every `n ≥ 0` |
+| arithmetic progression | ℝ → ℝ | with some difference |
+| geometric progression | ℝ → ℝ | with some ratio |
+| satisfying the fibonacci recurrence | ℝ → ℝ | `a(n+2) = a(n+1) + a(n)` |
+| solution of the fibonacci recurrence | ℝ → ℝ | `a(n+2) = a(n+1) + a(n)` |
+| solution of the linear recurrence with coefficients $x$ and $a$ | ℝ → ℝ | `a(n+2) = p a(n+1) + q a(n)` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th term of the arithmetic progression with first term $b$ and difference $c$ | ℝ → ℝ → ℝ → ℝ | `a + nd` |
+| sum of the first $a$ terms of the arithmetic progression with first term $b$ and difference $c$ | ℝ → ℝ → ℝ → ℝ | `n a + n(n-1)d/2` |
+| $a$ th term of the geometric progression with first term $b$ and ratio $c$ | ℝ → ℝ → ℝ → ℝ | `a qⁿ` |
+| sum of the first $a$ terms of the geometric progression with first term $b$ and ratio $c$ | ℝ → ℝ → ℝ → ℝ | `a(1 - qⁿ)/(1 - q)`, `q ≠ 1` |
+| larger characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `(p + √(p² + 4q))/2`, where `p² + 4q ≥ 0` |
+| smaller characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `(p - √(p² + 4q))/2`, where `p² + 4q ≥ 0` |
+
+## `copulas`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
+| probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
+| bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
+| coupling | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | a probability measure on `[0,1]²` with uniform marginals: the law of a pair `(X,Z)` of uniform random variables |
+| finite subset $x$ of $[0,1]$ | $[0,1]$ → Prop | a finite set of points of `[0,1]` (Mathlib `Set.Finite`) |
+| borel set | $[0,1]$ → Prop | a Borel subset of `[0,1]` (Mathlib `MeasurableSet`) |
+| sequence $x$ in $[0,1]$ | ℝ → $[0,1]$ | a sequence of points of `[0,1]`: its terms are those at the indices `0, 1, 2, …` |
+| kernel | (ℝ → $[0,1]$) → ℝ | a Borel function of the terms `1, …, m` of a sequence in `[0,1]` for some `m` (a function on `[0,1]^m`), square-integrable for independent uniform terms |
+| statistic | (ℝ → $[0,1]$) → (ℝ → $[0,1]$) → ℝ | a real function of finitely many observations `(U_i,V_i)` of a sample, measurable in them |
+| finite set of positive integers | ℝ → Prop | a finite set of integers `≥ 1` (an index set of the terms of a sequence) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
+| symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
+| continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
+| lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
+| borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
+| borel measurable | $[0,1]$ → $[0,1]$ → ℝ | a Borel measurable real function on the square `[0,1]²` (Mathlib `Measurable` of the uncurried function) |
+| borel measurable | $[0,1]$ → $[0,1]$ → $[0,1]$ | a Borel measurable map of the square `[0,1]²` to `[0,1]` (Mathlib `Measurable` of the uncurried function, as a real function) |
+| borel measurable | $[0,1]$ → ℝ | a Borel measurable real function on `[0,1]` (Mathlib `Measurable`) |
+| with uniform marginals | $[0,1]$ → $[0,1]$ → ℝ | `F(u,1) = u`, `F(1,v) = v` |
+| with uniform marginals | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | `γ([0,u]×[0,1]) = u`, `γ([0,1]×[0,v]) = v` |
+| positively quadrant dependent | $[0,1]$ → $[0,1]$ → ℝ | `C(u,v) ≥ uv` (PQD) |
+| negatively quadrant dependent | $[0,1]$ → $[0,1]$ → ℝ | `C(u,v) ≤ uv` (NQD) |
+| radially symmetric | $[0,1]$ → $[0,1]$ → ℝ | `C(u,v) = u + v - 1 + C(1-u,1-v)`: `(U,V)` and `(1-U,1-V)` have the same law |
+| left tail decreasing | $[0,1]$ → $[0,1]$ → ℝ | `C(u,v)/u` is nonincreasing in `u` (LTD in the first coordinate) |
+| max-stable | $[0,1]$ → $[0,1]$ → ℝ | `C(u^t, v^t) = C(u,v)^t` for every `t > 0`: an extreme-value copula |
+| more concordant than $x$ | $[0,1]$ → $[0,1]$ → ℝ | `C(u,v) ≥ D(u,v)` for all `u`, `v` (the concordance order) |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| convex [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConvexOn ℝ` on the class, for the pointwise vector space structure |
+| concave [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ConcaveOn ℝ` on the class |
+| lower semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `LowerSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| upper semicontinuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `UpperSemicontinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| continuous with respect to uniform convergence [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `ContinuousOn` for the topology of uniform convergence on `[0,1]²` |
+| affine [on $A$] | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `A((1-t)C₁ + tC₂) = (1-t)A(C₁) + tA(C₂)` for the members `C₁`, `C₂` of the class and `t ∈ [0,1]` |
+| convex | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `Convex ℝ`, for the pointwise vector space structure |
+| compact with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsCompact` for the topology of uniform convergence on `[0,1]²` |
+| closed with respect to uniform convergence | ($[0,1]$ → $[0,1]$ → ℝ) → Prop | `IsClosed` for the topology of uniform convergence on `[0,1]²` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| lebesgue measure on $[0,1]$ | ($[0,1]$ → Prop) → ℝ | the Lebesgue measure of a subset of `[0,1]` (Mathlib `volume`) |
+| standard normal quantile function | $[0,1]$ → ℝ | `Φ⁻¹(u) = inf {x : u ≤ Φ(x)}` for the standard normal distribution function `Φ` (Mathlib `cdf (gaussianReal 0 1)`): the inverse of `Φ` on `(0,1)` |
+| conditional distribution function of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `h_C(u,v) = P(V ≤ v \| U = u)` for a copula `C`, the distribution function of `(U,V)`: the conditional distribution function of `V` given `U = u`, from the disintegration of the measure of `C` (Mathlib `Measure.condKernel`); a version of `∂₁C` |
+| coupling associated with $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → Prop) → ℝ | the law of `(X,Z) = (1-U,1-V)` for a pair `(U,V)` with the copula `C`: `γ(A) = μ_C{(u,v) : (1-u,1-v) ∈ A}` |
+| copula associated with $a$ | (($[0,1]$ → $[0,1]$ → Prop) → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the copula of `(U,V) = (1-X,1-Z)` for a pair `(X,Z)` with the coupling `γ`: `C(u,v) = γ{(x,z) : x ≥ 1-u, z ≥ 1-v}` |
+| markov product of $a$ and $b$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | `(A*B)(u,v) = ∫₀¹ ∂₂A(u,t) ∂₁B(t,v) dt` for copulas `A`, `B` (Darsow, Nguyen and Olsen): the copula of `(X₀,X₂)` for a Markov chain whose steps have the copulas `A` and `B` |
+| markov power of order $a$ of $b$ | ℝ → ($[0,1]$ → $[0,1]$ → ℝ) → $[0,1]$ → $[0,1]$ → ℝ | the Markov product of `k` factors `C`, for an integer `k ≥ 1` and a copula `C`: the copula of `(X₀,X_k)` for a stationary Markov chain whose steps have the copula `C` |
+| markov operator of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ($[0,1]$ → ℝ) → $[0,1]$ → ℝ | `(T_C g)(u) = ∫ g(y) K_C(u, dy)` for a copula `C`, with the conditional distribution `K_C(u,·)` of the second coordinate given the first (Mathlib `Measure.condKernel`): `E[g(V) \| U = u]` |
+| independence copula | $[0,1]$ → $[0,1]$ → ℝ | `Π(u,v) = uv` |
+| product copula | $[0,1]$ → $[0,1]$ → ℝ | `Π(u,v) = uv` |
+| comonotonicity copula | $[0,1]$ → $[0,1]$ → ℝ | `M(u,v) = min(u,v)` |
+| upper fréchet-hoeffding bound | $[0,1]$ → $[0,1]$ → ℝ | `M(u,v) = min(u,v)` |
+| upper frechet-hoeffding bound | $[0,1]$ → $[0,1]$ → ℝ | `M(u,v) = min(u,v)` |
+| countermonotonicity copula | $[0,1]$ → $[0,1]$ → ℝ | `W(u,v) = max(u+v-1, 0)` |
+| lower fréchet-hoeffding bound | $[0,1]$ → $[0,1]$ → ℝ | `W(u,v) = max(u+v-1, 0)` |
+| lower frechet-hoeffding bound | $[0,1]$ → $[0,1]$ → ℝ | `W(u,v) = max(u+v-1, 0)` |
+| clayton copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `(u^{-θ} + v^{-θ} - 1)^{-1/θ}`, `θ > 0` |
+| gumbel copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `exp(-((-log u)^θ + (-log v)^θ)^{1/θ})`, `θ ≥ 1` |
+| frank copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `-(1/θ) log(1 + (e^{-θu} - 1)(e^{-θv} - 1)/(e^{-θ} - 1))`, `θ ≠ 0` |
+| farlie-gumbel-morgenstern copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `uv(1 + θ(1-u)(1-v))`, `\|θ\| ≤ 1` |
+| fgm copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | the Farlie–Gumbel–Morgenstern copula |
+| ali-mikhail-haq copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `uv/(1 - θ(1-u)(1-v))`, `-1 ≤ θ < 1` |
+| cuadras-augé copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `min(u,v)^θ (uv)^{1-θ}`, `0 ≤ θ ≤ 1` |
+| cuadras-auge copula with parameter $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | the Cuadras–Augé copula |
+| marshall-olkin copula with parameters $a$ and $b$ | ℝ → ℝ → $[0,1]$ → $[0,1]$ → ℝ | `min(u^{1-α} v, u v^{1-β})`, `α, β ∈ [0,1]` |
+| gaussian copula with correlation $a$ | ℝ → $[0,1]$ → $[0,1]$ → ℝ | `Φ_ρ(Φ⁻¹(u), Φ⁻¹(v))`, the bivariate normal distribution function with correlation `ρ`, `\|ρ\| < 1` |
+| spearman's rho of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `12∫∫C(u,v) du dv - 3` |
+| kendall's tau of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `4∫C dC - 1` |
+| blomqvist's beta of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `4C(1/2,1/2) - 1` |
+| spearman's footrule of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `6∫C(t,t)dt - 2` |
+| gini's gamma of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `4∫(C(t,t) + C(t,1-t))dt - 2` |
+| chatterjee's xi of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `6∫∫(∂₁C(u,v))² du dv - 2` |
+| lower tail dependence coefficient of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `lim_{t→0⁺} C(t,t)/t`, where it exists |
+| upper tail dependence coefficient of $a$ | ($[0,1]$ → $[0,1]$ → ℝ) → ℝ | `lim_{t→1⁻} (1 - 2t + C(t,t))/(1-t)`, where it exists |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $L^2$ | ($[0,1]$ → ℝ) → Prop | the square-integrable functions on `[0,1]`: measurable, with an integrable square (Mathlib `MemLp f 2`) |
+| $L^2_0$ | ($[0,1]$ → ℝ) → Prop | the functions of `L^2` with integral zero |
 

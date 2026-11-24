@@ -1,0 +1,37 @@
+tests/MoreDensities/article.tex:9:1: info: defines \ell_{ (ell)
+tests/MoreDensities/article.tex:9:1: info: \ell_{ is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (2\,y=0)\land \neg (2=0)\land \neg (z\,{(2\,\pi\,y)}^{\frac{1}{2}}=0))
+tests/MoreDensities/article.tex:10:1: info: defines \@n1 (n1)
+tests/MoreDensities/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ (\neg (2=0)\land (\neg (2=0)\land \neg (2=0))\land \neg ({(x\,\pi)}^{\frac{1}{2}}\,\Gamma(\frac{x}{2})=0))\land \neg (x=0)\land \neg (2=0))
+tests/MoreDensities/article.tex:11:1: info: defines \@n2 (n2)
+tests/MoreDensities/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow \neg (x\,x=0)\land \neg (2\,(x\,x)=0))
+tests/MoreDensities/article.tex:12:1: info: defines \@n3 (n3)
+tests/MoreDensities/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ (\neg (y=0)\land \neg (y=0))\land \neg (y=0))
+tests/MoreDensities/article.tex:13:1: info: defines \@n4 (n4)
+tests/MoreDensities/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\Rightarrow (y=0\Rightarrow \neg (x=0)\land \neg (x=0))\land (\neg (y=0)\Rightarrow (\neg (x=0)\land \neg (y=0))\land \neg (x=0))))
+tests/MoreDensities/article.tex:14:1: info: defines \@n5 (n5)
+tests/MoreDensities/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R},\ x\le z\land z\le y\Rightarrow (\forall s\in \mathbb{R},\ (x\le s\land s<z\Rightarrow \neg ((y-x)\,(z-x)=0)\land (z\le s\land s\le y\Rightarrow ((z=y\Rightarrow \neg (y-x=0))\land (\neg (z=y)\Rightarrow \neg ((y-x)\,(y-z)=0)))\land \begin{cases}\frac{2}{y-x}&z=y\\\end{cases}=\frac{2\,(s-x)}{(y-x)\,(z-x)}))\land (\neg (x\le s\land s<z)\Rightarrow z\le s\land s\le y\Rightarrow (z=y\Rightarrow \neg (y-x=0))\land (\neg (z=y)\Rightarrow \neg ((y-x)\,(y-z)=0)))))
+tests/MoreDensities/article.tex:15:1: info: defines \gamma_1 (gamma1)
+tests/MoreDensities/article.tex:15:1: info: \gamma_1 is well defined if: \forall x\in \mathbb{R}\to \mathbb{R},\ ((\forall y\in \mathbb{R},\ 0\le x(y))\land \operatorname{Int}(x)((y\in \mathbb{R}\mapsto \top))\land \int((y\in \mathbb{R}\mapsto \top))(x)=1)\land \operatorname{Int}((y\in \mathbb{R}\mapsto {y}^{3}\,x(y)))((y\in \mathbb{R}\mapsto \top))\land \neg (\int_{-\infty}^{\infty}y\,y\,x(y)\,dy-\int_{-\infty}^{\infty}y\,x(y)\,dy\,\int_{-\infty}^{\infty}y\,x(y)\,dy=0)\Rightarrow \neg (2=0)\land \neg ({(\int_{-\infty}^{\infty}y\,y\,x(y)\,dy-\int_{-\infty}^{\infty}y\,x(y)\,dy\,\int_{-\infty}^{\infty}y\,x(y)\,dy)}^{\frac{3}{2}}=0)
+tests/MoreDensities/article.tex:16:1: info: defines \varphi (varphi)
+tests/MoreDensities/article.tex:16:1: info: \varphi is well defined if: \forall x\in \mathbb{R},\ \neg (2\,1=0)\land \neg (2=0)\land \neg ({(2\,\pi\,1)}^{\frac{1}{2}}=0)
+tests/MoreDensities/article.tex:21:43: info: claim 0: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall s\in \mathbb{R},\ 0\le \ell_{(x,y)(s))\land \operatorname{Int}(\ell_{(x,y))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\ell_{(x,y))=1
+tests/MoreDensities/article.tex:21:43: info: claim 1: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ z\le 0\Rightarrow \ell_{(x,y,z)=0)
+tests/MoreDensities/article.tex:21:43: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ z\le 0\Rightarrow 0<y)
+tests/MoreDensities/article.tex:25:14: info: claim 2: \forall x\in \mathbb{R},\ 0<x\Rightarrow ((\forall s\in \mathbb{R},\ 0\le \@n1(x)(s))\land \operatorname{Int}(\@n1(x))((s\in \mathbb{R}\mapsto \top))\land \int((s\in \mathbb{R}\mapsto \top))(\@n1(x))=1)\land (\forall s\in \mathbb{R},\ \@n1(x)(-s)=\@n1(x)(s))
+tests/MoreDensities/article.tex:29:17: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall z\in \mathbb{R},\ 0\le \@n2(x)(z))\land \operatorname{Int}(\@n2(x))((z\in \mathbb{R}\mapsto \top))\land \int((z\in \mathbb{R}\mapsto \top))(\@n2(x))=1
+tests/MoreDensities/article.tex:29:17: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n2(x,x)=\frac{\exp(-(\frac{1}{2}))}{x}
+tests/MoreDensities/article.tex:29:17: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x\land \neg (2=0)\land \neg (x=0)
+tests/MoreDensities/article.tex:33:16: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n3(0,x,0)=\frac{\exp(-1)}{x}
+tests/MoreDensities/article.tex:33:16: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x\land \neg (x=0)
+tests/MoreDensities/article.tex:37:17: info: claim 6: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow \@n4(x,0,y)=\frac{\exp(-(\frac{y}{x}))}{x})
+tests/MoreDensities/article.tex:37:17: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (0\le 0\land 0<x)\land \neg (x=0)\land \neg (x=0))
+tests/MoreDensities/article.tex:41:1: info: claim 7: \@n5(0,2,1,1)=1
+tests/MoreDensities/article.tex:41:1: info: claim 7 is meaningful if: (0\le 1\land 1\le 2)\land 0<2
+tests/MoreDensities/article.tex:41:1: info: claim 8: (\forall y\in \mathbb{R},\ 0\le \@n5(0,2,1)(y))\land \operatorname{Int}(\@n5(0,2,1))((y\in \mathbb{R}\mapsto \top))\land \int((y\in \mathbb{R}\mapsto \top))(\@n5(0,2,1))=1
+tests/MoreDensities/article.tex:41:1: info: claim 8 is meaningful if: (0\le 1\land 1\le 2)\land 0<2
+tests/MoreDensities/article.tex:45:1: info: claim 9: \gamma_1(\varphi)=0
+tests/MoreDensities/article.tex:45:1: info: claim 9 is meaningful if: ((\forall y\in \mathbb{R},\ 0\le \varphi(y))\land \operatorname{Int}(\varphi)((y\in \mathbb{R}\mapsto \top))\land \int((y\in \mathbb{R}\mapsto \top))(\varphi)=1)\land \operatorname{Int}((y\in \mathbb{R}\mapsto {y}^{3}\,\varphi(y)))((y\in \mathbb{R}\mapsto \top))\land \neg (\int_{-\infty}^{\infty}y\,y\,\varphi(y)\,dy-\int_{-\infty}^{\infty}y\,\varphi(y)\,dy\,\int_{-\infty}^{\infty}y\,\varphi(y)\,dy=0)
+tests/MoreDensities/article.tex: 8 definitions, 10 claims
+  text: 8 compiled, 0 failed, 0 prose (of 8)
+  results: 12 compiled, 0 failed, 0 prose (of 12)
+  all: 20 compiled, 0 failed, 0 prose (of 20)

@@ -41,6 +41,8 @@ import Leanify.Library.Integration
 import Leanify.Library.PlaneGeometry
 import Leanify.Library.MatrixNorms
 import Leanify.Library.SpecialNumbers
+import Leanify.Library.Recurrences
+import Leanify.Library.Copulas
 
 /-! # The fields of the vocabulary
 
@@ -99,18 +101,20 @@ def all : List (String × Vocab) := [
   ("integration", Integration.vocab),
   ("planegeometry", PlaneGeometry.vocab),
   ("matrixnorms", MatrixNorms.vocab),
-  ("specialnumbers", SpecialNumbers.vocab)]
+  ("specialnumbers", SpecialNumbers.vocab),
+  ("recurrences", Recurrences.vocab),
+  ("copulas", Copulas.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
 /-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
-`hilbert` with more, `metricspaces` is `topologies` with more, `planegeometry` is `geometry`
-and `matrixnorms` is `matrices` with more. Their entries are tagged with the field that adds
+`hilbert` with more, `copulas` is `markov` with more, `metricspaces` is `topologies` with
+more, `planegeometry` is `geometry` and `matrixnorms` is `matrices` with more. Their entries are tagged with the field that adds
 them. -/
 def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
-   ("matrixnorms", ["matrices"])]
+   ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -131,13 +135,13 @@ def bundles : List (String × List String) := [
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms"]),
   ("stochastic", ["statistics", "finance"]),
-  ("discrete", ["combinatorics", "permutations", "graphs"]),
+  ("discrete", ["combinatorics", "permutations", "graphs", "recurrences"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means"]),
   ("linearalgebra", ["vectors", "matrices"]),
   ("probability", ["distributions", "densities", "information", "risk", "stochasticorders"]),
-  ("dependence", ["markov"]),
+  ("dependence", ["copulas"]),
   ("statistics", ["probability", "dependence"])]
 
 /-- The realms: the bundles that `math` names, each a branch of mathematics. -/
