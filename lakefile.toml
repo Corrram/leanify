@@ -949,3 +949,27 @@ globs = ["PoissonProcesses.+"]
 name = "SurveySampling"
 srcDir = "tests"
 globs = ["SurveySampling.+"]
+
+[[lean_lib]]
+# The field convergence: convergence acceleration.
+name = "Convergence"
+srcDir = "tests"
+globs = ["Convergence.+"]
+
+[[lean_lib]]
+# The field finitefields: finite fields.
+name = "FiniteFields"
+srcDir = "tests"
+globs = ["FiniteFields.+"]
+
+[[lean_lib]]
+# The field liealgebras: simple Lie algebras.
+name = "LieAlgebras"
+srcDir = "tests"
+globs = ["LieAlgebras.+"]
+
+[[lean_lib]]
+# The field words: words and necklaces.
+name = "Words"
+srcDir = "tests"
+globs = ["Words.+"]

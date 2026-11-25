@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={convergence}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $N(L,t)$ for the number of bisection steps for an interval of length $L$ and tolerance $t$.
+We write $K(q,a,t)$ for the number of steps of a contraction with constant $q$ from the error $a$ to the tolerance $t$.
+We write $R(a,b,p)$ for the Richardson extrapolation of the approximations $a$ and $b$ of order $p$.
+We write $A(x,y,z)$ for the Aitken extrapolation of $x$, $y$ and $z$.
+We write $Q(a,b,c)$ for the estimated order of convergence from the errors $a$, $b$ and $c$.
+We write $D(y,x)$ for the number of correct significant digits of $y$ as an approximation of $x$.
+
+\section{Iteration counts}
+
+\begin{lemma}\label{counts}
+$N(1,\frac{1}{1000})=10$ and $K(\frac12,1,\frac18)=3$.
+\end{lemma}
+
+\section{Acceleration}
+
+\begin{lemma}\label{extrapolation}
+$R(1,\frac54,2)=\frac43$, $A(1,\frac12,\frac14)=0$, $Q(\frac12,\frac14,\frac{1}{16})=2$ and $D(\frac{999}{1000},1)=3$.
+\end{lemma}
+
+\end{document}

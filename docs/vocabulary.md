@@ -388,7 +388,11 @@ Further fields cover other branches of mathematics:
 * `fixedincome`: bonds, durations, perpetuities, loans;
 * `options`: payoffs, parity and the binomial model;
 * `poissonprocesses`: arrivals and compound sums;
-* `surveysampling`: sample sizes and design effects.
+* `surveysampling`: sample sizes and design effects;
+* `convergence`: iteration counts and extrapolation;
+* `finitefields`: linear algebra over finite fields;
+* `liealgebras`: the classical simple Lie algebras;
+* `words`: words, necklaces and de Bruijn sequences.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

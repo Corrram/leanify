@@ -72,6 +72,8 @@ except a notion whose meanings take arguments of different types, which the type
     * `polynomials`
     * `quadratics`
     * `groups`
+    * `finitefields`
+    * `liealgebras`
   * `topology`
     * `realsets`
     * `topologies`
@@ -93,6 +95,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `matrixnorms`
     * `descent`
     * `floatingpoint`
+    * `convergence`
   * `stochastic`
     * `statistics`
       * `probability`
@@ -137,6 +140,7 @@ except a notion whose meanings take arguments of different types, which the type
   * `discrete`
     * `combinatorics`
     * `counting`
+    * `words`
     * `permutations`
     * `graphs`
     * `graphcounts`
@@ -161,13 +165,13 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
-| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
+| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
-| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` |
+| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` |
 | `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` |
-| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
+| `discrete` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
@@ -3278,4 +3282,62 @@ except a notion whose meanings take arguments of different types, which the type
 | design effect of clusters of size $a$ with intraclass correlation $b$ | ℝ → ℝ → ℝ | `1 + (m-1)ρ` |
 | effective sample size of $a$ observations with design effect $b$ | ℝ → ℝ → ℝ | `n/deff` |
 | sampling fraction of a sample of $a$ from a population of $b$ | ℝ → ℝ → ℝ | `n/N` |
+
+## `convergence`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of bisection steps for an interval of length $a$ and tolerance $b$ | ℝ → ℝ → ℝ | `⌈log₂(L/ε)⌉`: the steps after which the bracketing interval is shorter than `ε` |
+| number of steps of a contraction with constant $a$ from the error $b$ to the tolerance $c$ | ℝ → ℝ → ℝ → ℝ | `⌈log(ε/e₀)/log q⌉` |
+| richardson extrapolation of the approximations $a$ and $b$ of order $c$ | ℝ → ℝ → ℝ → ℝ | `(2^p A(h/2) - A(h))/(2^p - 1)` for `A(h)` and `A(h/2)` |
+| aitken extrapolation of $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `x - (y-x)²/(z - 2y + x)` (Aitken's Δ²) |
+| estimated order of convergence from the errors $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `log(e₂/e₁)/log(e₁/e₀)` |
+| number of correct significant digits of $a$ as an approximation of $b$ | ℝ → ℝ → ℝ | `-log₁₀(\|x̂ - x\|/\|x\|)` |
+
+## `finitefields`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| prime power | ℝ | `p^k` for a prime `p` and an integer `k ≥ 1` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| prime power | ℝ | `p^k` for a prime `p` and an integer `k ≥ 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| order of the general linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `∏_{k=0}^{n-1}(q^n - q^k)` |
+| order of the special linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `\|GL_n(F_q)\|/(q-1)` |
+| number of square matrices of order $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `q^{n²}` |
+| number of $a$-dimensional subspaces of a space of dimension $b$ over the field with $c$ elements | ℝ → ℝ → ℝ → ℝ | the Gaussian binomial coefficient `∏_{i=0}^{k-1}(q^{n-i} - 1)/(q^{i+1} - 1)` |
+| number of points of the projective space of dimension $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `(q^{n+1} - 1)/(q - 1)` |
+| number of primitive elements of the field with $a$ elements | ℝ → ℝ | `φ(q - 1)`: the generators of the multiplicative group |
+
+## `liealgebras`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| dimension of the special linear lie algebra of rank $a$ | ℝ → ℝ | `n² + 2n` (`A_n`) |
+| dimension of the odd orthogonal lie algebra of rank $a$ | ℝ → ℝ | `n(2n+1)` (`B_n`) |
+| dimension of the symplectic lie algebra of rank $a$ | ℝ → ℝ | `n(2n+1)` (`C_n`) |
+| dimension of the even orthogonal lie algebra of rank $a$ | ℝ → ℝ | `n(2n-1)` (`D_n`) |
+| number of positive roots of the special linear lie algebra of rank $a$ | ℝ → ℝ | `n(n+1)/2` |
+| number of positive roots of the odd orthogonal lie algebra of rank $a$ | ℝ → ℝ | `n²` |
+| number of positive roots of the symplectic lie algebra of rank $a$ | ℝ → ℝ | `n²` |
+| number of positive roots of the even orthogonal lie algebra of rank $a$ | ℝ → ℝ | `n(n-1)` |
+| coxeter number of the special linear lie algebra of rank $a$ | ℝ → ℝ | `n+1` |
+| coxeter number of the odd orthogonal lie algebra of rank $a$ | ℝ → ℝ | `2n` |
+| coxeter number of the symplectic lie algebra of rank $a$ | ℝ → ℝ | `2n` |
+| coxeter number of the even orthogonal lie algebra of rank $a$ | ℝ → ℝ | `2n-2` |
+
+## `words`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of words of length $a$ over $b$ letters | ℝ → ℝ → ℝ | `k^n` |
+| number of palindromes of length $a$ over $b$ letters | ℝ → ℝ → ℝ | `k^{⌈n/2⌉}` |
+| number of words of length $a$ over $b$ letters with no two equal adjacent letters | ℝ → ℝ → ℝ | `k(k-1)^{n-1}` |
+| number of binary words of length $a$ without two consecutive ones | ℝ → ℝ | `F_{n+2} = ∑_{j=0}^{n} \binom{n+1-j}{j}` |
+| number of necklaces of length $a$ over $b$ colours | ℝ → ℝ → ℝ | `(1/n)∑_{i=1}^{n} k^{gcd(i,n)}`: words up to rotation |
+| number of de bruijn sequences of order $a$ over $b$ letters | ℝ → ℝ → ℝ | `(k!)^{k^{n-1}}/k^n`, as cyclic sequences |
 

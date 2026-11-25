@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={words}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $W(n,k)$ for the number of words of length $n$ over $k$ letters.
+We write $P(n,k)$ for the number of palindromes of length $n$ over $k$ letters.
+We write $A(n,k)$ for the number of words of length $n$ over $k$ letters with no two equal adjacent letters.
+We write $F(n)$ for the number of binary words of length $n$ without two consecutive ones.
+We write $N(n,k)$ for the number of necklaces of length $n$ over $k$ colours.
+We write $B(n,k)$ for the number of de Bruijn sequences of order $n$ over $k$ letters.
+
+\section{Words}
+
+\begin{lemma}\label{words}
+$W(3,2)=8$, $P(3,2)=4$, $P(4,2)=4$, $A(3,3)=12$, $F(3)=5$ and $F(4)=8$.
+\end{lemma}
+
+\begin{lemma}\label{fibonacci}
+Let $n$ be a positive integer. Then $F(n+1)=F(n)+F(n-1)$.
+\end{lemma}
+
+\section{Necklaces}
+
+\begin{lemma}\label{necklaces}
+$N(4,2)=6$, $N(6,2)=14$, $B(2,2)=1$ and $B(3,2)=2$.
+\end{lemma}
+
+\end{document}

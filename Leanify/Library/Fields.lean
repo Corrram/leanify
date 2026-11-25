@@ -130,6 +130,10 @@ import Leanify.Library.FixedIncome
 import Leanify.Library.Options
 import Leanify.Library.PoissonProcesses
 import Leanify.Library.SurveySampling
+import Leanify.Library.Convergence
+import Leanify.Library.FiniteFields
+import Leanify.Library.LieAlgebras
+import Leanify.Library.Words
 
 /-! # The fields of the vocabulary
 
@@ -277,7 +281,11 @@ def all : List (String × Vocab) := [
   ("fixedincome", FixedIncome.vocab),
   ("options", Options.vocab),
   ("poissonprocesses", PoissonProcesses.vocab),
-  ("surveysampling", SurveySampling.vocab)]
+  ("surveysampling", SurveySampling.vocab),
+  ("convergence", Convergence.vocab),
+  ("finitefields", FiniteFields.vocab),
+  ("liealgebras", LieAlgebras.vocab),
+  ("words", Words.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -307,11 +315,11 @@ def bundles : List (String × List String) := [
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
     "transforms", "fourier", "signals", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "epidemics", "populationdynamics", "pharmacokinetics", "variations", "physics", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
-  ("algebra", ["linearalgebra", "polynomials", "quadratics", "groups"]),
+  ("algebra", ["linearalgebra", "polynomials", "quadratics", "groups", "finitefields", "liealgebras"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "polyhedra", "sphericalgeometry", "mapprojections", "surfaces", "curves", "fractals"]),
-  ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint"]),
+  ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint", "convergence"]),
   ("stochastic", ["statistics", "finance", "fixedincome", "options", "utility", "economics", "macroeconomics", "games", "ratings", "queues", "reliability", "actuarial", "inventory", "voting"]),
-  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "graphcounts", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
+  ("discrete", ["combinatorics", "counting", "words", "permutations", "graphs", "graphcounts", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "analyticnumbertheory", "continuedfractions", "digits", "collatz", "cryptography", "diophantine", "latticepoints", "calendar"]),
   -- the areas inside them
   ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism", "kinematics", "optics", "acoustics", "music", "crystallography"]),

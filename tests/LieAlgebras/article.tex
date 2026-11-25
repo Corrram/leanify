@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={liealgebras}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $a(n)$ for the dimension of the special linear Lie algebra of rank $n$.
+We write $b(n)$ for the dimension of the odd orthogonal Lie algebra of rank $n$.
+We write $c(n)$ for the dimension of the symplectic Lie algebra of rank $n$.
+We write $d(n)$ for the dimension of the even orthogonal Lie algebra of rank $n$.
+We write $p(n)$ for the number of positive roots of the special linear Lie algebra of rank $n$.
+We write $P(n)$ for the number of positive roots of the even orthogonal Lie algebra of rank $n$.
+We write $h(n)$ for the Coxeter number of the special linear Lie algebra of rank $n$.
+We write $H(n)$ for the Coxeter number of the even orthogonal Lie algebra of rank $n$.
+
+\section{Dimensions}
+
+\begin{lemma}\label{values}
+$a(1)=3$, $b(2)=10$, $c(3)=21$, $d(4)=28$ and $p(2)=3$.
+\end{lemma}
+
+\begin{lemma}\label{typeA}
+Let $n$ be an integer with $n\ge1$. Then $a(n)=n\,(h(n)+1)$ and $a(n)=n+2p(n)$.
+\end{lemma}
+
+\begin{lemma}\label{typeD}
+Let $n$ be an integer with $n\ge4$. Then $d(n)=n\,(H(n)+1)$ and $d(n)=n+2P(n)$.
+\end{lemma}
+
+\end{document}

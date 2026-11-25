@@ -149,3 +149,7 @@ article-reader/
 /tests/Options/article.leanify.*
 /tests/PoissonProcesses/article.leanify.*
 /tests/SurveySampling/article.leanify.*
+/tests/Convergence/article.leanify.*
+/tests/FiniteFields/article.leanify.*
+/tests/LieAlgebras/article.leanify.*
+/tests/Words/article.leanify.*

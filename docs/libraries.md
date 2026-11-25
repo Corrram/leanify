@@ -89,7 +89,9 @@ math
 │   │   └── majorization          majorization of vectors (with vectors)
 │   ├── polynomials
 │   ├── quadratics                discriminants, roots and Vieta; Cardano's root of a cubic
-│   └── groups                    finite groups
+│   ├── groups                    finite groups
+│   ├── finitefields              GL_n(F_q), Gaussian binomials, projective spaces
+│   └── liealgebras               dimensions, positive roots, Coxeter numbers
 ├── topology                      topology and geometry
 │   ├── realsets                  (also in analysis)
 │   ├── topologies                topologies on ℝ: open, compact, Hausdorff, continuous maps
@@ -110,7 +112,8 @@ math
 │   ├── odesolvers                initial value problems; Euler, Heun, Runge–Kutta
 │   ├── matrixnorms               matrix norms, condition numbers, diagonal dominance (with matrices)
 │   ├── descent                   Armijo and Wolfe steps; gradient descent, heavy-ball, proximal point
-│   └── floatingpoint             machine epsilon, unit roundoff, ranges, errors, rounding
+│   ├── floatingpoint             machine epsilon, unit roundoff, ranges, errors, rounding
+│   └── convergence               bisection counts, Richardson and Aitken extrapolation
 ├── stochastic                    probability and statistics
 │   ├── statistics
 │   │   ├── probability
@@ -156,6 +159,7 @@ math
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
+│   ├── words                     palindromes, necklaces, de Bruijn sequences
 │   ├── permutations
 │   ├── graphs
 │   ├── graphcounts               Cayley's formula, chromatic polynomials, Turán graphs
@@ -305,6 +309,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`polynomials`](glossary.md#polynomials) | real polynomials: degree, coefficients, roots | |
 | [`quadratics`](glossary.md#quadratics) | for `ax² + bx + c`: the discriminant, the larger and smaller root, the sum and product of the roots, the vertex and extreme value, the number of real roots; the discriminant and Cardano's real root of `x³ + px + q` | |
 | [`groups`](glossary.md#groups) | finite groups up to isomorphism: abelian, cyclic, simple, solvable; Sylow subgroups; cyclic, symmetric, alternating and dihedral groups | |
+| [`finitefields`](glossary.md#finitefields) | prime powers; the orders of `GL_n(F_q)` and `SL_n(F_q)`; square matrices, subspaces (Gaussian binomials) and projective points over `F_q`; primitive elements | |
+| [`liealgebras`](glossary.md#liealgebras) | the dimensions, numbers of positive roots and Coxeter numbers of the classical simple Lie algebras `A_n`, `B_n`, `C_n`, `D_n` | |
 | **Topology and geometry** (`topology`) | | |
 | [`topologies`](glossary.md#topologies) | topologies on `ℝ`: `$\tau$-open`, `-closed`, `-compact`, `-connected`, `-dense`; Hausdorff, second countable, separable, metrizable, finer and coarser; continuous, open maps and homeomorphisms between topologies; convergent sequences; the usual, discrete, indiscrete, cofinite and lower limit topologies, generated and subspace topologies; closure, interior, boundary | |
 | [`metricspaces`](glossary.md#metricspaces) | metrics, pseudometrics and ultrametrics on `ℝ`: complete, bounded, (strongly) equivalent; Cauchy and convergent sequences, isometries, contractions; the Euclidean and discrete metrics, the induced topology, balls, diameter, distance to a set | loads `topologies` |
@@ -325,6 +331,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`matrixnorms`](glossary.md#matrixnorms) | Frobenius norm, maximum absolute row and column sums, condition numbers; strictly diagonally dominant, tridiagonal, upper Hessenberg, banded and entrywise nonnegative matrices | loads `matrices` |
 | [`descent`](glossary.md#descent) | Armijo and Wolfe steps, descent directions; gradient descent, heavy-ball (Polyak) and proximal point sequences of a differentiable function | |
 | [`floatingpoint`](glossary.md#floatingpoint) | numbers representable with `p` digits in base `b`; the machine epsilon and unit roundoff; the largest number, the smallest normal and subnormal numbers, the number of normal numbers; absolute and relative errors; rounding to decimal places | |
+| [`convergence`](glossary.md#convergence) | the numbers of bisection steps and contraction steps; Richardson and Aitken extrapolation; the estimated order of convergence; correct significant digits | |
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
@@ -368,6 +375,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
+| [`words`](glossary.md#words) | words, palindromes and words without equal adjacent letters; binary words without two consecutive ones; necklaces; de Bruijn sequences | |
 | [`permutations`](glossary.md#permutations) | permutations of `{1, …, n}`: sign, order, cycles, inversions | |
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
 | [`graphcounts`](glossary.md#graphcounts) | numbers of edges of complete, complete bipartite and hypercube graphs; labelled graphs; spanning trees (Cayley); chromatic polynomials of complete graphs, trees and cycles; edges of Turán graphs; the binomial bound on Ramsey numbers | |
