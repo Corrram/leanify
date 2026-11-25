@@ -74,6 +74,8 @@ math
 │   ├── metricspaces              metrics on ℝ: balls, Cauchy sequences, completeness (with topologies)
 │   ├── geometry                  the Euclidean plane
 │   ├── planegeometry             lines, triangle centres, conics (with geometry)
+│   ├── triangles                 triangles by their sides, regular polygons
+│   ├── solids                    volumes and surface areas, balls in n dimensions
 │   └── curves                    curvature, length and area of plane and polar curves
 ├── numerics                      numerical mathematics
 │   ├── approximation             errors, conditioning, difference quotients, quadrature, interpolation
@@ -122,8 +124,10 @@ math
     ├── arithmetic                arithmetic functions
     ├── congruences               arithmetic modulo n
     ├── specialnumbers            twin and Fermat primes, perfect powers, figurate numbers
+    ├── analyticnumbertheory      von Mangoldt, Chebyshev functions, primes in progressions
     ├── continuedfractions        convergents, badly approximable and Liouville numbers
-    └── digits                    base-b digits, palindromes, digital roots, repunits
+    ├── digits                    base-b digits, palindromes, digital roots, repunits
+    └── collatz                   the 3n+1 map, stopping times
 ```
 
 A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
@@ -234,6 +238,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`metricspaces`](glossary.md#metricspaces) | metrics, pseudometrics and ultrametrics on `ℝ`: complete, bounded, (strongly) equivalent; Cauchy and convergent sequences, isometries, contractions; the Euclidean and discrete metrics, the induced topology, balls, diameter, distance to a set | loads `topologies` |
 | [`geometry`](glossary.md#geometry) | points of the Euclidean plane: distances, triangles, lines, circles | |
 | [`planegeometry`](glossary.md#planegeometry) | the distance from a point to a line, feet of perpendiculars, reflections; circumcentre, incentre, orthocentre, circumradius and inradius of a triangle; ellipses, hyperbolas and parabolas by their foci, eccentricity | loads `geometry` |
+| [`triangles`](glossary.md#triangles) | for a triangle with sides `a`, `b`, `c`: the semiperimeter, the area (Heron), the angle opposite a side, the inradius and circumradius, altitudes, medians and angle bisectors; for a regular `n`-gon the interior angle, area, circumradius and apothem; the number of diagonals | |
+| [`solids`](glossary.md#solids) | the volume of the ball and the area of the sphere in `n` dimensions; volumes and surface areas of cylinders and cones; volumes of ellipsoids, tori, the regular tetrahedron, octahedron, dodecahedron and icosahedron and of the standard simplex | |
 | [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
 | **Numerical mathematics** (`numerics`) | | |
 | [`approximation`](glossary.md#approximation) | absolute and relative errors, the condition number, rounding, machine epsilon; forward, backward, central and second difference quotients; trapezoidal, midpoint and Simpson's rules (simple and composite), Riemann sums; linear and Lagrange interpolation, Chebyshev nodes | with `realfunctions` |
@@ -280,8 +286,10 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
 | [`congruences`](glossary.md#congruences) | congruences modulo `n`, quadratic residues, the Legendre symbol, primitive roots | |
 | [`specialnumbers`](glossary.md#specialnumbers) | twin, Sophie Germain, safe and Fermat primes, perfect cubes and powers, powers of two, sums of two squares, triangular numbers; Fermat and Mersenne numbers, repunits, pentagonal, tetrahedral, square pyramidal and oblong numbers | with `numbers` |
+| [`analyticnumbertheory`](glossary.md#analyticnumbertheory) | the von Mangoldt function, Chebyshev's `ϑ` and `ψ`, the offset logarithmic integral, the number of primes up to `x` in a residue class, the number of twin prime pairs, prime gaps, the sum of the reciprocals of the primes | with `numbers` |
 | [`continuedfractions`](glossary.md#continuedfractions) | the complete and partial quotients and the convergents (with numerators and denominators) of an irrational number, the value of a finite continued fraction; badly approximable numbers, Liouville numbers, quadratic irrationals, best approximations | |
 | [`digits`](glossary.md#digits) | the `k`th digit and the number of digits in base `b`, digit reversal, palindromes, digital roots, repunits; Harshad (Niven) and narcissistic (Armstrong) numbers | |
+| [`collatz`](glossary.md#collatz) | the Collatz map and its accelerated form, iterates, the total stopping time and the stopping time, the highest point of a trajectory; numbers with finite total stopping time | |
 
 ## Not yet
 

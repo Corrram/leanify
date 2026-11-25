@@ -56,6 +56,8 @@ except a notion whose meanings take arguments of different types, which the type
     * `metricspaces`
     * `geometry`
     * `planegeometry`
+    * `triangles`
+    * `solids`
     * `curves`
   * `numerics`
     * `approximation`
@@ -103,19 +105,21 @@ except a notion whose meanings take arguments of different types, which the type
     * `arithmetic`
     * `congruences`
     * `specialnumbers`
+    * `analyticnumbertheory`
     * `continuedfractions`
     * `digits`
+    * `collatz`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
 | `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
@@ -2494,4 +2498,68 @@ except a notion whose meanings take arguments of different types, which the type
 | doubling time for the growth rate $a$ | ℝ → ℝ | `log 2/r` |
 | endemic equilibrium of the sis model with basic reproduction number $a$ | ℝ → ℝ | `1 - 1/R₀`, the infected fraction at equilibrium |
 | critical vaccination coverage for the basic reproduction number $a$ and efficacy $b$ | ℝ → ℝ → ℝ | `(1 - 1/R₀)/e` |
+
+## `triangles`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| semiperimeter of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `s = (a + b + c)/2` |
+| area of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `√(s(s-a)(s-b)(s-c))` (Heron) |
+| angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the `γ ∈ (0,π)` with `cos γ = (a² + b² - c²)/(2ab)` (law of cosines) |
+| inradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `Δ/s` |
+| circumradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `abc/(4Δ)` |
+| altitude to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `2Δ/c` |
+| median to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `½ √(2a² + 2b² - c²)` |
+| bisector of the angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `√(ab((a+b)² - c²))/(a+b)` |
+| interior angle of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `(n-2)π/n` |
+| area of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `n s²/(4 tan(π/n))` |
+| circumradius of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `s/(2 sin(π/n))` |
+| apothem of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `s/(2 tan(π/n))`, the inradius |
+| number of diagonals of a convex polygon with $a$ vertices | ℝ → ℝ | `n(n-3)/2` |
+
+## `solids`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| volume of the ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `π^{n/2} r^n/Γ(n/2 + 1)` |
+| surface area of the sphere of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `2π^{n/2} r^{n-1}/Γ(n/2)`, the sphere in `ℝ^n` |
+| volume of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r² h` |
+| surface area of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `2π r(r + h)` |
+| volume of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r² h/3` |
+| surface area of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r(r + √(r² + h²))` |
+| volume of the ellipsoid with semi-axes $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `4π abc/3` |
+| volume of the torus with radii $a$ and $b$ | ℝ → ℝ → ℝ | `2π² R r²`, `0 < r < R` |
+| volume of the regular tetrahedron with edge $a$ | ℝ → ℝ | `a³/(6√2)` |
+| volume of the regular octahedron with edge $a$ | ℝ → ℝ | `√2 a³/3` |
+| volume of the regular dodecahedron with edge $a$ | ℝ → ℝ | `(15 + 7√5) a³/4` |
+| volume of the regular icosahedron with edge $a$ | ℝ → ℝ | `5(3 + √5) a³/12` |
+| volume of the standard simplex in dimension $a$ | ℝ → ℝ | `1/n!` |
+
+## `analyticnumbertheory`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| von mangoldt function at $a$ | ℝ → ℝ | `Λ(n) = log p` if `n = p^k`, `k ≥ 1`, `0` otherwise (Mathlib `ArithmeticFunction.vonMangoldt`) |
+| first chebyshev function at $a$ | ℝ → ℝ | `ϑ(x) = ∑_{p ≤ x} log p` |
+| second chebyshev function at $a$ | ℝ → ℝ | `ψ(x) = ∑_{n ≤ x} Λ(n)` |
+| offset logarithmic integral at $a$ | ℝ → ℝ | `Li(x) = ∫_2^x dt/log t`, `x ≥ 2` |
+| number of primes up to $a$ congruent to $b$ modulo $c$ | ℝ → ℝ → ℝ → ℝ | `#{p ≤ x prime : p ≡ a (mod q)}` |
+| number of twin prime pairs up to $a$ | ℝ → ℝ | `#{p ≤ x : p and p + 2 prime}` |
+| $a$ th prime gap | ℝ → ℝ | `p_{n+1} - p_n` |
+| sum of the reciprocals of the primes up to $a$ | ℝ → ℝ | `∑_{p ≤ x} 1/p` |
+
+## `collatz`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| with finite total stopping time | ℝ | a positive integer whose trajectory reaches `1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| collatz map | ℝ → ℝ | `n ↦ n/2` for even `n`, `3n + 1` otherwise |
+| accelerated collatz map | ℝ → ℝ | `n ↦ n/2` for even `n`, `(3n + 1)/2` otherwise |
+| $a$ th collatz iterate of $b$ | ℝ → ℝ → ℝ | `T^k(n)` |
+| total stopping time of $a$ | ℝ → ℝ | the least `k` with `T^k(n) = 1`, where the trajectory reaches `1` |
+| stopping time of $a$ | ℝ → ℝ | the least `k ≥ 1` with `T^k(n) < n`, where there is one |
+| highest point of the first $a$ collatz steps from $b$ | ℝ → ℝ → ℝ | `max_{j ≤ k} T^j(n)` |
 

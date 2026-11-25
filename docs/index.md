@@ -144,12 +144,12 @@ branch, `analysis` (real functions and sets, calculus, series, integration, asym
 transforms, Fourier series, optimization, dynamics, functional equations, generalized convexity, fractional calculus, summability, sequences of
 functions, ODEs, epidemic models, integral equations, classical PDEs, special functions), `algebra` (vectors,
 matrices, majorization, polynomials, groups), `topology` (topologies and metrics on the line, plane
-geometry, conics and curves), `numerics` (approximation, quadrature, iterative methods, ODE
+geometry, conics, triangles, solids and curves), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
 risk measures, stochastic orders, Markov chains, branching processes, random walks, extremes, copulas, samples, regression, time series, tests, Bayesian updating, finance, expected utility, economics, games, queues, reliability, actuarial mathematics, information channels, concentration bounds), `discrete` (combinatorics, permutations,
-graphs, recurrences, codes) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, continued
-fractions, digits);
+graphs, recurrences, codes) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
+distribution of primes, continued fractions, digits, the Collatz map);
 `leanify fields article.tex` says which ones an article
 needs. Each one gives its words a meaning in mathlib, and some add proved
 facts about them. [All libraries](libraries.md) · [Vocabularies and models](vocabularies.md) ·

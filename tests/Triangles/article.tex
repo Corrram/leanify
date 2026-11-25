@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={triangles}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $s(a,b,c)$ for the semiperimeter of the triangle with sides $a$, $b$ and $c$.
+We write $\Delta(a,b,c)$ for the area of the triangle with sides $a$, $b$ and $c$.
+We write $\gamma(c,a,b)$ for the angle opposite $c$ in the triangle with sides $a$ and $b$.
+We write $r(a,b,c)$ for the inradius of the triangle with sides $a$, $b$ and $c$.
+We write $R(a,b,c)$ for the circumradius of the triangle with sides $a$, $b$ and $c$.
+We write $m(c,a,b)$ for the median to $c$ in the triangle with sides $a$ and $b$.
+We write $\theta(n,s)$ for the interior angle of the regular polygon with $n$ sides of length $s$.
+We write $D(n)$ for the number of diagonals of a convex polygon with $n$ vertices.
+
+\section{The triangle with sides 3, 4 and 5}
+
+\begin{lemma}\label{pythagorean}
+$s(3,4,5)=6$, $\Delta(3,4,5)=6$, $r(3,4,5)=1$ and $R(3,4,5)=\frac52$.
+\end{lemma}
+
+\begin{lemma}\label{right}
+$\gamma(5,3,4)=\frac{\pi}{2}$ and $m(5,3,4)=\frac52$.
+\end{lemma}
+
+\section{Regular polygons}
+
+\begin{lemma}\label{polygons}
+$\theta(4,1)=\frac{\pi}{2}$, $\theta(6,1)=\frac{2\pi}{3}$, $D(4)=2$ and $D(5)=5$.
+\end{lemma}
+
+\begin{lemma}\label{euler}
+Let $a,b,c>0$ be real numbers with $a<b+c$, $b<a+c$ and $c<a+b$. Then $R(a,b,c)\ge2r(a,b,c)$.
+\end{lemma}
+
+\end{document}

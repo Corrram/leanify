@@ -631,3 +631,27 @@ globs = ["Actuarial.+"]
 name = "Epidemics"
 srcDir = "tests"
 globs = ["Epidemics.+"]
+
+[[lean_lib]]
+# The field triangles: triangles by their sides, regular polygons.
+name = "Triangles"
+srcDir = "tests"
+globs = ["Triangles.+"]
+
+[[lean_lib]]
+# The field solids: volumes and surface areas.
+name = "Solids"
+srcDir = "tests"
+globs = ["Solids.+"]
+
+[[lean_lib]]
+# The field analyticnumbertheory: the distribution of primes.
+name = "AnalyticNumberTheory"
+srcDir = "tests"
+globs = ["AnalyticNumberTheory.+"]
+
+[[lean_lib]]
+# The field collatz: the 3n+1 map.
+name = "Collatz"
+srcDir = "tests"
+globs = ["Collatz.+"]

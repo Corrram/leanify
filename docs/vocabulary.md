@@ -335,6 +335,12 @@ Further fields cover other branches of mathematics:
 * `channels`: capacities of the standard channels, rate-distortion functions;
 * `actuarial`: survival laws, life expectancies, premiums and annuities;
 * `epidemics`: reproduction numbers, thresholds and final sizes, the SIS model.
+* `triangles`: triangles by their side lengths (Heron's formula, angles, radii, medians),
+  regular polygons;
+* `solids`: volumes and surface areas, the ball and the sphere in `n` dimensions;
+* `analyticnumbertheory`: Chebyshev's functions, the von Mangoldt function, the logarithmic
+  integral, primes in residue classes, twin primes;
+* `collatz`: the Collatz map, its iterates and stopping times.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

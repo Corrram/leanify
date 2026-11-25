@@ -78,6 +78,10 @@ import Leanify.Library.Concentration
 import Leanify.Library.Channels
 import Leanify.Library.Actuarial
 import Leanify.Library.Epidemics
+import Leanify.Library.Triangles
+import Leanify.Library.Solids
+import Leanify.Library.AnalyticNumberTheory
+import Leanify.Library.Collatz
 
 /-! # The fields of the vocabulary
 
@@ -173,7 +177,11 @@ def all : List (String × Vocab) := [
   ("concentration", Concentration.vocab),
   ("channels", Channels.vocab),
   ("actuarial", Actuarial.vocab),
-  ("epidemics", Epidemics.vocab)]
+  ("epidemics", Epidemics.vocab),
+  ("triangles", Triangles.vocab),
+  ("solids", Solids.vocab),
+  ("analyticnumbertheory", AnalyticNumberTheory.vocab),
+  ("collatz", Collatz.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -204,11 +212,11 @@ def bundles : List (String × List String) := [
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
     "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "epidemics", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
-  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
+  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
   ("stochastic", ["statistics", "finance", "utility", "economics", "games", "queues", "reliability", "actuarial"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes"]),
-  ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
+  ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "analyticnumbertheory", "continuedfractions", "digits", "collatz"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),

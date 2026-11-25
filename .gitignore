@@ -96,3 +96,7 @@ article-reader/
 /tests/Channels/article.leanify.*
 /tests/Actuarial/article.leanify.*
 /tests/Epidemics/article.leanify.*
+/tests/Triangles/article.leanify.*
+/tests/Solids/article.leanify.*
+/tests/AnalyticNumberTheory/article.leanify.*
+/tests/Collatz/article.leanify.*

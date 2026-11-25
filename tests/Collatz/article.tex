@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={collatz}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $T$ for the Collatz map.
+We write $C_k(n)$ for the $k$th Collatz iterate of $n$.
+We write $\sigma_\infty(n)$ for the total stopping time of $n$.
+We write $\sigma(n)$ for the stopping time of $n$.
+We write $M_k(n)$ for the highest point of the first $k$ Collatz steps from $n$.
+
+\section{Trajectories}
+
+\begin{lemma}\label{map}
+$T(6)=3$, $T(3)=10$ and $C_2(6)=10$.
+\end{lemma}
+
+\begin{lemma}\label{six}
+$\sigma_\infty(6)=8$ and $\sigma(6)=1$.
+\end{lemma}
+
+\begin{lemma}\label{three}
+$M_7(3)=16$ and $\sigma(3)=6$.
+\end{lemma}
+
+\begin{lemma}\label{reach}
+Let $n$ be a positive integer with finite total stopping time. Then $C_{\sigma_\infty(n)}(n)=1$.
+\end{lemma}
+
+\end{document}
