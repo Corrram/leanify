@@ -1,0 +1,35 @@
+tests/MapProjections/article.tex:9:1: info: defines \@n0 (n0)
+tests/MapProjections/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})<x\land x<\frac{\pi}{2}\Rightarrow \neg (4=0)\land \neg (2=0)
+tests/MapProjections/article.tex:10:1: info: defines \@n1 (n1)
+tests/MapProjections/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})<x\land x<\frac{\pi}{2}\Rightarrow \neg (\cos(x)=0)
+tests/MapProjections/article.tex:11:1: info: defines \@n2 (n2)
+tests/MapProjections/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ (\forall y\in \mathbb{R},\ (\neg (2=0)\land (-(\frac{\pi}{2})<y\Rightarrow \neg (2=0)))\land (-(\frac{\pi}{2})<y\land y<\frac{\pi}{2}\Rightarrow \neg (4=0)\land \neg (2=0)))\land (\exists y\in \mathbb{R},\ ((-(\frac{\pi}{2})<y\land y<\frac{\pi}{2})\land \tan(\frac{\pi}{4}+\frac{y}{2})=\exp(x))\land (\forall z\in \mathbb{R},\ (-(\frac{\pi}{2})<z\land z<\frac{\pi}{2})\land \tan(\frac{\pi}{4}+\frac{z}{2})=\exp(x)\Rightarrow z=y))
+tests/MapProjections/article.tex:12:1: info: defines \@n3 (n3)
+tests/MapProjections/article.tex:13:1: info: defines \@n4 (n4)
+tests/MapProjections/article.tex:14:1: info: defines \@n5 (n5)
+tests/MapProjections/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2}\Rightarrow (\forall y\in \mathbb{R},\ 0<1+\cos(x)\,\cos(y)\Rightarrow \neg (1+\cos(x)\,\cos(y)=0))
+tests/MapProjections/article.tex:15:1: info: defines \@n6 (n6)
+tests/MapProjections/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2}\Rightarrow (\forall y\in \mathbb{R},\ 0<1+\cos(x)\,\cos(y)\Rightarrow \neg (1+\cos(x)\,\cos(y)=0))
+tests/MapProjections/article.tex:20:1: info: claim 0: \@n0(0)=0
+tests/MapProjections/article.tex:20:1: info: claim 0 is meaningful if: (\neg (2=0)\land (-(\frac{\pi}{2})<0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})<0\land 0<\frac{\pi}{2}
+tests/MapProjections/article.tex:20:1: info: claim 1: \@n1(0)=1
+tests/MapProjections/article.tex:20:1: info: claim 1 is meaningful if: (\neg (2=0)\land (-(\frac{\pi}{2})<0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})<0\land 0<\frac{\pi}{2}
+tests/MapProjections/article.tex:20:1: info: claim 2: \@n1(\frac{\pi}{3})=2
+tests/MapProjections/article.tex:20:1: info: claim 2 is meaningful if: (\neg (3=0)\land \neg (2=0)\land (-(\frac{\pi}{2})<\frac{\pi}{3}\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})<\frac{\pi}{3}\land \frac{\pi}{3}<\frac{\pi}{2}
+tests/MapProjections/article.tex:20:1: info: claim 3: \@n2(0)=0
+tests/MapProjections/article.tex:24:71: info: claim 4: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})<x\land x<\frac{\pi}{2}\Rightarrow \@n2(\@n0(x))=x
+tests/MapProjections/article.tex:24:71: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ (\neg (2=0)\land (-(\frac{\pi}{2})<x\Rightarrow \neg (2=0)))\land (-(\frac{\pi}{2})<x\land x<\frac{\pi}{2}\Rightarrow (\neg (2=0)\land (-(\frac{\pi}{2})<x\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})<x\land x<\frac{\pi}{2})
+tests/MapProjections/article.tex:30:1: info: claim 5: \@n3(\frac{\pi}{2})=1
+tests/MapProjections/article.tex:30:1: info: claim 5 is meaningful if: (\neg (2=0)\land \neg (2=0)\land (-(\frac{\pi}{2})\le \frac{\pi}{2}\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le \frac{\pi}{2}\land \frac{\pi}{2}\le \frac{\pi}{2}
+tests/MapProjections/article.tex:30:1: info: claim 6: \@n4(\frac{\pi}{3},2)=1
+tests/MapProjections/article.tex:30:1: info: claim 6 is meaningful if: (\neg (3=0)\land \neg (2=0)\land (-(\frac{\pi}{2})\le \frac{\pi}{3}\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le \frac{\pi}{3}\land \frac{\pi}{3}\le \frac{\pi}{2}
+tests/MapProjections/article.tex:30:1: info: claim 7: \@n5(0,0)=0
+tests/MapProjections/article.tex:30:1: info: claim 7 is meaningful if: 0<1+\cos(0)\,\cos(0)\land (\neg (2=0)\land (-(\frac{\pi}{2})\le 0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le 0\land 0\le \frac{\pi}{2}
+tests/MapProjections/article.tex:30:1: info: claim 8: \@n6(0,0)=0
+tests/MapProjections/article.tex:30:1: info: claim 8 is meaningful if: 0<1+\cos(0)\,\cos(0)\land (\neg (2=0)\land (-(\frac{\pi}{2})\le 0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le 0\land 0\le \frac{\pi}{2}
+tests/MapProjections/article.tex:30:1: info: claim 9: \@n5(0,\frac{\pi}{2})=2
+tests/MapProjections/article.tex:30:1: info: claim 9 is meaningful if: \neg (2=0)\land 0<1+\cos(0)\,\cos(\frac{\pi}{2})\land ((\neg (2=0)\land (-(\frac{\pi}{2})\le 0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le 0\land 0\le \frac{\pi}{2})\land \neg (2=0)
+tests/MapProjections/article.tex: 7 definitions, 10 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 4 compiled, 0 failed, 0 prose (of 4)
+  all: 11 compiled, 0 failed, 0 prose (of 11)

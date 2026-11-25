@@ -142,15 +142,15 @@ from a *vocabulary*, which the article loads as a program loads a library:
 The vocabularies form a tree: `vocab=math` loads them all, and its seven realms load a
 branch, `analysis` (real functions and sets, calculus, series, integration, asymptotics,
 transforms, Fourier series, signals, optimization, dynamics, functional equations, generalized convexity, fractional calculus, summability, sequences of
-functions, ODEs, epidemic and population models, pharmacokinetics, calculus of variations, physics (mechanics, waves, relativity, circuits, thermodynamics, kinetics, fluids, quantum mechanics, materials, astronomy, electromagnetism, kinematics, optics, acoustics), integral equations, classical PDEs, special functions), `algebra` (vectors,
+functions, ODEs, epidemic and population models, pharmacokinetics, calculus of variations, physics (mechanics, waves, relativity, circuits, thermodynamics, kinetics, fluids, quantum mechanics, materials, astronomy, electromagnetism, kinematics, optics, acoustics, music, crystallography), integral equations, classical PDEs, special functions), `algebra` (vectors,
 matrices, majorization, polynomials, quadratics and cubics, groups), `topology` (topologies and metrics on the line, plane
-geometry, conics, triangles, solids, polyhedra, the sphere, surfaces, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
+geometry, conics, triangles, solids, polyhedra, the sphere, map projections, surfaces, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods, floating-point arithmetic), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
 risk measures, stochastic orders, Markov chains, branching processes, random walks, extremes, population genetics, betting, copulas, samples, regression, time series, tests, Bayesian updating, diagnostic tests, machine learning, finance, expected utility, economics, macroeconomics, games, ratings, queues, reliability, actuarial mathematics, inventory models, voting, information channels, concentration bounds), `discrete` (combinatorics, permutations,
 graphs, graph counts, recurrences, codes, algorithms, combinatorial games, designs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
 distribution of primes, continued fractions, digits, the Collatz map,
-cryptography, Diophantine equations, lattice points);
+cryptography, Diophantine equations, lattice points, the calendar);
 `leanify fields article.tex` says which ones an article
 needs. Each one gives its words a meaning in mathlib, and some add proved
 facts about them. [All libraries](libraries.md) · [Vocabularies and models](vocabularies.md) ·

@@ -380,7 +380,11 @@ Further fields cover other branches of mathematics:
 * `macroeconomics`: growth models, multipliers, policy rules;
 * `acoustics`: sound speeds, levels and resonances;
 * `ratings`: Elo and paired comparisons;
-* `learning`: activations, losses and classification metrics.
+* `learning`: activations, losses and classification metrics;
+* `calendar`: leap years and weekdays;
+* `crystallography`: cubic lattices and Miller indices;
+* `mapprojections`: projections of the sphere;
+* `music`: pitch, intervals and tunings.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

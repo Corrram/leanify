@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={mapprojections}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $y(\phi)$ for the Mercator ordinate of the latitude $\phi$.
+We write $k(\phi)$ for the Mercator scale factor at the latitude $\phi$.
+We write $g(t)$ for the latitude of the Mercator ordinate $t$.
+We write $E(\phi)$ for the Lambert equal-area ordinate of the latitude $\phi$.
+We write $S(\phi,\lambda)$ for the sinusoidal abscissa of the point with latitude $\phi$ and longitude $\lambda$.
+We write $X(\phi,\lambda)$ for the stereographic abscissa of the point with latitude $\phi$ and longitude $\lambda$.
+We write $Y(\phi,\lambda)$ for the stereographic ordinate of the point with latitude $\phi$ and longitude $\lambda$.
+
+\section{Mercator}
+
+\begin{lemma}\label{mercator}
+$y(0)=0$, $k(0)=1$, $k(\frac{\pi}{3})=2$ and $g(0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{inverse}
+Let $\phi$ be a real number with $-\frac{\pi}{2}<\phi<\frac{\pi}{2}$. Then $g(y(\phi))=\phi$.
+\end{lemma}
+
+\section{Other projections}
+
+\begin{lemma}\label{others}
+$E(\frac{\pi}{2})=1$, $S(\frac{\pi}{3},2)=1$, $X(0,0)=0$, $Y(0,0)=0$ and $X(0,\frac{\pi}{2})=2$.
+\end{lemma}
+
+\end{document}

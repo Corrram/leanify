@@ -51,6 +51,8 @@ except a notion whose meanings take arguments of different types, which the type
       * `kinematics`
       * `optics`
       * `acoustics`
+      * `music`
+      * `crystallography`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -80,6 +82,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `solids`
     * `polyhedra`
     * `sphericalgeometry`
+    * `mapprojections`
     * `surfaces`
     * `curves`
     * `fractals`
@@ -150,18 +153,19 @@ except a notion whose meanings take arguments of different types, which the type
     * `cryptography`
     * `diophantine`
     * `latticepoints`
+    * `calendar`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `surfaces`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `surfaces`, `curves`, `fractals` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` |
 | `stochastic` | `statistics`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
-| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting` |
@@ -3162,4 +3166,61 @@ except a notion whose meanings take arguments of different types, which the type
 | f1 score for $a$ true positives, $b$ false positives and $c$ false negatives | ℝ → ℝ → ℝ → ℝ | `2TP/(2TP + FP + FN)` |
 | classification accuracy for $a$ true positives, $b$ true negatives, $c$ false positives and $d$ false negatives | ℝ → ℝ → ℝ → ℝ → ℝ | `(TP + TN)/(TP + TN + FP + FN)` |
 | matthews correlation coefficient for $a$ true positives, $b$ true negatives, $c$ false positives and $d$ false negatives | ℝ → ℝ → ℝ → ℝ → ℝ | `(TP·TN - FP·FN)/√((TP+FP)(TP+FN)(TN+FP)(TN+FN))` |
+
+## `calendar`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| leap year | ℝ | an integer divisible by `4`, and by `400` if it is divisible by `100` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| leap year | ℝ | divisible by `4`, and by `400` if divisible by `100` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of days of the year $a$ | ℝ → ℝ | `366` for a leap year, `365` otherwise |
+| number of days of month $a$ of the year $b$ | ℝ → ℝ → ℝ | `28` to `31` |
+| day of the week of the day $a$ of month $b$ of the year $c$ | ℝ → ℝ → ℝ → ℝ | Zeller's congruence: `0` for Saturday, `1` for Sunday, …, `6` for Friday |
+| number of leap years up to the year $a$ | ℝ → ℝ | `⌊y/4⌋ - ⌊y/100⌋ + ⌊y/400⌋` |
+
+## `crystallography`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| interplanar spacing of the cubic lattice with constant $a$ for the miller indices $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `a/√(h² + k² + l²)` |
+| packing fraction of the simple cubic lattice | ℝ | `π/6` |
+| packing fraction of the body-centred cubic lattice | ℝ | `√3π/8` |
+| packing fraction of the face-centred cubic lattice | ℝ | `√2π/6` |
+| coordination number of the simple cubic lattice | ℝ | `6` |
+| coordination number of the body-centred cubic lattice | ℝ | `8` |
+| coordination number of the face-centred cubic lattice | ℝ | `12` |
+| number of atoms per unit cell of the body-centred cubic lattice | ℝ | `2` |
+| number of atoms per unit cell of the face-centred cubic lattice | ℝ | `4` |
+| nearest-neighbour distance of the body-centred cubic lattice with constant $a$ | ℝ → ℝ | `√3a/2` |
+| nearest-neighbour distance of the face-centred cubic lattice with constant $a$ | ℝ → ℝ | `a/√2` |
+
+## `mapprojections`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| mercator ordinate of the latitude $a$ | ℝ → ℝ | `log tan(π/4 + φ/2)` |
+| mercator scale factor at the latitude $a$ | ℝ → ℝ | `sec φ` |
+| latitude of the mercator ordinate $a$ | ℝ → ℝ | `2 arctan(e^y) - π/2` (the Gudermannian function): the `φ ∈ (-π/2, π/2)` whose Mercator ordinate is `y` |
+| lambert equal-area ordinate of the latitude $a$ | ℝ → ℝ | `sin φ` |
+| sinusoidal abscissa of the point with latitude $a$ and longitude $b$ | ℝ → ℝ → ℝ | `λ cos φ` |
+| stereographic abscissa of the point with latitude $a$ and longitude $b$ | ℝ → ℝ → ℝ | `2 cos φ sin λ/(1 + cos φ cos λ)` |
+| stereographic ordinate of the point with latitude $a$ and longitude $b$ | ℝ → ℝ → ℝ | `2 sin φ/(1 + cos φ cos λ)` |
+
+## `music`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| frequency of the $a$ th piano key | ℝ → ℝ | `440 · 2^{(n-49)/12}`: the 49th key is A4 at 440 Hz |
+| frequency of $a$ semitones above $b$ | ℝ → ℝ → ℝ | `f · 2^{k/12}` (equal temperament) |
+| interval in cents from $a$ to $b$ | ℝ → ℝ → ℝ | `1200 log₂(g/f)` |
+| pythagorean comma | ℝ | `3¹²/2¹⁹`: twelve fifths over seven octaves |
+| syntonic comma | ℝ | `81/80` |
+| ratio of $a$ steps of the equal temperament with $b$ steps per octave | ℝ → ℝ → ℝ | `2^{k/n}` |
+| midi note number of the frequency $a$ | ℝ → ℝ | `69 + 12 log₂(f/440)` |
 

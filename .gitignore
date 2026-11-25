@@ -141,3 +141,7 @@ article-reader/
 /tests/Acoustics/article.leanify.*
 /tests/Ratings/article.leanify.*
 /tests/Learning/article.leanify.*
+/tests/Calendar/article.leanify.*
+/tests/Crystallography/article.leanify.*
+/tests/MapProjections/article.leanify.*
+/tests/Music/article.leanify.*

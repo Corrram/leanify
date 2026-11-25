@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={crystallography}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $d(a,h,k,l)$ for the interplanar spacing of the cubic lattice with constant $a$ for the Miller indices $h$, $k$ and $l$.
+We write $P$ for the packing fraction of the simple cubic lattice.
+We write $Q$ for the packing fraction of the body-centred cubic lattice.
+We write $R$ for the packing fraction of the face-centred cubic lattice.
+We write $A$ for the coordination number of the simple cubic lattice.
+We write $B$ for the coordination number of the body-centred cubic lattice.
+We write $C$ for the coordination number of the face-centred cubic lattice.
+We write $U$ for the number of atoms per unit cell of the body-centred cubic lattice.
+We write $V$ for the number of atoms per unit cell of the face-centred cubic lattice.
+We write $b(a)$ for the nearest-neighbour distance of the body-centred cubic lattice with constant $a$.
+We write $f(a)$ for the nearest-neighbour distance of the face-centred cubic lattice with constant $a$.
+
+\section{Spacings}
+
+\begin{lemma}\label{spacing}
+$d(2,1,1,1)=\frac{2}{\sqrt{3}}$ and $d(1,1,0,0)=1$.
+\end{lemma}
+
+\section{Cubic lattices}
+
+\begin{lemma}\label{numbers}
+$A=6$, $B=8$, $C=12$, $U=2$ and $V=4$.
+\end{lemma}
+
+\begin{lemma}\label{packing}
+$P<Q$ and $Q<R$.
+\end{lemma}
+
+\begin{lemma}\label{neighbours}
+Let $a$ be a positive real number. Then $f(a)<b(a)$ and $2f(a)^2=a^2$.
+\end{lemma}
+
+\end{document}

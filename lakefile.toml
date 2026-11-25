@@ -901,3 +901,27 @@ globs = ["Ratings.+"]
 name = "Learning"
 srcDir = "tests"
 globs = ["Learning.+"]
+
+[[lean_lib]]
+# The field calendar: the Gregorian calendar.
+name = "Calendar"
+srcDir = "tests"
+globs = ["Calendar.+"]
+
+[[lean_lib]]
+# The field crystallography: crystallography.
+name = "Crystallography"
+srcDir = "tests"
+globs = ["Crystallography.+"]
+
+[[lean_lib]]
+# The field mapprojections: map projections.
+name = "MapProjections"
+srcDir = "tests"
+globs = ["MapProjections.+"]
+
+[[lean_lib]]
+# The field music: mathematics of music.
+name = "Music"
+srcDir = "tests"
+globs = ["Music.+"]

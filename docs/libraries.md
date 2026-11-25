@@ -69,7 +69,9 @@ math
 │   │   ├── electromagnetism      Coulomb's law, fields of wires and solenoids, cyclotrons
 │   │   ├── kinematics            constant acceleration, circular motion, collisions
 │   │   ├── optics                lensmaker, image distances, gratings, Bragg, Malus
-│   │   └── acoustics             speed of sound, decibels, pipe resonances, reverberation
+│   │   ├── acoustics             speed of sound, decibels, pipe resonances, reverberation
+│   │   ├── music                 piano keys, semitones, cents, commas, MIDI numbers
+│   │   └── crystallography       Miller indices, cubic lattices, packing fractions
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -98,6 +100,7 @@ math
 │   ├── solids                    volumes and surface areas, balls in n dimensions
 │   ├── polyhedra                 Euler's formula, Platonic solids, dihedral angles
 │   ├── sphericalgeometry         central angles, Girard's theorem, caps, solid angles
+│   ├── mapprojections            Mercator, Lambert, sinusoidal, stereographic
 │   ├── surfaces                  Euler characteristic, genus, Gauss–Bonnet, curvature
 │   ├── curves                    curvature, length and area of plane and polar curves
 │   └── fractals                  similarity dimensions, Cantor, Koch, Sierpinski, Menger
@@ -168,12 +171,13 @@ math
     ├── collatz                   the 3n+1 map, stopping times
     ├── cryptography              RSA, discrete logarithms, Diffie–Hellman
     ├── diophantine               Frobenius numbers, sums of two squares, Pythagorean triples
-    └── latticepoints             Gauss's circle problem, visible points, Pick's theorem
+    ├── latticepoints             Gauss's circle problem, visible points, Pick's theorem
+    └── calendar                  leap years, month lengths, Zeller's congruence
 ```
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
 `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
-`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -279,6 +283,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`kinematics`](glossary.md#kinematics) | displacement and velocity at constant acceleration, stopping distances; centripetal acceleration and the period of circular motion; velocities after elastic and perfectly inelastic collisions and the kinetic energy lost | |
 | [`optics`](glossary.md#optics) | the lensmaker's equation, image distances and magnification of a thin lens; the Rayleigh angle; the angles of grating orders, single-slit minima and Bragg reflection; Malus's law | |
 | [`acoustics`](glossary.md#acoustics) | the speed of sound in an ideal gas; sound intensity and pressure levels; the intensity of a point source; resonances of open and closed pipes; the Sabine reverberation time | |
+| [`music`](glossary.md#music) | the frequencies of piano keys and of equal-tempered semitones, intervals in cents, the Pythagorean and syntonic commas, ratios of equal temperaments, MIDI note numbers | |
+| [`crystallography`](glossary.md#crystallography) | interplanar spacings by Miller indices; packing fractions, coordination numbers, atoms per unit cell and nearest-neighbour distances of cubic lattices | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -304,6 +310,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`solids`](glossary.md#solids) | the volume of the ball and the area of the sphere in `n` dimensions; volumes and surface areas of cylinders and cones; volumes of ellipsoids, tori, the regular tetrahedron, octahedron, dodecahedron and icosahedron and of the standard simplex | |
 | [`polyhedra`](glossary.md#polyhedra) | the Euler characteristic of a polyhedron; the vertices, edges, faces and dihedral angle of the Platonic solid `{p,q}`; angle defects | |
 | [`sphericalgeometry`](glossary.md#sphericalgeometry) | the central angle between two points given by latitude and longitude; chords; the spherical excess and the area of a spherical triangle (Girard); the area and volume of a spherical cap; the solid angle of a cone | |
+| [`mapprojections`](glossary.md#mapprojections) | the Mercator ordinate, scale factor and its inverse; the Lambert equal-area ordinate; the sinusoidal abscissa; stereographic coordinates | |
 | [`surfaces`](glossary.md#surfaces) | the Euler characteristic of closed orientable and nonorientable surfaces, the genus, the total curvature (Gauss–Bonnet); the Gaussian and mean curvature of spheres and cylinders; the area and Gaussian curvature of a torus | |
 | [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
 | [`fractals`](glossary.md#fractals) | the similarity dimension of a self-similar set (`N` pieces scaled by `r`, or two ratios by Moran's equation); the dimension, lengths and intervals of the Cantor set; the Koch curve and snowflake; the Sierpinski triangle; the Menger sponge | |
@@ -373,6 +380,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`cryptography`](glossary.md#cryptography) | residues and modular powers; the RSA modulus, totient, decryption exponent and ciphertext; discrete logarithms; the Diffie–Hellman key | |
 | [`diophantine`](glossary.md#diophantine) | congruent numbers, numbers representable as a sum of two squares; the Frobenius number and the genus of the numerical semigroup of two coprime integers; the number of representations by two integers and as a sum of two squares; Euclid's formula for Pythagorean triples | |
 | [`latticepoints`](glossary.md#latticepoints) | lattice points in a disk (Gauss's circle problem) and a ball, on a segment from the origin, visible lattice points in a square; the area of a lattice polygon by Pick's theorem | |
+| [`calendar`](glossary.md#calendar) | leap years; the numbers of days of years and months; the day of the week (Zeller's congruence); the number of leap years up to a year | |
 
 ## Not yet
 

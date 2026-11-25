@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={music}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $f(n)$ for the frequency of the $n$th piano key.
+We write $s(k,x)$ for the frequency of $k$ semitones above $x$.
+We write $c(x,y)$ for the interval in cents from $x$ to $y$.
+We write $P$ for the Pythagorean comma.
+We write $S$ for the syntonic comma.
+We write $r(k,n)$ for the ratio of $k$ steps of the equal temperament with $n$ steps per octave.
+We write $m(x)$ for the MIDI note number of the frequency $x$.
+
+\section{Pitch}
+
+\begin{lemma}\label{pitch}
+$f(49)=440$, $f(61)=880$, $m(440)=69$ and $c(440,880)=1200$.
+\end{lemma}
+
+\begin{lemma}\label{midi}
+Let $n$ be an integer with $1\le n\le88$. Then $m(f(n))=n+20$.
+\end{lemma}
+
+\section{Tuning}
+
+\begin{lemma}\label{tuning}
+$s(12,440)=880$, $r(12,12)=2$, $S=\frac{81}{80}$ and $P>S$.
+\end{lemma}
+
+\end{document}
