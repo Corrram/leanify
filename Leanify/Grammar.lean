@@ -3235,6 +3235,8 @@ inductive NotionCond where
   | formula (f : MT) (binds : List Bind)
   /-- `[for every $v\in A$,] the map $x\mapsto e$[, $x\in D$,] is non-increasing` -/
   | mono (binds : List Bind) (map : MT) (mono : Mono)
+  /-- A clause about the subject: `A group $G$ is called nice if $G$ is abelian.` -/
+  | clause (c : Clause)
   deriving Repr, Inhabited
 
 /-- What a description describes: the least or the greatest of the numbers it names, or
@@ -3501,6 +3503,10 @@ def nounVar (cs : List Chunk) : Option (List Chunk × List Chunk) :=
     | _ => false)
   match cs.drop ws.length with
   | .m [.id v] :: r => some (ws ++ [.m [.id v]], r)
+  -- (`an element $g\in G$`: the variable with its domain)
+  | .m ts :: r => match binderMath ts with
+    | some ([_], _) => if ws.isEmpty then none else some (ws ++ [.m ts], r)
+    | _ => none
   | _ => none
 
 /-- `NAME [(ABBR)]`. -/
@@ -3540,7 +3546,10 @@ def notionCond (cs : List Chunk) : Option NotionCond :=
     let (φ, r1) ← formula cs
     if isEnd r1 then some (NotionCond.formula φ []) else do
     let (b, r2) ← forBinder r1
-    if isEnd r2 then some (NotionCond.formula φ [b]) else none)
+    if isEnd r2 then some (NotionCond.formula φ [b]) else none) <|>
+  (do
+    let (c, r1) ← clause cs
+    if isEnd r1 then some (NotionCond.clause c) else none)
 
 /-- A notion defined in the text: `We call a NOUN $x$ NAME [(ABBR)] if COND.`,
 `[A NOUN] $x$ is called NAME [(ABBR)] if COND.`, `[A NOUN] $x$ is NAME [(ABBR)] if COND.` -/
@@ -3553,9 +3562,13 @@ def notionDef (cs : List Chunk) : Option Sent :=
     let r3 ← kw [w!"if"] r2
     withCond true np name abbr r3) <|>
   (do
+    -- (`We say that a NOUN $x$ is NAME if …`)
+    let cs := (kw [w!"we", w!"say", w!"that"] cs).getD cs
     let (np, r1) ← nounVar (article cs)
     let (named, r2) ← ((kw [w!"is", w!"called"] r1 <|> kw [w!"is", w!"said", w!"to", w!"be"] r1).map (true, ·)) <|>
       ((kw [w!"is"] r1).map (false, ·))
+    -- (`is called an involution`: the name of a kind of object)
+    let r2 := (kw [w!"a"] r2 <|> kw [w!"an"] r2).getD r2
     let (name, abbr, r3) ← nameAbbr r2
     let r4 ← kw [w!"if"] r3
     withCond named np name abbr r4)

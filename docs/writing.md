@@ -442,6 +442,7 @@ abbreviation after a `where`. Leanify reads these where they stand.
 | --- | --- |
 | a notion of an object | `We call a NOUN $F$ \emph{dominating} (\emph{DOM}) if $F(u,v)\ge uv$ for all $u,v\in[0,1]$.` (the abbreviation in parentheses is optional, and the notion may then be used by either name) |
 | a notion by a monotone map | `A NOUN $F$ is called \emph{ray-monotone} (\emph{RM}) if, for every $v\in[0,1]$, the map \begin{equation}u\longmapsto\frac{F(u,v)}{u},\qquad u\in(0,1],\end{equation} is non-increasing.` (`the map` may be left out: `$F$ is \emph{RM} if, for every $v\in(0,1)$, DISPLAY is non-increasing.`) |
+| a notion by a clause | `A group $G$ is called \emph{nice} if $G$ is abelian.`, `We say that a group $G$ is \emph{boolean} if $g^2=1$ for all $g\in G$.`, `An element $g\in G$ is called an \emph{involution} if …` (the condition is any clause about the subject; the binders after it may use it) |
 | the same subject again | `Similarly, $F$ is called \emph{NAME} (\emph{ABBR}) if …` (`$F$` is the NOUN of the previous notion) |
 | using a notion | `Every RM NOUN is DOM.`, `Let $F$ be an RM NOUN, and let $u,v\in[0,1]$.`, `For every RM NOUN $F$, …`, `If $F$ is an RM NOUN, then …`, `Every RM NOUN $F$ satisfies $F(u,v)\ge uv$ for all $u,v\in[0,1]$.`, `$F$ is RM`, `both RM and DOM` |
 | symbols inside a result | `Let $a,b\in(0,\infty)$, and let $A\coloneqq\frac{a+b}{2}$, $G\coloneqq\sqrt{ab}$ and $H\coloneqq\frac{2ab}{a+b}$. Then $H\le G\le A$.` (the symbols belong to the result and its proof, and depend on `a` and `b`) |

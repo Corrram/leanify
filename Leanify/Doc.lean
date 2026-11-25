@@ -2314,7 +2314,16 @@ whose domain uses the binders before it (`e\in[0,x]`) keeps them all. -/
 def binderInfos (b : Bind) (before : List BindInfo := []) : M (List BindInfo) := do
   declaredInts (← binderInfosRaw b before)
 
-def usedBinders (bs : List BindInfo) (used : List Codes) : List BindInfo :=
+def usedBinders (bs : List BindInfo) (used0 : List Codes) : List BindInfo :=
+  -- (a binder whose condition is about a used variable is used too: `Let $K$ be a field
+  -- with $\operatorname{char}(K)=p>0$` says what `p` is)
+  let mentions (j i : Nat) : Bool := match bs[j]? with
+    | some b => b.pred.any fun p => Tm.subst (.num 0) (j - i) p != Tm.subst (.num 1) (j - i) p
+    | none => false
+  let step (u : List Codes) : List Codes :=
+    u ++ ((bs.zipIdx.filter fun (b, j) => !u.contains b.name &&
+      (bs.zipIdx.any fun (b', i) => i < j && u.contains b'.name && mentions j i)).map (·.1.name))
+  let used := step (step (step used0))
   let dependent (b : BindInfo) : Bool := b.pred.any fun p => shift 1 0 p != p
   let lastDep := ((bs.zipIdx.filter fun (b, _) => used.contains b.name && dependent b).map (·.2)).getLast?
   (bs.zipIdx.filter fun (b, i) => used.contains b.name || lastDep.any (i ≤ ·)).map (·.1)
@@ -3712,25 +3721,30 @@ def monoTm (sc : Scope) (m : MT) (mono : Mono) : M Tm := do
 
 /-- The condition of a notion, about its subject (`loc 0` of `sc`). -/
 def notionBody (sc : Scope) (cond : NotionCond) : M Tm := do
+  -- (the binders' domains may use the subject: `for every $g\in G$`)
+  let before : List BindInfo := sc.reverse.map fun (n, t) => ⟨n, t, none⟩
   match cond with
   | .formula f binds =>
-    let bs := (← bindersInfos binds)
+    let bs := (← bindersInfos binds before)
     pure (wrap bs (← prop (scopeOf bs ++ sc) none f))
   | .mono binds m mono =>
-    let bs := (← bindersInfos binds)
+    let bs := (← bindersInfos binds before)
     pure (wrap bs (← monoTm (scopeOf bs ++ sc) m mono))
+  | .clause _ => fail E.unsupported
 
 /-- `We call a copula $C$ NAME (ABBR) if COND.`: the notion `λ C, COND`, named by
 `NAME` and `ABBR`. -/
-def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond) :
-    M (List Nat × List Nat) := do
+def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond)
+    (clauseBody : Option (Scope → M Tm) := none) : M (List Nat × List Nat) := do
   let s ← match subj with
     | [.m [.id v]] => match (← get).notionSubject with
       | some b => if b.name == v then pure b else fail E.free v
       | none => fail E.free v
     | np => nounPhrase np
   if s.name.isEmpty then fail E.unsupported
-  let body ← notionBody (scopeOf [s]) cond
+  let body ← match cond, clauseBody with
+    | .clause _, some cb => cb (scopeOf [s])
+    | _, _ => notionBody (scopeOf [s]) cond
   let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false, 1⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
   let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
   modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
@@ -5619,7 +5633,12 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let [bi] ← binderInfos b | fail E.unsupported
     modify fun st => { st with fixed := (c.ctx.sec, bi) :: st.fixed.filter (·.2.name != bi.name) }
     if defs.isEmpty then pure ([], []) else constDefs c (some bi) defs labels
-  | .defNotion subj name abbr cond => defNotion subj name abbr cond
+  | .defNotion subj name abbr cond =>
+    -- (a clause about the subject: read as the clause of a claim about it)
+    let cb : Option (Scope → M Tm) := match cond with
+      | .clause cl => some fun sc => clauseTm c sc none none cl
+      | _ => none
+    defNotion subj name abbr cond cb
   | .defMember subj cls cond binds => defMember subj cls cond binds
   | .notionSubject subj => do
     -- only the running text introduces the subject of later notions

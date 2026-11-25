@@ -651,6 +651,7 @@ def vocab : Vocab where
     ⟨M, .sig, 141, "`φ\\colon G\\to H` binds a map with domain `G` and codomain `H`", none⟩,
     ⟨M, .fn w!"\\circ", 142, "`ψ\\circ φ`", none⟩,
     ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
+    ⟨S, .fn w!"char", 47, "`\\operatorname{char}(K)`, the characteristic", none⟩,
     ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
     ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,

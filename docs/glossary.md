@@ -1307,6 +1307,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $f\colon A\to B$ | $\mathrm{Map}$ | `φ\colon G\to H` binds a map with domain `G` and codomain `H` |
 | $\circ$ | $\mathrm{Map}$ | `ψ\circ φ` |
 | $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
+| $\operatorname{char}$ | $\mathrm{El}$ → Prop | `\operatorname{char}(K)`, the characteristic |
 | $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |

@@ -2,6 +2,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage[vocab=structures]{leanify}
 \newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
 \begin{document}
 
 % Structures with their elements: groups, rings, fields, vector spaces, topological
@@ -197,6 +198,24 @@ Let $K$ be a field of characteristic $p>0$ and let $a\in K$. Then $(a+1)^p=a^p+1
 
 \begin{lemma}\label{positive-characteristic}
 Let $K$ be a field of positive characteristic. Then $K$ is not of characteristic zero.
+\end{lemma}
+
+\section{Notions of structures}
+
+\begin{definition}\label{boolean}
+A group $G$ is called \emph{boolean} if $g^2=1$ for all $g\in G$.
+\end{definition}
+
+\begin{lemma}\label{boolean-abelian}
+Every boolean group is abelian.
+\end{lemma}
+
+\begin{definition}\label{nice}
+We say that a group $G$ is \emph{nice} if $G$ is abelian.
+\end{definition}
+
+\begin{lemma}\label{char-hypothesis}
+Let $K$ be a field with $\operatorname{char}(K)=p>0$. Then $p>0$.
 \end{lemma}
 
 \end{document}
