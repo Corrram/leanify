@@ -89,8 +89,19 @@ def mathChunk : List Chunk → Option (List MTok × List Chunk)
 
 def formula (cs : List Chunk) : Option (MT × List Chunk) := do
   let (ts, rest) ← mathChunk cs
-  let m ← Math.parseDisplay ts
-  some (m, rest)
+  match Math.parseDisplay ts with
+  | some m => some (m, rest)
+  | none =>
+    -- `$a,b>0$`: each name with the bound after the last (`a>0` and `b>0`)
+    let parts := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+    if parts.length < 2 then none else
+    let last ← parts.getLast?
+    let i ← last.findIdx? fun t => (Math.relOf t).isSome
+    let suffix := last.drop i
+    let names := parts.dropLast ++ [last.take i]
+    if !names.all (fun n => match n with | [.id _] | [.cmd _] => true | _ => false) then none
+    let ms ← names.mapM fun n => Math.parseFormula (n ++ suffix)
+    some (.conj ms, rest)
 
 def sig (cs : List Chunk) : Option (MT × List Chunk) := do
   let (ts, rest) ← mathChunk cs

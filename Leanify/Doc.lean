@@ -1250,6 +1250,20 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
     match Grammar.formula cs with
     | some (m0, r0) =>
       -- `with $a_n\ge0$ for all $n$`: the condition for every value of the variables
+      -- (`for every real number $x$`, `for all integers $n$`: the noun's numbers)
+      let nounDom (r : List Chunk) : Option (MT × List Chunk) :=
+        let dom (ws : List Codes) (d : Codes) : Option (MT × List Chunk) :=
+          (Grammar.kw ws r).map fun r' => (MT.id d, r')
+        dom [w!"real", w!"numbers"] w!"\\mathbb{R}" <|> dom [w!"real", w!"number"] w!"\\mathbb{R}" <|>
+        dom [w!"integers"] w!"\\mathbb{Z}" <|> dom [w!"integer"] w!"\\mathbb{Z}" <|>
+        dom [w!"natural", w!"numbers"] w!"\\mathbb{N}" <|> dom [w!"natural", w!"number"] w!"\\mathbb{N}"
+      let r0 : List Chunk := match (Grammar.kw [w!"for", w!"all"] r0 <|> Grammar.kw [w!"for", w!"every"] r0 <|>
+          Grammar.kw [w!"for", w!"each"] r0) with
+        | some r1 => match nounDom r1 with
+          | some (d, .m [.id v] :: r2) => [.w w!"for", .w w!"all", .m ([.id v, .cmd w!"in"] ++ (match d with
+              | .id n => [.id n] | _ => []))] ++ r2
+          | _ => r0
+        | none => r0
       let (m, r) : MT × List Chunk := match (Grammar.kw [w!"for", w!"all"] r0 <|> Grammar.kw [w!"for", w!"every"] r0 <|>
           Grammar.kw [w!"for", w!"each"] r0) with
         | some (.m ts :: r1) =>
@@ -2289,8 +2303,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
       -- `For every positive integer $n$ and every $x\in[0,1]$`: a noun phrase, whose
       -- condition may use the variables bound before it
       | .noun np => do
-        let b ← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse
-        out := out ++ [b]
+        out := out ++ (← nounBindersImplicit np ((before ++ out).map fun b => (b.name, b.ty)).reverse)
       | _ => fail E.unsupported
     pure out
 where

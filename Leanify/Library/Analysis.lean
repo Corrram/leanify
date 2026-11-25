@@ -99,6 +99,8 @@ def vocab : Vocab where
     mod phrase!"strictly decreasing" true (fnP .strictAnti) "(Mathlib `StrictAnti`)",
     mod phrase!"monotone" true (fPred fun f => or (app2 (prim (.fnProp .monotone)) f all) (app2 (prim (.fnProp .antitone)) f all))
       "increasing or decreasing",
+    mod phrase!"strictly monotone" true (fPred fun f => or (app2 (prim .strictMonoOn) f all) (app2 (prim (.fnProp .strictAnti)) f all))
+      "strictly increasing or strictly decreasing (Mathlib `StrictMono`, `StrictAnti`)",
     mod phrase!"convex" true (fnP .convex) "(Mathlib `ConvexOn`)",
     mod phrase!"concave" true (onLine .concaveOn) "(Mathlib `ConcaveOn`)",
     mod phrase!"strictly convex" true (fnP .strictConvex) "(Mathlib `StrictConvexOn`)",

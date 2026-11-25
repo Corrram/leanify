@@ -878,6 +878,7 @@ except a notion whose meanings take arguments of different types, which the type
 | strictly increasing | ℝ → ℝ | (Mathlib `StrictMono`) |
 | strictly decreasing | ℝ → ℝ | (Mathlib `StrictAnti`) |
 | monotone | ℝ → ℝ | increasing or decreasing |
+| strictly monotone | ℝ → ℝ | strictly increasing or strictly decreasing (Mathlib `StrictMono`, `StrictAnti`) |
 | convex | ℝ → ℝ | (Mathlib `ConvexOn`) |
 | concave | ℝ → ℝ | (Mathlib `ConcaveOn`) |
 | strictly convex | ℝ → ℝ | (Mathlib `StrictConvexOn`) |
