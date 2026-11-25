@@ -3913,7 +3913,11 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
     match next with
     | none => some (bs.reverse, ds.reverse, cs)
     | some r =>
-      match letBinder r with
+      -- (`Let $R$ be a ring and $I$ an ideal of $R$`: `be` left out)
+      let elided : Option (Bind × List Chunk) := match r with
+        | .m v :: .w a :: rest => if a == w!"a" || a == w!"an" then letBinder (.m v :: .w w!"be" :: .w a :: rest) else none
+        | _ => none
+      match letBinder r <|> elided with
       | some (b, r') => letMore f r' (b :: bs) ds
       | none =>
         match formula r with
@@ -5641,6 +5645,42 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let p2 := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩] ++ s.toks.drop (k + 2)
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := suchThat then return ps.map fun ts => { s with toks := ts }
+  -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
+  -- hypothesis `Suppose that the order of $G$ is divisible by $p$.`
+  let whose : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let toks : List PTok := s.toks
+    let k : Nat ← (List.range toks.length).find? fun i => (toks[i]? >>= textWord) == some w!"whose"
+    let pos : Nat := (toks[k]?.map fun (t : PTok) => t.pos).getD 0
+    -- (the variable: the formula before `whose`, or the one after `let`)
+    let mathAt (i : Nat) : Option (List PTok) := do
+      let t : PTok ← toks[i]?
+      if t.tok != Tok.mopen then none
+      let body := (toks.drop (i + 1)).takeWhile fun (u : PTok) => u.tok != Tok.mclose
+      let close : PTok ← toks[i + 1 + body.length]?
+      some ([t] ++ body ++ [close])
+    let before : Option (List PTok) := do
+      let t : PTok ← toks[k - 1]?
+      if t.tok != Tok.mclose || k == 0 then none
+      let j ← (List.range (k - 1)).reverse.find? fun i => (toks[i]?.map fun (u : PTok) => u.tok) == some Tok.mopen
+      mathAt j
+    -- (the variable of the last binder before it: `let $G$ be …`)
+    let lastBe : Option (List PTok) := do
+      let i ← (List.range k).reverse.find? fun i =>
+        match mathAt i with
+        | some m => (toks[i + m.length]? >>= textWord) == some w!"be"
+        | none => false
+      mathAt i
+    let v ← before <|> lastBe
+    let after : List PTok := toks.drop (k + 1)
+    let j : Nat ← after.findIdx? fun t => textWord t == some w!"is" || textWord t == some w!"are"
+    if j == 0 then none
+    let pre : List PTok := ((toks.take k).reverse.dropWhile isTextComma).reverse
+    let p1 : List PTok := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 : List PTok := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩, ⟨.word w!"the", pos, false⟩] ++
+      after.take j ++ [⟨.word w!"of", pos, false⟩] ++ v ++ after.drop j
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := whose then return ps.map fun ts => { s with toks := ts }
   let (ts, pre) := match whereNotation s.toks with
     | some (rest, nt) => (rest, [nt])
     | none => (s.toks, [])

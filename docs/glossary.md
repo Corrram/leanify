@@ -1097,6 +1097,9 @@ except a notion whose meanings take arguments of different types, which the type
 | well-ordered set | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
 | homomorphism | $\mathrm{Map}$ | `φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`) |
 | group homomorphism | $\mathrm{Map}$ | (Mathlib `MonoidHom`) |
+| homomorphism of groups | $\mathrm{Map}$ | (Mathlib `MonoidHom`) |
+| homomorphism of rings | $\mathrm{Map}$ | (Mathlib `RingHom`) |
+| isomorphism of groups | $\mathrm{Map}$ | (Mathlib `MulEquiv`) |
 | ring homomorphism | $\mathrm{Map}$ | (Mathlib `RingHom`) |
 | linear map | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
 | linear transformation | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
@@ -1252,6 +1255,7 @@ except a notion whose meanings take arguments of different types, which the type
 | linearly independent | $\mathrm{El}$ → Prop | (Mathlib `LinearIndependent`) |
 | linearly dependent | $\mathrm{El}$ → Prop | not linearly independent |
 | cauchy | ℝ → $\mathrm{El}$ | (Mathlib `CauchySeq`) |
+| bounded | ℝ → $\mathrm{El}$ | its terms lie in a ball (Mathlib `Bornology.IsBounded (Set.range x)`) |
 | convergent to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
 | converging to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
 | continuous | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
@@ -1333,6 +1337,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
 | $\operatorname{char}$ | $\mathrm{El}$ → Prop | `\operatorname{char}(K)`, the characteristic |
 | $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
+| $\lvert x\rvert$ | $\mathrm{El}$ → Prop | `\|G\|`, the number of elements (Mathlib `Nat.card`) |
 | $\operatorname{@bracket}$ | $\mathrm{El}$ → Prop | `[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |

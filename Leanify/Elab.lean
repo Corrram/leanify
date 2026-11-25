@@ -1631,7 +1631,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         if aty == .fn .real .prop then pure (cardTm a, .real)
         -- (of an element of a vocabulary's type: its method, the modulus of a
         -- complex number)
-        else if (← ownTy aty) then callMethod aty .abs [a]
+        else if (← ownTy aty) || (← method aty .abs).isSome then callMethod aty .abs [a]
         else do let a ← asReal (a, aty); pure (.abs a, .real)
     | .minm [x, y] => do
       let a ← asReal (← term f sc pf x); let b ← asReal (← term f sc pf y)

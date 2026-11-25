@@ -425,6 +425,9 @@ def vocab : Vocab where
     -- maps between structures, with their domain and codomain
     mapN phrase!"homomorphism" phrase!"homomorphisms" 147 "`φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`)",
     mapN phrase!"group homomorphism" phrase!"group homomorphisms" 147 "(Mathlib `MonoidHom`)",
+    mapN phrase!"homomorphism of groups" phrase!"homomorphisms of groups" 147 "(Mathlib `MonoidHom`)",
+    mapN phrase!"homomorphism of rings" phrase!"homomorphisms of rings" 148 "(Mathlib `RingHom`)",
+    mapN phrase!"isomorphism of groups" phrase!"isomorphisms of groups" 158 "(Mathlib `MulEquiv`)",
     mapN phrase!"ring homomorphism" phrase!"ring homomorphisms" 148 "(Mathlib `RingHom`)",
     mapN phrase!"linear map" phrase!"linear maps" 149 "(Mathlib `LinearMap`)",
     mapN phrase!"linear transformation" phrase!"linear transformations" 149 "(Mathlib `LinearMap`)",
@@ -619,6 +622,10 @@ def vocab : Vocab where
     adjS phrase!"linearly independent" (c 121) "(Mathlib `LinearIndependent`)",
     adjS phrase!"linearly dependent" (sP fun b => not (app (const 121) b)) "not linearly independent",
     { phrase := phrase!"Cauchy", prenominal := true, ty := Q, pred := c 137, doc := "(Mathlib `CauchySeq`)" },
+    { phrase := phrase!"bounded", prenominal := true, ty := Q,
+      pred := close (lamT Q (fun _ => tt) fun q => exR fun r => allR fun n => imp (isNat n)
+        (le (app2 (const 10) (app q n) (app q (num 0))) r)),
+      doc := "its terms lie in a ball (Mathlib `Bornology.IsBounded (Set.range x)`)" },
     { phrase := phrase!"convergent to $v$", prenominal := false, ty := Q,
       pred := close (lamT E (fun _ => tt) fun l => lamT Q (fun _ => tt) fun q => app2 (const 136) q l), doc := "(Mathlib `Filter.Tendsto`)" },
     { phrase := phrase!"converging to $v$", prenominal := false, ty := Q,
@@ -708,6 +715,7 @@ def vocab : Vocab where
     ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
     ⟨S, .fn w!"char", 47, "`\\operatorname{char}(K)`, the characteristic", none⟩,
     ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
+    ⟨S, .abs, 20, "`|G|`, the number of elements (Mathlib `Nat.card`)", none⟩,
     ⟨S, .fn w!"@bracket", 196, "`[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension", none⟩,
     ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,

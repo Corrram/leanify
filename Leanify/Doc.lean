@@ -600,6 +600,41 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
         t :: standardForms f there' cond' (some t) ts
     | none => t :: standardForms f there cond (some t) ts
 
+/-- `$x$ satisfies $φ$`: `$φ$` (the variables are bound); `$a,b\in R$ satisfy $φ$`:
+`$a,b\in R$ and $φ$`. -/
+def satisfiesForm : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | f + 1, ts =>
+    match ts.findIdx? (fun t => !t.math && match t.tok with
+        | .word v => v == w!"satisfies" || v == w!"satisfy"
+        | _ => false) with
+    | none => ts
+    | some k =>
+      let before := ts.take k
+      let after := ts.drop (k + 1)
+      let opens := match after.head? with | some t => t.tok == .mopen | none => false
+      let closes := match before.getLast? with | some t => t.tok == .mclose | none => false
+      if !opens || !closes then before ++ [ts[k]!] ++ satisfiesForm f after else
+      -- (the formula before: from its `$`)
+      let j := ((List.range (k - 1)).reverse.find? fun i => (ts[i]?.map (·.tok)) == some .mopen).getD 0
+      let inner := (ts.take (k - 1)).drop (j + 1)
+      let bare := inner.all fun t => match t.tok with
+        | .mvar _ | .mnum _ => true
+        | .csym c => c == 44 || c == 95
+        | .msym c => c == 44 || c == 95
+        | _ => false
+      let pos := ts[k]!.pos
+      -- (after a word that opens a clause; not `the function $u$ satisfies`)
+      let opener := j == 0 || match ts[j - 1]? with
+        | some t => !t.math && match t.tok with
+          | .word w => [w!"if", w!"then", w!"that", w!"and", w!"when", w!"whenever", w!"suppose", w!"assume", w!"if"].contains (Grammar.lower w)
+          | .punct _ => true
+          | _ => false
+        | none => true
+      if !opener then before ++ [ts[k]!] ++ satisfiesForm f after else
+      if bare then ts.take j ++ satisfiesForm f after
+      else before ++ [⟨.word w!"and", pos, false⟩] ++ satisfiesForm f after
+
 /-- `(a_n)_{n\ge1}`, `(a_n)_{n=1}^{\infty}`, `(a_n)_{n\in\mathbb{N}}`: a sequence written by its
 term, with the range of its index, is the sequence `(a_n)` (its terms are those at the
 natural numbers; the range says no more about the sequence). -/
@@ -2092,7 +2127,8 @@ def freeIds : Nat → List Codes → MT → List Codes
   | 0, _, _ => []
   | f + 1, bound, m =>
     match m with
-    | .id n => if bound.contains n || n == [42] then [] else [n]
+    -- (`@the`, `@norm`: markers of the parser, no variables)
+    | .id n => if bound.contains n || n == [42] || n.head? == some 64 then [] else [n]
     | .num _ => []
     -- the base of `e_b` is a symbol, not a variable; `a_0` may be a variable
     | .sub (.id k) i =>
@@ -2342,15 +2378,34 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- (a term `x_1` of a sequence is not a variable of its own)
     if let some x := free.find? fun n => st.seqs.any (·.1 == n) then
       fail E.finding (w!"a condition on the terms of the sequence " ++ x ++ w!" together with new variables: state it where " ++ x ++ w!" is introduced (with $…$)")
+    -- (`If $a,b\in R$ and $ab=0$` for a structure `R`: the variables are its elements)
+    let rec memsOf : Nat → MT → List (Codes × MT)
+      | 0, _ => []
+      | f + 1, m => match m with
+        | .conj xs => xs.flatMap (memsOf f)
+        | .land x y => memsOf f x ++ memsOf f y
+        | .chain (.id v) [(.mem, d)] => [(v, d)]
+        | .chain (.tuple xs) [(.mem, d)] => xs.filterMap fun x => match x with | .id v => some (v, d) | _ => none
+        | _ => []
+    let mems := memsOf 8 φ
+    let tyOf (v : Codes) : M Ty := do
+      match mems.find? (·.1 == v) with
+      | some (_, d) =>
+        let st0 ← get
+        let t ← tryCatch (do let (t, _) ← domainOf false d outer; pure t) fun _ => do set st0; pure Ty.real
+        pure (if Elab.isBase t then t else .real)
+      | none => pure .real
+    let tys ← free.mapM tyOf
     match free.reverse with
     | [] => fail E.unsupported
     | last :: _ =>
-      let sc : Scope := free.reverse.map (·, Ty.real) ++ outer
+      let sc : Scope := (free.zip tys).reverse ++ outer
       let (p, pty) ← Elab.term 100000 sc none φ
       if pty != .prop then fail E.type
+      let lty := (tys.getLast?).getD .real
       -- the predicate is applied to the last variable where all of them are bound,
       -- so `φ` is shifted past its own (unused) argument
-      pure (free.map fun v => (⟨v, .real, if v == last then some (.lam .real .tt (shift 1 0 p)) else none⟩ : BindInfo))
+      pure ((free.zip tys).map fun (v, t) => (⟨v, t, if v == last then some (.lam lty .tt (shift 1 0 p)) else none⟩ : BindInfo))
   | .many bs => do
     let mut out : List BindInfo := []
     for b in bs do
@@ -6930,6 +6985,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- other wordings of the forms that are read, then the words of the article's conventions
   let stdToks := Notation.rewriteWords Notation.standardWords (s.toks.length + 1) none s.toks
   let stdToks := Notation.seqRanges (stdToks.length + 1) stdToks
+  let stdToks := Notation.satisfiesForm (stdToks.length + 1) stdToks
   let s := { s with toks := Notation.standardForms (stdToks.length + 1) false false none stdToks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
