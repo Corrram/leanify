@@ -151,7 +151,13 @@ def vocab : Vocab where
     mod phrase!"with $v$ vertices" false (close <| lamR fun n => lamT G (fun _ => tt) fun g => eq (nv g) n)
       "with `n` vertices",
     mod phrase!"with $v$ edges" false (close <| lamR fun m => lamT G (fun _ => tt) fun g => eq (app (const numEdges) g) m)
-      "with `m` edges"]
+      "with `m` edges",
+    mod phrase!"with $v$ vertices and $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
+        and (eq (nv g) n) (eq (app (const numEdges) g) m))
+      "with `n` vertices and `m` edges",
+    mod phrase!"on $v$ vertices with $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
+        and (eq (nv g) n) (eq (app (const numEdges) g) m))
+      "with `n` vertices and `m` edges"]
   notions := [
     { name := phrase!"vertex set of $v$", value := vertexSet, ty := G ⟶ .real ⟶ .prop,
       doc := "`{1, …, n}`" },

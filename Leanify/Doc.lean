@@ -2195,12 +2195,35 @@ def nounBinders (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
       pure [← nounPhrase np outer]
   | none => pure [← nounPhrase np outer]
 
+/-- `nounBinders`; and where a letter that nothing defines stands in a formula of the noun
+phrase (`Let $G$ be a graph with $n$ vertices`, `an $n\times n$ matrix`), the letter is a
+number bound with it, before it. -/
+def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
+  | 0, outer => nounBinders np outer
+  | f + 1, outer => do
+    let st0 ← get
+    tryCatch (nounBinders np outer) fun e => do
+      if e.code != E.undefined && e.code != E.free then throw e
+      let v := e.detail
+      let single := match v with | [c] => (c ≥ 97 && c ≤ 122) || (c ≥ 65 && c ≤ 90) | _ => false
+      let inPhrase := np.any fun c => match c with | .m ts => ts.contains (.id v) | _ => false
+      let varOfNoun := np.any fun c => match c with | .m [.id w] => w == v | _ => false
+      if !single || !inPhrase || (outer.any (·.1 == v)) then throw e
+      -- (not the noun's own variable: `a graph $n$`)
+      if varOfNoun && (np.filter fun c => match c with | .m _ => true | _ => false).length < 2 then throw e
+      set st0
+      let bs ← nounBindersImplicitN np f ((v, .real) :: outer)
+      pure ((⟨v, .real, none⟩ : BindInfo) :: bs)
+
+def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) :=
+  nounBindersImplicitN np 3 outer
+
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
   match b with
   -- (a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`)
   | .every vs d => everyIn outer vs d
-  | .noun np => nounBinders np outer
+  | .noun np => nounBindersImplicit np outer
   | .hyp b => binderInfosRaw b before
   | .on _ => pure []
   | .ifCond φ => do
@@ -2292,7 +2315,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
         let cs := vs.map fun v => condOfDomain v d
         out ← attachCond before out (match cs with | [c] => c | _ => .conj cs)
       else out := out ++ (← binderInfosRaw.everyAfter (before ++ out) vs d)
-    | .noun np => out := out ++ (← nounBinders np ((before ++ out).map fun b => (b.name, b.ty)).reverse)
+    | .noun np => out := out ++ (← nounBindersImplicit np ((before ++ out).map fun b => (b.name, b.ty)).reverse)
     | .ifCond φ => if restates out φ then out ← attachCond before out φ else out := out ++ (← binderInfosRaw b (before ++ out))
     | b => out := out ++ (← binderInfosRaw b (before ++ out))
   declaredInts out

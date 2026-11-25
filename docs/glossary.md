@@ -628,6 +628,8 @@ except a notion whose meanings take arguments of different types, which the type
 | on $x$ vertices | $\mathrm{Graph}$ | with `n` vertices |
 | with $x$ vertices | $\mathrm{Graph}$ | with `n` vertices |
 | with $x$ edges | $\mathrm{Graph}$ | with `m` edges |
+| with $x$ vertices and $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
+| on $x$ vertices with $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |

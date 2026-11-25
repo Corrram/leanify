@@ -2307,6 +2307,19 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
+  -- `$G$ has $n-1$ edges`: the modifier `with $n-1$ edges` of the vocabulary
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has"] r
+      let (k, r2) ← mathChunk r1
+      let ws := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | _ => false
+      if ws.isEmpty then none
+      some (Clause.isA s ([Chunk.w w!"with", Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
   -- `$f$ has a [unique] fixed point`, `$G$ has an element of order $2$`: there is such an
   -- object of the subject (the noun's complement `of $f$`, after the noun's words)
   match (do

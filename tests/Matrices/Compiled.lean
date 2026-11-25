@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Matrices.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["matrices"]
 
-#leanify_article Matrices "article.tex" "fnv1a64:b79a94f684d874b0" with Matrices.vocabulary
+#leanify_article Matrices "article.tex" "fnv1a64:b40545ba686c5645" with Matrices.vocabulary
