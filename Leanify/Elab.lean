@@ -1411,7 +1411,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             match decor.bind fun (p, v) => (lookupLocal sc v).map (p, ·) with
             | some (p, i, t) =>
               if (← ownTy t) then callMethod t (.decor p) [.loc i] else fail E.undefined n
-            | none => fail E.undefined n
+            | none =>
+              -- `e` alone, where nothing names it (as `e^x`): Euler's number `\exp(1)`
+              if n == [101] && !(← get).unreadIds.contains [101] then
+                pure (.app (.prim (.realFn .exp)) (.num 1), .real)
+              else fail E.undefined n
     -- (with an operand of a vocabulary's type, that type's method)
     | .add x y => do
       let a ← term f sc pf x; let b ← term f sc pf y

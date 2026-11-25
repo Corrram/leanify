@@ -43,7 +43,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\lim_{n\to\infty} a_n` | for an index `n`, `m`, `k`, `j`, `i` (or `N`, `M`, `K`): the limit of the sequence through the natural numbers |
 | `(-1)^k`, `2^{n+1}` | an exponent built from indices is an integer power, for any base. An exponent written as a quotient (`x^{1/k}`, `x^{\frac{1}{2k}}`) is a root: a real power of a nonnegative base, whatever its letters |
 | `n!`, `\binom{n}{k}` | for natural numbers `n`, `k` |
-| `\exp(x)`, `\exp x`, `e^{x}` | the exponential function (`e` unless the article names something `e`) |
+| `\exp(x)`, `\exp x`, `e^{x}`, `\frac{1}{e}` | the exponential function, and `e` alone Euler's number `\exp(1)` (unless the article names something `e`, or a sentence binds it: `For every $e>0$`) |
 | `\log x`, `\ln x` | the natural logarithm, applied only to positive numbers (the claim asks that the argument be positive) |
 | `\sin x`, `\cos x`, `\tan x`, `\sin^2 x` | the trigonometric functions (`\tan` only where `\cos` is not zero); `\sin^2 x` is the square of `\sin x` |
 | `\pi` | the number π, unless the article defines `\pi` |
