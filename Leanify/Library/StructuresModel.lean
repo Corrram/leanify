@@ -382,6 +382,11 @@ def Reduced : (El → Prop) → Prop := ringHas fun α R => letI := R; IsReduced
 def char (S : El → Prop) : ℝ :=
   if h : ∃ R : Ring (carrier S), RingOn S R then (@ringChar (carrier S) (Classical.choose h).toNonAssocRing.toNonAssocSemiring : ℝ) else 0
 
+/-- The perfection `K^{p^∞}` of a field of characteristic `p`: the elements that are
+`p^n`-th powers in `K` for every `n` (`⋂ₙ K^{pⁿ}`). -/
+def perfectionS (K : El → Prop) : El → Prop := fun x =>
+  K x ∧ ∀ n : ℕ, ∃ y, K y ∧ eqv (pow y ((char K) ^ n)) x
+
 def AlgClosed : (El → Prop) → Prop :=
   ringHas fun α R => letI := R; ∃ h : IsField α, letI := h.toField; IsAlgClosed α
 def Perfect : (El → Prop) → Prop :=

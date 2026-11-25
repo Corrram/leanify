@@ -54,7 +54,7 @@ abbrev F : Ty := E ⟶ E
 abbrev M : Ty := .base 1
 
 /-- The constants, in the order of their indices: `(type, TeX name, Lean name)`. -/
-def table : List (Ty × Codes × Codes) := [
+def table1 : List (Ty × Codes × Codes) := [
   (.real ⟶ E, w!"", w!"Leanify.Structures.ofReal"),                                          -- 0
   (E ⟶ E ⟶ E, w!"+", w!"Leanify.Structures.add"),                                           -- 1
   (E ⟶ E ⟶ E, w!"-", w!"Leanify.Structures.sub"),                                           -- 2
@@ -154,7 +154,9 @@ def table : List (Ty × Codes × Codes) := [
   (S ⟶ E ⟶ .prop, w!"\\operatorname{UpperBound}", w!"Leanify.Structures.UpperBound"),       -- 96
   (S ⟶ E ⟶ .prop, w!"\\operatorname{LowerBound}", w!"Leanify.Structures.LowerBound"),       -- 97
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Maximal}", w!"Leanify.Structures.MaximalIn"),           -- 98
-  (S ⟶ E ⟶ .prop, w!"\\operatorname{Minimal}", w!"Leanify.Structures.MinimalIn"),           -- 99
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{Minimal}", w!"Leanify.Structures.MinimalIn")]           -- 99
+/-- The constants from index 100 (the table is split for the code generator). -/
+def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Greatest}", w!"Leanify.Structures.GreatestIn"),         -- 100
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Least}", w!"Leanify.Structures.LeastIn"),               -- 101
   (S ⟶ F ⟶ .prop, w!"\\operatorname{Monotone}", w!"Leanify.Structures.MonotoneOn'"),         -- 102
@@ -249,7 +251,11 @@ def table : List (Ty × Codes × Codes) := [
   (S ⟶ .real, w!"\\operatorname{diam}", w!"Leanify.Structures.diam"),                     -- 191
   (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet"),            -- 192
   (S ⟶ .prop, w!"\\operatorname{RealVectorSpace}", w!"Leanify.Structures.RealVectorSpace"), -- 193
-  (M ⟶ S ⟶ S, w!"#[#]", w!"Leanify.Structures.imageSetM")]                                  -- 194
+  (M ⟶ S ⟶ S, w!"#[#]", w!"Leanify.Structures.imageSetM"),                                  -- 194
+  (S ⟶ S, w!"#^{p^\\infty}", w!"Leanify.Structures.perfectionS")]                           -- 195
+
+/-- The constants, in the order of their indices. -/
+def table : List (Ty × Codes × Codes) := table1 ++ table2
 
 /-! ## Helpers -/
 
@@ -534,6 +540,8 @@ def vocab : Vocab where
       pred := close (lamT E (fun _ => tt) fun a => eq (app (const 23) a) (num 0)), doc := "(Mathlib `IsOfFinOrder`)" },
     postS phrase!"of characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g => eq (app (const 47) g) p) "(Mathlib `ringChar`)",
     postS phrase!"of positive characteristic" (sP fun g => lt (num 0) (app (const 47) g)) "(Mathlib `ringChar`)",
+    postS phrase!"of positive characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g =>
+      and (lt (num 0) p) (eq (app (const 47) g) p)) "(Mathlib `ringChar`)",
     postS phrase!"of characteristic zero" (sP fun g => eq (app (const 47) g) (num 0)) "(Mathlib `CharZero`)",
     postS phrase!"isomorphic to $v$" (close <| lamT S (fun _ => tt) fun h => lamT S (fun _ => tt) fun g => app2 (const 36) g h) "(Mathlib `MulEquiv`)",
     postS phrase!"$v$-group" (close <| lamR fun p => lamT S (fun _ => tt) fun g => and (app (lift Core.posInt) p) (app2 (const 17) p g))
@@ -615,6 +623,8 @@ def vocab : Vocab where
       doc := "of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`)" },
     { name := phrase!"Klein four-group", value := .const 114, ty := S, doc := "`C_2 × C_2`" },
     { name := phrase!"direct product of $v$ and $v$", value := .const 115, ty := S ⟶ S ⟶ S, doc := "`G × H` (Mathlib `Prod`)" },
+    { name := phrase!"perfection of $v$", value := .const 195, ty := S ⟶ S,
+      doc := "`K^{p^∞} = ⋂ₙ K^{pⁿ}` of a field `K` of characteristic `p > 0`: the elements that are `pⁿ`-th powers for every `n`" },
     { name := phrase!"dimension of $v$", value := .const 119, ty := S ⟶ .real, doc := "over its scalars (Mathlib `Module.finrank`)" },
     { name := phrase!"span of $v$", value := .const 122, ty := S ⟶ S, doc := "(Mathlib `Submodule.span`)" },
     { name := phrase!"linear span of $v$", value := .const 122, ty := S ⟶ S, doc := "(Mathlib `Submodule.span`)" },

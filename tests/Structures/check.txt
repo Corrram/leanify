@@ -64,6 +64,7 @@ tests/Structures/article.tex:234:21: info: defines \operatorname{involution} (in
 tests/Structures/article.tex:234:21: info: \operatorname{involution} is well defined if: \forall x\in \mathrm{El},\ \forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow y(x)\Rightarrow 2\in \mathbb{Z}\land (0\le 2\lor \operatorname{Invertible}(x))
 tests/Structures/article.tex:238:55: info: claim 49: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \operatorname{involution}(y)\Rightarrow (y)^{-1}=y)
 tests/Structures/article.tex:238:55: info: claim 49 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \operatorname{involution}(y)\Rightarrow \operatorname{Invertible}(y))
-tests/Structures/article.tex: 5 definitions, 50 claims
-  results: 106 compiled, 0 failed, 0 prose (of 106)
-  all: 106 compiled, 0 failed, 0 prose (of 106)
+tests/Structures/article.tex:242:88: info: claim 50: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land 0<x\land \operatorname{char}(y)=x\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ (\forall t\in \mathrm{El},\ z(t)\Leftrightarrow y^{p^\infty}(t))\Rightarrow z(1)))
+tests/Structures/article.tex: 5 definitions, 51 claims
+  results: 109 compiled, 0 failed, 0 prose (of 109)
+  all: 109 compiled, 0 failed, 0 prose (of 109)

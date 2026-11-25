@@ -1204,6 +1204,7 @@ except a notion whose meanings take arguments of different types, which the type
 | of infinite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of positive characteristic | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
+| of positive characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of characteristic zero | $\mathrm{El}$ → Prop | (Mathlib `CharZero`) |
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
 | $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |
@@ -1271,6 +1272,7 @@ except a notion whose meanings take arguments of different types, which the type
 | dihedral group of order $a$ | ℝ → $\mathrm{El}$ → Prop | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
 | klein four-group | $\mathrm{El}$ → Prop | `C_2 × C_2` |
 | direct product of $a$ and $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `G × H` (Mathlib `Prod`) |
+| perfection of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `K^{p^∞} = ⋂ₙ K^{pⁿ}` of a field `K` of characteristic `p > 0`: the elements that are `pⁿ`-th powers for every `n` |
 | dimension of $a$ | ($\mathrm{El}$ → Prop) → ℝ | over its scalars (Mathlib `Module.finrank`) |
 | span of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
 | linear span of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
