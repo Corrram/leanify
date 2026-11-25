@@ -58,7 +58,16 @@ def vocab : Vocab where
     noun phrase!"prime number" phrase!"prime numbers" prime "a prime (Mathlib `Nat.Prime`)",
     noun phrase!"prime" phrase!"primes" prime "a prime (Mathlib `Nat.Prime`)",
     noun phrase!"composite number" phrase!"composite numbers" composite "an integer `≥ 2` that is not prime",
-    noun phrase!"perfect square" phrase!"perfect squares" perfectSquare "`x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`)"]
+    noun phrase!"perfect square" phrase!"perfect squares" perfectSquare "`x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`)",
+    { noun phrase!"divisor" phrase!"divisors" (close <| lamR fun d => isInt d) "an integer `d` with `d ∣ n` (Mathlib `Int.instDvd`)" with
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) },
+    { noun phrase!"positive divisor" phrase!"positive divisors" (close <| lamR fun d => and (isInt d) (lt (num 0) d))
+        "a divisor `d ≥ 1` (Mathlib `Nat.divisors`)" with
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) },
+    { noun phrase!"prime divisor" phrase!"prime divisors" prime "a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`)" with
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) },
+    { noun phrase!"prime factor" phrase!"prime factors" prime "a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`)" with
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) }]
   mods := [
     adj phrase!"even" even "`x = 2k` for an integer `k` (Mathlib `Even`)",
     adj phrase!"odd" odd "`x = 2k+1` for an integer `k` (Mathlib `Odd`)",

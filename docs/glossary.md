@@ -411,6 +411,10 @@ except a notion whose meanings take arguments of different types, which the type
 | prime | ℝ | a prime (Mathlib `Nat.Prime`) |
 | composite number | ℝ | an integer `≥ 2` that is not prime |
 | perfect square | ℝ | `x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`) |
+| divisor | ℝ | an integer `d` with `d ∣ n` (Mathlib `Int.instDvd`) |
+| positive divisor | ℝ | a divisor `d ≥ 1` (Mathlib `Nat.divisors`) |
+| prime divisor | ℝ | a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`) |
+| prime factor | ℝ | a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |

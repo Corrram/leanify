@@ -2645,7 +2645,8 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   match (do
       if none_ then none else
       let ws0 := r.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
-      let (ts, r1) ← mathChunk (r.drop ws0.length)
+      -- (`integers $x$ and $y$`, as `integers $x,y$`)
+      let (ts, r1) ← joinedVars (r.drop ws0.length)
       -- `there are distinct primes $p,q$`: a condition on all of them
       let (ws, ps) := collectiveWords 8 ws0
       if ws.isEmpty then none else

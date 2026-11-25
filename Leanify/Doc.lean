@@ -546,11 +546,12 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       else if v == w!"the" && (match ts with
           | k :: n :: _ => ((lw k).map kinds.contains).getD false && n.tok == .mopen
           | _ => false) then standardForms f there cond prev (ts.drop 1)
-      -- `Then the sequence $(a_n^2)$ converges`: the sequence `$(a_n^2)$` (not after `of`:
-      -- `the limit of the sequence $a$` is a notion's)
-      else if v == w!"the" && (prev.isNone || prevWord == some w!"then" || prevWord == some w!"that" ||
-          prevWord == some w!"and" || prevWord == some w!"if") && (match ts with
-          | k :: n :: _ => lw k == some w!"sequence" && n.tok == .mopen
+      -- `Then the sequence $(a_n^2)$ converges`, `the number $n^3-n$ is divisible by $6$`: the
+      -- formula (not after `of`: `the limit of the sequence $a$` is a notion's)
+      else if v == w!"the" && (prevWord == some w!"then" || prevWord == some w!"that" ||
+          prevWord == some w!"and" || prevWord == some w!"if" || (prev.map (·.tok == .punct 44)).getD false ||
+          (prev.isNone && (match ts with | k :: _ => lw k == some w!"sequence" | _ => false))) && (match ts with
+          | k :: n :: _ => (lw k == some w!"sequence" || lw k == some w!"number" || lw k == some w!"integer") && n.tok == .mopen
           | _ => false) then standardForms f there cond prev (ts.drop 1)
       -- `If $φ$ then $ψ$`
       else if v == w!"then" && afterMath then

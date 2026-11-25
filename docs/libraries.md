@@ -416,7 +416,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`combinatorialgames`](glossary.md#combinatorialgames) | the nim-sum of two and three heaps and the winning moves of Nim; the Grundy value of a subtraction game; the Wythoff pairs | |
 | [`designs`](glossary.md#designs) | orders admissible for Steiner triple systems; the replication number and number of blocks of a 2-design; the triples of a Steiner triple system; points and lines of projective and affine planes | |
 | **Number theory** (`numbertheory`) | | |
-| [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
+| [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor; divisors, positive divisors, prime divisors and prime factors of an integer | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
 | [`congruences`](glossary.md#congruences) | congruences modulo `n`, quadratic residues, the Legendre symbol, primitive roots | |
 | [`specialnumbers`](glossary.md#specialnumbers) | twin, Sophie Germain, safe and Fermat primes, perfect cubes and powers, powers of two, sums of two squares, triangular numbers; Fermat and Mersenne numbers, repunits, pentagonal, tetrahedral, square pyramidal and oblong numbers | with `numbers` |
