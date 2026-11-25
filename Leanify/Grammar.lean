@@ -3726,6 +3726,17 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let m ← Math.parseFormula ts
     if (kw [w!"be"] r).isSome then none else
     if isCondition m then some (.ifCond m, r) else none) <|>
+  -- `$L/K$ be a [finite] field extension`: the field `K`, and `L` an extension of it
+  (do
+    let (ts, r) ← mathChunk cs
+    let [.id l, .sym 47, .id k] := ts | none
+    let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
+    let ws := r1.takeWhile (fun (c : Chunk) => match c with
+      | .w w => w != w!"with" && w != w!"such" && w != w!"and" | .p 45 => true | _ => false)
+    match ws.getLast? with
+    | some (.w e) => if e != w!"extension" then none
+    | _ => none
+    some (.many [.noun [.w w!"field", .m [.id k]], .noun (ws ++ [.m [.id l], .w w!"of", .m [.id k]])], r1.drop ws.length)) <|>
   -- `$a<b$ be real numbers`: the variables of the chain, each of the noun, and the chain
   (do
     let (ts, r) ← mathChunk cs
