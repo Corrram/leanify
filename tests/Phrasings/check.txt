@@ -1,0 +1,27 @@
+tests/Phrasings/article.tex:11:1: info: claim 0: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Phrasings/article.tex:15:1: info: claim 1: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
+tests/Phrasings/article.tex:19:1: info: claim 2: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Phrasings/article.tex:23:1: info: claim 3: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Phrasings/article.tex:27:1: info: claim 4: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Phrasings/article.tex:31:1: info: claim 5: \forall x\in \mathbb{R},\ \exists y\in \mathbb{R},\ x<y
+tests/Phrasings/article.tex:35:16: info: claim 6: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Phrasings/article.tex:39:21: info: claim 7: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Phrasings/article.tex:43:1: info: claim 8: \forall x\in \mathbb{R},\ 0<{x}^{2}+1
+tests/Phrasings/article.tex:47:27: info: claim 9: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Phrasings/article.tex:51:27: info: claim 10: \forall x\in \mathbb{R},\ 0\le {x}^{2}
+tests/Phrasings/article.tex:55:12: info: claim 11: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Phrasings/article.tex:59:12: info: claim 12: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land y<x)
+tests/Phrasings/article.tex:63:1: info: claim 13: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land x\le y)\land y\le x+1)
+tests/Phrasings/article.tex:67:47: info: claim 14: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<x\,y)
+tests/Phrasings/article.tex:71:18: info: claim 15: \forall x\in \mathbb{R},\ {x}^{2}=0\Leftrightarrow x=0
+tests/Phrasings/article.tex:75:25: info: claim 16: \forall x\in \mathbb{R},\ 0\le \lvert x\rvert
+tests/Phrasings/article.tex:75:25: info: claim 17: \forall x\in \mathbb{R},\ \lvert x\rvert=0\Leftrightarrow x=0
+tests/Phrasings/article.tex:79:1: info: defines f (f)
+tests/Phrasings/article.tex:79:70: info: claim 18: f(2)=4
+tests/Phrasings/article.tex:83:12: info: claim 19: \forall x\in \mathbb{R},\ 0<x\Rightarrow {(\frac{x}{2})}^{2}\le {x}^{2}
+tests/Phrasings/article.tex:87:1: info: defines A (A)
+tests/Phrasings/article.tex:87:40: info: claim 20: A(1)
+tests/Phrasings/article.tex:91:1: warning: Lemma p21 is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Phrasings/article.tex: 2 definitions, 21 claims
+  results: 32 compiled, 0 failed, 1 prose (of 33)
+  all: 32 compiled, 0 failed, 1 prose (of 33)

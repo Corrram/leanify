@@ -489,6 +489,85 @@ def varTok : List MTok → Option Tok
   | [.cmd n] => some (.cmd n)
   | _ => none
 
+/-- Other wordings of what the grammar reads, as authors write them: each is replaced by
+the wording of `docs/writing.md` before the sentence is read (`for any` is `for every`,
+`so that` is `such that`, `one has` is `we have`). -/
+def standardWords : List (List Codes × List Tok) :=
+  let w (s : List Codes) : List Tok := s.map Tok.word
+  [([w!"so", w!"that"], w [w!"such", w!"that"]),
+   ([w!"iff"], w [w!"if", w!"and", w!"only", w!"if"]),
+   ([w!"it", w!"holds", w!"that"], w [w!"we", w!"have"]),
+   ([w!"we", w!"have", w!"that"], w [w!"we", w!"have"]),
+   ([w!"one", w!"has"], w [w!"we", w!"have"]),
+   ([w!"one", w!"gets"], w [w!"we", w!"have"]),
+   ([w!"one", w!"obtains"], w [w!"we", w!"have"]),
+   ([w!"there", w!"is", w!"some"], w [w!"there", w!"is", w!"a"]),
+   ([w!"there", w!"exists", w!"some"], w [w!"there", w!"exists", w!"a"]),
+   ([w!"be", w!"two"], w [w!"be"]), ([w!"be", w!"three"], w [w!"be"]), ([w!"be", w!"four"], w [w!"be"])]
+
+/-- Words around a formula that say nothing more than the formula: `$φ$ holds` is `$φ$`,
+`the inequality $φ$` is `$φ$`; and `If $φ$ then $ψ$` has its comma, `real $x$` its noun,
+`there is … $y$ with $φ$` is `such that $φ$`. `there` says whether `there is|exists` came
+before in the sentence, `cond` whether the sentence is inside the condition of an `if`:
+there `any` is left alone, since `if $f(x)=0$ for any $x$` asks for one `x` only. -/
+def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List PTok
+  | 0, _, _, _, ts => ts
+  | _ + 1, _, _, _, [] => []
+  | f + 1, there, cond, prev, t :: ts =>
+    let lw (p : PTok) : Option Codes := match p.tok with
+      | .word v => if p.math then none else some (Grammar.lower v)
+      | _ => none
+    let afterMath := match prev with | some p => p.tok == .mclose | none => false
+    let beforeMath := match ts with | n :: _ => n.tok == .mopen | [] => false
+    let word (v : Codes) : PTok := ⟨.word v, t.pos, false⟩
+    let prevWord := prev.bind lw
+    let beforeEnd := match ts with
+      | n :: _ => (match n.tok with | .punct _ => true | _ => false)
+      | [] => true
+    let kinds : List Codes := [w!"inequality", w!"identity", w!"equality", w!"estimate", w!"bound", w!"formula", w!"relation"]
+    match lw t with
+    | some v =>
+      -- `$φ$ holds`
+      if (v == w!"holds" || v == w!"hold") && afterMath then standardForms f there cond prev ts
+      -- `the inequality $φ$`
+      else if v == w!"the" && (match ts with
+          | k :: n :: _ => ((lw k).map kinds.contains).getD false && n.tok == .mopen
+          | _ => false) then standardForms f there cond prev (ts.drop 1)
+      -- `If $φ$ then $ψ$`
+      else if v == w!"then" && afterMath then
+        ⟨.punct 44, t.pos, false⟩ :: t :: standardForms f there cond (some t) ts
+      -- `we obtain $φ$`
+      else if (v == w!"get" || v == w!"obtain" || v == w!"find") && prevWord == some w!"we" && beforeMath then
+        word w!"have" :: standardForms f there cond (some t) ts
+      -- `for all real $x$`
+      else if v == w!"real" && beforeMath then t :: word w!"number" :: standardForms f there cond (some t) ts
+      -- `Let $x$ be real.`
+      else if v == w!"real" && prevWord == some w!"be" && beforeEnd then
+        word w!"a" :: t :: word w!"number" :: standardForms f there cond (some t) ts
+      -- `Any real number $x$ satisfies`, `for any $x$`: every one, outside a condition
+      else if v == w!"any" && !cond && (prev.isNone || prevWord == some w!"for") then
+        word w!"every" :: standardForms f there cond (some t) ts
+      -- `Given $x>0$, we have`
+      else if v == w!"given" && prev.isNone && beforeMath then
+        word w!"for" :: standardForms f there cond (some t) ts
+      -- `for all $x$ we have $φ$`
+      else if v == w!"we" && afterMath && (match ts with | n :: _ => lw n == some w!"have" | [] => false) then
+        ⟨.punct 44, t.pos, false⟩ :: t :: standardForms f there cond (some t) ts
+      -- `such that for all $x$ we have $φ$`
+      else if v == w!"that" && prevWord == some w!"such" &&
+          (match ts with | n :: _ => lw n == some w!"for" | [] => false) then
+        t :: ⟨.punct 44, t.pos, false⟩ :: standardForms f there cond (some t) ts
+      -- `there is a real number $y>0$ with $y<x$`
+      else if v == w!"with" && there && afterMath && beforeMath &&
+          !(ts.any fun p => lw p == some w!"such") then
+        word w!"such" :: word w!"that" :: standardForms f false cond (some t) ts
+      else
+        let there' := there || ((v == w!"is" || v == w!"exists" || v == w!"exist") &&
+          (match prev with | some p => lw p == some w!"there" | none => false))
+        let cond' := (cond || v == w!"if") && v != w!"then"
+        t :: standardForms f there' cond' (some t) ts
+    | none => t :: standardForms f there cond (some t) ts
+
 /-- Replace the words of the article's conventions in the text of a sentence (not
 after `strictly` or `non`: `strictly increasing` keeps its meaning). -/
 def rewriteWords (aliases : List (List Codes × List Tok)) : Nat → Option Tok → List PTok → List PTok
@@ -6105,6 +6184,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- a notation that binds a variable of its argument is not applied: a finding
   let capturedVar := Notation.captured s.toks
   let s := if capturedVar.isSome then { s with toks := toks0 } else s
+  -- other wordings of the forms that are read, then the words of the article's conventions
+  let stdToks := Notation.rewriteWords Notation.standardWords (s.toks.length + 1) none s.toks
+  let s := { s with toks := Notation.standardForms (stdToks.length + 1) false false none stdToks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   -- the symbols this sentence introduces, if it is not read

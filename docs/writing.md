@@ -503,6 +503,29 @@ with that `e`, which otherwise is the exponential. Words before a formula name i
 without a preposition: `the arithmetic mean $\frac{a+b}{2}$ is at least …` compares the
 mean, `the probability of an exit at $-1$ is at least …` is not read.
 
+### Other wordings of the same forms
+
+A sentence need not be worded as in the tables above. These wordings are replaced by the
+form they stand for before the sentence is read, so they are read as that form:
+
+| written | read as |
+| --- | --- |
+| `For any $x$, …`, `Any NOUN $x$ satisfies …` | `For every $x$, …`, `Every NOUN $x$ satisfies …`. Inside the condition of an `if`, `any` is left alone and the sentence is not read: `If $f(x)=0$ for any $x$, then …` may ask for one `x` only. Write `for every` or `for some` there |
+| `Given $x>0$, we have …` | `For $x>0$, we have …` |
+| `… so that $φ$` | `… such that $φ$` |
+| `$φ$ iff $ψ$` | `$φ$ if and only if $ψ$` |
+| `one has`, `one gets`, `one obtains`, `it holds that`, `we have that`, and `we get`, `we obtain`, `we find` before a formula | `we have` |
+| `$φ$ holds`, `the inequality $φ$` (also `identity`, `equality`, `estimate`, `bound`, `formula`, `relation`) | `$φ$` |
+| `If $φ$ then $ψ$`, `For all $x$ we have $φ$` | the same with the comma (`If $φ$, then $ψ$`) |
+| `there is some $y>0$ with $y<x$` | `there is a $y>0$ such that $y<x$` |
+| `Let $x$ and $y$ be two positive real numbers.` | `Let $x$ and $y$ be positive real numbers.` (`two`, `three`, `four` do not say that the objects differ) |
+| `Let $x$ be real.`, `for all real $x$` | `Let $x$ be a real number.`, `for all real numbers $x$` |
+
+In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\defeq` are
+`\coloneqq`, `\backslash` and `\smallsetminus` are `\setminus`; the sizes `\bigg`, `\Bigg`,
+`\middle` and the old font switches `\rm`, `\sf` are skipped; `\mathsf`, `\mathfrak`,
+`\mathscr`, `\mathtt`, `\boldsymbol` and `\bm` name a symbol as `\mathcal` does.
+
 ### Notions that the article does not define
 
 An article on graphs does not define *graph*. If the vocabulary has no field for its

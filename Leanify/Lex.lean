@@ -128,7 +128,8 @@ def wDropText : List Codes :=
 def wDropArg : List Codes := [w!"color", w!"textcolor", w!"marginpar", w!"marginnote", w!"pagecolor", w!"footnote"]
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
-   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber"]
+   w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber",
+   w!"bigg", w!"Bigg", w!"bigm", w!"Bigm", w!"biggm", w!"Biggm", w!"middle", w!"rm", w!"sf", w!"protect"]
 /-- Commands of formulas that are another spelling of a symbol the grammar reads:
 `\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`, `\triangleq` is `\coloneqq`. -/
 def mathAlias (n : Codes) : Option Tok :=
@@ -138,6 +139,9 @@ def mathAlias (n : Codes) : Option Tok :=
   else if n == w!"leqslant" || n == w!"leqq" then some (.cmd w!"le")
   else if n == w!"geqslant" || n == w!"geqq" then some (.cmd w!"ge")
   else if n == w!"lvert" || n == w!"rvert" || n == w!"vert" then some (.msym 124)
+  else if n == w!"rightarrow" || n == w!"longrightarrow" then some (.cmd w!"to")
+  else if n == w!"coloneq" || n == w!"defeq" then some (.cmd w!"coloneqq")
+  else if n == w!"backslash" || n == w!"smallsetminus" then some (.cmd w!"setminus")
   else if n == w!"lbrace" then some (.csym 123)
   else if n == w!"rbrace" then some (.csym 125)
   else none
