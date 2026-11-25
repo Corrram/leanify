@@ -1293,12 +1293,14 @@ except a notion whose meanings take arguments of different types, which the type
 | $<$ | $\mathrm{El}$ | `x ≤ y`, `x ≠ y` |
 | a number in a set | $\mathrm{El}$ | a number as an element of a given structure (`φ(1)` for `φ : G → H`) |
 | $\operatorname{@norm}$ | $\mathrm{El}$ | `\lVert x\rVert`: the norm of a normed space |
+| $\operatorname{d}$ | $\mathrm{El}$ | `d(x,y)`: the distance of a metric space, where the article defines no `d` |
 | $\operatorname{@inner}$ | $\mathrm{El}$ | `\langle x,y\rangle`: the inner product of an inner product space |
 | $x(t)$ | $\mathrm{Map}$ | `φ(a)`; a number is that element of the domain (`φ(1)`) |
 | $f\colon A\to B$ | $\mathrm{Map}$ | `φ\colon G\to H` binds a map with domain `G` and codomain `H` |
 | $\circ$ | $\mathrm{Map}$ | `ψ\circ φ` |
 | $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
 | $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
+| $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |
 | $\operatorname{im}$ | $\mathrm{Map}$ | `\operatorname{im} φ`, the image |
 | $\operatorname{rank}$ | $\mathrm{Map}$ | `\operatorname{rank} T` |

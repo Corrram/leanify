@@ -1847,6 +1847,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let argTy : Ty := match ← method t .call with
             | some (_, .fn _ (.fn a' _)) => a'
             | _ => .real
+          -- (`\varphi(K)` of a set `K` of such elements: its image, the type's method)
+          if argTy != .real then
+            let (v, vt) ← term f sc pf a
+            if vt == .fn argTy .prop then
+              if (← method t (.fn w!"@image")).isSome then return (← callMethod t (.fn w!"@image") [.loc i, v])
           let x ← if argTy == .real then asReal (← term f sc pf a) else do
             let (v, vt) ← term f sc pf a
             coerce v vt argTy
@@ -1874,6 +1879,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let xs ← args.mapM (term f sc pf)
         applyAll h hty doms xs
     | .app hd args => do
+      -- `d(x,y)` of two elements of a vocabulary's type, where the article defines no `d`:
+      -- the type's method of that name (the distance of a metric space)
+      if let (.id n, [a1, a2]) := (hd, args) then
+        if (lookupLocal sc n).isNone && (← lookupGlob n).isNone && (← get).vocab.methods.any (·.op == .fn n) then
+          let x ← term f sc pf a1
+          let y ← term f sc pf a2
+          if x.2 == y.2 && (← ownTy x.2) && (← method x.2 (.fn n)).isSome then
+            return (← callMethod x.2 (.fn n) [x.1, y.1])
       -- `the kernel of $\varphi$` (a notion subject): the notion of the vocabulary with these
       -- words and arguments, the types of the arguments deciding between several
       if let .id op := hd then
@@ -2063,8 +2076,20 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | [] => do pure (← propOf f sc pf body, .prop)
       | v :: rest => do
         if (lookupLocal sc v).isSome then fail E.shadow v
-        let sc' : Scope := (v, Ty.real) :: sc
         let pf' := pf.map fun (s, t) => (shift 1 0 s, t)
+        -- (a set of elements of a vocabulary's type, `for all $g\in G$` of a group: the
+        -- variable is one of them, not a number)
+        let elTy : Option Ty ← match dom with
+          | .id n => match lookupLocal sc n with
+            | some (_, .fn a .prop) => pure (if isBase a then some a else none)
+            | _ => pure none
+          | _ => pure none
+        if let some a := elTy then
+          let (d, _) ← term f sc none dom
+          let m := Tm.app (shift 1 0 d) (.loc 0)
+          let b ← propOf f ((v, a) :: sc) pf' (.quant isAll rest dom body)
+          return (if isAll then .all a (.imp m b) else .ex a (.and m b), .prop)
+        let sc' : Scope := (v, Ty.real) :: sc
         let m ← member f sc' (.loc 0, .real) dom
         -- (a letter the article declares to be an integer)
         let m := match declaredInt (← get) v (.loc 0), m with

@@ -43,6 +43,11 @@ tests/Structures/article.tex:163:63: info: claim 36: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:167:106: info: claim 37: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{RealVectorSpace}(x)\land \operatorname{FiniteDimensional}(x)\Rightarrow (\forall y\in \mathrm{Map},\ \operatorname{Linear}(y)\land y\colon x\to x\Rightarrow \operatorname{Injective}(y)\Rightarrow \operatorname{Surjective}(y))
 tests/Structures/article.tex:171:77: info: claim 38: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\land \operatorname{FiniteDimensional}(y)\land \dim(y)=3\Rightarrow \dim(y)=3)
 tests/Structures/article.tex:175:34: info: claim 39: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \lvert x\rvert=6\Rightarrow (\exists y\in \mathrm{El},\ (x(y)\land \operatorname{ord}(y)=2)\land \top)
-tests/Structures/article.tex: 0 definitions, 40 claims
-  results: 81 compiled, 0 failed, 0 prose (of 81)
-  all: 81 compiled, 0 failed, 0 prose (of 81)
+tests/Structures/article.tex:179:21: info: claim 40: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow {y}^{2}=1)\Rightarrow (\forall z\in \mathrm{El},\ \forall s\in \mathrm{El},\ x(z)\land x(s)\Rightarrow z\,s=s\,z)
+tests/Structures/article.tex:179:21: info: claim 40 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow 2\in \mathbb{Z}\land (0\le 2\lor \operatorname{Invertible}(y)))
+tests/Structures/article.tex:183:121: info: claim 41: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Continuous}(z)\land z\colon x\to y\Rightarrow (\forall s\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(s)\land (\forall b\in \mathrm{El},\ s(b)\Rightarrow x(b))\Rightarrow \operatorname{Compact}(z[z](s)))))
+tests/Structures/article.tex:187:31: info: claim 42: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{T_2}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(y)\land (\forall t\in \mathrm{El},\ y(t)\Rightarrow x(t))\Rightarrow \operatorname{Closed}(x)(y))
+tests/Structures/article.tex:191:49: info: claim 43: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow d(y,s)\le d(y,z)+d(z,s))))
+tests/Structures/article.tex: 0 definitions, 44 claims
+  results: 89 compiled, 0 failed, 0 prose (of 89)
+  all: 89 compiled, 0 failed, 0 prose (of 89)

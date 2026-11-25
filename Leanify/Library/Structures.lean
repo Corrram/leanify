@@ -248,7 +248,8 @@ def table : List (Ty × Codes × Codes) := [
   (S ⟶ .prop, w!"\\operatorname{Perfect}", w!"Leanify.Structures.PerfectSpace'"),         -- 190
   (S ⟶ .real, w!"\\operatorname{diam}", w!"Leanify.Structures.diam"),                     -- 191
   (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet"),            -- 192
-  (S ⟶ .prop, w!"\\operatorname{RealVectorSpace}", w!"Leanify.Structures.RealVectorSpace")] -- 193
+  (S ⟶ .prop, w!"\\operatorname{RealVectorSpace}", w!"Leanify.Structures.RealVectorSpace"), -- 193
+  (M ⟶ S ⟶ S, w!"#[#]", w!"Leanify.Structures.imageSetM")]                                  -- 194
 
 /-! ## Helpers -/
 
@@ -642,12 +643,14 @@ def vocab : Vocab where
     ⟨E, .le, 8, "the order of a partially ordered set", none⟩, ⟨E, .lt, 9, "`x ≤ y`, `x ≠ y`", none⟩,
     ⟨E, .ofRealIn, 103, "a number as an element of a given structure (`φ(1)` for `φ : G → H`)", none⟩,
     ⟨E, .fn w!"@norm", 138, "`\\lVert x\\rVert`: the norm of a normed space", none⟩,
+    ⟨E, .fn w!"d", 10, "`d(x,y)`: the distance of a metric space, where the article defines no `d`", none⟩,
     ⟨E, .fn w!"@inner", 139, "`\\langle x,y\\rangle`: the inner product of an inner product space", none⟩,
     ⟨M, .call, 140, "`φ(a)`; a number is that element of the domain (`φ(1)`)", none⟩,
     ⟨M, .sig, 141, "`φ\\colon G\\to H` binds a map with domain `G` and codomain `H`", none⟩,
     ⟨M, .fn w!"\\circ", 142, "`ψ\\circ φ`", none⟩,
     ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
     ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
+    ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,
     ⟨M, .fn w!"im", 164, "`\\operatorname{im} φ`, the image", none⟩,
     ⟨M, .fn w!"rank", 165, "`\\operatorname{rank} T`", none⟩,

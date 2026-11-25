@@ -868,6 +868,8 @@ def ContractionM (φ : Map) : Prop := ∃ L : ℝ, 0 ≤ L ∧ L < 1 ∧ Lipschi
 def kernelM (φ : Map) : El → Prop := kernel φ.dom (apply φ)
 /-- The image of the domain. -/
 def imageM (φ : Map) : El → Prop := image φ.dom (apply φ)
+/-- `φ(K)`: the image of the elements of `K` in the domain. -/
+def imageSetM (φ : Map) (K : El → Prop) : El → Prop := image (fun a => φ.dom a ∧ K a) (apply φ)
 /-- The rank and the nullity of a linear map (Mathlib `LinearMap.rank`). -/
 def rankM (φ : Map) : ℝ := dimS (imageM φ)
 def nullityM (φ : Map) : ℝ := dimS (kernelM φ)
