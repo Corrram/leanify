@@ -877,3 +877,27 @@ globs = ["Optics.+"]
 name = "Pharmacokinetics"
 srcDir = "tests"
 globs = ["Pharmacokinetics.+"]
+
+[[lean_lib]]
+# The field macroeconomics: macroeconomics.
+name = "Macroeconomics"
+srcDir = "tests"
+globs = ["Macroeconomics.+"]
+
+[[lean_lib]]
+# The field acoustics: acoustics.
+name = "Acoustics"
+srcDir = "tests"
+globs = ["Acoustics.+"]
+
+[[lean_lib]]
+# The field ratings: rating systems.
+name = "Ratings"
+srcDir = "tests"
+globs = ["Ratings.+"]
+
+[[lean_lib]]
+# The field learning: machine learning.
+name = "Learning"
+srcDir = "tests"
+globs = ["Learning.+"]

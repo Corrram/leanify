@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={ratings}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $E(a,b)$ for the Elo expected score of a player rated $a$ against a player rated $b$.
+We write $U(r,k,s,x)$ for the Elo update of the rating $r$ with factor $k$ for the score $s$ and the expected score $x$.
+We write $B(a,b)$ for the Bradley-Terry probability that the strength $a$ beats the strength $b$.
+We write $W(d,s)$ for the logistic win probability for the rating difference $d$ with scale $s$.
+We write $P(s,a,x)$ for the Pythagorean expectation for $s$ points scored and $a$ points allowed with exponent $x$.
+
+\section{Elo}
+
+\begin{lemma}\label{symmetry}
+Let $a$ and $b$ be real numbers. Then $E(a,b)+E(b,a)=1$.
+\end{lemma}
+
+\begin{lemma}\label{elo}
+$E(1600,1600)=\frac12$, $E(2000,1600)=\frac{10}{11}$ and $U(1500,32,1,\frac12)=1516$.
+\end{lemma}
+
+\section{Other models}
+
+\begin{lemma}\label{others}
+$B(3,1)=\frac34$, $W(0,1)=\frac12$ and $P(2,1,2)=\frac45$.
+\end{lemma}
+
+\end{document}

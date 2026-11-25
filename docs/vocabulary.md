@@ -376,7 +376,11 @@ Further fields cover other branches of mathematics:
 * `graphcounts`: counting edges, spanning trees and colourings of standard graphs;
 * `kinematics`: accelerated and circular motion, collisions;
 * `optics`: lenses, diffraction, polarization;
-* `pharmacokinetics`: the one-compartment model.
+* `pharmacokinetics`: the one-compartment model;
+* `macroeconomics`: growth models, multipliers, policy rules;
+* `acoustics`: sound speeds, levels and resonances;
+* `ratings`: Elo and paired comparisons;
+* `learning`: activations, losses and classification metrics.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

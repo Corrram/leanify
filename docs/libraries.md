@@ -68,7 +68,8 @@ math
 │   │   ├── astronomy             parallax, magnitudes, Hubble's law, Schwarzschild radius
 │   │   ├── electromagnetism      Coulomb's law, fields of wires and solenoids, cyclotrons
 │   │   ├── kinematics            constant acceleration, circular motion, collisions
-│   │   └── optics                lensmaker, image distances, gratings, Bragg, Malus
+│   │   ├── optics                lensmaker, image distances, gratings, Bragg, Malus
+│   │   └── acoustics             speed of sound, decibels, pipe resonances, reverberation
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -130,13 +131,16 @@ math
 │   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
 │   │   ├── bayesian              conjugate posteriors, Bayes' formula
 │   │   ├── diagnostictests       predictive values, likelihood ratios, odds ratios
+│   │   ├── learning              activations, losses, precision, recall, F1, MCC
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   ├── finance                   interest, annuities, Black–Scholes
 │   ├── utility                   expected utility, risk aversion, certainty equivalents
 │   ├── economics                 elasticities, production functions, Lorenz curves, Gini
+│   ├── macroeconomics            Solow model, Fisher equation, multipliers, Taylor rule
 │   ├── games                     two-by-two zero-sum games, values, optimal strategies
+│   ├── ratings                   Elo, Bradley–Terry, Pythagorean expectation
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
 │   ├── reliability               series, parallel, k-out-of-n systems; MTTF
 │   ├── actuarial                 survival laws, premiums, annuities
@@ -169,7 +173,7 @@ math
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
 `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
-`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -274,6 +278,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`electromagnetism`](glossary.md#electromagnetism) | the Coulomb force, the field and potential of a point charge; parallel-plate capacitance and field energy density; the magnetic fields of a long wire and a solenoid; the magnetic force on a moving charge, cyclotron frequency and Larmor radius | |
 | [`kinematics`](glossary.md#kinematics) | displacement and velocity at constant acceleration, stopping distances; centripetal acceleration and the period of circular motion; velocities after elastic and perfectly inelastic collisions and the kinetic energy lost | |
 | [`optics`](glossary.md#optics) | the lensmaker's equation, image distances and magnification of a thin lens; the Rayleigh angle; the angles of grating orders, single-slit minima and Bragg reflection; Malus's law | |
+| [`acoustics`](glossary.md#acoustics) | the speed of sound in an ideal gas; sound intensity and pressure levels; the intensity of a point source; resonances of open and closed pipes; the Sabine reverberation time | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -320,6 +325,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`testing`](glossary.md#testing) | the z- and t-statistics of a sample for a mean, one- and two-sided p-values, standard normal quantiles, the margin of error at a confidence level, Pearson's chi-squared statistic | |
 | [`bayesian`](glossary.md#bayesian) | posterior mean, mode and parameters of a beta prior after binomial data, the posterior mean of a gamma prior after Poisson data, posterior mean and variance of a normal prior after normal data; Bayes' formula and the Bayes factor | |
 | [`diagnostictests`](glossary.md#diagnostictests) | positive and negative predictive values, accuracy, likelihood ratios and the Youden index of a test; post-test odds; the odds ratio and relative risk of a 2×2 table; the number needed to treat | |
+| [`learning`](glossary.md#learning) | the sigmoid, ReLU and softplus functions; binary cross-entropy and hinge loss; the precision, recall, F1 score, accuracy and Matthews correlation coefficient of confusion counts | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
@@ -336,7 +342,9 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |
+| [`macroeconomics`](glossary.md#macroeconomics) | steady-state capital and output of the Solow model and its golden-rule saving rate; the Harrod–Domar growth rate; the real interest rate (Fisher); the compound annual growth rate; money and Keynesian multipliers; the Taylor rule | |
 | [`games`](glossary.md#games) | the value, lower and upper values and expected payoffs of a two-by-two zero-sum game; optimal strategies of the row and column players | |
+| [`ratings`](glossary.md#ratings) | the Elo expected score and update; the Bradley–Terry and logistic win probabilities; the Pythagorean expectation | |
 | [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | [`actuarial`](glossary.md#actuarial) | survival functions and the force of mortality of the Gompertz and Gompertz–Makeham laws; life expectancy, net single premiums of whole life insurance and annuities under constant forces, annuities-certain, the complete expectation of life, pure endowments | |

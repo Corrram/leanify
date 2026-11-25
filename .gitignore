@@ -137,3 +137,7 @@ article-reader/
 /tests/Kinematics/article.leanify.*
 /tests/Optics/article.leanify.*
 /tests/Pharmacokinetics/article.leanify.*
+/tests/Macroeconomics/article.leanify.*
+/tests/Acoustics/article.leanify.*
+/tests/Ratings/article.leanify.*
+/tests/Learning/article.leanify.*

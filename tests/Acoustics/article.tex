@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={acoustics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $c(g,R,T,M)$ for the speed of sound in an ideal gas with adiabatic index $g$, gas constant $R$, temperature $T$ and molar mass $M$.
+We write $L(i,j)$ for the sound intensity level of the intensity $i$ for the reference intensity $j$.
+We write $P(p,q)$ for the sound pressure level of the pressure $p$ for the reference pressure $q$.
+We write $I(r,w)$ for the intensity at distance $r$ from a point source of power $w$.
+We write $O(n,l,s)$ for the frequency of the $n$th resonance of a pipe of length $l$ open at both ends with sound speed $s$.
+We write $C(n,l,s)$ for the frequency of the $n$th resonance of a pipe of length $l$ closed at one end with sound speed $s$.
+We write $S(v,a)$ for the Sabine reverberation time of a room of volume $v$ with absorption area $a$.
+
+\section{Levels}
+
+\begin{lemma}\label{levels}
+$c(1,1,4,1)=2$, $L(1000,1)=30$, $P(10,1)=20$ and $I(1,4\pi)=1$.
+\end{lemma}
+
+\begin{lemma}\label{pressure}
+Let $i$ and $j$ be positive real numbers. Then $P(\sqrt{i},\sqrt{j})=L(i,j)$.
+\end{lemma}
+
+\section{Resonance}
+
+\begin{lemma}\label{pipes}
+$O(1,1,340)=170$, $C(1,1,340)=85$, $C(2,1,340)=255$ and $S(1000,161)=1$.
+\end{lemma}
+
+\end{document}

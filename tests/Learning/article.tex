@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={learning}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\sigma$ for the sigmoid function.
+We write $\rho$ for the rectified linear unit.
+We write $S$ for the softplus function.
+We write $H(p,y)$ for the binary cross-entropy of the prediction $p$ for the label $y$.
+We write $h(s,y)$ for the hinge loss of the score $s$ for the label $y$.
+We write $P(a,b)$ for the precision for $a$ true positives and $b$ false positives.
+We write $R(a,c)$ for the recall for $a$ true positives and $c$ false negatives.
+We write $F(a,b,c)$ for the F1 score for $a$ true positives, $b$ false positives and $c$ false negatives.
+We write $A(a,b,c,d)$ for the classification accuracy for $a$ true positives, $b$ true negatives, $c$ false positives and $d$ false negatives.
+We write $M(a,b,c,d)$ for the Matthews correlation coefficient for $a$ true positives, $b$ true negatives, $c$ false positives and $d$ false negatives.
+
+\section{Activations and losses}
+
+\begin{lemma}\label{activations}
+$\sigma(0)=\frac12$, $\rho(-1)=0$, $\rho(2)=2$ and $S(0)=\log2$.
+\end{lemma}
+
+\begin{lemma}\label{symmetry}
+For every real number $x$, $\sigma(x)+\sigma(-x)=1$ and $S(x)-S(-x)=x$.
+\end{lemma}
+
+\begin{lemma}\label{losses}
+$H(\frac12,1)=\log2$, $h(2,1)=0$ and $h(0,-1)=1$.
+\end{lemma}
+
+\section{Metrics}
+
+\begin{lemma}\label{metrics}
+$P(3,1)=\frac34$, $R(3,1)=\frac34$, $F(3,1,1)=\frac34$, $A(3,4,1,2)=\frac{7}{10}$ and $M(1,1,0,0)=1$.
+\end{lemma}
+
+\end{document}

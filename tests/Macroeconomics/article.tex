@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={macroeconomics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $k(s,n,d,a)$ for the steady-state capital per worker of the Solow model with saving rate $s$, population growth $n$, depreciation $d$ and capital share $a$.
+We write $y(s,n,d,a)$ for the steady-state output per worker of the Solow model with saving rate $s$, population growth $n$, depreciation $d$ and capital share $a$.
+We write $g(a)$ for the golden-rule saving rate of the Solow model with capital share $a$.
+We write $h(s,v)$ for the Harrod-Domar growth rate for the saving rate $s$ and the capital-output ratio $v$.
+We write $r(i,p)$ for the real interest rate for the nominal rate $i$ and the inflation rate $p$.
+We write $G(a,b,n)$ for the compound annual growth rate from $a$ to $b$ over $n$ years.
+We write $M(x)$ for the money multiplier for the reserve ratio $x$.
+We write $K(c)$ for the Keynesian multiplier for the marginal propensity to consume $c$.
+We write $T(p,q,u,x)$ for the Taylor rule rate for the inflation $p$, the target inflation $q$, the output gap $u$ and the neutral real rate $x$.
+
+\section{Growth}
+
+\begin{lemma}\label{solow}
+$k(\frac14,0,\frac14,\frac12)=1$, $y(\frac14,0,\frac18,\frac12)=2$ and $g(\frac13)=\frac13$.
+\end{lemma}
+
+\begin{lemma}\label{output}
+Let $s$, $d$ and $a$ be real numbers with $0<s<1$, $d>0$ and $0<a<1$. Then $y(s,0,d,a)=k(s,0,d,a)^a$.
+\end{lemma}
+
+\section{Rates and multipliers}
+
+\begin{lemma}\label{rates}
+$h(\frac{3}{10},3)=\frac{1}{10}$, $r(\frac{21}{100},\frac{1}{10})=\frac{1}{10}$ and $G(1,4,2)=1$.
+\end{lemma}
+
+\begin{lemma}\label{multipliers}
+$M(\frac{1}{10})=10$, $K(\frac45)=5$ and $T(2,2,0,2)=4$.
+\end{lemma}
+
+\end{document}
