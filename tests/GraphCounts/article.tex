@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={graphcounts}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $e(n)$ for the number of edges of the complete graph on $n$ vertices.
+We write $b(m,n)$ for the number of edges of the complete bipartite graph with parts of sizes $m$ and $n$.
+We write $q(n)$ for the number of edges of the hypercube of dimension $n$.
+We write $L(n)$ for the number of labelled graphs on $n$ vertices.
+We write $\tau(n)$ for the number of spanning trees of the complete graph on $n$ vertices.
+We write $\sigma(m,n)$ for the number of spanning trees of the complete bipartite graph with parts of sizes $m$ and $n$.
+We write $c(n)$ for the number of spanning trees of the cycle on $n$ vertices.
+We write $P(n,k)$ for the chromatic polynomial of the complete graph on $n$ vertices at $k$.
+We write $T(n,k)$ for the chromatic polynomial of a tree on $n$ vertices at $k$.
+We write $C(n,k)$ for the chromatic polynomial of the cycle on $n$ vertices at $k$.
+We write $t(n,r)$ for the number of edges of the Tur\'an graph on $n$ vertices with $r$ parts.
+We write $R(a,b)$ for the binomial bound on the Ramsey number for $a$ and $b$.
+
+\section{Counts}
+
+\begin{lemma}\label{edges}
+$e(4)=6$, $b(2,3)=6$, $q(3)=12$ and $L(3)=8$.
+\end{lemma}
+
+\begin{lemma}\label{trees}
+$\tau(4)=16$, $\sigma(2,2)=4$ and $c(5)=5$.
+\end{lemma}
+
+\section{Colourings and extremal numbers}
+
+\begin{lemma}\label{chromatic}
+$P(3,3)=6$, $T(3,3)=12$, $C(3,3)=6$ and $C(4,2)=2$.
+\end{lemma}
+
+\begin{lemma}\label{factorial}
+Let $n$ be an integer with $n\ge2$. Then $P(n,n)=n!$.
+\end{lemma}
+
+\begin{lemma}\label{turan}
+$t(5,2)=6$, $t(6,3)=12$ and $R(3,3)=6$.
+\end{lemma}
+
+\end{document}

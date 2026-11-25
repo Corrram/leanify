@@ -53,6 +53,7 @@ math
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── epidemics                 reproduction numbers, final sizes, the SIS model
 │   ├── populationdynamics        logistic growth, harvesting, Ricker, Lotka–Volterra
+│   ├── pharmacokinetics          one-compartment model, clearance, steady state, loading dose
 │   ├── variations                actions, Euler–Lagrange equation, minimizers
 │   ├── physics
 │   │   ├── mechanics             projectiles, pendulums, oscillators, orbits
@@ -65,7 +66,9 @@ math
 │   │   ├── quantum               particle in a box, oscillator, hydrogen, de Broglie
 │   │   ├── materials             stress, moduli, beam deflections, buckling
 │   │   ├── astronomy             parallax, magnitudes, Hubble's law, Schwarzschild radius
-│   │   └── electromagnetism      Coulomb's law, fields of wires and solenoids, cyclotrons
+│   │   ├── electromagnetism      Coulomb's law, fields of wires and solenoids, cyclotrons
+│   │   ├── kinematics            constant acceleration, circular motion, collisions
+│   │   └── optics                lensmaker, image distances, gratings, Bragg, Malus
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -144,6 +147,7 @@ math
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
 │   ├── permutations
 │   ├── graphs
+│   ├── graphcounts               Cayley's formula, chromatic polynomials, Turán graphs
 │   ├── recurrences               progressions, Fibonacci and linear recurrences
 │   ├── codes                     binary words, Hamming distance, coding bounds
 │   ├── algorithms                comparisons of searching and sorting, Hanoi, master theorem
@@ -165,7 +169,7 @@ math
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
 `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
-`materials`, `astronomy`, `electromagnetism`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -255,6 +259,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
 | [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
 | [`populationdynamics`](glossary.md#populationdynamics) | exponential and logistic populations, doubling times, the maximum sustainable yield and the harvested equilibrium; the Ricker and Beverton–Holt maps; the prey and predator equilibria of the Lotka–Volterra system | |
+| [`pharmacokinetics`](glossary.md#pharmacokinetics) | the concentration after an intravenous dose, clearance, elimination half-life, area under the curve, the average steady-state concentration, the accumulation factor and the loading dose | |
 | [`variations`](glossary.md#variations) | for a Lagrangian `L(t, y, p)`: the action, solutions of the Euler–Lagrange equation, minimizers with the same endpoint values, the Hamiltonian; the arc-length functional and the Dirichlet energy; functions with given endpoint values | |
 | [`mechanics`](glossary.md#mechanics) | the range, maximal height and time of flight of a projectile; the period of a pendulum; the natural frequency, period and damping ratio of an oscillator; kinetic energy; the circular orbital speed, escape velocity and orbital period (Kepler's third law) for a gravitational parameter | |
 | [`waves`](glossary.md#waves) | the wavelength, Doppler and beat frequencies, the harmonics of a string and the wave speed on it; the angle of refraction (Snell's law), the critical and Brewster angles; levels in decibels; the focal length of a thin lens | |
@@ -267,6 +272,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`materials`](glossary.md#materials) | stress and strain; the axial stiffness of a rod; shear and bulk moduli from Young's modulus and Poisson's ratio; second moments of area; deflections of cantilevers and simply supported beams; the Euler buckling load | |
 | [`astronomy`](glossary.md#astronomy) | distances from parallaxes, distance moduli, magnitude differences; redshifts, recession speeds (Hubble's law) and the Hubble time; the Schwarzschild radius; stellar luminosity; Wien's peak wavelength | |
 | [`electromagnetism`](glossary.md#electromagnetism) | the Coulomb force, the field and potential of a point charge; parallel-plate capacitance and field energy density; the magnetic fields of a long wire and a solenoid; the magnetic force on a moving charge, cyclotron frequency and Larmor radius | |
+| [`kinematics`](glossary.md#kinematics) | displacement and velocity at constant acceleration, stopping distances; centripetal acceleration and the period of circular motion; velocities after elastic and perfectly inelastic collisions and the kinetic energy lost | |
+| [`optics`](glossary.md#optics) | the lensmaker's equation, image distances and magnification of a thin lens; the Rayleigh angle; the angles of grating orders, single-slit minima and Bragg reflection; Malus's law | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -340,6 +347,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
 | [`permutations`](glossary.md#permutations) | permutations of `{1, …, n}`: sign, order, cycles, inversions | |
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
+| [`graphcounts`](glossary.md#graphcounts) | numbers of edges of complete, complete bipartite and hypercube graphs; labelled graphs; spanning trees (Cayley); chromatic polynomials of complete graphs, trees and cycles; edges of Turán graphs; the binomial bound on Ramsey numbers | |
 | [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |
 | [`codes`](glossary.md#codes) | binary words of length `n`; the Hamming weight and distance of the first `n` letters, the volume of a Hamming ball; the sphere-packing, Singleton and Gilbert–Varshamov bounds; the rate of a code | |
 | [`algorithms`](glossary.md#algorithms) | worst-case comparisons of binary search, insertion sort and merge sort, the expected comparisons of quicksort, the sorting lower bound `⌈log₂ n!⌉`, maximum and minimum finding; the Tower of Hanoi; the critical exponent of the master theorem; perfect binary trees and minimal heights | |

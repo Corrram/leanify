@@ -1,0 +1,37 @@
+tests/Optics/article.tex:9:1: info: defines \@n0 (n0)
+tests/Optics/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 1<x\Rightarrow (\forall y\in \mathbb{R},\ \neg (y=0)\Rightarrow (\forall z\in \mathbb{R},\ \neg (z=0)\land \neg (y=z)\Rightarrow (\neg (y=0)\land \neg (z=0))\land \neg ((x-1)\,(\frac{1}{y}-\frac{1}{z})=0)))
+tests/Optics/article.tex:10:1: info: defines \@n1 (n1)
+tests/Optics/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land \neg (y=x)\Rightarrow (\neg (x=0)\land \neg (y=0))\land \neg (\frac{1}{x}-\frac{1}{y}=0))
+tests/Optics/article.tex:11:1: info: defines \@n2 (n2)
+tests/Optics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \neg (x=0))
+tests/Optics/article.tex:12:1: info: defines \@n3 (n3)
+tests/Optics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (100=0)\land \neg (y=0))
+tests/Optics/article.tex:13:1: info: defines \@n4 (n4)
+tests/Optics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land x\,y\le 1\,z\Rightarrow (\forall s\in \mathbb{R},\ (0\le s\Rightarrow \neg (2=0))\land (0\le s\land s\le \frac{\pi}{2}\Rightarrow \neg (1\,z=0)))\land (\exists s\in \mathbb{R},\ ((0\le s\land s\le \frac{\pi}{2})\land \sin(s)=\frac{x\,y}{1\,z})\land (\forall t\in \mathbb{R},\ (0\le t\land t\le \frac{\pi}{2})\land \sin(t)=\frac{x\,y}{1\,z}\Rightarrow t=s))))
+tests/Optics/article.tex:14:1: info: defines \@n5 (n5)
+tests/Optics/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land x\,y\le 1\,z\Rightarrow (\forall s\in \mathbb{R},\ (0\le s\Rightarrow \neg (2=0))\land (0\le s\land s\le \frac{\pi}{2}\Rightarrow \neg (1\,z=0)))\land (\exists s\in \mathbb{R},\ ((0\le s\land s\le \frac{\pi}{2})\land \sin(s)=\frac{x\,y}{1\,z})\land (\forall t\in \mathbb{R},\ (0\le t\land t\le \frac{\pi}{2})\land \sin(t)=\frac{x\,y}{1\,z}\Rightarrow t=s))))
+tests/Optics/article.tex:15:1: info: defines \@n6 (n6)
+tests/Optics/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land x\,y\le 2\,z\Rightarrow (\forall s\in \mathbb{R},\ (0\le s\Rightarrow \neg (2=0))\land (0\le s\land s\le \frac{\pi}{2}\Rightarrow \neg (2\,z=0)))\land (\exists s\in \mathbb{R},\ ((0\le s\land s\le \frac{\pi}{2})\land \sin(s)=\frac{x\,y}{2\,z})\land (\forall t\in \mathbb{R},\ (0\le t\land t\le \frac{\pi}{2})\land \sin(t)=\frac{x\,y}{2\,z}\Rightarrow t=s))))
+tests/Optics/article.tex:16:1: info: defines \@n7 (n7)
+tests/Optics/article.tex:21:1: info: claim 0: \@n0(\frac{3}{2},1,-1)=1
+tests/Optics/article.tex:21:1: info: claim 0 is meaningful if: (\neg (-1=0)\land \neg (1=-1))\land \neg (1=0)\land \neg (2=0)\land 1<\frac{3}{2}
+tests/Optics/article.tex:21:1: info: claim 1: \@n1(1,2)=2
+tests/Optics/article.tex:21:1: info: claim 1 is meaningful if: (0<2\land \neg (2=1))\land \neg (1=0)
+tests/Optics/article.tex:21:1: info: claim 2: \@n2(2,2)=-1
+tests/Optics/article.tex:21:1: info: claim 2 is meaningful if: 0<2
+tests/Optics/article.tex:25:57: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land \neg (y=x)\Rightarrow \frac{1}{y}+\frac{1}{\@n1(x,y)}=\frac{1}{x})
+tests/Optics/article.tex:25:57: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land \neg (y=x)\Rightarrow (\neg (y=0)\land ((0<y\land \neg (y=x))\land \neg (x=0))\land \neg (\@n1(x,y)=0))\land \neg (x=0))
+tests/Optics/article.tex:31:1: info: claim 4: \@n3(1,122)=\frac{1}{100}
+tests/Optics/article.tex:31:1: info: claim 4 is meaningful if: (0<122\land 0<1)\land \neg (100=0)
+tests/Optics/article.tex:31:1: info: claim 5: \@n4(1,1,2)=\frac{\pi}{6}
+tests/Optics/article.tex:31:1: info: claim 5 is meaningful if: ((0<2\land 1\,1\le 1\,2)\land 0<1\land 1\in \mathbb{Z}\land 0\le 1)\land \neg (6=0)
+tests/Optics/article.tex:31:1: info: claim 6: \@n5(1,1,1)=\frac{\pi}{2}
+tests/Optics/article.tex:31:1: info: claim 6 is meaningful if: ((0<1\land 1\,1\le 1\,1)\land 0<1\land 1\in \mathbb{Z}\land 0\le 1)\land \neg (2=0)
+tests/Optics/article.tex:31:1: info: claim 7: \@n6(1,1,1)=\frac{\pi}{6}
+tests/Optics/article.tex:31:1: info: claim 7 is meaningful if: ((0<1\land 1\,1\le 2\,1)\land 0<1\land 1\in \mathbb{Z}\land 0\le 1)\land \neg (6=0)
+tests/Optics/article.tex:35:1: info: claim 8: \@n7(4,\frac{\pi}{3})=1
+tests/Optics/article.tex:35:1: info: claim 8 is meaningful if: 0\le 4\land \neg (3=0)
+tests/Optics/article.tex: 8 definitions, 9 claims
+  text: 8 compiled, 0 failed, 0 prose (of 8)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 13 compiled, 0 failed, 0 prose (of 13)

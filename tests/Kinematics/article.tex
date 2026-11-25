@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={kinematics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $s(t,u,a)$ for the displacement after time $t$ with initial velocity $u$ and acceleration $a$.
+We write $v(t,u,a)$ for the velocity after time $t$ with initial velocity $u$ and acceleration $a$.
+We write $d(u,a)$ for the stopping distance from speed $u$ at deceleration $a$.
+We write $A(w,r)$ for the centripetal acceleration at speed $w$ on a circle of radius $r$.
+We write $T(w,r)$ for the period of uniform circular motion at speed $w$ on a circle of radius $r$.
+We write $X(m,n,x,y)$ for the velocity of the first body after an elastic collision of masses $m$ and $n$ with velocities $x$ and $y$.
+We write $Y(m,n,x,y)$ for the velocity of the second body after an elastic collision of masses $m$ and $n$ with velocities $x$ and $y$.
+We write $W(m,n,x,y)$ for the velocity after a perfectly inelastic collision of masses $m$ and $n$ with velocities $x$ and $y$.
+We write $K(m,n,x,y)$ for the kinetic energy lost in a perfectly inelastic collision of masses $m$ and $n$ with velocities $x$ and $y$.
+
+\section{Motion}
+
+\begin{lemma}\label{suvat}
+Let $t$ be a real number with $t\ge0$. Let $u$ and $a$ be real numbers. Then $v(t,u,a)^2=u^2+2a\,s(t,u,a)$.
+\end{lemma}
+
+\begin{lemma}\label{stopping}
+Let $u$ and $a$ be positive real numbers. Then $s(\frac{u}{a},u,-a)=d(u,a)$.
+\end{lemma}
+
+\begin{lemma}\label{circle}
+$A(2,4)=1$ and $T(\pi,1)=2$.
+\end{lemma}
+
+\section{Collisions}
+
+\begin{lemma}\label{exchange}
+Let $m$ be a positive real number. Let $x$ be a real number. Then $X(m,m,x,0)=0$ and $Y(m,m,x,0)=x$.
+\end{lemma}
+
+\begin{lemma}\label{momentum}
+Let $m$ and $n$ be positive real numbers. Let $x$ and $y$ be real numbers. Then $m\,X(m,n,x,y)+n\,Y(m,n,x,y)=mx+ny$.
+\end{lemma}
+
+\begin{lemma}\label{inelastic}
+$W(1,1,2,0)=1$ and $K(1,1,2,0)=1$.
+\end{lemma}
+
+\end{document}

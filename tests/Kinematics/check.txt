@@ -1,0 +1,36 @@
+tests/Kinematics/article.tex:9:1: info: defines \@n0 (n0)
+tests/Kinematics/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \neg (2=0))
+tests/Kinematics/article.tex:10:1: info: defines \@n1 (n1)
+tests/Kinematics/article.tex:11:1: info: defines \@n2 (n2)
+tests/Kinematics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (2\,y=0))
+tests/Kinematics/article.tex:12:1: info: defines \@n3 (n3)
+tests/Kinematics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0)
+tests/Kinematics/article.tex:13:1: info: defines \@n4 (n4)
+tests/Kinematics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (x=0))
+tests/Kinematics/article.tex:14:1: info: defines \@n5 (n5)
+tests/Kinematics/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \neg (x+y=0)))
+tests/Kinematics/article.tex:15:1: info: defines \@n6 (n6)
+tests/Kinematics/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \neg (x+y=0)))
+tests/Kinematics/article.tex:16:1: info: defines \@n7 (n7)
+tests/Kinematics/article.tex:16:1: info: \@n7 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \neg (x+y=0)))
+tests/Kinematics/article.tex:17:1: info: defines \@n8 (n8)
+tests/Kinematics/article.tex:17:1: info: \@n8 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \neg (2\,(x+y)=0)))
+tests/Kinematics/article.tex:22:73: info: claim 0: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0\le z\Rightarrow {\@n1(z,x,y)}^{2}={x}^{2}+2\,y\,\@n0(z,x,y)
+tests/Kinematics/article.tex:26:43: info: claim 1: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n0(\frac{x}{y},x,-y)=\@n2(x,y))
+tests/Kinematics/article.tex:26:43: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\neg (y=0)\land 0\le \frac{x}{y})\land 0<y\land 0\le x)
+tests/Kinematics/article.tex:30:1: info: claim 2: \@n3(2,4)=1
+tests/Kinematics/article.tex:30:1: info: claim 2 is meaningful if: 0<4
+tests/Kinematics/article.tex:30:1: info: claim 3: \@n4(\pi,1)=2
+tests/Kinematics/article.tex:30:1: info: claim 3 is meaningful if: 0<1\land 0<\pi
+tests/Kinematics/article.tex:36:62: info: claim 4: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \@n5(y,y,x,0)=0
+tests/Kinematics/article.tex:36:62: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \@n6(y,y,x,0)=x
+tests/Kinematics/article.tex:40:76: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow z\,\@n5(z,s,x,y)+s\,\@n6(z,s,x,y)=z\,x+s\,y)
+tests/Kinematics/article.tex:40:76: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow (0<s\land 0<z)\land 0<s\land 0<z)
+tests/Kinematics/article.tex:44:1: info: claim 7: \@n7(1,1,2,0)=1
+tests/Kinematics/article.tex:44:1: info: claim 7 is meaningful if: 0<1\land 0<1
+tests/Kinematics/article.tex:44:1: info: claim 8: \@n8(1,1,2,0)=1
+tests/Kinematics/article.tex:44:1: info: claim 8 is meaningful if: 0<1\land 0<1
+tests/Kinematics/article.tex: 9 definitions, 9 claims
+  text: 9 compiled, 0 failed, 0 prose (of 9)
+  results: 13 compiled, 0 failed, 0 prose (of 13)
+  all: 22 compiled, 0 failed, 0 prose (of 22)

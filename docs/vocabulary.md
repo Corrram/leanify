@@ -372,7 +372,11 @@ Further fields cover other branches of mathematics:
 * `electromagnetism`: charges, fields, capacitors, wires, cyclotrons;
 * `polyhedra`: Euler's formula and the Platonic solids;
 * `betting`: odds, the Kelly criterion, margins;
-* `surfaces`: Euler characteristic, genus, curvature.
+* `surfaces`: Euler characteristic, genus, curvature;
+* `graphcounts`: counting edges, spanning trees and colourings of standard graphs;
+* `kinematics`: accelerated and circular motion, collisions;
+* `optics`: lenses, diffraction, polarization;
+* `pharmacokinetics`: the one-compartment model.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

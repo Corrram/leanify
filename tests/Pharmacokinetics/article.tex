@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={pharmacokinetics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $C(t,D,V,k)$ for the concentration at time $t$ after an intravenous dose $D$ with volume of distribution $V$ and elimination rate $k$.
+We write $L(k,V)$ for the clearance for the elimination rate $k$ and the volume of distribution $V$.
+We write $h(V,c)$ for the elimination half-life for the volume of distribution $V$ and the clearance $c$.
+We write $A(D,c)$ for the area under the curve of the dose $D$ with clearance $c$.
+We write $S(D,\tau,F,c)$ for the average steady-state concentration of the dose $D$ every $\tau$ with bioavailability $F$ and clearance $c$.
+We write $R(k,\tau)$ for the accumulation factor for the elimination rate $k$ and the dosing interval $\tau$.
+We write $W(x,V,F)$ for the loading dose for the target concentration $x$ with volume of distribution $V$ and bioavailability $F$.
+
+\section{One compartment}
+
+\begin{lemma}\label{halflife}
+Let $D$, $V$ and $k$ be positive real numbers. Then $C(h(V,L(k,V)),D,V,k)=\frac{D}{2V}$.
+\end{lemma}
+
+\begin{lemma}\label{steady}
+Let $D$, $V$, $k$ and $\tau$ be positive real numbers. Then $S(D,\tau,1,L(k,V))\tau=A(D,L(k,V))$.
+\end{lemma}
+
+\begin{lemma}\label{doses}
+$W(2,3,\frac12)=12$ and $R(1,\log2)=2$.
+\end{lemma}
+
+\end{document}

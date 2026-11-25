@@ -133,3 +133,7 @@ article-reader/
 /tests/Polyhedra/article.leanify.*
 /tests/Betting/article.leanify.*
 /tests/Surfaces/article.leanify.*
+/tests/GraphCounts/article.leanify.*
+/tests/Kinematics/article.leanify.*
+/tests/Optics/article.leanify.*
+/tests/Pharmacokinetics/article.leanify.*

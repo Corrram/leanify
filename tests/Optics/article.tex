@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={optics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $f(n,a,b)$ for the focal length by the lensmaker's equation for refractive index $n$ and radii $a$ and $b$.
+We write $D(f,o)$ for the image distance of a thin lens of focal length $f$ for the object distance $o$.
+We write $M(o,i)$ for the magnification for the object distance $o$ and the image distance $i$.
+We write $R(l,d)$ for the Rayleigh angle for the wavelength $l$ and the aperture diameter $d$.
+We write $G(m,l,d)$ for the angle of the $m$th order of a grating for the wavelength $l$ and the spacing $d$.
+We write $S(m,l,a)$ for the angle of the $m$th minimum of a single slit for the wavelength $l$ and the width $a$.
+We write $B(n,l,d)$ for the Bragg angle of order $n$ for the wavelength $l$ and the spacing $d$.
+We write $P(x,t)$ for the transmitted intensity for the intensity $x$ at the polarizer angle $t$.
+
+\section{Lenses}
+
+\begin{lemma}\label{lens}
+$f(\frac32,1,-1)=1$, $D(1,2)=2$ and $M(2,2)=-1$.
+\end{lemma}
+
+\begin{lemma}\label{thin}
+Let $f$ and $o$ be positive real numbers with $o\ne f$. Then $\frac{1}{o}+\frac{1}{D(f,o)}=\frac{1}{f}$.
+\end{lemma}
+
+\section{Diffraction and polarization}
+
+\begin{lemma}\label{diffraction}
+$R(1,122)=\frac{1}{100}$, $G(1,1,2)=\frac{\pi}{6}$, $S(1,1,1)=\frac{\pi}{2}$ and $B(1,1,1)=\frac{\pi}{6}$.
+\end{lemma}
+
+\begin{lemma}\label{malus}
+$P(4,\frac{\pi}{3})=1$.
+\end{lemma}
+
+\end{document}

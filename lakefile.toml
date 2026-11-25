@@ -853,3 +853,27 @@ globs = ["Betting.+"]
 name = "Surfaces"
 srcDir = "tests"
 globs = ["Surfaces.+"]
+
+[[lean_lib]]
+# The field graphcounts: counting in graph theory.
+name = "GraphCounts"
+srcDir = "tests"
+globs = ["GraphCounts.+"]
+
+[[lean_lib]]
+# The field kinematics: kinematics and collisions.
+name = "Kinematics"
+srcDir = "tests"
+globs = ["Kinematics.+"]
+
+[[lean_lib]]
+# The field optics: optics.
+name = "Optics"
+srcDir = "tests"
+globs = ["Optics.+"]
+
+[[lean_lib]]
+# The field pharmacokinetics: pharmacokinetics.
+name = "Pharmacokinetics"
+srcDir = "tests"
+globs = ["Pharmacokinetics.+"]

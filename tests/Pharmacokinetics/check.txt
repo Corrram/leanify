@@ -1,0 +1,25 @@
+tests/Pharmacokinetics/article.tex:9:1: info: defines \@n0 (n0)
+tests/Pharmacokinetics/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \neg (z=0))))
+tests/Pharmacokinetics/article.tex:10:1: info: defines \@n1 (n1)
+tests/Pharmacokinetics/article.tex:11:1: info: defines \@n2 (n2)
+tests/Pharmacokinetics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0))
+tests/Pharmacokinetics/article.tex:12:1: info: defines \@n3 (n3)
+tests/Pharmacokinetics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0))
+tests/Pharmacokinetics/article.tex:13:1: info: defines \@n4 (n4)
+tests/Pharmacokinetics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z\le 1\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \neg (s\,y=0))))
+tests/Pharmacokinetics/article.tex:14:1: info: defines \@n5 (n5)
+tests/Pharmacokinetics/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (1-\exp(-(x\,y))=0))
+tests/Pharmacokinetics/article.tex:15:1: info: defines \@n6 (n6)
+tests/Pharmacokinetics/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z\le 1\Rightarrow \neg (z=0)))
+tests/Pharmacokinetics/article.tex:20:48: info: claim 0: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \@n0(\@n2(y,\@n1(z,y)),x,y,z)=\frac{x}{2\,y}))
+tests/Pharmacokinetics/article.tex:20:48: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (0<z\land 0<y\land 0\le x\land ((0<y\land 0<z)\land 0<\@n1(z,y))\land 0\le \@n2(y,\@n1(z,y)))\land \neg (2\,y=0)))
+tests/Pharmacokinetics/article.tex:24:56: info: claim 1: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \@n4(x,s,1,\@n1(z,y))\,s=\@n3(x,\@n1(z,y)))))
+tests/Pharmacokinetics/article.tex:24:56: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow ((0<y\land 0<z)\land 0<\@n1(z,y)\land ((0<1\land 1\le 1)\land 0<s\land 0\le x)\land 0<y\land 0<z)\land (0<y\land 0<z)\land 0<\@n1(z,y)\land 0\le x\land 0<y\land 0<z)))
+tests/Pharmacokinetics/article.tex:28:1: info: claim 2: \@n6(2,3,\frac{1}{2})=12
+tests/Pharmacokinetics/article.tex:28:1: info: claim 2 is meaningful if: \neg (2=0)\land (0<\frac{1}{2}\land \frac{1}{2}\le 1)\land (0<3\land 0\le 2)\land \neg (2=0)
+tests/Pharmacokinetics/article.tex:28:1: info: claim 3: \@n5(1,\log(2))=2
+tests/Pharmacokinetics/article.tex:28:1: info: claim 3 is meaningful if: 0<2\land 0<\log(2)\land 0<1\land 0<2
+tests/Pharmacokinetics/article.tex: 7 definitions, 4 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 12 compiled, 0 failed, 0 prose (of 12)
