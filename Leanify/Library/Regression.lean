@@ -46,12 +46,12 @@ def reg (name : Phrase) (needY : Bool) (body : B → B → B → B) (doc : Strin
 def vocab : Vocab where
   notions := [
     { name := phrase!"fitted value at $v$ of the regression of $v$ on $v$ for the first $v$ terms",
-      ty := .real ⟶ F ⟶ F ⟶ .real ⟶ .real, doms := [none, none, none, dom4 .real fun _ y x n => ok n x],
+      ty := .real ⟶ F ⟶ F ⟶ .real ⟶ .real, doms := [none, none, none, dom4 .real fun _ _ x n => ok n x],
       doc := "`b̂₀ + b̂₁ t` for the least-squares line",
       value := close <| lamR fun t => lamT F (fun _ => tt) fun y => lamT F (fun _ => tt) fun x =>
         lamT .real (fun n => ok n x) fun n => fitted n x y t },
     { name := phrase!"$v$th residual of the regression of $v$ on $v$ for the first $v$ terms",
-      ty := .real ⟶ F ⟶ F ⟶ .real ⟶ .real, doms := [none, none, none, dom4 .real fun _ y x n => ok n x],
+      ty := .real ⟶ F ⟶ F ⟶ .real ⟶ .real, doms := [none, none, none, dom4 .real fun _ _ x n => ok n x],
       doc := "`y_i - ŷ_i`",
       value := close <| lamR fun i => lamT F (fun _ => tt) fun y => lamT F (fun _ => tt) fun x =>
         lamT .real (fun n => ok n x) fun n => resid n x y i },

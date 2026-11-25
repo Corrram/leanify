@@ -45,7 +45,7 @@ def vocab : Vocab where
       doc := "`W log₂(1 + s)` bits per second (Shannon–Hartley)",
       value := close <| lamT .real pos fun w => lamT .real (fun s => le (num 0) s) fun s => mul w (log2 (add (num 1) s)) },
     { name := phrase!"rate-distortion function of the Bernoulli source with parameter $v$ at distortion $v$",
-      ty := .real ⟶ .real ⟶ .real, doms := [dom1 .real prob, dom2 .real fun p d => and (le (num 0) d) (le d (num 1))],
+      ty := .real ⟶ .real ⟶ .real, doms := [dom1 .real prob, dom2 .real fun _ d => and (le (num 0) d) (le d (num 1))],
       doc := "`h(p) - h(D)` for `D < min(p, 1-p)`, and `0` otherwise",
       value := close <| lamT .real prob fun p => lamT .real (fun d => and (le (num 0) d) (le d (num 1))) fun d =>
         cases (lt d (app2 (prim .min) p (sub (num 1) p))) (sub (h p) (h d)) (num 0) },
