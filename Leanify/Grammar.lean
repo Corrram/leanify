@@ -4340,6 +4340,21 @@ def supposeSent (cs : List Chunk) : Option Sent := do
     let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
     let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
     if ws.isEmpty || !isEnd (r2.drop ws.length) then none else some (.noun (ws ++ [.m v]))
+  -- `Suppose $f\colon\mathbb{R}\to\mathbb{R}$ is differentiable [and $f'$ is bounded]`: the
+  -- map with the adjectives, then the other hypotheses (the binder in `many`, see `supposeIn`)
+  let sigForm : Option (Bind × List Chunk) := do
+    let (ts, r1) ← mathChunk r
+    let _ ← Math.parseSig ts
+    let r2 ← kw [w!"is"] r1
+    let ws := r2.takeWhile (fun (c : Chunk) => match c with
+      | .w w => w != w!"and" && w != w!"such" && w != w!"with" | .p 45 => true | _ => false)
+    if ws.isEmpty || (kw [w!"a"] r2).isSome || (kw [w!"an"] r2).isSome then none
+    some (Bind.noun (ws ++ [.w w!"map", .m ts]), r2.drop ws.length)
+  if let some (b, rest) := sigForm then
+    if isEnd rest then return .suppose [] additive caseLike contra (some (.many [b]))
+    let r' ← kw [w!"and"] rest
+    let (hs, r1) ← hypClauses 4 r' []
+    if isEnd r1 then return .suppose hs additive caseLike contra (some (.many [b])) else none
   let asBinder := asBinder <|> (plural <|> singular).map Bind.hyp
   let (hs, r1) ← hypClauses 4 r []
   if isEnd r1 then some (.suppose hs additive caseLike contra asBinder) else none

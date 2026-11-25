@@ -55,7 +55,9 @@ tests/Series/article.tex:113:1: info: claim 26: \forall x\in \mathbb{R},\ \foral
 tests/Series/article.tex:113:1: info: claim 26 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (0<x\land 0<y)\land x+y=1\Rightarrow \neg (4=0)
 tests/Series/article.tex:117:61: info: claim 27: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow 0<y(s))\Rightarrow 0<y(1))
 tests/Series/article.tex:117:61: info: claim 27 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow 0<y(s))\Rightarrow 1\in \mathbb{Z}\land 1\le 1\land 1\le x)
-tests/Series/article.tex: 10 definitions, 28 claims
+tests/Series/article.tex:121:81: info: claim 28: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow \operatorname{bounded}((y\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}s}x(s)\big|_{s=y}))\text{ on }\{y:\top\}\Rightarrow \operatorname{Lipschitz}(x)\text{ on }\{y:\top\}
+tests/Series/article.tex:121:81: info: claim 28 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R},\ \exists z\in \mathbb{R},\ ((s\in \mathbb{R}\mapsto x(s)))'(y)=z\text{ within }(s\in \mathbb{R}\mapsto \top)\land (\forall s\in \mathbb{R},\ ((t\in \mathbb{R}\mapsto x(t)))'(y)=s\text{ within }(t\in \mathbb{R}\mapsto \top)\Rightarrow s=z))
+tests/Series/article.tex: 10 definitions, 29 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 42 compiled, 0 failed, 0 prose (of 42)
-  all: 52 compiled, 0 failed, 0 prose (of 52)
+  results: 44 compiled, 0 failed, 0 prose (of 44)
+  all: 54 compiled, 0 failed, 0 prose (of 54)

@@ -5426,6 +5426,12 @@ def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Boo
     | some (.every vs _) => vs.allM fun v => do pure (← Elab.lookupGlob v).isSome
     | _ => pure false
   match asBinder with
+  -- (a map bound with its adjectives, then the other hypotheses: `Suppose $f\colon A\to B$ is
+  -- differentiable and $f'$ is bounded.`)
+  | some (.many [b]) =>
+    if contra then fail E.unsupported
+    discard <| assumeIn c [b] []
+    if hyps.isEmpty then return ([], [])
   | some b => if !contra && !defined && newVars b then return ← assumeIn c [b] [] else pure ()
   | none => pure ()
   let item := c.ctx.items.headD 0
