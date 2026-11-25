@@ -3637,7 +3637,14 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let (vs, _) ← binderMath ts
     let [v] := vs | none
     let r1 ← kw [w!"be"] r
-    if (kw [w!"a"] r1).isSome || (kw [w!"an"] r1).isSome || (kw [w!"the"] r1).isSome then none else
+    -- (`$g\in G$ be an involution`: a notion of the article's, one word, of the elements)
+    let r1 ← match kw [w!"a"] r1 <|> kw [w!"an"] r1 with
+      | some (.w n :: rest) =>
+        let ends := match rest with | [] | .p _ :: _ => true | .w w :: _ => w == w!"and" | _ => false
+        if ends && ![w!"number", w!"integer", w!"point", w!"element", w!"vector", w!"function", w!"map", w!"prime",
+            w!"set", w!"subset", w!"matrix", w!"polynomial", w!"sequence"].contains n then some (.w n :: rest) else none
+      | some _ => none
+      | none => if (kw [w!"the"] r1).isSome then none else some r1
     let i ← ts.findIdx? (· == .cmd w!"in")
     let dts := ts.drop (i + 1)
     let body := r1.takeWhile fun (c : Chunk) => match c with

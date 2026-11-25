@@ -3736,6 +3736,37 @@ def notionBody (sc : Scope) (cond : NotionCond) : M Tm := do
 `NAME` and `ABBR`. -/
 def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond)
     (clauseBody : Option (Scope → M Tm) := none) : M (List Nat × List Nat) := do
+  let st0 ← get
+  -- `Let $G$ be a group. An element $g\in G$ is called NAME if …`: a notion of the objects
+  -- of the result's variables (`G`): an object is NAME if it is, for some values of them
+  let env := st0.envBinders
+  let viaEnv ← match subj with
+    | [.m [.id _]] => pure none
+    | np =>
+      if env.isEmpty then pure none else
+      tryCatch (do let _ ← nounPhrase np; set st0; pure none) fun e => do
+        set st0
+        if e.code != E.undefined && e.code != E.free then throw e
+        let outer := scopeOf env
+        let s ← nounPhrase np outer
+        if s.name.isEmpty then fail E.unsupported
+        let sc := (s.name, s.ty) :: outer
+        let body ← match cond, clauseBody with
+          | .clause _, some cb => cb sc
+          | _, _ => notionBody sc cond
+        let t := Tm.and (holdsAt s.pred (.loc 0)) body
+        -- (the object outermost, the variables inside: `λ g, ∃ G, … ∧ t`)
+        let n := env.length
+        let t' := Tm.subst (.loc n) 0 t
+        let ex := env.foldr (fun b acc => Tm.ex b.ty (match b.pred with
+          | some q => .and (.app q (.loc 0)) acc
+          | none => acc)) t'
+        pure (some (s, ex))
+  if let some (s, ex) := viaEnv then
+    let i ← addGlob ⟨[], .fn s.ty .prop, [none], false, 1⟩ (.lam s.ty .tt ex)
+    let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
+    modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
+    return ([i], [])
   let s ← match subj with
     | [.m [.id v]] => match (← get).notionSubject with
       | some b => if b.name == v then pure b else fail E.free v
