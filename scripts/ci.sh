@@ -102,7 +102,8 @@ checks() {
 
   group "The fields that an article needs are found by trying them"
   $LEANIFY fields tests/Graphs/article.tex --vocab core > "$TMP/fields.txt" || fail "leanify fields"
-  grep -q "^  graphs: 18 more sentences" "$TMP/fields.txt" || { cat "$TMP/fields.txt"; fail "tests/Graphs: the field graphs is not suggested"; }
+  # (the count grows with the article: any number of further sentences)
+  grep -q "^  graphs: [0-9][0-9]* more sentences" "$TMP/fields.txt" || { cat "$TMP/fields.txt"; fail "tests/Graphs: the field graphs is not suggested"; }
   $LEANIFY fields tests/Graphs/article.tex > "$TMP/fields.txt" || fail "leanify fields"
   grep -q "with vocab=graphs" "$TMP/fields.txt" || fail "tests/Graphs: the field of the preamble is not read"
   grep -q "no other field of the vocabulary reads more" "$TMP/fields.txt" || fail "tests/Graphs: a further field is suggested"
