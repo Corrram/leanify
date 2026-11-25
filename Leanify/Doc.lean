@@ -550,8 +550,8 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       -- formula (not after `of`: `the limit of the sequence $a$` is a notion's)
       else if v == w!"the" && (prevWord == some w!"then" || prevWord == some w!"that" ||
           prevWord == some w!"and" || prevWord == some w!"if" || (prev.map (·.tok == .punct 44)).getD false ||
-          (prev.isNone && (match ts with | k :: _ => lw k == some w!"sequence" | _ => false))) && (match ts with
-          | k :: n :: _ => (lw k == some w!"sequence" || lw k == some w!"number" || lw k == some w!"integer") && n.tok == .mopen
+          (prev.isNone && (match ts with | k :: _ => lw k == some w!"sequence" || lw k == some w!"series" | _ => false))) && (match ts with
+          | k :: n :: _ => (lw k == some w!"sequence" || lw k == some w!"series" || lw k == some w!"number" || lw k == some w!"integer") && n.tok == .mopen
           | _ => false) then standardForms f there cond prev (ts.drop 1)
       -- `If $φ$ then $ψ$`
       else if v == w!"then" && afterMath then

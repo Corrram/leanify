@@ -3680,6 +3680,15 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
             then upTo else []
           | _ => []
       | _ => []
+    -- `$f\colon[0,1]\to\mathbb{R}$ be continuous [with …]`: adjectives without a noun, of the map
+    let bare : Option (List Chunk × List Chunk) := do
+      let r1 ← kw [w!"be"] r
+      if (kw [w!"a"] r1).isSome || (kw [w!"an"] r1).isSome || (kw [w!"the"] r1).isSome then none
+      let ws := r1.takeWhile (fun (c : Chunk) => match c with
+        | .w w => w != w!"with" && w != w!"such" && w != w!"and" && w != w!"given" && w != w!"defined" | .p 45 => true | _ => false)
+      if ws.isEmpty then none
+      some (ws, r1.drop ws.length)
+    let adj := adj <|> bare
     match adj with
     | some (adjs, r2) => let post := postOf r2; some (.noun (adjs ++ [.w w!"map", .m ts] ++ post), r2.drop post.length)
     | none =>
