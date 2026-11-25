@@ -705,6 +705,30 @@ srcDir = "tests"
 globs = ["Inventory.+"]
 
 [[lean_lib]]
+# The field algorithms: analysis of algorithms.
+name = "Algorithms"
+srcDir = "tests"
+globs = ["Algorithms.+"]
+
+[[lean_lib]]
+# The field populationgenetics: population genetics.
+name = "PopulationGenetics"
+srcDir = "tests"
+globs = ["PopulationGenetics.+"]
+
+[[lean_lib]]
+# The field waves: waves and optics.
+name = "Waves"
+srcDir = "tests"
+globs = ["Waves.+"]
+
+[[lean_lib]]
+# The field relativity: special relativity.
+name = "Relativity"
+srcDir = "tests"
+globs = ["Relativity.+"]
+
+[[lean_lib]]
 # Conditions in binders, with the core vocabulary.
 name = "Conditions"
 srcDir = "tests"

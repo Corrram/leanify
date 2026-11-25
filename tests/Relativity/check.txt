@@ -1,0 +1,35 @@
+tests/Relativity/article.tex:9:1: info: defines \gamma (gamma)
+tests/Relativity/article.tex:9:1: info: \gamma is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\land \lvert x\rvert<y\Rightarrow (\neg (y\,y=0)\land \neg (2=0))\land \neg ({(1-\frac{x\,x}{y\,y})}^{\frac{1}{2}}=0)
+tests/Relativity/article.tex:10:1: info: defines \eta (eta)
+tests/Relativity/article.tex:10:1: info: \eta is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\land \lvert x\rvert<y\Rightarrow \neg (y-x=0)\land \neg (2=0)
+tests/Relativity/article.tex:11:1: info: defines \@n2 (n2)
+tests/Relativity/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\land \lvert x\rvert<y\Rightarrow \neg (y-x=0)\land \neg (2=0)
+tests/Relativity/article.tex:12:1: info: defines \@n3 (n3)
+tests/Relativity/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\land \lvert x\rvert<z\land \lvert y\rvert<z\Rightarrow \neg (z\,z=0)\land \neg (1+\frac{x\,y}{z\,z}=0)
+tests/Relativity/article.tex:13:1: info: defines \@n4 (n4)
+tests/Relativity/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\land \lvert y\rvert<z\Rightarrow (\neg (z\,z=0)\land \neg (2=0))\land \neg ({(1-\frac{y\,y}{z\,z})}^{\frac{1}{2}}=0))
+tests/Relativity/article.tex:14:1: info: defines \@n5 (n5)
+tests/Relativity/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\land \lvert y\rvert<z\Rightarrow ((\neg (z\,z=0)\land \neg (2=0))\land \neg ({(1-\frac{y\,y}{z\,z})}^{\frac{1}{2}}=0))\land \neg (\frac{1}{{(1-\frac{y\,y}{z\,z})}^{\frac{1}{2}}}=0))
+tests/Relativity/article.tex:15:1: info: defines \@n6 (n6)
+tests/Relativity/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\land \lvert y\rvert<z\Rightarrow (\neg (z\,z=0)\land \neg (2=0))\land \neg ({(1-\frac{y\,y}{z\,z})}^{\frac{1}{2}}=0))
+tests/Relativity/article.tex:16:1: info: defines \@n7 (n7)
+tests/Relativity/article.tex:16:1: info: \@n7 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\land \lvert y\rvert<z\Rightarrow (\neg (z\,z=0)\land \neg (2=0))\land \neg ({(1-\frac{y\,y}{z\,z})}^{\frac{1}{2}}=0))
+tests/Relativity/article.tex:17:1: info: defines \@n8 (n8)
+tests/Relativity/article.tex:22:1: info: claim 0: \gamma(0,1)=1
+tests/Relativity/article.tex:22:1: info: claim 0 is meaningful if: 0<1\land \lvert 0\rvert<1
+tests/Relativity/article.tex:22:1: info: claim 1: \gamma(\frac{3}{5},1)=\frac{5}{4}
+tests/Relativity/article.tex:22:1: info: claim 1 is meaningful if: ((0<1\Rightarrow \neg (5=0))\land (0<1\land \lvert \frac{3}{5}\rvert<1)\land \neg (5=0))\land \neg (4=0)
+tests/Relativity/article.tex:22:1: info: claim 2: \@n3(\frac{1}{2},\frac{1}{2},1)=\frac{4}{5}
+tests/Relativity/article.tex:22:1: info: claim 2 is meaningful if: ((0<1\Rightarrow \neg (2=0)\land (\lvert \frac{1}{2}\rvert<1\Rightarrow \neg (2=0)))\land (0<1\land \lvert \frac{1}{2}\rvert<1\land \lvert \frac{1}{2}\rvert<1)\land \neg (2=0)\land \neg (2=0))\land \neg (5=0)
+tests/Relativity/article.tex:22:1: info: claim 3: \@n2(\frac{3}{5},1)=2
+tests/Relativity/article.tex:22:1: info: claim 3 is meaningful if: (0<1\Rightarrow \neg (5=0))\land (0<1\land \lvert \frac{3}{5}\rvert<1)\land \neg (5=0)
+tests/Relativity/article.tex:26:94: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \lvert y\rvert<x\land \lvert z\rvert<x\Rightarrow \eta(\@n3(y,z,x),x)=\eta(y,x)+\eta(z,x))
+tests/Relativity/article.tex:26:94: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \lvert y\rvert<x\land \lvert z\rvert<x\Rightarrow ((0<x\Rightarrow 0<x\land \lvert y\rvert<x\land \lvert z\rvert<x)\land (0<x\land \lvert \@n3(y,z,x)\rvert<x)\land 0<x\land \lvert y\rvert<x\land \lvert z\rvert<x)\land (0<x\land \lvert y\rvert<x)\land 0<x\land \lvert z\rvert<x)
+tests/Relativity/article.tex:30:108: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\Rightarrow (\forall s\in \mathbb{R},\ \lvert s\rvert<x\Rightarrow \@n4(y,s,x)\,\@n5(z,s,x)=y\,z)))
+tests/Relativity/article.tex:30:108: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\Rightarrow (\forall s\in \mathbb{R},\ \lvert s\rvert<x\Rightarrow ((0<x\land \lvert s\rvert<x)\land 0\le y)\land (0<x\land \lvert s\rvert<x)\land 0\le z)))
+tests/Relativity/article.tex:36:82: info: claim 6: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \lvert z\rvert<x\Rightarrow {\@n6(y,z,x)}^{2}={\@n8(y,x)}^{2}+{\@n7(y,z,x)}^{2}\,{x}^{2}))
+tests/Relativity/article.tex:36:82: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \lvert z\rvert<x\Rightarrow ((0<x\land \lvert z\rvert<x)\land 0<y)\land (0<x\land 0<y)\land (0<x\land \lvert z\rvert<x)\land 0<y))
+tests/Relativity/article.tex: 9 definitions, 7 claims
+  text: 9 compiled, 0 failed, 0 prose (of 9)
+  results: 10 compiled, 0 failed, 0 prose (of 10)
+  all: 19 compiled, 0 failed, 0 prose (of 19)

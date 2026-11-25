@@ -33,7 +33,10 @@ except a notion whose meanings take arguments of different types, which the type
     * `odes`
     * `epidemics`
     * `variations`
-    * `mechanics`
+    * `physics`
+      * `mechanics`
+      * `waves`
+      * `relativity`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -84,6 +87,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `branching`
         * `randomwalks`
         * `extremes`
+        * `populationgenetics`
       * `samples`
       * `regression`
       * `timeseries`
@@ -106,6 +110,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `graphs`
     * `recurrences`
     * `codes`
+    * `algorithms`
   * `numbertheory`
     * `numbers`
     * `arithmetic`
@@ -120,19 +125,20 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `waves`, `relativity`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `waves`, `relativity`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
-| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
+| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
+| `physics` | `mechanics`, `waves`, `relativity` | `mechanics`, `waves`, `relativity` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
-| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
+| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
 
 ## `core`
 
@@ -2692,4 +2698,62 @@ except a notion whose meanings take arguments of different types, which the type
 | critical fractile for underage cost $a$ and overage cost $b$ | ℝ → ℝ → ℝ | `c_u/(c_u + c_o)` |
 | newsvendor quantity for uniform demand on $[a,b]$ with underage cost $c$ and overage cost $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `a + (b-a) c_u/(c_u + c_o)`: the critical-fractile quantile of the demand |
 | newsvendor quantity for exponential demand with mean $a$, underage cost $b$ and overage cost $c$ | ℝ → ℝ → ℝ → ℝ | `μ log((c_u + c_o)/c_o)` |
+
+## `algorithms`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of comparisons of binary search on $a$ elements | ℝ → ℝ | `⌊log₂ n⌋ + 1`, in the worst case |
+| number of comparisons of insertion sort on $a$ elements | ℝ → ℝ | `n(n-1)/2`, in the worst case |
+| number of comparisons of merge sort on $a$ elements | ℝ → ℝ | `n⌈log₂ n⌉ - 2^{⌈log₂ n⌉} + 1`, in the worst case |
+| expected number of comparisons of quicksort on $a$ elements | ℝ → ℝ | `2(n+1)H_n - 4n`, for a uniformly random order of distinct keys |
+| lower bound for sorting $a$ elements | ℝ → ℝ | `⌈log₂ n!⌉`: comparisons needed in the worst case by any comparison sort |
+| number of comparisons to find the maximum of $a$ elements | ℝ → ℝ | `n - 1` |
+| number of comparisons to find the maximum and the minimum of $a$ elements | ℝ → ℝ | `⌈3n/2⌉ - 2` |
+| number of moves of the tower of hanoi with $a$ disks | ℝ → ℝ | `2^n - 1` |
+| critical exponent for $a$ subproblems with shrinking factor $b$ | ℝ → ℝ → ℝ | `log a / log b` = `log_b a`, for `T(n) = a T(n/b) + f(n)` (master theorem) |
+| number of nodes of a perfect binary tree of height $a$ | ℝ → ℝ | `2^{h+1} - 1` |
+| minimal height of a binary tree with $a$ nodes | ℝ → ℝ | `⌊log₂ n⌋` |
+
+## `populationgenetics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| homozygote frequency for an allele with frequency $a$ | ℝ → ℝ | `p²` (Hardy–Weinberg) |
+| heterozygote frequency for an allele with frequency $a$ | ℝ → ℝ | `2p(1-p)` (Hardy–Weinberg, two alleles) |
+| frequency after selection of an allele with frequency $a$ and relative fitness $b$ | ℝ → ℝ → ℝ | `pr/(pr + 1 - p)`: one generation of haploid selection |
+| fixation probability of a mutant with fitness $a$ in a moran population of size $b$ | ℝ → ℝ → ℝ | `(1 - 1/r)/(1 - 1/r^N)`, and `1/N` for `r = 1`: one mutant among `N` individuals |
+| kimura fixation probability for selection coefficient $a$ and population size $b$ | ℝ → ℝ → ℝ | `(1 - e^{-2s})/(1 - e^{-4Ns})`, and `1/(2N)` for `s = 0` (diffusion approximation, one new mutant) |
+| heterozygosity after $a$ generations in a population of size $b$ with initial heterozygosity $c$ | ℝ → ℝ → ℝ → ℝ | `H(1 - 1/(2N))^t` (Wright–Fisher drift) |
+| effective size of a population with $a$ males and $b$ females | ℝ → ℝ → ℝ | `4N_m N_f/(N_m + N_f)` |
+| equilibrium frequency for the forward mutation rate $a$ and the backward mutation rate $b$ | ℝ → ℝ → ℝ | `ν/(μ + ν)`: the frequency of the allele that mutates away at rate `μ` and back at rate `ν` |
+
+## `waves`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| wavelength for wave speed $a$ and frequency $b$ | ℝ → ℝ → ℝ | `c/f` |
+| doppler frequency for source frequency $a$, wave speed $b$, observer speed $c$ and source speed $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `f (c + u)/(c - w)`: observer and source moving towards each other at speeds `u` and `w` |
+| beat frequency of $a$ and $b$ | ℝ → ℝ → ℝ | `\|f₁ - f₂\|` |
+| frequency of the $a$ th harmonic of a string of length $b$ with wave speed $c$ | ℝ → ℝ → ℝ → ℝ | `nc/(2L)`, with both ends fixed |
+| wave speed on a string with tension $a$ and linear density $b$ | ℝ → ℝ → ℝ | `√(T/μ)` |
+| angle of refraction for the angle of incidence $a$ and the refractive indices $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the `t ∈ [0, π/2]` with `n₁ sin a = n₂ sin t` (Snell's law), short of total internal reflection |
+| critical angle for the refractive indices $a$ and $b$ | ℝ → ℝ → ℝ | `arcsin(n₂/n₁)`, for `n₂ < n₁`: the `t ∈ [0, π/2]` with `sin t = n₂/n₁` |
+| brewster angle for the refractive indices $a$ and $b$ | ℝ → ℝ → ℝ | `arctan(n₂/n₁)`: the `t ∈ (0, π/2)` with `tan t = n₂/n₁` |
+| level in decibels of the power ratio $a$ | ℝ → ℝ | `10 log₁₀ r` |
+| focal length of a thin lens with object distance $a$ and image distance $b$ | ℝ → ℝ → ℝ | `1/(1/d_o + 1/d_i)` (thin lens equation) |
+
+## `relativity`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| lorentz factor of the speed $a$ with the speed of light $b$ | ℝ → ℝ → ℝ | `1/√(1 - v²/c²)`, for `\|v\| < c` |
+| rapidity of the speed $a$ with the speed of light $b$ | ℝ → ℝ → ℝ | `artanh(v/c) = ½ log((c+v)/(c-v))` |
+| redshift factor of the speed $a$ with the speed of light $b$ | ℝ → ℝ → ℝ | `√((c+v)/(c-v))`: the ratio of received to emitted wavelength, source receding at `v` |
+| relativistic sum of the velocities $a$ and $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `(u + v)/(1 + uv/c²)`, for `\|u\|, \|v\| < c` |
+| dilated time of the proper time $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `γτ` |
+| contracted length of the proper length $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `L/γ` |
+| relativistic energy of the mass $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `γmc²` |
+| relativistic momentum of the mass $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `γmv` |
+| rest energy of the mass $a$ with the speed of light $b$ | ℝ → ℝ → ℝ | `mc²` |
 

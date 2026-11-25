@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={populationgenetics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $P(p)$ for the homozygote frequency for an allele with frequency $p$.
+We write $Q(p)$ for the heterozygote frequency for an allele with frequency $p$.
+We write $w(p,r)$ for the frequency after selection of an allele with frequency $p$ and relative fitness $r$.
+We write $u(r,N)$ for the fixation probability of a mutant with fitness $r$ in a Moran population of size $N$.
+We write $K(s,N)$ for the Kimura fixation probability for selection coefficient $s$ and population size $N$.
+We write $H(t,N,h)$ for the heterozygosity after $t$ generations in a population of size $N$ with initial heterozygosity $h$.
+We write $E(m,f)$ for the effective size of a population with $m$ males and $f$ females.
+We write $q(\mu,\nu)$ for the equilibrium frequency for the forward mutation rate $\mu$ and the backward mutation rate $\nu$.
+
+\section{Hardy--Weinberg}
+
+\begin{lemma}\label{hardy}
+Let $p$ be a real number with $0\le p\le1$. Then $P(p)+Q(p)+P(1-p)=1$.
+\end{lemma}
+
+\section{Selection and drift}
+
+\begin{lemma}\label{fixation}
+$u(1,10)=\frac1{10}$, $u(2,2)=\frac23$, $K(0,5)=\frac1{10}$ and $w(\frac12,2)=\frac23$.
+\end{lemma}
+
+\begin{lemma}\label{drift}
+Let $N$ be a positive integer. Then $H(1,N,1)=1-\frac{1}{2N}$.
+\end{lemma}
+
+\begin{lemma}\label{sizes}
+$E(10,10)=20$ and $q(1,3)=\frac34$.
+\end{lemma}
+
+\end{document}

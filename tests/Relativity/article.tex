@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={relativity}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\gamma(v,c)$ for the Lorentz factor of the speed $v$ with the speed of light $c$.
+We write $\eta(v,c)$ for the rapidity of the speed $v$ with the speed of light $c$.
+We write $z(v,c)$ for the redshift factor of the speed $v$ with the speed of light $c$.
+We write $S(u,v,c)$ for the relativistic sum of the velocities $u$ and $v$ with the speed of light $c$.
+We write $T(t,v,c)$ for the dilated time of the proper time $t$ at the speed $v$ with the speed of light $c$.
+We write $L(l,v,c)$ for the contracted length of the proper length $l$ at the speed $v$ with the speed of light $c$.
+We write $E(m,v,c)$ for the relativistic energy of the mass $m$ at the speed $v$ with the speed of light $c$.
+We write $p(m,v,c)$ for the relativistic momentum of the mass $m$ at the speed $v$ with the speed of light $c$.
+We write $R(m,c)$ for the rest energy of the mass $m$ with the speed of light $c$.
+
+\section{Kinematics}
+
+\begin{lemma}\label{values}
+$\gamma(0,1)=1$, $\gamma(\frac35,1)=\frac54$, $S(\frac12,\frac12,1)=\frac45$ and $z(\frac35,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{rapidity}
+Let $c$ be a positive real number. Let $u$ and $v$ be real numbers with $|u|<c$ and $|v|<c$. Then $\eta(S(u,v,c),c)=\eta(u,c)+\eta(v,c)$.
+\end{lemma}
+
+\begin{lemma}\label{dilation}
+Let $c$ be a positive real number. Let $t$, $l$ and $v$ be real numbers with $t\ge0$, $l\ge0$ and $|v|<c$. Then $T(t,v,c)L(l,v,c)=tl$.
+\end{lemma}
+
+\section{Dynamics}
+
+\begin{lemma}\label{energy}
+Let $c$ and $m$ be positive real numbers. Let $v$ be a real number with $|v|<c$. Then $E(m,v,c)^2=R(m,c)^2+p(m,v,c)^2c^2$.
+\end{lemma}
+
+\end{document}

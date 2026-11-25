@@ -142,13 +142,13 @@ from a *vocabulary*, which the article loads as a program loads a library:
 The vocabularies form a tree: `vocab=math` loads them all, and its seven realms load a
 branch, `analysis` (real functions and sets, calculus, series, integration, asymptotics,
 transforms, Fourier series, optimization, dynamics, functional equations, generalized convexity, fractional calculus, summability, sequences of
-functions, ODEs, epidemic models, calculus of variations, classical mechanics, integral equations, classical PDEs, special functions), `algebra` (vectors,
+functions, ODEs, epidemic models, calculus of variations, mechanics, waves and relativity, integral equations, classical PDEs, special functions), `algebra` (vectors,
 matrices, majorization, polynomials, quadratics and cubics, groups), `topology` (topologies and metrics on the line, plane
 geometry, conics, triangles, solids, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
-risk measures, stochastic orders, Markov chains, branching processes, random walks, extremes, copulas, samples, regression, time series, tests, Bayesian updating, finance, expected utility, economics, games, queues, reliability, actuarial mathematics, inventory models, information channels, concentration bounds), `discrete` (combinatorics, permutations,
-graphs, recurrences, codes) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
+risk measures, stochastic orders, Markov chains, branching processes, random walks, extremes, population genetics, copulas, samples, regression, time series, tests, Bayesian updating, finance, expected utility, economics, games, queues, reliability, actuarial mathematics, inventory models, information channels, concentration bounds), `discrete` (combinatorics, permutations,
+graphs, recurrences, codes, algorithms) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
 distribution of primes, continued fractions, digits, the Collatz map,
 cryptography, Diophantine equations);
 `leanify fields article.tex` says which ones an article

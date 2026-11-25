@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={algorithms}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $B(n)$ for the number of comparisons of binary search on $n$ elements.
+We write $I(n)$ for the number of comparisons of insertion sort on $n$ elements.
+We write $M(n)$ for the number of comparisons of merge sort on $n$ elements.
+We write $Q(n)$ for the expected number of comparisons of quicksort on $n$ elements.
+We write $S(n)$ for the lower bound for sorting $n$ elements.
+We write $m(n)$ for the number of comparisons to find the maximum and the minimum of $n$ elements.
+We write $H(n)$ for the number of moves of the Tower of Hanoi with $n$ disks.
+We write $e(a,b)$ for the critical exponent for $a$ subproblems with shrinking factor $b$.
+We write $N(k)$ for the number of nodes of a perfect binary tree of height $k$.
+We write $h(n)$ for the minimal height of a binary tree with $n$ nodes.
+
+\section{Sorting and searching}
+
+\begin{lemma}\label{values}
+$B(1000)=10$, $I(4)=6$, $M(4)=5$ and $Q(3)=\frac83$.
+\end{lemma}
+
+\begin{lemma}\label{bounds}
+$S(5)=7$, $m(10)=13$, $H(3)=7$ and $e(4,2)=2$.
+\end{lemma}
+
+\begin{lemma}\label{lower}
+Let $n$ be an integer with $n\ge1$. Then $h(n)=B(n)-1$ and $S(n)\le M(n)$.
+\end{lemma}
+
+\section{Recursion}
+
+\begin{lemma}\label{hanoi}
+Let $n$ be an integer with $n\ge0$. Then $H(n+1)=2H(n)+1$ and $N(n)=H(n+1)$.
+\end{lemma}
+
+\end{document}

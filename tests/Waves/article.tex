@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={waves}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\lambda(c,f)$ for the wavelength for wave speed $c$ and frequency $f$.
+We write $D(f,c,u,w)$ for the Doppler frequency for source frequency $f$, wave speed $c$, observer speed $u$ and source speed $w$.
+We write $b(f,g)$ for the beat frequency of $f$ and $g$.
+We write $F(n,L,c)$ for the frequency of the $n$th harmonic of a string of length $L$ with wave speed $c$.
+We write $V(T,m)$ for the wave speed on a string with tension $T$ and linear density $m$.
+We write $R(a,n,m)$ for the angle of refraction for the angle of incidence $a$ and the refractive indices $n$ and $m$.
+We write $C(n,m)$ for the critical angle for the refractive indices $n$ and $m$.
+We write $B(n,m)$ for the Brewster angle for the refractive indices $n$ and $m$.
+We write $G(r)$ for the level in decibels of the power ratio $r$.
+We write $P(x,y)$ for the focal length of a thin lens with object distance $x$ and image distance $y$.
+
+\section{Sound}
+
+\begin{lemma}\label{sound}
+$\lambda(340,170)=2$, $b(440,442)=2$, $F(2,1,340)=340$ and $V(4,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{doppler}
+$D(100,340,0,0)=100$, $D(100,340,0,170)=200$ and $G(100)=20$.
+\end{lemma}
+
+\section{Optics}
+
+\begin{lemma}\label{brewster}
+Let $n$ and $m$ be positive real numbers. Then $\tan B(n,m)=\frac{m}{n}$.
+\end{lemma}
+
+\begin{lemma}\label{critical}
+Let $n$ and $m$ be positive real numbers with $m<n$. Then $\sin C(n,m)=\frac{m}{n}$ and $R(C(n,m),n,m)=\frac{\pi}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{lens}
+$R(0,1,2)=0$ and $P(2,2)=1$.
+\end{lemma}
+
+\end{document}

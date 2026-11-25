@@ -1,0 +1,46 @@
+tests/Algorithms/article.tex:9:1: info: defines \@n0 (n0)
+tests/Algorithms/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ ((y\in \mathbb{Z}\land 1\le y)\land {2}^{y-1}\le x\land x<{2}^{y})\land (\forall z\in \mathbb{R},\ (z\in \mathbb{Z}\land 1\le z)\land {2}^{z-1}\le x\land x<{2}^{z}\Rightarrow z=y))
+tests/Algorithms/article.tex:10:1: info: defines \@n1 (n1)
+tests/Algorithms/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (2=0)
+tests/Algorithms/article.tex:11:1: info: defines \@n2 (n2)
+tests/Algorithms/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ ((y\in \mathbb{Z}\land 0\le y)\land x\le {2}^{y}\land (y=0\lor {2}^{y-1}<x))\land (\forall z\in \mathbb{R},\ (z\in \mathbb{Z}\land 0\le z)\land x\le {2}^{z}\land (z=0\lor {2}^{z-1}<x)\Rightarrow z=y))\land (\exists y\in \mathbb{R},\ ((y\in \mathbb{Z}\land 0\le y)\land x\le {2}^{y}\land (y=0\lor {2}^{y-1}<x))\land (\forall z\in \mathbb{R},\ (z\in \mathbb{Z}\land 0\le z)\land x\le {2}^{z}\land (z=0\lor {2}^{z-1}<x)\Rightarrow z=y))
+tests/Algorithms/article.tex:12:1: info: defines \@n3 (n3)
+tests/Algorithms/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ \neg (y=0))
+tests/Algorithms/article.tex:13:1: info: defines \@n4 (n4)
+tests/Algorithms/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (\log(2)=0)
+tests/Algorithms/article.tex:14:1: info: defines \@n5 (n5)
+tests/Algorithms/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (2=0)
+tests/Algorithms/article.tex:15:1: info: defines \@n6 (n6)
+tests/Algorithms/article.tex:16:1: info: defines \@n7 (n7)
+tests/Algorithms/article.tex:16:1: info: \@n7 is well defined if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 1<y\Rightarrow \neg (\log(y)=0))
+tests/Algorithms/article.tex:17:1: info: defines \@n8 (n8)
+tests/Algorithms/article.tex:18:1: info: defines \@n9 (n9)
+tests/Algorithms/article.tex:18:1: info: \@n9 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\exists y\in \mathbb{R},\ ((y\in \mathbb{Z}\land 1\le y)\land {2}^{y-1}\le x\land x<{2}^{y})\land (\forall z\in \mathbb{R},\ (z\in \mathbb{Z}\land 1\le z)\land {2}^{z-1}\le x\land x<{2}^{z}\Rightarrow z=y))
+tests/Algorithms/article.tex:23:1: info: claim 0: \@n0(1000)=10
+tests/Algorithms/article.tex:23:1: info: claim 0 is meaningful if: 1000\in \mathbb{Z}\land 1\le 1000
+tests/Algorithms/article.tex:23:1: info: claim 1: \@n1(4)=6
+tests/Algorithms/article.tex:23:1: info: claim 1 is meaningful if: 4\in \mathbb{Z}\land 1\le 4
+tests/Algorithms/article.tex:23:1: info: claim 2: \@n2(4)=5
+tests/Algorithms/article.tex:23:1: info: claim 2 is meaningful if: 4\in \mathbb{Z}\land 1\le 4
+tests/Algorithms/article.tex:23:1: info: claim 3: \@n3(3)=\frac{8}{3}
+tests/Algorithms/article.tex:23:1: info: claim 3 is meaningful if: (3\in \mathbb{Z}\land 1\le 3)\land \neg (3=0)
+tests/Algorithms/article.tex:27:1: info: claim 4: \@n4(5)=7
+tests/Algorithms/article.tex:27:1: info: claim 4 is meaningful if: 5\in \mathbb{Z}\land 1\le 5
+tests/Algorithms/article.tex:27:1: info: claim 5: \@n5(10)=13
+tests/Algorithms/article.tex:27:1: info: claim 5 is meaningful if: 10\in \mathbb{Z}\land 1\le 10
+tests/Algorithms/article.tex:27:1: info: claim 6: \@n6(3)=7
+tests/Algorithms/article.tex:27:1: info: claim 6 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
+tests/Algorithms/article.tex:27:1: info: claim 7: \@n7(4,2)=2
+tests/Algorithms/article.tex:27:1: info: claim 7 is meaningful if: 1<2\land 1\le 4
+tests/Algorithms/article.tex:31:37: info: claim 8: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \@n9(x)=\@n0(x)-1
+tests/Algorithms/article.tex:31:37: info: claim 8 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (x\in \mathbb{Z}\land 1\le x)\land x\in \mathbb{Z}\land 1\le x
+tests/Algorithms/article.tex:31:37: info: claim 9: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \@n4(x)\le \@n2(x)
+tests/Algorithms/article.tex:31:37: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (x\in \mathbb{Z}\land 1\le x)\land x\in \mathbb{Z}\land 1\le x
+tests/Algorithms/article.tex:37:37: info: claim 10: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow \@n6(x+1)=2\,\@n6(x)+1
+tests/Algorithms/article.tex:37:37: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (x+1\in \mathbb{Z}\land 0\le x+1)\land x\in \mathbb{Z}\land 0\le x
+tests/Algorithms/article.tex:37:37: info: claim 11: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow \@n8(x)=\@n6(x+1)
+tests/Algorithms/article.tex:37:37: info: claim 11 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (x\in \mathbb{Z}\land 0\le x)\land x+1\in \mathbb{Z}\land 0\le x+1
+tests/Algorithms/article.tex: 10 definitions, 12 claims
+  text: 10 compiled, 0 failed, 0 prose (of 10)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 16 compiled, 0 failed, 0 prose (of 16)

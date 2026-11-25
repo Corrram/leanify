@@ -348,7 +348,11 @@ Further fields cover other branches of mathematics:
 * `fractals`: similarity dimensions and the classical self-similar sets;
 * `diophantine`: Frobenius numbers, sums of two squares, Pythagorean triples, congruent numbers;
 * `mechanics`: projectiles, pendulums, oscillators, orbits;
-* `inventory`: lot sizes and the newsvendor model.
+* `inventory`: lot sizes and the newsvendor model;
+* `algorithms`: operation counts of searching and sorting, the master theorem;
+* `populationgenetics`: Hardy–Weinberg, selection, fixation, drift;
+* `waves`: Doppler, harmonics, refraction, decibels, lenses;
+* `relativity`: Lorentz factors, rapidities, relativistic energy.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

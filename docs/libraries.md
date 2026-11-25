@@ -52,7 +52,10 @@ math
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── epidemics                 reproduction numbers, final sizes, the SIS model
 │   ├── variations                actions, Euler–Lagrange equation, minimizers
-│   ├── mechanics                 projectiles, pendulums, oscillators, orbits
+│   ├── physics
+│   │   ├── mechanics             projectiles, pendulums, oscillators, orbits
+│   │   ├── waves                 Doppler, harmonics, Snell's law, decibels, lenses
+│   │   └── relativity            Lorentz factor, rapidity, velocity addition, γmc²
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -101,7 +104,8 @@ math
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
 │   │   │   ├── branching         Galton–Watson processes, extinction probabilities
 │   │   │   ├── randomwalks       gambler's ruin, Brownian hitting probabilities
-│   │   │   └── extremes          GEV and generalized Pareto laws, domains of attraction
+│   │   │   ├── extremes          GEV and generalized Pareto laws, domains of attraction
+│   │   │   └── populationgenetics Hardy–Weinberg, fixation probabilities, drift
 │   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   ├── regression            residuals, sums of squares, R², standard errors
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
@@ -124,7 +128,8 @@ math
 │   ├── permutations
 │   ├── graphs
 │   ├── recurrences               progressions, Fibonacci and linear recurrences
-│   └── codes                     binary words, Hamming distance, coding bounds
+│   ├── codes                     binary words, Hamming distance, coding bounds
+│   └── algorithms                comparisons of searching and sorting, Hanoi, master theorem
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
@@ -138,7 +143,8 @@ math
     └── diophantine               Frobenius numbers, sums of two squares, Pythagorean triples
 ```
 
-A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
+`relativity`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -228,6 +234,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
 | [`variations`](glossary.md#variations) | for a Lagrangian `L(t, y, p)`: the action, solutions of the Euler–Lagrange equation, minimizers with the same endpoint values, the Hamiltonian; the arc-length functional and the Dirichlet energy; functions with given endpoint values | |
 | [`mechanics`](glossary.md#mechanics) | the range, maximal height and time of flight of a projectile; the period of a pendulum; the natural frequency, period and damping ratio of an oscillator; kinetic energy; the circular orbital speed, escape velocity and orbital period (Kepler's third law) for a gravitational parameter | |
+| [`waves`](glossary.md#waves) | the wavelength, Doppler and beat frequencies, the harmonics of a string and the wave speed on it; the angle of refraction (Snell's law), the critical and Brewster angles; levels in decibels; the focal length of a thin lens | |
+| [`relativity`](glossary.md#relativity) | the Lorentz factor, rapidity and redshift factor of a speed; the relativistic sum of velocities; dilated times and contracted lengths; relativistic energy and momentum, rest energy (the speed of light is an argument) | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -280,6 +288,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
 | [`randomwalks`](glossary.md#randomwalks) | gambler's ruin: the ruin probability and the expected duration, the probability of reaching the target; the distribution of the simple random walk after `n` steps; for Brownian motion the hitting probability, the expected exit time and the transition density | |
 | [`extremes`](glossary.md#extremes) | the GEV, standard Gumbel, Fréchet and reversed Weibull distribution functions, return levels, the generalized Pareto distribution function and its mean excess; distribution functions in the maximum domain of attraction of the Gumbel, Fréchet or Weibull law, regularly varying tails | |
+| [`populationgenetics`](glossary.md#populationgenetics) | Hardy–Weinberg homozygote and heterozygote frequencies; allele frequencies after selection; Moran and Kimura fixation probabilities; heterozygosity under drift; the effective size of a population with males and females; mutation equilibria | |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |
@@ -295,6 +304,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
 | [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |
 | [`codes`](glossary.md#codes) | binary words of length `n`; the Hamming weight and distance of the first `n` letters, the volume of a Hamming ball; the sphere-packing, Singleton and Gilbert–Varshamov bounds; the rate of a code | |
+| [`algorithms`](glossary.md#algorithms) | worst-case comparisons of binary search, insertion sort and merge sort, the expected comparisons of quicksort, the sorting lower bound `⌈log₂ n!⌉`, maximum and minimum finding; the Tower of Hanoi; the critical exponent of the master theorem; perfect binary trees and minimal heights | |
 | **Number theory** (`numbertheory`) | | |
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
