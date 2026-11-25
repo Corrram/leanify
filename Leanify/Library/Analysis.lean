@@ -57,6 +57,10 @@ def differentiable : Tm := fnP .differentiable
 def lipschitzWith (l f : B) : B :=
   and (le (num 0) l) (allR fun x => allR fun y => le (abs (sub (app f x) (app f y))) (mul l (abs (sub x y))))
 def lipschitz (f : B) : B := exR fun l => lipschitzWith l f
+/-- `f(x) → f(c)` as `x → c`. -/
+def continuousAt (f c : B) : B :=
+  allR fun e => imp (lt (num 0) e) (exR fun d => and (lt (num 0) d) (allR fun x =>
+    imp (lt (abs (sub x c)) d) (lt (abs (sub (app f x) (app f c))) e)))
 
 def mod (p : Phrase) (pre : Bool) (pred : Tm) (doc : String) : Modifier :=
   { phrase := p, prenominal := pre, ty := F, pred, doc }
@@ -109,6 +113,14 @@ def vocab : Vocab where
     mod phrase!"surjective" true (fPred fun f => surjective f) "onto `ℝ` (Mathlib `Function.Surjective`)",
     mod phrase!"bijective" true (fPred fun f => and (injective f) (surjective f)) "(Mathlib `Function.Bijective`)",
     mod phrase!"constant" true (fPred fun f => allR fun x => allR fun y => eq (app f x) (app f y)) "`f(x) = f(y)`",
+    mod phrase!"continuous at $v$" false (close <| lamR fun c => lamT F (fun _ => tt) fun f => continuousAt f c)
+      "`f(x) → f(c)` as `x → c` (Mathlib `ContinuousAt`)",
+    mod phrase!"discontinuous at $v$" false (close <| lamR fun c => lamT F (fun _ => tt) fun f => not (continuousAt f c))
+      "not continuous at `c`",
+    mod phrase!"differentiable at $v$" false (close <| lamR fun c => lamT F (fun _ => tt) fun f => exR fun l =>
+        allR fun e => imp (lt (num 0) e) (exR fun d => and (lt (num 0) d) (allR fun h =>
+          imp (and (lt (num 0) (abs h)) (lt (abs h) d)) (lt (abs (sub (div (sub (app f (add c h)) (app f c)) h) l)) e))))
+      "the difference quotients at `c` converge (Mathlib `DifferentiableAt`)",
     mod phrase!"measurable" true (.const 3) "(Mathlib `Measurable`)",
     mod phrase!"integrable" true (.const 4) "Lebesgue integrable on the line (Mathlib `MeasureTheory.Integrable`)",
     mod phrase!"of bounded variation on $[v,v]$" false (.const 5) "(Mathlib `BoundedVariationOn`)",

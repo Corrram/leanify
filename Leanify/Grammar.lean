@@ -2020,6 +2020,8 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       -- (`strictAdj`: not when a further adjective follows that is not a standard one,
       -- `compact and perfect`: the vocabulary's adjectives are read below)
       if strictAdj && moreWords r2 then none
+      -- (`continuous at $0$`: a phrase of the vocabulary with an object, below)
+      if (match r2 with | .w w :: .m _ :: _ => [w!"at", w!"to", w!"from", w!"near"].contains w | _ => false) then none
       some (Clause.adjectives m adjs, r2)) with
   | some res => some res
   | none =>
@@ -2287,6 +2289,22 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       -- (membership, `lies in`, is the formula's `\in`)
       if rel == Rel.mem || rel == Rel.nmem || rel == Rel.dvd || rel == Rel.ndvd then return (Clause.fact (.chain l [(rel, rr)]), r2)
       some (Clause.compare l rel rr, r2)) with
+  | some res => some res
+  | none =>
+  -- `$f$ attains its maximum on $[a,b]$`: a point of the set where no value is larger
+  match (do
+      let (ts, r) ← mathChunk cs
+      let f ← Math.parseFormula ts
+      let r1 ← kw [w!"attains", w!"its"] r <|> kw [w!"attains", w!"a"] r
+      let (isMax, r2) ← (kw [w!"maximum"] r1).map (true, ·) <|> (kw [w!"minimum"] r1).map (false, ·)
+      let r3 ← kw [w!"on"] r2
+      let (dts, r4) ← mathChunk r3
+      let d ← Math.parseFormula dts
+      let c : Codes := w!"\\attained"
+      let x : Codes := w!"\\attaining"
+      let fc := MT.app f [.id c]
+      some (Clause.fact (.quant false [c] d (.quant true [x] d (.chain (MT.app f [.id x]) [(if isMax then Rel.le else Rel.ge, fc)]))), r4) :
+      Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$f$ has a [unique] fixed point`, `$G$ has an element of order $2$`: there is such an
@@ -3629,30 +3647,58 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     -- before the noun
     let adj : Option (List Chunk × List Chunk) := do
       let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
-      let ws := r1.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
+      let ws := r1.takeWhile (fun (c : Chunk) => match c with
+        | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
       if ws.length < 2 then none
       match ws.getLast? with
       | some (.w w) => if w == w!"function" || w == w!"map" then some (ws.dropLast, r1.drop ws.length) else none
       | _ => none
+    -- (conditions after it, `with $f'(x)=0$ for all $x$`, as for any noun)
+    -- (`such that` with a formula only: a clause is a hypothesis of its own, `partsOf`)
+    let postOf (r2 : List Chunk) : List Chunk :=
+      let upTo := r2.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+      match r2 with
+      | .w w :: _ =>
+        if w == w!"with" then upTo
+        else match r2 with
+          | .w _ :: .w t :: .m _ :: rest =>
+            if w == w!"such" && t == w!"that" && (match rest with | [] | .p _ :: _ => true | .w f :: _ => f == w!"for" | _ => false)
+            then upTo else []
+          | _ => []
+      | _ => []
     match adj with
-    | some (adjs, r2) => some (.noun (adjs ++ [.w w!"map", .m ts]), r2)
+    | some (adjs, r2) => let post := postOf r2; some (.noun (adjs ++ [.w w!"map", .m ts] ++ post), r2.drop post.length)
     | none =>
       -- `$\varphi\colon G\to H$ be a homomorphism`: another noun of maps, with the signature
       let other : Option (List Chunk × List Chunk) := do
         if r'.length != r.length then none
         let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
-        let ws := r1.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
+        let ws := r1.takeWhile (fun (c : Chunk) => match c with
+          | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false)
         if ws.isEmpty then none
         some (ws, r1.drop ws.length)
       match other with
-      | some (ws, r2) => some (.noun (ws ++ [.m ts]), r2)
-      | none => some (.noun [.w w!"map", .m ts], r')) <|>
+      | some (ws, r2) => let post := postOf r2; some (.noun (ws ++ [.m ts] ++ post), r2.drop post.length)
+      | none => let post := postOf r'; some (.noun ([.w w!"map", .m ts] ++ post), r'.drop post.length)) <|>
   -- `$c>0$`: a condition, assumed like a binder
   (do
     let (ts, r) ← mathChunk cs
     let m ← Math.parseFormula ts
     if (kw [w!"be"] r).isSome then none else
     if isCondition m then some (.ifCond m, r) else none) <|>
+  -- `$a<b$ be real numbers`: the variables of the chain, each of the noun, and the chain
+  (do
+    let (ts, r) ← mathChunk cs
+    let r1 ← kw [w!"be"] r
+    let m ← Math.parseFormula ts
+    let .chain (.id x) rest := m | none
+    let ys ← rest.mapM fun (_, y) => match y with | .id y => some y | _ => none
+    if ys.isEmpty then none
+    let joined : List MTok := ((x :: ys).map fun n => [MTok.id n]).intersperse [MTok.sym 44] |>.flatten
+    let (b, r2) ← pluralNoun joined r1
+    match b with
+    | .many bs => some (.many (bs ++ [.ifCond m]), r2)
+    | b => some (.many [b, .ifCond m], r2)) <|>
   -- `$a,b$ be positive integers`, `$a$ and $b$ be positive integers`,
   -- `$x_1,\ldots,x_n$ be real numbers [with $φ$]`
   (do
@@ -3705,7 +3751,7 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let simple (t : List MTok) : Bool := (!t.isEmpty && t.all fun x => match x with
       | .id n => n.length == 1 | .digit _ => true | .sym c => c == 43 || c == 45 | _ => false) ||
       (match t with | [.cmd _] => true | _ => false)
-    let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from", w!"modulo"]
+    let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from", w!"modulo", w!"at", w!"by"]
     let lastPrep := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?
     let argPhrase : Option (List Chunk × List Chunk) := match lastPrep, r1.drop ws.length with
       | some (_, i), .m t :: more =>
@@ -5061,6 +5107,20 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
 
+/-- `Every NP has a NOUN …` as `For every NP $x$, $x$ has a NOUN …` (`Every bounded
+sequence of real numbers has a convergent subsequence.`): the noun phrase's variable, or one
+of its own. -/
+def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"every"] cs
+  let (np, r1) ← chunksUntil [w!"has"] r []
+  let _ ← kw [w!"has"] r1
+  if np.isEmpty then none
+  match np.getLast? with
+  | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
+  | _ =>
+    let v : Codes := w!"ve"
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
+
 /-- `[Consequently,] [the functions] $\rho$, $\nu$, and $\eta$ are affine on $\mathcal C$.` as
 `$\rho$ is affine on $\mathcal C$ and $\nu$ is … and $\eta$ is ….`: what is said of several
 symbols is said of each. -/
@@ -5200,6 +5260,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
       | some s => some s
       | none =>
         match everyIsSent body >>= sentence0 with
+        | some s => some s
+        | none =>
+        match everyHasSent body >>= sentence0 with
         | some s => some s
         | none =>
           match adjCommaSent cs >>= sentence0 with
@@ -5440,6 +5503,18 @@ def considerAsSet (ts : List PTok) : Option (List PTok) := do
 (see above). -/
 def partsOf (s : Sentence) : Option (List Sentence) := do
   let parses (ts : List PTok) : Bool := (parseSentence { s with toks := ts }).isSome
+  -- `Let $(a_n)$ be a sequence such that $\sum a_n$ converges.`: the binder, then the
+  -- hypothesis `Suppose that $\sum a_n$ converges.` (a condition that is a clause)
+  let suchThat : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let k ← (List.range s.toks.length).find? fun i =>
+      (s.toks[i]? >>= textWord) == some w!"such" && (s.toks[i + 1]? >>= textWord) == some w!"that"
+    let pos := (s.toks[k]?.map (·.pos)).getD 0
+    let pre := (s.toks.take k).reverse.dropWhile isTextComma |>.reverse
+    let p1 := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩] ++ s.toks.drop (k + 2)
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := suchThat then return ps.map fun ts => { s with toks := ts }
   let (ts, pre) := match whereNotation s.toks with
     | some (rest, nt) => (rest, [nt])
     | none => (s.toks, [])

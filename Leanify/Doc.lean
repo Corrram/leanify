@@ -1323,13 +1323,13 @@ def complementOf (np : List Chunk) : Option (List MTok) :=
   | .w _ :: _ => go np
   | _ => none
 
-/-- A property of a sequence `t` of real numbers (a real function whose terms are its values
-at the natural numbers), said of its terms: `increasing` (Mathlib `Monotone`), `strictly
-increasing` (`StrictMono`), `decreasing`, `monotone`, `bounded`, `positive`, … -/
-def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
-  let nats : Tm := .lam .real .tt (.app (.prim .isNat) (.loc 0))
-  let on (p : Prim) : Tm := .app (.app (.prim p) t) nats
-  let terms (p : Tm → Tm) : Tm := .all .real (.imp (.app (.prim .isNat) (.loc 0)) (p (.app (shift 1 0 t) (.loc 0))))
+/-- A standard property of a real function `t` on the domain `dom` (a predicate of real
+numbers): `increasing` (Mathlib `MonotoneOn`), `strictly increasing`, `decreasing`,
+`monotone`, `bounded`, `positive`, `nonnegative`, `negative`, `continuous`, `convex`,
+`concave`, `differentiable`, `Lipschitz`, `injective`, …; `none` for other words. -/
+def fnAdjectiveOn (t : Tm) (a : List Codes) (dom : Tm) : Option Tm :=
+  let on (p : Prim) : Tm := .app (.app (.prim p) t) dom
+  let terms (p : Tm → Tm) : Tm := .all .real (.imp (.app (shift 1 0 dom) (.loc 0)) (p (.app (shift 1 0 t) (.loc 0))))
   let a := a.map Grammar.lower
   -- (`non-decreasing`)
   let a := match a with
@@ -1346,7 +1346,29 @@ def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
   else if a == [w!"nonnegative"] then some (on (.fnProp .nonneg))
   else if a == [w!"negative"] then some (terms fun x => .lt x (.num 0))
   else if a == [w!"nonpositive"] then some (terms fun x => .le x (.num 0))
+  else if a == [w!"continuous"] then some (on .continuousOn)
+  else if a == [w!"concave"] then some (on .concaveOn)
+  else if a == [w!"convex"] then some (on (.fnProp .convex))
+  else if a == [w!"strictly", w!"convex"] then some (on (.fnProp .strictConvex))
+  else if a == [w!"strictly", w!"concave"] then some (on (.fnProp .strictConcave))
+  else if a == [w!"differentiable"] then some (on (.fnProp .differentiable))
+  else if a == [w!"continuously", w!"differentiable"] then some (on (.fnProp .contDiff))
+  else if a == [w!"injective"] || a == [w!"one-to-one"] then some (on (.fnProp .injective))
+  else if a == [w!"lipschitz"] || a == [w!"lipschitz", w!"continuous"] then some (on (.fnProp .lipschitz))
+  else if a == [w!"lower", w!"semicontinuous"] then some (on (.fnProp .lowerSemicont))
+  else if a == [w!"upper", w!"semicontinuous"] then some (on (.fnProp .upperSemicont))
   else none
+
+/-- A property of a sequence `t` of real numbers (a real function whose terms are its values
+at the natural numbers), said of its terms: `increasing` (Mathlib `Monotone`), `strictly
+increasing` (`StrictMono`), `decreasing`, `monotone`, `bounded`, `positive`, … -/
+def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
+  let a' := a.map Grammar.lower
+  -- (of its terms only: not the properties of a function of the line)
+  if [[w!"continuous"], [w!"convex"], [w!"concave"], [w!"differentiable"], [w!"continuously", w!"differentiable"],
+      [w!"strictly", w!"convex"], [w!"strictly", w!"concave"], [w!"lower", w!"semicontinuous"],
+      [w!"upper", w!"semicontinuous"]].contains a' then none
+  else fnAdjectiveOn t a (.lam .real .tt (.app (.prim .isNat) (.loc 0)))
 
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
@@ -1759,6 +1781,13 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     if (← get).pendingSeq && ty == .fn .real .real then
       let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
       if let some body := seqAdjective (.loc 0) words then return Tm.lam ty .tt body
+    -- (of a real function on the domain of its signature, `a continuous function
+    -- $f\colon[a,b]\to\mathbb{R}$`: the property on that domain)
+    if ty == .fn .real .real then
+      if let some d := (← get).sigDom then
+        if d != .lam .real .tt .tt then
+          let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
+          if let some body := fnAdjectiveOn (.loc 0) words (shift 1 0 d) then return Tm.lam ty .tt body
     match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (ms.map (·, [])) with
     | some (m, _) => slotPred m cs
     | none => fail E.type
@@ -4370,6 +4399,12 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.imp h p)
   | .notions s names disj => do
     let st ← get
+    -- `$\sum_{k=0}^\infty a_k$ converges` (`is convergent`), `diverges`: of the series
+    if let [[w]] := names then
+      if w == w!"convergent" || w == w!"divergent" then
+        if let .bigop true _ _ _ _ := s then
+          if let (.guard (.and _ conv) _, _) ← subjTerm sc s then
+            return (if w == w!"convergent" then conv else .not conv)
     unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
     let x ← subjTerm sc s
     -- a name the article does not define is an adjective of the vocabulary

@@ -79,7 +79,13 @@ def vocab : Vocab where
       "`a_n > 0`",
     seqNoun phrase!"sequence of nonnegative real numbers" phrase!"sequences of nonnegative real numbers" (some fun x => le (num 0) x)
       "`a_n ≥ 0`",
-    seqNoun phrase!"sequence of integers" phrase!"sequences of integers" (some fun x => isInt x) "(Mathlib `ℕ → ℤ`)"]
+    seqNoun phrase!"sequence of integers" phrase!"sequences of integers" (some fun x => isInt x) "(Mathlib `ℕ → ℤ`)",
+    { seqNoun phrase!"subsequence" phrase!"subsequences" none
+        "`n ↦ a_{φ(n)}` for a strictly increasing `φ : ℕ → ℕ` (Mathlib `StrictMono`, `a ∘ φ`)" with
+      arg := some ([w!"of"], F, close <| lamT F (fun _ => tt) fun a => lamT F (fun _ => tt) fun b =>
+        exT F fun p => and (allR fun n => imp (nat n) (nat (app p n)))
+          (and (allR fun n => imp (nat n) (lt (app p n) (app p (add n (num 1)))))
+            (allR fun n => imp (nat n) (eq (app b n) (app a (app p n)))))) }]
   mods := [
     { phrase := phrase!"converging to $v$", prenominal := false, ty := F,
       pred := close <| lamR fun l => lamT F (fun _ => tt) fun a => tendsTo a l, doc := "`a_n → l` (Mathlib `Filter.Tendsto`)" },

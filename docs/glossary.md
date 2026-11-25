@@ -884,6 +884,9 @@ except a notion whose meanings take arguments of different types, which the type
 | surjective | ℝ → ℝ | onto `ℝ` (Mathlib `Function.Surjective`) |
 | bijective | ℝ → ℝ | (Mathlib `Function.Bijective`) |
 | constant | ℝ → ℝ | `f(x) = f(y)` |
+| continuous at $x$ | ℝ → ℝ | `f(x) → f(c)` as `x → c` (Mathlib `ContinuousAt`) |
+| discontinuous at $x$ | ℝ → ℝ | not continuous at `c` |
+| differentiable at $x$ | ℝ → ℝ | the difference quotients at `c` converge (Mathlib `DifferentiableAt`) |
 | measurable | ℝ → ℝ | (Mathlib `Measurable`) |
 | integrable | ℝ → ℝ | Lebesgue integrable on the line (Mathlib `MeasureTheory.Integrable`) |
 | of bounded variation on $[x,a]$ | ℝ → ℝ | (Mathlib `BoundedVariationOn`) |
@@ -996,6 +999,7 @@ except a notion whose meanings take arguments of different types, which the type
 | coprime to $x$ | ℝ | no common divisor but `±1` (Mathlib `IsCoprime`) |
 | relatively prime to $x$ | ℝ | (Mathlib `IsCoprime`) |
 | divisible by $x$ | ℝ | `d ∣ a` |
+| not divisible by $x$ | ℝ | `d ∤ a` |
 | invertible modulo $x$ | ℝ | coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`) |
 | unit modulo $x$ | ℝ | coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`) |
 | quadratic residue modulo $x$ | ℝ | coprime to `n`, and a square modulo `n` (Mathlib `IsSquare` in `ZMod n`) |
@@ -1812,6 +1816,7 @@ except a notion whose meanings take arguments of different types, which the type
 | sequence of positive real numbers | ℝ → ℝ | `a_n > 0` |
 | sequence of nonnegative real numbers | ℝ → ℝ | `a_n ≥ 0` |
 | sequence of integers | ℝ → ℝ | (Mathlib `ℕ → ℤ`) |
+| subsequence | ℝ → ℝ | `n ↦ a_{φ(n)}` for a strictly increasing `φ : ℕ → ℕ` (Mathlib `StrictMono`, `a ∘ φ`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |

@@ -57,6 +57,7 @@ def vocab : Vocab where
     modN phrase!"coprime to $v$" (fun n a => and (and (isInt a) (isInt n)) (coprime a n)) "no common divisor but `±1` (Mathlib `IsCoprime`)",
     modN phrase!"relatively prime to $v$" (fun n a => and (and (isInt a) (isInt n)) (coprime a n)) "(Mathlib `IsCoprime`)",
     modN phrase!"divisible by $v$" (fun n a => and (and (isInt a) (isInt n)) (divides n a)) "`d ∣ a`",
+    modN phrase!"not divisible by $v$" (fun n a => and (and (isInt a) (isInt n)) (not (divides n a))) "`d ∤ a`",
     modN phrase!"invertible modulo $v$" unit "coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`)",
     modN phrase!"unit modulo $v$" unit "coprime to `n ≥ 1` (Mathlib `IsUnit` in `ZMod n`)",
     modN phrase!"quadratic residue modulo $v$" qr "coprime to `n`, and a square modulo `n` (Mathlib `IsSquare` in `ZMod n`)",
