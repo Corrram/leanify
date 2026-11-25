@@ -19,6 +19,20 @@ leanify fields article.tex
 tries every field on the article and names those that read more of its sentences, with
 the line for the preamble.
 
+**Without the option, every field is loaded.** `\usepackage{leanify}` reads the article with the
+whole vocabulary, as `vocab=math` does, so a first article needs no choice. Three things follow:
+
+* An article that already has a certificate keeps the fields of that certificate, so that its
+  reading does not change under it (its Lean files name them; an older certificate without
+  fields is the core alone).
+* `vocab=core` is the core vocabulary alone, and `vocab={…}` names fields. Naming them keeps the
+  reading of an article the same when the vocabulary grows; `leanify fields article.tex` finds
+  them.
+* With every field loaded, a few phrases have a meaning for each kind of argument (`the inverse
+  of`, `the order of`, …): a definition names the kind (`the inverse of a permutation $\sigma$`).
+  A variable in `[0,1]` is a point of the unit interval (see the bundles below), and the kernel
+  audit of a certificate takes about five times as long as with one field.
+
 ## The tree of libraries
 
 Fields are grouped into *bundles*, and bundles into bundles, so that an article can name a
@@ -242,8 +256,9 @@ the report:
   `stochastic`, `statistics` and `dependence`; an article without copulas loads
   `probability` instead.
 
-Load the smallest bundle that reads your article: fewer words in the vocabulary mean fewer
-phrases that your own definitions could shadow, and a faster check. `leanify fields` names
+For an article you certify, name the smallest bundle that reads it: fewer words in the vocabulary
+mean fewer phrases that your own definitions could shadow, a faster audit, and a reading that
+stays the same when fields are added. `leanify fields` names
 the fields an article needs and, when they belong together, their bundle.
 
 ### Renamed fields

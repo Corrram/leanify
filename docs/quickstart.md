@@ -55,9 +55,10 @@ This line is the formal statement of the theorem at line 64. It is computed from
 sentence, so it cannot drift away from the paper, and it is short enough to read.
 [Writing for Leanify](writing.md) lists the wordings that are read.
 
-If the article uses the words of a subject (a copula, a graph, a Markov chain), it
-needs the [field of the vocabulary](vocabularies.md) that has them. You do not have to
-know which:
+The words of a subject (a copula, a graph, a Markov chain) come from the
+[fields of the vocabulary](vocabularies.md). `\usepackage{leanify}` loads all of them
+(`vocab=math`), so you do not have to choose. When the article is settled, name the fields it
+uses, so that its reading stays the same as the vocabulary grows:
 
 ```sh
 leanify fields article.tex

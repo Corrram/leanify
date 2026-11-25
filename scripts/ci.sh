@@ -90,6 +90,16 @@ checks() {
   [ ! -e "$lone/plain/lean" ] || fail "--no-project made a project"
   endgroup
 
+  group "An article that names no field is read with every field; one with a certificate, with its fields"
+  cp tests/Default/article.tex "$TMP/default.tex"
+  $LEANIFY check "$TMP/default.tex" > "$TMP/default.txt" || fail "an article without fields is not read with all of them"
+  grep -q "all: 6 compiled, 0 failed" "$TMP/default.txt" || fail "the default vocabulary"
+  $LEANIFY check "$TMP/default.tex" --vocab core > "$TMP/default.txt" && fail "vocab=core read the words of fields" || true
+  # (tests/Notation has a certificate with the core alone: `[0,1]` is not a type there)
+  $LEANIFY check tests/Notation/article.tex --claims > "$TMP/default.txt" || true
+  grep -qF 'claim 26: \int_{0}^{1}x' "$TMP/default.txt" || fail "an article with a certificate is not read with its fields"
+  endgroup
+
   group "The fields that an article needs are found by trying them"
   $LEANIFY fields tests/Graphs/article.tex --vocab core > "$TMP/fields.txt" || fail "leanify fields"
   grep -q "^  graphs: 18 more sentences" "$TMP/fields.txt" || { cat "$TMP/fields.txt"; fail "tests/Graphs: the field graphs is not suggested"; }

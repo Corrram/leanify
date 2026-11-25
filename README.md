@@ -109,7 +109,8 @@ unit square use `--vocab unitsquare` ([Vocabularies and models](docs/vocabularie
 subjects have fields of their own, grouped into a tree of bundles ([Libraries](docs/libraries.md)):
 `vocab=math` loads every field, and seven realms load a branch of mathematics,
 `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete` and `numbertheory`.
-`leanify fields article.tex` names the fields that read more of an article.
+An article that names no field is read with all of them (`vocab=math` is the default; `vocab=core`
+is the core alone). `leanify fields article.tex` names the fields an article uses.
 
 The same source gives the two readable outputs:
 

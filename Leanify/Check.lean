@@ -1068,6 +1068,10 @@ def suggestFields (path : System.FilePath) (given : Option (List String)) (extra
           have_ := n
         else break
       | none => break
+    -- (an article that names no field is read with all of them)
+    if given.isNone && named.isEmpty then
+      IO.println s!"(the article names no field, so it is read with every field, vocab=math; naming the fields \
+        below instead keeps its reading the same when the vocabulary grows)"
     if added.isEmpty then
       IO.println s!"{path}: no other field of the vocabulary reads more of it. What is not read is a wording \
         (docs/writing.md lists the forms that are read) or a notion that no field has \

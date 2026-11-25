@@ -36,7 +36,9 @@
 %%   \usepackage[certify, vocab=unitsquare]{leanify}  % build on every compile
 %% Options: status, certify (implies status), check=false (no quick check),
 %% vocab=FIELDS (the fields of the vocabulary the article uses, e.g.
-%% vocab={numbers,analysis}; see docs/vocabulary.md), notions={graph, finite graph}
+%% vocab={numbers,analysis}; see docs/vocabulary.md; without it every field,
+%% vocab=math, or the fields of the article's certificate if it has one;
+%% vocab=core is the core vocabulary alone), notions={graph, finite graph}
 %% (nouns the article uses without defining them) and quantities={degree} (words
 %% that name numbers): Leanify reads both from the source, nothing is printed for
 %% them, and \leanifyreport lists them (docs/writing.md), lean=FILE (its
@@ -95,8 +97,11 @@
 \tl_replace_all:Nnn \l__leanify_vocab_tl { , } { , ~ }
 \cs_new:Npn \leanify@vocab
   {
-    \str_if_empty:NTF \l__leanify_vocab_str { core }
-      { core, ~ \tl_use:N \l__leanify_vocab_tl }
+    \str_if_empty:NTF \l__leanify_vocab_str { math ~ (every ~ field) }
+      {
+        \str_if_eq:VnTF \l__leanify_vocab_str { core } { core }
+          { core, ~ \tl_use:N \l__leanify_vocab_tl }
+      }
   }
 \ExplSyntaxOff
 

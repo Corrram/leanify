@@ -36,7 +36,8 @@ import Leanify.Library.Fields
 
 `FIELDS` are the fields of the vocabulary the article uses, separated by commas
 (`numbers,analysis`; `docs/vocabulary.md` lists them); the core vocabulary is
-always there. -/
+always there. Without `--vocab` the article is read with every field (as `--vocab math`);
+`--vocab core` is the core vocabulary alone. -/
 
 open Leanify
 
@@ -49,17 +50,22 @@ def usage : String :=
   "       leanify --version\n" ++
   "       leanify init ARTICLE.tex [--name NAME] [--vocab FIELD,FIELD,…] [--leanify REV|PATH]\n" ++
   "       leanify prepare ARTICLE.tex --lean COMPILED.lean\n" ++
-  "       leanify audit ARTICLE.tex"
+  "       leanify audit ARTICLE.tex\n" ++
+  "without --vocab an article is read with every field (--vocab math); --vocab core is the core vocabulary alone"
 
 def optArg (opts : List String) (flag : String) : Option String :=
   match opts.dropWhile (· != flag) with
   | _ :: v :: _ => some v
   | _ => none
 
-/-- The fields named by `--vocab` (none: the core vocabulary alone). -/
+/-- The fields named by `--vocab`. Without the option they are `math`, every field: an
+author who names no field has the whole vocabulary. `--vocab core` names none: the core
+vocabulary alone. -/
 def fieldsOf (opts : List String) : List String :=
-  (((optArg opts "--vocab").getD "").splitOn ",").map (fun n => String.ofList (n.toList.filter (· != ' ')))
-    |>.filter fun n => n != "" && n != "core"
+  match optArg opts "--vocab" with
+  | none => ["math"]
+  | some v => (v.splitOn ",").map (fun n => String.ofList (n.toList.filter (· != ' ')))
+      |>.filter fun n => n != "" && n != "core"
 
 /-- The vocabulary of the named fields, or the names that are not fields. -/
 def vocabOf (fs : List String) : Except String Vocab :=
@@ -197,6 +203,26 @@ def findCompiled (path : System.FilePath) (given : Option String) : IO (Option S
       if ← e.path.isDir then
         if ← names (e.path / "Compiled.lean") ("../../" ++ file) then return some (e.path / "Compiled.lean")
   return none
+
+/-- The fields an article is read with: those of `--vocab`; without the option, those of
+its certificate if it has Lean files, so that an article keeps the reading it was certified
+with (no `with` in its `#leanify_article`: the core alone); and otherwise `math`. -/
+def fieldsFor (path : System.FilePath) (opts : List String) : IO (List String) := do
+  if opts.contains "--vocab" then return fieldsOf opts
+  let compiled? ← try findCompiled path (optArg opts "--lean") catch _ => pure none
+  let some compiled := compiled? | return fieldsOf opts
+  let text ← try IO.FS.readFile compiled catch _ => pure ""
+  let some cmd := (text.splitOn "\n").find? fun l => l.trimAsciiStart.toString.startsWith "#leanify_article "
+    | return fieldsOf opts
+  match cmd.splitOn " with " with
+  | _ :: v :: _ =>
+    if (v.splitOn "UnitSquare.withCore").length > 1 then return ["unitsquare"]
+    match text.splitOn "Fields.select [" with
+    | _ :: r :: _ =>
+      return (((r.splitOn "]").headD "").splitOn ",").map (fun n =>
+        String.ofList (n.toList.filter fun c => c != ' ' && c != '"' && c != '\n' && c != '\r')) |>.filter (· != "")
+    | _ => return fieldsOf opts
+  | _ => return []
 
 /-- The namespace a compiled Lean file compiles its article into. -/
 def namespaceOf (compiled : System.FilePath) : IO (Option String) := do
@@ -367,7 +393,8 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   let vocabImport := if selected then "import Leanify.Library.Fields\n"
     else if unitSquare then "import Leanify.Library.UnitSquare\n" else ""
   let vocabDef := if selected then
-      s!"\n/-- The vocabulary of the article: the core and the fields {String.intercalate ", " fs}. -/\n" ++
+      (if fs == ["math"] then "\n/-- The vocabulary of the article: every field (`math`). -/\n"
+        else s!"\n/-- The vocabulary of the article: the core and the fields {String.intercalate ", " fs}. -/\n") ++
       s!"def {ns}.vocabulary : Leanify.Vocab := Leanify.Fields.select [{fieldList}]\n"
     else ""
   let vocabWith := if selected then s!" with {ns}.vocabulary"
@@ -745,7 +772,7 @@ def texCommand (path : System.FilePath) (opts : List String) : IO UInt32 := do
   IO.println s!"leanify {Leanify.version}: {path}"
   let log (t : String) : IO Unit := IO.print t
   let mut recs : Array Rec := #[]
-  match vocabOf (fieldsOf opts) with
+  match vocabOf (← fieldsFor path opts) with
   | .error e => recs := recs.push (.warn e)
   | .ok V =>
     unless opts.contains "--no-check" do recs := recs ++ (← checkRecs V path)
@@ -862,10 +889,11 @@ theorem {ns}.Audit.built : Leanify.compileArticle {ns}.vocab {ns}.source = some 
 def main (args : List String) : IO UInt32 := do
   match args with
   | "check" :: path :: opts =>
-    if let .error e := vocabOf (fieldsOf opts) then
+    let fs ← fieldsFor path opts
+    if let .error e := vocabOf fs then
       IO.eprintln s!"leanify check: {e}"
       return 2
-    let vocab := (vocabOf (fieldsOf opts)).toOption.getD Vocab.core
+    let vocab := (vocabOf fs).toOption.getD Vocab.core
     -- (`--notions "graph, finite graph"`: as the option `notions` of the package, to try it)
     let extra := (((optArg opts "--notions").getD "").splitOn ",").filterMap (fun e =>
       Declared.ofEntry (Codes.ofString e)) ++

@@ -401,6 +401,9 @@ Further fields cover other branches of mathematics:
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.
 
+An article that names no field is read with all of them (`vocab=math` is the default; an article
+with a certificate keeps the fields of its certificate). `vocab=core` is the core vocabulary alone.
+
 A *bundle* names several fields (`vocab=probability`, `vocab=algebra`, …), and the bundles
 form a tree ([Libraries](libraries.md#the-tree-of-libraries) draws it): `math` has every
 field, and its seven *realms* are the branches of mathematics, `analysis`, `algebra`,

@@ -997,3 +997,9 @@ globs = ["Traffic.+"]
 name = "GeometricProbability"
 srcDir = "tests"
 globs = ["GeometricProbability.+"]
+
+[[lean_lib]]
+# The default vocabulary: every field.
+name = "Default"
+srcDir = "tests"
+globs = ["Default.+"]
