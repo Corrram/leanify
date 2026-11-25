@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Conditions.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select []
 
-#leanify_article Conditions "article.tex" "fnv1a64:0d26fffd588b13de" with Conditions.vocabulary
+#leanify_article Conditions "article.tex" "fnv1a64:49af9f55233501e1" with Conditions.vocabulary

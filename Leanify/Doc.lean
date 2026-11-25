@@ -1690,12 +1690,18 @@ def condOfDomain (v : Codes) (d : MT) : MT :=
     | none, none => .chain (.id v) [(.mem, d)]
   | _ => .chain (.id v) [(.mem, d)]
 
+/-- The conjuncts of a condition (`with $a\ge0$ and $b\ge0$`), each read on its own. -/
+def conjunctsOf : Nat → MT → List MT
+  | 0, m => [m]
+  | f + 1, .conj ms => ms.flatMap (conjunctsOf f)
+  | _, m => [m]
+
 /-- A condition on variables bound before it in the same binder (`with $a\ge0$`): it joins
 the domain of the last of them that it mentions (the last variable, if it mentions none of
 them), not simply the last one: in `Let $a$, $b$ and $c$ be real numbers with $a\ge0$`, the
 condition on `a` must not ride on `c`, which the claim may leave unused. `φ` is read in the
 scope of `before` and of the variables of `out` up to that one. -/
-def attachCond (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
+def attachOne (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
   if out.isEmpty then fail E.unsupported
   let mentioned := freeIds 64 [] φ
   let j := ((out.zipIdx.filter fun (b, _) => mentioned.contains b.name).map (·.2)).getLast?.getD (out.length - 1)
@@ -1707,6 +1713,13 @@ def attachCond (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
     | some q => Tm.lam last.ty .tt (.and (.app (shift 1 0 q) (.loc 0)) (shift 1 0 p))
     | none => Tm.lam last.ty .tt (shift 1 0 p)
   pure (out.take j ++ [{ last with pred := some pred }] ++ out.drop (j + 1))
+
+/-- `attachOne` for each conjunct (`with $a\ge0$ and $b\ge0$`: each condition on its own
+variable, so that a claim that uses `a` alone keeps `a ≥ 0`). -/
+def attachCond (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
+  let mut o := out
+  for m in conjunctsOf 8 φ do o ← attachOne before o m
+  pure o
 
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse

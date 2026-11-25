@@ -1,10 +1,11 @@
 tests/Conditions/article.tex:10:52: info: claim 0: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ y\le x+y)
 tests/Conditions/article.tex:14:1: info: claim 1: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ y\le x+y)
-tests/Conditions/article.tex:20:56: info: claim 2: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow 0\le x+y)
-tests/Conditions/article.tex:24:66: info: claim 3: \forall x\in \mathbb{R},\ 0\le x\land x<1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow x\,y<y+1)
-tests/Conditions/article.tex:28:105: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\land \lvert y-z\rvert<x\Rightarrow y<z+x))
-tests/Conditions/article.tex:32:22: info: claim 5: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow {x}^{2}<x
-tests/Conditions/article.tex:36:60: info: claim 6: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ x\le y\land y\le 1\Rightarrow 0\le y\land y\le 1)
-tests/Conditions/article.tex: 0 definitions, 7 claims
-  results: 14 compiled, 0 failed, 0 prose (of 14)
-  all: 14 compiled, 0 failed, 0 prose (of 14)
+tests/Conditions/article.tex:18:55: info: claim 2: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow 0<x+1
+tests/Conditions/article.tex:24:56: info: claim 3: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow 0\le x+y)
+tests/Conditions/article.tex:28:66: info: claim 4: \forall x\in \mathbb{R},\ 0\le x\land x<1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow x\,y<y+1)
+tests/Conditions/article.tex:32:105: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\land \lvert y-z\rvert<x\Rightarrow y<z+x))
+tests/Conditions/article.tex:36:22: info: claim 6: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow {x}^{2}<x
+tests/Conditions/article.tex:40:60: info: claim 7: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ x\le y\land y\le 1\Rightarrow 0\le y\land y\le 1)
+tests/Conditions/article.tex: 0 definitions, 8 claims
+  results: 16 compiled, 0 failed, 0 prose (of 16)
+  all: 16 compiled, 0 failed, 0 prose (of 16)
