@@ -108,3 +108,4 @@ article-reader/
 /tests/Diophantine/article.leanify.*
 /tests/Mechanics/article.leanify.*
 /tests/Inventory/article.leanify.*
+/tests/Conditions/article.leanify.*

@@ -703,3 +703,9 @@ globs = ["Mechanics.+"]
 name = "Inventory"
 srcDir = "tests"
 globs = ["Inventory.+"]
+
+[[lean_lib]]
+# Conditions in binders, with the core vocabulary.
+name = "Conditions"
+srcDir = "tests"
+globs = ["Conditions.+"]

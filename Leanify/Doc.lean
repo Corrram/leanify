@@ -1672,6 +1672,42 @@ def declaredInts (bs : List BindInfo) : M (List BindInfo) := do
     | some (.lam _ _ (.and (.app (.prim .isInt) (.loc 0)) _)) => b
     | some q => { b with pred := some (.lam .real .tt (.and isInt (.app (shift 1 0 q) (.loc 0)))) })
 
+/-- The condition that the variable `v` lies in the domain `d` of a binder, as a formula:
+an interval by its bounds (`$b\ge0$` is the binder of `b` over `[0,\infty)`, and the
+condition `b\ge0`), another domain by membership. -/
+def condOfDomain (v : Codes) (d : MT) : MT :=
+  let isInf (m : MT) : Bool := match m with | .id n => n == w!"\\infty" | _ => false
+  match d with
+  | .ival lo hi lopen hopen =>
+    let lower : Option (Rel × MT) := match lo with
+      | .neg m => if isInf m then none else some (if lopen then .gt else .ge, lo)
+      | _ => some (if lopen then .gt else .ge, lo)
+    let upper : Option (Rel × MT) := if isInf hi then none else some (if hopen then .lt else .le, hi)
+    match lower, upper with
+    | some (r, a), some (r', b) => .conj [.chain (.id v) [(r, a)], .chain (.id v) [(r', b)]]
+    | some l, none => .chain (.id v) [l]
+    | none, some u => .chain (.id v) [u]
+    | none, none => .chain (.id v) [(.mem, d)]
+  | _ => .chain (.id v) [(.mem, d)]
+
+/-- A condition on variables bound before it in the same binder (`with $a\ge0$`): it joins
+the domain of the last of them that it mentions (the last variable, if it mentions none of
+them), not simply the last one: in `Let $a$, $b$ and $c$ be real numbers with $a\ge0$`, the
+condition on `a` must not ride on `c`, which the claim may leave unused. `φ` is read in the
+scope of `before` and of the variables of `out` up to that one. -/
+def attachCond (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
+  if out.isEmpty then fail E.unsupported
+  let mentioned := freeIds 64 [] φ
+  let j := ((out.zipIdx.filter fun (b, _) => mentioned.contains b.name).map (·.2)).getLast?.getD (out.length - 1)
+  let some last := out[j]? | fail E.unsupported
+  let sc : Scope := ((before ++ out.take (j + 1)).map fun b => (b.name, b.ty)).reverse
+  let (p, pty) ← Elab.term 100000 sc none φ
+  if pty != .prop then fail E.type
+  let pred := match last.pred with
+    | some q => Tm.lam last.ty .tt (.and (.app (shift 1 0 q) (.loc 0)) (shift 1 0 p))
+    | none => Tm.lam last.ty .tt (shift 1 0 p)
+  pure (out.take j ++ [{ last with pred := some pred }] ++ out.drop (j + 1))
+
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
   match b with
@@ -1714,15 +1750,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
       | .every vs d => out := out ++ (← everyAfter (before ++ out) vs d)
       -- `For every $x\in A$ with $φ$`: a condition on the variables bound before it,
       -- part of the domain of the last one
-      | .ifCond φ => do
-        let some last := out.getLast? | fail E.unsupported
-        let sc : Scope := ((before ++ out).map fun b => (b.name, b.ty)).reverse
-        let (p, pty) ← Elab.term 100000 sc none φ
-        if pty != .prop then fail E.type
-        let pred := match last.pred with
-          | some q => Tm.lam last.ty .tt (.and (.app (shift 1 0 q) (.loc 0)) (shift 1 0 p))
-          | none => Tm.lam last.ty .tt (shift 1 0 p)
-        out := out.dropLast ++ [{ last with pred := some pred }]
+      | .ifCond φ => out ← attachCond before out φ
       -- `For every positive integer $n$ and every $x\in[0,1]$`: a noun phrase, whose
       -- condition may use the variables bound before it
       | .noun np => do
@@ -1760,10 +1788,25 @@ def usedBinders (bs : List BindInfo) (used : List Codes) : List BindInfo :=
 before it (`For $x\in(0,1]$ and $e\in[0,x]$`). -/
 def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List BindInfo) := do
   let mut out : List BindInfo := []
+  let st ← get
+  -- (a binder or a condition after others of the same sentence, about variables that they
+  -- already bind, is a condition on them: `Let $a$ and $b$ be real numbers with $a\ge0$,
+  -- $b\ge0$ and $|b|<1$` does not bind `b` again)
+  let restates (out : List BindInfo) (φ : MT) : Bool :=
+    let fr := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n =>
+      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
+    -- (it may also use the variables bound before: `Let $c>0$. Let $v$ be a real number
+    -- with … and $|v|<c$.`)
+    fr.any (fun n => out.any (·.name == n)) && fr.all fun n => out.any (·.name == n) || before.any (·.name == n)
   for b in binds do
     match b with
-    | .every vs d => out := out ++ (← binderInfosRaw.everyAfter (before ++ out) vs d)
+    | .every vs d =>
+      if !vs.isEmpty && vs.all (fun n => out.any (·.name == n)) then
+        let cs := vs.map fun v => condOfDomain v d
+        out ← attachCond before out (match cs with | [c] => c | _ => .conj cs)
+      else out := out ++ (← binderInfosRaw.everyAfter (before ++ out) vs d)
     | .noun np => out := out ++ [← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse]
+    | .ifCond φ => if restates out φ then out ← attachCond before out φ else out := out ++ (← binderInfosRaw b (before ++ out))
     | b => out := out ++ (← binderInfosRaw b (before ++ out))
   declaredInts out
 

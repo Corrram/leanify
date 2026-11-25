@@ -34,8 +34,8 @@ tests/Triangles/article.tex:31:1: info: claim 8: \@n7(4)=2
 tests/Triangles/article.tex:31:1: info: claim 8 is meaningful if: 4\in \mathbb{Z}\land 3\le 4
 tests/Triangles/article.tex:31:1: info: claim 9: \@n7(5)=5
 tests/Triangles/article.tex:31:1: info: claim 9 is meaningful if: 5\in \mathbb{Z}\land 3\le 5
-tests/Triangles/article.tex:35:66: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land x<y+z\Rightarrow (\forall s\in \mathbb{R},\ s<x+z\Rightarrow (\forall t\in \mathbb{R},\ t<x+s\Rightarrow 2\,\@n3(x,s,t)\le \@n4(x,s,t)))))
-tests/Triangles/article.tex:35:66: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land x<y+z\Rightarrow (\forall s\in \mathbb{R},\ s<x+z\Rightarrow (\forall t\in \mathbb{R},\ t<x+s\Rightarrow ((0<x\land 0<s)\land 0<t\land x<s+t\land s<x+t\land t<x+s)\land (0<x\land 0<s)\land 0<t\land x<s+t\land s<x+t\land t<x+s))))
+tests/Triangles/article.tex:35:66: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow 2\,\@n3(x,y,z)\le \@n4(x,y,z)))
+tests/Triangles/article.tex:35:66: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y))
 tests/Triangles/article.tex: 8 definitions, 11 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
   results: 5 compiled, 0 failed, 0 prose (of 5)
