@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={majorization}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $L_k(x)$ for the $k$th largest coordinate of $x$.
+We write $S_k(x)$ for the sum of the $k$ largest coordinates of $x$.
+We write $\Pi(x,t)$ for the positive-part sum of $x$ at $t$.
+
+\section{Majorization}
+
+\begin{lemma}\label{reflexive}
+Let $n$ be a positive integer and let $x$ be a vector in $\mathbb{R}^n$. Then $x$ is majorized by $x$, and $S_0(x)=0$.
+\end{lemma}
+
+\begin{lemma}\label{weak}
+Let $n$ be a positive integer, and let $x$ and $y$ be vectors in $\mathbb{R}^n$. If $x$ is majorized by $y$, then $x$ is weakly submajorized by $y$.
+\end{lemma}
+
+\begin{lemma}\label{order}
+Let $x$ be a vector in $\mathbb{R}^2$. Then $L_1(x)\ge L_2(x)$, and $\Pi(x,t)\ge0$ for every real number $t$.
+\end{lemma}
+
+\end{document}

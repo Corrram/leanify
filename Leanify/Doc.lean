@@ -1180,8 +1180,23 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       match np.getLast? with
       | some (.m v) =>
         let ws := np.dropLast
+        let words (cs : List Chunk) : Bool := cs.all fun c => match c with | .w _ | .p 45 => true | _ => false
+        -- (a modifier with formulas, `a vector in $\mathbb{R}^n$ $x$`: the shortest ending of
+        -- the words that is one, after words only)
+        if !words ws then
+          let hitS := (List.range ws.length).findSome? fun k0 =>
+            let k := k0 + 1
+            if k ≥ ws.length then none else
+            let head := ws.take (ws.length - k)
+            let tail := ws.drop (ws.length - k)
+            if !words head then none else
+            if V.mods.any (fun m => !m.prenominal && Notation.hasSlots m.phrase &&
+                (Notation.matchSlots m.phrase tail []).isSome) then some k else none
+          match hitS with
+          | some k => hoist f (ws.take (ws.length - k) ++ [.m v]) ++ ws.drop (ws.length - k)
+          | none => np
+        else
         -- (a noun with a hyphen, `right-hand side Lipschitz in the second variable`)
-        if ws.any (fun c => match c with | .w _ | .p 45 => false | _ => true) then np else
         let hit := V.mods.findSome? fun m =>
           if m.prenominal || Notation.hasSlots m.phrase || m.phrase.length ≥ ws.length then none else
           let tail := ws.drop (ws.length - m.phrase.length)

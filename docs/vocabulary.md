@@ -325,6 +325,12 @@ Further fields cover other branches of mathematics:
   errors of the least-squares line;
 * `bayesian`: conjugate posteriors (beta–binomial, gamma–Poisson, normal–normal), Bayes'
   formula.
+* `majorization` (loads `vectors`): majorization of vectors, the `k`th largest coordinate;
+* `odes`: classical first- and second-order equations by their coefficients, the Wronskian;
+* `randomwalks`: gambler's ruin, the simple random walk, Brownian hitting probabilities and
+  exit times;
+* `functionsequences`: pointwise and uniform convergence, equicontinuity of sequences of
+  functions.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

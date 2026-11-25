@@ -70,6 +70,10 @@ import Leanify.Library.Extremes
 import Leanify.Library.Games
 import Leanify.Library.Regression
 import Leanify.Library.Bayesian
+import Leanify.Library.Majorization
+import Leanify.Library.Odes
+import Leanify.Library.RandomWalks
+import Leanify.Library.FunctionSequences
 
 /-! # The fields of the vocabulary
 
@@ -157,19 +161,24 @@ def all : List (String × Vocab) := [
   ("extremes", Extremes.vocab),
   ("games", Games.vocab),
   ("regression", Regression.vocab),
-  ("bayesian", Bayesian.vocab)]
+  ("bayesian", Bayesian.vocab),
+  ("majorization", Majorization.vocab),
+  ("odes", Odes.vocab),
+  ("randomwalks", RandomWalks.vocab),
+  ("functionsequences", FunctionSequences.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
 /-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
 `hilbert` with more, `copulas` is `markov` with more, `metricspaces` is `topologies` with
-more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more. Their entries are tagged with the field that adds
+more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more and `majorization` is `vectors` with more. Their entries are tagged with the field that adds
 them. -/
 def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
    ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
-   ("markovchains", ["matrices", "matrixnorms"])]
+   ("markovchains", ["matrices", "matrixnorms"]),
+   ("majorization", ["vectors"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -185,7 +194,7 @@ def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
-    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
+    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
@@ -194,8 +203,8 @@ def bundles : List (String × List String) := [
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
-  ("linearalgebra", ["vectors", "matrices"]),
-  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains", "branching", "extremes"]),
+  ("linearalgebra", ["vectors", "matrices", "majorization"]),
+  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "dependence"])]
 

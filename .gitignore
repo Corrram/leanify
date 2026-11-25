@@ -88,3 +88,7 @@ article-reader/
 /tests/Games/article.leanify.*
 /tests/Regression/article.leanify.*
 /tests/Bayesian/article.leanify.*
+/tests/Majorization/article.leanify.*
+/tests/Odes/article.leanify.*
+/tests/RandomWalks/article.leanify.*
+/tests/FunctionSequences/article.leanify.*

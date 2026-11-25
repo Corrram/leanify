@@ -48,6 +48,8 @@ math
 │   ├── convexity                 log-, harmonically, s-, h-convex functions; Hermite–Hadamard
 │   ├── fractional                Riemann–Liouville, Hadamard, Caputo; Mittag-Leffler
 │   ├── summability               Cesàro and Abel summability, sequences
+│   ├── functionsequences         pointwise and uniform convergence, equicontinuity
+│   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -61,7 +63,8 @@ math
 ├── algebra
 │   ├── linearalgebra
 │   │   ├── vectors
-│   │   └── matrices
+│   │   ├── matrices
+│   │   └── majorization          majorization of vectors (with vectors)
 │   ├── polynomials
 │   └── groups                    finite groups
 ├── topology                      topology and geometry
@@ -87,6 +90,7 @@ math
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
 │   │   │   ├── branching         Galton–Watson processes, extinction probabilities
+│   │   │   ├── randomwalks       gambler's ruin, Brownian hitting probabilities
 │   │   │   └── extremes          GEV and generalized Pareto laws, domains of attraction
 │   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   ├── regression            residuals, sums of squares, R², standard errors
@@ -203,6 +207,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`convexity`](glossary.md#convexity) | log-convex, harmonically convex and concave, geometrically and GA-convex, star-shaped, quasiconcave, `$s$-convex in the second sense`, `$h$-convex`, Wright-convex functions, P-functions and Godunova–Levin functions; the integral mean on `[a,b]`, the Hermite–Hadamard gap, the Jensen gap | |
 | [`fractional`](glossary.md#fractional) | left- and right-sided Riemann–Liouville fractional integrals, the Hadamard fractional integral, Riemann–Liouville and Caputo fractional derivatives of order in `(0,1)`, the gamma function, the one- and two-parameter Mittag-Leffler functions | |
 | [`summability`](glossary.md#summability) | Cesàro and Abel summable sequences, convergent, null, Cauchy, eventually nondecreasing and bounded-variation sequences, subadditive and log-concave sequences; Cesàro means, arithmetic means, the Abel sum, forward differences | |
+| [`functionsequences`](glossary.md#functionsequences) | for a sequence of functions `f(n, x)`: pointwise and uniform convergence (on `[a,b]` or the line), uniformly Cauchy, uniformly bounded, equicontinuous, monotone in the index; the supremum distance to a limit, partial sums of a series of functions | |
+| [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -215,6 +221,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | **Algebra** (`algebra`) | | |
 | [`vectors`](glossary.md#vectors) | real vectors: norms, inner products, coordinates, angles | |
 | [`matrices`](glossary.md#matrices) | real matrices: determinant, trace, rank, inverse, eigenvalues; symmetric, orthogonal, positive definite | |
+| [`majorization`](glossary.md#majorization) | vectors majorized, weakly submajorized or weakly supermajorized by another, decreasingly ordered vectors; the `k`th largest coordinate, the sum of the `k` largest coordinates, the positive-part sum | loads `vectors` |
 | [`polynomials`](glossary.md#polynomials) | real polynomials: degree, coefficients, roots | |
 | [`groups`](glossary.md#groups) | finite groups up to isomorphism: abelian, cyclic, simple, solvable; Sylow subgroups; cyclic, symmetric, alternating and dihedral groups | |
 | **Topology and geometry** (`topology`) | | |
@@ -245,6 +252,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
+| [`randomwalks`](glossary.md#randomwalks) | gambler's ruin: the ruin probability and the expected duration, the probability of reaching the target; the distribution of the simple random walk after `n` steps; for Brownian motion the hitting probability, the expected exit time and the transition density | |
 | [`extremes`](glossary.md#extremes) | the GEV, standard Gumbel, Fréchet and reversed Weibull distribution functions, return levels, the generalized Pareto distribution function and its mean excess; distribution functions in the maximum domain of attraction of the Gumbel, Fréchet or Weibull law, regularly varying tails | |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |

@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={randomwalks}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $r_k(N,p)$ for the ruin probability from $k$ with target $N$ and up-probability $p$.
+We write $D_k(N,p)$ for the expected duration from $k$ with target $N$ and up-probability $p$.
+We write $P_n(x,p)$ for the probability of being at $x$ after $n$ steps with up-probability $p$.
+We write $h(m,s,a,c)$ for the probability that Brownian motion with drift $m$ and variance $s$ hits $a$ before $c$.
+We write $T(s,c,a)$ for the expected exit time of Brownian motion with variance $s$ from $(c,a)$.
+We write $q_t(m,s)$ for the transition density of Brownian motion with drift $m$ and variance $s$ at time $t$.
+
+\section{Gambler's ruin}
+
+\begin{lemma}\label{fair}
+$r_1(2,\frac12)=\frac12$, $r_1(2,\frac13)=\frac23$ and $D_1(2,\frac12)=1$.
+\end{lemma}
+
+\begin{lemma}\label{walk}
+$P_2(0,\frac12)=\frac12$ and $P_2(1,\frac12)=0$.
+\end{lemma}
+
+\section{Brownian motion}
+
+\begin{lemma}\label{brownian}
+$h(0,1,1,-1)=\frac12$, $T(1,-1,1)=1$ and $q_1(0,1)(0)=\frac{1}{\sqrt{2\pi}}$.
+\end{lemma}
+
+\end{document}

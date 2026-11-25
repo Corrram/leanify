@@ -583,3 +583,27 @@ globs = ["Regression.+"]
 name = "Bayesian"
 srcDir = "tests"
 globs = ["Bayesian.+"]
+
+[[lean_lib]]
+# The field majorization: majorization of real vectors.
+name = "Majorization"
+srcDir = "tests"
+globs = ["Majorization.+"]
+
+[[lean_lib]]
+# The field odes: classical ordinary differential equations.
+name = "Odes"
+srcDir = "tests"
+globs = ["Odes.+"]
+
+[[lean_lib]]
+# The field randomwalks: random walks and Brownian motion.
+name = "RandomWalks"
+srcDir = "tests"
+globs = ["RandomWalks.+"]
+
+[[lean_lib]]
+# The field functionsequences: sequences of functions.
+name = "FunctionSequences"
+srcDir = "tests"
+globs = ["FunctionSequences.+"]

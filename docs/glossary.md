@@ -29,6 +29,8 @@ except a notion whose meanings take arguments of different types, which the type
     * `convexity`
     * `fractional`
     * `summability`
+    * `functionsequences`
+    * `odes`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -44,6 +46,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `linearalgebra`
       * `vectors`
       * `matrices`
+      * `majorization`
     * `polynomials`
     * `groups`
   * `topology`
@@ -69,6 +72,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `stochasticorders`
         * `markovchains`
         * `branching`
+        * `randomwalks`
         * `extremes`
       * `samples`
       * `regression`
@@ -100,19 +104,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
-| `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
-| `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
-| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes` |
+| `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
+| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
 
 ## `core`
 
@@ -2328,4 +2332,103 @@ except a notion whose meanings take arguments of different types, which the type
 | posterior variance of the normal prior with variance $a$ after $b$ observations with variance $c$ | ℝ → ℝ → ℝ → ℝ | `1/(1/τ² + n/σ²)` |
 | posterior probability with prior $a$ and likelihoods $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `P(E\|H)P(H)/(P(E\|H)P(H) + P(E\|¬H)(1-P(H)))`, Bayes' formula |
 | bayes factor with likelihoods $a$ and $b$ | ℝ → ℝ → ℝ | `P(E\|H₁)/P(E\|H₀)` |
+
+## `majorization`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| vector | $\mathrm{Vec}$ | a real vector of some dimension (Mathlib `Fin n → ℝ`) |
+| unit vector | $\mathrm{Vec}$ | of norm 1 |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| nonzero | $\mathrm{Vec}$ | not the zero vector |
+| unit | $\mathrm{Vec}$ | of norm 1 |
+| in $\mathbb{R}^x$ | $\mathrm{Vec}$ | of dimension `n` |
+| in $\mathbb{R}^{x}$ | $\mathrm{Vec}$ | of dimension `n` |
+| of dimension $x$ | $\mathrm{Vec}$ | in `ℝⁿ` |
+| orthogonal to $x$ | $\mathrm{Vec}$ | of the same dimension, with inner product 0 |
+| parallel to $x$ | $\mathrm{Vec}$ | of the same dimension, one a multiple of the other |
+| majorized by $x$ | $\mathrm{Vec}$ | `∑_{i≤k} x_{[i]} ≤ ∑_{i≤k} y_{[i]}` for every `k`, with equality for `k = n` |
+| weakly submajorized by $x$ | $\mathrm{Vec}$ | `∑_{i≤k} x_{[i]} ≤ ∑_{i≤k} y_{[i]}` for every `k` |
+| weakly supermajorized by $x$ | $\mathrm{Vec}$ | `∑_{i≤k} x_{(i)} ≥ ∑_{i≤k} y_{(i)}` for every `k`, the smallest coordinates |
+| decreasingly ordered | $\mathrm{Vec}$ | `x_1 ≥ x_2 ≥ … ≥ x_n` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| dimension of $a$ | $\mathrm{Vec}$ → ℝ | `n`, for a vector in `ℝⁿ` |
+| norm of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm (Mathlib `EuclideanSpace`) |
+| length of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm |
+| inner product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension (Mathlib `inner`) |
+| dot product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension |
+| $a$ th coordinate of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `xᵢ`, for `1 ≤ i ≤ n` |
+| distance between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `‖x - y‖`, of vectors of the same dimension |
+| angle between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | in `[0, π]`, of nonzero vectors of the same dimension (Mathlib `InnerProductGeometry.angle`) |
+| cross product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → $\mathrm{Vec}$ | of vectors of dimension 3 (Mathlib `crossProduct`) |
+| zero vector of dimension $a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| zero vector in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| $a$ th standard basis vector of dimension $b$ | ℝ → ℝ → $\mathrm{Vec}$ | `eᵢ ∈ ℝⁿ`, for `1 ≤ i ≤ n` |
+| sum of the coordinates of $a$ | $\mathrm{Vec}$ → ℝ | `∑ xᵢ` |
+| set of vectors in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| set of vectors of dimension $a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| $a$ th largest coordinate of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `x_{[k]}`, `1 ≤ k ≤ n` |
+| sum of the $a$ largest coordinates of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `∑_{i=1}^{k} x_{[i]}` |
+| positive-part sum of $a$ at $b$ | $\mathrm{Vec}$ → ℝ → ℝ | `∑_i (x_i - t)^+` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Vec}$ | a real number `c` as the vector `(c)` of dimension 1 |
+| $+$ | $\mathrm{Vec}$ | `x + y`, of the same dimension |
+| $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
+| $-$ (sign) | $\mathrm{Vec}$ | `-x` |
+| $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
+| $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
+
+## `odes`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| solution of the first-order linear equation with coefficients $x$ and $a$ | ℝ → ℝ | `y' = a(t) y + b(t)` everywhere |
+| solution of the separable equation with factors $x$ and $a$ | ℝ → ℝ | `y' = g(t) h(y)` everywhere |
+| solution of the bernoulli equation with coefficients $x$ and $a$ and exponent $b$ | ℝ → ℝ | `y' + p(t) y = q(t) y^n` everywhere |
+| solution of the riccati equation with coefficients $x$, $a$ and $b$ | ℝ → ℝ | `y' = p(t) + q(t) y + r(t) y²` everywhere |
+| solution of the second-order linear equation with coefficients $x$ and $a$ | ℝ → ℝ | `y'' + p(t) y' + q(t) y = 0` everywhere |
+| solution of the euler-cauchy equation with coefficients $x$ and $a$ | ℝ → ℝ | `t² y'' + a t y' + b y = 0` for `t > 0` |
+| solution of the harmonic oscillator equation with frequency $x$ | ℝ → ℝ | `y'' + ω² y = 0` everywhere |
+| solution of the damped oscillator equation with damping $x$ and frequency $a$ | ℝ → ℝ | `y'' + 2c y' + ω² y = 0` everywhere |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| wronskian of $a$ and $b$ at $c$ | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `f(t) g'(t) - f'(t) g(t)` |
+
+## `randomwalks`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| ruin probability from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability of reaching `0` before `N` from `k` (`1 - k/N` for `p = 1/2`) |
+| probability of reaching the target from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability of reaching `N` before `0` from `k` |
+| expected duration from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the expected number of steps until `0` or `N` is reached (`k(N-k)` for `p = 1/2`) |
+| probability of being at $a$ after $b$ steps with up-probability $c$ | ℝ → ℝ → ℝ → ℝ | `\binom{n}{(n+x)/2} p^{(n+x)/2} (1-p)^{(n-x)/2}` where `n + x` is even and `\|x\| ≤ n`, `0` otherwise |
+| probability that brownian motion with drift $a$ and variance $b$ hits $c$ before $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | for `a > 0 > -b`: `(1 - e^{2μb/σ²})/(e^{-2μa/σ²} - e^{2μb/σ²})`, `b/(a+b)` for `μ = 0` |
+| expected exit time of brownian motion with variance $a$ from $(b,c)$ | ℝ → ℝ → ℝ → ℝ | `ab/σ²` for the interval `(-b, a)`, started at `0`, without drift |
+| transition density of brownian motion with drift $a$ and variance $b$ at time $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | `x ↦ e^{-(x-μt)²/(2σ²t)}/√(2πσ²t)` |
+
+## `functionsequences`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| pointwise convergent to $x$ on $[a,b]$ | ℝ → ℝ → ℝ | `f(n,x) → g(x)` for every `x ∈ [a,b]` |
+| uniformly convergent to $x$ on $[a,b]$ | ℝ → ℝ → ℝ | `sup_{x∈[a,b]} \|f(n,x) - g(x)\| → 0` |
+| pointwise convergent to $x$ | ℝ → ℝ → ℝ | `f(n,x) → g(x)` for every `x` |
+| uniformly convergent to $x$ | ℝ → ℝ → ℝ | `sup_x \|f(n,x) - g(x)\| → 0` |
+| uniformly cauchy on $[x,a]$ | ℝ → ℝ → ℝ | `\|f(m,x) - f(n,x)\| < ε` for all large `m`, `n` and all `x ∈ [a,b]` |
+| uniformly bounded on $[x,a]$ | ℝ → ℝ → ℝ | `\|f(n,x)\| ≤ M` for all `n` and `x ∈ [a,b]` |
+| equicontinuous on $[x,a]$ | ℝ → ℝ → ℝ | for every `x` and `ε > 0` one `δ > 0` serves every `f_n` |
+| monotonically increasing in the index | ℝ → ℝ → ℝ | `f(n,x) ≤ f(n+1,x)` for all `n` and `x` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| supremum distance between the $a$ th term of $b$ and $c$ on $[d,e]$ | ℝ → (ℝ → ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `sup_{x∈[a,b]} \|f(n,x) - g(x)\|`, the least upper bound (where the differences are bounded) |
+| $a$ th partial sum of the series of functions $b$ at $c$ | ℝ → (ℝ → ℝ → ℝ) → ℝ → ℝ | `∑_{k=0}^{n} f(k,x)` |
 

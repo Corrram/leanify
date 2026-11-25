@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={odes}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $W(f,g,t)$ for the Wronskian of $f$ and $g$ at $t$.
+For every real number $t$, let $e(t)\coloneqq\exp(t)$.
+For every real number $t$, let $s(t)\coloneqq\sin t$.
+For every real number $t$, let $c(t)\coloneqq\cos t$.
+For every real number $t$, let $w(t)\coloneqq t^2$.
+For every real number $t$, let $o(t)\coloneqq1$.
+For every real number $t$, let $m(t)\coloneqq-1$.
+For every real number $t$, let $z(t)\coloneqq0$.
+For every real number $y$, let $i(y)\coloneqq y$.
+
+\section{First order}
+
+\begin{lemma}\label{first}
+$e$ is a solution of the first-order linear equation with coefficients $o$ and $z$, and $e$ is a solution of the separable equation with factors $o$ and $i$.
+\end{lemma}
+
+\begin{lemma}\label{nonlinear}
+$e$ is a solution of the Bernoulli equation with coefficients $m$ and $z$ and exponent $2$, and $e$ is a solution of the Riccati equation with coefficients $z$, $o$ and $z$.
+\end{lemma}
+
+\section{Second order}
+
+\begin{lemma}\label{second}
+$s$ is a solution of the second-order linear equation with coefficients $z$ and $o$, $s$ is a solution of the harmonic oscillator equation with frequency $1$, and $s$ is a solution of the damped oscillator equation with damping $0$ and frequency $1$.
+\end{lemma}
+
+\begin{lemma}\label{euler}
+$w$ is a solution of the Euler-Cauchy equation with coefficients $0$ and $-2$.
+\end{lemma}
+
+\begin{lemma}\label{wronskian}
+Let $t$ be a real number. Then $W(s,c,t)=-1$.
+\end{lemma}
+
+\end{document}

@@ -28,7 +28,7 @@ bundles = {m.group(1): re.findall(r'"([a-z]+)"', m.group(2)) for m in re.findite
 inc = {"hilbert": ["unitsquare"], "markov": ["unitsquare", "hilbert"], "metricspaces": ["topologies"],
        "copulas": ["unitsquare", "hilbert", "markov"],
        "planegeometry": ["geometry"], "matrixnorms": ["matrices"],
-       "markovchains": ["matrices", "matrixnorms"]}
+       "markovchains": ["matrices", "matrixnorms"], "majorization": ["vectors"]}
 def expand(fs):
     out = []
     for f in fs:

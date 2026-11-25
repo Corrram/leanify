@@ -1555,6 +1555,11 @@ def nameWords : Nat → List Chunk → List Codes → List Codes × List Chunk
 def clauseEnd (cs : List Chunk) : Bool :=
   isEnd cs || (punct 44 cs).isSome || (kw [w!"by"] cs >>= cite).isSome
 
+/-- A word after `and $x$` with which a phrase of the vocabulary goes on (`with coefficients $p$
+and $q$ and exponent $n$`), rather than the verb of a new clause. -/
+def phraseGoesOn (v : Codes) : Bool :=
+  [w!"and", w!"or", w!"with", w!"from", w!"to", w!"at", w!"in", w!"on", w!"of", w!"up"].contains v
+
 /-- A list of the arguments of a phrase goes on after a comma (`with kernel $K$, right-hand side
 $g$ and parameter $\lambda$`): words, a formula, `and` and a word follow it. -/
 def listContinues (cs : List Chunk) : Bool :=
@@ -1599,7 +1604,8 @@ def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk ×
       -- $x>0$`; not the last argument of a phrase, `collinear with $B$ and $C$.`)
       | .w w :: .m ts :: rest =>
         w == w!"and" && (match rest with
-          | .w _ :: _ => true
+          -- (`with coefficients $p$ and $q$ and exponent $n$`: the phrase goes on)
+          | .w v :: _ => !phraseGoesOn v
           | _ => match Math.parseFormula ts with
             | some (.chain _ (_ :: _)) => true
             | some _ => false
@@ -2269,7 +2275,7 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           if (match r4 with
               | .p 45 :: _ => true
               | .w a :: .m _ :: rest =>
-                (a == w!"and" && (match rest with | .w _ :: _ => false | _ => true)) ||
+                (a == w!"and" && (match rest with | .w v :: _ => phraseGoesOn v | _ => true)) ||
                 -- (`… of $f$ from $a$`: the phrase goes on with a preposition)
                 [w!"from", w!"to", w!"at", w!"in", w!"under", w!"over", w!"between"].contains a
               -- (`… with kernel $K$ and right-hand side $g$`: the phrase goes on with another

@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={functionsequences}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For all $n,x\in\mathbb{R}$, let $f(n,x)\coloneqq\frac{x}{n+1}$.
+For all $n,x\in\mathbb{R}$, let $g(n,x)\coloneqq1-\frac{1}{n+1}$.
+For every real number $x$, let $z(x)\coloneqq0$.
+For every real number $x$, let $o(x)\coloneqq1$.
+We write $d_n(f,g)$ for the supremum distance between the $n$th term of $f$ and $g$ on $[0,1]$.
+We write $S_n(f,x)$ for the $n$th partial sum of the series of functions $f$ at $x$.
+
+\section{Convergence}
+
+\begin{lemma}\label{uniform}
+$f$ is uniformly convergent to $z$ on $[0,1]$ and pointwise convergent to $z$ on $[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+$f$ is uniformly bounded on $[0,1]$ and equicontinuous on $[0,1]$, and $f$ is uniformly Cauchy on $[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{monotone}
+$g$ is monotonically increasing in the index, and $g$ is pointwise convergent to $o$.
+\end{lemma}
+
+\begin{lemma}\label{distance}
+$d_0(f,z)=1$ and $S_1(f,1)=\frac32$.
+\end{lemma}
+
+\end{document}
