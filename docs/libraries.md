@@ -104,11 +104,12 @@ math
 │   │   └── majorization          majorization of vectors (with vectors)
 │   ├── polynomials
 │   ├── quadratics                discriminants, roots and Vieta; Cardano's root of a cubic
-│   ├── groups                    finite groups
+│   ├── structures                groups, rings, fields, vector spaces, with their elements (also in topology)
 │   ├── finitefields              GL_n(F_q), Gaussian binomials, projective spaces
 │   └── liealgebras               dimensions, positive roots, Coxeter numbers
 ├── topology                      topology and geometry
 │   ├── realsets                  (also in analysis)
+│   ├── structures                topological and metric spaces, ordered sets (also in algebra)
 │   ├── topologies                topologies on ℝ: open, compact, Hausdorff, continuous maps
 │   ├── metricspaces              metrics on ℝ: balls, Cauchy sequences, completeness (with topologies)
 │   ├── geometry                  the Euclidean plane
@@ -263,6 +264,13 @@ the fields an article needs and, when they belong together, their bundle.
 
 ### Renamed fields
 
+The field `groups` (finite groups as a type of their own) is now part of `structures`,
+where a group is the set of its elements, finite or not; `vocab=groups` loads
+`structures`, and an article reads the same with it, except that `the order of` has a
+meaning for groups and for their elements, so a `We write` definition names the kind (`We
+write $|G|$ for the order of a group $G$`).
+
+
 The fields `analysis` and `topology` of earlier versions are now `realfunctions` and
 `realsets`, and the names `analysis` and `topology` are realms that contain them. An
 article that loaded `vocab=analysis` reads the same with the realm (it has more words, no
@@ -328,7 +336,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`majorization`](glossary.md#majorization) | vectors majorized, weakly submajorized or weakly supermajorized by another, decreasingly ordered vectors; the `k`th largest coordinate, the sum of the `k` largest coordinates, the positive-part sum | loads `vectors` |
 | [`polynomials`](glossary.md#polynomials) | real polynomials: degree, coefficients, roots | |
 | [`quadratics`](glossary.md#quadratics) | for `ax² + bx + c`: the discriminant, the larger and smaller root, the sum and product of the roots, the vertex and extreme value, the number of real roots; the discriminant and Cardano's real root of `x³ + px + q` | |
-| [`groups`](glossary.md#groups) | finite groups up to isomorphism: abelian, cyclic, simple, solvable; Sylow subgroups; cyclic, symmetric, alternating and dihedral groups | |
+| [`structures`](glossary.md#structures) | structures with their elements (`Let $G$ be a group and $g\in G$`): groups, subgroups and normal subgroups; rings, ideals (prime, maximal, principal), integral domains, fields and field extensions, characteristic; modules and vector spaces over a ring or field, subspaces, dimension; topological and metric spaces, open, closed, dense and compact subsets, neighbourhoods, Hausdorff, compact, connected, complete; partially and totally ordered sets, lattices, bounds; maps bound by a signature (`$\varphi\colon G\to H$`): homomorphisms, linear, continuous and monotone maps, homeomorphisms, isometries; cyclic, symmetric, alternating and dihedral groups, direct products. Also loaded as `groups`, `rings` or `spaces` | |
 | [`finitefields`](glossary.md#finitefields) | prime powers; the orders of `GL_n(F_q)` and `SL_n(F_q)`; square matrices, subspaces (Gaussian binomials) and projective points over `F_q`; primitive elements | |
 | [`liealgebras`](glossary.md#liealgebras) | the dimensions, numbers of positive roots and Coxeter numbers of the classical simple Lie algebras `A_n`, `B_n`, `C_n`, `D_n` | |
 | **Topology and geometry** (`topology`) | | |
@@ -423,9 +431,11 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 
 ## Not yet
 
-Topology and metrics are on the real line: a field has types of its own, but not yet an
-abstract space whose points are of a type the article declares (`Let $(X,d)$ be a metric
-space.`). Sample statistics (the sample mean and variance, empirical distribution
+Abstract structures (`structures`) have at most `2^𝔠` elements: their elements are
+points that are sets of real numbers, which every structure of analysis and algebra in
+practice can be (`docs/vocabularies.md`). A structure written with its operations as a
+tuple (`Let $(X,d)$ be a metric space.`, `$(G,\cdot)$`) is not read yet; name it (`Let $X$
+be a metric space.`). Sample statistics (the sample mean and variance, empirical distribution
 functions, estimators and tests) have no field yet: they need a sample as a sequence of
 numbers, and the grammar does not yet bind an infinite sequence whose terms are written
 `a_n` ([roadmap](roadmap.md)); a sequence is written as a function of the natural numbers

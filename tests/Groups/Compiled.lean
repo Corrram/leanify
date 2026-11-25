@@ -3,7 +3,7 @@ import Leanify.Library.Fields
 
 /-! # `article.tex`, compiled
 
-A test of the field `groups` of the vocabulary: finite groups as a type of its own, a modifier whose argument is a group (`isomorphic to $C_4$`), `Every NP $x$ is ADJ`, and clauses joined by `or` and by `if and only if`. After editing the article, run
+A test of the field `structures` (named `groups`): groups as sets of their elements, named finite groups, a modifier whose argument is a group (`isomorphic to $C_4$`), `Every NP $x$ is ADJ`, and clauses joined by `or` and by `if and only if`. After editing the article, run
 
     lake exe leanify prepare tests/Groups/article.tex --lean tests/Groups/Compiled.lean
 
@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Groups.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["groups"]
 
-#leanify_article Groups "article.tex" "fnv1a64:24b615dd50f3d941" with Groups.vocabulary
+#leanify_article Groups "article.tex" "fnv1a64:9645c573c1622d9d" with Groups.vocabulary

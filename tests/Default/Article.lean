@@ -13,7 +13,7 @@ import Leanify.Library.ComplexModel
 import Leanify.Library.TorusModel
 import Leanify.Library.VectorsModel
 import Leanify.Library.PolynomialsModel
-import Leanify.Library.GroupsModel
+import Leanify.Library.StructuresModel
 import Leanify.Library.TopologiesModel
 import Leanify.Library.GeometryModel
 import Mathlib.Analysis.SpecialFunctions.Gamma.Basic

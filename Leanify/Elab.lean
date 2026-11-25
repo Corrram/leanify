@@ -288,6 +288,16 @@ structure St where
   locals : List (Nat × Nat) := []
   /-- The variables of each result at its end (its proof starts with them). -/
   resultBinders : List (Nat × List BindInfo) := []
+  /-- The domain of the map that the noun phrase being read binds by a signature
+(`$\varphi\colon G\to H$`), as a predicate stated where the variable is bound: what a noun or
+adjective of maps that is meant on a domain (`homomorphism`, `injective`) is about. -/
+  sigDom : Option Tm := none
+  /-- The domain a noun phrase starts with, before any signature (the subject's, in `$\varphi$
+  is a homomorphism`). -/
+  sigDomPreset : Option Tm := none
+  /-- The domains of the maps bound by a signature: the environment, the map's name and the
+  domain as written (read again where a sentence says that the map is injective). -/
+  sigDoms : List (Nat × Codes × MT) := []
   /-- The environment of the current sentence, and the result its proof proves. -/
   curEnv : Nat := 0
   curProved : Option Nat := none
@@ -626,6 +636,7 @@ def opName : OpKey → Codes
   | .abs => w!"$\\lvert\\cdot\\rvert$" | .sum => w!"$\\sum$" | .prod => w!"$\\prod$"
   | .le | .lt => w!"an order ($\\le$, $<$)" | .fn n => w!"$" ++ n ++ w!"$"
   | .decor n => w!"$" ++ n ++ w!"$" | .call => w!"an application to a number"
+  | .eq => w!"$=$" | .ofRealIn => w!"a number in a set" | .inv => w!"an inverse"
 
 /-- `op` on elements of `t`, applied to `args`: the method's constant. -/
 def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
@@ -701,7 +712,10 @@ def arith (op : OpKey) (a b : Tm × Ty) : M (Tm × Ty) := do
   let x ← coerce a.1 a.2 t
   let y ← coerce b.1 b.2 t
   let r ← callMethod t op [x, y]
-  if op == .div then
+  -- (a type with an inverse of its own says where division is meant, in the domain of its
+  -- division: a group has no `0` to exclude)
+  let ownInv := (← method t .inv).isSome
+  if op == .div && !ownInv then
     let zero ← coerce (.num 0) .real t
     return (.guard (.not (.eq y zero)) r.1, r.2)
   return r
@@ -767,11 +781,25 @@ def applyAllD (head : Tm) (ty : Ty) (doms : List (Option Tm)) :
         | some g => Tm.guard g guarded
         | none => guarded
       applyAllD guarded cod (domsAfter a' (doms.drop 1)) rest
-    | _ =>
+    | _ => do
+      let hasMul (t : Ty) : M Bool := do
+        pure ((← ownTy t) && ((← get).vocab.methods.any fun m => m.ty == t && m.op == .mul))
+      let mulA ← hasMul aty
+      let mulT ← hasMul ty
+      -- a number before an element of a vocabulary's type with a product: `2(v+w)`
+      if ty == .real && rest.isEmpty && mulA then do
+        let h' ← coerce head .real aty
+        let (t, t') ← callMethod aty .mul [h', a]
+        pure (t, t', [])
       -- a real number applied to one argument is a product
-      if ty == .real && rest.isEmpty then do
+      else if ty == .real && rest.isEmpty then do
         let a' ← coerce a aty .real
         pure (.mul head a', .real, [])
+      -- (so is an element of a vocabulary's type with a product, `c(v+w)`, `a(b+1)`)
+      else if rest.isEmpty && (aty == ty || aty == .real) && mulT then do
+        let a' ← coerce a aty ty
+        let (t, t') ← callMethod ty .mul [head, a']
+        pure (t, t', [])
       else fail E.type
 
 def applyAll (head : Tm) (ty : Ty) (doms : List (Option Tm)) (args : List (Tm × Ty)) : M (Tm × Ty) := do
@@ -973,9 +1001,10 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
     let t := if (← ownTy x.2) then x.2 else y.2
     let a ← coerce x.1 x.2 t
     let b ← coerce y.1 y.2 t
+    let hasEq := ((← get).vocab.methods.any fun m => m.ty == t && m.op == .eq)
     match r with
-    | .eq => return .eq a b
-    | .ne => return .not (.eq a b)
+    | .eq => if hasEq then return (← callMethod t .eq [a, b]).1 else return .eq a b
+    | .ne => if hasEq then return .not (← callMethod t .eq [a, b]).1 else return .not (.eq a b)
     | .le => return (← callMethod t .le [a, b]).1
     | .lt => return (← callMethod t .lt [a, b]).1
     | .ge => return (← callMethod t .le [b, a]).1
@@ -2495,6 +2524,12 @@ where
             | _ => none
           if let some d := top then
             if (← method t (.decor d)).isSome then return (← callMethod t (.decor d) [z])
+          -- (a type with an inverse of its own, such as the elements of a group: `g^{-1}` is
+          -- the inverse, `g^{-n}` the inverse of `g^n`)
+          if (← method t .inv).isSome then
+            if let .neg (.num n) := e then
+              let base ← if n == 1 then pure z else do pure (← callMethod t .pow [z, .num n]).1
+              return (← callMethod t .inv [base])
           match e with
           | .num n => return (← callMethod t .pow [z, .num n])
           | .neg (.num n) => return (← arith .div (.num 1, .real) (← callMethod t .pow [z, .num n]))

@@ -143,7 +143,7 @@ The vocabularies form a tree: `vocab=math` loads them all, and its seven realms 
 branch, `analysis` (real functions and sets, calculus, series, integration, asymptotics,
 transforms, Fourier series, signals, optimization, dynamics, functional equations, generalized convexity, fractional calculus, summability, sequences of
 functions, ODEs, epidemic and population models, pharmacokinetics, calculus of variations, physics (mechanics, waves, relativity, circuits, thermodynamics, kinetics, fluids, quantum mechanics, materials, astronomy, electromagnetism, kinematics, optics, acoustics, music, crystallography, orbits), integral equations, classical PDEs, special functions), `algebra` (vectors,
-matrices, majorization, polynomials, quadratics and cubics, groups, finite fields, Lie algebras), `topology` (topologies and metrics on the line, plane
+matrices, majorization, polynomials, quadratics and cubics, groups, rings, fields and vector spaces with their elements, finite fields, Lie algebras), `topology` (topologies and metrics on the line, plane
 geometry, conics, triangles, solids, polyhedra, the sphere, map projections, surfaces, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods, floating-point arithmetic, convergence acceleration), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,

@@ -186,10 +186,16 @@ Further fields cover other branches of mathematics:
   perpendicular bisectors, circles and discs as sets of points;
 * `congruences`: `congruent to $b$ modulo $n$`, `coprime to $n$`, quadratic residues and
   the Legendre symbol, primitive roots, inverses modulo `n`;
-* `groups`: finite groups, a type of its own, up to isomorphism (`isomorphic to $H$`):
-  abelian, cyclic, simple, solvable and nilpotent groups; the order, the exponent, the
-  numbers of subgroups, of conjugacy classes and of Sylow subgroups; cyclic, symmetric,
-  alternating and dihedral groups, the Klein four-group, direct products;
+* `structures`: groups, rings, fields, modules and vector spaces, topological and metric
+  spaces and ordered sets, with their elements (`Let $G$ be a group and $g,h\in G$.`,
+  `gh`, `g^{-1}`, `x+y`, `cv`, `1` and `0` of the structure they meet); substructures named
+  by a complement (`subgroup of $G$`, `prime ideal of $R$`, `vector space over $K$`,
+  `closed subset of $X$`); maps bound by a signature (`$\varphi\colon G\to H$` a
+  homomorphism, a linear or continuous map); abelian, cyclic, simple, solvable, nilpotent,
+  finite, Noetherian, algebraically closed, Hausdorff, compact, connected, complete; the
+  order of a group and of an element, index, centre, exponent, Sylow numbers,
+  characteristic, dimension; cyclic, symmetric, alternating and dihedral groups, the Klein
+  four-group, direct products (also loaded as `groups`, `rings`, `spaces`);
 * `means`: the arithmetic, geometric, harmonic, quadratic, contraharmonic, Heronian,
   centroidal, logarithmic and identric means of two numbers, the power and Lehmer means of
   order `p`, each defined for the numbers its formula needs;

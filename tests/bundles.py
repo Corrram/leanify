@@ -16,7 +16,7 @@ compared, not the readings.
 `math`, which has every field, reads some articles differently by design, and for it an article
 passes if it reads at least as many sentences as with its own fields, or if what it does not
 read is a definition of an overloaded notion (`We write $|G|$ for the order of $G$`, where
-`order of` is a notion of groups and of permutations: the article names the kind, `the order
+`order of` is a notion of groups, of their elements and of permutations: the article names the kind, `the order
 of a group $G$`). Its words are more than any article's fields: a noun that the fields did
 not know is read, and a letter that a field reserves (`\\zeta`, the Riemann zeta function of
 `special`) is that field's."""

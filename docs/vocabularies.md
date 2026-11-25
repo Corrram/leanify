@@ -127,7 +127,7 @@ function`, `triangle-free`), and `$v$th` also matches `$n$-th`.
 
 The variables of a modifier have the types of the first arguments of its predicate: a
 number, or an object (`orthogonal to $v$` in `vectors` takes a vector, `isomorphic to $v$`
-in `groups` a group, `lying on $v$` in `geometry` a set of points, `local minimizer of $v$`
+in `structures` a group, `lying on $v$` in `geometry` a set of points, `local minimizer of $v$`
 in `optimization` a real function). A modifier is also
 stated after `is` (`$x$ is orthogonal to $y$`, `$S$ is of measure zero` as `$S$ is null`,
 `$x$ is a local minimizer of $f$`),

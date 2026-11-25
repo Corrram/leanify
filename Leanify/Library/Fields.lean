@@ -18,7 +18,7 @@ import Leanify.Library.Analysis
 import Leanify.Library.Vectors
 import Leanify.Library.Geometry
 import Leanify.Library.Congruences
-import Leanify.Library.Groups
+import Leanify.Library.Structures
 import Leanify.Library.Means
 import Leanify.Library.Densities
 import Leanify.Library.Fourier
@@ -174,7 +174,7 @@ def all : List (String × Vocab) := [
   ("vectors", Vectors.vocab),
   ("geometry", Geometry.vocab),
   ("congruences", Congruences.vocab),
-  ("groups", Groups.vocab),
+  ("structures", Structures.vocab),
   ("means", Means.vocab),
   ("densities", Densities.vocab),
   ("fourier", Fourier.vocab),
@@ -323,8 +323,8 @@ def bundles : List (String × List String) := [
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
     "transforms", "fourier", "signals", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "epidemics", "populationdynamics", "pharmacokinetics", "variations", "physics", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
-  ("algebra", ["linearalgebra", "polynomials", "quadratics", "groups", "finitefields", "liealgebras"]),
-  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "polyhedra", "sphericalgeometry", "mapprojections", "surfaces", "curves", "fractals"]),
+  ("algebra", ["linearalgebra", "polynomials", "quadratics", "structures", "finitefields", "liealgebras"]),
+  ("topology", ["realsets", "structures", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "polyhedra", "sphericalgeometry", "mapprojections", "surfaces", "curves", "fractals"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint", "convergence"]),
   ("stochastic", ["statistics", "finance", "fixedincome", "options", "utility", "economics", "macroeconomics", "games", "ratings", "queues", "reliability", "actuarial", "inventory", "voting", "traffic"]),
   ("discrete", ["combinatorics", "counting", "words", "permutations", "graphs", "graphcounts", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
@@ -333,6 +333,8 @@ def bundles : List (String × List String) := [
   ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism", "kinematics", "optics", "acoustics", "music", "crystallography", "orbits"]),
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
+  -- names of parts of `structures`, kept for articles that name them
+  ("groups", ["structures"]), ("rings", ["structures"]), ("spaces", ["structures"]),
   ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "learning", "surveysampling", "variograms", "dependence"])]
@@ -377,7 +379,11 @@ def collisions (V : Vocab) : List (Phrase × List Codes) :=
     if same.any (·.pred != n.pred) then some (n.phrase, fields (·.field) same) else none
   let nouns := V.nouns.filterMap fun n =>
     let same := V.nouns.filter (·.sing == n.sing)
-    if same.any fun m => m.ty != n.ty || m.pred != n.pred then some (n.sing, fields (·.field) same) else none
+    -- (nouns told apart by the types of their complements, `subset of $A$`, are not)
+    let meanings : List (Ty × Tm × Option (List Codes × Ty × Tm)) := (same.map fun m => (m.ty, m.pred, m.arg)).eraseDups
+    let argTys : List (Option Ty) := meanings.map fun m => m.2.2.map (·.2.1)
+    let byArg := argTys.all (·.isSome) && argTys.eraseDups.length == meanings.length
+    if !byArg && same.any (fun m => m.ty != n.ty || m.pred != n.pred) then some (n.sing, fields (·.field) same) else none
   let syms := V.symbols.filterMap fun n =>
     let same := V.symbols.filter (·.sym == n.sym)
     if same.length > 1 then some ([PItem.m [.cmd (n.sym.drop 1)]], fields (·.field) same) else none

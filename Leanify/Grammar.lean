@@ -3521,7 +3521,17 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _ => none
     match adj with
     | some (adjs, r2) => some (.noun (adjs ++ [.w w!"map", .m ts]), r2)
-    | none => some (.noun [.w w!"map", .m ts], r')) <|>
+    | none =>
+      -- `$\varphi\colon G\to H$ be a homomorphism`: another noun of maps, with the signature
+      let other : Option (List Chunk × List Chunk) := do
+        if r'.length != r.length then none
+        let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
+        let ws := r1.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
+        if ws.isEmpty then none
+        some (ws, r1.drop ws.length)
+      match other with
+      | some (ws, r2) => some (.noun (ws ++ [.m ts]), r2)
+      | none => some (.noun [.w w!"map", .m ts], r')) <|>
   -- `$c>0$`: a condition, assumed like a binder
   (do
     let (ts, r) ← mathChunk cs

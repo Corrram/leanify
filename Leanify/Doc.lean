@@ -977,7 +977,7 @@ termination_by sizeOf d
 /-- A field of a signature `u:\mathbb{R}^3\times[0,1)\to\mathbb{R}^3`: its description
 and its type (the component index first for a vector field), when the domain has at
 least two coordinates; `\mathbb{R}^n\times I` has `n` spatial coordinates and a time. -/
-def fieldSig (d c : MT) : M (Option (FieldInfo × Ty)) := do
+def fieldSig (d c : MT) (sc : Scope := []) : M (Option (FieldInfo × Ty)) := do
   let groups := match d with
     | .app (.id t) [a, b] => if t == w!"\\times" then [a, b] else [d]
     | _ => [d]
@@ -989,9 +989,9 @@ def fieldSig (d c : MT) : M (Option (FieldInfo × Ty)) := do
   let (sp, periodic) : MT × Bool := match sp with
     | .sup (.id t) (.num n) => if t == w!"\\mathbb{T}" then (.sup (.id w!"\\mathbb{R}") (.num n), true) else (sp, false)
     | _ => (sp, false)
-  let sds ← domainsOf true sp
+  let sds ← domainsOf true sp sc
   let tds ← match tm with
-    | some b => domainsOf true b
+    | some b => domainsOf true b sc
     | none => pure []
   if tds.length > 1 || sds.any (·.1 != .real) || tds.any (·.1 != .real) then return none
   let dim ← match c with
@@ -1185,6 +1185,20 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
       | _ => ((m :: acc).reverse, r)
     | none => (acc.reverse, cs)
 
+/-- A map bound by a signature on a set of elements of a vocabulary's type that has numbers
+in it (`$\\varphi\\colon G\\to H$`): its value at a number is its value at that element of
+the domain (`\\varphi(1)` at the identity of `G`). Stated where the map is bound. -/
+def numeralsIn (dt ct : Ty) (dp : Option Tm) : M (List Tm) := do
+  let some p := dp | return []
+  let st ← get
+  let some m := st.vocab.methods.find? (fun m => m.ty == dt && m.op == .ofRealIn) | return []
+  let some o := st.vocab.methods.find? (fun m => m.ty == dt && m.op == .ofReal) | return []
+  let cty : Ty := .fn dt ct
+  -- `fun f => ∀ r, f (ofReal r) = f (ofRealIn D r)`
+  let body := Tm.eq (.app (.loc 1) (.app (.const o.const) (.loc 0)))
+    (.app (.loc 1) (.app (.app (.const m.const) (shift 3 0 p)) (.loc 0)))
+  pure [Tm.lam cty .tt (.all .real body)]
+
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
@@ -1254,6 +1268,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `a small $\zeta>0$`: how small is not said
   if (wordsOf np).head? == some w!"small" || (wordsOf np).head? == some w!"large" then
     fail E.finding w!"`small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound"
+  modify fun st => { st with sigDom := st.sigDomPreset }
   let st ← get
   let V := st.vocab
   -- `a set of measure zero $S$` (as `Let $S$ be a set of measure zero` is read): a modifier
@@ -1275,7 +1290,14 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             let tail := ws.drop (ws.length - k)
             if !words head then none else
             if V.mods.any (fun m => !m.prenominal && Notation.hasSlots m.phrase &&
-                (Notation.matchSlots m.phrase tail []).isSome) then some k else none
+                (Notation.matchSlots m.phrase tail []).isSome) then some k else
+            -- (a noun's complement, `subgroup of $G$ $H$`)
+            match tail with
+            | [.w w, .m _] =>
+              if V.nouns.any (fun n => match n.arg with
+                | some (ws, _, _) => ws.contains (Grammar.lower w)
+                | none => false) then some k else none
+            | _ => none
           match hitS with
           | some k => hoist f (ws.take (ws.length - k) ++ [.m v]) ++ ws.drop (ws.length - k)
           | none => np
@@ -1318,6 +1340,32 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       match st.notions.findSome? (fun (ph, i) => (matchName ph cs).map (i, ·)) with
       | some (i, r) => preN f r (i :: acc)
       | none => (acc.reverse, cs)
+  -- a noun's complement (`subgroup of $G$`): the relation to the object it names, as a
+  -- predicate of the variable, stated where the variable is bound (as a modifier's)
+  let nounArg (n : Noun) (rest : List Chunk) : M (List Tm × List Chunk) := do
+    match n.arg, rest with
+    | some (ws, aty, rel), .w w :: .m ts :: rest' =>
+      if !ws.contains (Grammar.lower w) then return ([], rest)
+      let some mt := Math.parseFormula ts | fail E.unsupported
+      let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
+      let (a, aty') ← Elab.term 100000 sc none mt
+      let a ← if aty' == aty then pure a else if aty == .real then Elab.asReal (a, aty') else fail E.type
+      pure ([Tm.lam n.ty .tt (Notation.betaApply rel [a, .loc 0])], rest')
+    | _, _ => pure ([], rest)
+  -- a noun's predicate; a noun of maps meant on a domain takes the domain of the signature
+  let nounPred (n : Noun) : M Tm := do
+    if !n.onDomain then return n.pred
+    let some d := (← get).sigDom
+      | fail E.finding (w!"a " ++ ((n.sing.filterMap fun i => match i with | .w w => some w | _ => none).intersperse [32]).flatten ++
+          w!" is bound with its domain: $\\varphi\\colon G\\to H$")
+    pure (Tm.lam n.ty .tt (Notation.betaApply n.pred [shift 1 0 d, .loc 0]))
+  -- (the chunks after the noun's variable, if one follows it)
+  let afterVar (n : Noun) (v : Option (List MTok)) (r : List Chunk) : List Chunk :=
+    match v, r with
+    | none, .m ts :: r' =>
+      let single := match ts with | [.id _] | [.cmd _] => true | _ => false
+      if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then r else r'
+    | _, _ => r
   -- the head: an article class, a vocabulary noun, or a variable with a signature
   -- (the article's own classes take precedence over the vocabulary's nouns)
   -- (`implicit`: adjectives of numbers came before, so a variable alone is a real number)
@@ -1343,16 +1391,46 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           | _ => false
         let cands := if sigAhead then [] else V.nouns.filterMap (fun n =>
             ((matchPhrase n.sing r0) <|> (matchPhrase n.plural r0)).map fun (v, r) => ((n, v), r))
-        match ← theMeaning (fun (nv : Noun × Option (List MTok)) => (nv.1.ty, nv.1.pred, nv.2))
-            (·.1.field) r0 cands with
-        | some ((n, v), r) =>
-          match v, r with
-          -- `a copula $C$`: the variable follows a noun without a slot
-          | none, .m ts :: r' =>
-            let single := match ts with | [.id _] | [.cmd _] => true | _ => false
-            if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then pure (n.ty, [n.pred], v, r)
-            else pure (n.ty, [n.pred], some ts, r')
-          | _, _ => pure (n.ty, [n.pred], v, r)
+        -- (nouns with the same words: their complements' types decide, `subset of $A$`)
+        let fitsArg (nvr : Noun × Option (List MTok) × List Chunk) : M Unit := do
+          let (n, v, r) := nvr
+          let _ ← nounArg n (afterVar n v r)
+        match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
+            (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) with
+        | some ((n, v, _), r) =>
+          -- `a homomorphism $\varphi\colon G\to H$`: a noun of maps, with its signature
+          let sigVar : Option (List MTok × List Chunk) := match v, r with
+            | none, .m ts :: r' => if (Math.parseSig ts).isSome then some (ts, r') else none
+            | some ts, r' => if (Math.parseSig ts).isSome then some (ts, r') else none
+            | _, _ => none
+          match sigVar, n.ty with
+          | some (ts, r'), .fn _ _ =>
+            let some (.sig (.id f) d c) := Math.parseSig ts | fail E.unsupported
+            let ds ← domainsOf false d outer
+            let (ct, cp) ← domainOf false c outer
+            let [(dt, dp)] := ds | fail E.unsupported
+            if Ty.fn dt ct != n.ty then fail E.type
+            let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
+            modify fun st => { st with sigDom := some dom, sigDoms := (st.curEnv, f, d) :: st.sigDoms.filter (·.2.1 != f) }
+            let inDom : Tm := match dp with
+              | some q => .app (shift 3 0 q) (.loc 0)
+              | none => .tt
+            let into : List Tm := match cp with
+              | some p => [Tm.lam n.ty .tt (.all dt (.imp inDom (.app (shift 3 0 p) (.app (.loc 1) (.loc 0)))))]
+              | none => []
+            let (extra, rest) ← nounArg n r'
+            pure (n.ty, [← nounPred n] ++ into ++ (← numeralsIn dt ct dp) ++ extra, some [.id f], rest)
+          | _, _ =>
+          let np0 ← nounPred n
+          let (ty, ps, var, rest) : Ty × List Tm × Option (List MTok) × List Chunk := match v, r with
+            -- `a copula $C$`: the variable follows a noun without a slot
+            | none, .m ts :: r' =>
+              let single := match ts with | [.id _] | [.cmd _] => true | _ => false
+              if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then (n.ty, [np0], v, r)
+              else (n.ty, [np0], some ts, r')
+            | _, _ => (n.ty, [np0], v, r)
+          let (extra, rest) ← nounArg n rest
+          pure (ty, ps ++ extra, var, rest)
         | none =>
           -- `$f:A\to B$`, optionally after the noun `map` or `function`
           let r1 := match r0 with
@@ -1386,15 +1464,15 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               -- (a function on a power of an interval type of the vocabulary, `c:[0,1]^2\to\mathbb{R}`
               -- with the field `unitsquare`, is a function of its points, not a field)
               let onPoints := (← tryCatch (do
-                  let ds ← domainsOf false d
+                  let ds ← domainsOf false d outer
                   pure (!ds.isEmpty && ds.all fun (t, p) => Elab.isBase t && p.isNone)) fun _ => pure false)
-              match ← (if onPoints then pure none else fieldSig d c) with
+              match ← (if onPoints then pure none else fieldSig d c outer) with
               | some (info, ty) =>
                 modify fun st => { st with fields := (f, info) :: st.fields }
                 pure (ty, [], some [.id f], r)
               | none =>
-              let ds ← domainsOf false d
-              let (ct, cp) ← domainOf false c
+              let ds ← domainsOf false d outer
+              let (ct, cp) ← domainOf false c outer
               -- `a function $A:\mathcal C\to\mathbb{R}$` on a class of the article: a
               -- function of the objects of its type, whose values are asked for at the
               -- members of the class only
@@ -1402,6 +1480,23 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               | [(dt, some (.glob gi))], none =>
                 modify fun st => { st with varDoms := (st.curEnv, f, .glob gi) :: st.varDoms }
                 pure (Ty.fn dt ct, [], some [.id f], r)
+              | _, _ =>
+              -- `$f\colon A\to B$` with sets `A`, `B` (of numbers, or of the elements of a
+              -- structure, `$\varphi\colon G\to H$`): a function of the elements of `A`'s type
+              -- that maps `A` into `B` (its values elsewhere are not used)
+              match ds, cp with
+              | [(dt, dp)], _ =>
+                let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
+                modify fun st => { st with sigDom := some dom, sigDoms := (st.curEnv, f, d) :: st.sigDoms.filter (·.2.1 != f) }
+                if cp.isNone then pure (Ty.fn dt ct, [], some [.id f], r) else
+                -- (the predicates of the domains are stated where the variable is bound)
+                let inDom : Tm := match dp with
+                  | some p => .app (shift 3 0 p) (.loc 0)
+                  | none => .tt
+                let inCod : Tm := match cp with
+                  | some p => .app (shift 3 0 p) (.app (.loc 1) (.loc 0))
+                  | none => .tt
+                pure (Ty.fn dt ct, [Tm.lam (.fn dt ct) .tt (.all dt (.imp inDom inCod))] ++ (← numeralsIn dt ct dp), some [.id f], r)
               | _, _ =>
               if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
               pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
@@ -1427,6 +1522,10 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- (a modifier with variables, `on $v$ vertices`: its predicate of their values, which are
   -- formulas in the scope of the binder, as the conditions below)
   let slotPred (m : Modifier) (cs : List Chunk) : M Tm := do
+    -- (a modifier of maps meant on a domain: the domain of the signature)
+    if m.onDomain then
+      let some d := (← get).sigDom | fail E.type
+      return Tm.lam ty .tt (Notation.betaApply m.pred [shift 1 0 d, .loc 0])
     if !Notation.hasSlots m.phrase then return m.pred
     let some (args, _) := Notation.matchPrefix m.phrase cs [] | fail E.type
     let sc : Scope := [([], ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer
@@ -1697,7 +1796,9 @@ def freeIds : Nat → List Codes → MT → List Codes
     -- (the domain may be a condition on the variables, `\varepsilon>0`)
     | .quant _ vs d b => freeIds f (vs ++ bound) d ++ freeIds f (vs ++ bound) b
     | .limit v t b => freeIds f bound t ++ freeIds f (v :: bound) b
-    | .sig .. | .text _ => []
+    -- (the sets of a signature, `f\colon A\to B`)
+    | .sig _ d c => freeIds f bound d ++ freeIds f bound c
+    | .text _ => []
 
 /-- The variables that a formula binds: of its sets, integrals, sums, limits, maps and
 quantifiers. -/
@@ -2257,7 +2358,22 @@ def vocabOf (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm :
     let v ← term F sc none mt
     let a ← if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
     pure (Notation.betaApply m.pred [a, s.1])
-  | none => fail E.noun ((phrase.intersperse [32]).flatten)
+  | none =>
+    -- `$H$ is a normal subgroup of $G$`: a noun with a complement
+    if let .math mt := o then
+      let nouns := (← get).vocab.nouns.filter fun n => n.ty == s.2 && !n.onDomain &&
+        (n.sing == ws.map PItem.w || n.plural == ws.map PItem.w) &&
+        (n.arg.any fun (pw, _, _) => pw.contains w!"of")
+      if !nouns.isEmpty then
+        let v ← term F sc none mt
+        let fits := nouns.filter fun n => n.arg.any fun (_, aty, _) => aty == v.2 || aty == .real
+        match fits with
+        | [n] =>
+          if let some (_, aty, rel) := n.arg then
+            let a ← if aty == .real then Elab.asReal v else pure v.1
+            return Tm.mkAnd (Notation.betaApply n.pred [s.1]) (Notation.betaApply rel [a, s.1])
+        | _ => pure ()
+    fail E.noun ((phrase.intersperse [32]).flatten)
 
 def predicate (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm := do
   let some i := lookupWords (← get).preds phrase | vocabOf sc s phrase o
@@ -3193,7 +3309,8 @@ def bindMaths1 : Bind → List MT
   | .noun np => (mathsOf np).flatMap fun ts =>
     match (Grammar.seqBound ts).bind fun (l, b) => (Grammar.seqVars l).map (·, b) with
     | some ((_, name, lo, hi), bound) => [lo, hi] ++ (Math.parseFormula (name ++ bound)).toList
-    | none => (Math.parseFormula ts).toList
+    -- (a signature, `f\colon A\to B`, whose sets may be variables of the result)
+    | none => ((Math.parseFormula ts) <|> (Math.parseSig ts)).toList
   | .ifCond φ => [φ]
   | .hyp b => bindMaths1 b
   | _ => []
@@ -3372,14 +3489,35 @@ def knownStart (st : St) (np : List Chunk) : Bool :=
 def nameChunks (name : List Codes) : List Chunk :=
   name.map fun w => if w == w!"-" then Chunk.p 45 else .w w
 
+/-- The domain of a map bound by a signature in this result or its proof
+(`$\\varphi\\colon G\\to H$`), as a predicate in the scope `sc`. -/
+def sigDomain (sc : Scope) (k : Codes) : M (Option Tm) := do
+  let st ← get
+  if (Elab.lookupLocal sc k).isNone then return none
+  match st.sigDoms.find? fun (e, n, _) => n == k && (e == st.curEnv || st.curProved == some e) with
+  | some (_, _, d) => tryCatch (do let (_, p) ← domainOf false d sc; pure p) fun _ => pure none
+  | none => pure none
+
 /-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
 (with its modifiers), or prenominal modifiers alone. The type of `x` decides between
 modifiers with the same words. -/
 def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   let V := (← get).vocab
   let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
-  let np ← tryCatch (some <$> nounPhrase cs) fun e =>
+  -- (the subject's domain, for a noun of maps meant on one: `$\\varphi$ is a homomorphism`)
+  let subjDom : Option Tm ← match x.1 with
+    | .loc i => match sc[i]? with
+      | some (k, _) => sigDomain sc k
+      | none => pure none
+    | _ => pure none
+  -- (the noun phrase is read in the scope of the sentence, `$H$ is a subgroup of $G$`; its
+  -- predicate is stated where its variable would be bound, one binder further in)
+  modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0) }
+  let np ← tryCatch (some <$> nounPhrase cs sc) fun e => do
+    modify fun st => { st with sigDomPreset := none }
     if e.code == E.ambiguous then throw e else pure none
+  modify fun st => { st with sigDomPreset := none }
+  let np := np.map fun b => if sc.isEmpty then b else { b with pred := b.pred.map (lowerBy 1) }
   -- a notion with its arguments: `$X$ is the Poisson distribution with mean $\lambda$`
   let notion ← if np.isSome then pure none else do
     let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
@@ -4066,7 +4204,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some k => do
         match ← lookupGlob k with
         | some (_, g) => pure (g.doms.head?).join
-        | none => pure none
+        | none => sigDomain sc k
       | none => pure none
     let ps ← adjs.mapM fun (a, on) =>
       -- the standard adjectives, else the vocabulary's (`even` of an integer)

@@ -72,11 +72,12 @@ except a notion whose meanings take arguments of different types, which the type
       * `majorization`
     * `polynomials`
     * `quadratics`
-    * `groups`
+    * `structures`
     * `finitefields`
     * `liealgebras`
   * `topology`
     * `realsets`
+    * `structures`
     * `topologies`
     * `metricspaces`
     * `geometry`
@@ -169,10 +170,10 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
-| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `finitefields`, `liealgebras` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
+| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` |
+| `topology` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` |
 | `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
 | `discrete` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
@@ -180,6 +181,9 @@ except a notion whose meanings take arguments of different types, which the type
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
+| `groups` | `structures` | `structures` |
+| `rings` | `structures` | `structures` |
+| `spaces` | `structures` | `structures` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
 | `dependence` | `copulas` | `copulas` |
 | `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas` |
@@ -790,6 +794,8 @@ except a notion whose meanings take arguments of different types, which the type
 | set of real numbers | ℝ → Prop | (Mathlib `Set ℝ`) |
 | subset $x$ of $\mathbb{R}$ | ℝ → Prop | (Mathlib `Set ℝ`) |
 | null set | ℝ → Prop | of Lebesgue measure zero |
+| subset | ℝ → Prop | a set of real numbers inside another |
+| element | ℝ | a number in a set of real numbers |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -1005,45 +1011,193 @@ except a notion whose meanings take arguments of different types, which the type
 | number of primitive roots modulo $a$ | ℝ → ℝ | in `[0, n)` |
 | set of units modulo $a$ | ℝ → ℝ → Prop | the integers in `[0, n)` coprime to `n` (Mathlib `(ZMod n)ˣ`) |
 
-## `groups`
+## `structures`
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| group | $\mathrm{Grp}$ | a finite group (Mathlib `Group (Fin n)`) |
-| finite group | $\mathrm{Grp}$ | (Mathlib `Group (Fin n)`) |
+| group | $\mathrm{El}$ → Prop | a group (Mathlib `Group`), written multiplicatively or additively |
+| finite group | $\mathrm{El}$ → Prop | (Mathlib `Group`, `Finite`) |
+| abelian group | $\mathrm{El}$ → Prop | (Mathlib `CommGroup`) |
+| cyclic group | $\mathrm{El}$ → Prop | (Mathlib `IsCyclic`) |
+| subgroup | $\mathrm{El}$ → Prop | a group with the operations of `G` inside `G` (Mathlib `Subgroup`) |
+| normal subgroup | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
+| proper subgroup | $\mathrm{El}$ → Prop | a subgroup other than `G` |
+| element | $\mathrm{El}$ | an element of a structure: `g ∈ G` |
+| unit | $\mathrm{El}$ | an invertible element of a ring (Mathlib `IsUnit`) |
+| zero divisor | $\mathrm{El}$ | `ab = 0` for some `b ≠ 0` |
+| nilpotent element | $\mathrm{El}$ | `aⁿ = 0` for some `n` (Mathlib `IsNilpotent`) |
+| upper bound | $\mathrm{El}$ | `a ≤ b` for every `a` of the set (Mathlib `upperBounds`) |
+| lower bound | $\mathrm{El}$ | (Mathlib `lowerBounds`) |
+| maximal element | $\mathrm{El}$ | nothing in the set is above it (Mathlib `Maximal`) |
+| minimal element | $\mathrm{El}$ | (Mathlib `Minimal`) |
+| greatest element | $\mathrm{El}$ | (Mathlib `IsGreatest`) |
+| least element | $\mathrm{El}$ | (Mathlib `IsLeast`) |
+| ring | $\mathrm{El}$ → Prop | a ring with identity (Mathlib `Ring`) |
+| commutative ring | $\mathrm{El}$ → Prop | (Mathlib `CommRing`) |
+| integral domain | $\mathrm{El}$ → Prop | (Mathlib `IsDomain`, commutative) |
+| field | $\mathrm{El}$ → Prop | (Mathlib `Field`) |
+| division ring | $\mathrm{El}$ → Prop | (Mathlib `DivisionRing`) |
+| skew field | $\mathrm{El}$ → Prop | a division ring (Mathlib `DivisionRing`) |
+| principal ideal domain | $\mathrm{El}$ → Prop | (Mathlib `IsPrincipalIdealRing`, `IsDomain`) |
+| unique factorization domain | $\mathrm{El}$ → Prop | (Mathlib `UniqueFactorizationMonoid`) |
+| local ring | $\mathrm{El}$ → Prop | (Mathlib `IsLocalRing`) |
+| algebraically closed field | $\mathrm{El}$ → Prop | (Mathlib `IsAlgClosed`) |
+| perfect field | $\mathrm{El}$ → Prop | (Mathlib `PerfectField`) |
+| subring | $\mathrm{El}$ → Prop | a ring with the operations of `R` inside `R` (Mathlib `Subring`) |
+| subfield | $\mathrm{El}$ → Prop | (Mathlib `Subfield`) |
+| field extension | $\mathrm{El}$ → Prop | a field `L` that has `K` as a subfield |
+| extension | $\mathrm{El}$ → Prop | a field extension |
+| ideal | $\mathrm{El}$ → Prop | a two-sided ideal (Mathlib `Ideal`) |
+| proper ideal | $\mathrm{El}$ → Prop | an ideal other than `R` |
+| prime ideal | $\mathrm{El}$ → Prop | (Mathlib `Ideal.IsPrime`) |
+| maximal ideal | $\mathrm{El}$ → Prop | (Mathlib `Ideal.IsMaximal`) |
+| principal ideal | $\mathrm{El}$ → Prop | (Mathlib `Submodule.IsPrincipal`) |
+| module | $\mathrm{El}$ → Prop | a module over a ring (Mathlib `Module`) |
+| vector space | $\mathrm{El}$ → Prop | a vector space over a field (Mathlib `Module`) |
+| subspace | $\mathrm{El}$ → Prop | a linear subspace (Mathlib `Submodule`) |
+| linear subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
+| vector subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
+| submodule | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
+| topological space | $\mathrm{El}$ → Prop | (Mathlib `TopologicalSpace`) |
+| metric space | $\mathrm{El}$ → Prop | (Mathlib `MetricSpace`) |
+| compact space | $\mathrm{El}$ → Prop | (Mathlib `CompactSpace`) |
+| hausdorff space | $\mathrm{El}$ → Prop | (Mathlib `T2Space`) |
+| compact hausdorff space | $\mathrm{El}$ → Prop | (Mathlib `CompactSpace`, `T2Space`) |
+| complete metric space | $\mathrm{El}$ → Prop | (Mathlib `CompleteSpace`) |
+| subset | $\mathrm{El}$ → Prop | a set of elements of `X` |
+| open subset | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
+| closed subset | $\mathrm{El}$ → Prop | (Mathlib `IsClosed`) |
+| dense subset | $\mathrm{El}$ → Prop | (Mathlib `Dense`) |
+| compact subset | $\mathrm{El}$ → Prop | (Mathlib `IsCompact`) |
+| neighbourhood | $\mathrm{El}$ → Prop | (Mathlib `nhds`) |
+| neighborhood | $\mathrm{El}$ → Prop | (Mathlib `nhds`) |
+| open neighbourhood | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`, `nhds`) |
+| open neighborhood | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`, `nhds`) |
+| partially ordered set | $\mathrm{El}$ → Prop | (Mathlib `PartialOrder`) |
+| poset | $\mathrm{El}$ → Prop | a partially ordered set (Mathlib `PartialOrder`) |
+| totally ordered set | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
+| linearly ordered set | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
+| chain | $\mathrm{El}$ → Prop | a totally ordered set (Mathlib `IsChain`) |
+| lattice | $\mathrm{El}$ → Prop | (Mathlib `Lattice`) |
+| well-ordered set | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
+| homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | `φ(ab) = φ(a)φ(b)` on the domain (Mathlib `MonoidHom`) |
+| group homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonoidHom`) |
+| ring homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `RingHom`) |
+| linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
+| linear transformation | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
+| linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
+| continuous map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
+| homeomorphism | $\mathrm{El}$ → $\mathrm{El}$ | onto its image (Mathlib `Homeomorph`) |
+| isometry | $\mathrm{El}$ → $\mathrm{El}$ | `d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`) |
+| monotone map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
+| order-preserving map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
-| abelian | $\mathrm{Grp}$ | `ab = ba` (Mathlib `CommGroup`) |
-| commutative | $\mathrm{Grp}$ | `ab = ba` |
-| cyclic | $\mathrm{Grp}$ | generated by one element (Mathlib `IsCyclic`) |
-| simple | $\mathrm{Grp}$ | nontrivial, without proper normal subgroups (Mathlib `IsSimpleGroup`) |
-| solvable | $\mathrm{Grp}$ | (Mathlib `IsSolvable`) |
-| nilpotent | $\mathrm{Grp}$ | (Mathlib `Group.IsNilpotent`) |
-| trivial | $\mathrm{Grp}$ | of order 1 |
-| nontrivial | $\mathrm{Grp}$ | of order at least 2 |
-| of order $x$ | $\mathrm{Grp}$ | with `n` elements |
-| isomorphic to $x$ | $\mathrm{Grp}$ | (Mathlib `MulEquiv`) |
-| $x$-group | $\mathrm{Grp}$ | every element has order a power of `p` (Mathlib `IsPGroup`) |
+| abelian | $\mathrm{El}$ → Prop | any two elements commute (Mathlib `CommGroup`) |
+| commutative | $\mathrm{El}$ → Prop | any two elements commute (Mathlib `CommGroup`, `CommRing`) |
+| cyclic | $\mathrm{El}$ → Prop | generated by one element (Mathlib `IsCyclic`) |
+| simple | $\mathrm{El}$ → Prop | nontrivial, without proper normal subgroups (Mathlib `IsSimpleGroup`) |
+| solvable | $\mathrm{El}$ → Prop | (Mathlib `IsSolvable`) |
+| nilpotent | $\mathrm{El}$ → Prop | (Mathlib `Group.IsNilpotent`) |
+| finite | $\mathrm{El}$ → Prop | with finitely many elements (Mathlib `Finite`) |
+| infinite | $\mathrm{El}$ → Prop | (Mathlib `Infinite`) |
+| countable | $\mathrm{El}$ → Prop | (Mathlib `Countable`) |
+| trivial | $\mathrm{El}$ → Prop | with one element |
+| nontrivial | $\mathrm{El}$ → Prop | with more than one element |
+| noetherian | $\mathrm{El}$ → Prop | every ideal is finitely generated (Mathlib `IsNoetherianRing`) |
+| noetherian | $\mathrm{El}$ → Prop | (Mathlib `IsNoetherianRing`) |
+| reduced | $\mathrm{El}$ → Prop | without nonzero nilpotent elements (Mathlib `IsReduced`) |
+| algebraically closed | $\mathrm{El}$ → Prop | (Mathlib `IsAlgClosed`) |
+| perfect | $\mathrm{El}$ → Prop | (Mathlib `PerfectField`) |
+| hausdorff | $\mathrm{El}$ → Prop | (Mathlib `T2Space`) |
+| compact | $\mathrm{El}$ → Prop | (Mathlib `CompactSpace`, `IsCompact`) |
+| connected | $\mathrm{El}$ → Prop | (Mathlib `ConnectedSpace`) |
+| path-connected | $\mathrm{El}$ → Prop | (Mathlib `PathConnectedSpace`) |
+| path connected | $\mathrm{El}$ → Prop | (Mathlib `PathConnectedSpace`) |
+| locally compact | $\mathrm{El}$ → Prop | (Mathlib `LocallyCompactSpace`) |
+| second countable | $\mathrm{El}$ → Prop | (Mathlib `SecondCountableTopology`) |
+| second-countable | $\mathrm{El}$ → Prop | (Mathlib `SecondCountableTopology`) |
+| separable | $\mathrm{El}$ → Prop | (Mathlib `SeparableSpace`) |
+| metrizable | $\mathrm{El}$ → Prop | (Mathlib `MetrizableSpace`) |
+| discrete | $\mathrm{El}$ → Prop | (Mathlib `DiscreteTopology`) |
+| regular | $\mathrm{El}$ → Prop | (Mathlib `RegularSpace`) |
+| normal | $\mathrm{El}$ → Prop | (Mathlib `NormalSpace`) |
+| complete | $\mathrm{El}$ → Prop | every Cauchy sequence converges (Mathlib `CompleteSpace`) |
+| totally bounded | $\mathrm{El}$ → Prop | (Mathlib `TotallyBounded`) |
+| bounded | $\mathrm{El}$ → Prop | (Mathlib `Bornology.IsBounded`) |
+| open | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
+| totally ordered | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
+| well-ordered | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
+| of order $x$ | $\mathrm{El}$ → Prop | with `n` elements (Mathlib `Nat.card`) |
+| of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
+| isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
+| $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |
+| closed in $x$ | $\mathrm{El}$ → Prop | (Mathlib `IsClosed`) |
+| dense in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Dense`) |
+| normal in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
+| finite-dimensional over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| of dimension $x$ over $a$ | $\mathrm{El}$ → Prop | (Mathlib `Module.finrank`) |
+| injective | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.InjOn`) |
+| continuous | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
+| linear | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
+| isometric | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
+| monotone | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| injective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.InjOn`) |
+| continuous [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
+| linear [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
+| isometric [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
+| monotone [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| order of $a$ | $\mathrm{Grp}$ → ℝ | the number of elements (Mathlib `Nat.card`) |
-| exponent of $a$ | $\mathrm{Grp}$ → ℝ | the least `e ≥ 1` with `g^e = 1` for all `g` (Mathlib `Monoid.exponent`) |
-| number of subgroups of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup`) |
-| number of normal subgroups of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.Normal`) |
-| number of conjugacy classes of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `ConjClasses`) |
-| order of the centre of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.center`) |
-| order of the center of $a$ | $\mathrm{Grp}$ → ℝ | (Mathlib `Subgroup.center`) |
-| number of elements of order $a$ in $b$ | ℝ → $\mathrm{Grp}$ → ℝ | (Mathlib `orderOf`) |
-| number of sylow $a$-subgroups of $b$ | ℝ → $\mathrm{Grp}$ → ℝ | for a prime `p` (Mathlib `Sylow`) |
-| cyclic group of order $a$ | ℝ → $\mathrm{Grp}$ | `C_n` (Mathlib `Multiplicative (ZMod n)`) |
-| symmetric group of degree $a$ | ℝ → $\mathrm{Grp}$ | `S_n` (Mathlib `Equiv.Perm (Fin n)`) |
-| alternating group of degree $a$ | ℝ → $\mathrm{Grp}$ | `A_n` (Mathlib `alternatingGroup`) |
-| dihedral group of order $a$ | ℝ → $\mathrm{Grp}$ | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
-| klein four-group | $\mathrm{Grp}$ | `C_2 × C_2` |
-| trivial group | $\mathrm{Grp}$ | of order 1 |
-| direct product of $a$ and $b$ | $\mathrm{Grp}$ → $\mathrm{Grp}$ → $\mathrm{Grp}$ | `G × H` (Mathlib `Prod`) |
+| order of $a$ | ($\mathrm{El}$ → Prop) → ℝ | the number of elements (Mathlib `Nat.card`) |
+| order of $a$ | $\mathrm{El}$ → ℝ | of an element (Mathlib `orderOf`) |
+| cardinality of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Nat.card`) |
+| index of $a$ in $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup.index`) |
+| centre of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.center`) |
+| center of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.center`) |
+| exponent of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Monoid.exponent`) |
+| number of sylow $a$-subgroups of $b$ | ℝ → ($\mathrm{El}$ → Prop) → ℝ | for a prime `p` (Mathlib `Sylow`) |
+| identity element of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | the identity (Mathlib `1`) |
+| identity of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | (Mathlib `1`) |
+| neutral element of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | (Mathlib `1`) |
+| zero element of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | (Mathlib `0`) |
+| characteristic of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `ringChar`) |
+| dimension of $a$ over $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Module.finrank`) |
+| subgroup generated by $a$ | $\mathrm{El}$ → $\mathrm{El}$ → Prop | the powers `gⁿ`, `n ∈ ℤ` (Mathlib `Subgroup.zpowers`) |
+| cyclic subgroup generated by $a$ | $\mathrm{El}$ → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.zpowers`) |
+| number of subgroups of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup`) |
+| number of normal subgroups of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup.Normal`) |
+| number of conjugacy classes of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `ConjClasses`) |
+| number of elements of order $a$ in $b$ | ℝ → ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `orderOf`) |
+| order of the centre of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup.center`) |
+| order of the center of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup.center`) |
+| trivial group | $\mathrm{El}$ → Prop | the group with one element |
+| cyclic group of order $a$ | ℝ → $\mathrm{El}$ → Prop | `C_n` (Mathlib `Multiplicative (ZMod n)`) |
+| symmetric group of degree $a$ | ℝ → $\mathrm{El}$ → Prop | `S_n` (Mathlib `Equiv.Perm (Fin n)`) |
+| alternating group of degree $a$ | ℝ → $\mathrm{El}$ → Prop | `A_n` (Mathlib `alternatingGroup`) |
+| dihedral group of order $a$ | ℝ → $\mathrm{El}$ → Prop | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
+| klein four-group | $\mathrm{El}$ → Prop | `C_2 × C_2` |
+| direct product of $a$ and $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `G × H` (Mathlib `Prod`) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{El}$ | a number as an element: `1` the identity, `0` the zero, `n` the sum of `n` identities |
+| $+$ | $\mathrm{El}$ | `x + y` |
+| $-$ | $\mathrm{El}$ | `x - y` |
+| $\cdot$ | $\mathrm{El}$ | `xy`; a scalar times an element of a module, `c • v` |
+| $/$ | $\mathrm{El}$ | `x y⁻¹`, for an invertible `y` |
+| $-$ (sign) | $\mathrm{El}$ | `-x` |
+| $x^{-1}$ | $\mathrm{El}$ | `x⁻¹`, for an invertible `x` |
+| $x^n$ | $\mathrm{El}$ | `x ^ n` for an integer `n` (`x^{-1}` the inverse), negative for an invertible `x` |
+| $=$ | $\mathrm{El}$ | equality of elements; a numeral is an element of the other side's structure |
+| $\le$ | $\mathrm{El}$ | the order of a partially ordered set |
+| $<$ | $\mathrm{El}$ | `x ≤ y`, `x ≠ y` |
+| a number in a set | $\mathrm{El}$ | a number as an element of a given structure (`φ(1)` for `φ : G → H`) |
 
 ## `means`
 

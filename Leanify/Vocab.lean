@@ -44,6 +44,15 @@ structure Noun where
   field : Codes := []
   /-- Its meaning and Mathlib counterpart, for the glossary. -/
   doc : String := ""
+  /-- A complement that names another object (`subgroup of $G$`, `vector space over
+  $K$`): the words that may introduce it, its type, and the relation, a closed term
+  `arg → ty → Prop` (`fun G H => H ⊆ G`). Nouns with the same words whose complements have
+  different types are told apart by the complement. -/
+  arg : Option (List Codes × Ty × Tm) := none
+  /-- A noun of maps meant on a domain (`homomorphism`): `pred` takes the domain first,
+  `(dom → Prop) → ty → Prop`, the domain of the signature that binds the map
+  (`$\varphi\colon G\to H$`). -/
+  onDomain : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives
@@ -55,6 +64,8 @@ structure Modifier where
   pred : Tm
   field : Codes := []
   doc : String := ""
+  /-- A modifier of maps meant on a domain (`injective`): as `Noun.onDomain`. -/
+  onDomain : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. A notion
@@ -94,6 +105,17 @@ inductive OpKey where
   | decor (name : Codes)
   /-- An element applied to a number (`\sigma(i)`): `T → ℝ → U`. -/
   | call
+  /-- `x=y` (and `x\ne y`): `T → T → Prop`, where equality of the type is not Lean's (the
+  elements of algebraic structures, where a numeral `1` is the identity of the structure it
+  is compared with). Without it, `x=y` is Lean's equality. -/
+  | eq
+  /-- A number as an element of a set of elements of the type (`φ(1)` for `φ\colon G\to H`:
+  the identity of `G`): `(T → Prop) → ℝ → T`. A map bound by a signature on such a set
+  takes a number to its value at that element. -/
+  | ofRealIn
+  /-- `x^{-1}`, the inverse, where the type has its own (`x^{-n}` is `(x^n)^{-1}`): `T → T`.
+  Without it, `x^{-1}` is `1/x`. -/
+  | inv
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A method: the notation `op` on elements of `ty` is the constant `const`. -/
@@ -325,7 +347,8 @@ def append (V W : Vocab) : Vocab :=
     typeLean := V.typeLean ++ List.replicate (kt - V.typeLean.length) ([], []) ++ W.typeLean
     modules := V.modules ++ W.modules.filter (!V.modules.contains ·)
     adjectives := V.adjectives ++ W.adjectives.map fun a => { a with ty := shiftTy kt a.ty, pred := tm a.pred }
-    nouns := V.nouns ++ W.nouns.map fun n => { n with ty := shiftTy kt n.ty, pred := tm n.pred }
+    nouns := V.nouns ++ W.nouns.map fun n =>
+      { n with ty := shiftTy kt n.ty, pred := tm n.pred, arg := n.arg.map fun (ws, t, r) => (ws, shiftTy kt t, tm r) }
     mods := V.mods ++ W.mods.map fun m => { m with ty := shiftTy kt m.ty, pred := tm m.pred }
     notions := V.notions ++ W.notions.map fun n =>
       { n with ty := shiftTy kt n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }

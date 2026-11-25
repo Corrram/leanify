@@ -131,6 +131,16 @@ article binds as it binds numbers, and modifiers that take numbers:
 | `$\deg p$`, `$\deg(pq)=\deg p+\deg q$` | `\deg` and `\det` apply to what follows them, as `\sin` does; the product of two real functions, or of a number and a real function, is taken value by value |
 | `$\overline{G}$` | the complement of a graph (a decoration of the field's type) |
 
+Structures with their elements (the field `structures`):
+
+| Sentence | Reading |
+| --- | --- |
+| `Let $G$ be a group and let $g,h\in G$.`, `Let $g$ be an element of $G$.` | a structure is the set of its elements: `g\in G` binds an element as `x\in A` binds a number |
+| `$(gh)^{-1}=h^{-1}g^{-1}$`, `$g^2=1$`, `$a(b+1)=ab+a$`, `$c(v+w)=cv+cw$` | the operations of the structure the elements belong to; `1` and `0` are its identity and zero; `cv` with a scalar `c` of the field over which `v`'s space is a vector space is the scalar multiple; `x^{-1}` and `x/y` ask that the element is invertible (every element of a group, a nonzero element of a field) |
+| `Let $H$ be a subgroup of $G$.`, `Let $I$ be a prime ideal of $R$.`, `Let $V$ be a vector space over $K$.`, `Let $F$ be a closed subset of $X$.`, `$H$ is a normal subgroup of $G$.` | a noun with a complement (`of`, `over`, `in`): the object it names is a term of the sentence |
+| `Let $\varphi\colon G\to H$ be a homomorphism.`, `Let $T\colon V\to W$ be a linear map.`, `Let $f\colon X\to Y$ be a continuous map.` | a map bound by its signature: it maps `G` into `H`, and the noun (`homomorphism`, `linear map`, `isometry`) and adjectives (`injective`, `continuous`) are meant on its domain; `\varphi(1)` is its value at the identity of `G` |
+| `Let $A$ be a set of real numbers and $f\colon A\to A$ a function.`, `Let $B$ be a subset of $A$.` | the same for sets of real numbers: `f` maps `A` into `A`, `B\subseteq A` |
+
 Further forms that the fields use (they are read for any vocabulary):
 
 | Sentence | Reading |

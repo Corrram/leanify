@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[vocab=structures]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+% Structures with their elements: groups, rings, fields, vector spaces, topological
+% spaces and ordered sets, their substructures, and maps bound by their signatures.
+
+\section{Groups}
+
+\begin{lemma}\label{inverse}
+Let $G$ be a group and let $g,h\in G$. Then $(gh)^{-1}=h^{-1}g^{-1}$.
+\end{lemma}
+
+\begin{lemma}\label{involution}
+Let $G$ be a group and let $g\in G$ with $g^2=1$. Then $g=g^{-1}$.
+\end{lemma}
+
+\begin{lemma}\label{normal}
+Let $G$ be an abelian group and let $H$ be a subgroup of $G$. Then $H$ is a normal subgroup of $G$.
+\end{lemma}
+
+\begin{lemma}\label{hom}
+Let $G$ and $H$ be groups and let $\varphi\colon G\to H$ be a homomorphism. Then $\varphi(1)=1$.
+\end{lemma}
+
+\begin{lemma}\label{element}
+Let $G$ be a group and let $g$ be an element of $G$. Then $g^{0}=1$.
+\end{lemma}
+
+\section{Rings and fields}
+
+\begin{lemma}\label{field}
+Let $K$ be a field of characteristic $0$ and let $x\in K$ with $x\ne0$. Then $xx^{-1}=1$.
+\end{lemma}
+
+\begin{lemma}\label{ideal}
+Let $R$ be a commutative ring and let $I$ be a prime ideal of $R$. Then $I$ is an ideal of $R$.
+\end{lemma}
+
+\begin{lemma}\label{distributive}
+Let $R$ be a ring and $a,b\in R$. Then $a(b+1)=ab+a$.
+\end{lemma}
+
+\section{Vector spaces}
+
+\begin{lemma}\label{scalar}
+Let $K$ be a field and let $V$ be a vector space over $K$. Let $v\in V$ and $c\in K$. Then $c(v+v)=cv+cv$.
+\end{lemma}
+
+\begin{lemma}\label{linear}
+Let $K$ be a field, let $V$ and $W$ be vector spaces over $K$ and let $T\colon V\to W$ be a linear map. Then $T(0)=0$.
+\end{lemma}
+
+\section{Spaces and orders}
+
+\begin{lemma}\label{compact}
+Let $X$ be a compact Hausdorff space and let $F$ be a closed subset of $X$. Then $F$ is compact.
+\end{lemma}
+
+\begin{lemma}\label{order}
+Let $P$ be a partially ordered set and let $a,b\in P$ with $a\le b$ and $b\le a$. Then $a=b$.
+\end{lemma}
+
+\end{document}

@@ -1,6 +1,6 @@
 import Groups.Compiled
 import Leanify.Readable
-import Leanify.Library.GroupsModel
+import Leanify.Library.StructuresModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

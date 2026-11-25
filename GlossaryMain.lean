@@ -55,6 +55,7 @@ def opText : OpKey → String
   | .fn n => (if n.head? == some 92 then "$" ++ Codes.toString n ++ "$" else "$\\operatorname{" ++ Codes.toString n ++ "}$")
   | .decor n => if n.head? == some 94 then "$x" ++ Codes.toString n ++ "$" else "$" ++ Codes.toString n ++ "{x}$"
   | .call => "$x(t)$"
+  | .eq => "$=$" | .ofRealIn => "a number in a set" | .inv => "$x^{-1}$"
 
 def cell (s : String) : String := s.replace "|" "\\|"
 

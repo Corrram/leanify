@@ -1003,3 +1003,9 @@ globs = ["GeometricProbability.+"]
 name = "Default"
 srcDir = "tests"
 globs = ["Default.+"]
+
+[[lean_lib]]
+# Groups, rings, fields, vector spaces and spaces with their elements.
+name = "Structures"
+srcDir = "tests"
+globs = ["Structures.+"]

@@ -77,7 +77,13 @@ def vocab : Vocab where
     nounS phrase!"set" phrase!"sets" anySet "a set of real numbers (Mathlib `Set ℝ`)",
     nounS phrase!"set of real numbers" phrase!"sets of real numbers" anySet "(Mathlib `Set ℝ`)",
     nounS phrase!"subset $v$ of $\\mathbb{R}$" phrase!"subsets $v$ of $\\mathbb{R}$" anySet "(Mathlib `Set ℝ`)",
-    nounS phrase!"null set" phrase!"null sets" (.const 12) "of Lebesgue measure zero"]
+    nounS phrase!"null set" phrase!"null sets" (.const 12) "of Lebesgue measure zero",
+    { nounS phrase!"subset" phrase!"subsets" anySet "a set of real numbers inside another" with
+      arg := some ([w!"of"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamT (.real ⟶ .prop) (fun _ => tt) fun b =>
+        allR fun x => imp (app b x) (app a x)) },
+    { sing := phrase!"element", plural := phrase!"elements", ty := .real, pred := predR fun _ => tt,
+      arg := some ([w!"of"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun x => app a x),
+      doc := "a number in a set of real numbers" }]
   mods := [
     mod phrase!"open" true (.const 0) "(Mathlib `IsOpen`)",
     mod phrase!"closed" true (.const 1) "(Mathlib `IsClosed`)",
