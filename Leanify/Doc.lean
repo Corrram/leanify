@@ -3820,9 +3820,31 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     -- words with which no phrase of the vocabulary starts are prose
     unless knownStart (← get) np do fail E.prose
     let x ← term F sc none s
+    -- (a plural after `are`, `$x$ and $y$ are binary words of length $3$`: the phrase in the
+    -- singular, with its article, one plural word at a time)
+    let singulars : List (List Chunk) := match np with
+      | .w a :: _ =>
+        if a == w!"a" || a == w!"an" then [] else
+        (List.range np.length).filterMap fun i => match (np[i]? : Option Chunk) with
+          | some (Chunk.w w) =>
+            if w.length > 2 && w.getLast? == some 115 && w.dropLast.getLast? != some 115 then
+              some (Chunk.w w!"a" :: np.set i (Chunk.w w.dropLast))
+            else none
+          | _ => none
+      | _ => []
+    let st0 ← get
     -- words that are not the vocabulary's are prose
-    let p ← tryCatch (vocabPredicate sc x np) fun e =>
-      if e.code == E.noun || e.code == E.unsupported then fail E.prose e.detail else throw e
+    let p ← tryCatch (vocabPredicate sc x np) fun e => do
+      let mut res : Option Tm := none
+      for np' in singulars do
+        if res.isNone then
+          set st0
+          res ← tryCatch (some <$> vocabPredicate sc x np') fun _ => pure none
+      match res with
+      | some p => pure p
+      | none =>
+        if !singulars.isEmpty then set st0
+        if e.code == E.noun || e.code == E.unsupported then fail E.prose e.detail else throw e
     pure (if neg then .not p else p)
   | .everyIs np names disj => do
     let b ← nounPhrase np

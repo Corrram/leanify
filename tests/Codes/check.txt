@@ -10,10 +10,10 @@ tests/Codes/article.tex:15:1: info: defines z (z)
 tests/Codes/article.tex:16:1: info: defines o (o)
 tests/Codes/article.tex:21:1: info: claim 0: (3\in \mathbb{Z}\land 0\le 3)\land (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\land x\le 3\Rightarrow z(x)=0\lor z(x)=1)
 tests/Codes/article.tex:21:1: info: claim 1: (3\in \mathbb{Z}\land 0\le 3)\land (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\land x\le 3\Rightarrow o(x)=0\lor o(x)=1)
-tests/Codes/article.tex:21:1: info: claim 2: \mathrm{wt}(3,o)=3
-tests/Codes/article.tex:21:1: info: claim 2 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
-tests/Codes/article.tex:21:1: info: claim 3: \@n1(3,z,o)=3
-tests/Codes/article.tex:21:1: info: claim 3 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
+tests/Codes/article.tex:21:45: info: claim 2: \mathrm{wt}(3,o)=3
+tests/Codes/article.tex:21:45: info: claim 2 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
+tests/Codes/article.tex:21:45: info: claim 3: \@n1(3,z,o)=3
+tests/Codes/article.tex:21:45: info: claim 3 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
 tests/Codes/article.tex:25:83: info: claim 4: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ \@n1(x,y,z)\le \mathrm{wt}(x,y)+\mathrm{wt}(x,z))
 tests/Codes/article.tex:25:83: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ (x\in \mathbb{Z}\land 0\le x)\land (x\in \mathbb{Z}\land 0\le x)\land x\in \mathbb{Z}\land 0\le x)
 tests/Codes/article.tex:31:1: info: claim 5: \@n2(1,7)=8
@@ -26,5 +26,5 @@ tests/Codes/article.tex:31:1: info: claim 8: \@n5(7,3)=5
 tests/Codes/article.tex:31:1: info: claim 8 is meaningful if: ((7\in \mathbb{Z}\land 1\le 7)\land 7\le 3)\land 7\in \mathbb{Z}\land 1\le 7
 tests/Codes/article.tex: 8 definitions, 9 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 4 compiled, 0 failed, 0 prose (of 4)
-  all: 12 compiled, 0 failed, 0 prose (of 12)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 13 compiled, 0 failed, 0 prose (of 13)
