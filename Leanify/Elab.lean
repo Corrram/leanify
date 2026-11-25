@@ -2027,6 +2027,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if xs.length != ys.length then fail E.type
       let ps ← (xs.zip ys).mapM fun (a, b) => do relTm .eq (← term f sc pf a) (← term f sc pf b)
       pure (conjAll ps, .prop)
+    -- `(a,b)\neq(0,0)`: pairs, not intervals
+    | .chain (.tuple xs) [(.ne, .tuple ys)] => do
+      if xs.length != ys.length then fail E.type
+      let ps ← (xs.zip ys).mapM fun (a, b) => do relTm .eq (← term f sc pf a) (← term f sc pf b)
+      pure (.not (conjAll ps), .prop)
     -- `(a,b)` as a set: the open interval (as after `\in`)
     | .tuple [a, b] => do
       let sc' : Scope := (w!"@x", Ty.real) :: sc

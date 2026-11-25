@@ -283,7 +283,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | --- | --- | --- |
 | [`core`](glossary.md#core) | real numbers, integers, rational numbers, signs; always there | |
 | **Analysis** (`analysis`) | | |
-| [`realfunctions`](glossary.md#realfunctions) | real functions by a noun: continuous (also at a point), discontinuous and differentiable at a point, Lipschitz, differentiable, smooth, monotone, convex, periodic, integrable; derivative, supremum norm, total variation, inverse | |
+| [`realfunctions`](glossary.md#realfunctions) | real functions by a noun (`a continuous function $f$ on $[0,1]$`, as `$f\colon[0,1]\to\mathbb{R}$`): continuous (also at a point), discontinuous and differentiable at a point, Lipschitz, differentiable, smooth, monotone, convex, periodic, integrable; derivative, supremum norm, total variation, inverse | |
 | [`realsets`](glossary.md#realsets) | sets of real numbers: open, closed, compact, connected, dense, countable, null; subsets, elements, upper and lower bounds; closure, interior, supremum, Lebesgue measure | |
 | [`calculus`](glossary.md#calculus) | `$n$ times (continuously) differentiable`; the `n`th, second and third derivative, Taylor polynomials, antiderivatives, critical and inflection points; arc length, average value, area between graphs, volume of revolution | with `realfunctions` |
 | [`series`](glossary.md#series) | sequences of real numbers `(a_n)` (positive, nonnegative, of integers), converging to a number, convergent and divergent, subsequences; summable, absolutely and conditionally summable, square-summable and alternating sequences of terms; the sum and partial sums of a series, the Cauchy product, power series and their radius of convergence, geometric series; the limit, limit superior and limit inferior of a sequence | with `realfunctions` |
@@ -416,7 +416,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`combinatorialgames`](glossary.md#combinatorialgames) | the nim-sum of two and three heaps and the winning moves of Nim; the Grundy value of a subtraction game; the Wythoff pairs | |
 | [`designs`](glossary.md#designs) | orders admissible for Steiner triple systems; the replication number and number of blocks of a 2-design; the triples of a Steiner triple system; points and lines of projective and affine planes | |
 | **Number theory** (`numbertheory`) | | |
-| [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor; divisors, positive divisors, prime divisors and prime factors of an integer | |
+| [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor; divisors, positive divisors, prime divisors and prime factors of an integer; products of primes, sums of two primes and of four squares, differences of two squares | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
 | [`congruences`](glossary.md#congruences) | congruences modulo `n`, quadratic residues, the Legendre symbol, primitive roots | |
 | [`specialnumbers`](glossary.md#specialnumbers) | twin, Sophie Germain, safe and Fermat primes, perfect cubes and powers, powers of two, sums of two squares, triangular numbers; Fermat and Mersenne numbers, repunits, pentagonal, tetrahedral, square pyramidal and oblong numbers | with `numbers` |

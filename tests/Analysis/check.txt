@@ -22,7 +22,8 @@ tests/Analysis/article.tex:53:1: info: claim 10: \forall x\in \mathbb{R}\to \mat
 tests/Analysis/article.tex:53:44: info: claim 11: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ x(-z)=-x(z))\Rightarrow (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \lvert x(s)\rvert\le z)\lor (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ x(s)=z)
 tests/Analysis/article.tex:57:24: info: claim 12: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s))\Leftrightarrow (\forall z\in \mathbb{R},\ x(-z)=x(z))
 tests/Analysis/article.tex:57:24: info: claim 13: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{nondecreasing}(x)\text{ on }\{z:\top\}\lor \operatorname{nonincreasing}(x)\text{ on }\{z:\top\}
-tests/Analysis/article.tex: 4 definitions, 14 claims
+tests/Analysis/article.tex:61:65: info: claim 14: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{s:0\le s\land s\le 1\}\land x(0)<0\land 0<x(1)\Rightarrow (\exists y\in \mathbb{R},\ (0<y\land y<1)\land x(y)=0)
+tests/Analysis/article.tex: 4 definitions, 15 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 21 compiled, 0 failed, 0 prose (of 21)
-  all: 25 compiled, 0 failed, 0 prose (of 25)
+  results: 23 compiled, 0 failed, 0 prose (of 23)
+  all: 27 compiled, 0 failed, 0 prose (of 27)

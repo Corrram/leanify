@@ -410,6 +410,11 @@ except a notion whose meanings take arguments of different types, which the type
 | prime number | ℝ | a prime (Mathlib `Nat.Prime`) |
 | prime | ℝ | a prime (Mathlib `Nat.Prime`) |
 | composite number | ℝ | an integer `≥ 2` that is not prime |
+| product of primes | ℝ | `p_1⋯p_k` for primes `p_i`, `k ≥ 1` (Mathlib `Nat.primeFactorsList`) |
+| product of prime numbers | ℝ | `p_1⋯p_k` for primes `p_i`, `k ≥ 1` |
+| sum of four squares | ℝ | `a² + b² + c² + d²` for integers |
+| sum of two primes | ℝ | `p + q` for primes `p`, `q` |
+| difference of two squares | ℝ | `a² - b²` for integers `a`, `b` |
 | perfect square | ℝ | `x = k²` for an integer `k` (Mathlib `IsSquare` in `ℤ`) |
 | divisor | ℝ | an integer `d` with `d ∣ n` (Mathlib `Int.instDvd`) |
 | positive divisor | ℝ | a divisor `d ≥ 1` (Mathlib `Nat.divisors`) |

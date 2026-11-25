@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Analysis.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["realfunctions"]
 
-#leanify_article Analysis "article.tex" "fnv1a64:68de9b35b2c2503e" with Analysis.vocabulary
+#leanify_article Analysis "article.tex" "fnv1a64:14a04cc10f1763ff" with Analysis.vocabulary

@@ -1445,6 +1445,35 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         | _ => false
       if w == w!"fixed" && !fixedNoun then c :: rest else np
     | _ => np
+  -- `a continuous function $f$ on $[0,1]$`: the function `f\colon[0,1]\to\mathbb{R}`
+  -- (not where the vocabulary has a noun `… function on …` with the word before,
+  -- `distribution function on $[0,1]^2$`)
+  let np :=
+    let fixedBefore (prev : Option Codes) : Bool := V0.nouns.any fun n =>
+      (List.range n.sing.length).any fun i =>
+        n.sing[i]? == some (.w w!"function") &&
+        (n.sing[i + 1]? == some (.w w!"on") || (n.sing[i + 1]? == some .v && n.sing[i + 2]? == some (.w w!"on"))) &&
+        (i == 0 || match prev with
+          | some w => n.sing[i - 1]? == some (.w w)
+          | none => false)
+    let sig (v d : List MTok) : List MTok := v ++ [.sym 58] ++ d ++ [.cmd w!"to", .id w!"\\mathbb{R}"]
+    let single (v : List MTok) : Bool := match v with | [.id _] => true | _ => false
+    let rec go : Nat → Option Codes → List Chunk → List Chunk
+      | 0, _, cs => cs
+      | k + 1, prev, cs => match cs with
+        | .w fw :: .m v :: .w o :: .m d :: rest =>
+          if fw == w!"function" && (o == w!"on" || o == w!"over") && single v && !fixedBefore prev then .w fw :: .m (sig v d) :: rest
+          else .w fw :: go k (some fw) (.m v :: .w o :: .m d :: rest)
+        | .w fw :: .w o :: .m d :: .m v :: rest =>
+          if fw == w!"function" && (o == w!"on" || o == w!"over") && single v && !fixedBefore prev then .w fw :: .m (sig v d) :: rest
+          else .w fw :: go k (some fw) (.w o :: .m d :: .m v :: rest)
+        | .w fw :: .m v :: .w df :: .w o :: .m d :: rest =>
+          if fw == w!"function" && df == w!"defined" && o == w!"on" && single v then .w fw :: .m (sig v d) :: rest
+          else .w fw :: go k (some fw) (.m v :: .w df :: .w o :: .m d :: rest)
+        | .w w :: rest => .w w :: go k (some w) rest
+        | c :: rest => c :: go k none rest
+        | [] => []
+    go (np.length + 1) none np
   -- `every $x\in[0,1]$` in a list of binders (`for every positive integer $n$ and every
   -- $x\in[0,1]$`): a variable and its domain
   match np with

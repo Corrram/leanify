@@ -35,7 +35,13 @@ tests/Arithmetic/article.tex:39:58: info: claim 16: \forall x\in \mathbb{R},\ x\
 tests/Arithmetic/article.tex:39:58: info: claim 16 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 0<x)\land 0\le x\land \neg (2=0)
 tests/Arithmetic/article.tex:43:1: info: claim 17: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1))\land (\exists z\in \mathbb{R},\ z\in \mathbb{N}\land x={2}^{z}-1)\Rightarrow (x\,(\frac{x+1}{2})\in \mathbb{Z}\land 0<x\,(\frac{x+1}{2}))\land \sigma_{1}(x\,(\frac{x+1}{2}))=2\,x\,(\frac{x+1}{2})
 tests/Arithmetic/article.tex:43:1: info: claim 17 is meaningful if: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1))\land (\exists z\in \mathbb{R},\ z\in \mathbb{N}\land x={2}^{z}-1)\Rightarrow \neg (2=0)
-tests/Arithmetic/article.tex: 10 definitions, 18 claims
+tests/Arithmetic/article.tex:47:1: info: claim 18: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow (\exists z\in \mathbb{R},\ (z\in \mathbb{N}\land 1\le z)\land (\exists s\in \mathbb{R}\to \mathbb{R},\ (\forall t\in \mathbb{R},\ t\in \mathbb{Z}\land 1\le t\land t\le z\Rightarrow s(t)\in \mathbb{Z}\land 2\le s(t)\land (\forall a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (a\in \mathbb{N}\land b\in \mathbb{N})\land a\,b=s(t)\Rightarrow a=1\lor b=1))\land \prod(1)(z)(s)=x))
+tests/Arithmetic/article.tex:51:1: info: claim 19: \exists y\in \mathbb{R},\ \exists z\in \mathbb{R},\ ((y\in \mathbb{Z}\land 2\le y\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=y\Rightarrow s=1\lor t=1))\land z\in \mathbb{Z}\land 2\le z\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=z\Rightarrow s=1\lor t=1))\land 10=y+z
+tests/Arithmetic/article.tex:51:1: info: claim 20: \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land 7=y\,y-z\,z)
+tests/Arithmetic/article.tex:55:1: info: claim 21: \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land 7=y\,y+z\,z+(s\,s+t\,t))))
+tests/Arithmetic/article.tex:59:45: info: claim 22: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land (\neg (x=0)\lor \neg (y=0))\Rightarrow 0<{x}^{2}+{y}^{2})
+tests/Arithmetic/article.tex:63:46: info: claim 23: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land \neg (x=0\land y=0)\Rightarrow \neg (x=0)\lor \neg (y=0))
+tests/Arithmetic/article.tex: 10 definitions, 24 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 8 compiled, 0 failed, 0 prose (of 8)
-  all: 18 compiled, 0 failed, 0 prose (of 18)
+  results: 15 compiled, 0 failed, 0 prose (of 15)
+  all: 25 compiled, 0 failed, 0 prose (of 25)

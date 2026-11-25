@@ -3908,6 +3908,18 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
 def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind × List MT × List Chunk)
   | 0, cs, bs, ds => some (bs.reverse, ds.reverse, cs)
   | f + 1, cs, bs, ds =>
+    -- `Let $a$ and $b$ be integers, not both zero`: one of them is not `0`
+    let notAll : Option (List Chunk × Bind) := do
+      let r ← (punct 44 cs >>= kw [w!"not", w!"both", w!"zero"]) <|> (punct 44 cs >>= kw [w!"not", w!"all", w!"zero"])
+      let .many nbs ← bs.head? | none
+      let vs := nbs.filterMap fun b => match b with
+        | .noun np => np.reverse.findSome? fun c => match c with | .m [.id v] => some v | _ => none
+        | _ => none
+      if vs.length < 2 || vs.length != nbs.length then none
+      let ne (v : Codes) : MT := .chain (.id v) [(.ne, .num 0)]
+      let v0 ← vs.head?
+      some (r, .ifCond ((vs.drop 1).foldl (fun acc v => MT.lor acc (ne v)) (ne v0)))
+    if let some (r, b) := notAll then letMore f r (b :: bs) ds else
     let next := (punct 44 cs >>= kw [w!"and", w!"let"]) <|> (punct 44 cs >>= kw [w!"and"]) <|>
       (punct 44 cs >>= kw [w!"let"]) <|> kw [w!"and", w!"let"] cs <|> kw [w!"and"] cs <|> punct 44 cs
     match next with
@@ -5227,6 +5239,11 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
   match np.find? (fun c => match c with | .m _ => true | _ => false) with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   | some (.m [.cmd v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.cmd v]] ++ r1)
+  -- (`every integer $n\ge2$ is …`: the variable of the condition)
+  | some (.m ts) =>
+    match Math.parseFormula ts with
+    | some (.chain (.id v) (_ :: _)) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
+    | _ => none
   | some _ => none
   | none =>
     -- `Every Harshad number is a positive integer.`: a noun after `is a`, of an object
