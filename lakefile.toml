@@ -15,6 +15,15 @@ scope = "leanprover-community"
 git = "https://github.com/leanprover-community/mathlib4"
 rev = "5ed2965256430c3649e86755f9576b54eca72435"
 
+[[lean_exe]]
+name = "leanify"
+root = "LeanifyCli"
+
+[[lean_exe]]
+# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
+name = "glossary"
+root = "GlossaryMain"
+
 [[lean_lib]]
 name = "Leanify"
 globs = ["Leanify.*"]
@@ -292,15 +301,6 @@ globs = ["Operators.+"]
 name = "TacticSteps"
 srcDir = "tests"
 globs = ["TacticSteps"]
-
-[[lean_exe]]
-name = "leanify"
-root = "LeanifyCli"
-
-[[lean_exe]]
-# `lake exe glossary > docs/glossary.md`: the glossary of the vocabulary.
-name = "glossary"
-root = "GlossaryMain"
 
 [[lean_lib]]
 # The field asymptotics: `$f$ is dominated by $g$`, `of the same order as`, regular variation.
