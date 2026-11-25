@@ -533,6 +533,8 @@ def vocab : Vocab where
     { phrase := phrase!"of infinite order", prenominal := false, ty := E,
       pred := close (lamT E (fun _ => tt) fun a => eq (app (const 23) a) (num 0)), doc := "(Mathlib `IsOfFinOrder`)" },
     postS phrase!"of characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g => eq (app (const 47) g) p) "(Mathlib `ringChar`)",
+    postS phrase!"of positive characteristic" (sP fun g => lt (num 0) (app (const 47) g)) "(Mathlib `ringChar`)",
+    postS phrase!"of characteristic zero" (sP fun g => eq (app (const 47) g) (num 0)) "(Mathlib `CharZero`)",
     postS phrase!"isomorphic to $v$" (close <| lamT S (fun _ => tt) fun h => lamT S (fun _ => tt) fun g => app2 (const 36) g h) "(Mathlib `MulEquiv`)",
     postS phrase!"$v$-group" (close <| lamR fun p => lamT S (fun _ => tt) fun g => and (app (lift Core.posInt) p) (app2 (const 17) p g))
       "every element has order a power of `p` (Mathlib `IsPGroup`)",

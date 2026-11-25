@@ -1200,6 +1200,8 @@ except a notion whose meanings take arguments of different types, which the type
 | of finite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of infinite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
+| of positive characteristic | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
+| of characteristic zero | $\mathrm{El}$ → Prop | (Mathlib `CharZero`) |
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
 | $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |
 | closed in $x$ | $\mathrm{El}$ → Prop | (Mathlib `IsClosed`) |

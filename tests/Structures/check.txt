@@ -48,6 +48,9 @@ tests/Structures/article.tex:179:21: info: claim 40 is meaningful if: \forall x\
 tests/Structures/article.tex:183:121: info: claim 41: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Continuous}(z)\land z\colon x\to y\Rightarrow (\forall s\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(s)\land (\forall b\in \mathrm{El},\ s(b)\Rightarrow x(b))\Rightarrow \operatorname{Compact}(z[z](s)))))
 tests/Structures/article.tex:187:31: info: claim 42: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{T_2}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(y)\land (\forall t\in \mathrm{El},\ y(t)\Rightarrow x(t))\Rightarrow \operatorname{Closed}(x)(y))
 tests/Structures/article.tex:191:49: info: claim 43: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow d(y,s)\le d(y,z)+d(z,s))))
-tests/Structures/article.tex: 0 definitions, 44 claims
-  results: 89 compiled, 0 failed, 0 prose (of 89)
-  all: 89 compiled, 0 failed, 0 prose (of 89)
+tests/Structures/article.tex:195:62: info: claim 44: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land \operatorname{char}(y)=x\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow {(z+1)}^{x}={z}^{x}+1))
+tests/Structures/article.tex:195:62: info: claim 44 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land \operatorname{char}(y)=x\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow (x\in \mathbb{N}\land x\in \mathbb{Z}\land (0\le x\lor \operatorname{Invertible}(z+1)))\land x\in \mathbb{N}\land x\in \mathbb{Z}\land (0\le x\lor \operatorname{Invertible}(z))))
+tests/Structures/article.tex:199:48: info: claim 45: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\land 0<\operatorname{char}(x)\Rightarrow \neg (\operatorname{char}(x)=0)
+tests/Structures/article.tex: 0 definitions, 46 claims
+  results: 93 compiled, 0 failed, 0 prose (of 93)
+  all: 93 compiled, 0 failed, 0 prose (of 93)

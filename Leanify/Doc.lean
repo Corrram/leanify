@@ -2215,8 +2215,33 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
       let bs ← nounBindersImplicitN np f ((v, .real) :: outer)
       pure ((⟨v, .real, none⟩ : BindInfo) :: bs)
 
-def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) :=
-  nounBindersImplicitN np 3 outer
+def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
+  -- `a field $K$ of characteristic $p>0$`: a parameter with its bound, after the noun's
+  -- variable: the letter, bound with the bound before the object
+  let firstM := np.findIdx? fun c => match c with | .m _ => true | _ => false
+  let hit : Option (Nat × Codes × MT) := match firstM with
+    | none => none
+    | some i0 => (np.zipIdx.filterMap fun (c, i) =>
+        if i ≤ i0 then none else
+        match c, np[i - 1]? with
+        | .m ts, some (.w w) =>
+          -- (a condition, `with $n\ge1$`, is not a slot)
+          if [w!"with", w!"that", w!"and", w!"where", w!"satisfying"].contains w then none else
+          match Math.parseFormula ts with
+          | some m@(.chain (.id v) [(_, _)]) =>
+            -- (nor a condition on the object's own variable)
+            if np.any (fun c => match c with | .m [.id u] => u == v | _ => false) then none else some (i, v, m)
+          | _ => none
+        | _, _ => none).head?
+  match hit with
+  | some (i, v, cond) =>
+    if (Elab.lookupLocal outer v).isSome || (← Elab.lookupGlob v).isSome then nounBindersImplicitN np 3 outer else
+    let (p, pty) ← Elab.term 100000 ((v, .real) :: outer) none cond
+    if pty != .prop then fail E.type
+    let np' := np.set i (.m [.id v])
+    let bs ← nounBindersImplicitN np' 3 ((v, .real) :: outer)
+    pure ((⟨v, .real, some (.lam .real .tt (shift 1 0 p))⟩ : BindInfo) :: bs)
+  | none => nounBindersImplicitN np 3 outer
 
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
