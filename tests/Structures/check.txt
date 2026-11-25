@@ -56,6 +56,9 @@ tests/Structures/article.tex:206:1: info: \operatorname{boolean} is well defined
 tests/Structures/article.tex:210:1: info: claim 46: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{boolean}(x)\Rightarrow (\forall z\in \mathrm{El},\ \forall s\in \mathrm{El},\ x(z)\land x(s)\Rightarrow z\,s=s\,z)
 tests/Structures/article.tex:214:1: info: defines \operatorname{nice} (nice)
 tests/Structures/article.tex:218:55: info: claim 47: \forall x\in \mathbb{R},\ \forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land \operatorname{char}(y)=x\land 0<x\Rightarrow 0<x
-tests/Structures/article.tex: 2 definitions, 48 claims
-  results: 98 compiled, 0 failed, 0 prose (of 98)
-  all: 98 compiled, 0 failed, 0 prose (of 98)
+tests/Structures/article.tex:222:1: info: defines \operatorname{separated} (separated)
+tests/Structures/article.tex:226:1: info: defines \text{square-trivial} (squareTrivial)
+tests/Structures/article.tex:226:1: info: \text{square-trivial} is well defined if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall z\in \mathrm{El},\ \forall s\in \mathrm{El},\ x(z)\land x(s)\Rightarrow z\,s=s\,z)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow 2\in \mathbb{Z}\land (0\le 2\lor \operatorname{Invertible}(y)))
+tests/Structures/article.tex: 4 definitions, 48 claims
+  results: 100 compiled, 0 failed, 0 prose (of 100)
+  all: 100 compiled, 0 failed, 0 prose (of 100)

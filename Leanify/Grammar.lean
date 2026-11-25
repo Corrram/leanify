@@ -3523,9 +3523,13 @@ def nameAbbr (cs : List Chunk) : Option (List Codes × List Codes × List Chunk)
 /-- `for every|all|each $x\in A$`. -/
 def forBinder (cs : List Chunk) : Option (Bind × List Chunk) := do
   let r ← kw [w!"for", w!"every"] cs <|> kw [w!"for", w!"all"] cs <|> kw [w!"for", w!"each"] cs
+  -- (`for all distinct $x,y\in X$`: different from each other)
+  let (distinct, r) := match kw [w!"distinct"] r with | some r' => (true, r') | none => (false, r)
   let (ts, r1) ← mathChunk r
   let (vs, d) ← binderMath ts
-  some (.every vs d, r1)
+  if !distinct then return (.every vs d, r1)
+  let [x, y] := vs | none
+  some (.many [.every vs d, .ifCond (.chain (.id x) [(.ne, .id y)])], r1)
 
 /-- The condition of a notion: `[, for every $v\in A$,] [the map] M[,] is MONO`, or
 `$φ$ [for all $x\in A$]`. -/
@@ -3548,7 +3552,7 @@ def notionCond (cs : List Chunk) : Option NotionCond :=
     let (b, r2) ← forBinder r1
     if isEnd r2 then some (NotionCond.formula φ [b]) else none) <|>
   (do
-    let (c, r1) ← clause cs
+    let (c, r1) ← andClauses cs <|> clause cs
     if isEnd r1 then some (NotionCond.clause c) else none)
 
 /-- A notion defined in the text: `We call a NOUN $x$ NAME [(ABBR)] if COND.`,
