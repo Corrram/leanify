@@ -1,0 +1,29 @@
+tests/Extremes/article.tex:9:1: info: defines \@n0 (n0)
+tests/Extremes/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ (x=0\Rightarrow \neg (z=0)\land (0<1+x\,(\frac{s-y}{z})\Rightarrow (\neg (z=0)\land \neg (x=0))\land \exp(-{(1+x\,(\frac{s-y}{z}))}^{-(\frac{1}{x})})=\exp(-\exp(-(\frac{s-y}{z}))))\land (0<x\Rightarrow 0=\exp(-\exp(-(\frac{s-y}{z})))))\land (\neg (x=0)\Rightarrow \neg (z=0)\land (0<1+x\,(\frac{s-y}{z})\Rightarrow (\neg (z=0)\land \neg (x=0))\land (0<x\Rightarrow 0=\exp(-{(1+x\,(\frac{s-y}{z}))}^{-(\frac{1}{x})})))))
+tests/Extremes/article.tex:10:1: info: defines \Lambda (Lambda)
+tests/Extremes/article.tex:11:1: info: defines \Phi (Phi)
+tests/Extremes/article.tex:12:1: info: defines \@n3 (n3)
+tests/Extremes/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 1<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ 0<s\Rightarrow (y=0\Rightarrow \neg (x=0))\land (\neg (y=0)\Rightarrow \neg (y=0)\land \neg (x=0)))
+tests/Extremes/article.tex:13:1: info: defines \@n4 (n4)
+tests/Extremes/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ (z<0\Rightarrow (x=0\Rightarrow \neg (y=0)\land 1-\exp(-(\frac{z}{y}))=0)\land (0<1+x\,(\frac{z}{y})\Rightarrow (\neg (y=0)\land \neg (x=0))\land 1-{(1+x\,(\frac{z}{y}))}^{-(\frac{1}{x})}=0))\land (\neg (z<0)\Rightarrow (x=0\Rightarrow \neg (y=0)\land (0<1+x\,(\frac{z}{y})\Rightarrow (\neg (y=0)\land \neg (x=0))\land 1-{(1+x\,(\frac{z}{y}))}^{-(\frac{1}{x})}=1-\exp(-(\frac{z}{y}))))\land (\neg (x=0)\Rightarrow \neg (y=0)\land (0<1+x\,(\frac{z}{y})\Rightarrow \neg (y=0)\land \neg (x=0)))))
+tests/Extremes/article.tex:14:1: info: defines \@n5 (n5)
+tests/Extremes/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x<1\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (1-x=0))
+tests/Extremes/article.tex:15:1: info: defines E (E)
+tests/Extremes/article.tex:20:27: info: claim 0: \forall x\in \mathbb{R},\ \@n0(0,0,1,x)=\Lambda(x)
+tests/Extremes/article.tex:20:27: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ 0<1
+tests/Extremes/article.tex:20:27: info: claim 1: \Lambda(0)=\exp(-1)
+tests/Extremes/article.tex:20:27: info: claim 2: \Phi(1,1)=\exp(-1)
+tests/Extremes/article.tex:20:27: info: claim 2 is meaningful if: 0<1
+tests/Extremes/article.tex:24:1: info: claim 3: \exists y\in \mathbb{R}\to \mathbb{R},\ \exists z\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\Rightarrow 0<y(s))\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ 0<t\Rightarrow (\exists a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (b\in \mathbb{Z}\land 1\le b)\land a\le b\Rightarrow \lvert {E(y(b)\,s+z(b))}^{b}-\exp(-\exp(-s))\rvert<t))
+tests/Extremes/article.tex:28:67: info: claim 4: \forall x\in \mathbb{R}\to \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall t\in \mathbb{R},\ x(t)<1)\land (\forall t\in \mathbb{R},\ 0<t\Rightarrow (\forall a\in \mathbb{R},\ 0<a\Rightarrow (\exists b\in \mathbb{R},\ \forall p\in \mathbb{R},\ b\le p\Rightarrow \lvert \frac{1-x(p\,t)}{1-x(p)}-{t}^{-y}\rvert<a)))\Rightarrow (\exists t\in \mathbb{R}\to \mathbb{R},\ \exists a\in \mathbb{R}\to \mathbb{R},\ (\forall b\in \mathbb{R},\ b\in \mathbb{Z}\land 1\le b\Rightarrow 0<t(b))\land (\forall b\in \mathbb{R},\ \forall p\in \mathbb{R},\ 0<p\Rightarrow (\exists q\in \mathbb{R},\ \forall w\in \mathbb{R},\ (w\in \mathbb{Z}\land 1\le w)\land q\le w\Rightarrow \lvert {x(t(w)\,b+a(w))}^{w}-\begin{cases}\exp(-{b}^{-y})&0<b\\\end{cases}\rvert<p)))
+tests/Extremes/article.tex:28:67: info: claim 4 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R}\to \mathbb{R},\ (\forall t\in \mathbb{R},\ s(t)<1)\Rightarrow (\forall t\in \mathbb{R},\ 0<t\Rightarrow (\forall a\in \mathbb{R},\ 0<a\Rightarrow (\forall b\in \mathbb{R},\ \forall p\in \mathbb{R},\ b\le p\Rightarrow \neg (1-s(p)=0))))))
+tests/Extremes/article.tex:34:31: info: claim 5: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \@n4(0,1,x)=E(x)
+tests/Extremes/article.tex:34:31: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow 0<1
+tests/Extremes/article.tex:34:31: info: claim 6: \@n5(\frac{1}{2},1)=2
+tests/Extremes/article.tex:34:31: info: claim 6 is meaningful if: 0<1\land \neg (2=0)\land \frac{1}{2}<1
+tests/Extremes/article.tex:38:1: info: claim 7: \@n3(2,0,0,1)=-\log(\log(2))
+tests/Extremes/article.tex:38:1: info: claim 7 is meaningful if: (0<1\land 1<2)\land 0<2\land 0<\log(2)
+tests/Extremes/article.tex: 7 definitions, 8 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 8 compiled, 0 failed, 0 prose (of 8)
+  all: 15 compiled, 0 failed, 0 prose (of 15)

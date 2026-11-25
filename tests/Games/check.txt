@@ -1,0 +1,19 @@
+tests/Games/article.tex:9:1: info: defines \@n0 (n0)
+tests/Games/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \exists t\in \mathbb{R},\ ((\exists a\in \mathbb{R},\ (0\le a\land a\le 1)\land \min\{a\,x+(1-a)\,z,a\,y+(1-a)\,s\}=t)\land (\forall a\in \mathbb{R},\ 0\le a\land a\le 1\Rightarrow \min\{a\,x+(1-a)\,z,a\,y+(1-a)\,s\}\le t))\land (\forall a\in \mathbb{R},\ (\exists b\in \mathbb{R},\ (0\le b\land b\le 1)\land \min\{b\,x+(1-b)\,z,b\,y+(1-b)\,s\}=a)\land (\forall b\in \mathbb{R},\ 0\le b\land b\le 1\Rightarrow \min\{b\,x+(1-b)\,z,b\,y+(1-b)\,s\}\le a)\Rightarrow a=t)
+tests/Games/article.tex:10:1: info: defines \@n1 (n1)
+tests/Games/article.tex:11:1: info: defines \@n2 (n2)
+tests/Games/article.tex:12:1: info: defines \@n3 (n3)
+tests/Games/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow (0\le y\land y\le 1)\land 0\le x\land x\le 1)
+tests/Games/article.tex:17:1: info: claim 0: \@n0(1,-1,-1,1)=0
+tests/Games/article.tex:17:1: info: claim 1: \@n1(1,-1,-1,1)=-1
+tests/Games/article.tex:17:1: info: claim 2: \@n2(1,-1,-1,1)=1
+tests/Games/article.tex:21:1: info: claim 3: (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land \min\{\frac{1}{2}\,1+(1-\frac{1}{2})\,(-1),\frac{1}{2}\,(-1)+(1-\frac{1}{2})\,1\}=(\iota x\in \mathbb{R}.\ (\exists y\in \mathbb{R},\ (0\le y\land y\le 1)\land \min\{y\,1+(1-y)\,(-1),y\,(-1)+(1-y)\,1\}=x)\land (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \min\{y\,1+(1-y)\,(-1),y\,(-1)+(1-y)\,1\}\le x))
+tests/Games/article.tex:21:1: info: claim 3 is meaningful if: (\neg (2=0)\land (0\le \frac{1}{2}\Rightarrow \neg (2=0)))\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1\Rightarrow ((\neg (2=0)\land \neg (2=0))\land \neg (2=0)\land \neg (2=0))\land (\exists x\in \mathbb{R},\ ((\exists y\in \mathbb{R},\ (0\le y\land y\le 1)\land \min\{y\,1+(1-y)\,(-1),y\,(-1)+(1-y)\,1\}=x)\land (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \min\{y\,1+(1-y)\,(-1),y\,(-1)+(1-y)\,1\}\le x))\land (\forall y\in \mathbb{R},\ (\exists z\in \mathbb{R},\ (0\le z\land z\le 1)\land \min\{z\,1+(1-z)\,(-1),z\,(-1)+(1-z)\,1\}=y)\land (\forall z\in \mathbb{R},\ 0\le z\land z\le 1\Rightarrow \min\{z\,1+(1-z)\,(-1),z\,(-1)+(1-z)\,1\}\le y)\Rightarrow y=x)))
+tests/Games/article.tex:21:1: info: claim 4: \@n3(\frac{1}{2},\frac{1}{2})=0
+tests/Games/article.tex:21:1: info: claim 4 is meaningful if: \neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land (\neg (2=0)\land 0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land \neg (2=0)
+tests/Games/article.tex:25:32: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \@n1(x,y,z,s)\le \@n0(x,y,z,s)
+tests/Games/article.tex:25:32: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \@n0(x,y,z,s)\le \@n2(x,y,z,s)
+tests/Games/article.tex: 4 definitions, 7 claims
+  text: 4 compiled, 0 failed, 0 prose (of 4)
+  results: 4 compiled, 0 failed, 0 prose (of 4)
+  all: 8 compiled, 0 failed, 0 prose (of 8)

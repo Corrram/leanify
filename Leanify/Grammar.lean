@@ -1558,7 +1558,25 @@ def clauseEnd (cs : List Chunk) : Bool :=
 /-- A list of the arguments of a phrase goes on after a comma (`with kernel $K$, right-hand side
 $g$ and parameter $\lambda$`): words, a formula, `and` and a word follow it. -/
 def listContinues (cs : List Chunk) : Bool :=
+  -- (`with payoffs $a$, $b$, $c$ and $d$`: formulas separated by commas, then `and` and the last,
+  -- which no verb follows)
+  let verbs := [w!"is", w!"are", w!"has", w!"have", w!"satisfies", w!"satisfy", w!"equals", w!"holds",
+    w!"hold", w!"lies", w!"lie", w!"belongs", w!"divides", w!"does", w!"do", w!"can", w!"converges"]
+  -- (formulas that state something, `$I_0(u)=1$ and $J(u)=2$`, are claims, not arguments)
+  let term (ts : List MTok) : Bool := match Math.parseFormula ts with
+    | some (.chain _ (_ :: _)) => false
+    | some _ => true
+    | none => false
+  let rec formulas : Nat → List Chunk → Bool
+    | 0, _ => false
+    | f + 1, .p 44 :: .m ts :: r => term ts && formulas f r
+    | _, .w a :: .m ts :: r =>
+      a == w!"and" && term ts && (match r with
+        | .w v :: _ => !verbs.contains v
+        | _ => true)
+    | _, _ => false
   match cs with
+  | .p 44 :: .m ts :: r => term ts && formulas 8 r
   | .p 44 :: rest =>
     let ws := rest.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
     let stop := [w!"and", w!"so", w!"which", w!"where", w!"whereas", w!"then", w!"since", w!"hence",

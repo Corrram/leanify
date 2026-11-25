@@ -69,14 +69,18 @@ except a notion whose meanings take arguments of different types, which the type
         * `stochasticorders`
         * `markovchains`
         * `branching`
+        * `extremes`
       * `samples`
+      * `regression`
       * `timeseries`
       * `testing`
+      * `bayesian`
       * `dependence`
         * `copulas`
     * `finance`
     * `utility`
     * `economics`
+    * `games`
     * `queues`
     * `reliability`
   * `discrete`
@@ -96,19 +100,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `economics`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `economics`, `queues`, `reliability` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
-| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` |
+| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `timeseries`, `testing`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
 
 ## `core`
 
@@ -2261,4 +2265,67 @@ except a notion whose meanings take arguments of different types, which the type
 | ces function with parameter $a$ and weight $b$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(K,L) ↦ (a K^ρ + (1-a) L^ρ)^{1/ρ}`, `ρ ≠ 0`, `0 < a < 1` |
 | gini coefficient of $a$ | (ℝ → ℝ) → ℝ | `1 - 2 ∫_0^1 L`, of a Lorenz curve |
 | consumer surplus for the demand $a$ at price $b$ up to $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_p^P D`, up to the choke price `P` |
+
+## `extremes`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| in the maximum domain of attraction of the gumbel distribution | ℝ → ℝ | `F(a_n x + b_n)^n → exp(-e^{-x})` for some `a_n > 0`, `b_n` |
+| in the maximum domain of attraction of the fréchet distribution with index $x$ | ℝ → ℝ | `F(a_n x + b_n)^n → Φ_α(x)` |
+| in the maximum domain of attraction of the frechet distribution with index $x$ | ℝ → ℝ | the Fréchet case |
+| in the maximum domain of attraction of the weibull distribution with index $x$ | ℝ → ℝ | `F(a_n x + b_n)^n → Ψ_α(x)` |
+| regularly varying in the tail with index $x$ | ℝ → ℝ | `F(t) < 1` and `(1 - F(tx))/(1 - F(t)) → x^{-α}` as `t → ∞`, for `x > 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| generalized extreme value distribution function with shape $a$, location $b$ and scale $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | `exp(-(1 + ξ(x-μ)/σ)^{-1/ξ})` on the support, `exp(-e^{-(x-μ)/σ})` for `ξ = 0` |
+| standard gumbel distribution function | ℝ → ℝ | `exp(-e^{-x})` |
+| fréchet distribution function with index $a$ | ℝ → ℝ → ℝ | `exp(-x^{-α})` for `x > 0`, `0` otherwise |
+| frechet distribution function with index $a$ | ℝ → ℝ → ℝ | the Fréchet distribution function |
+| reversed weibull distribution function with index $a$ | ℝ → ℝ → ℝ | `exp(-(-x)^α)` for `x < 0`, `1` otherwise |
+| return level for the return period $a$ with shape $b$, location $c$ and scale $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | the `(1 - 1/T)`-quantile of the GEV distribution |
+| generalized pareto distribution function with shape $a$ and scale $b$ | ℝ → ℝ → ℝ → ℝ | `1 - (1 + ξx/σ)^{-1/ξ}` for `x ≥ 0` on the support, `1 - e^{-x/σ}` for `ξ = 0` |
+| mean excess of the generalized pareto distribution with shape $a$ and scale $b$ | ℝ → ℝ → ℝ | `σ/(1 - ξ)` at `0`, for `ξ < 1` |
+
+## `games`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| optimal strategy for the row player in the zero-sum game with payoffs $x$, $a$, $b$ and $c$ | ℝ | `p ∈ [0,1]` with `min(pa + (1-p)c, pb + (1-p)d)` the value |
+| optimal strategy for the column player in the zero-sum game with payoffs $x$, $a$, $b$ and $c$ | ℝ | `q ∈ [0,1]` with `max(qa + (1-q)b, qc + (1-q)d)` the value |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `max_p min(pa + (1-p)c, pb + (1-p)d)` over `p ∈ [0,1]` |
+| lower value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `max(min(a,b), min(c,d))`, in pure strategies |
+| upper value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `min(max(a,c), max(b,d))`, in pure strategies |
+| expected payoff of the strategies $a$ and $b$ in the zero-sum game with payoffs $c$, $d$, $e$ and $y$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `pq a + p(1-q) b + (1-p)q c + (1-p)(1-q) d` |
+
+## `regression`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| fitted value at $a$ of the regression of $b$ on $c$ for the first $d$ terms | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `b̂₀ + b̂₁ t` for the least-squares line |
+| $a$ th residual of the regression of $b$ on $c$ for the first $d$ terms | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `y_i - ŷ_i` |
+| residual sum of squares of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑ (y_i - ŷ_i)²` |
+| total sum of squares of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑ (y_i - ȳ)²` |
+| explained sum of squares of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `∑ (ŷ_i - ȳ)²` |
+| coefficient of determination of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `R² = 1 - RSS/TSS` |
+| adjusted coefficient of determination of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `1 - (1 - R²)(n-1)/(n-2)` |
+| residual standard error of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `√(RSS/(n-2))` |
+| standard error of the slope of the regression of $a$ on $b$ for the first $c$ terms | (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ | `√(RSS/(n-2)) / √(∑ (x_i - x̄)²)` |
+
+## `bayesian`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| posterior mean of the beta prior with parameters $a$ and $b$ after $c$ successes in $d$ trials | ℝ → ℝ → ℝ → ℝ → ℝ | `(a+k)/(a+b+n)` |
+| posterior mode of the beta prior with parameters $a$ and $b$ after $c$ successes in $d$ trials | ℝ → ℝ → ℝ → ℝ → ℝ | `(a+k-1)/(a+b+n-2)`, where both posterior parameters exceed `1` |
+| first posterior parameter of the beta prior with parameters $a$ and $b$ after $c$ successes in $d$ trials | ℝ → ℝ → ℝ → ℝ → ℝ | `a + k` |
+| second posterior parameter of the beta prior with parameters $a$ and $b$ after $c$ successes in $d$ trials | ℝ → ℝ → ℝ → ℝ → ℝ | `b + n - k` |
+| posterior mean of the gamma prior with shape $a$ and rate $b$ after $c$ observations with sum $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(α+s)/(β+n)`, Poisson data |
+| posterior mean of the normal prior with mean $a$ and variance $b$ after $c$ observations with mean $d$ and variance $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `(μ₀/τ² + n x̄/σ²)/(1/τ² + n/σ²)` |
+| posterior variance of the normal prior with variance $a$ after $b$ observations with variance $c$ | ℝ → ℝ → ℝ → ℝ | `1/(1/τ² + n/σ²)` |
+| posterior probability with prior $a$ and likelihoods $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `P(E\|H)P(H)/(P(E\|H)P(H) + P(E\|¬H)(1-P(H)))`, Bayes' formula |
+| bayes factor with likelihoods $a$ and $b$ | ℝ → ℝ → ℝ | `P(E\|H₁)/P(E\|H₀)` |
 

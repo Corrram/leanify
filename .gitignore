@@ -84,3 +84,7 @@ article-reader/
 /tests/IntegralEquations/article.leanify.*
 /tests/ClassicalPdes/article.leanify.*
 /tests/Economics/article.leanify.*
+/tests/Extremes/article.leanify.*
+/tests/Games/article.leanify.*
+/tests/Regression/article.leanify.*
+/tests/Bayesian/article.leanify.*

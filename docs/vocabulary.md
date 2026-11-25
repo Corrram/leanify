@@ -318,6 +318,13 @@ Further fields cover other branches of mathematics:
   two variables, the heat kernel, d'Alembert's formula;
 * `economics`: elasticities, marginal and average values, Cobb–Douglas and CES functions,
   Lorenz curves and the Gini coefficient, consumer surplus.
+* `extremes`: GEV and generalized Pareto distribution functions, return levels, maximum
+  domains of attraction;
+* `games`: values and optimal strategies of two-by-two zero-sum games;
+* `regression`: residuals, sums of squares, the coefficient of determination and standard
+  errors of the least-squares line;
+* `bayesian`: conjugate posteriors (beta–binomial, gamma–Poisson, normal–normal), Bayes'
+  formula.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

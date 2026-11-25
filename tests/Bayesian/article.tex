@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={bayesian}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $m(a,b,k,n)$ for the posterior mean of the beta prior with parameters $a$ and $b$ after $k$ successes in $n$ trials.
+We write $M(a,b,k,n)$ for the posterior mode of the beta prior with parameters $a$ and $b$ after $k$ successes in $n$ trials.
+We write $g(\alpha,\beta,n,s)$ for the posterior mean of the gamma prior with shape $\alpha$ and rate $\beta$ after $n$ observations with sum $s$.
+We write $\mu(a,t,n,x,s)$ for the posterior mean of the normal prior with mean $a$ and variance $t$ after $n$ observations with mean $x$ and variance $s$.
+We write $P(h,p,q)$ for the posterior probability with prior $h$ and likelihoods $p$ and $q$.
+
+\section{Conjugate families}
+
+\begin{lemma}\label{beta}
+$m(1,1,3,4)=\frac23$ and $M(2,2,3,4)=\frac23$.
+\end{lemma}
+
+\begin{lemma}\label{gamma}
+$g(1,1,3,5)=\frac32$.
+\end{lemma}
+
+\begin{lemma}\label{normal}
+$\mu(0,1,1,2,1)=1$.
+\end{lemma}
+
+\section{Bayes' formula}
+
+\begin{lemma}\label{bayes}
+$P(\frac12,\frac34,\frac14)=\frac34$.
+\end{lemma}
+
+\begin{lemma}\label{uniform}
+Let $k,n$ be nonnegative integers with $k\le n$. Then $m(1,1,k,n)=\frac{k+1}{n+2}$.
+\end{lemma}
+
+\end{document}

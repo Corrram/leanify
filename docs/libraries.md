@@ -86,16 +86,20 @@ math
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
-│   │   │   └── branching         Galton–Watson processes, extinction probabilities
+│   │   │   ├── branching         Galton–Watson processes, extinction probabilities
+│   │   │   └── extremes          GEV and generalized Pareto laws, domains of attraction
 │   │   ├── samples               sample mean, variance, order statistics, correlation
+│   │   ├── regression            residuals, sums of squares, R², standard errors
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
 │   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
+│   │   ├── bayesian              conjugate posteriors, Bayes' formula
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   ├── finance                   interest, annuities, Black–Scholes
 │   ├── utility                   expected utility, risk aversion, certainty equivalents
 │   ├── economics                 elasticities, production functions, Lorenz curves, Gini
+│   ├── games                     two-by-two zero-sum games, values, optimal strategies
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
 │   └── reliability               series, parallel, k-out-of-n systems; MTTF
 ├── discrete                      discrete mathematics
@@ -231,17 +235,21 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`copulas`](glossary.md#copulas) | the independence, comonotonicity and countermonotonicity copulas; Clayton, Gumbel, Frank, FGM, Ali–Mikhail–Haq, Cuadras–Augé, Marshall–Olkin and Gaussian copulas; Spearman's rho, Kendall's tau, Blomqvist's beta, Spearman's footrule, Gini's gamma, Chatterjee's xi, tail dependence coefficients; positively and negatively quadrant dependent, radially symmetric, left tail decreasing, max-stable; the concordance order | loads `markov` |
 | [`distributions`](glossary.md#distributions) | probability distributions on `ℕ₀`: Poisson, binomial, negative binomial, geometric, Bernoulli, discrete uniform, hypergeometric, point masses; the mean, the variance, the probability generating function | |
 | [`samples`](glossary.md#samples) | the first `n` terms of a sequence as a sample: sample mean, variance and standard deviation, moments, the empirical distribution function, order statistics, median and range, sample covariance and correlation, least-squares slope and intercept | |
+| [`regression`](glossary.md#regression) | for the least-squares line of `y` on `x` and the first `n` observations: fitted values, residuals, residual, total and explained sums of squares, the (adjusted) coefficient of determination, the residual standard error and the standard error of the slope | |
 | [`timeseries`](glossary.md#timeseries) | the sample autocovariance and autocorrelation at a lag, moving averages, cumulative sums, difference sequences and seasonal differences, exponential smoothing; autoregressive sequences of order one and random walks | |
 | [`testing`](glossary.md#testing) | the z- and t-statistics of a sample for a mean, one- and two-sided p-values, standard normal quantiles, the margin of error at a confidence level, Pearson's chi-squared statistic | |
+| [`bayesian`](glossary.md#bayesian) | posterior mean, mode and parameters of a beta prior after binomial data, the posterior mean of a gamma prior after Poisson data, posterior mean and variance of a normal prior after normal data; Bayes' formula and the Bayes factor | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
+| [`extremes`](glossary.md#extremes) | the GEV, standard Gumbel, Fréchet and reversed Weibull distribution functions, return levels, the generalized Pareto distribution function and its mean excess; distribution functions in the maximum domain of attraction of the Gumbel, Fréchet or Weibull law, regularly varying tails | |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |
+| [`games`](glossary.md#games) | the value, lower and upper values and expected payoffs of a two-by-two zero-sum game; optimal strategies of the row and column players | |
 | [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | **Discrete mathematics** (`discrete`) | | |

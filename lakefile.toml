@@ -559,3 +559,27 @@ globs = ["ClassicalPdes.+"]
 name = "Economics"
 srcDir = "tests"
 globs = ["Economics.+"]
+
+[[lean_lib]]
+# The field extremes: extreme value theory.
+name = "Extremes"
+srcDir = "tests"
+globs = ["Extremes.+"]
+
+[[lean_lib]]
+# The field games: two-person zero-sum games.
+name = "Games"
+srcDir = "tests"
+globs = ["Games.+"]
+
+[[lean_lib]]
+# The field regression: simple linear regression.
+name = "Regression"
+srcDir = "tests"
+globs = ["Regression.+"]
+
+[[lean_lib]]
+# The field bayesian: conjugate updating.
+name = "Bayesian"
+srcDir = "tests"
+globs = ["Bayesian.+"]

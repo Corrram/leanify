@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={extremes}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $G_{\xi,\mu,\sigma}$ for the generalized extreme value distribution function with shape $\xi$, location $\mu$ and scale $\sigma$.
+We write $\Lambda$ for the standard Gumbel distribution function.
+We write $\Phi_\alpha$ for the Fréchet distribution function with index $\alpha$.
+We write $z_T(\xi,\mu,\sigma)$ for the return level for the return period $T$ with shape $\xi$, location $\mu$ and scale $\sigma$.
+We write $H_{\xi,\sigma}$ for the generalized Pareto distribution function with shape $\xi$ and scale $\sigma$.
+We write $e(\xi,\sigma)$ for the mean excess of the generalized Pareto distribution with shape $\xi$ and scale $\sigma$.
+For every real number $x$, let $E(x)\coloneqq 1-\exp(-x)$.
+
+\section{Limit laws}
+
+\begin{lemma}\label{gumbel}
+Let $x$ be a real number. Then $G_{0,0,1}(x)=\Lambda(x)$, and $\Lambda(0)=\exp(-1)$ and $\Phi_1(1)=\exp(-1)$.
+\end{lemma}
+
+\begin{lemma}\label{exponential}
+$E$ is in the maximum domain of attraction of the Gumbel distribution.
+\end{lemma}
+
+\begin{lemma}\label{frechet}
+Let $F:\mathbb{R}\to\mathbb{R}$ be a function and let $\alpha>0$. If $F$ is regularly varying in the tail with index $\alpha$, then $F$ is in the maximum domain of attraction of the Fréchet distribution with index $\alpha$.
+\end{lemma}
+
+\section{Peaks over thresholds}
+
+\begin{lemma}\label{pareto}
+Let $x\ge0$ be a real number. Then $H_{0,1}(x)=E(x)$, and $e(\frac12,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{return}
+$z_2(0,0,1)=-\log(\log 2)$.
+\end{lemma}
+
+\end{document}

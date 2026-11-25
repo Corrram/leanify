@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={games}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $v(a,b,c,d)$ for the value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$.
+We write $L(a,b,c,d)$ for the lower value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$.
+We write $U(a,b,c,d)$ for the upper value of the zero-sum game with payoffs $a$, $b$, $c$ and $d$.
+We write $E(p,q)$ for the expected payoff of the strategies $p$ and $q$ in the zero-sum game with payoffs $1$, $-1$, $-1$ and $1$.
+
+\section{Matching pennies}
+
+\begin{lemma}\label{pennies}
+$v(1,-1,-1,1)=0$, $L(1,-1,-1,1)=-1$ and $U(1,-1,-1,1)=1$.
+\end{lemma}
+
+\begin{lemma}\label{optimal}
+$\frac12$ is an optimal strategy for the row player in the zero-sum game with payoffs $1$, $-1$, $-1$ and $1$, and $E(\frac12,\frac12)=0$.
+\end{lemma}
+
+\begin{lemma}\label{minimax}
+Let $a,b,c,d$ be real numbers. Then $L(a,b,c,d)\le v(a,b,c,d)$ and $v(a,b,c,d)\le U(a,b,c,d)$.
+\end{lemma}
+
+\end{document}

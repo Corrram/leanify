@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={regression}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\hat y_n(t,v,x)$ for the fitted value at $t$ of the regression of $v$ on $x$ for the first $n$ terms.
+We write $e_{i,n}(y,x)$ for the $i$th residual of the regression of $y$ on $x$ for the first $n$ terms.
+We write $\mathrm{RSS}_n(y,x)$ for the residual sum of squares of the regression of $y$ on $x$ for the first $n$ terms.
+We write $\mathrm{TSS}_n(y,x)$ for the total sum of squares of the regression of $y$ on $x$ for the first $n$ terms.
+We write $R^2_n(y,x)$ for the coefficient of determination of the regression of $y$ on $x$ for the first $n$ terms.
+We write $s_n(y,x)$ for the residual standard error of the regression of $y$ on $x$ for the first $n$ terms.
+For every real number $i$, let $u(i)\coloneqq i$.
+For every real number $i$, let $l(i)\coloneqq 2i+1$.
+For every real number $i$, let $w(i)\coloneqq -\frac32 i^2+\frac{13}{2}i-4$.
+
+\section{An exact line}
+
+\begin{lemma}\label{exact}
+$\hat y_3(5,l,u)=11$ and $e_{2,3}(l,u)=0$. Moreover, $\mathrm{RSS}_3(l,u)=0$, $\mathrm{TSS}_3(l,u)=8$, $R^2_3(l,u)=1$ and $s_3(l,u)=0$.
+\end{lemma}
+
+\section{A noisy line}
+
+\begin{lemma}\label{noisy}
+$\mathrm{RSS}_3(w,u)=\frac32$, $\mathrm{TSS}_3(w,u)=2$ and $R^2_3(w,u)=\frac14$.
+\end{lemma}
+
+\begin{lemma}\label{range}
+Let $x,y:\mathbb{R}\to\mathbb{R}$ be functions and let $n\ge3$ be an integer. Then $\mathrm{RSS}_n(y,x)\ge0$.
+\end{lemma}
+
+\end{document}
