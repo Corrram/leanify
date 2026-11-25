@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={variograms}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S$ for the spherical variogram with sill $2$ and range $1$.
+We write $X$ for the exponential variogram with sill $1$ and range $1$.
+We write $G$ for the Gaussian variogram with sill $1$ and range $1$.
+We write $C$ for the exponential covariance with sill $1$ and range $1$.
+We write $P$ for the power variogram with coefficient $2$ and exponent $1$.
+We write $N$ for the variogram $X$ with nugget $\frac12$.
+We write $R(a)$ for the practical range of the exponential variogram with range $a$.
+
+\section{Models}
+
+\begin{lemma}\label{values}
+$S(\frac12)=\frac{11}{8}$, $S(2)=2$, $X(0)=0$, $G(1)=1-e^{-1}$, $P(-3)=6$ and $R(2)=6$.
+\end{lemma}
+
+\begin{lemma}\label{covariance}
+For every real number $h$, $X(h)+C(h)=1$.
+\end{lemma}
+
+\begin{lemma}\label{nugget}
+$N(0)=0$ and $N(1)=\frac12+X(1)$.
+\end{lemma}
+
+\end{document}

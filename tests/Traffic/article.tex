@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={traffic}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $v(k,u,j)$ for the Greenshields speed at density $k$ with free-flow speed $u$ and jam density $j$.
+We write $q(k,u,j)$ for the Greenshields flow at density $k$ with free-flow speed $u$ and jam density $j$.
+We write $C(u,j)$ for the capacity of a road with free-flow speed $u$ and jam density $j$.
+We write $K(j)$ for the critical density for the jam density $j$.
+We write $U(x,u,c)$ for the uncongested speed at flow $x$ with free-flow speed $u$ and capacity $c$.
+We write $h(x)$ for the headway at flow $x$.
+We write $s(k)$ for the spacing at density $k$.
+
+\section{Greenshields}
+
+\begin{lemma}\label{capacity}
+Let $u$ and $j$ be positive real numbers. Then $q(K(j),u,j)=C(u,j)$ and $U(0,u,C(u,j))=u$.
+\end{lemma}
+
+\begin{lemma}\label{flow}
+Let $u$ and $j$ be positive real numbers. Let $k$ be a real number with $0\le k\le j$. Then $q(k,u,j)=k\,v(k,u,j)$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$h(\frac12)=2$, $s(4)=\frac14$ and $v(0,100,200)=100$.
+\end{lemma}
+
+\end{document}

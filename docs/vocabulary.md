@@ -392,7 +392,11 @@ Further fields cover other branches of mathematics:
 * `convergence`: iteration counts and extrapolation;
 * `finitefields`: linear algebra over finite fields;
 * `liealgebras`: the classical simple Lie algebras;
-* `words`: words, necklaces and de Bruijn sequences.
+* `words`: words, necklaces and de Bruijn sequences;
+* `orbits`: Keplerian orbits and transfers;
+* `variograms`: variogram and covariance models;
+* `traffic`: the Greenshields model;
+* `geometricprobability`: random points, as integrals.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

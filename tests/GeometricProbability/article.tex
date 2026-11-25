@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={geometricprobability}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $I$ for the expected distance between two random points in the unit interval.
+We write $D$ for the expected distance between two random points in the unit square.
+We write $E$ for the expected distance between two random points in the unit disk.
+We write $A$ for the expected area of a triangle with random vertices in the unit square.
+We write $P$ for the probability that three random points on a circle form an acute triangle.
+
+\section{Distances}
+
+\begin{lemma}\label{interval}
+$I=\frac13$ and $I<D$.
+\end{lemma}
+
+\begin{lemma}\label{square}
+$D=\frac{2+\sqrt{2}+5\log(1+\sqrt{2})}{15}$ and $E=\frac{128}{45\pi}$.
+\end{lemma}
+
+\section{Triangles}
+
+\begin{lemma}\label{triangles}
+$A=\frac{11}{144}$ and $P=\frac14$.
+\end{lemma}
+
+\end{document}

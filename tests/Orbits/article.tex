@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={orbits}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $v(r,a,\mu)$ for the orbital speed at distance $r$ on an orbit with semi-major axis $a$ for the gravitational parameter $\mu$.
+We write $p(a,x)$ for the periapsis distance of an orbit with semi-major axis $a$ and eccentricity $x$.
+We write $q(a,x)$ for the apoapsis distance of an orbit with semi-major axis $a$ and eccentricity $x$.
+We write $E(a,\mu)$ for the specific orbital energy of an orbit with semi-major axis $a$ for the gravitational parameter $\mu$.
+We write $B(r,s,\mu)$ for the first burn of the Hohmann transfer from radius $r$ to radius $s$ for the gravitational parameter $\mu$.
+We write $C(r,s,\mu)$ for the second burn of the Hohmann transfer from radius $r$ to radius $s$ for the gravitational parameter $\mu$.
+We write $S(x,y)$ for the synodic period of the periods $x$ and $y$.
+We write $H(m,M,a)$ for the Hill radius of a body of mass $m$ orbiting a mass $M$ at distance $a$.
+
+\section{Energy}
+
+\begin{lemma}\label{visviva}
+Let $a$ and $\mu$ be positive real numbers. Then $\frac{v(a,a,\mu)^2}{2}-\frac{\mu}{a}=E(a,\mu)$.
+\end{lemma}
+
+\begin{lemma}\label{distances}
+$p(2,\frac12)=1$, $q(2,\frac12)=3$, $S(1,2)=2$ and $H(3,1,1)=1$.
+\end{lemma}
+
+\section{Transfers}
+
+\begin{lemma}\label{hohmann}
+Let $r$ and $\mu$ be positive real numbers. Then $B(r,r,\mu)=0$ and $C(r,r,\mu)=0$.
+\end{lemma}
+
+\end{document}

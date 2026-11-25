@@ -134,6 +134,10 @@ import Leanify.Library.Convergence
 import Leanify.Library.FiniteFields
 import Leanify.Library.LieAlgebras
 import Leanify.Library.Words
+import Leanify.Library.Orbits
+import Leanify.Library.Variograms
+import Leanify.Library.Traffic
+import Leanify.Library.GeometricProbability
 
 /-! # The fields of the vocabulary
 
@@ -285,7 +289,11 @@ def all : List (String × Vocab) := [
   ("convergence", Convergence.vocab),
   ("finitefields", FiniteFields.vocab),
   ("liealgebras", LieAlgebras.vocab),
-  ("words", Words.vocab)]
+  ("words", Words.vocab),
+  ("orbits", Orbits.vocab),
+  ("variograms", Variograms.vocab),
+  ("traffic", Traffic.vocab),
+  ("geometricprobability", GeometricProbability.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -318,16 +326,16 @@ def bundles : List (String × List String) := [
   ("algebra", ["linearalgebra", "polynomials", "quadratics", "groups", "finitefields", "liealgebras"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "polyhedra", "sphericalgeometry", "mapprojections", "surfaces", "curves", "fractals"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint", "convergence"]),
-  ("stochastic", ["statistics", "finance", "fixedincome", "options", "utility", "economics", "macroeconomics", "games", "ratings", "queues", "reliability", "actuarial", "inventory", "voting"]),
+  ("stochastic", ["statistics", "finance", "fixedincome", "options", "utility", "economics", "macroeconomics", "games", "ratings", "queues", "reliability", "actuarial", "inventory", "voting", "traffic"]),
   ("discrete", ["combinatorics", "counting", "words", "permutations", "graphs", "graphcounts", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "analyticnumbertheory", "continuedfractions", "digits", "collatz", "cryptography", "diophantine", "latticepoints", "calendar"]),
   -- the areas inside them
-  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism", "kinematics", "optics", "acoustics", "music", "crystallography"]),
+  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism", "kinematics", "optics", "acoustics", "music", "crystallography", "orbits"]),
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
-  ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
+  ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
   ("dependence", ["copulas"]),
-  ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "learning", "surveysampling", "dependence"])]
+  ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "learning", "surveysampling", "variograms", "dependence"])]
 
 /-- The realms: the bundles that `math` names, each a branch of mathematics. -/
 def realms : List String := (bundles.lookup "math").getD []

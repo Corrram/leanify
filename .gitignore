@@ -153,3 +153,7 @@ article-reader/
 /tests/FiniteFields/article.leanify.*
 /tests/LieAlgebras/article.leanify.*
 /tests/Words/article.leanify.*
+/tests/Orbits/article.leanify.*
+/tests/Variograms/article.leanify.*
+/tests/Traffic/article.leanify.*
+/tests/GeometricProbability/article.leanify.*

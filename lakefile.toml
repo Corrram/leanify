@@ -973,3 +973,27 @@ globs = ["LieAlgebras.+"]
 name = "Words"
 srcDir = "tests"
 globs = ["Words.+"]
+
+[[lean_lib]]
+# The field orbits: orbital mechanics.
+name = "Orbits"
+srcDir = "tests"
+globs = ["Orbits.+"]
+
+[[lean_lib]]
+# The field variograms: variogram models.
+name = "Variograms"
+srcDir = "tests"
+globs = ["Variograms.+"]
+
+[[lean_lib]]
+# The field traffic: traffic flow.
+name = "Traffic"
+srcDir = "tests"
+globs = ["Traffic.+"]
+
+[[lean_lib]]
+# The field geometricprobability: geometric probability.
+name = "GeometricProbability"
+srcDir = "tests"
+globs = ["GeometricProbability.+"]

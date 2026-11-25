@@ -71,7 +71,8 @@ math
 │   │   ├── optics                lensmaker, image distances, gratings, Bragg, Malus
 │   │   ├── acoustics             speed of sound, decibels, pipe resonances, reverberation
 │   │   ├── music                 piano keys, semitones, cents, commas, MIDI numbers
-│   │   └── crystallography       Miller indices, cubic lattices, packing fractions
+│   │   ├── crystallography       Miller indices, cubic lattices, packing fractions
+│   │   └── orbits                vis-viva, apsides, Hohmann transfers, Hill radius
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -123,6 +124,7 @@ math
 │   │   │   ├── channels          channel capacities, rate distortion
 │   │   │   ├── concentration     tail bounds, sample sizes, sample complexity
 │   │   │   ├── classicalprobability birthday, coupon collector, ballot, secretary problems
+│   │   │   ├── geometricprobability random distances, triangles, acute triangles (as integrals)
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
@@ -140,6 +142,7 @@ math
 │   │   ├── diagnostictests       predictive values, likelihood ratios, odds ratios
 │   │   ├── learning              activations, losses, precision, recall, F1, MCC
 │   │   ├── surveysampling        sample sizes, finite population correction, design effects
+│   │   ├── variograms            spherical, exponential, Gaussian and power models, nuggets
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
@@ -155,7 +158,8 @@ math
 │   ├── reliability               series, parallel, k-out-of-n systems; MTTF
 │   ├── actuarial                 survival laws, premiums, annuities
 │   ├── inventory                 economic order quantity, newsvendor
-│   └── voting                    Hare and Droop quotas, D'Hondt and Webster divisors
+│   ├── voting                    Hare and Droop quotas, D'Hondt and Webster divisors
+│   └── traffic                   Greenshields model, capacity, headway, spacing
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
@@ -185,7 +189,7 @@ math
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
 `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
-`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -293,6 +297,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`acoustics`](glossary.md#acoustics) | the speed of sound in an ideal gas; sound intensity and pressure levels; the intensity of a point source; resonances of open and closed pipes; the Sabine reverberation time | |
 | [`music`](glossary.md#music) | the frequencies of piano keys and of equal-tempered semitones, intervals in cents, the Pythagorean and syntonic commas, ratios of equal temperaments, MIDI note numbers | |
 | [`crystallography`](glossary.md#crystallography) | interplanar spacings by Miller indices; packing fractions, coordination numbers, atoms per unit cell and nearest-neighbour distances of cubic lattices | |
+| [`orbits`](glossary.md#orbits) | the vis-viva speed, periapsis and apoapsis distances, specific orbital energy, the burns of a Hohmann transfer, synodic periods, the Hill radius | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -345,11 +350,13 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`diagnostictests`](glossary.md#diagnostictests) | positive and negative predictive values, accuracy, likelihood ratios and the Youden index of a test; post-test odds; the odds ratio and relative risk of a 2×2 table; the number needed to treat | |
 | [`learning`](glossary.md#learning) | the sigmoid, ReLU and softplus functions; binary cross-entropy and hinge loss; the precision, recall, F1 score, accuracy and Matthews correlation coefficient of confusion counts | |
 | [`surveysampling`](glossary.md#surveysampling) | sample sizes for proportions and means, with the finite population correction; margins of error; design effects and effective sample sizes; sampling fractions | |
+| [`variograms`](glossary.md#variograms) | spherical, exponential, Gaussian and power variograms, nuggets, the exponential covariance, the practical range | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
 | [`concentration`](glossary.md#concentration) | Markov, Chebyshev, Cantelli, Hoeffding, Bernstein, Chernoff and McDiarmid bounds; the Hoeffding sample size; the realizable and agnostic sample complexity of a finite hypothesis class | |
 | [`classicalprobability`](glossary.md#classicalprobability) | the birthday problem, the coupon collector, the ballot problem, derangements, Buffon's needle, the secretary problem (cutoff and success probability), runs of heads | |
+| [`geometricprobability`](glossary.md#geometricprobability) | expected distances between random points in the unit interval, square and disk, the expected area of a random triangle, the probability of an acute triangle on a circle, each as the integral it is | |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
@@ -372,6 +379,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`actuarial`](glossary.md#actuarial) | survival functions and the force of mortality of the Gompertz and Gompertz–Makeham laws; life expectancy, net single premiums of whole life insurance and annuities under constant forces, annuities-certain, the complete expectation of life, pure endowments | |
 | [`inventory`](glossary.md#inventory) | the cost per unit time of a lot size, the economic order quantity and its cost, cycle lengths, reorder points, the economic order quantity with backorders, the economic production quantity; the critical fractile and the newsvendor quantity for uniform and exponential demand | |
 | [`voting`](glossary.md#voting) | the Hare, Droop and majority quotas; the D'Hondt and Webster quotients; the number of pairwise contests; the largest Borda score | |
+| [`traffic`](glossary.md#traffic) | the Greenshields speed and flow, capacity, critical density and uncongested speed; headway and spacing | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
