@@ -110,6 +110,10 @@ import Leanify.Library.Signals
 import Leanify.Library.Voting
 import Leanify.Library.Materials
 import Leanify.Library.Astronomy
+import Leanify.Library.Electromagnetism
+import Leanify.Library.Polyhedra
+import Leanify.Library.Betting
+import Leanify.Library.Surfaces
 
 /-! # The fields of the vocabulary
 
@@ -237,7 +241,11 @@ def all : List (String × Vocab) := [
   ("signals", Signals.vocab),
   ("voting", Voting.vocab),
   ("materials", Materials.vocab),
-  ("astronomy", Astronomy.vocab)]
+  ("astronomy", Astronomy.vocab),
+  ("electromagnetism", Electromagnetism.vocab),
+  ("polyhedra", Polyhedra.vocab),
+  ("betting", Betting.vocab),
+  ("surfaces", Surfaces.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -268,16 +276,16 @@ def bundles : List (String × List String) := [
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
     "transforms", "fourier", "signals", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "epidemics", "populationdynamics", "variations", "physics", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "quadratics", "groups"]),
-  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "sphericalgeometry", "curves", "fractals"]),
+  ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "polyhedra", "sphericalgeometry", "surfaces", "curves", "fractals"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint"]),
   ("stochastic", ["statistics", "finance", "utility", "economics", "games", "queues", "reliability", "actuarial", "inventory", "voting"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "analyticnumbertheory", "continuedfractions", "digits", "collatz", "cryptography", "diophantine", "latticepoints"]),
   -- the areas inside them
-  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy"]),
+  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism"]),
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
-  ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes", "populationgenetics"]),
+  ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes", "populationgenetics", "betting"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "dependence"])]
 

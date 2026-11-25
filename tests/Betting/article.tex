@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={betting}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $P(o)$ for the probability implied by the decimal odds $o$.
+We write $D(p)$ for the fair decimal odds for the probability $p$.
+We write $O(p)$ for the odds in favour for the probability $p$.
+We write $X(o,p)$ for the expected profit of a unit stake at decimal odds $o$ with winning probability $p$.
+We write $K(p,b)$ for the Kelly fraction for winning probability $p$ and net odds $b$.
+We write $G(f,b,p)$ for the expected logarithmic growth of staking the fraction $f$ at net odds $b$ with winning probability $p$.
+We write $M(a,b)$ for the bookmaker margin of the decimal odds $a$ and $b$.
+
+\section{Odds}
+
+\begin{lemma}\label{odds}
+$P(4)=\frac14$, $D(\frac14)=4$, $O(\frac14)=\frac13$ and $X(4,\frac14)=0$.
+\end{lemma}
+
+\begin{lemma}\label{inverse}
+Let $p$ be a real number with $0<p<1$. Then $P(D(p))=p$.
+\end{lemma}
+
+\section{Stakes}
+
+\begin{lemma}\label{kelly}
+$K(\frac12,2)=\frac14$, $G(0,2,\frac12)=0$ and $M(\frac{19}{10},\frac{19}{10})=\frac{1}{19}$.
+\end{lemma}
+
+\end{document}

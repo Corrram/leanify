@@ -368,7 +368,11 @@ Further fields cover other branches of mathematics:
 * `signals`: pulses, sampling, decibels, filters;
 * `voting`: quotas and divisors of electoral systems;
 * `materials`: stresses, moduli, beams and columns;
-* `astronomy`: distances, magnitudes, Hubble's law, stellar radiation.
+* `astronomy`: distances, magnitudes, Hubble's law, stellar radiation;
+* `electromagnetism`: charges, fields, capacitors, wires, cyclotrons;
+* `polyhedra`: Euler's formula and the Platonic solids;
+* `betting`: odds, the Kelly criterion, margins;
+* `surfaces`: Euler characteristic, genus, curvature.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

@@ -1,0 +1,32 @@
+tests/Betting/article.tex:9:1: info: defines \@n0 (n0)
+tests/Betting/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 1<x\Rightarrow \neg (x=0)
+tests/Betting/article.tex:10:1: info: defines \@n1 (n1)
+tests/Betting/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow \neg (x=0)
+tests/Betting/article.tex:11:1: info: defines \@n2 (n2)
+tests/Betting/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow \neg (1-x=0)
+tests/Betting/article.tex:12:1: info: defines \@n3 (n3)
+tests/Betting/article.tex:13:1: info: defines \@n4 (n4)
+tests/Betting/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0))
+tests/Betting/article.tex:14:1: info: defines \@n5 (n5)
+tests/Betting/article.tex:15:1: info: defines \@n6 (n6)
+tests/Betting/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 1<x\Rightarrow (\forall y\in \mathbb{R},\ 1<y\Rightarrow \neg (x=0)\land \neg (y=0))
+tests/Betting/article.tex:20:1: info: claim 0: \@n0(4)=\frac{1}{4}
+tests/Betting/article.tex:20:1: info: claim 0 is meaningful if: 1<4\land \neg (4=0)
+tests/Betting/article.tex:20:1: info: claim 1: \@n1(\frac{1}{4})=4
+tests/Betting/article.tex:20:1: info: claim 1 is meaningful if: \neg (4=0)\land 0<\frac{1}{4}\land \frac{1}{4}<1
+tests/Betting/article.tex:20:1: info: claim 2: \@n2(\frac{1}{4})=\frac{1}{3}
+tests/Betting/article.tex:20:1: info: claim 2 is meaningful if: (\neg (4=0)\land 0<\frac{1}{4}\land \frac{1}{4}<1)\land \neg (3=0)
+tests/Betting/article.tex:20:1: info: claim 3: \@n3(4,\frac{1}{4})=0
+tests/Betting/article.tex:20:1: info: claim 3 is meaningful if: \neg (4=0)\land (0<\frac{1}{4}\land \frac{1}{4}<1)\land 1<4\land \neg (4=0)
+tests/Betting/article.tex:24:40: info: claim 4: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow \@n0(\@n1(x))=x
+tests/Betting/article.tex:24:40: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow (0<x\land x<1)\land 1<\@n1(x)
+tests/Betting/article.tex:30:1: info: claim 5: \@n4(\frac{1}{2},2)=\frac{1}{4}
+tests/Betting/article.tex:30:1: info: claim 5 is meaningful if: (0<2\land \neg (2=0)\land 0<\frac{1}{2}\land \frac{1}{2}<1)\land \neg (4=0)
+tests/Betting/article.tex:30:1: info: claim 6: \@n5(0,2,\frac{1}{2})=0
+tests/Betting/article.tex:30:1: info: claim 6 is meaningful if: \neg (2=0)\land (0<\frac{1}{2}\land \frac{1}{2}<1)\land (0<2\land 0\le 0\land 0<1)\land \neg (2=0)
+tests/Betting/article.tex:30:1: info: claim 7: \@n6(\frac{19}{10},\frac{19}{10})=\frac{1}{19}
+tests/Betting/article.tex:30:1: info: claim 7 is meaningful if: (\neg (10=0)\land 1<\frac{19}{10}\land (\neg (10=0)\land 1<\frac{19}{10})\land \neg (10=0))\land \neg (19=0)
+tests/Betting/article.tex: 7 definitions, 8 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 4 compiled, 0 failed, 0 prose (of 4)
+  all: 11 compiled, 0 failed, 0 prose (of 11)

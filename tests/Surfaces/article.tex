@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={surfaces}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\chi(n)$ for the Euler characteristic of the closed orientable surface of genus $n$.
+We write $N(k)$ for the Euler characteristic of the closed nonorientable surface of genus $k$.
+We write $g(c)$ for the genus of the closed orientable surface with Euler characteristic $c$.
+We write $T(n)$ for the total curvature of the closed orientable surface of genus $n$.
+We write $K(R)$ for the Gaussian curvature of the sphere of radius $R$.
+We write $H(R)$ for the mean curvature of the sphere of radius $R$.
+We write $Z(R)$ for the mean curvature of the cylinder of radius $R$.
+We write $A(R,r)$ for the surface area of the torus with radii $R$ and $r$.
+We write $\kappa(R,r,t)$ for the Gaussian curvature of the torus with radii $R$ and $r$ at the angle $t$.
+
+\section{Topology}
+
+\begin{lemma}\label{values}
+$\chi(0)=2$, $\chi(1)=0$, $N(1)=1$, $g(-2)=2$ and $T(0)=4\pi$.
+\end{lemma}
+
+\begin{lemma}\label{bonnet}
+Let $n$ be an integer with $n\ge0$. Then $T(n)=2\pi\chi(n)$ and $g(\chi(n))=n$.
+\end{lemma}
+
+\section{Curvature}
+
+\begin{lemma}\label{sphere}
+Let $R$ be a positive real number. Then $K(R)=H(R)^2$, $H(R)=2Z(R)$ and $4\pi R^2K(R)=T(0)$.
+\end{lemma}
+
+\begin{lemma}\label{torus}
+$A(2,1)=8\pi^2$, $\kappa(2,1,0)=\frac13$ and $\kappa(2,1,\frac{\pi}{2})=0$.
+\end{lemma}
+
+\end{document}

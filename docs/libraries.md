@@ -64,7 +64,8 @@ math
 │   │   ├── fluids                Reynolds and Froude numbers, Poiseuille, drag, Stokes
 │   │   ├── quantum               particle in a box, oscillator, hydrogen, de Broglie
 │   │   ├── materials             stress, moduli, beam deflections, buckling
-│   │   └── astronomy             parallax, magnitudes, Hubble's law, Schwarzschild radius
+│   │   ├── astronomy             parallax, magnitudes, Hubble's law, Schwarzschild radius
+│   │   └── electromagnetism      Coulomb's law, fields of wires and solenoids, cyclotrons
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -91,7 +92,9 @@ math
 │   ├── planegeometry             lines, triangle centres, conics (with geometry)
 │   ├── triangles                 triangles by their sides, regular polygons
 │   ├── solids                    volumes and surface areas, balls in n dimensions
+│   ├── polyhedra                 Euler's formula, Platonic solids, dihedral angles
 │   ├── sphericalgeometry         central angles, Girard's theorem, caps, solid angles
+│   ├── surfaces                  Euler characteristic, genus, Gauss–Bonnet, curvature
 │   ├── curves                    curvature, length and area of plane and polar curves
 │   └── fractals                  similarity dimensions, Cantor, Koch, Sierpinski, Menger
 ├── numerics                      numerical mathematics
@@ -116,7 +119,8 @@ math
 │   │   │   ├── branching         Galton–Watson processes, extinction probabilities
 │   │   │   ├── randomwalks       gambler's ruin, Brownian hitting probabilities
 │   │   │   ├── extremes          GEV and generalized Pareto laws, domains of attraction
-│   │   │   └── populationgenetics Hardy–Weinberg, fixation probabilities, drift
+│   │   │   ├── populationgenetics Hardy–Weinberg, fixation probabilities, drift
+│   │   │   └── betting           implied probabilities, Kelly criterion, margins
 │   │   ├── samples               sample mean, variance, order statistics, correlation
 │   │   ├── regression            residuals, sums of squares, R², standard errors
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
@@ -161,7 +165,7 @@ math
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
 `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
-`materials`, `astronomy`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`materials`, `astronomy`, `electromagnetism`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -262,6 +266,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`quantum`](glossary.md#quantum) | the levels of a particle in a box, a harmonic oscillator and the hydrogen atom; the probability density in a box; de Broglie wavelengths, photon energies, hydrogen transition wavelengths (Rydberg), the Compton shift | |
 | [`materials`](glossary.md#materials) | stress and strain; the axial stiffness of a rod; shear and bulk moduli from Young's modulus and Poisson's ratio; second moments of area; deflections of cantilevers and simply supported beams; the Euler buckling load | |
 | [`astronomy`](glossary.md#astronomy) | distances from parallaxes, distance moduli, magnitude differences; redshifts, recession speeds (Hubble's law) and the Hubble time; the Schwarzschild radius; stellar luminosity; Wien's peak wavelength | |
+| [`electromagnetism`](glossary.md#electromagnetism) | the Coulomb force, the field and potential of a point charge; parallel-plate capacitance and field energy density; the magnetic fields of a long wire and a solenoid; the magnetic force on a moving charge, cyclotron frequency and Larmor radius | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -285,7 +290,9 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`planegeometry`](glossary.md#planegeometry) | the distance from a point to a line, feet of perpendiculars, reflections; circumcentre, incentre, orthocentre, circumradius and inradius of a triangle; ellipses, hyperbolas and parabolas by their foci, eccentricity | loads `geometry` |
 | [`triangles`](glossary.md#triangles) | for a triangle with sides `a`, `b`, `c`: the semiperimeter, the area (Heron), the angle opposite a side, the inradius and circumradius, altitudes, medians and angle bisectors; for a regular `n`-gon the interior angle, area, circumradius and apothem; the number of diagonals | |
 | [`solids`](glossary.md#solids) | the volume of the ball and the area of the sphere in `n` dimensions; volumes and surface areas of cylinders and cones; volumes of ellipsoids, tori, the regular tetrahedron, octahedron, dodecahedron and icosahedron and of the standard simplex | |
+| [`polyhedra`](glossary.md#polyhedra) | the Euler characteristic of a polyhedron; the vertices, edges, faces and dihedral angle of the Platonic solid `{p,q}`; angle defects | |
 | [`sphericalgeometry`](glossary.md#sphericalgeometry) | the central angle between two points given by latitude and longitude; chords; the spherical excess and the area of a spherical triangle (Girard); the area and volume of a spherical cap; the solid angle of a cone | |
+| [`surfaces`](glossary.md#surfaces) | the Euler characteristic of closed orientable and nonorientable surfaces, the genus, the total curvature (Gauss–Bonnet); the Gaussian and mean curvature of spheres and cylinders; the area and Gaussian curvature of a torus | |
 | [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
 | [`fractals`](glossary.md#fractals) | the similarity dimension of a self-similar set (`N` pieces scaled by `r`, or two ratios by Moran's equation); the dimension, lengths and intervals of the Cantor set; the Koch curve and snowflake; the Sierpinski triangle; the Menger sponge | |
 | **Numerical mathematics** (`numerics`) | | |
@@ -318,6 +325,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`randomwalks`](glossary.md#randomwalks) | gambler's ruin: the ruin probability and the expected duration, the probability of reaching the target; the distribution of the simple random walk after `n` steps; for Brownian motion the hitting probability, the expected exit time and the transition density | |
 | [`extremes`](glossary.md#extremes) | the GEV, standard Gumbel, Fréchet and reversed Weibull distribution functions, return levels, the generalized Pareto distribution function and its mean excess; distribution functions in the maximum domain of attraction of the Gumbel, Fréchet or Weibull law, regularly varying tails | |
 | [`populationgenetics`](glossary.md#populationgenetics) | Hardy–Weinberg homozygote and heterozygote frequencies; allele frequencies after selection; Moran and Kimura fixation probabilities; heterozygosity under drift; the effective size of a population with males and females; mutation equilibria | |
+| [`betting`](glossary.md#betting) | implied probabilities and fair odds, odds in favour, the expected profit of a stake, the Kelly fraction and logarithmic growth, the bookmaker's margin | |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |

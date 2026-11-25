@@ -829,3 +829,27 @@ globs = ["Materials.+"]
 name = "Astronomy"
 srcDir = "tests"
 globs = ["Astronomy.+"]
+
+[[lean_lib]]
+# The field electromagnetism: electromagnetism.
+name = "Electromagnetism"
+srcDir = "tests"
+globs = ["Electromagnetism.+"]
+
+[[lean_lib]]
+# The field polyhedra: polyhedra.
+name = "Polyhedra"
+srcDir = "tests"
+globs = ["Polyhedra.+"]
+
+[[lean_lib]]
+# The field betting: betting and odds.
+name = "Betting"
+srcDir = "tests"
+globs = ["Betting.+"]
+
+[[lean_lib]]
+# The field surfaces: surfaces.
+name = "Surfaces"
+srcDir = "tests"
+globs = ["Surfaces.+"]

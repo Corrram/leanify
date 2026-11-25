@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={electromagnetism}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $F(a,b,r,k)$ for the Coulomb force between the charges $a$ and $b$ at distance $r$ with Coulomb constant $k$.
+We write $E(q,r,k)$ for the electric field of the point charge $q$ at distance $r$ with Coulomb constant $k$.
+We write $V(q,r,k)$ for the electric potential of the point charge $q$ at distance $r$ with Coulomb constant $k$.
+We write $C(A,d,s)$ for the capacitance of a parallel-plate capacitor with area $A$ and separation $d$ with permittivity $s$.
+We write $u(f,s)$ for the energy density of the electric field $f$ with permittivity $s$.
+We write $B(I,r,m)$ for the magnetic field of a long wire with current $I$ at distance $r$ with permeability $m$.
+We write $S(n,I,m)$ for the magnetic field inside a solenoid with $n$ turns per unit length and current $I$ with permeability $m$.
+We write $M(q,v,t,b)$ for the magnetic force on the charge $q$ with speed $v$ at angle $t$ to the field $b$.
+We write $W(q,m,b)$ for the cyclotron frequency of the charge $q$ with mass $m$ in the field $b$.
+We write $R(q,m,v,b)$ for the Larmor radius of the charge $q$ with mass $m$ and speed $v$ in the field $b$.
+
+\section{Electrostatics}
+
+\begin{lemma}\label{values}
+$F(1,1,1,1)=1$, $F(1,-1,2,4)=-1$, $V(2,2,1)=1$, $C(2,1,3)=6$ and $u(2,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{field}
+Let $q$ be a real number. Let $r$ and $k$ be positive real numbers. Then $E(q,r,k)=\frac{V(q,r,k)}{r}$ and $F(q,1,r,k)=E(q,r,k)$.
+\end{lemma}
+
+\section{Magnetism}
+
+\begin{lemma}\label{wires}
+$B(1,1,2\pi)=1$ and $S(2,3,1)=6$.
+\end{lemma}
+
+\begin{lemma}\label{cyclotron}
+Let $q$, $m$, $v$ and $b$ be positive real numbers. Then $2\pi R(q,m,v,b)W(q,m,b)=v$ and $M(q,v,\frac{\pi}{2},b)=qvb$.
+\end{lemma}
+
+\end{document}

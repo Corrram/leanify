@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={polyhedra}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\chi(v,e,f)$ for the Euler characteristic of a polyhedron with $v$ vertices, $e$ edges and $f$ faces.
+We write $V(p,q)$ for the number of vertices of the Platonic solid with faces of $p$ sides and $q$ faces at each vertex.
+We write $E(p,q)$ for the number of edges of the Platonic solid with faces of $p$ sides and $q$ faces at each vertex.
+We write $F(p,q)$ for the number of faces of the Platonic solid with faces of $p$ sides and $q$ faces at each vertex.
+We write $\theta(p,q)$ for the dihedral angle of the Platonic solid with faces of $p$ sides and $q$ faces at each vertex.
+We write $\delta(s)$ for the angle defect of a vertex with face angles summing to $s$.
+
+\section{The Platonic solids}
+
+\begin{lemma}\label{cube}
+$V(4,3)=8$, $E(4,3)=12$, $F(4,3)=6$, $\theta(4,3)=\frac{\pi}{2}$ and $\delta(\frac{3\pi}{2})=\frac{\pi}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{icosahedron}
+$V(3,5)=12$, $E(3,5)=30$ and $F(3,5)=20$.
+\end{lemma}
+
+\begin{lemma}\label{euler}
+Let $p$ and $q$ be integers with $p\ge3$, $q\ge3$ and $(p-2)(q-2)<4$. Then $\chi(V(p,q),E(p,q),F(p,q))=2$.
+\end{lemma}
+
+\end{document}

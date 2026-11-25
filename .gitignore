@@ -129,3 +129,7 @@ article-reader/
 /tests/Voting/article.leanify.*
 /tests/Materials/article.leanify.*
 /tests/Astronomy/article.leanify.*
+/tests/Electromagnetism/article.leanify.*
+/tests/Polyhedra/article.leanify.*
+/tests/Betting/article.leanify.*
+/tests/Surfaces/article.leanify.*
