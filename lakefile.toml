@@ -535,3 +535,27 @@ globs = ["Codes.+"]
 name = "HigherFunctions"
 srcDir = "tests"
 globs = ["HigherFunctions.+"]
+
+[[lean_lib]]
+# The field summability: summation methods and sequences.
+name = "Summability"
+srcDir = "tests"
+globs = ["Summability.+"]
+
+[[lean_lib]]
+# The field integralequations: linear integral equations.
+name = "IntegralEquations"
+srcDir = "tests"
+globs = ["IntegralEquations.+"]
+
+[[lean_lib]]
+# The field classicalpdes: classical PDEs in one space dimension.
+name = "ClassicalPdes"
+srcDir = "tests"
+globs = ["ClassicalPdes.+"]
+
+[[lean_lib]]
+# The field economics: elasticities, production functions, inequality.
+name = "Economics"
+srcDir = "tests"
+globs = ["Economics.+"]

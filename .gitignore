@@ -80,3 +80,7 @@ article-reader/
 /tests/Reliability/article.leanify.*
 /tests/Codes/article.leanify.*
 /tests/HigherFunctions/article.leanify.*
+/tests/Summability/article.leanify.*
+/tests/IntegralEquations/article.leanify.*
+/tests/ClassicalPdes/article.leanify.*
+/tests/Economics/article.leanify.*

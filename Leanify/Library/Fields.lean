@@ -62,6 +62,10 @@ import Leanify.Library.Queues
 import Leanify.Library.Reliability
 import Leanify.Library.Codes
 import Leanify.Library.HigherFunctions
+import Leanify.Library.Summability
+import Leanify.Library.IntegralEquations
+import Leanify.Library.ClassicalPdes
+import Leanify.Library.Economics
 
 /-! # The fields of the vocabulary
 
@@ -141,7 +145,11 @@ def all : List (String × Vocab) := [
   ("queues", Queues.vocab),
   ("reliability", Reliability.vocab),
   ("codes", Codes.vocab),
-  ("higherfunctions", HigherFunctions.vocab)]
+  ("higherfunctions", HigherFunctions.vocab),
+  ("summability", Summability.vocab),
+  ("integralequations", IntegralEquations.vocab),
+  ("classicalpdes", ClassicalPdes.vocab),
+  ("economics", Economics.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -169,11 +177,11 @@ def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
-    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "elementary", "complex", "torus"]),
+    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
-  ("stochastic", ["statistics", "finance", "utility", "queues", "reliability"]),
+  ("stochastic", ["statistics", "finance", "utility", "economics", "queues", "reliability"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
   -- the areas inside them

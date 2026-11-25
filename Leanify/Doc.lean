@@ -425,6 +425,19 @@ def betaApply : Tm → List Tm → Tm
   | .lam _ .tt b, a :: as => betaApply (Tm.subst a 0 b) as
   | f, as => as.foldl .app f
 
+/-- The head of a term applied to arguments, β-reduced where it is a λ without a domain, through
+the guards of the arguments (`(λ m n. [m = n] I_n) x x` is `[x = x] I_x`): what a notation that
+fixes or repeats arguments of a notion stands for. -/
+def headBeta : Nat → Tm → Tm
+  | 0, t => t
+  | f + 1, .app g a =>
+    match headBeta f g with
+    | .lam _ .tt b => headBeta f (Tm.subst a 0 b)
+    | .guard c g' => .guard c (headBeta f (.app g' a))
+    | g' => .app g' a
+  | f + 1, .guard c e => .guard c (headBeta f e)
+  | _, t => t
+
 /-- The types of the first `k` arguments of a predicate (its leading λs): those of the
 variables of a modifier (`$v$-regular`: a number; `orthogonal to $v$`: a vector). -/
 def slotTys : Nat → Tm → List Ty
@@ -5031,7 +5044,53 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
       let firstOf (v : Tok) : Nat := (varPos.findIdx? (· == some v)).getD 0
       let varTys : List Ty := ts.map fun v => tys.getD (firstOf v) .real
       let allDoms : List (Option Tm) := n.doms ++ List.replicate tys.length none
-      let varDoms : List (Option Tm) := ts.map fun v => allDoms.getD (firstOf v) none
+      -- (the domain of a variable speaks about the arguments before it, which the notation
+      -- may fix (`We write $N_a$ for the integral mean of $f$ on $[0,a]$.`) or name in another
+      -- order: they are put in, as the definition has them; a domain about a variable that
+      -- comes later in the notation is left to the guard inside the value)
+      let wholeVars := fixedArgs.all (·.isNone) && ts.length == tsAll.length
+      let varDoms : List (Option Tm) := ts.zipIdx.map fun (v, j) =>
+        let pos := firstOf v
+        match allDoms.getD pos none with
+        | none => none
+        | some p =>
+          if wholeVars then some p else
+          let rs : List (Option Tm) := (List.range pos).map fun q =>
+            match fixedArgs.getD q none, varPos.getD q none with
+            | some (c, _), _ => some c
+            | none, some t => match ts.idxOf? t with
+              | some w => if w < j then some (.loc (j - w)) else none
+              | none => none
+            | none, none => none
+          if rs.any (·.isNone) then none else
+          let closed := (List.range (pos + 1)).foldl (fun b _ => Tm.lam .real .tt b) p
+          some (Notation.betaApply closed (rs.filterMap id ++ [.loc 0]))
+      -- (the domain of a fixed argument that speaks about variables before it, `the integral
+      -- mean of $g$ on $[0,1]$` with `g` integrable on `[0,1]`: a condition on the last of
+      -- them, which the definition then asks for, instead of a condition for every `g`)
+      let varDoms : List (Option Tm) := if wholeVars then varDoms else
+        (List.range args.length).foldl (fun (ds : List (Option Tm)) q =>
+          match fixedArgs.getD q none, allDoms.getD q none with
+          | some (cq, _), some pq =>
+            let before := (List.range q).filterMap fun q' => (varPos.getD q' none).bind fun t => ts.idxOf? t
+            match before.max? with
+            | none => ds
+            | some jStar =>
+              let rs : List (Option Tm) := (List.range q).map fun q' =>
+                match fixedArgs.getD q' none, varPos.getD q' none with
+                | some (c, _), _ => some c
+                | none, some t => (ts.idxOf? t).map fun w => .loc (jStar - w)
+                | none, none => none
+              if rs.any (·.isNone) then ds else
+              let closed := (List.range (q + 1)).foldl (fun b _ => Tm.lam .real .tt b) pq
+              let cond : Tm := .app (Notation.betaApply closed (rs.filterMap id ++ [cq])) cq
+              let ty := varTys.getD jStar .real
+              let extra : Tm := .lam ty .tt (Tm.shift 1 0 cond)
+              ds.set jStar (some (match ds.getD jStar none with
+                | some (.lam t d b) => .lam t d (.and b (Tm.shift 1 0 cond))
+                | some other => .lam ty .tt (.and (.app (Tm.shift 1 0 other) (.loc 0)) (Tm.shift 1 0 cond))
+                | none => extra))
+          | _, _ => ds) varDoms
       -- the arguments in order: the pattern's variables as locals, the fixed values as given
       let rec place : List (Option Tok × Option (Tm × Ty)) → List Ty → List (Tm × Ty)
         | [], _ => []
@@ -5040,7 +5099,10 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         | (none, none) :: cs, _ :: tys => place cs tys
         | _, [] => []
       let (body, resTy) ← applyAll n.value n.ty n.doms (place (varPos.zip fixedArgs) tys)
-      let value := varTys.foldr (fun t b => Tm.lam t .tt b) body
+      let body := if fixedArgs.all (·.isNone) && ts.length == tsAll.length then body else Notation.headBeta 64 body
+      -- (the variables range over their domains, so that the definition is well defined
+      -- where its uses are)
+      let value := (varTys.zip varDoms).foldr (fun (t, d) b => Tm.lam t (if wholeVars then .tt else holdsAt d (.loc 0)) b) body
       let gty := varTys.foldr (fun t r => Ty.fn t r) resTy
       let pat' := Notation.items ts (pat.map (·.tok))
       let key := match Notation.symbolOf pat' with

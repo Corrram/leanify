@@ -141,12 +141,13 @@ from a *vocabulary*, which the article loads as a program loads a library:
 
 The vocabularies form a tree: `vocab=math` loads them all, and its seven realms load a
 branch, `analysis` (real functions and sets, calculus, series, integration, asymptotics,
-transforms, Fourier series, optimization, dynamics, functional equations, generalized convexity, fractional calculus, special functions), `algebra` (vectors,
+transforms, Fourier series, optimization, dynamics, functional equations, generalized convexity, fractional calculus, summability, integral
+equations, classical PDEs, special functions), `algebra` (vectors,
 matrices, polynomials, groups), `topology` (topologies and metrics on the line, plane
 geometry, conics and curves), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
-risk measures, stochastic orders, Markov chains, branching processes, copulas, samples, time series, tests, finance, expected utility, queues, reliability), `discrete` (combinatorics, permutations,
+risk measures, stochastic orders, Markov chains, branching processes, copulas, samples, time series, tests, finance, expected utility, economics, queues, reliability), `discrete` (combinatorics, permutations,
 graphs, recurrences, codes) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, continued
 fractions, digits);
 `leanify fields article.tex` says which ones an article

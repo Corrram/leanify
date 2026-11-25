@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={summability}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\sigma_n(a)$ for the $n$th Cesàro mean of $a$.
+We write $A(a)$ for the Abel sum of $a$.
+We write $\Delta^n_m(a)$ for the $n$th forward difference of $a$ at $m$.
+For every real number $k$, let $g(k)\coloneqq(-1)^k$.
+For every real number $k$, let $u(k)\coloneqq\frac{1}{k+2}$.
+For every real number $k$, let $h(k)\coloneqq\sqrt{|k|}$.
+For every real number $k$, let $q(k)\coloneqq k^2$.
+For every real number $k$, let $w(k)\coloneqq 2^k$.
+
+\section{Grandi's series}
+
+\begin{lemma}\label{grandi}
+$g$ is Cesàro summable to $\frac12$ and Abel summable to $\frac12$, and $\sigma_2(g)=\frac12$ and $A(g)=\frac12$.
+\end{lemma}
+
+\section{Sequences}
+
+\begin{lemma}\label{cauchy}
+Let $a:\mathbb{R}\to\mathbb{R}$ be a function and let $l$ be a real number. If $a$ is convergent to $l$, then $a$ is Cauchy.
+\end{lemma}
+
+\begin{lemma}\label{examples}
+$u$ is null and of bounded variation, $h$ is a subadditive sequence, and $w$ is a log-concave sequence.
+\end{lemma}
+
+\begin{lemma}\label{difference}
+$\Delta^2_0(q)=2$ and $\Delta^1_3(q)=7$.
+\end{lemma}
+
+\end{document}

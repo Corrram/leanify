@@ -47,6 +47,9 @@ math
 │   ├── functionalequations       Cauchy's and Jensen's equations, subadditivity, homogeneity
 │   ├── convexity                 log-, harmonically, s-, h-convex functions; Hermite–Hadamard
 │   ├── fractional                Riemann–Liouville, Hadamard, Caputo; Mittag-Leffler
+│   ├── summability               Cesàro and Abel summability, sequences
+│   ├── integralequations         Volterra, Fredholm and Abel equations
+│   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
 │   │   ├── special               gamma, beta, zeta
 │   │   ├── hyperbolic, trigonometry
@@ -92,6 +95,7 @@ math
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   ├── finance                   interest, annuities, Black–Scholes
 │   ├── utility                   expected utility, risk aversion, certainty equivalents
+│   ├── economics                 elasticities, production functions, Lorenz curves, Gini
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
 │   └── reliability               series, parallel, k-out-of-n systems; MTTF
 ├── discrete                      discrete mathematics
@@ -194,6 +198,9 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`functionalequations`](glossary.md#functionalequations) | additive (Cauchy), subadditive and superadditive, midpoint convex and concave, Jensen-affine, multiplicative on the reals, logarithmically additive, involutive, idempotent, homogeneous of degree `k` and positively homogeneous functions; solutions of d'Alembert's equation | |
 | [`convexity`](glossary.md#convexity) | log-convex, harmonically convex and concave, geometrically and GA-convex, star-shaped, quasiconcave, `$s$-convex in the second sense`, `$h$-convex`, Wright-convex functions, P-functions and Godunova–Levin functions; the integral mean on `[a,b]`, the Hermite–Hadamard gap, the Jensen gap | |
 | [`fractional`](glossary.md#fractional) | left- and right-sided Riemann–Liouville fractional integrals, the Hadamard fractional integral, Riemann–Liouville and Caputo fractional derivatives of order in `(0,1)`, the gamma function, the one- and two-parameter Mittag-Leffler functions | |
+| [`summability`](glossary.md#summability) | Cesàro and Abel summable sequences, convergent, null, Cauchy, eventually nondecreasing and bounded-variation sequences, subadditive and log-concave sequences; Cesàro means, arithmetic means, the Abel sum, forward differences | |
+| [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
+| [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
 | [`hyperbolic`](glossary.md#hyperbolic), [`trigonometry`](glossary.md#trigonometry) | `\sinh`, `\cosh`, `\tanh`; `\arcsin`, `\arccos`, `\arctan`, `\cot` with their domains | |
 | [`orthogonalpolynomials`](glossary.md#orthogonalpolynomials) | the Legendre, Hermite (physicists' and probabilists'), Laguerre and Chebyshev (first and second kind) polynomials of degree `n` | |
@@ -234,6 +241,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
+| [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |
 | [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | **Discrete mathematics** (`discrete`) | | |

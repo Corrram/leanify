@@ -121,6 +121,7 @@ def vocab : Vocab where
     ofF phrase!"Lipschitz constant of $v$" (.const 9) (F ⟶ .real) (some (fPred fun f => lipschitz f))
       "the least `L`, of a Lipschitz function",
     { name := phrase!"total variation of $v$ on $[v,v]$", ty := F ⟶ .real ⟶ .real ⟶ .real,
+      doms := [none, none, dom3 .real fun f a b => app (app (app (const 5) a) b) f],
       doc := "of a function of bounded variation there (Mathlib `eVariationOn`)",
       value := close <| lamT F (fun _ => tt) fun f => lamR fun a => lamR fun b =>
         guard (app (app (app (const 5) a) b) f) (app (app (app (const 10) f) a) b) },

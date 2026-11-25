@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={economics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For every real number $p$, let $D(p)\coloneqq 10-p$.
+For every real number $x$, let $L(x)\coloneqq x^2$.
+We write $\varepsilon_f(x)$ for the price elasticity of $f$ at $x$.
+We write $\mathrm{MV}_f(x)$ for the marginal value of $f$ at $x$.
+We write $\mathrm{AV}_f(x)$ for the average value of $f$ at $x$.
+We write $G(L)$ for the Gini coefficient of $L$.
+We write $\mathrm{CS}(f,p,q)$ for the consumer surplus for the demand $f$ at price $p$ up to $q$.
+We write $Q$ for the Cobb-Douglas function with exponents $\frac12$ and $\frac12$.
+We write $C$ for the CES function with parameter $1$ and weight $\frac12$.
+
+\section{Demand}
+
+\begin{lemma}\label{elasticity}
+$\varepsilon_D(5)=-1$, $D$ is unit elastic at $5$, $D$ is elastic at $6$ and $D$ is inelastic at $2$.
+\end{lemma}
+
+\begin{lemma}\label{marginal}
+$\mathrm{MV}_D(3)=-1$, $\mathrm{AV}_D(2)=4$ and $\mathrm{CS}(D,4,10)=18$.
+\end{lemma}
+
+\section{Production and inequality}
+
+\begin{lemma}\label{production}
+$Q$ is linearly homogeneous, and $C(2,4)=3$.
+\end{lemma}
+
+\begin{lemma}\label{lorenz}
+$L$ is a Lorenz curve, and $G(L)=\frac13$.
+\end{lemma}
+
+\end{document}

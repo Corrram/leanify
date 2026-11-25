@@ -311,6 +311,13 @@ Further fields cover other branches of mathematics:
   Gilbert–Varshamov bounds;
 * `higherfunctions`: error functions, Bessel functions, the lower incomplete gamma function,
   Lambert W, the dilogarithm, the sine and Fresnel integrals, Dawson's function.
+* `summability`: Cesàro and Abel summability and properties of sequences, Cesàro means,
+  forward differences;
+* `integralequations`: Volterra, Fredholm and Abel integral equations, kernels;
+* `classicalpdes`: the heat, wave, transport, Laplace and Burgers equations for functions of
+  two variables, the heat kernel, d'Alembert's formula;
+* `economics`: elasticities, marginal and average values, Cobb–Douglas and CES functions,
+  Lorenz curves and the Gini coefficient, consumer surplus.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

@@ -1555,6 +1555,20 @@ def nameWords : Nat → List Chunk → List Codes → List Codes × List Chunk
 def clauseEnd (cs : List Chunk) : Bool :=
   isEnd cs || (punct 44 cs).isSome || (kw [w!"by"] cs >>= cite).isSome
 
+/-- A list of the arguments of a phrase goes on after a comma (`with kernel $K$, right-hand side
+$g$ and parameter $\lambda$`): words, a formula, `and` and a word follow it. -/
+def listContinues (cs : List Chunk) : Bool :=
+  match cs with
+  | .p 44 :: rest =>
+    let ws := rest.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+    let stop := [w!"and", w!"so", w!"which", w!"where", w!"whereas", w!"then", w!"since", w!"hence",
+      w!"that", w!"for", w!"i", w!"respectively", w!"thus", w!"while", w!"but", w!"or"]
+    !ws.isEmpty && (match ws.head? with | some (.w w) => !stop.contains w | _ => false) &&
+      (match rest.drop ws.length with
+       | .m _ :: .w a :: .w _ :: _ => a == w!"and"
+       | _ => false)
+  | _ => false
+
 /-- The chunks up to the end of a clause. -/
 def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
   | 0, _, _ => none
@@ -1575,7 +1589,7 @@ def untilClauseEnd : Nat → List Chunk → List Chunk → Option (List Chunk ×
       -- (`… and that $g$ is …`, in an assumption)
       | .w w :: .w t :: _ => w == w!"and" && t == w!"that"
       | _ => false
-    if clauseEnd cs || (nextClause && !acc.isEmpty) then some (acc.reverse, cs) else
+    if (clauseEnd cs && !listContinues cs) || (nextClause && !acc.isEmpty) then some (acc.reverse, cs) else
     match cs with
     | [] => none
     | c :: r => untilClauseEnd f r (c :: acc)
@@ -2233,9 +2247,18 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           if (kw [w!"of"] r4 <|> kw [w!"on"] r4 <|> kw [w!"with"] r4).isSome then none
           -- (`… with right-hand side $f$`: the object stopped at a hyphen; `… with coefficients
           -- $1$ and $1$`: the last argument of the phrase follows)
+          if listContinues r4 then none
           if (match r4 with
               | .p 45 :: _ => true
-              | .w a :: .m _ :: rest => a == w!"and" && (match rest with | .w _ :: _ => false | _ => true)
+              | .w a :: .m _ :: rest =>
+                (a == w!"and" && (match rest with | .w _ :: _ => false | _ => true)) ||
+                -- (`… of $f$ from $a$`: the phrase goes on with a preposition)
+                [w!"from", w!"to", w!"at", w!"in", w!"under", w!"over", w!"between"].contains a
+              -- (`… with kernel $K$ and right-hand side $g$`: the phrase goes on with another
+              -- argument)
+              | .w a :: .w b :: _ =>
+                (a == w!"and" && b != w!"that" && b != w!"so" && b != w!"hence" && b != w!"thus") ||
+                [w!"from", w!"to", w!"at", w!"in", w!"under", w!"over", w!"between", w!"up"].contains a
               | _ => false) then none
           some (Clause.pred s phrase o, r4)) with
       | some res => some res
@@ -2245,6 +2268,13 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | .math f => do
           let (neg, r2) := match kw [w!"not"] r1 with | some r' => (true, r') | none => (false, r1)
           let (np, r3) ← untilClauseEnd 32 r2 []
+          -- `$v$ is a solution of … and a solution of …`: two noun phrases of the same object
+          let andA := (List.range np.length).find? fun i => i > 0 && match (np[i]? : Option Chunk), (np[i+1]? : Option Chunk) with
+            | some (Chunk.w a), some (Chunk.w b) => a == w!"and" && (b == w!"a" || b == w!"an")
+            | _, _ => false
+          if let some i := andA then
+            if !neg then
+              return (.both [.isA f (np.take i) false, .isA f (np.drop (i + 1)) false], r3)
           -- `$Q_t$ is a copula with $D(Q_t)=0$ [and $R(Q_t)=\sqrt t$]`: what follows `with`
           -- is said of the same object, as further clauses
           let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false

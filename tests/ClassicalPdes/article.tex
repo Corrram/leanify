@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={classicalpdes}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For all $x,t\in\mathbb{R}$, let $u(x,t)\coloneqq x^2+2t$.
+For all $x,t\in\mathbb{R}$, let $v(x,t)\coloneqq \sin(x-t)$.
+For all $x,y\in\mathbb{R}$, let $h(x,y)\coloneqq x^2-y^2$.
+For all $x,t\in\mathbb{R}$, let $w(x,t)\coloneqq 3$.
+For every real number $x$, let $s(x)\coloneqq\sin x$.
+For every real number $x$, let $z(x)\coloneqq0$.
+We write $D_1(f,x,t)$ for the partial derivative of $f$ in the first variable at $x$ and $t$.
+We write $\Phi_k$ for the heat kernel with diffusivity $k$.
+We write $A$ for the d'Alembert solution with speed $1$, initial displacement $s$ and initial velocity $z$.
+
+\section{Solutions}
+
+\begin{lemma}\label{heat}
+$u$ is a solution of the heat equation with diffusivity $1$, and $D_1(u,1,0)=2$.
+\end{lemma}
+
+\begin{lemma}\label{wave}
+$v$ is a solution of the wave equation with speed $1$ and a solution of the transport equation with speed $1$.
+\end{lemma}
+
+\begin{lemma}\label{laplace}
+$h$ is harmonic, $h$ is a solution of Laplace's equation, and $w$ is a solution of Burgers' equation with viscosity $1$.
+\end{lemma}
+
+\begin{lemma}\label{kernel}
+$\Phi_1(0,1)=\frac{1}{\sqrt{4\pi}}$ and $A(0,0)=0$.
+\end{lemma}
+
+\end{document}

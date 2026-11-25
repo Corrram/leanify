@@ -28,6 +28,9 @@ except a notion whose meanings take arguments of different types, which the type
     * `functionalequations`
     * `convexity`
     * `fractional`
+    * `summability`
+    * `integralequations`
+    * `classicalpdes`
     * `elementary`
       * `special`
       * `hyperbolic`
@@ -73,6 +76,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `copulas`
     * `finance`
     * `utility`
+    * `economics`
     * `queues`
     * `reliability`
   * `discrete`
@@ -92,12 +96,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `economics`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `queues`, `reliability` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `economics`, `queues`, `reliability` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
@@ -2179,4 +2183,82 @@ except a notion whose meanings take arguments of different types, which the type
 | fresnel sine integral of $a$ | ℝ → ℝ | `S(x) = ∫_0^x sin(t²) dt` |
 | fresnel cosine integral of $a$ | ℝ → ℝ | `C(x) = ∫_0^x cos(t²) dt` |
 | dawson function at $a$ | ℝ → ℝ | `D(x) = e^{-x²} ∫_0^x e^{t²} dt` |
+
+## `summability`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| cesàro summable to $x$ | ℝ → ℝ | `(s_0 + … + s_{n-1})/n → s` for the partial sums `s_j = a_0 + … + a_j` |
+| cesaro summable to $x$ | ℝ → ℝ | Cesàro summable |
+| abel summable to $x$ | ℝ → ℝ | `∑ a_k r^k` converges for `0 < r < 1` and tends to `s` as `r → 1⁻` |
+| convergent to $x$ | ℝ → ℝ | `a_n → l` (Mathlib `Filter.Tendsto`) |
+| null | ℝ → ℝ | `a_n → 0` |
+| eventually nondecreasing | ℝ → ℝ | `a_n ≤ a_{n+1}` for all large `n` |
+| of bounded variation | ℝ → ℝ | `∑ \|a_{k+1} - a_k\|` converges |
+| cauchy | ℝ → ℝ | `\|a_m - a_n\| < ε` for all large `m`, `n` |
+| subadditive sequence | ℝ → ℝ | `a_{m+n} ≤ a_m + a_n` for `m, n ≥ 1` (Fekete) |
+| log-concave sequence | ℝ → ℝ | `a_{k-1} a_{k+1} ≤ a_k²` for `k ≥ 1` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| $a$ th cesàro mean of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(s_0 + … + s_{n-1})/n` for the partial sums `s_j` |
+| $a$ th arithmetic mean of the terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `(a_0 + … + a_{n-1})/n` |
+| abel sum of $a$ | (ℝ → ℝ) → ℝ | `lim_{r→1⁻} ∑ a_k r^k`, where it exists |
+| $a$ th forward difference of $b$ at $c$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `Δ^n a_m = ∑_{k=0}^{n} (-1)^{n-k} \binom{n}{k} a_{m+k}` |
+
+## `integralequations`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| solution of the volterra integral equation with kernel $x$ and right-hand side $a$ from $b$ | ℝ → ℝ | `y(x) = g(x) + ∫_a^x K(x,t) y(t) dt` for every `x ≥ a` |
+| solution of the fredholm integral equation with kernel $x$, right-hand side $a$ and parameter $b$ on $[c,d]$ | ℝ → ℝ | `y(x) = g(x) + λ ∫_a^b K(x,t) y(t) dt` for every `x ∈ [a,b]` |
+| solution of the homogeneous fredholm integral equation with kernel $x$ and parameter $a$ on $[b,c]$ | ℝ → ℝ | `y(x) = λ ∫_a^b K(x,t) y(t) dt` for every `x ∈ [a,b]` |
+| solution of abel's integral equation with right-hand side $x$ from $a$ | ℝ → ℝ | `∫_a^x y(t)/√(x-t) dt = g(x)` for every `x > a` |
+| symmetric kernel | ℝ → ℝ → ℝ | `K(x,t) = K(t,x)` |
+| kernel of volterra type | ℝ → ℝ → ℝ | `K(x,t) = 0` for `t > x` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| second iterated kernel of $a$ on $[b,c]$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ → ℝ | `(x,t) ↦ ∫_a^b K(x,s) K(s,t) ds` |
+| integral of $a$ against the kernel $b$ on $[c,d]$ at $e$ | (ℝ → ℝ) → (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `∫_a^b K(x,t) y(t) dt`, the integral operator with kernel `K` applied to `y`, at `x` |
+
+## `classicalpdes`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| solution of the heat equation with diffusivity $x$ | ℝ → ℝ → ℝ | `u_t = k u_{xx}` everywhere |
+| solution of the wave equation with speed $x$ | ℝ → ℝ → ℝ | `u_{tt} = c² u_{xx}` everywhere |
+| solution of the transport equation with speed $x$ | ℝ → ℝ → ℝ | `u_t + c u_x = 0` everywhere |
+| solution of burgers' equation with viscosity $x$ | ℝ → ℝ → ℝ | `u_t + u u_x = ν u_{xx}` everywhere |
+| harmonic | ℝ → ℝ → ℝ | `u_{xx} + u_{yy} = 0` everywhere |
+| solution of laplace's equation | ℝ → ℝ → ℝ | `u_{xx} + u_{yy} = 0` everywhere |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| partial derivative of $a$ in the first variable at $b$ and $c$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ | `∂u/∂x (x,t)`, where it exists |
+| partial derivative of $a$ in the second variable at $b$ and $c$ | (ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ | `∂u/∂t (x,t)`, where it exists |
+| heat kernel with diffusivity $a$ | ℝ → ℝ → ℝ → ℝ | `(x,t) ↦ e^{-x²/(4kt)}/√(4πkt)` for `t > 0` (and `0` for `t ≤ 0`) |
+| d'alembert solution with speed $a$, initial displacement $b$ and initial velocity $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `(x,t) ↦ (f(x-ct) + f(x+ct))/2 + (1/(2c)) ∫_{x-ct}^{x+ct} g` |
+
+## `economics`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| lorenz curve | ℝ → ℝ | `L(0) = 0`, `L(1) = 1`, nondecreasing and convex on `[0,1]` |
+| elastic at $x$ | ℝ → ℝ | `\|x f'(x)/f(x)\| > 1` |
+| inelastic at $x$ | ℝ → ℝ | `\|x f'(x)/f(x)\| < 1` |
+| unit elastic at $x$ | ℝ → ℝ | `\|x f'(x)/f(x)\| = 1` |
+| linearly homogeneous | ℝ → ℝ → ℝ | `F(tK, tL) = t F(K,L)` for `t > 0` (constant returns to scale) |
+| with constant returns to scale | ℝ → ℝ → ℝ | `F(tK, tL) = t F(K,L)` for `t > 0` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| elasticity of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `x f'(x)/f(x)` |
+| price elasticity of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `p D'(p)/D(p)` |
+| marginal value of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `f'(x)` |
+| average value of $a$ at $b$ | (ℝ → ℝ) → ℝ → ℝ | `f(x)/x` |
+| cobb-douglas function with exponents $a$ and $b$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(K,L) ↦ K^α L^β` (for `K, L ≥ 0`) |
+| ces function with parameter $a$ and weight $b$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(K,L) ↦ (a K^ρ + (1-a) L^ρ)^{1/ρ}`, `ρ ≠ 0`, `0 < a < 1` |
+| gini coefficient of $a$ | (ℝ → ℝ) → ℝ | `1 - 2 ∫_0^1 L`, of a Lorenz curve |
+| consumer surplus for the demand $a$ at price $b$ up to $c$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_p^P D`, up to the choke price `P` |
 

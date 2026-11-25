@@ -1,0 +1,23 @@
+tests/IntegralEquations/article.tex:9:1: info: defines K (K)
+tests/IntegralEquations/article.tex:10:1: info: defines e (e)
+tests/IntegralEquations/article.tex:11:1: info: defines o (o)
+tests/IntegralEquations/article.tex:12:1: info: defines c (c)
+tests/IntegralEquations/article.tex:13:1: info: defines z (z)
+tests/IntegralEquations/article.tex:14:1: info: defines r (r)
+tests/IntegralEquations/article.tex:14:1: info: r is well defined if: \forall x\in \mathbb{R},\ 0\le x\land \neg (2=0)
+tests/IntegralEquations/article.tex:15:1: info: defines \@n0 (n0)
+tests/IntegralEquations/article.tex:16:1: info: defines \@n1 (n1)
+tests/IntegralEquations/article.tex:21:1: info: claim 0: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \operatorname{Int}((y\in \mathbb{R}\mapsto K(x,y)\,e(y)))(0)(x)\land e(x)=o(x)+\int_{0}^{x}K(x,y)\,e(y)\,dy
+tests/IntegralEquations/article.tex:25:1: info: claim 1: 0\le 1\land (\forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \operatorname{Int}((y\in \mathbb{R}\mapsto K(x,y)\,c(y)))(0)(1)\land c(x)=o(x)+\frac{1}{2}\,\int_{0}^{1}K(x,y)\,c(y)\,dy)
+tests/IntegralEquations/article.tex:25:1: info: claim 1 is meaningful if: 0\le 1\Rightarrow (\forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \operatorname{Int}((y\in \mathbb{R}\mapsto K(x,y)\,c(y)))(0)(1)\Rightarrow \neg (2=0))
+tests/IntegralEquations/article.tex:25:1: info: claim 2: 0\le 1\land (\forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow \operatorname{Int}((y\in \mathbb{R}\mapsto K(x,y)\,z(y)))(0)(1)\land z(x)=0+1\,\int_{0}^{1}K(x,y)\,z(y)\,dy)
+tests/IntegralEquations/article.tex:29:1: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow \operatorname{Int}((y\in \mathbb{R}\mapsto \frac{o(y)}{{(x-y)}^{\frac{1}{2}}}))(0)(x)\land \int_{0}^{x}\frac{o(y)}{{(x-y)}^{\frac{1}{2}}}\,dy=r(x)
+tests/IntegralEquations/article.tex:29:1: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \neg (2=0)\land \neg ({(x-y)}^{\frac{1}{2}}=0))\land (\operatorname{Int}((y\in \mathbb{R}\mapsto \frac{o(y)}{{(x-y)}^{\frac{1}{2}}}))(0)(x)\Rightarrow (\forall y\in \mathbb{R},\ \neg (2=0)\land \neg ({(x-y)}^{\frac{1}{2}}=0)))
+tests/IntegralEquations/article.tex:35:1: info: claim 4: \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ K(y,z)=K(z,y)
+tests/IntegralEquations/article.tex:35:1: info: claim 5: \@n1(o,5)=1
+tests/IntegralEquations/article.tex:35:1: info: claim 5 is meaningful if: 0\le 1\land \operatorname{Int}((y\in \mathbb{R}\mapsto K(5,y)\,o(y)))(0)(1)
+tests/IntegralEquations/article.tex:39:25: info: claim 6: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \@n0(K,x,y)=1
+tests/IntegralEquations/article.tex: 8 definitions, 7 claims
+  text: 8 compiled, 0 failed, 0 prose (of 8)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

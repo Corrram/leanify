@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={integralequations}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For all $x,t\in\mathbb{R}$, let $K(x,t)\coloneqq1$.
+For every real number $x$, let $e(x)\coloneqq\exp(x)$.
+For every real number $x$, let $o(x)\coloneqq1$.
+For every real number $x$, let $c(x)\coloneqq2$.
+For every real number $x$, let $z(x)\coloneqq0$.
+For every real number $x$, let $r(x)\coloneqq2\sqrt{x}$.
+We write $K_2$ for the second iterated kernel of $K$ on $[0,1]$.
+We write $T(y,x)$ for the integral of $y$ against the kernel $K$ on $[0,1]$ at $x$.
+
+\section{Equations of the second kind}
+
+\begin{lemma}\label{volterra}
+$e$ is a solution of the Volterra integral equation with kernel $K$ and right-hand side $o$ from $0$.
+\end{lemma}
+
+\begin{lemma}\label{fredholm}
+$c$ is a solution of the Fredholm integral equation with kernel $K$, right-hand side $o$ and parameter $\frac12$ on $[0,1]$, and $z$ is a solution of the homogeneous Fredholm integral equation with kernel $K$ and parameter $1$ on $[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{abel}
+$o$ is a solution of Abel's integral equation with right-hand side $r$ from $0$.
+\end{lemma}
+
+\section{Kernels}
+
+\begin{lemma}\label{kernels}
+$K$ is a symmetric kernel, and $T(o,5)=1$.
+\end{lemma}
+
+\begin{lemma}\label{iterated}
+Let $x,t\in\mathbb{R}$. Then $K_2(x,t)=1$.
+\end{lemma}
+
+\end{document}
