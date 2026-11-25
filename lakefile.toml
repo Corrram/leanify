@@ -655,3 +655,27 @@ globs = ["AnalyticNumberTheory.+"]
 name = "Collatz"
 srcDir = "tests"
 globs = ["Collatz.+"]
+
+[[lean_lib]]
+# The field variations: calculus of variations.
+name = "Variations"
+srcDir = "tests"
+globs = ["Variations.+"]
+
+[[lean_lib]]
+# The field quadratics: quadratic and cubic polynomials by coefficients.
+name = "Quadratics"
+srcDir = "tests"
+globs = ["Quadratics.+"]
+
+[[lean_lib]]
+# The field classicalprobability: classical problems.
+name = "ClassicalProbability"
+srcDir = "tests"
+globs = ["ClassicalProbability.+"]
+
+[[lean_lib]]
+# The field cryptography: RSA and discrete logarithms.
+name = "Cryptography"
+srcDir = "tests"
+globs = ["Cryptography.+"]

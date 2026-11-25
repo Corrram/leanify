@@ -100,3 +100,7 @@ article-reader/
 /tests/Solids/article.leanify.*
 /tests/AnalyticNumberTheory/article.leanify.*
 /tests/Collatz/article.leanify.*
+/tests/Variations/article.leanify.*
+/tests/Quadratics/article.leanify.*
+/tests/ClassicalProbability/article.leanify.*
+/tests/Cryptography/article.leanify.*

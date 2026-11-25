@@ -32,6 +32,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `functionsequences`
     * `odes`
     * `epidemics`
+    * `variations`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -49,6 +50,7 @@ except a notion whose meanings take arguments of different types, which the type
       * `matrices`
       * `majorization`
     * `polynomials`
+    * `quadratics`
     * `groups`
   * `topology`
     * `realsets`
@@ -73,6 +75,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `information`
         * `channels`
         * `concentration`
+        * `classicalprobability`
         * `risk`
         * `stochasticorders`
         * `markovchains`
@@ -109,22 +112,23 @@ except a notion whose meanings take arguments of different types, which the type
     * `continuedfractions`
     * `digits`
     * `collatz`
+    * `cryptography`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
-| `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `groups` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
-| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
+| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
 
 ## `core`
 
@@ -2562,4 +2566,60 @@ except a notion whose meanings take arguments of different types, which the type
 | total stopping time of $a$ | ℝ → ℝ | the least `k` with `T^k(n) = 1`, where the trajectory reaches `1` |
 | stopping time of $a$ | ℝ → ℝ | the least `k ≥ 1` with `T^k(n) < n`, where there is one |
 | highest point of the first $a$ collatz steps from $b$ | ℝ → ℝ → ℝ | `max_{j ≤ k} T^j(n)` |
+
+## `variations`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| solution of the euler-lagrange equation for $x$ on $[a,b]$ | ℝ → ℝ | `d/dt L_p(t, y, y') = L_y(t, y, y')` on `[a,b]` |
+| minimizer of the action of $x$ on $[a,b]$ with the same endpoint values | ℝ → ℝ | no differentiable `z` with `z(a) = y(a)`, `z(b) = y(b)` has a smaller action |
+| function with endpoint values $x$ and $a$ on $[b,c]$ | ℝ → ℝ | `y(a) = α`, `y(b) = β` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| action of $a$ under $b$ on $[c,d]$ | (ℝ → ℝ) → (ℝ → ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b L(t, y(t), y'(t)) dt` |
+| arc-length functional of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `∫_a^b √(1 + y'²)` |
+| dirichlet energy of $a$ on $[b,c]$ | (ℝ → ℝ) → ℝ → ℝ → ℝ | `½ ∫_a^b y'²` |
+| hamiltonian of $a$ at $b$, $c$ and $d$ | (ℝ → ℝ → ℝ → ℝ) → ℝ → ℝ → ℝ → ℝ | `p L_p(t, y, p) - L(t, y, p)` |
+
+## `quadratics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| discriminant of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `b² - 4ac` |
+| larger root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `(-b + √(b² - 4ac))/(2a)`, for `a > 0` and `b² ≥ 4ac` |
+| smaller root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `(-b - √(b² - 4ac))/(2a)`, for `a > 0` and `b² ≥ 4ac` |
+| sum of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `-b/a` (Vieta) |
+| product of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `c/a` (Vieta) |
+| vertex of the parabola with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `-b/(2a)` |
+| extreme value of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `c - b²/(4a)`, the minimum for `a > 0`, the maximum for `a < 0` |
+| number of real roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `2`, `1` or `0` by the sign of `b² - 4ac` |
+| discriminant of the cubic with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `-4p³ - 27q²` for `x³ + px + q` |
+| cardano root of the cubic with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `∛(-q/2 + √Δ') + ∛(-q/2 - √Δ')`, `Δ' = q²/4 + p³/27 ≥ 0`: the real root of `x³ + px + q` |
+
+## `classicalprobability`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| probability of a shared birthday among $a$ people with $b$ days | ℝ → ℝ → ℝ | `1 - ∏_{i=0}^{n-1} (d-i)/d`, which is `1` for `n > d` |
+| expected number of draws to collect $a$ coupons | ℝ → ℝ | `n H_n = n ∑_{k=1}^{n} 1/k` |
+| ballot probability for $a$ and $b$ votes | ℝ → ℝ → ℝ | `(a-b)/(a+b)`: the winner with `a` votes is ahead throughout the count |
+| probability of a derangement of $a$ elements | ℝ → ℝ | `∑_{k=0}^{n} (-1)^k/k!`: no fixed point in a uniformly random permutation |
+| probability that buffon's needle of length $a$ crosses a line with spacing $b$ | ℝ → ℝ → ℝ | `2ℓ/(π d)` for `ℓ ≤ d` |
+| optimal cutoff of the secretary problem with $a$ candidates | ℝ → ℝ | `⌊n/e⌋`, asymptotically optimal |
+| success probability of the secretary problem with $a$ candidates and cutoff $b$ | ℝ → ℝ → ℝ | `(r/n) ∑_{k=r+1}^{n} 1/(k-1)`, rejecting the first `r` candidates |
+| expected number of runs of heads in $a$ fair tosses | ℝ → ℝ | `(n+1)/4` |
+
+## `cryptography`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| residue of $a$ modulo $b$ | ℝ → ℝ → ℝ | `x - n⌊x/n⌋ ∈ {0, …, n-1}` |
+| modular power $a$ to the $b$ modulo $c$ | ℝ → ℝ → ℝ → ℝ | `a^k mod n` |
+| rsa modulus for the primes $a$ and $b$ | ℝ → ℝ → ℝ | `n = pq` |
+| rsa totient for the primes $a$ and $b$ | ℝ → ℝ → ℝ | `(p-1)(q-1)` |
+| rsa decryption exponent for the primes $a$ and $b$ and the encryption exponent $c$ | ℝ → ℝ → ℝ → ℝ | the `d ∈ [1, (p-1)(q-1)]` with `ed ≡ 1 (mod (p-1)(q-1))` |
+| rsa ciphertext of $a$ for the modulus $b$ and the exponent $c$ | ℝ → ℝ → ℝ → ℝ | `m^e mod n` |
+| discrete logarithm of $a$ to the base $b$ modulo $c$ | ℝ → ℝ → ℝ → ℝ | the least `k ≥ 0` with `g^k ≡ h (mod p)`, where there is one |
+| diffie-hellman key for the base $a$, the modulus $b$ and the exponents $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `g^{ab} mod p` |
 

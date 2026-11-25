@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={cryptography}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $x\bmod n$ for the residue of $x$ modulo $n$.
+We write $P(a,k,n)$ for the modular power $a$ to the $k$ modulo $n$.
+We write $N(p,q)$ for the RSA modulus for the primes $p$ and $q$.
+We write $\varphi(p,q)$ for the RSA totient for the primes $p$ and $q$.
+We write $d(p,q,e)$ for the RSA decryption exponent for the primes $p$ and $q$ and the encryption exponent $e$.
+We write $\log_{g,p}(h)$ for the discrete logarithm of $h$ to the base $g$ modulo $p$.
+We write $K(g,p,a,b)$ for the Diffie-Hellman key for the base $g$, the modulus $p$ and the exponents $a$ and $b$.
+
+\section{RSA}
+
+\begin{lemma}\label{rsa}
+$N(3,11)=33$, $\varphi(3,11)=20$ and $d(3,11,3)=7$.
+\end{lemma}
+
+\begin{lemma}\label{power}
+$P(2,10,1000)=24$ and $17\bmod 5=2$.
+\end{lemma}
+
+\section{Discrete logarithms}
+
+\begin{lemma}\label{dlog}
+$\log_{2,11}(8)=3$ and $K(2,11,3,4)=4$.
+\end{lemma}
+
+\end{document}

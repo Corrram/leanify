@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={quadratics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $D(a,b,c)$ for the discriminant of the quadratic with coefficients $a$, $b$ and $c$.
+We write $x_+(a,b,c)$ for the larger root of the quadratic with coefficients $a$, $b$ and $c$.
+We write $x_-(a,b,c)$ for the smaller root of the quadratic with coefficients $a$, $b$ and $c$.
+We write $V(a,b,c)$ for the vertex of the parabola with coefficients $a$, $b$ and $c$.
+We write $N(a,b,c)$ for the number of real roots of the quadratic with coefficients $a$, $b$ and $c$.
+We write $\Delta(p,q)$ for the discriminant of the cubic with coefficients $p$ and $q$.
+We write $C(p,q)$ for the Cardano root of the cubic with coefficients $p$ and $q$.
+
+\section{Quadratics}
+
+\begin{lemma}\label{example}
+$D(1,-3,2)=1$, $x_+(1,-3,2)=2$, $x_-(1,-3,2)=1$, $V(1,-3,2)=\frac32$ and $N(1,-3,2)=2$.
+\end{lemma}
+
+\begin{lemma}\label{vieta}
+Let $a>0$, $b$ and $c$ be real numbers with $b^2\ge4ac$. Then $x_+(a,b,c)+x_-(a,b,c)=-\frac{b}{a}$.
+\end{lemma}
+
+\section{Cubics}
+
+\begin{lemma}\label{cubic}
+$\Delta(-3,2)=0$ and $C(0,-8)=2$.
+\end{lemma}
+
+\end{document}

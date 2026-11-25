@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={variations}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+For all $t,y,p\in\mathbb{R}$, let $L(t,y,p)\coloneqq p^2$.
+For every real number $t$, let $u(t)\coloneqq 2t+1$.
+We write $A(y,a,b)$ for the action of $y$ under $L$ on $[a,b]$.
+We write $E(y,a,b)$ for the Dirichlet energy of $y$ on $[a,b]$.
+We write $\ell(y,a,b)$ for the arc-length functional of $y$ on $[a,b]$.
+We write $H(t,y,p)$ for the Hamiltonian of $L$ at $t$, $y$ and $p$.
+
+\section{Straight lines}
+
+\begin{lemma}\label{line}
+$u$ is a solution of the Euler-Lagrange equation for $L$ on $[0,1]$, and $u$ is a function with endpoint values $1$ and $3$ on $[0,1]$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$A(u,0,1)=4$, $E(u,0,1)=2$ and $\ell(u,0,1)=\sqrt5$.
+\end{lemma}
+
+\begin{lemma}\label{hamiltonian}
+Let $t,y,p$ be real numbers. Then $H(t,y,p)=p^2$.
+\end{lemma}
+
+\begin{lemma}\label{minimizer}
+$u$ is a minimizer of the action of $L$ on $[0,1]$ with the same endpoint values.
+\end{lemma}
+
+\end{document}

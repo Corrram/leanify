@@ -51,6 +51,7 @@ math
 │   ├── functionsequences         pointwise and uniform convergence, equicontinuity
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── epidemics                 reproduction numbers, final sizes, the SIS model
+│   ├── variations                actions, Euler–Lagrange equation, minimizers
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -67,6 +68,7 @@ math
 │   │   ├── matrices
 │   │   └── majorization          majorization of vectors (with vectors)
 │   ├── polynomials
+│   ├── quadratics                discriminants, roots and Vieta; Cardano's root of a cubic
 │   └── groups                    finite groups
 ├── topology                      topology and geometry
 │   ├── realsets                  (also in analysis)
@@ -91,6 +93,7 @@ math
 │   │   │   ├── information       entropy and divergences
 │   │   │   ├── channels          channel capacities, rate distortion
 │   │   │   ├── concentration     tail bounds, sample sizes, sample complexity
+│   │   │   ├── classicalprobability birthday, coupon collector, ballot, secretary problems
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
@@ -127,7 +130,8 @@ math
     ├── analyticnumbertheory      von Mangoldt, Chebyshev functions, primes in progressions
     ├── continuedfractions        convergents, badly approximable and Liouville numbers
     ├── digits                    base-b digits, palindromes, digital roots, repunits
-    └── collatz                   the 3n+1 map, stopping times
+    ├── collatz                   the 3n+1 map, stopping times
+    └── cryptography              RSA, discrete logarithms, Diffie–Hellman
 ```
 
 A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
@@ -218,6 +222,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`functionsequences`](glossary.md#functionsequences) | for a sequence of functions `f(n, x)`: pointwise and uniform convergence (on `[a,b]` or the line), uniformly Cauchy, uniformly bounded, equicontinuous, monotone in the index; the supremum distance to a limit, partial sums of a series of functions | |
 | [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
 | [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
+| [`variations`](glossary.md#variations) | for a Lagrangian `L(t, y, p)`: the action, solutions of the Euler–Lagrange equation, minimizers with the same endpoint values, the Hamiltonian; the arc-length functional and the Dirichlet energy; functions with given endpoint values | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -232,6 +237,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`matrices`](glossary.md#matrices) | real matrices: determinant, trace, rank, inverse, eigenvalues; symmetric, orthogonal, positive definite | |
 | [`majorization`](glossary.md#majorization) | vectors majorized, weakly submajorized or weakly supermajorized by another, decreasingly ordered vectors; the `k`th largest coordinate, the sum of the `k` largest coordinates, the positive-part sum | loads `vectors` |
 | [`polynomials`](glossary.md#polynomials) | real polynomials: degree, coefficients, roots | |
+| [`quadratics`](glossary.md#quadratics) | for `ax² + bx + c`: the discriminant, the larger and smaller root, the sum and product of the roots, the vertex and extreme value, the number of real roots; the discriminant and Cardano's real root of `x³ + px + q` | |
 | [`groups`](glossary.md#groups) | finite groups up to isomorphism: abelian, cyclic, simple, solvable; Sylow subgroups; cyclic, symmetric, alternating and dihedral groups | |
 | **Topology and geometry** (`topology`) | | |
 | [`topologies`](glossary.md#topologies) | topologies on `ℝ`: `$\tau$-open`, `-closed`, `-compact`, `-connected`, `-dense`; Hausdorff, second countable, separable, metrizable, finer and coarser; continuous, open maps and homeomorphisms between topologies; convergent sequences; the usual, discrete, indiscrete, cofinite and lower limit topologies, generated and subspace topologies; closure, interior, boundary | |
@@ -261,6 +267,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
 | [`concentration`](glossary.md#concentration) | Markov, Chebyshev, Cantelli, Hoeffding, Bernstein, Chernoff and McDiarmid bounds; the Hoeffding sample size; the realizable and agnostic sample complexity of a finite hypothesis class | |
+| [`classicalprobability`](glossary.md#classicalprobability) | the birthday problem, the coupon collector, the ballot problem, derangements, Buffon's needle, the secretary problem (cutoff and success probability), runs of heads | |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
@@ -290,6 +297,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`continuedfractions`](glossary.md#continuedfractions) | the complete and partial quotients and the convergents (with numerators and denominators) of an irrational number, the value of a finite continued fraction; badly approximable numbers, Liouville numbers, quadratic irrationals, best approximations | |
 | [`digits`](glossary.md#digits) | the `k`th digit and the number of digits in base `b`, digit reversal, palindromes, digital roots, repunits; Harshad (Niven) and narcissistic (Armstrong) numbers | |
 | [`collatz`](glossary.md#collatz) | the Collatz map and its accelerated form, iterates, the total stopping time and the stopping time, the highest point of a trajectory; numbers with finite total stopping time | |
+| [`cryptography`](glossary.md#cryptography) | residues and modular powers; the RSA modulus, totient, decryption exponent and ciphertext; discrete logarithms; the Diffie–Hellman key | |
 
 ## Not yet
 

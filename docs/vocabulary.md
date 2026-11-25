@@ -341,6 +341,10 @@ Further fields cover other branches of mathematics:
 * `analyticnumbertheory`: Chebyshev's functions, the von Mangoldt function, the logarithmic
   integral, primes in residue classes, twin primes;
 * `collatz`: the Collatz map, its iterates and stopping times.
+* `variations`: actions of Lagrangians, the Euler–Lagrange equation, minimizers;
+* `quadratics`: quadratics and cubics by their coefficients (discriminants, roots, Vieta);
+* `classicalprobability`: the classical problems (birthday, coupons, ballot, Buffon, secretary);
+* `cryptography`: RSA, discrete logarithms, Diffie–Hellman.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

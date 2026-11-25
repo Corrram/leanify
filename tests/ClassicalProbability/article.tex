@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={classicalprobability}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $b(n,d)$ for the probability of a shared birthday among $n$ people with $d$ days.
+We write $T_n$ for the expected number of draws to collect $n$ coupons.
+We write $B(a,b)$ for the ballot probability for $a$ and $b$ votes.
+We write $q_n$ for the probability of a derangement of $n$ elements.
+We write $P(\ell,d)$ for the probability that Buffon's needle of length $\ell$ crosses a line with spacing $d$.
+We write $S(n,r)$ for the success probability of the secretary problem with $n$ candidates and cutoff $r$.
+
+\section{Values}
+
+\begin{lemma}\label{birthday}
+$b(2,2)=\frac12$, $b(3,2)=1$ and $b(1,365)=0$.
+\end{lemma}
+
+\begin{lemma}\label{coupons}
+$T_2=3$, $B(3,1)=\frac12$ and $q_3=\frac13$.
+\end{lemma}
+
+\begin{lemma}\label{buffon}
+$P(1,1)=\frac{2}{\pi}$ and $S(3,1)=\frac12$.
+\end{lemma}
+
+\end{document}
