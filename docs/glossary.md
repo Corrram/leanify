@@ -1115,6 +1115,20 @@ except a notion whose meanings take arguments of different types, which the type
 | basis | $\mathrm{El}$ → Prop | a linearly independent set spanning `V` (Mathlib `Basis`) |
 | spanning set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
 | generating set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| monoid | $\mathrm{El}$ → Prop | (Mathlib `Monoid`) |
+| commutative monoid | $\mathrm{El}$ → Prop | (Mathlib `CommMonoid`) |
+| semigroup | $\mathrm{El}$ → Prop | (Mathlib `Semigroup`) |
+| finitely generated group | $\mathrm{El}$ → Prop | (Mathlib `Group.FG`) |
+| finitely generated abelian group | $\mathrm{El}$ → Prop | (Mathlib `AddGroup.FG`) |
+| finitely generated module | $\mathrm{El}$ → Prop | (Mathlib `Module.Finite`) |
+| finitely generated field extension | $\mathrm{El}$ → Prop | (Mathlib `IntermediateField.FG`) |
+| finitely generated extension | $\mathrm{El}$ → Prop | (Mathlib `IntermediateField.FG`) |
+| finite extension | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| finite field extension | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| algebraic extension | $\mathrm{El}$ → Prop | (Mathlib `Algebra.IsAlgebraic`) |
+| limit point | $\mathrm{El}$ | (Mathlib `AccPt`) |
+| accumulation point | $\mathrm{El}$ | (Mathlib `AccPt`) |
+| isolated point | $\mathrm{El}$ | a point of the set that is not a limit point |
 | eigenvalue | $\mathrm{El}$ | `Tv = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
 | eigenvector | $\mathrm{El}$ | (Mathlib `Module.End.HasEigenvector`) |
 | fixed point | $\mathrm{El}$ | `φ(a) = a` (Mathlib `Function.IsFixedPt`) |
@@ -1153,7 +1167,18 @@ except a notion whose meanings take arguments of different types, which the type
 | normal | $\mathrm{El}$ → Prop | (Mathlib `NormalSpace`) |
 | complete | $\mathrm{El}$ → Prop | every Cauchy sequence converges (Mathlib `CompleteSpace`) |
 | totally bounded | $\mathrm{El}$ → Prop | (Mathlib `TotallyBounded`) |
-| bounded | $\mathrm{El}$ → Prop | (Mathlib `Bornology.IsBounded`) |
+| bounded | $\mathrm{El}$ → Prop | its distances are bounded (Mathlib `Bornology.IsBounded`) |
+| first countable | $\mathrm{El}$ → Prop | (Mathlib `FirstCountableTopology`) |
+| first-countable | $\mathrm{El}$ → Prop | (Mathlib `FirstCountableTopology`) |
+| totally disconnected | $\mathrm{El}$ → Prop | (Mathlib `TotallyDisconnectedSpace`) |
+| sigma-compact | $\mathrm{El}$ → Prop | (Mathlib `SigmaCompactSpace`) |
+| lindelöf | $\mathrm{El}$ → Prop | (Mathlib `LindelofSpace`) |
+| lindelof | $\mathrm{El}$ → Prop | (Mathlib `LindelofSpace`) |
+| finitely generated | $\mathrm{El}$ → Prop | a finitely generated group (Mathlib `Group.FG`) |
+| algebraic over $x$ | $\mathrm{El}$ | (Mathlib `IsAlgebraic`) |
+| transcendental over $x$ | $\mathrm{El}$ | (Mathlib `Transcendental`) |
+| algebraic over $x$ | $\mathrm{El}$ → Prop | (Mathlib `Algebra.IsAlgebraic`) |
+| finite over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | open | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
 | totally ordered | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
 | well-ordered | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
@@ -1240,6 +1265,7 @@ except a notion whose meanings take arguments of different types, which the type
 | identity map of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ | (Mathlib `MonoidHom.id`, `LinearMap.id`) |
 | identity map on $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ | (Mathlib `id`) |
 | composition of $a$ and $b$ | $\mathrm{Map}$ → $\mathrm{Map}$ → $\mathrm{Map}$ | `ψ ∘ φ` |
+| degree of $a$ over $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → ℝ | `[L : K]` (Mathlib `Module.finrank`) |
 
 | Notation | On | Meaning |
 | --- | --- | --- |

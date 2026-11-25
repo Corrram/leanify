@@ -225,7 +225,29 @@ def table : List (Ty × Codes × Codes) := [
   (M ⟶ .real, w!"\\lVert #\\rVert", w!"Leanify.Structures.opNormM"),                    -- 167
   (M ⟶ E ⟶ .prop, w!"\\operatorname{Eigenvalue}", w!"Leanify.Structures.EigenvalueOf"),  -- 168
   (M ⟶ E ⟶ .prop, w!"\\operatorname{Eigenvector}", w!"Leanify.Structures.EigenvectorOf"), -- 169
-  (M ⟶ E ⟶ .prop, w!"\\operatorname{Fix}", w!"Leanify.Structures.FixedPointOf")]          -- 170
+  (M ⟶ E ⟶ .prop, w!"\\operatorname{Fix}", w!"Leanify.Structures.FixedPointOf"),         -- 170
+  (S ⟶ .prop, w!"\\operatorname{Monoid}", w!"Leanify.Structures.IsMonoid"),               -- 171
+  (S ⟶ .prop, w!"\\operatorname{Semigroup}", w!"Leanify.Structures.IsSemigroup"),         -- 172
+  (S ⟶ .prop, w!"\\operatorname{FG}", w!"Leanify.Structures.FGGroup"),                    -- 173
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{FG}", w!"Leanify.Structures.FGModule"),              -- 174
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{FG}", w!"Leanify.Structures.FGExtension"),           -- 175
+  (S ⟶ S ⟶ .real, w!"[#1:#2]", w!"Leanify.Structures.degree"),                             -- 176
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{Algebraic}", w!"Leanify.Structures.AlgebraicEl"),    -- 177
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{Algebraic}", w!"Leanify.Structures.AlgebraicExt"),   -- 178
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{FiniteExtension}", w!"Leanify.Structures.FiniteExt"), -- 179
+  (S ⟶ S ⟶ S, w!"\\overline{#1}", w!"Leanify.Structures.closureIn"),                      -- 180
+  (S ⟶ S ⟶ S, w!"\\operatorname{int}", w!"Leanify.Structures.interiorIn"),                -- 181
+  (S ⟶ S ⟶ S, w!"\\partial", w!"Leanify.Structures.boundaryIn"),                          -- 182
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{LimitPoint}", w!"Leanify.Structures.LimitPointOf"),  -- 183
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{Isolated}", w!"Leanify.Structures.IsolatedPointOf"), -- 184
+  (S ⟶ .prop, w!"\\operatorname{FirstCountable}", w!"Leanify.Structures.FirstCountableS"), -- 185
+  (S ⟶ .prop, w!"\\operatorname{TotallyDisconnected}", w!"Leanify.Structures.TotallyDisconnectedS"), -- 186
+  (S ⟶ .prop, w!"\\operatorname{SigmaCompact}", w!"Leanify.Structures.SigmaCompactS"),   -- 187
+  (S ⟶ .prop, w!"\\operatorname{Lindelof}", w!"Leanify.Structures.LindelofS"),           -- 188
+  (S ⟶ .prop, w!"\\operatorname{T_0}", w!"Leanify.Structures.T0"),                       -- 189
+  (S ⟶ .prop, w!"\\operatorname{Perfect}", w!"Leanify.Structures.PerfectSpace'"),         -- 190
+  (S ⟶ .real, w!"\\operatorname{diam}", w!"Leanify.Structures.diam"),                     -- 191
+  (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet")]            -- 192
 
 /-! ## Helpers -/
 
@@ -415,6 +437,27 @@ def vocab : Vocab where
     nounOf phrase!"basis" phrase!"bases" [w!"of", w!"for"] (sP fun _ => tt) (relC 123) "a linearly independent set spanning `V` (Mathlib `Basis`)",
     nounOf phrase!"spanning set" phrase!"spanning sets" [w!"of", w!"for"] (sP fun _ => tt) (relC 124) "(Mathlib `Submodule.span`)",
     nounOf phrase!"generating set" phrase!"generating sets" [w!"of", w!"for"] (sP fun _ => tt) (relC 124) "(Mathlib `Submodule.span`)",
+    -- monoids, finite generation, extensions
+    noun phrase!"monoid" phrase!"monoids" (c 171) "(Mathlib `Monoid`)",
+    noun phrase!"commutative monoid" phrase!"commutative monoids" (sP fun m => and (app (const 171) m) (app (lift comm) m)) "(Mathlib `CommMonoid`)",
+    noun phrase!"semigroup" phrase!"semigroups" (c 172) "(Mathlib `Semigroup`)",
+    noun phrase!"finitely generated group" phrase!"finitely generated groups" (c 173) "(Mathlib `Group.FG`)",
+    noun phrase!"finitely generated abelian group" phrase!"finitely generated abelian groups"
+      (sP fun g => and (app (const 173) g) (app (lift comm) g)) "(Mathlib `AddGroup.FG`)",
+    nounOf phrase!"finitely generated module" phrase!"finitely generated modules" [w!"over"] (sP fun _ => tt) (relC 174) "(Mathlib `Module.Finite`)",
+    nounOf phrase!"finitely generated field extension" phrase!"finitely generated field extensions" [w!"of"] isField (relC 175)
+      "(Mathlib `IntermediateField.FG`)",
+    nounOf phrase!"finitely generated extension" phrase!"finitely generated extensions" [w!"of"] isField (relC 175)
+      "(Mathlib `IntermediateField.FG`)",
+    nounOf phrase!"finite extension" phrase!"finite extensions" [w!"of"] isField (relC 179) "(Mathlib `FiniteDimensional`)",
+    nounOf phrase!"finite field extension" phrase!"finite field extensions" [w!"of"] isField (relC 179) "(Mathlib `FiniteDimensional`)",
+    nounOf phrase!"algebraic extension" phrase!"algebraic extensions" [w!"of"] isField (relC 178) "(Mathlib `Algebra.IsAlgebraic`)",
+    { sing := phrase!"limit point", plural := phrase!"limit points", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], S, rel S E fun s a => app2 (const 183) s a), doc := "(Mathlib `AccPt`)" },
+    { sing := phrase!"accumulation point", plural := phrase!"accumulation points", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], S, rel S E fun s a => app2 (const 183) s a), doc := "(Mathlib `AccPt`)" },
+    { sing := phrase!"isolated point", plural := phrase!"isolated points", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], S, rel S E fun s a => app2 (const 184) s a), doc := "a point of the set that is not a limit point" },
     -- elements about maps
     { sing := phrase!"eigenvalue", plural := phrase!"eigenvalues", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of"], M, rel M E fun t a => app2 (const 168) t a), doc := "`Tv = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`)" },
@@ -458,7 +501,20 @@ def vocab : Vocab where
     adjS phrase!"normal" (c 71) "(Mathlib `NormalSpace`)",
     adjS phrase!"complete" (c 87) "every Cauchy sequence converges (Mathlib `CompleteSpace`)",
     adjS phrase!"totally bounded" (c 88) "(Mathlib `TotallyBounded`)",
-    adjS phrase!"bounded" (c 89) "(Mathlib `Bornology.IsBounded`)",
+    adjS phrase!"bounded" (c 192) "its distances are bounded (Mathlib `Bornology.IsBounded`)",
+    adjS phrase!"first countable" (c 185) "(Mathlib `FirstCountableTopology`)",
+    adjS phrase!"first-countable" (c 185) "(Mathlib `FirstCountableTopology`)",
+    adjS phrase!"totally disconnected" (c 186) "(Mathlib `TotallyDisconnectedSpace`)",
+    adjS phrase!"sigma-compact" (c 187) "(Mathlib `SigmaCompactSpace`)",
+    adjS phrase!"Lindelöf" (c 188) "(Mathlib `LindelofSpace`)",
+    adjS phrase!"Lindelof" (c 188) "(Mathlib `LindelofSpace`)",
+    adjS phrase!"finitely generated" (c 173) "a finitely generated group (Mathlib `Group.FG`)",
+    { phrase := phrase!"algebraic over $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun k => lamT E (fun _ => tt) fun a => app2 (const 177) k a), doc := "(Mathlib `IsAlgebraic`)" },
+    { phrase := phrase!"transcendental over $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun k => lamT E (fun _ => tt) fun a => not (app2 (const 177) k a)), doc := "(Mathlib `Transcendental`)" },
+    postS phrase!"algebraic over $v$" (close <| lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun l => app2 (const 178) k l) "(Mathlib `Algebra.IsAlgebraic`)",
+    postS phrase!"finite over $v$" (close <| lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun l => app2 (const 179) k l) "(Mathlib `FiniteDimensional`)",
     adjS phrase!"open" (c 80) "(Mathlib `IsOpen`)",
     adjS phrase!"totally ordered" (c 93) "(Mathlib `LinearOrder`)",
     adjS phrase!"well-ordered" (c 95) "(Mathlib `IsWellOrder`)",
@@ -558,7 +614,8 @@ def vocab : Vocab where
     { name := phrase!"codomain of $v$", value := .const 146, ty := M ⟶ S, doc := "of a map" },
     { name := phrase!"identity map of $v$", value := .const 144, ty := S ⟶ M, doc := "(Mathlib `MonoidHom.id`, `LinearMap.id`)" },
     { name := phrase!"identity map on $v$", value := .const 144, ty := S ⟶ M, doc := "(Mathlib `id`)" },
-    { name := phrase!"composition of $v$ and $v$", value := .const 142, ty := M ⟶ M ⟶ M, doc := "`ψ ∘ φ`" }]
+    { name := phrase!"composition of $v$ and $v$", value := .const 142, ty := M ⟶ M ⟶ M, doc := "`ψ ∘ φ`" },
+    { name := phrase!"degree of $v$ over $v$", value := .const 176, ty := S ⟶ S ⟶ .real, doc := "`[L : K]` (Mathlib `Module.finrank`)" }]
   methods := [
     ⟨E, .ofReal, 0, "a number as an element: `1` the identity, `0` the zero, `n` the sum of `n` identities", none⟩,
     ⟨E, .add, 1, "`x + y`", none⟩, ⟨E, .sub, 2, "`x - y`", none⟩,
