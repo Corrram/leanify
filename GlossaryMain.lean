@@ -83,7 +83,7 @@ def fieldSection (name : String) (V : Vocab) : List String :=
 
 /-- The tree of the bundles, from `math` down, as nested list items. -/
 partial def bundleTree (b : String) (depth : Nat) : List String :=
-  let pad := String.mk (List.replicate (2 * depth) ' ')
+  let pad := String.ofList (List.replicate (2 * depth) ' ')
   match Fields.bundles.lookup b with
   | some ms => s!"{pad}* `{b}`" :: ms.flatMap fun m => bundleTree m (depth + 1)
   | none => [s!"{pad}* `{b}`"]
