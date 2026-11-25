@@ -52,6 +52,7 @@ math
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── epidemics                 reproduction numbers, final sizes, the SIS model
 │   ├── variations                actions, Euler–Lagrange equation, minimizers
+│   ├── mechanics                 projectiles, pendulums, oscillators, orbits
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -78,7 +79,8 @@ math
 │   ├── planegeometry             lines, triangle centres, conics (with geometry)
 │   ├── triangles                 triangles by their sides, regular polygons
 │   ├── solids                    volumes and surface areas, balls in n dimensions
-│   └── curves                    curvature, length and area of plane and polar curves
+│   ├── curves                    curvature, length and area of plane and polar curves
+│   └── fractals                  similarity dimensions, Cantor, Koch, Sierpinski, Menger
 ├── numerics                      numerical mathematics
 │   ├── approximation             errors, conditioning, difference quotients, quadrature, interpolation
 │   ├── iteration                 Newton's method, fixed-point iteration, orders of convergence
@@ -114,7 +116,8 @@ math
 │   ├── games                     two-by-two zero-sum games, values, optimal strategies
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
 │   ├── reliability               series, parallel, k-out-of-n systems; MTTF
-│   └── actuarial                 survival laws, premiums, annuities
+│   ├── actuarial                 survival laws, premiums, annuities
+│   └── inventory                 economic order quantity, newsvendor
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
@@ -131,7 +134,8 @@ math
     ├── continuedfractions        convergents, badly approximable and Liouville numbers
     ├── digits                    base-b digits, palindromes, digital roots, repunits
     ├── collatz                   the 3n+1 map, stopping times
-    └── cryptography              RSA, discrete logarithms, Diffie–Hellman
+    ├── cryptography              RSA, discrete logarithms, Diffie–Hellman
+    └── diophantine               Frobenius numbers, sums of two squares, Pythagorean triples
 ```
 
 A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
@@ -223,6 +227,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
 | [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
 | [`variations`](glossary.md#variations) | for a Lagrangian `L(t, y, p)`: the action, solutions of the Euler–Lagrange equation, minimizers with the same endpoint values, the Hamiltonian; the arc-length functional and the Dirichlet energy; functions with given endpoint values | |
+| [`mechanics`](glossary.md#mechanics) | the range, maximal height and time of flight of a projectile; the period of a pendulum; the natural frequency, period and damping ratio of an oscillator; kinetic energy; the circular orbital speed, escape velocity and orbital period (Kepler's third law) for a gravitational parameter | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -247,6 +252,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`triangles`](glossary.md#triangles) | for a triangle with sides `a`, `b`, `c`: the semiperimeter, the area (Heron), the angle opposite a side, the inradius and circumradius, altitudes, medians and angle bisectors; for a regular `n`-gon the interior angle, area, circumradius and apothem; the number of diagonals | |
 | [`solids`](glossary.md#solids) | the volume of the ball and the area of the sphere in `n` dimensions; volumes and surface areas of cylinders and cones; volumes of ellipsoids, tori, the regular tetrahedron, octahedron, dodecahedron and icosahedron and of the standard simplex | |
 | [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
+| [`fractals`](glossary.md#fractals) | the similarity dimension of a self-similar set (`N` pieces scaled by `r`, or two ratios by Moran's equation); the dimension, lengths and intervals of the Cantor set; the Koch curve and snowflake; the Sierpinski triangle; the Menger sponge | |
 | **Numerical mathematics** (`numerics`) | | |
 | [`approximation`](glossary.md#approximation) | absolute and relative errors, the condition number, rounding, machine epsilon; forward, backward, central and second difference quotients; trapezoidal, midpoint and Simpson's rules (simple and composite), Riemann sums; linear and Lagrange interpolation, Chebyshev nodes | with `realfunctions` |
 | [`iteration`](glossary.md#iteration) | the Newton map, secant step and relaxation; Newton, secant and fixed-point sequences; convergent with order `p`, linearly, superlinearly, quadratically, cubically; contractive maps | with `realfunctions` |
@@ -281,6 +287,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | [`actuarial`](glossary.md#actuarial) | survival functions and the force of mortality of the Gompertz and Gompertz–Makeham laws; life expectancy, net single premiums of whole life insurance and annuities under constant forces, annuities-certain, the complete expectation of life, pure endowments | |
+| [`inventory`](glossary.md#inventory) | the cost per unit time of a lot size, the economic order quantity and its cost, cycle lengths, reorder points, the economic order quantity with backorders, the economic production quantity; the critical fractile and the newsvendor quantity for uniform and exponential demand | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
@@ -298,6 +305,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`digits`](glossary.md#digits) | the `k`th digit and the number of digits in base `b`, digit reversal, palindromes, digital roots, repunits; Harshad (Niven) and narcissistic (Armstrong) numbers | |
 | [`collatz`](glossary.md#collatz) | the Collatz map and its accelerated form, iterates, the total stopping time and the stopping time, the highest point of a trajectory; numbers with finite total stopping time | |
 | [`cryptography`](glossary.md#cryptography) | residues and modular powers; the RSA modulus, totient, decryption exponent and ciphertext; discrete logarithms; the Diffie–Hellman key | |
+| [`diophantine`](glossary.md#diophantine) | congruent numbers, numbers representable as a sum of two squares; the Frobenius number and the genus of the numerical semigroup of two coprime integers; the number of representations by two integers and as a sum of two squares; Euclid's formula for Pythagorean triples | |
 
 ## Not yet
 

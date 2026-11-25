@@ -679,3 +679,27 @@ globs = ["ClassicalProbability.+"]
 name = "Cryptography"
 srcDir = "tests"
 globs = ["Cryptography.+"]
+
+[[lean_lib]]
+# The field fractals: self-similar sets.
+name = "Fractals"
+srcDir = "tests"
+globs = ["Fractals.+"]
+
+[[lean_lib]]
+# The field diophantine: Diophantine equations.
+name = "Diophantine"
+srcDir = "tests"
+globs = ["Diophantine.+"]
+
+[[lean_lib]]
+# The field mechanics: classical mechanics.
+name = "Mechanics"
+srcDir = "tests"
+globs = ["Mechanics.+"]
+
+[[lean_lib]]
+# The field inventory: inventory models.
+name = "Inventory"
+srcDir = "tests"
+globs = ["Inventory.+"]

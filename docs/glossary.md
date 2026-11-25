@@ -33,6 +33,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `odes`
     * `epidemics`
     * `variations`
+    * `mechanics`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -61,6 +62,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `triangles`
     * `solids`
     * `curves`
+    * `fractals`
   * `numerics`
     * `approximation`
     * `iteration`
@@ -96,6 +98,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `queues`
     * `reliability`
     * `actuarial`
+    * `inventory`
   * `discrete`
     * `combinatorics`
     * `counting`
@@ -113,17 +116,18 @@ except a notion whose meanings take arguments of different types, which the type
     * `digits`
     * `collatz`
     * `cryptography`
+    * `diophantine`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
@@ -2622,4 +2626,70 @@ except a notion whose meanings take arguments of different types, which the type
 | rsa ciphertext of $a$ for the modulus $b$ and the exponent $c$ | ℝ → ℝ → ℝ → ℝ | `m^e mod n` |
 | discrete logarithm of $a$ to the base $b$ modulo $c$ | ℝ → ℝ → ℝ → ℝ | the least `k ≥ 0` with `g^k ≡ h (mod p)`, where there is one |
 | diffie-hellman key for the base $a$, the modulus $b$ and the exponents $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `g^{ab} mod p` |
+
+## `fractals`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| similarity dimension of a self-similar set with $a$ pieces scaled by $b$ | ℝ → ℝ → ℝ | `log N / log(1/r)`: `N` copies of the set, each scaled by `0 < r < 1` |
+| similarity dimension of a self-similar set with ratios $a$ and $b$ | ℝ → ℝ → ℝ | the `s ≥ 0` with `r₁^s + r₂^s = 1` (Moran's equation), for `0 < r₁, r₂ < 1` |
+| dimension of the middle-thirds cantor set | ℝ | `log 2 / log 3` |
+| length of the cantor set after $a$ steps | ℝ → ℝ | `(2/3)^n`: the total length of the `n`th stage, from `[0,1]` |
+| number of intervals of the cantor set after $a$ steps | ℝ → ℝ | `2^n` |
+| length of the koch curve after $a$ steps | ℝ → ℝ | `(4/3)^n`, from a unit segment |
+| area of the koch snowflake with side $a$ | ℝ → ℝ | `2√3 s²/5`: the limit of the areas of the snowflake stages on a triangle with side `s` |
+| area of the sierpinski triangle with side $a$ after $b$ steps | ℝ → ℝ → ℝ | `(√3/4) s² (3/4)^n` |
+| volume of the menger sponge after $a$ steps | ℝ → ℝ | `(20/27)^n`, from a unit cube |
+
+## `diophantine`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| congruent number | ℝ | a positive integer that is the area of a right triangle with rational sides |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| representable as a sum of two squares | ℝ | a natural number `a² + b²` with integers `a` and `b` |
+| congruent number | ℝ | a positive integer that is the area of a right triangle with rational sides |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| frobenius number of $a$ and $b$ | ℝ → ℝ → ℝ | `ab - a - b`, for coprime `a, b ≥ 2`: the largest integer that is not `ax + by` with natural numbers `x`, `y` (Sylvester) |
+| genus of the numerical semigroup generated by $a$ and $b$ | ℝ → ℝ → ℝ | `(a-1)(b-1)/2`, for coprime `a, b ≥ 2`: the number of natural numbers that are not `ax + by` with natural numbers `x`, `y` |
+| number of representations of $a$ by $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the number of pairs `(x, y)` of natural numbers with `ax + by = n` |
+| number of representations of $a$ as a sum of two squares | ℝ → ℝ | `r₂(n)`: the number of pairs `(a, b)` of integers with `a² + b² = n` |
+| first leg of the pythagorean triple generated by $a$ and $b$ | ℝ → ℝ → ℝ | `m² - n²` (Euclid's formula) |
+| second leg of the pythagorean triple generated by $a$ and $b$ | ℝ → ℝ → ℝ | `2mn` (Euclid's formula) |
+| hypotenuse of the pythagorean triple generated by $a$ and $b$ | ℝ → ℝ → ℝ | `m² + n²` (Euclid's formula) |
+
+## `mechanics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| range of a projectile with speed $a$ and angle $b$ under gravity $c$ | ℝ → ℝ → ℝ → ℝ | `u² sin(2a)/g`, on level ground, for `0 < a < π/2` |
+| maximal height of a projectile with speed $a$ and angle $b$ under gravity $c$ | ℝ → ℝ → ℝ → ℝ | `u² sin²a/(2g)` |
+| time of flight of a projectile with speed $a$ and angle $b$ under gravity $c$ | ℝ → ℝ → ℝ → ℝ | `2u sin a/g`, on level ground |
+| period of a pendulum of length $a$ under gravity $b$ | ℝ → ℝ → ℝ | `2π√(ℓ/g)`, for small oscillations |
+| natural frequency of the oscillator with mass $a$ and spring constant $b$ | ℝ → ℝ → ℝ | `√(k/m)`, the angular frequency of `m x'' + k x = 0` |
+| period of the oscillator with mass $a$ and spring constant $b$ | ℝ → ℝ → ℝ | `2π√(m/k)` |
+| damping ratio of the oscillator with mass $a$, damping $b$ and spring constant $c$ | ℝ → ℝ → ℝ → ℝ | `c/(2√(mk))` for `m x'' + c x' + k x = 0`: underdamped below `1`, critically damped at `1`, overdamped above |
+| kinetic energy of a body of mass $a$ with speed $b$ | ℝ → ℝ → ℝ | `mv²/2` |
+| circular orbital speed at distance $a$ for the gravitational parameter $b$ | ℝ → ℝ → ℝ | `√(μ/r)`, with `μ = GM` |
+| escape velocity at distance $a$ for the gravitational parameter $b$ | ℝ → ℝ → ℝ | `√(2μ/r)`, with `μ = GM` |
+| orbital period for the semi-major axis $a$ and the gravitational parameter $b$ | ℝ → ℝ → ℝ | `2π√(a³/μ)` (Kepler's third law), with `μ = GM` |
+
+## `inventory`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| cost per unit time of ordering $a$ units for demand rate $b$, ordering cost $c$ and holding cost $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `DK/Q + hQ/2`: ordering and holding costs per unit time with lots of `Q` units |
+| economic order quantity for demand rate $a$, ordering cost $b$ and holding cost $c$ | ℝ → ℝ → ℝ → ℝ | `√(2DK/h)` (Harris–Wilson) |
+| minimal cost per unit time for demand rate $a$, ordering cost $b$ and holding cost $c$ | ℝ → ℝ → ℝ → ℝ | `√(2DKh)`: the cost at the economic order quantity |
+| cycle length of ordering $a$ units for demand rate $b$ | ℝ → ℝ → ℝ | `Q/D` |
+| reorder point for demand rate $a$ and lead time $b$ | ℝ → ℝ → ℝ | `DL` |
+| economic order quantity with backorders for demand rate $a$, ordering cost $b$, holding cost $c$ and shortage cost $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `√(2DK/h) √((h+p)/p)` |
+| economic production quantity for demand rate $a$, production rate $b$, setup cost $c$ and holding cost $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `√(2DK/(h(1 - D/P)))`, for a production rate `P > D` |
+| critical fractile for underage cost $a$ and overage cost $b$ | ℝ → ℝ → ℝ | `c_u/(c_u + c_o)` |
+| newsvendor quantity for uniform demand on $[a,b]$ with underage cost $c$ and overage cost $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `a + (b-a) c_u/(c_u + c_o)`: the critical-fractile quantile of the demand |
+| newsvendor quantity for exponential demand with mean $a$, underage cost $b$ and overage cost $c$ | ℝ → ℝ → ℝ → ℝ | `μ log((c_u + c_o)/c_o)` |
 

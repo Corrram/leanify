@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={inventory}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $C(Q,D,K,h)$ for the cost per unit time of ordering $Q$ units for demand rate $D$, ordering cost $K$ and holding cost $h$.
+We write $Q^*(D,K,h)$ for the economic order quantity for demand rate $D$, ordering cost $K$ and holding cost $h$.
+We write $c(D,K,h)$ for the minimal cost per unit time for demand rate $D$, ordering cost $K$ and holding cost $h$.
+We write $t(Q,D)$ for the cycle length of ordering $Q$ units for demand rate $D$.
+We write $s(D,L)$ for the reorder point for demand rate $D$ and lead time $L$.
+We write $B(D,K,h,p)$ for the economic order quantity with backorders for demand rate $D$, ordering cost $K$, holding cost $h$ and shortage cost $p$.
+We write $P(D,R,K,h)$ for the economic production quantity for demand rate $D$, production rate $R$, setup cost $K$ and holding cost $h$.
+We write $F(u,o)$ for the critical fractile for underage cost $u$ and overage cost $o$.
+We write $q(a,b,u,o)$ for the newsvendor quantity for uniform demand on $[a,b]$ with underage cost $u$ and overage cost $o$.
+We write $q_e(m,u,o)$ for the newsvendor quantity for exponential demand with mean $m$, underage cost $u$ and overage cost $o$.
+
+\section{Lot sizes}
+
+\begin{lemma}\label{harris}
+Let $D$, $K$ and $h$ be positive real numbers. Then $C(Q^*(D,K,h),D,K,h)=c(D,K,h)$.
+\end{lemma}
+
+\begin{lemma}\label{example}
+$Q^*(50,2,2)=10$, $t(10,50)=\frac15$, $s(50,2)=100$ and $P(1,2,1,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{backorders}
+Let $D$, $K$, $h$ and $p$ be positive real numbers. Then $B(D,K,h,p)\ge Q^*(D,K,h)$.
+\end{lemma}
+
+\section{The newsvendor}
+
+\begin{lemma}\label{newsvendor}
+$F(3,1)=\frac34$, $q(0,100,3,1)=75$ and $q_e(10,1,1)=10\log 2$.
+\end{lemma}
+
+\end{document}

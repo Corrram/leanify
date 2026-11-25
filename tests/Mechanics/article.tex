@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={mechanics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $R(u,a,g)$ for the range of a projectile with speed $u$ and angle $a$ under gravity $g$.
+We write $H(u,a,g)$ for the maximal height of a projectile with speed $u$ and angle $a$ under gravity $g$.
+We write $T(u,a,g)$ for the time of flight of a projectile with speed $u$ and angle $a$ under gravity $g$.
+We write $P(l,g)$ for the period of a pendulum of length $l$ under gravity $g$.
+We write $\omega(m,k)$ for the natural frequency of the oscillator with mass $m$ and spring constant $k$.
+We write $\tau(m,k)$ for the period of the oscillator with mass $m$ and spring constant $k$.
+We write $\zeta(m,c,k)$ for the damping ratio of the oscillator with mass $m$, damping $c$ and spring constant $k$.
+We write $E(m,v)$ for the kinetic energy of a body of mass $m$ with speed $v$.
+We write $V(r,\mu)$ for the circular orbital speed at distance $r$ for the gravitational parameter $\mu$.
+We write $W(r,\mu)$ for the escape velocity at distance $r$ for the gravitational parameter $\mu$.
+We write $K(a,\mu)$ for the orbital period for the semi-major axis $a$ and the gravitational parameter $\mu$.
+
+\section{Projectiles}
+
+\begin{lemma}\label{range}
+Let $u$ and $g$ be positive real numbers. Then $R(u,\frac{\pi}{4},g)=\frac{u^2}{g}$.
+\end{lemma}
+
+\begin{lemma}\label{height}
+Let $u$, $a$ and $g$ be positive real numbers with $a<\frac{\pi}{2}$. Then $H(u,a,g)=\frac{g}{8}T(u,a,g)^2$.
+\end{lemma}
+
+\section{Oscillators}
+
+\begin{lemma}\label{oscillator}
+Let $m$ and $k$ be positive real numbers. Then $\tau(m,k)\omega(m,k)=2\pi$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$E(2,3)=9$, $\zeta(1,2,1)=1$ and $P(1,1)=2\pi$.
+\end{lemma}
+
+\section{Orbits}
+
+\begin{lemma}\label{orbits}
+Let $r$ and $\mu$ be positive real numbers. Then $W(r,\mu)=\sqrt{2}V(r,\mu)$ and $K(r,\mu)V(r,\mu)=2\pi r$.
+\end{lemma}
+
+\end{document}

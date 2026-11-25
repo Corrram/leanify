@@ -104,3 +104,7 @@ article-reader/
 /tests/Quadratics/article.leanify.*
 /tests/ClassicalProbability/article.leanify.*
 /tests/Cryptography/article.leanify.*
+/tests/Fractals/article.leanify.*
+/tests/Diophantine/article.leanify.*
+/tests/Mechanics/article.leanify.*
+/tests/Inventory/article.leanify.*

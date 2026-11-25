@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={fractals}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $d(N,r)$ for the similarity dimension of a self-similar set with $N$ pieces scaled by $r$.
+We write $s(a,b)$ for the similarity dimension of a self-similar set with ratios $a$ and $b$.
+We write $d_C$ for the dimension of the middle-thirds Cantor set.
+We write $C_n$ for the length of the Cantor set after $n$ steps.
+We write $L_n$ for the length of the Koch curve after $n$ steps.
+We write $A(s)$ for the area of the Koch snowflake with side $s$.
+We write $S(s,n)$ for the area of the Sierpinski triangle with side $s$ after $n$ steps.
+We write $M_n$ for the volume of the Menger sponge after $n$ steps.
+
+\section{Dimensions}
+
+\begin{lemma}\label{cantor}
+$d(2,\frac13)=d_C$, $s(\frac13,\frac13)=d_C$ and $d_C=\frac{\log 2}{\log 3}$.
+\end{lemma}
+
+\begin{lemma}\label{full}
+Let $N$ be an integer with $N\ge2$. Then $d(N,\frac1N)=1$.
+\end{lemma}
+
+\section{Stages}
+
+\begin{lemma}\label{stages}
+Let $n$ be an integer with $n\ge0$. Then $L_{n+1}=\frac43 L_n$ and $C_{n+1}=\frac23 C_n$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$M_1=\frac{20}{27}$, $S(1,0)=\frac{\sqrt{3}}{4}$ and $A(1)=\frac{2\sqrt{3}}{5}$.
+\end{lemma}
+
+\end{document}

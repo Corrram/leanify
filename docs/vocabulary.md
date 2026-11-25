@@ -344,7 +344,11 @@ Further fields cover other branches of mathematics:
 * `variations`: actions of Lagrangians, the Euler–Lagrange equation, minimizers;
 * `quadratics`: quadratics and cubics by their coefficients (discriminants, roots, Vieta);
 * `classicalprobability`: the classical problems (birthday, coupons, ballot, Buffon, secretary);
-* `cryptography`: RSA, discrete logarithms, Diffie–Hellman.
+* `cryptography`: RSA, discrete logarithms, Diffie–Hellman;
+* `fractals`: similarity dimensions and the classical self-similar sets;
+* `diophantine`: Frobenius numbers, sums of two squares, Pythagorean triples, congruent numbers;
+* `mechanics`: projectiles, pendulums, oscillators, orbits;
+* `inventory`: lot sizes and the newsvendor model.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.
