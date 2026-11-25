@@ -1820,6 +1820,32 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let xs ← args.mapM (term f sc pf)
         applyAll h hty doms xs
     | .app hd args => do
+      -- `the kernel of $\varphi$` (a notion subject): the notion of the vocabulary with these
+      -- words and arguments, the types of the arguments deciding between several
+      if let .id op := hd then
+        if op == w!"@the" then
+          let V := (← get).vocab
+          let pat : List (Option Codes) := args.map fun m => match m with | .text w => some w | _ => none
+          let actual := args.filter fun m => match m with | .text _ => false | _ => true
+          let fitsName (n : Notion) : Bool := n.name.length == pat.length && (n.name.zip pat).all fun (it, p) =>
+            match it, p with
+            | .w w, some w' => Grammar.lower w == w'
+            | .v, none => true
+            | _, _ => false
+          let cands := (V.notions.filter fitsName).foldl (fun acc n => if acc.any (fun m => m.ty == n.ty && m.value == n.value) then acc else acc ++ [n]) []
+          -- (words that are no notion of the vocabulary: prose)
+          if cands.isEmpty then fail E.prose ((pat.filterMap id).intersperse [32]).flatten
+          let ts ← actual.mapM (term f sc pf)
+          let st0 ← get
+          let fits ← cands.filterM fun n => do
+            let ok ← tryCatch (do let _ ← applyAll n.value n.ty n.doms ts; pure true) fun _ => pure false
+            set st0
+            pure ok
+          let words := (pat.filterMap id).intersperse [32]
+          match fits with
+          | [n] => return (← applyAll n.value n.ty n.doms ts)
+          | [] => fail E.noun words.flatten
+          | _ => fail E.ambiguous (words.flatten ++ w!" has several meanings")
       match hd, args with
       -- `\limsup_{n\to\infty} a_n`, `\liminf_{x\to\infty} f(x)`: the number `L` such that, for
       -- every `ε>0`, the values beyond every `N` exceed `L-ε` somewhere and eventually stay

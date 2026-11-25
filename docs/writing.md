@@ -516,7 +516,11 @@ denote the charge of the surface.`, `Consider the idempotent $e$.`) is an object
 article, not such a variable: the claim is refused (`q is not defined`), and so is `e^2`
 with that `e`, which otherwise is the exponential. Words before a formula name it only
 without a preposition: `the arithmetic mean $\frac{a+b}{2}$ is at least …` compares the
-mean, `the probability of an exit at $-1$ is at least …` is not read.
+mean. With a preposition, the words and formulas are a notion of the vocabulary with its
+arguments, the subject of the claim as a formula would be: `The kernel of $\varphi$ is a
+normal subgroup of $G$.`, `The order of $G$ is $6$.`, `The distance between $P$ and $Q$ is
+at least $0$.`; words that are no notion (`the probability of an exit at $-1$ is at least
+…`) are prose.
 
 ### Other wordings of the same forms
 

@@ -1410,10 +1410,42 @@ structure CClause where
   forDefs : List MT := []
   deriving Repr, Inhabited
 
+/-- `the kernel of $\varphi$`, `the order of $G$`, `the distance between $x$ and $y$`
+before a verb: a notion of the vocabulary with its arguments, as the formula
+`@the(WORDS, ARGS)` (each word a `text`, each argument a formula, in their order), which the
+elaboration looks up among the notions. -/
+def notionSubj (cs : List Chunk) : Option (MT × List Chunk) := do
+  let r ← kw [w!"the"] cs
+  let verbs : List Codes := [w!"is", w!"are", w!"divides", w!"equals", w!"satisfies", w!"has", w!"lies",
+    w!"belongs", w!"contains", w!"coincides", w!"does", w!"can", w!"exceeds", w!"agrees", w!"holds"]
+  let body := r.takeWhile fun (c : Chunk) => match c with
+    | .w w => !verbs.contains w
+    | .m _ => true
+    | _ => false
+  let rest := r.drop body.length
+  match rest with
+  | .w _ :: _ => pure ()
+  | _ => none
+  let items ← body.mapM fun (c : Chunk) => match c with
+    | .w w => some (MT.text (lower w))
+    | .m ts => Math.parseFormula ts
+    | _ => none
+  -- (at least one word before the first argument, and an argument)
+  if !(items.any fun m => match m with | .text _ => false | _ => true) then none
+  -- (a preposition before the first argument: `the number $c$ is …` names its object)
+  let before := items.takeWhile fun m => match m with | .text _ => true | _ => false
+  let preps : List Codes := [w!"of", w!"between", w!"from", w!"in", w!"on", w!"at", w!"over", w!"to", w!"with"]
+  if !(before.any fun m => match m with | .text w => preps.contains w | _ => false) then none
+  match items.head? with
+  | some (.text _) => pure ()
+  | _ => none
+  some (.app (.id w!"@the") items, rest)
+
 def subj (cs : List Chunk) : Option (Subj × List Chunk) :=
   match cs with
   | .m _ :: _ => do let (m, r) ← formula cs; some (.math m, r)
   | .w v :: r =>
+    if v == w!"the" then (notionSubj cs).map fun (m, r) => (.math m, r) else
     if v == w!"its" then
       let ws := r.takeWhile (fun c => match c with
         | .w u => !([w!"is", w!"which", w!"attains"].contains u) | _ => false)
@@ -1646,7 +1678,9 @@ def namedTerm (cs : List Chunk) : Option (MT × List Chunk) := do
       let preps := [w!"of", w!"at", w!"in", w!"on", w!"to", w!"for", w!"by", w!"with", w!"from",
         w!"over", w!"under", w!"between", w!"into", w!"through", w!"about", w!"near", w!"after",
         w!"before", w!"than", w!"as", w!"per", w!"via", w!"along", w!"across", w!"among", w!"within"]
-      if ws.any (fun c => match c with | .w w => preps.contains (lower w) | _ => false) then none
+      -- (or a notion of the vocabulary with its arguments: `the distance between $P$ and $Q$`)
+      if ws.any (fun c => match c with | .w w => preps.contains (lower w) | _ => false) then
+        return ← notionSubj cs
       else some (r'.drop ws.length)
     | none => some cs
   formula r
@@ -2258,6 +2292,25 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
     | none =>
     match kw [w!"is"] r with
     | some r1 =>
+      -- `the order of $G$ is $6$`: a notion subject equal to a term
+      let isTerm : Option (Clause × List Chunk) := match s, r1 with
+        | .math (.app (.id t) items), .m ts :: r2 =>
+          if t != w!"@the" then none else do
+          let m ← Math.parseFormula ts
+          match m with
+          | .chain _ _ => none
+          | _ =>
+            let ends := match r2 with
+              | [] => true
+              | .p c :: _ => c != 45
+              | .w w :: _ => [w!"and", w!"if", w!"for", w!"where", w!"since", w!"so", w!"because", w!"when",
+                  w!"whenever", w!"then", w!"which", w!"provided"].contains w
+              | _ => false
+            if ends then some (.fact (.chain (.app (.id t) items) [(.eq, m)]), r2) else none
+        | _, _ => none
+      match isTerm with
+      | some res => some res
+      | none =>
       -- (`is of measure zero`, where no object follows `of`: an adjective of the
       -- vocabulary, below)
       match (do
