@@ -356,7 +356,11 @@ Further fields cover other branches of mathematics:
 * `populationdynamics`: logistic growth, harvesting, Ricker and Beverton–Holt maps, Lotka–Volterra;
 * `circuits`: resistors, capacitors and inductors;
 * `thermodynamics`: heat engines, ideal gases, Boltzmann factors;
-* `sphericalgeometry`: distances and areas on the sphere.
+* `sphericalgeometry`: distances and areas on the sphere;
+* `floatingpoint`: floating-point systems, errors and rounding;
+* `latticepoints`: counting lattice points, Pick's theorem;
+* `combinatorialgames`: Nim, Grundy values, Wythoff's game;
+* `kinetics`: reaction orders, half-lives, rates and pH.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={floatingpoint}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $M(b,p)$ for the machine epsilon for base $b$ and precision $p$.
+We write $u(b,p)$ for the unit roundoff for base $b$ and precision $p$.
+We write $L(b,p,m)$ for the largest floating-point number for base $b$, precision $p$ and maximal exponent $m$.
+We write $N(b,m)$ for the smallest positive normal number for base $b$ and minimal exponent $m$.
+We write $S(b,p,m)$ for the smallest positive subnormal number for base $b$, precision $p$ and minimal exponent $m$.
+We write $F(b,p,m,n)$ for the number of normal floating-point numbers for base $b$, precision $p$ and exponents from $m$ to $n$.
+We write $A(y,x)$ for the absolute error of $y$ as an approximation of $x$.
+We write $R(y,x)$ for the relative error of $y$ as an approximation of $x$.
+We write $r(x,d)$ for the rounding of $x$ to $d$ decimal places.
+
+\section{Double precision}
+
+\begin{lemma}\label{double}
+$M(2,53)=2^{-52}$, $u(2,53)=2^{-53}$ and $L(2,53,1023)=(2-2^{-52})2^{1023}$.
+\end{lemma}
+
+\begin{lemma}\label{tiny}
+$N(2,-1022)=2^{-1022}$, $S(2,53,-1022)=2^{-1074}$ and $F(10,1,0,0)=18$.
+\end{lemma}
+
+\section{Errors}
+
+\begin{lemma}\label{errors}
+Let $x$ and $y$ be real numbers with $x\ne0$. Then $R(y,x)=\frac{A(y,x)}{|x|}$.
+\end{lemma}
+
+\begin{lemma}\label{rounding}
+$r(\frac{314159}{100000},2)=\frac{314}{100}$ and $\frac34$ is representable with $2$ digits in base $2$.
+\end{lemma}
+
+\end{document}

@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={kinetics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $Z(t,k,c)$ for the concentration at time $t$ in a zeroth-order reaction with rate constant $k$ and initial concentration $c$.
+We write $F(t,k,c)$ for the concentration at time $t$ in a first-order reaction with rate constant $k$ and initial concentration $c$.
+We write $S(t,k,c)$ for the concentration at time $t$ in a second-order reaction with rate constant $k$ and initial concentration $c$.
+We write $H(k)$ for the half-life of a first-order reaction with rate constant $k$.
+We write $J(k,c)$ for the half-life of a second-order reaction with rate constant $k$ and initial concentration $c$.
+We write $\lambda(T)$ for the decay constant for the half-life $T$.
+We write $A(a,E,T,R)$ for the Arrhenius rate constant for the prefactor $a$, the activation energy $E$ and the temperature $T$ with gas constant $R$.
+We write $v(V,K,s)$ for the Michaelis-Menten rate for the maximal rate $V$, the Michaelis constant $K$ and the substrate concentration $s$.
+We write $P(x)$ for the pH for the hydrogen ion concentration $x$.
+
+\section{Half-lives}
+
+\begin{lemma}\label{half}
+Let $k$ and $c$ be positive real numbers. Then $F(H(k),k,c)=\frac{c}{2}$, $S(J(k,c),k,c)=\frac{c}{2}$ and $Z(\frac{c}{k},k,c)=0$.
+\end{lemma}
+
+\begin{lemma}\label{decay}
+Let $T$ be a positive real number. Then $H(\lambda(T))=T$.
+\end{lemma}
+
+\section{Rates}
+
+\begin{lemma}\label{rates}
+$P(\frac{1}{1000})=3$, $v(2,1,1)=1$ and $A(1,0,1,1)=1$.
+\end{lemma}
+
+\end{document}

@@ -117,3 +117,7 @@ article-reader/
 /tests/Circuits/article.leanify.*
 /tests/Thermodynamics/article.leanify.*
 /tests/SphericalGeometry/article.leanify.*
+/tests/FloatingPoint/article.leanify.*
+/tests/LatticePoints/article.leanify.*
+/tests/CombinatorialGames/article.leanify.*
+/tests/Kinetics/article.leanify.*

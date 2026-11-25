@@ -40,6 +40,7 @@ except a notion whose meanings take arguments of different types, which the type
       * `relativity`
       * `circuits`
       * `thermodynamics`
+      * `kinetics`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -76,6 +77,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `odesolvers`
     * `matrixnorms`
     * `descent`
+    * `floatingpoint`
   * `stochastic`
     * `statistics`
       * `probability`
@@ -115,6 +117,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `recurrences`
     * `codes`
     * `algorithms`
+    * `combinatorialgames`
   * `numbertheory`
     * `numbers`
     * `arithmetic`
@@ -126,18 +129,19 @@ except a notion whose meanings take arguments of different types, which the type
     * `collatz`
     * `cryptography`
     * `diophantine`
+    * `latticepoints`
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` |
-| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
+| `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` |
 | `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
-| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` |
-| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
-| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics` |
+| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames` |
+| `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
+| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` |
@@ -2814,4 +2818,57 @@ except a notion whose meanings take arguments of different types, which the type
 | area of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `2πRh`, for `0 ≤ h ≤ 2R` |
 | volume of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `πh²(3R - h)/3` |
 | solid angle of a cone with half-angle $a$ | ℝ → ℝ | `2π(1 - cos θ)` |
+
+## `floatingpoint`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| representable with $x$ digits in base $a$ | ℝ | `0`, or `m b^e` with integers `m`, `e` and `\|m\| < b^p`: a number with a `p`-digit significand in base `b` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| machine epsilon for base $a$ and precision $b$ | ℝ → ℝ → ℝ | `b^{1-p}`: the distance from `1` to the next floating-point number |
+| unit roundoff for base $a$ and precision $b$ | ℝ → ℝ → ℝ | `b^{1-p}/2`: the largest relative error of rounding to nearest |
+| largest floating-point number for base $a$, precision $b$ and maximal exponent $c$ | ℝ → ℝ → ℝ → ℝ | `(1 - b^{-p}) b^{e_max + 1}` |
+| smallest positive normal number for base $a$ and minimal exponent $b$ | ℝ → ℝ → ℝ | `b^{e_min}` |
+| smallest positive subnormal number for base $a$, precision $b$ and minimal exponent $c$ | ℝ → ℝ → ℝ → ℝ | `b^{e_min - p + 1}` |
+| number of normal floating-point numbers for base $a$, precision $b$ and exponents from $c$ to $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `2(b-1)b^{p-1}(e_max - e_min + 1)`, with both signs |
+| absolute error of $a$ as an approximation of $b$ | ℝ → ℝ → ℝ | `\|x̂ - x\|` |
+| relative error of $a$ as an approximation of $b$ | ℝ → ℝ → ℝ | `\|x̂ - x\|/\|x\|`, for `x ≠ 0` |
+| rounding of $a$ to $b$ decimal places | ℝ → ℝ → ℝ | `⌊10^d x + 1/2⌋/10^d`: to the nearest multiple of `10^{-d}`, halves up |
+
+## `latticepoints`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| number of lattice points in the disk of radius $a$ | ℝ → ℝ | the number of `(a,b) ∈ ℤ²` with `a² + b² ≤ r²` (Gauss's circle problem) |
+| number of lattice points in the ball of radius $a$ | ℝ → ℝ | the number of `(a,b,c) ∈ ℤ³` with `a² + b² + c² ≤ r²` |
+| number of lattice points on the segment from the origin to the point with coordinates $a$ and $b$ | ℝ → ℝ → ℝ | `gcd(a,b) + 1`, with both endpoints |
+| number of visible lattice points in the square of side $a$ | ℝ → ℝ | the number of `(a,b)` with `1 ≤ a, b ≤ n` and `gcd(a,b) = 1` |
+| area of a lattice polygon with $a$ interior points and $b$ boundary points | ℝ → ℝ → ℝ | `I + B/2 - 1` (Pick's theorem), for a simple polygon with lattice vertices |
+
+## `combinatorialgames`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| nim-sum of $a$ and $b$ | ℝ → ℝ → ℝ | `a ⊕ b`: the bitwise exclusive or |
+| nim-sum of $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `a ⊕ b ⊕ c`: `0` exactly for the losing positions of Nim (Bouton) |
+| number of winning moves in the nim position with heaps $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the number of heaps `h` with `h ⊕ s < h`, `s = a ⊕ b ⊕ c`: the moves to a losing position |
+| grundy value of a heap of $a$ in the subtraction game with moves up to $b$ | ℝ → ℝ → ℝ | `n mod (k+1)`: a move takes `1` to `k` tokens |
+| first coordinate of the $a$ th wythoff pair | ℝ → ℝ | `⌊nφ⌋`, `φ = (1 + √5)/2`: the `n`th losing position of Wythoff's game is `(⌊nφ⌋, ⌊nφ²⌋)` |
+| second coordinate of the $a$ th wythoff pair | ℝ → ℝ | `⌊nφ²⌋` |
+
+## `kinetics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| concentration at time $a$ in a zeroth-order reaction with rate constant $b$ and initial concentration $c$ | ℝ → ℝ → ℝ → ℝ | `max(c₀ - kt, 0)` |
+| concentration at time $a$ in a first-order reaction with rate constant $b$ and initial concentration $c$ | ℝ → ℝ → ℝ → ℝ | `c₀e^{-kt}` |
+| concentration at time $a$ in a second-order reaction with rate constant $b$ and initial concentration $c$ | ℝ → ℝ → ℝ → ℝ | `c₀/(1 + kc₀t)` |
+| half-life of a first-order reaction with rate constant $a$ | ℝ → ℝ | `log 2/k` |
+| half-life of a second-order reaction with rate constant $a$ and initial concentration $b$ | ℝ → ℝ → ℝ | `1/(kc₀)` |
+| decay constant for the half-life $a$ | ℝ → ℝ | `log 2/T` |
+| arrhenius rate constant for the prefactor $a$, the activation energy $b$ and the temperature $c$ with gas constant $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `A e^{-E_a/(RT)}` |
+| michaelis-menten rate for the maximal rate $a$, the michaelis constant $b$ and the substrate concentration $c$ | ℝ → ℝ → ℝ → ℝ | `V_max S/(K_M + S)` |
+| ph for the hydrogen ion concentration $a$ | ℝ → ℝ | `-log₁₀ [H⁺]` |
 

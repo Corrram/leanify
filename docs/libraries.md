@@ -58,7 +58,8 @@ math
 │   │   ├── waves                 Doppler, harmonics, Snell's law, decibels, lenses
 │   │   ├── relativity            Lorentz factor, rapidity, velocity addition, γmc²
 │   │   ├── circuits              resistors, RC charging, LC resonance, RLC impedance
-│   │   └── thermodynamics        Carnot efficiency, ideal gases, cooling, Boltzmann factors
+│   │   ├── thermodynamics        Carnot efficiency, ideal gases, cooling, Boltzmann factors
+│   │   └── kinetics              reaction orders, half-lives, Arrhenius, Michaelis–Menten, pH
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -93,7 +94,8 @@ math
 │   ├── iteration                 Newton's method, fixed-point iteration, orders of convergence
 │   ├── odesolvers                initial value problems; Euler, Heun, Runge–Kutta
 │   ├── matrixnorms               matrix norms, condition numbers, diagonal dominance (with matrices)
-│   └── descent                   Armijo and Wolfe steps; gradient descent, heavy-ball, proximal point
+│   ├── descent                   Armijo and Wolfe steps; gradient descent, heavy-ball, proximal point
+│   └── floatingpoint             machine epsilon, unit roundoff, ranges, errors, rounding
 ├── stochastic                    probability and statistics
 │   ├── statistics
 │   │   ├── probability
@@ -133,7 +135,8 @@ math
 │   ├── graphs
 │   ├── recurrences               progressions, Fibonacci and linear recurrences
 │   ├── codes                     binary words, Hamming distance, coding bounds
-│   └── algorithms                comparisons of searching and sorting, Hanoi, master theorem
+│   ├── algorithms                comparisons of searching and sorting, Hanoi, master theorem
+│   └── combinatorialgames        nim-sums, Grundy values, Wythoff pairs
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
@@ -144,11 +147,12 @@ math
     ├── digits                    base-b digits, palindromes, digital roots, repunits
     ├── collatz                   the 3n+1 map, stopping times
     ├── cryptography              RSA, discrete logarithms, Diffie–Hellman
-    └── diophantine               Frobenius numbers, sums of two squares, Pythagorean triples
+    ├── diophantine               Frobenius numbers, sums of two squares, Pythagorean triples
+    └── latticepoints             Gauss's circle problem, visible points, Pick's theorem
 ```
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
-`relativity`, `circuits`, `thermodynamics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`relativity`, `circuits`, `thermodynamics`, `kinetics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -243,6 +247,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`relativity`](glossary.md#relativity) | the Lorentz factor, rapidity and redshift factor of a speed; the relativistic sum of velocities; dilated times and contracted lengths; relativistic energy and momentum, rest energy (the speed of light is an argument) | |
 | [`circuits`](glossary.md#circuits) | resistances in series and in parallel, dissipated power; the time constant and capacitor voltage of an RC circuit; energies stored in capacitances and inductances; the resonant frequency of an LC circuit; the impedance and quality factor of a series RLC circuit | |
 | [`thermodynamics`](glossary.md#thermodynamics) | the Carnot efficiency and refrigerator coefficient of performance; the pressure of an ideal gas; Newton's law of cooling; entropy changes of heating; black-body radiation; Boltzmann factors and the mean energy of a two-level system (constants of nature are arguments) | |
+| [`kinetics`](glossary.md#kinetics) | concentrations in reactions of order zero, one and two; half-lives and decay constants; the Arrhenius rate constant; the Michaelis–Menten rate; the pH | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -275,6 +280,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`odesolvers`](glossary.md#odesolvers) | right-hand sides `f(t, y)`, Lipschitz in the second variable; solutions of a differential equation and of an initial value problem, of linear equations of order two with constant coefficients and of the logistic equation; Euler, Heun, midpoint and Runge–Kutta steps and sequences | with `realfunctions` |
 | [`matrixnorms`](glossary.md#matrixnorms) | Frobenius norm, maximum absolute row and column sums, condition numbers; strictly diagonally dominant, tridiagonal, upper Hessenberg, banded and entrywise nonnegative matrices | loads `matrices` |
 | [`descent`](glossary.md#descent) | Armijo and Wolfe steps, descent directions; gradient descent, heavy-ball (Polyak) and proximal point sequences of a differentiable function | |
+| [`floatingpoint`](glossary.md#floatingpoint) | numbers representable with `p` digits in base `b`; the machine epsilon and unit roundoff; the largest number, the smallest normal and subnormal numbers, the number of normal numbers; absolute and relative errors; rounding to decimal places | |
 | **Probability and statistics** (`stochastic`) | | |
 | [`unitsquare`](glossary.md#unitsquare) | `[0,1]` and the unit square with Lebesgue measure: copulas, distribution functions, probability measures and couplings with uniform marginals, samples `(U_i,V_i)` with `\mathbb{E}_C` and `P_C` | |
 | [`hilbert`](glossary.md#hilbert), [`markov`](glossary.md#markov) | `L^2` on `[0,1]`, operators, the Hoeffding decomposition; the Markov operator of a copula | each loads the ones before it |
@@ -313,6 +319,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |
 | [`codes`](glossary.md#codes) | binary words of length `n`; the Hamming weight and distance of the first `n` letters, the volume of a Hamming ball; the sphere-packing, Singleton and Gilbert–Varshamov bounds; the rate of a code | |
 | [`algorithms`](glossary.md#algorithms) | worst-case comparisons of binary search, insertion sort and merge sort, the expected comparisons of quicksort, the sorting lower bound `⌈log₂ n!⌉`, maximum and minimum finding; the Tower of Hanoi; the critical exponent of the master theorem; perfect binary trees and minimal heights | |
+| [`combinatorialgames`](glossary.md#combinatorialgames) | the nim-sum of two and three heaps and the winning moves of Nim; the Grundy value of a subtraction game; the Wythoff pairs | |
 | **Number theory** (`numbertheory`) | | |
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |
@@ -324,6 +331,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`collatz`](glossary.md#collatz) | the Collatz map and its accelerated form, iterates, the total stopping time and the stopping time, the highest point of a trajectory; numbers with finite total stopping time | |
 | [`cryptography`](glossary.md#cryptography) | residues and modular powers; the RSA modulus, totient, decryption exponent and ciphertext; discrete logarithms; the Diffie–Hellman key | |
 | [`diophantine`](glossary.md#diophantine) | congruent numbers, numbers representable as a sum of two squares; the Frobenius number and the genus of the numerical semigroup of two coprime integers; the number of representations by two integers and as a sum of two squares; Euclid's formula for Pythagorean triples | |
+| [`latticepoints`](glossary.md#latticepoints) | lattice points in a disk (Gauss's circle problem) and a ball, on a segment from the origin, visible lattice points in a square; the area of a lattice polygon by Pick's theorem | |
 
 ## Not yet
 

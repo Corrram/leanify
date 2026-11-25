@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={combinatorialgames}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $s(a,b)$ for the nim-sum of $a$ and $b$.
+We write $t(a,b,c)$ for the nim-sum of $a$, $b$ and $c$.
+We write $W(a,b,c)$ for the number of winning moves in the Nim position with heaps $a$, $b$ and $c$.
+We write $G(n,k)$ for the Grundy value of a heap of $n$ in the subtraction game with moves up to $k$.
+We write $x_n$ for the first coordinate of the $n$th Wythoff pair.
+We write $y_n$ for the second coordinate of the $n$th Wythoff pair.
+
+\section{Nim}
+
+\begin{lemma}\label{nim}
+$s(5,3)=6$, $t(1,2,3)=0$, $W(3,4,5)=1$ and $W(1,2,3)=0$.
+\end{lemma}
+
+\begin{lemma}\label{xor}
+Let $a$ and $b$ be integers with $a\ge0$ and $b\ge0$. Then $s(a,b)=s(b,a)$ and $s(a,a)=0$.
+\end{lemma}
+
+\section{Other games}
+
+\begin{lemma}\label{other}
+$G(10,3)=2$, $x_1=1$, $y_1=2$, $x_2=3$ and $y_2=5$.
+\end{lemma}
+
+\end{document}

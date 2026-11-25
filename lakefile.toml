@@ -757,3 +757,27 @@ globs = ["Thermodynamics.+"]
 name = "SphericalGeometry"
 srcDir = "tests"
 globs = ["SphericalGeometry.+"]
+
+[[lean_lib]]
+# The field floatingpoint: floating-point arithmetic.
+name = "FloatingPoint"
+srcDir = "tests"
+globs = ["FloatingPoint.+"]
+
+[[lean_lib]]
+# The field latticepoints: lattice points.
+name = "LatticePoints"
+srcDir = "tests"
+globs = ["LatticePoints.+"]
+
+[[lean_lib]]
+# The field combinatorialgames: impartial games.
+name = "CombinatorialGames"
+srcDir = "tests"
+globs = ["CombinatorialGames.+"]
+
+[[lean_lib]]
+# The field kinetics: chemical kinetics.
+name = "Kinetics"
+srcDir = "tests"
+globs = ["Kinetics.+"]

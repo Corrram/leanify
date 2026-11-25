@@ -1,0 +1,34 @@
+tests/Kinetics/article.tex:9:1: info: defines \@n0 (n0)
+tests/Kinetics/article.tex:10:1: info: defines \@n1 (n1)
+tests/Kinetics/article.tex:11:1: info: defines \@n2 (n2)
+tests/Kinetics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (1+y\,(z\,x)=0)))
+tests/Kinetics/article.tex:12:1: info: defines \@n3 (n3)
+tests/Kinetics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (x=0)
+tests/Kinetics/article.tex:13:1: info: defines \@n4 (n4)
+tests/Kinetics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (x\,y=0))
+tests/Kinetics/article.tex:14:1: info: defines \lambda (lambda)
+tests/Kinetics/article.tex:14:1: info: \lambda is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (x=0)
+tests/Kinetics/article.tex:15:1: info: defines \@n6 (n6)
+tests/Kinetics/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \neg (s\,z=0))))
+tests/Kinetics/article.tex:16:1: info: defines \@n7 (n7)
+tests/Kinetics/article.tex:16:1: info: \@n7 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0\le z\Rightarrow \neg (y+z=0)))
+tests/Kinetics/article.tex:17:1: info: defines \@n8 (n8)
+tests/Kinetics/article.tex:17:1: info: \@n8 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (\log(10)=0)
+tests/Kinetics/article.tex:22:43: info: claim 0: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n1(\@n3(x),x,y)=\frac{y}{2})
+tests/Kinetics/article.tex:22:43: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<y\land 0<x\land 0<x\land 0\le \@n3(x))\land \neg (2=0))
+tests/Kinetics/article.tex:22:43: info: claim 1: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n2(\@n4(x,y),x,y)=\frac{y}{2})
+tests/Kinetics/article.tex:22:43: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<y\land 0<x\land (0<y\land 0<x)\land 0\le \@n4(x,y))\land \neg (2=0))
+tests/Kinetics/article.tex:22:43: info: claim 2: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n0(\frac{y}{x},x,y)=0)
+tests/Kinetics/article.tex:22:43: info: claim 2 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<y\land 0<x\land \neg (x=0)\land 0\le \frac{y}{x})
+tests/Kinetics/article.tex:26:36: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n3(\lambda(x))=x
+tests/Kinetics/article.tex:26:36: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x\land 0<\lambda(x)
+tests/Kinetics/article.tex:32:1: info: claim 4: \@n8(\frac{1}{1000})=3
+tests/Kinetics/article.tex:32:1: info: claim 4 is meaningful if: \neg (1000=0)\land 0<\frac{1}{1000}
+tests/Kinetics/article.tex:32:1: info: claim 5: \@n7(2,1,1)=1
+tests/Kinetics/article.tex:32:1: info: claim 5 is meaningful if: 0\le 1\land 0<1\land 0<2
+tests/Kinetics/article.tex:32:1: info: claim 6: \@n6(1,0,1,1)=1
+tests/Kinetics/article.tex:32:1: info: claim 6 is meaningful if: 0<1\land 0<1\land 0\le 0\land 0<1
+tests/Kinetics/article.tex: 9 definitions, 7 claims
+  text: 9 compiled, 0 failed, 0 prose (of 9)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

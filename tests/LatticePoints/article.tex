@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={latticepoints}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $N(r)$ for the number of lattice points in the disk of radius $r$.
+We write $M(r)$ for the number of lattice points in the ball of radius $r$.
+We write $S(a,b)$ for the number of lattice points on the segment from the origin to the point with coordinates $a$ and $b$.
+We write $V(n)$ for the number of visible lattice points in the square of side $n$.
+We write $A(i,b)$ for the area of a lattice polygon with $i$ interior points and $b$ boundary points.
+
+\section{Counts}
+
+\begin{lemma}\label{counts}
+$N(1)=5$, $N(2)=13$, $M(1)=7$, $S(4,6)=3$ and $V(2)=3$.
+\end{lemma}
+
+\begin{lemma}\label{origin}
+Let $r$ be a real number with $r\ge0$. Then $N(r)\ge1$.
+\end{lemma}
+
+\section{Pick's theorem}
+
+\begin{lemma}\label{pick}
+$A(0,4)=1$ and $A(1,4)=2$.
+\end{lemma}
+
+\end{document}
