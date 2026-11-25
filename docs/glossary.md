@@ -1133,6 +1133,12 @@ except a notion whose meanings take arguments of different types, which the type
 | monoid | $\mathrm{El}$ → Prop | (Mathlib `Monoid`) |
 | commutative monoid | $\mathrm{El}$ → Prop | (Mathlib `CommMonoid`) |
 | semigroup | $\mathrm{El}$ → Prop | (Mathlib `Semigroup`) |
+| cancellative semigroup | $\mathrm{El}$ → Prop | `ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`) |
+| cancellative monoid | $\mathrm{El}$ → Prop | (Mathlib `CancelMonoid`) |
+| commutative semigroup | $\mathrm{El}$ → Prop | (Mathlib `CommSemigroup`) |
+| idempotent | $\mathrm{El}$ | an element `e` with `e² = e` (Mathlib `IsIdempotentElem`) |
+| left identity | $\mathrm{El}$ | `ea = a` for every `a` |
+| right identity | $\mathrm{El}$ | `ae = a` for every `a` |
 | finitely generated group | $\mathrm{El}$ → Prop | (Mathlib `Group.FG`) |
 | finitely generated abelian group | $\mathrm{El}$ → Prop | (Mathlib `AddGroup.FG`) |
 | finitely generated module | $\mathrm{El}$ → Prop | (Mathlib `Module.Finite`) |
@@ -1162,6 +1168,10 @@ except a notion whose meanings take arguments of different types, which the type
 | countable | $\mathrm{El}$ → Prop | (Mathlib `Countable`) |
 | trivial | $\mathrm{El}$ → Prop | with one element |
 | nontrivial | $\mathrm{El}$ → Prop | with more than one element |
+| cancellative | $\mathrm{El}$ → Prop | `ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`) |
+| left cancellative | $\mathrm{El}$ → Prop | `ab = ac` implies `b = c` (Mathlib `IsLeftCancelMul`) |
+| right cancellative | $\mathrm{El}$ → Prop | `ba = ca` implies `b = c` (Mathlib `IsRightCancelMul`) |
+| idempotent | $\mathrm{El}$ | `e² = e` (Mathlib `IsIdempotentElem`) |
 | noetherian | $\mathrm{El}$ → Prop | every ideal is finitely generated (Mathlib `IsNoetherianRing`) |
 | noetherian | $\mathrm{El}$ → Prop | (Mathlib `IsNoetherianRing`) |
 | reduced | $\mathrm{El}$ → Prop | without nonzero nilpotent elements (Mathlib `IsReduced`) |
@@ -1202,6 +1212,15 @@ except a notion whose meanings take arguments of different types, which the type
 | of order $x$ | $\mathrm{El}$ | an element of order `n` (Mathlib `orderOf`) |
 | of finite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of infinite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
+| of prime order | $\mathrm{El}$ → Prop | finite, with a prime number of elements |
+| of odd order | $\mathrm{El}$ → Prop | finite, with an odd number of elements |
+| of even order | $\mathrm{El}$ → Prop | finite, with an even number of elements |
+| of prime order | $\mathrm{El}$ | (Mathlib `orderOf`) |
+| of odd order | $\mathrm{El}$ | (Mathlib `orderOf`) |
+| of even order | $\mathrm{El}$ | (Mathlib `orderOf`) |
+| of index $x$ in $a$ | $\mathrm{El}$ → Prop | `[G : H] = n`; `of index $n$` after `subgroup of $G$` (Mathlib `Subgroup.index`) |
+| of finite index in $x$ | $\mathrm{El}$ → Prop | finitely many cosets (Mathlib `Subgroup.FiniteIndex`) |
+| of infinite index in $x$ | $\mathrm{El}$ → Prop | infinitely many cosets (Mathlib `Subgroup.index`) |
 | of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of positive characteristic | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of positive characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
@@ -1314,6 +1333,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
 | $\operatorname{char}$ | $\mathrm{El}$ → Prop | `\operatorname{char}(K)`, the characteristic |
 | $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
+| $\operatorname{@bracket}$ | $\mathrm{El}$ → Prop | `[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |
 | $\operatorname{im}$ | $\mathrm{Map}$ | `\operatorname{im} φ`, the image |

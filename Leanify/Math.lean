@@ -614,7 +614,13 @@ def run : Nat → Mode → List MTok → R
         let (b, r3) ← run f (.additive false) r2
         let r4 ← expect (.sym 93) r3
         some (.ival a b true false, r4))
-    | .sym 91 :: rest => do
+    | .sym 91 :: rest => (do
+      -- `[G:H]`, `[L:K]`: the index of a subgroup, the degree of a field extension
+      let (a, r1) ← (match rest with | .id x :: r => some (MT.id x, r) | _ => none)
+      let r2 ← expect (.sym 58) r1
+      let (b, r3) ← (match r2 with | .id x :: r => some (MT.id x, r) | _ => none)
+      let r4 ← expect (.sym 93) r3
+      some (.app (.id w!"@bracket") [a, b], r4)) <|> do
       let (a, r1) ← run f (.additive false) rest
       let r2 ← expect (.sym 44) r1
       let (b, r3) ← run f (.additive false) r2

@@ -889,6 +889,10 @@ def EigenvectorOf (T : Map) (v : El) : Prop :=
 /-- `a` is a fixed point of `φ`. -/
 def FixedPointOf (φ : Map) (a : El) : Prop := φ.dom a ∧ eqv (apply φ a) a
 
+/-- `[A:B]`: the degree of a field extension where both are fields, the index of a
+subgroup otherwise. -/
+def bracketIndex (A B : El → Prop) : ℝ := if IsFieldS A ∧ IsFieldS B then degree A B else index A B
+
 end
 
 end Leanify.Structures

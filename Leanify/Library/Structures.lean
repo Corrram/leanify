@@ -1,4 +1,5 @@
 import Leanify.Library.Core
+import Leanify.Library.Numbers
 
 /-! # Vocabulary: algebraic, topological and ordered structures with their elements
 
@@ -252,7 +253,8 @@ def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet"),            -- 192
   (S ⟶ .prop, w!"\\operatorname{RealVectorSpace}", w!"Leanify.Structures.RealVectorSpace"), -- 193
   (M ⟶ S ⟶ S, w!"#[#]", w!"Leanify.Structures.imageSetM"),                                  -- 194
-  (S ⟶ S, w!"#^{p^\\infty}", w!"Leanify.Structures.perfectionS")]                           -- 195
+  (S ⟶ S, w!"#^{p^\\infty}", w!"Leanify.Structures.perfectionS"),                           -- 195
+  (S ⟶ S ⟶ .real, w!"[#1:#2]", w!"Leanify.Structures.bracketIndex")]                       -- 196
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -312,6 +314,17 @@ def comm : Tm := sP fun g => allT E fun a => allT E fun b => imp (and (app g a) 
 /-- A ring that is a field, as a noun's predicate. -/
 def isField : Tm := c 40
 def elemOf : Tm := rel S E fun g a => app g a
+/-- `ab = ac` implies `b = c` (left cancellation) in `s`. -/
+def leftCancel (s : B) : B := allT E fun a => allT E fun b => allT E fun x =>
+  imp (and (app s a) (and (app s b) (app s x))) (imp (app2 (const 7) (app2 (const 3) a b) (app2 (const 3) a x)) (app2 (const 7) b x))
+/-- `ba = ca` implies `b = c` (right cancellation) in `s`. -/
+def rightCancel (s : B) : B := allT E fun a => allT E fun b => allT E fun x =>
+  imp (and (app s a) (and (app s b) (app s x))) (imp (app2 (const 7) (app2 (const 3) b a) (app2 (const 3) x a)) (app2 (const 7) b x))
+/-- A property of the number of elements (`of prime order`). -/
+def orderIs (p : B → B) : Tm := sP fun g => and (app (const 21) g) (p (cardOf g))
+/-- The same, of the order of an element. -/
+def elOrderIs (p : B → B) : Tm := close <| lamT E (fun _ => tt) fun a => and (lt (num 0) (app (const 23) a)) (p (app (const 23) a))
+def isEvenB (n : B) : B := exR fun k => and (isInt k) (eq n (mul (num 2) k))
 
 def vocab : Vocab where
   types := [w!"\\mathrm{El}", w!"\\mathrm{Map}"]
@@ -452,6 +465,21 @@ def vocab : Vocab where
     noun phrase!"monoid" phrase!"monoids" (c 171) "(Mathlib `Monoid`)",
     noun phrase!"commutative monoid" phrase!"commutative monoids" (sP fun m => and (app (const 171) m) (app (lift comm) m)) "(Mathlib `CommMonoid`)",
     noun phrase!"semigroup" phrase!"semigroups" (c 172) "(Mathlib `Semigroup`)",
+    noun phrase!"cancellative semigroup" phrase!"cancellative semigroups"
+      (sP fun s => and (app (const 172) s) (and (leftCancel s) (rightCancel s))) "`ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`)",
+    noun phrase!"cancellative monoid" phrase!"cancellative monoids"
+      (sP fun s => and (app (const 171) s) (and (leftCancel s) (rightCancel s))) "(Mathlib `CancelMonoid`)",
+    noun phrase!"commutative semigroup" phrase!"commutative semigroups"
+      (sP fun s => and (app (const 172) s) (app (lift comm) s)) "(Mathlib `CommSemigroup`)",
+    { sing := phrase!"idempotent", plural := phrase!"idempotents", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of", w!"in"], S, rel S E fun s e => and (app s e) (app2 (const 7) (app2 (const 3) e e) e)),
+      doc := "an element `e` with `e² = e` (Mathlib `IsIdempotentElem`)" },
+    { sing := phrase!"left identity", plural := phrase!"left identities", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of", w!"in"], S, rel S E fun s e => and (app s e) (allT E fun a => imp (app s a) (app2 (const 7) (app2 (const 3) e a) a))),
+      doc := "`ea = a` for every `a`" },
+    { sing := phrase!"right identity", plural := phrase!"right identities", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of", w!"in"], S, rel S E fun s e => and (app s e) (allT E fun a => imp (app s a) (app2 (const 7) (app2 (const 3) a e) a))),
+      doc := "`ae = a` for every `a`" },
     noun phrase!"finitely generated group" phrase!"finitely generated groups" (c 173) "(Mathlib `Group.FG`)",
     noun phrase!"finitely generated abelian group" phrase!"finitely generated abelian groups"
       (sP fun g => and (app (const 173) g) (app (lift comm) g)) "(Mathlib `AddGroup.FG`)",
@@ -492,6 +520,11 @@ def vocab : Vocab where
     adjS phrase!"countable" (c 22) "(Mathlib `Countable`)",
     adjS phrase!"trivial" (sP fun g => eq (cardOf g) (num 1)) "with one element",
     adjS phrase!"nontrivial" (sP fun g => not (eq (cardOf g) (num 1))) "with more than one element",
+    adjS phrase!"cancellative" (sP fun s => and (leftCancel s) (rightCancel s)) "`ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`)",
+    adjS phrase!"left cancellative" (sP leftCancel) "`ab = ac` implies `b = c` (Mathlib `IsLeftCancelMul`)",
+    adjS phrase!"right cancellative" (sP rightCancel) "`ba = ca` implies `b = c` (Mathlib `IsRightCancelMul`)",
+    { phrase := phrase!"idempotent", prenominal := true, ty := E,
+      pred := close (lamT E (fun _ => tt) fun e => app2 (const 7) (app2 (const 3) e e) e), doc := "`e² = e` (Mathlib `IsIdempotentElem`)" },
     adjS phrase!"Noetherian" (c 42) "every ideal is finitely generated (Mathlib `IsNoetherianRing`)",
     adjS phrase!"noetherian" (c 42) "(Mathlib `IsNoetherianRing`)",
     adjS phrase!"reduced" (c 46) "without nonzero nilpotent elements (Mathlib `IsReduced`)",
@@ -538,6 +571,18 @@ def vocab : Vocab where
       pred := close (lamT E (fun _ => tt) fun a => lt (num 0) (app (const 23) a)), doc := "(Mathlib `IsOfFinOrder`)" },
     { phrase := phrase!"of infinite order", prenominal := false, ty := E,
       pred := close (lamT E (fun _ => tt) fun a => eq (app (const 23) a) (num 0)), doc := "(Mathlib `IsOfFinOrder`)" },
+    postS phrase!"of prime order" (orderIs Numbers.isPrime) "finite, with a prime number of elements",
+    postS phrase!"of odd order" (orderIs fun n => not (isEvenB n)) "finite, with an odd number of elements",
+    postS phrase!"of even order" (orderIs isEvenB) "finite, with an even number of elements",
+    { phrase := phrase!"of prime order", prenominal := false, ty := E, pred := elOrderIs Numbers.isPrime, doc := "(Mathlib `orderOf`)" },
+    { phrase := phrase!"of odd order", prenominal := false, ty := E, pred := elOrderIs fun n => not (isEvenB n), doc := "(Mathlib `orderOf`)" },
+    { phrase := phrase!"of even order", prenominal := false, ty := E, pred := elOrderIs isEvenB, doc := "(Mathlib `orderOf`)" },
+    postS phrase!"of index $v$ in $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun h =>
+      eq (app2 (const 24) g h) n) "`[G : H] = n`; `of index $n$` after `subgroup of $G$` (Mathlib `Subgroup.index`)",
+    postS phrase!"of finite index in $v$" (close <| lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun h =>
+      lt (num 0) (app2 (const 24) g h)) "finitely many cosets (Mathlib `Subgroup.FiniteIndex`)",
+    postS phrase!"of infinite index in $v$" (close <| lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun h =>
+      eq (app2 (const 24) g h) (num 0)) "infinitely many cosets (Mathlib `Subgroup.index`)",
     postS phrase!"of characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g => eq (app (const 47) g) p) "(Mathlib `ringChar`)",
     postS phrase!"of positive characteristic" (sP fun g => lt (num 0) (app (const 47) g)) "(Mathlib `ringChar`)",
     postS phrase!"of positive characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g =>
@@ -663,6 +708,7 @@ def vocab : Vocab where
     ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
     ⟨S, .fn w!"char", 47, "`\\operatorname{char}(K)`, the characteristic", none⟩,
     ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
+    ⟨S, .fn w!"@bracket", 196, "`[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension", none⟩,
     ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,
     ⟨M, .fn w!"im", 164, "`\\operatorname{im} φ`, the image", none⟩,

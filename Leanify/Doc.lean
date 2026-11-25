@@ -539,6 +539,18 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       else if (v == w!"spans" || v == w!"generates") && afterMath && beforeMath then
         word w!"is" :: word w!"a" :: word (if v == w!"spans" then w!"spanning" else w!"generating") :: word w!"set" ::
           word w!"of" :: standardForms f there cond (some (word w!"of")) ts
+      -- `$G$ has order $n$`, `$g$ has finite order`, `$K$ has characteristic $p$`: the
+      -- modifiers `of order $n$`, `of finite order`, `of characteristic $p$`
+      else if (v == w!"has" || v == w!"have") && afterMath && (match ts with
+          | n :: m :: _ =>
+            let quantity (x : Option Codes) : Bool := match x with
+              | some x => [w!"order", w!"characteristic", w!"dimension", w!"index"].contains x
+              | none => false
+            (quantity (lw n) && m.tok == .mopen) ||
+              (((lw n).map fun x => [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains x).getD false &&
+                quantity (lw m))
+          | _ => false) then
+        word (if v == w!"has" then w!"is" else w!"are") :: word w!"of" :: standardForms f there cond (some (word w!"of")) ts
       else if (v == w!"converges" || v == w!"diverges") && afterMath && beforeEnd then
         word w!"is" :: word (if v == w!"converges" then w!"convergent" else w!"divergent") ::
           standardForms f there cond (some (word w!"convergent")) ts
@@ -941,13 +953,13 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
 the scope of `i` (2 for terms of the scope the predicate is stated in, 3 for terms of the
 scope outside its variable); `p` is a term of that scope or the predicate of an element
 stated where its variable is bound. -/
-def seqPred (k : Nat) (l h : Tm) (p : Option Tm) : Tm :=
+def seqPred (k : Nat) (l h : Tm) (p : Option Tm) (et : Ty := .real) : Tm :=
   let i := Tm.loc 0
   let range := Tm.and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
   let elem := match p with
     | some p => Tm.app (shift 2 0 p) (.app (.loc 1) i)
     | none => .tt
-  .lam (.fn .real .real) .tt (.all .real (.imp range elem))
+  .lam (.fn .real et) .tt (.all .real (.imp range elem))
 
 /-- The type and predicate of the domain of the variables `vs` of a binder: `domainOf`,
 or, for a sequence (`x_1,\ldots,x_n\in A`, `@seq lo hi A`), a real function whose terms
@@ -1767,7 +1779,19 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if pmAll.length ≤ k then do
         let (h, nms) ← headOf rEnd (pmAll.length > 0)
         pure (pmAll.length, h, nms)
-      else tryCatch (do let (h, nms) ← headOf (restAt k) (k > 0); pure (k, h, nms)) fun _ => tryK f (k + 1)
+      else tryCatch (do
+          let st1 ← get
+          let (h, nms) ← headOf (restAt k) (k > 0)
+          -- (a noun that is also a modifier, `idempotent`: before another noun, the modifier,
+          -- `an idempotent element`)
+          let nounNext := match h.2.2.2 with
+            | .w w :: _ => V.nouns.any fun n => n.sing.head? == some (.w w) || n.plural.head? == some (.w w)
+            | _ => false
+          if nounNext && k < pmAll.length then
+            let st2 ← get
+            set st1
+            tryCatch (tryK f (k + 1)) fun _ => do set st2; pure (k, h, nms)
+          else pure (k, h, nms)) fun _ => tryK f (k + 1)
   let (k, (ty, preds, var, r1), nms) ← tryK (pmAll.length + 1) 0
   let pmGroups := pmAll.take k
   -- (a modifier with variables, `on $v$ vertices`: its predicate of their values, which are
@@ -1836,7 +1860,23 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         else none)
       match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
       | some (m, r) => post f r ((← slotPred m cs) :: acc)
-      | none => pure (acc.reverse, cs)
+      | none =>
+        -- (`a subgroup of $G$ of index $2$`: a modifier that ends in `in $v$`, without it,
+        -- of the object the noun's complement names)
+        let rels : List ((Modifier × List Chunk) × List Chunk) := match complementOf np with
+          | some comp =>
+            if !(V.nouns.any fun n => n.arg.isSome && n.ty == ty) then [] else
+            V.mods.filterMap fun m => if m.prenominal || m.ty != ty then none else
+              match m.phrase.reverse with
+              | .v :: .w i :: front =>
+                if i != w!"in" || !Notation.hasSlots front.reverse && front.isEmpty then none else
+                (Notation.matchPrefix front.reverse cs []).map fun (_, r) =>
+                  ((m, cs.take (cs.length - r.length) ++ [.w w!"in", .m comp] ++ r), r)
+              | _ => none
+          | none => []
+        match ← theMeaning (fun (mc : Modifier × List Chunk) => mc.1.pred) (·.1.field) cs rels with
+        | some ((m, cs2), r) => post f r ((← slotPred m cs2) :: acc)
+        | none => pure (acc.reverse, cs)
   let (qms, r2) ← post 4 r1 []
   -- `a copula $C$ with maximal correlation $R=R(C)$`: the value of a function at the
   -- variable, named by the function's letter for the rest of the result. The words are
@@ -1927,19 +1967,27 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
 sequence `a`, each of whose terms `a_i`, for the integers `i` from the first index to the
 last, is as the noun phrase says of a single variable. -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
-  let seq : Option (List Chunk × Codes × List MTok × List MTok × MT × MT) := match np.reverse with
-    | .m ts :: rest => (Grammar.seqBound ts).bind fun (list, bound) =>
-        (Grammar.seqVars list).map fun (x, name, lo, hi) => (rest.reverse, x, name, bound, lo, hi)
-    | _ => none
+  -- (the sequence after the noun, or before its complement: `elements $x_1,\ldots,x_n$
+  -- of $R$`)
+  let seqAt (ts : List MTok) := (Grammar.seqBound ts).bind fun (list, bound) =>
+    (Grammar.seqVars list).map fun (x, name, lo, hi) => (x, name, bound, lo, hi)
+  let seq : Option (List Chunk × List Chunk × Codes × List MTok × List MTok × MT × MT) :=
+    (match np.reverse with
+      | .m ts :: rest => (seqAt ts).map fun (x, name, bound, lo, hi) => (rest.reverse, [], x, name, bound, lo, hi)
+      | _ => none) <|>
+    ((np.zipIdx.findSome? fun (c, i) => match c with
+        | .m ts => if i == 0 then none else (seqAt ts).map fun r => (i, r)
+        | _ => none).map fun (i, (x, name, bound, lo, hi)) => (np.take i, np.drop (i + 1), x, name, bound, lo, hi))
   match seq with
-  | some (pre, x, name, bound, lo, hi) => do
-    let b ← nounPhrase1 (pre ++ [.m (name ++ bound)]) outer
-    if b.ty != .real then fail E.unsupported
+  | some (pre, post, x, name, bound, lo, hi) => do
+    let b ← nounPhrase1 (pre ++ [.m (name ++ bound)] ++ post) outer
+    -- (numbers, or elements of a structure of the vocabulary: `elements $x_1,\ldots,x_n$ of $R$`)
+    if b.ty != .real && !Elab.isBase b.ty then fail E.unsupported
     let l ← closedBound lo outer
     let h ← closedBound hi outer
     modify fun st => { st with seqs := (x, lo, hi) :: st.seqs.filter (·.1 != x) }
     -- (the predicate is stated where the sequence is bound)
-    pure ⟨x, .fn .real .real, some (seqPred 3 l h b.pred)⟩
+    pure ⟨x, .fn .real b.ty, some (seqPred 3 l h b.pred b.ty)⟩
   | none => do
     let b ← nounPhrase1 np outer
     modify fun st => { st with seqs := st.seqs.filter (·.1 != b.name) }

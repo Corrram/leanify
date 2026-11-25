@@ -1885,7 +1885,7 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         if (lookupLocal sc n).isNone && (← lookupGlob n).isNone && (← get).vocab.methods.any (·.op == .fn n) then
           let x ← term f sc pf a1
           let y ← term f sc pf a2
-          if x.2 == y.2 && (← ownTy x.2) && (← method x.2 (.fn n)).isSome then
+          if x.2 == y.2 && (← method x.2 (.fn n)).isSome then
             return (← callMethod x.2 (.fn n) [x.1, y.1])
       -- `the kernel of $\varphi$` (a notion subject): the notion of the vocabulary with these
       -- words and arguments, the types of the arguments deciding between several
@@ -3262,12 +3262,13 @@ where
               return (.guard (.app (.prim .isNat) a) (.app (.loc j) a), et)
         -- `x_i` for a sequence `x` of the scope (`x_1,\ldots,x_n`): its term, defined for
         -- the integers `i` from the first index to the last
-        if let some (j, .fn .real .real) := lookupLocal sc key then
+        if let some (j, .fn .real et) := lookupLocal sc key then
+          if et == .real || isBase et then
           if let some (_, lo, hi) := (← get).seqs.find? (·.1 == key) then
             let a ← asReal (← term f sc none i)
             let l ← asReal (← term f sc none lo)
             let h ← asReal (← term f sc none hi)
-            return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), .real)
+            return (.guard (conjAll [.app (.prim .isInt) a, .le l a, .le a h]) (.app (.loc j) a), et)
         -- `U_i` for a sequence of points of a vocabulary's type (a sample, `\mathbb{E}_C[\ldots]`):
         -- its term at the natural number `i`
         if let some (j, .fn .real (.base bt)) := lookupLocal sc key then

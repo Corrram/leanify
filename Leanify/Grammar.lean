@@ -3702,7 +3702,9 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
         | _ => acc.reverse
     let body := bodyOf (r1.length + 1) r1 []
     if body.isEmpty then none
-    let hasMath := body.any fun (c : Chunk) => match c with | .m _ => true | _ => false
+    -- (`of finite order`: a phrase after the noun, as one with a formula)
+    let hasMath := body.any (fun (c : Chunk) => match c with | .m _ => true | _ => false) ||
+      (match body with | .w w :: _ => w == w!"of" | _ => false)
     -- (`finite and nonempty`: adjectives before the noun, without `and`)
     let body' := if hasMath then body else body.filter fun (c : Chunk) => match c with | .w w => w != w!"and" | _ => true
     let np : List Chunk := if hasMath then [.w noun, .m [.id v], .w w!"of", .m dts] ++ body
@@ -3880,7 +3882,7 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       -- (conditions after it, `with $φ$`, as for any noun)
       -- (and another phrase of the noun, `a vector space over $K$ of dimension $3$`)
       let post' := match rest' with
-        | .w w :: _ => if w == w!"with" || w == w!"such" || w == w!"of" then
+        | .w w :: _ => if w == w!"with" || w == w!"such" || w == w!"of" || w == w!"that" || w == w!"which" then
             rest'.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true) else []
         | _ => []
       some (.noun (lead ++ np ++ post'), rest'.drop post'.length)
