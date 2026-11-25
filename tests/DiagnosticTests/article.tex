@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={diagnostictests}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $P(s,c,p)$ for the positive predictive value for sensitivity $s$, specificity $c$ and prevalence $p$.
+We write $N(s,c,p)$ for the negative predictive value for sensitivity $s$, specificity $c$ and prevalence $p$.
+We write $A(s,c,p)$ for the accuracy for sensitivity $s$, specificity $c$ and prevalence $p$.
+We write $U(s,c)$ for the positive likelihood ratio for sensitivity $s$ and specificity $c$.
+We write $V(s,c)$ for the negative likelihood ratio for sensitivity $s$ and specificity $c$.
+We write $J(s,c)$ for the Youden index for sensitivity $s$ and specificity $c$.
+We write $O(o,l)$ for the post-test odds for the pre-test odds $o$ and the likelihood ratio $l$.
+We write $Q(a,b,c,d)$ for the odds ratio of the table with entries $a$, $b$, $c$ and $d$.
+We write $R(a,b,c,d)$ for the relative risk of the table with entries $a$, $b$, $c$ and $d$.
+We write $T(c,t)$ for the number needed to treat for the control event rate $c$ and the treatment event rate $t$.
+
+\section{A test}
+
+\begin{lemma}\label{test}
+$P(\frac{9}{10},\frac{9}{10},\frac{1}{10})=\frac12$, $N(\frac{9}{10},\frac{9}{10},\frac{1}{10})=\frac{81}{82}$ and $A(\frac{9}{10},\frac{9}{10},\frac{1}{10})=\frac{9}{10}$.
+\end{lemma}
+
+\begin{lemma}\label{ratios}
+$U(\frac{9}{10},\frac{9}{10})=9$, $V(\frac{9}{10},\frac{9}{10})=\frac19$ and $J(\frac{9}{10},\frac{9}{10})=\frac45$.
+\end{lemma}
+
+\begin{lemma}\label{bayes}
+Let $s$, $c$ and $p$ be real numbers with $0<s<1$, $0<c<1$ and $0<p<1$. Then $\frac{P(s,c,p)}{1-P(s,c,p)}=O(\frac{p}{1-p},U(s,c))$.
+\end{lemma}
+
+\section{Tables}
+
+\begin{lemma}\label{tables}
+$Q(10,20,5,40)=4$, $R(10,20,5,40)=3$ and $T(\frac12,\frac14)=4$.
+\end{lemma}
+
+\end{document}

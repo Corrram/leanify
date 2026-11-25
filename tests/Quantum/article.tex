@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={quantum}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $E(n,m,L,h)$ for the energy of the $n$th level of a particle of mass $m$ in a box of length $L$ with Planck constant $h$.
+We write $O(n,w,h)$ for the energy of the $n$th level of the harmonic oscillator with angular frequency $w$ and reduced Planck constant $h$.
+We write $H(n,R)$ for the energy of the $n$th level of the hydrogen atom with Rydberg energy $R$.
+We write $P(n,L,x)$ for the probability density of the $n$th state of a particle in a box of length $L$ at $x$.
+We write $\lambda(p,h)$ for the de Broglie wavelength for momentum $p$ with Planck constant $h$.
+We write $G(f,h)$ for the energy of a photon of frequency $f$ with Planck constant $h$.
+We write $W(n,m,R)$ for the wavelength of the hydrogen transition from level $n$ to level $m$ with Rydberg constant $R$.
+We write $C(t,l)$ for the Compton shift for the scattering angle $t$ with Compton wavelength $l$.
+
+\section{Levels}
+
+\begin{lemma}\label{box}
+Let $m$, $L$ and $h$ be positive real numbers. Then $E(2,m,L,h)=4E(1,m,L,h)$.
+\end{lemma}
+
+\begin{lemma}\label{oscillator}
+Let $w$ and $h$ be positive real numbers. Then $O(1,w,h)-O(0,w,h)=hw$.
+\end{lemma}
+
+\begin{lemma}\label{hydrogen}
+Let $R$ be a positive real number. Then $H(2,R)-H(1,R)=\frac34R$ and $W(2,1,R)=\frac{4}{3R}$.
+\end{lemma}
+
+\section{Values}
+
+\begin{lemma}\label{values}
+$\lambda(2,4)=2$, $G(3,2)=6$, $C(\pi,1)=2$, $C(0,1)=0$ and $P(1,1,\frac12)=2$.
+\end{lemma}
+
+\end{document}

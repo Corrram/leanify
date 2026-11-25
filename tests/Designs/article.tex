@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={designs}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $r(v,k,\lambda)$ for the replication number of a design with $v$ points, block size $k$ and index $\lambda$.
+We write $b(v,k,\lambda)$ for the number of blocks of a design with $v$ points, block size $k$ and index $\lambda$.
+We write $T(v)$ for the number of triples of a Steiner triple system of order $v$.
+We write $P(n)$ for the number of points of a projective plane of order $n$.
+We write $L(n)$ for the number of lines of a projective plane of order $n$.
+We write $A(n)$ for the number of points of an affine plane of order $n$.
+We write $B(n)$ for the number of lines of an affine plane of order $n$.
+
+\section{The Fano plane}
+
+\begin{lemma}\label{fano}
+$r(7,3,1)=3$, $b(7,3,1)=7$, $T(7)=7$, $P(2)=7$ and $L(2)=7$.
+\end{lemma}
+
+\begin{lemma}\label{affine}
+$A(3)=9$, $B(3)=12$ and $T(9)=12$.
+\end{lemma}
+
+\begin{lemma}\label{admissible}
+$7$ is admissible for Steiner triple systems and $9$ is admissible for Steiner triple systems.
+\end{lemma}
+
+\section{Counting}
+
+\begin{lemma}\label{count}
+Let $v$, $k$ and $\lambda$ be integers with $2\le k<v$ and $\lambda\ge1$. Then $k\,b(v,k,\lambda)=v\,r(v,k,\lambda)$.
+\end{lemma}
+
+\end{document}

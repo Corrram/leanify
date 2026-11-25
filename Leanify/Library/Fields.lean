@@ -102,6 +102,10 @@ import Leanify.Library.FloatingPoint
 import Leanify.Library.LatticePoints
 import Leanify.Library.CombinatorialGames
 import Leanify.Library.Kinetics
+import Leanify.Library.Fluids
+import Leanify.Library.Quantum
+import Leanify.Library.Designs
+import Leanify.Library.DiagnosticTests
 
 /-! # The fields of the vocabulary
 
@@ -221,7 +225,11 @@ def all : List (String × Vocab) := [
   ("floatingpoint", FloatingPoint.vocab),
   ("latticepoints", LatticePoints.vocab),
   ("combinatorialgames", CombinatorialGames.vocab),
-  ("kinetics", Kinetics.vocab)]
+  ("kinetics", Kinetics.vocab),
+  ("fluids", Fluids.vocab),
+  ("quantum", Quantum.vocab),
+  ("designs", Designs.vocab),
+  ("diagnostictests", DiagnosticTests.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -255,15 +263,15 @@ def bundles : List (String × List String) := [
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "triangles", "solids", "sphericalgeometry", "curves", "fractals"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent", "floatingpoint"]),
   ("stochastic", ["statistics", "finance", "utility", "economics", "games", "queues", "reliability", "actuarial", "inventory"]),
-  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes", "algorithms", "combinatorialgames"]),
+  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes", "algorithms", "combinatorialgames", "designs"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "analyticnumbertheory", "continuedfractions", "digits", "collatz", "cryptography", "diophantine", "latticepoints"]),
   -- the areas inside them
-  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics"]),
+  ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum"]),
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
   ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes", "populationgenetics"]),
   ("dependence", ["copulas"]),
-  ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "dependence"])]
+  ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "dependence"])]
 
 /-- The realms: the bundles that `math` names, each a branch of mathematics. -/
 def realms : List String := (bundles.lookup "math").getD []

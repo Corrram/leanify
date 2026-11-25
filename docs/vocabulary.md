@@ -360,7 +360,11 @@ Further fields cover other branches of mathematics:
 * `floatingpoint`: floating-point systems, errors and rounding;
 * `latticepoints`: counting lattice points, Pick's theorem;
 * `combinatorialgames`: Nim, Grundy values, Wythoff's game;
-* `kinetics`: reaction orders, half-lives, rates and pH.
+* `kinetics`: reaction orders, half-lives, rates and pH;
+* `fluids`: dimensionless numbers, pipe flow, drag;
+* `quantum`: energy levels and wavelengths of the solvable systems;
+* `designs`: block designs, Steiner triple systems, finite planes;
+* `diagnostictests`: predictive values, likelihood ratios, 2×2 tables.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

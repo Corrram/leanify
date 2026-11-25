@@ -121,3 +121,7 @@ article-reader/
 /tests/LatticePoints/article.leanify.*
 /tests/CombinatorialGames/article.leanify.*
 /tests/Kinetics/article.leanify.*
+/tests/Fluids/article.leanify.*
+/tests/Quantum/article.leanify.*
+/tests/Designs/article.leanify.*
+/tests/DiagnosticTests/article.leanify.*

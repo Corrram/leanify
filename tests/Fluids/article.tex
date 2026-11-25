@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={fluids}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $R(\rho,u,L,\mu)$ for the Reynolds number for density $\rho$, speed $u$, length $L$ and viscosity $\mu$.
+We write $F(u,L,g)$ for the Froude number for speed $u$, length $L$ and gravity $g$.
+We write $p(h,a,\rho,g)$ for the hydrostatic pressure at depth $h$ with surface pressure $a$, density $\rho$ and gravity $g$.
+We write $v(h,g)$ for the efflux speed from depth $h$ under gravity $g$.
+We write $Q(r,d,\mu,L)$ for the Poiseuille flow rate through a pipe of radius $r$ with pressure drop $d$, viscosity $\mu$ and length $L$.
+We write $D(\rho,u,c,A)$ for the drag force for density $\rho$, speed $u$, drag coefficient $c$ and area $A$.
+We write $S(r,a,b,\mu,g)$ for the Stokes terminal velocity of a sphere of radius $r$ and density $a$ in a fluid of density $b$ and viscosity $\mu$ under gravity $g$.
+We write $q(\rho,u)$ for the dynamic pressure for density $\rho$ and speed $u$.
+
+\section{Values}
+
+\begin{lemma}\label{values}
+$R(1000,2,1,1)=2000$, $F(2,1,4)=1$, $v(5,10)=10$ and $Q(1,8,1,1)=\pi$.
+\end{lemma}
+
+\begin{lemma}\label{forces}
+$D(2,3,1,1)=9$, $q(2,3)=9$ and $S(3,2,1,1,9)=18$.
+\end{lemma}
+
+\section{Bernoulli}
+
+\begin{lemma}\label{bernoulli}
+Let $a$ be a real number. Let $h$, $\rho$ and $g$ be positive real numbers. Then $p(h,a,\rho,g)=a+q(\rho,v(h,g))$.
+\end{lemma}
+
+\end{document}

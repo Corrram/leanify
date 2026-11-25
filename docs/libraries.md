@@ -59,7 +59,9 @@ math
 │   │   ├── relativity            Lorentz factor, rapidity, velocity addition, γmc²
 │   │   ├── circuits              resistors, RC charging, LC resonance, RLC impedance
 │   │   ├── thermodynamics        Carnot efficiency, ideal gases, cooling, Boltzmann factors
-│   │   └── kinetics              reaction orders, half-lives, Arrhenius, Michaelis–Menten, pH
+│   │   ├── kinetics              reaction orders, half-lives, Arrhenius, Michaelis–Menten, pH
+│   │   ├── fluids                Reynolds and Froude numbers, Poiseuille, drag, Stokes
+│   │   └── quantum               particle in a box, oscillator, hydrogen, de Broglie
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -117,6 +119,7 @@ math
 │   │   ├── timeseries            autocovariance, moving averages, differences, smoothing
 │   │   ├── testing               z- and t-statistics, p-values, quantiles, chi-squared
 │   │   ├── bayesian              conjugate posteriors, Bayes' formula
+│   │   ├── diagnostictests       predictive values, likelihood ratios, odds ratios
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
@@ -136,7 +139,8 @@ math
 │   ├── recurrences               progressions, Fibonacci and linear recurrences
 │   ├── codes                     binary words, Hamming distance, coding bounds
 │   ├── algorithms                comparisons of searching and sorting, Hanoi, master theorem
-│   └── combinatorialgames        nim-sums, Grundy values, Wythoff pairs
+│   ├── combinatorialgames        nim-sums, Grundy values, Wythoff pairs
+│   └── designs                   block designs, Steiner triple systems, finite planes
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
@@ -152,7 +156,7 @@ math
 ```
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
-`relativity`, `circuits`, `thermodynamics`, `kinetics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -248,6 +252,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`circuits`](glossary.md#circuits) | resistances in series and in parallel, dissipated power; the time constant and capacitor voltage of an RC circuit; energies stored in capacitances and inductances; the resonant frequency of an LC circuit; the impedance and quality factor of a series RLC circuit | |
 | [`thermodynamics`](glossary.md#thermodynamics) | the Carnot efficiency and refrigerator coefficient of performance; the pressure of an ideal gas; Newton's law of cooling; entropy changes of heating; black-body radiation; Boltzmann factors and the mean energy of a two-level system (constants of nature are arguments) | |
 | [`kinetics`](glossary.md#kinetics) | concentrations in reactions of order zero, one and two; half-lives and decay constants; the Arrhenius rate constant; the Michaelis–Menten rate; the pH | |
+| [`fluids`](glossary.md#fluids) | the Reynolds and Froude numbers; hydrostatic and dynamic pressure; Torricelli's efflux speed; the Poiseuille flow rate; the drag force; the Stokes terminal velocity | |
+| [`quantum`](glossary.md#quantum) | the levels of a particle in a box, a harmonic oscillator and the hydrogen atom; the probability density in a box; de Broglie wavelengths, photon energies, hydrogen transition wavelengths (Rydberg), the Compton shift | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -291,6 +297,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`timeseries`](glossary.md#timeseries) | the sample autocovariance and autocorrelation at a lag, moving averages, cumulative sums, difference sequences and seasonal differences, exponential smoothing; autoregressive sequences of order one and random walks | |
 | [`testing`](glossary.md#testing) | the z- and t-statistics of a sample for a mean, one- and two-sided p-values, standard normal quantiles, the margin of error at a confidence level, Pearson's chi-squared statistic | |
 | [`bayesian`](glossary.md#bayesian) | posterior mean, mode and parameters of a beta prior after binomial data, the posterior mean of a gamma prior after Poisson data, posterior mean and variance of a normal prior after normal data; Bayes' formula and the Bayes factor | |
+| [`diagnostictests`](glossary.md#diagnostictests) | positive and negative predictive values, accuracy, likelihood ratios and the Youden index of a test; post-test odds; the odds ratio and relative risk of a 2×2 table; the number needed to treat | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
@@ -320,6 +327,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`codes`](glossary.md#codes) | binary words of length `n`; the Hamming weight and distance of the first `n` letters, the volume of a Hamming ball; the sphere-packing, Singleton and Gilbert–Varshamov bounds; the rate of a code | |
 | [`algorithms`](glossary.md#algorithms) | worst-case comparisons of binary search, insertion sort and merge sort, the expected comparisons of quicksort, the sorting lower bound `⌈log₂ n!⌉`, maximum and minimum finding; the Tower of Hanoi; the critical exponent of the master theorem; perfect binary trees and minimal heights | |
 | [`combinatorialgames`](glossary.md#combinatorialgames) | the nim-sum of two and three heaps and the winning moves of Nim; the Grundy value of a subtraction game; the Wythoff pairs | |
+| [`designs`](glossary.md#designs) | orders admissible for Steiner triple systems; the replication number and number of blocks of a 2-design; the triples of a Steiner triple system; points and lines of projective and affine planes | |
 | **Number theory** (`numbertheory`) | | |
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |

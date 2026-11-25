@@ -781,3 +781,27 @@ globs = ["CombinatorialGames.+"]
 name = "Kinetics"
 srcDir = "tests"
 globs = ["Kinetics.+"]
+
+[[lean_lib]]
+# The field fluids: fluid mechanics.
+name = "Fluids"
+srcDir = "tests"
+globs = ["Fluids.+"]
+
+[[lean_lib]]
+# The field quantum: elementary quantum mechanics.
+name = "Quantum"
+srcDir = "tests"
+globs = ["Quantum.+"]
+
+[[lean_lib]]
+# The field designs: combinatorial designs.
+name = "Designs"
+srcDir = "tests"
+globs = ["Designs.+"]
+
+[[lean_lib]]
+# The field diagnostictests: diagnostic tests and 2x2 tables.
+name = "DiagnosticTests"
+srcDir = "tests"
+globs = ["DiagnosticTests.+"]
