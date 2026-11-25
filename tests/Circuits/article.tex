@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={circuits}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S(a,b)$ for the resistance of $a$ and $b$ in series.
+We write $P(a,b)$ for the resistance of $a$ and $b$ in parallel.
+We write $W(R,V)$ for the power dissipated by the resistance $R$ at the voltage $V$.
+We write $\tau(R,C)$ for the time constant of the RC circuit with resistance $R$ and capacitance $C$.
+We write $U(t,R,C,V)$ for the capacitor voltage at time $t$ in the RC circuit with resistance $R$, capacitance $C$ and source voltage $V$.
+We write $A(C,V)$ for the energy stored in the capacitance $C$ at the voltage $V$.
+We write $B(L,I)$ for the energy stored in the inductance $L$ with the current $I$.
+We write $f(L,C)$ for the resonant frequency of the LC circuit with inductance $L$ and capacitance $C$.
+We write $Z(R,L,C,w)$ for the impedance of the series RLC circuit with resistance $R$, inductance $L$ and capacitance $C$ at angular frequency $w$.
+We write $Q(R,L,C)$ for the quality factor of the series RLC circuit with resistance $R$, inductance $L$ and capacitance $C$.
+
+\section{Resistors}
+
+\begin{lemma}\label{values}
+$S(1,2)=3$, $P(2,2)=1$, $W(2,4)=8$, $A(2,3)=9$, $B(2,3)=9$ and $Q(1,4,1)=2$.
+\end{lemma}
+
+\section{Transients and resonance}
+
+\begin{lemma}\label{charging}
+Let $R$, $C$ and $V$ be positive real numbers. Then $U(\tau(R,C),R,C,V)=(1-e^{-1})V$.
+\end{lemma}
+
+\begin{lemma}\label{resonance}
+Let $L$ and $C$ be positive real numbers. Then $Z(0,L,C,\frac{1}{\sqrt{LC}})=0$ and $2\pi f(L,C)\sqrt{LC}=1$.
+\end{lemma}
+
+\end{document}

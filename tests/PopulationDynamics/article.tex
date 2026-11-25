@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={populationdynamics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $X(t,r,n)$ for the exponential population at time $t$ with growth rate $r$ and initial size $n$.
+We write $T_2(r)$ for the doubling time for the growth rate $r$.
+We write $N(t,r,K,n)$ for the logistic population at time $t$ with growth rate $r$, carrying capacity $K$ and initial size $n$.
+We write $Y(r,K)$ for the maximum sustainable yield for growth rate $r$ and carrying capacity $K$.
+We write $H(r,K,E)$ for the equilibrium of the logistic model with growth rate $r$, carrying capacity $K$ and harvesting effort $E$.
+We write $R(r,K,x)$ for the Ricker map with growth rate $r$ and carrying capacity $K$ at $x$.
+We write $B(r,K,x)$ for the Beverton-Holt map with growth rate $r$ and carrying capacity $K$ at $x$.
+We write $P(a,b,c,d)$ for the prey equilibrium of the Lotka-Volterra system with rates $a$, $b$, $c$ and $d$.
+We write $Q(a,b,c,d)$ for the predator equilibrium of the Lotka-Volterra system with rates $a$, $b$, $c$ and $d$.
+
+\section{Growth}
+
+\begin{lemma}\label{doubling}
+Let $r$ be a positive real number. Then $X(T_2(r),r,1)=2$.
+\end{lemma}
+
+\begin{lemma}\label{logistic}
+Let $r$, $K$ and $n$ be positive real numbers. Then $N(0,r,K,n)=n$.
+\end{lemma}
+
+\begin{lemma}\label{harvest}
+$Y(4,100)=100$ and $H(2,10,1)=5$.
+\end{lemma}
+
+\section{Maps and systems}
+
+\begin{lemma}\label{maps}
+Let $r$ and $K$ be positive real numbers. Then $R(r,K,K)=K$ and $B(r,K,K)=K$.
+\end{lemma}
+
+\begin{lemma}\label{lotka}
+$P(1,2,3,4)=\frac34$ and $Q(1,2,3,4)=\frac12$.
+\end{lemma}
+
+\end{document}

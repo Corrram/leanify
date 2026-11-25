@@ -51,11 +51,14 @@ math
 │   ├── functionsequences         pointwise and uniform convergence, equicontinuity
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
 │   ├── epidemics                 reproduction numbers, final sizes, the SIS model
+│   ├── populationdynamics        logistic growth, harvesting, Ricker, Lotka–Volterra
 │   ├── variations                actions, Euler–Lagrange equation, minimizers
 │   ├── physics
 │   │   ├── mechanics             projectiles, pendulums, oscillators, orbits
 │   │   ├── waves                 Doppler, harmonics, Snell's law, decibels, lenses
-│   │   └── relativity            Lorentz factor, rapidity, velocity addition, γmc²
+│   │   ├── relativity            Lorentz factor, rapidity, velocity addition, γmc²
+│   │   ├── circuits              resistors, RC charging, LC resonance, RLC impedance
+│   │   └── thermodynamics        Carnot efficiency, ideal gases, cooling, Boltzmann factors
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -82,6 +85,7 @@ math
 │   ├── planegeometry             lines, triangle centres, conics (with geometry)
 │   ├── triangles                 triangles by their sides, regular polygons
 │   ├── solids                    volumes and surface areas, balls in n dimensions
+│   ├── sphericalgeometry         central angles, Girard's theorem, caps, solid angles
 │   ├── curves                    curvature, length and area of plane and polar curves
 │   └── fractals                  similarity dimensions, Cantor, Koch, Sierpinski, Menger
 ├── numerics                      numerical mathematics
@@ -144,7 +148,7 @@ math
 ```
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
-`relativity`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`relativity`, `circuits`, `thermodynamics`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -232,10 +236,13 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`functionsequences`](glossary.md#functionsequences) | for a sequence of functions `f(n, x)`: pointwise and uniform convergence (on `[a,b]` or the line), uniformly Cauchy, uniformly bounded, equicontinuous, monotone in the index; the supremum distance to a limit, partial sums of a series of functions | |
 | [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
 | [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
+| [`populationdynamics`](glossary.md#populationdynamics) | exponential and logistic populations, doubling times, the maximum sustainable yield and the harvested equilibrium; the Ricker and Beverton–Holt maps; the prey and predator equilibria of the Lotka–Volterra system | |
 | [`variations`](glossary.md#variations) | for a Lagrangian `L(t, y, p)`: the action, solutions of the Euler–Lagrange equation, minimizers with the same endpoint values, the Hamiltonian; the arc-length functional and the Dirichlet energy; functions with given endpoint values | |
 | [`mechanics`](glossary.md#mechanics) | the range, maximal height and time of flight of a projectile; the period of a pendulum; the natural frequency, period and damping ratio of an oscillator; kinetic energy; the circular orbital speed, escape velocity and orbital period (Kepler's third law) for a gravitational parameter | |
 | [`waves`](glossary.md#waves) | the wavelength, Doppler and beat frequencies, the harmonics of a string and the wave speed on it; the angle of refraction (Snell's law), the critical and Brewster angles; levels in decibels; the focal length of a thin lens | |
 | [`relativity`](glossary.md#relativity) | the Lorentz factor, rapidity and redshift factor of a speed; the relativistic sum of velocities; dilated times and contracted lengths; relativistic energy and momentum, rest energy (the speed of light is an argument) | |
+| [`circuits`](glossary.md#circuits) | resistances in series and in parallel, dissipated power; the time constant and capacitor voltage of an RC circuit; energies stored in capacitances and inductances; the resonant frequency of an LC circuit; the impedance and quality factor of a series RLC circuit | |
+| [`thermodynamics`](glossary.md#thermodynamics) | the Carnot efficiency and refrigerator coefficient of performance; the pressure of an ideal gas; Newton's law of cooling; entropy changes of heating; black-body radiation; Boltzmann factors and the mean energy of a two-level system (constants of nature are arguments) | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -259,6 +266,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`planegeometry`](glossary.md#planegeometry) | the distance from a point to a line, feet of perpendiculars, reflections; circumcentre, incentre, orthocentre, circumradius and inradius of a triangle; ellipses, hyperbolas and parabolas by their foci, eccentricity | loads `geometry` |
 | [`triangles`](glossary.md#triangles) | for a triangle with sides `a`, `b`, `c`: the semiperimeter, the area (Heron), the angle opposite a side, the inradius and circumradius, altitudes, medians and angle bisectors; for a regular `n`-gon the interior angle, area, circumradius and apothem; the number of diagonals | |
 | [`solids`](glossary.md#solids) | the volume of the ball and the area of the sphere in `n` dimensions; volumes and surface areas of cylinders and cones; volumes of ellipsoids, tori, the regular tetrahedron, octahedron, dodecahedron and icosahedron and of the standard simplex | |
+| [`sphericalgeometry`](glossary.md#sphericalgeometry) | the central angle between two points given by latitude and longitude; chords; the spherical excess and the area of a spherical triangle (Girard); the area and volume of a spherical cap; the solid angle of a cone | |
 | [`curves`](glossary.md#curves) | the speed, signed curvature, length and signed area of a curve with coordinate functions `x`, `y`; regular and singular points; the curvature and radius of curvature of a graph; the area and length of a polar curve | |
 | [`fractals`](glossary.md#fractals) | the similarity dimension of a self-similar set (`N` pieces scaled by `r`, or two ratios by Moran's equation); the dimension, lengths and intervals of the Cantor set; the Koch curve and snowflake; the Sierpinski triangle; the Menger sponge | |
 | **Numerical mathematics** (`numerics`) | | |

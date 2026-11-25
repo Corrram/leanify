@@ -1,0 +1,32 @@
+tests/SphericalGeometry/article.tex:9:1: info: defines \@n0 (n0)
+tests/SphericalGeometry/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2}\Rightarrow (\forall y\in \mathbb{R},\ -(\frac{\pi}{2})\le y\land y\le \frac{\pi}{2}\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \exists t\in \mathbb{R},\ ((0\le t\land t\le \pi)\land \cos(t)=\sin(x)\,\sin(y)+\cos(x)\,\cos(y)\,\cos(z-s))\land (\forall a\in \mathbb{R},\ (0\le a\land a\le \pi)\land \cos(a)=\sin(x)\,\sin(y)+\cos(x)\,\cos(y)\,\cos(z-s)\Rightarrow a=t)))
+tests/SphericalGeometry/article.tex:10:1: info: defines \@n1 (n1)
+tests/SphericalGeometry/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0\le x\land x\le \pi\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (2=0))
+tests/SphericalGeometry/article.tex:11:1: info: defines \@n2 (n2)
+tests/SphericalGeometry/article.tex:12:1: info: defines \@n3 (n3)
+tests/SphericalGeometry/article.tex:13:1: info: defines \@n4 (n4)
+tests/SphericalGeometry/article.tex:14:1: info: defines \@n5 (n5)
+tests/SphericalGeometry/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land x\le 2\,y\Rightarrow \neg (3=0))
+tests/SphericalGeometry/article.tex:15:1: info: defines \Omega (Omega)
+tests/SphericalGeometry/article.tex:20:1: info: claim 0: \@n0(0,0,0,\frac{\pi}{2})=\frac{\pi}{2}
+tests/SphericalGeometry/article.tex:20:1: info: claim 0 is meaningful if: (((\neg (2=0)\land (-(\frac{\pi}{2})\le 0\Rightarrow \neg (2=0)))\land (-(\frac{\pi}{2})\le 0\land 0\le \frac{\pi}{2})\land (\neg (2=0)\land (-(\frac{\pi}{2})\le 0\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le 0\land 0\le \frac{\pi}{2})\land \neg (2=0))\land \neg (2=0)
+tests/SphericalGeometry/article.tex:24:70: info: claim 1: \forall x\in \mathbb{R},\ -(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2}\Rightarrow \@n0(x,x,0,0)=0
+tests/SphericalGeometry/article.tex:24:70: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ (\neg (2=0)\land (-(\frac{\pi}{2})\le x\Rightarrow \neg (2=0)))\land (-(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2}\Rightarrow (\neg (2=0)\land (-(\frac{\pi}{2})\le x\Rightarrow \neg (2=0)))\land (-(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2})\land (\neg (2=0)\land (-(\frac{\pi}{2})\le x\Rightarrow \neg (2=0)))\land -(\frac{\pi}{2})\le x\land x\le \frac{\pi}{2})
+tests/SphericalGeometry/article.tex:30:1: info: claim 2: \@n2(\frac{\pi}{2},\frac{\pi}{2},\frac{\pi}{2})=\frac{\pi}{2}
+tests/SphericalGeometry/article.tex:30:1: info: claim 2 is meaningful if: ((\neg (2=0)\land (0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi\Rightarrow \neg (2=0)\land \neg (2=0)))\land ((0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land \pi<\frac{\pi}{2}+(\frac{\pi}{2}+\frac{\pi}{2}))\land (\neg (2=0)\land (0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land (\neg (2=0)\land 0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land \neg (2=0))\land \neg (2=0))\land \neg (2=0)
+tests/SphericalGeometry/article.tex:30:1: info: claim 3: \@n3(\frac{\pi}{2},\frac{\pi}{2},\frac{\pi}{2},1)=\frac{\pi}{2}
+tests/SphericalGeometry/article.tex:30:1: info: claim 3 is meaningful if: (0<1\land (\neg (2=0)\land (0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi\Rightarrow \neg (2=0)\land \neg (2=0)))\land ((0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land \pi<\frac{\pi}{2}+(\frac{\pi}{2}+\frac{\pi}{2}))\land (\neg (2=0)\land (0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land (\neg (2=0)\land 0<\frac{\pi}{2}\land \frac{\pi}{2}<\pi)\land \neg (2=0))\land \neg (2=0))\land \neg (2=0)
+tests/SphericalGeometry/article.tex:34:36: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n4(2\,x,x)=4\,\pi\,{x}^{2}
+tests/SphericalGeometry/article.tex:34:36: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (0<x\land 2\,x\le 2\,x)\land 0\le 2\,x
+tests/SphericalGeometry/article.tex:34:36: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n5(2\,x,x)=\frac{4}{3}\,\pi\,{x}^{3}
+tests/SphericalGeometry/article.tex:34:36: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow ((0<x\land 2\,x\le 2\,x)\land 0\le 2\,x)\land \neg (3=0)
+tests/SphericalGeometry/article.tex:34:36: info: claim 6: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n1(\pi,x)=2\,x
+tests/SphericalGeometry/article.tex:34:36: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<x\land 0\le \pi\land \pi\le \pi
+tests/SphericalGeometry/article.tex:38:1: info: claim 7: \Omega(\pi)=4\,\pi
+tests/SphericalGeometry/article.tex:38:1: info: claim 7 is meaningful if: 0\le \pi\land \pi\le \pi
+tests/SphericalGeometry/article.tex:38:1: info: claim 8: \Omega(\frac{\pi}{2})=2\,\pi
+tests/SphericalGeometry/article.tex:38:1: info: claim 8 is meaningful if: \neg (2=0)\land 0\le \frac{\pi}{2}\land \frac{\pi}{2}\le \pi
+tests/SphericalGeometry/article.tex: 7 definitions, 9 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 7 compiled, 0 failed, 0 prose (of 7)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

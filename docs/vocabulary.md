@@ -352,7 +352,11 @@ Further fields cover other branches of mathematics:
 * `algorithms`: operation counts of searching and sorting, the master theorem;
 * `populationgenetics`: Hardy–Weinberg, selection, fixation, drift;
 * `waves`: Doppler, harmonics, refraction, decibels, lenses;
-* `relativity`: Lorentz factors, rapidities, relativistic energy.
+* `relativity`: Lorentz factors, rapidities, relativistic energy;
+* `populationdynamics`: logistic growth, harvesting, Ricker and Beverton–Holt maps, Lotka–Volterra;
+* `circuits`: resistors, capacitors and inductors;
+* `thermodynamics`: heat engines, ideal gases, Boltzmann factors;
+* `sphericalgeometry`: distances and areas on the sphere.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

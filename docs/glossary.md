@@ -32,11 +32,14 @@ except a notion whose meanings take arguments of different types, which the type
     * `functionsequences`
     * `odes`
     * `epidemics`
+    * `populationdynamics`
     * `variations`
     * `physics`
       * `mechanics`
       * `waves`
       * `relativity`
+      * `circuits`
+      * `thermodynamics`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -64,6 +67,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `planegeometry`
     * `triangles`
     * `solids`
+    * `sphericalgeometry`
     * `curves`
     * `fractals`
   * `numerics`
@@ -125,15 +129,15 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `waves`, `relativity`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `variations`, `mechanics`, `waves`, `relativity`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
-| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `curves`, `fractals` |
+| `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
 | `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine` |
-| `physics` | `mechanics`, `waves`, `relativity` | `mechanics`, `waves`, `relativity` |
+| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` |
@@ -2756,4 +2760,58 @@ except a notion whose meanings take arguments of different types, which the type
 | relativistic energy of the mass $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `γmc²` |
 | relativistic momentum of the mass $a$ at the speed $b$ with the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `γmv` |
 | rest energy of the mass $a$ with the speed of light $b$ | ℝ → ℝ → ℝ | `mc²` |
+
+## `populationdynamics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| exponential population at time $a$ with growth rate $b$ and initial size $c$ | ℝ → ℝ → ℝ → ℝ | `N₀ e^{rt}` |
+| doubling time for the growth rate $a$ | ℝ → ℝ | `log 2 / r` |
+| logistic population at time $a$ with growth rate $b$, carrying capacity $c$ and initial size $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `K N₀ e^{rt}/(K + N₀(e^{rt} - 1))`: the solution of `N' = rN(1 - N/K)`, `N(0) = N₀` |
+| maximum sustainable yield for growth rate $a$ and carrying capacity $b$ | ℝ → ℝ → ℝ | `rK/4`: the largest harvest `rN(1 - N/K)`, at `N = K/2` |
+| equilibrium of the logistic model with growth rate $a$, carrying capacity $b$ and harvesting effort $c$ | ℝ → ℝ → ℝ → ℝ | `K(1 - E/r)`: the positive equilibrium of `N' = rN(1 - N/K) - EN`, for `0 ≤ E < r` |
+| ricker map with growth rate $a$ and carrying capacity $b$ at $c$ | ℝ → ℝ → ℝ → ℝ | `N e^{r(1 - N/K)}` |
+| beverton-holt map with growth rate $a$ and carrying capacity $b$ at $c$ | ℝ → ℝ → ℝ → ℝ | `RN/(1 + (R-1)N/K)` |
+| prey equilibrium of the lotka-volterra system with rates $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `γ/δ` for `x' = αx - βxy`, `y' = δxy - γy` with the rates `α`, `β`, `γ`, `δ` |
+| predator equilibrium of the lotka-volterra system with rates $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `α/β` for `x' = αx - βxy`, `y' = δxy - γy` with the rates `α`, `β`, `γ`, `δ` |
+
+## `circuits`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| resistance of $a$ and $b$ in series | ℝ → ℝ → ℝ | `R₁ + R₂` |
+| resistance of $a$ and $b$ in parallel | ℝ → ℝ → ℝ | `R₁R₂/(R₁ + R₂)` |
+| power dissipated by the resistance $a$ at the voltage $b$ | ℝ → ℝ → ℝ | `V²/R` |
+| time constant of the rc circuit with resistance $a$ and capacitance $b$ | ℝ → ℝ → ℝ | `RC` |
+| capacitor voltage at time $a$ in the rc circuit with resistance $b$, capacitance $c$ and source voltage $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `V(1 - e^{-t/(RC)})`, charging from `0` |
+| energy stored in the capacitance $a$ at the voltage $b$ | ℝ → ℝ → ℝ | `CV²/2` |
+| energy stored in the inductance $a$ with the current $b$ | ℝ → ℝ → ℝ | `LI²/2` |
+| resonant frequency of the lc circuit with inductance $a$ and capacitance $b$ | ℝ → ℝ → ℝ | `1/(2π√(LC))` |
+| impedance of the series rlc circuit with resistance $a$, inductance $b$ and capacitance $c$ at angular frequency $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `√(R² + (ωL - 1/(ωC))²)` |
+| quality factor of the series rlc circuit with resistance $a$, inductance $b$ and capacitance $c$ | ℝ → ℝ → ℝ → ℝ | `√(L/C)/R` |
+
+## `thermodynamics`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| carnot efficiency between the hot temperature $a$ and the cold temperature $b$ | ℝ → ℝ → ℝ | `1 - T_c/T_h`, for `0 < T_c < T_h` |
+| coefficient of performance of a carnot refrigerator between the hot temperature $a$ and the cold temperature $b$ | ℝ → ℝ → ℝ | `T_c/(T_h - T_c)` |
+| pressure of $a$ moles of an ideal gas at temperature $b$ in volume $c$ with gas constant $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `nRT/V` |
+| temperature at time $a$ by newton's law of cooling with ambient temperature $b$, initial temperature $c$ and rate $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `T_a + (T₀ - T_a)e^{-kt}` |
+| entropy change of heating the heat capacity $a$ from temperature $b$ to temperature $c$ | ℝ → ℝ → ℝ → ℝ | `C log(T₂/T₁)`, for a constant heat capacity `C` |
+| power radiated by a black body with area $a$ at temperature $b$ with stefan-boltzmann constant $c$ | ℝ → ℝ → ℝ → ℝ | `σAT⁴` |
+| boltzmann factor of the energy $a$ at temperature $b$ with boltzmann constant $c$ | ℝ → ℝ → ℝ → ℝ | `e^{-E/(kT)}` |
+| mean energy of a two-level system with gap $a$ at temperature $b$ with boltzmann constant $c$ | ℝ → ℝ → ℝ → ℝ | `ε/(e^{ε/(kT)} + 1)` |
+
+## `sphericalgeometry`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| central angle between the points with latitudes $a$ and $b$ and longitudes $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `arccos(sin φ₁ sin φ₂ + cos φ₁ cos φ₂ cos(λ₁ - λ₂))`: the `θ ∈ [0, π]` with that cosine, the great-circle distance on the unit sphere |
+| chord for the central angle $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `2R sin(θ/2)` |
+| spherical excess of the triangle with angles $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `α + β + γ - π`, for angles in `(0, π)` with `α + β + γ > π` |
+| area of the spherical triangle with angles $a$, $b$ and $c$ on a sphere of radius $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `R²(α + β + γ - π)` (Girard's theorem) |
+| area of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `2πRh`, for `0 ≤ h ≤ 2R` |
+| volume of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `πh²(3R - h)/3` |
+| solid angle of a cone with half-angle $a$ | ℝ → ℝ | `2π(1 - cos θ)` |
 

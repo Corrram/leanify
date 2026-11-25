@@ -1,0 +1,42 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={thermodynamics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\eta(h,c)$ for the Carnot efficiency between the hot temperature $h$ and the cold temperature $c$.
+We write $K(h,c)$ for the coefficient of performance of a Carnot refrigerator between the hot temperature $h$ and the cold temperature $c$.
+We write $p(n,T,V,R)$ for the pressure of $n$ moles of an ideal gas at temperature $T$ in volume $V$ with gas constant $R$.
+We write $\theta(t,a,b,k)$ for the temperature at time $t$ by Newton's law of cooling with ambient temperature $a$, initial temperature $b$ and rate $k$.
+We write $S(C,a,b)$ for the entropy change of heating the heat capacity $C$ from temperature $a$ to temperature $b$.
+We write $P(A,T,s)$ for the power radiated by a black body with area $A$ at temperature $T$ with Stefan-Boltzmann constant $s$.
+We write $w(E,T,k)$ for the Boltzmann factor of the energy $E$ at temperature $T$ with Boltzmann constant $k$.
+We write $U(g,T,k)$ for the mean energy of a two-level system with gap $g$ at temperature $T$ with Boltzmann constant $k$.
+
+\section{Heat engines}
+
+\begin{lemma}\label{carnot}
+$\eta(400,300)=\frac14$ and $K(400,300)=3$.
+\end{lemma}
+
+\begin{lemma}\label{performance}
+Let $h$ and $c$ be real numbers with $0<c<h$. Then $K(h,c)=\frac{1-\eta(h,c)}{\eta(h,c)}$.
+\end{lemma}
+
+\section{Gases and heat}
+
+\begin{lemma}\label{gas}
+$p(1,300,1,2)=600$, $P(1,1,1)=1$, $w(0,1,1)=1$ and $U(1,1,1)=\frac{1}{e+1}$.
+\end{lemma}
+
+\begin{lemma}\label{cooling}
+Let $a$ and $b$ be real numbers. Then $\theta(0,a,b,1)=b$.
+\end{lemma}
+
+\begin{lemma}\label{entropy}
+Let $C$, $a$ and $b$ be positive real numbers. Then $S(C,a,b)+S(C,b,a)=0$.
+\end{lemma}
+
+\end{document}

@@ -733,3 +733,27 @@ globs = ["Relativity.+"]
 name = "Conditions"
 srcDir = "tests"
 globs = ["Conditions.+"]
+
+[[lean_lib]]
+# The field populationdynamics: population models.
+name = "PopulationDynamics"
+srcDir = "tests"
+globs = ["PopulationDynamics.+"]
+
+[[lean_lib]]
+# The field circuits: electric circuits.
+name = "Circuits"
+srcDir = "tests"
+globs = ["Circuits.+"]
+
+[[lean_lib]]
+# The field thermodynamics: thermodynamics.
+name = "Thermodynamics"
+srcDir = "tests"
+globs = ["Thermodynamics.+"]
+
+[[lean_lib]]
+# The field sphericalgeometry: geometry on the sphere.
+name = "SphericalGeometry"
+srcDir = "tests"
+globs = ["SphericalGeometry.+"]

@@ -113,3 +113,7 @@ article-reader/
 /tests/Waves/article.leanify.*
 /tests/Relativity/article.leanify.*
 /tests/Conditions/article.leanify.*
+/tests/PopulationDynamics/article.leanify.*
+/tests/Circuits/article.leanify.*
+/tests/Thermodynamics/article.leanify.*
+/tests/SphericalGeometry/article.leanify.*

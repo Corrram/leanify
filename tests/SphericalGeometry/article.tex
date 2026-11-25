@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={sphericalgeometry}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $d(p,q,l,m)$ for the central angle between the points with latitudes $p$ and $q$ and longitudes $l$ and $m$.
+We write $c(t,R)$ for the chord for the central angle $t$ on a sphere of radius $R$.
+We write $E(a,b,g)$ for the spherical excess of the triangle with angles $a$, $b$ and $g$.
+We write $A(a,b,g,R)$ for the area of the spherical triangle with angles $a$, $b$ and $g$ on a sphere of radius $R$.
+We write $C(h,R)$ for the area of the spherical cap of height $h$ on a sphere of radius $R$.
+We write $V(h,R)$ for the volume of the spherical cap of height $h$ on a sphere of radius $R$.
+We write $\Omega(t)$ for the solid angle of a cone with half-angle $t$.
+
+\section{Distances}
+
+\begin{lemma}\label{quarter}
+$d(0,0,0,\frac{\pi}{2})=\frac{\pi}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{same}
+Let $p$ be a real number with $-\frac{\pi}{2}\le p\le\frac{\pi}{2}$. Then $d(p,p,0,0)=0$.
+\end{lemma}
+
+\section{Areas and volumes}
+
+\begin{lemma}\label{octant}
+$E(\frac{\pi}{2},\frac{\pi}{2},\frac{\pi}{2})=\frac{\pi}{2}$ and $A(\frac{\pi}{2},\frac{\pi}{2},\frac{\pi}{2},1)=\frac{\pi}{2}$.
+\end{lemma}
+
+\begin{lemma}\label{caps}
+Let $R$ be a positive real number. Then $C(2R,R)=4\pi R^2$, $V(2R,R)=\frac43\pi R^3$ and $c(\pi,R)=2R$.
+\end{lemma}
+
+\begin{lemma}\label{solid}
+$\Omega(\pi)=4\pi$ and $\Omega(\frac{\pi}{2})=2\pi$.
+\end{lemma}
+
+\end{document}
