@@ -83,7 +83,15 @@ def vocab : Vocab where
         allR fun x => imp (app b x) (app a x)) },
     { sing := phrase!"element", plural := phrase!"elements", ty := .real, pred := predR fun _ => tt,
       arg := some ([w!"of"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun x => app a x),
-      doc := "a number in a set of real numbers" }]
+      doc := "a number in a set of real numbers" },
+    { sing := phrase!"upper bound", plural := phrase!"upper bounds", ty := .real, pred := predR fun _ => tt,
+      arg := some ([w!"of", w!"for"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun u =>
+        allR fun x => imp (app a x) (le x u)),
+      doc := "a number `u` with `a ≤ u` for every `a` of the set (Mathlib `upperBounds`)" },
+    { sing := phrase!"lower bound", plural := phrase!"lower bounds", ty := .real, pred := predR fun _ => tt,
+      arg := some ([w!"of", w!"for"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun l =>
+        allR fun x => imp (app a x) (le l x)),
+      doc := "a number `l` with `l ≤ a` for every `a` of the set (Mathlib `lowerBounds`)" }]
   mods := [
     mod phrase!"open" true (.const 0) "(Mathlib `IsOpen`)",
     mod phrase!"closed" true (.const 1) "(Mathlib `IsClosed`)",

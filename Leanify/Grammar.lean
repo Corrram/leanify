@@ -1376,6 +1376,8 @@ inductive Clause where
   /-- The false statement (`This is a contradiction.`): under hypotheses, that they
   cannot all hold. -/
   | absurd
+  /-- `$\sup A$ exists`, `$A$ has a maximum`: the term is defined. -/
+  | exists_ (m : MT)
   /-- `the statement holds for $E$`, in the proof of a result: the statement of the
   result, with the variable of the induction replaced by `E` (the hypothesis of an
   induction, or its conclusion for `n+1`). -/
@@ -2023,6 +2025,7 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
   -- [the function|map|set] $X$ is ADJ, ADJ and ADJ
   match (do
       let cs := match kw [w!"the", w!"function"] cs <|> kw [w!"the", w!"map"] cs <|> kw [w!"the", w!"set"] cs <|>
+          kw [w!"the", w!"interval"] cs <|>
           kw [w!"the", w!"number"] cs <|> kw [w!"the", w!"class"] cs with
         | some r => r | none => cs
       let (m, r) ← formula cs
@@ -2316,6 +2319,21 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let fc := MT.app f [.id c]
       some (Clause.fact (.quant false [c] d (.quant true [x] d (.chain (MT.app f [.id x]) [(if isMax then Rel.le else Rel.ge, fc)]))), r4) :
       Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$\sup A$ exists`, `$A$ has a maximum` (a minimum, a supremum, an infimum): the term
+  -- is defined
+  match (do
+      let (ts, r) ← mathChunk cs
+      let m ← Math.parseFormula ts
+      match kw [w!"exists"] r with
+      | some r1 => some (Clause.exists_ m, r1)
+      | none =>
+        let r1 ← kw [w!"has", w!"a"] r
+        let (t, r2) ← (kw [w!"maximum"] r1).map (MT.extr true m, ·) <|> (kw [w!"minimum"] r1).map (MT.extr false m, ·) <|>
+          (kw [w!"supremum"] r1).map (MT.bound true m, ·) <|> (kw [w!"infimum"] r1).map (MT.bound false m, ·) <|>
+          (kw [w!"largest", w!"element"] r1).map (MT.extr true m, ·) <|> (kw [w!"smallest", w!"element"] r1).map (MT.extr false m, ·)
+        some (Clause.exists_ t, r2) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ has $n-1$ edges`: the modifier `with $n-1$ edges` of the vocabulary
@@ -3614,6 +3632,10 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
     | _ + 1, [], acc => acc.reverse
     | f + 1, c :: rest, acc =>
       match c, rest with
+      -- (`that is bounded above`: a relative clause after the noun, not its words)
+      | .w w, .w i :: _ =>
+        if (w == w!"that" || w == w!"which") && (i == w!"is" || i == w!"are") then acc.reverse
+        else if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
       | .w w, _ => if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
       | .p 45, _ => go f rest (c :: acc)
       | .m _, .p 45 :: _ => go f rest (c :: acc)
@@ -3645,8 +3667,15 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   -- have a formula)
   (do
     let (ts, r) ← mathChunk cs
-    let (vs, _) ← binderMath ts
-    let [v] := vs | none
+    -- (`$A\subseteq\mathbb{R}$ be finite and nonempty`: a subset of the domain)
+    let (v, i, noun) ← (do
+        let (vs, _) ← binderMath ts
+        let [v] := vs | none
+        let i ← ts.findIdx? (· == .cmd w!"in")
+        some (v, i, w!"element")) <|>
+      (match ts with
+        | .id v :: .cmd c :: _ :: _ => if c == w!"subseteq" || c == w!"subset" then some (v, 1, w!"subset") else none
+        | _ => none)
     let r1 ← kw [w!"be"] r
     -- (`$g\in G$ be an involution`: a notion of the article's, one word, of the elements)
     let r1 ← match kw [w!"a"] r1 <|> kw [w!"an"] r1 with
@@ -3656,17 +3685,28 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
             w!"set", w!"subset", w!"matrix", w!"polynomial", w!"sequence"].contains n then some (.w n :: rest) else none
       | some _ => none
       | none => if (kw [w!"the"] r1).isSome then none else some r1
-    let i ← ts.findIdx? (· == .cmd w!"in")
     let dts := ts.drop (i + 1)
-    let body := r1.takeWhile fun (c : Chunk) => match c with
-      | .w w => ![w!"and", w!"with", w!"such", w!"where", w!"then", w!"fixed", w!"arbitrary", w!"given"].contains w
-      | .m _ => true
-      | .p 45 => true
-      | _ => false
+    -- (`and` between adjectives: `finite and nonempty`; not before a new binder, `and let`)
+    let rec bodyOf : Nat → List Chunk → List Chunk → List Chunk
+      | 0, _, acc => acc.reverse
+      | f + 1, cs, acc => match cs with
+        | .w w :: rest@(.w n :: _) =>
+          if w == w!"and" then (if n == w!"let" || acc.isEmpty then acc.reverse else bodyOf f rest (.w w :: acc))
+          else if [w!"with", w!"such", w!"where", w!"then", w!"fixed", w!"arbitrary", w!"given"].contains w then acc.reverse
+          else bodyOf f rest (.w w :: acc)
+        | .w w :: rest =>
+          if [w!"and", w!"with", w!"such", w!"where", w!"then", w!"fixed", w!"arbitrary", w!"given"].contains w then acc.reverse
+          else bodyOf f rest (.w w :: acc)
+        | .m t :: rest => bodyOf f rest (.m t :: acc)
+        | .p 45 :: rest => bodyOf f rest (.p 45 :: acc)
+        | _ => acc.reverse
+    let body := bodyOf (r1.length + 1) r1 []
     if body.isEmpty then none
     let hasMath := body.any fun (c : Chunk) => match c with | .m _ => true | _ => false
-    let np : List Chunk := if hasMath then [.w w!"element", .m [.id v], .w w!"of", .m dts] ++ body
-      else body ++ [.w w!"element", .m [.id v], .w w!"of", .m dts]
+    -- (`finite and nonempty`: adjectives before the noun, without `and`)
+    let body' := if hasMath then body else body.filter fun (c : Chunk) => match c with | .w w => w != w!"and" | _ => true
+    let np : List Chunk := if hasMath then [.w noun, .m [.id v], .w w!"of", .m dts] ++ body
+      else body' ++ [.w noun, .m [.id v], .w w!"of", .m dts]
     some (.noun np, r1.drop body.length)) <|>
   -- `$\varphi,\psi:[0,1]\to\mathbb{R}$ be continuous functions`: each of them is such a
   -- function
@@ -3809,7 +3849,7 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     -- words and conditions after the formula (`with zero mean`), up to a comma or the end
     let rest := r1.drop (ws.length + tail.length)
     let opensPost := match rest with
-      | .w w :: _ => w == w!"with" || w == w!"of" || w == w!"such"
+      | .w w :: _ => w == w!"with" || w == w!"of" || w == w!"such" || w == w!"that" || w == w!"which"
       | _ => false
     let post := if tail.isEmpty && !opensPost then [] else
       rest.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)

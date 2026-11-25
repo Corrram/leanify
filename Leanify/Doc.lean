@@ -1815,11 +1815,22 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       -- states first
       else pure (Tm.glob i)
     | _ => fail E.type
+  -- (`a set of real numbers that is bounded above [and closed]`: the adjectives after
+  -- `that is`, as modifiers after the noun)
+  let (rel, r1) : Bool × List Chunk := match r1 with
+    | .w t :: .w i :: rest =>
+      if (t == w!"that" || t == w!"which") && (i == w!"is" || i == w!"are") then (true, rest) else (false, r1)
+    | _ => (false, r1)
   -- postnominal modifiers
   let rec post : Nat → List Chunk → List Tm → M (List Tm × List Chunk)
     | 0, cs, acc => pure (acc.reverse, cs)
     | f + 1, cs, acc => do
-      let cands := V.mods.filterMap (fun m => if !m.prenominal && m.ty == ty then
+      let cs := if rel && !acc.isEmpty then (match cs with
+          | .w a :: rest => if a == w!"and" then rest else cs
+          | .p 44 :: .w a :: rest => if a == w!"and" then rest else cs
+          | .p 44 :: rest => rest
+          | _ => cs) else cs
+      let cands := V.mods.filterMap (fun m => if (rel || !m.prenominal) && m.ty == ty then
           if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
           (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
         else none)
@@ -2394,6 +2405,7 @@ def clauseMaths : Clause → List MT
   | .scoped f _ _ e => f :: e.toList
   | .everyNP np b _ => b :: (mathsOf np).filterMap Math.parseFormula
   | .everyIs np _ _ => (mathsOf np).filterMap Math.parseFormula
+  | .exists_ m => [m]
   | .extremumOf _ v f _ a _ => v :: f.toList ++ a.toList
   | .increasing ms => ms
   | .monoFns fs d _ => d :: fs.map fun f => match f with
@@ -4237,6 +4249,10 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     Clause → M Tm
   | .fact f | .holds f => prop sc none f
   | .absurd => pure (.not .tt)
+  -- (the term is defined: `$\sup A$ exists`)
+  | .exists_ m => do
+    let (t, _) ← term F sc none m
+    pure (Tm.defined t)
   -- (`the statement holds for $E$` is given its clauses before it is read: `expandStmt`)
   | .stmtAt _ | .stmtBelow _ => fail E.unsupported
   | .inst v e hyps stmt => do

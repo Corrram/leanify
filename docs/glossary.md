@@ -802,6 +802,8 @@ except a notion whose meanings take arguments of different types, which the type
 | null set | ℝ → Prop | of Lebesgue measure zero |
 | subset | ℝ → Prop | a set of real numbers inside another |
 | element | ℝ | a number in a set of real numbers |
+| upper bound | ℝ | a number `u` with `a ≤ u` for every `a` of the set (Mathlib `upperBounds`) |
+| lower bound | ℝ | a number `l` with `l ≤ a` for every `a` of the set (Mathlib `lowerBounds`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
