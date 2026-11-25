@@ -145,3 +145,7 @@ article-reader/
 /tests/Crystallography/article.leanify.*
 /tests/MapProjections/article.leanify.*
 /tests/Music/article.leanify.*
+/tests/FixedIncome/article.leanify.*
+/tests/Options/article.leanify.*
+/tests/PoissonProcesses/article.leanify.*
+/tests/SurveySampling/article.leanify.*

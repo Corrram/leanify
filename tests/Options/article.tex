@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={options}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $C(K,S)$ for the payoff of a call with strike $K$ at the price $S$.
+We write $P(K,S)$ for the payoff of a put with strike $K$ at the price $S$.
+We write $F(S,T,r)$ for the forward price of a stock with price $S$ for maturity $T$ at the rate $r$.
+We write $p(c,S,K,T,r)$ for the put price by put-call parity for the call price $c$, the stock price $S$, the strike $K$, the maturity $T$ and the rate $r$.
+We write $q(r,u,d,t)$ for the risk-neutral probability of the binomial model with rate $r$, up factor $u$ and down factor $d$ over a step $t$.
+We write $U(s,t)$ for the Cox-Ross-Rubinstein up factor for the volatility $s$ over a step $t$.
+We write $B(a,b,x,r,t)$ for the one-step binomial price with values $a$ and $b$ for the risk-neutral probability $x$, the rate $r$ and the step $t$.
+
+\section{Payoffs}
+
+\begin{lemma}\label{difference}
+Let $K$ and $S$ be real numbers. Then $C(K,S)-P(K,S)=S-K$.
+\end{lemma}
+
+\begin{lemma}\label{payoffs}
+$C(100,120)=20$, $P(100,120)=0$, $F(100,1,0)=100$ and $p(10,100,100,1,0)=10$.
+\end{lemma}
+
+\section{The binomial model}
+
+\begin{lemma}\label{binomial}
+$q(0,2,\frac12,1)=\frac13$, $U(1,1)=e$ and $B(20,0,\frac13,0,1)=\frac{20}{3}$.
+\end{lemma}
+
+\end{document}

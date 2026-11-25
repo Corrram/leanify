@@ -384,7 +384,11 @@ Further fields cover other branches of mathematics:
 * `calendar`: leap years and weekdays;
 * `crystallography`: cubic lattices and Miller indices;
 * `mapprojections`: projections of the sphere;
-* `music`: pitch, intervals and tunings.
+* `music`: pitch, intervals and tunings;
+* `fixedincome`: bonds, durations, perpetuities, loans;
+* `options`: payoffs, parity and the binomial model;
+* `poissonprocesses`: arrivals and compound sums;
+* `surveysampling`: sample sizes and design effects.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

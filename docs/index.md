@@ -147,7 +147,7 @@ matrices, majorization, polynomials, quadratics and cubics, groups), `topology` 
 geometry, conics, triangles, solids, polyhedra, the sphere, map projections, surfaces, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods, floating-point arithmetic), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
-risk measures, stochastic orders, Markov chains, branching processes, random walks, extremes, population genetics, betting, copulas, samples, regression, time series, tests, Bayesian updating, diagnostic tests, machine learning, finance, expected utility, economics, macroeconomics, games, ratings, queues, reliability, actuarial mathematics, inventory models, voting, information channels, concentration bounds), `discrete` (combinatorics, permutations,
+risk measures, stochastic orders, Markov chains, branching processes, random walks, Poisson processes, extremes, population genetics, betting, copulas, samples, regression, time series, tests, Bayesian updating, diagnostic tests, machine learning, survey sampling, finance, bonds, options, expected utility, economics, macroeconomics, games, ratings, queues, reliability, actuarial mathematics, inventory models, voting, information channels, concentration bounds), `discrete` (combinatorics, permutations,
 graphs, graph counts, recurrences, codes, algorithms, combinatorial games, designs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
 distribution of primes, continued fractions, digits, the Collatz map,
 cryptography, Diophantine equations, lattice points, the calendar);

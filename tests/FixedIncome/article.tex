@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={fixedincome}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $P(F,c,y,n)$ for the price of a bond with face value $F$, coupon rate $c$ and yield $y$ maturing in $n$ periods.
+We write $D(F,c,y,n)$ for the Macaulay duration of a bond with face value $F$, coupon rate $c$ and yield $y$ maturing in $n$ periods.
+We write $M(F,c,y,n)$ for the modified duration of a bond with face value $F$, coupon rate $c$ and yield $y$ maturing in $n$ periods.
+We write $Y(F,c,p)$ for the current yield of a bond with face value $F$ and coupon rate $c$ at the price $p$.
+We write $V(x,r)$ for the value of a perpetuity paying $x$ at the rate $r$.
+We write $G(x,r,g)$ for the value of a growing perpetuity paying $x$ at the rate $r$ with growth $g$.
+We write $E(r,m)$ for the effective annual rate of the nominal rate $r$ compounded $m$ times a year.
+We write $A(L,n,r)$ for the payment of a loan of $L$ over $n$ periods at the rate $r$.
+We write $B(L,k,a,r)$ for the balance of a loan of $L$ after $k$ payments of $a$ at the rate $r$.
+
+\section{Bonds}
+
+\begin{lemma}\label{par}
+Let $F$ and $c$ be positive real numbers. Let $n$ be a positive integer. Then $P(F,c,c,n)=F$.
+\end{lemma}
+
+\begin{lemma}\label{zero}
+$P(100,0,1,1)=50$, $D(100,0,1,3)=3$, $M(100,0,1,3)=\frac32$ and $Y(100,\frac{1}{20},50)=\frac{1}{10}$.
+\end{lemma}
+
+\section{Perpetuities and loans}
+
+\begin{lemma}\label{perpetuities}
+$V(5,\frac{1}{10})=50$, $G(5,\frac{1}{10},\frac{1}{20})=100$, $E(\frac12,2)=\frac{9}{16}$ and $A(100,1,\frac{1}{10})=110$.
+\end{lemma}
+
+\begin{lemma}\label{amortization}
+Let $L$ and $r$ be positive real numbers. Let $n$ be a positive integer. Then $B(L,n,A(L,n,r),r)=0$.
+\end{lemma}
+
+\end{document}

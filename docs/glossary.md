@@ -107,6 +107,7 @@ except a notion whose meanings take arguments of different types, which the type
         * `markovchains`
         * `branching`
         * `randomwalks`
+        * `poissonprocesses`
         * `extremes`
         * `populationgenetics`
         * `betting`
@@ -117,9 +118,12 @@ except a notion whose meanings take arguments of different types, which the type
       * `bayesian`
       * `diagnostictests`
       * `learning`
+      * `surveysampling`
       * `dependence`
         * `copulas`
     * `finance`
+    * `fixedincome`
+    * `options`
     * `utility`
     * `economics`
     * `macroeconomics`
@@ -157,20 +161,20 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas`, `finance`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` |
+| `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
-| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting` |
+| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `copulas` |
 
 ## `core`
 
@@ -3223,4 +3227,55 @@ except a notion whose meanings take arguments of different types, which the type
 | syntonic comma | ℝ | `81/80` |
 | ratio of $a$ steps of the equal temperament with $b$ steps per octave | ℝ → ℝ → ℝ | `2^{k/n}` |
 | midi note number of the frequency $a$ | ℝ → ℝ | `69 + 12 log₂(f/440)` |
+
+## `fixedincome`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| price of a bond with face value $a$, coupon rate $b$ and yield $c$ maturing in $d$ periods | ℝ → ℝ → ℝ → ℝ → ℝ | `cF∑_{k=1}^{n}(1+y)^{-k} + F(1+y)^{-n}` |
+| macaulay duration of a bond with face value $a$, coupon rate $b$ and yield $c$ maturing in $d$ periods | ℝ → ℝ → ℝ → ℝ → ℝ | the present-value weighted mean time of the payments, in periods |
+| modified duration of a bond with face value $a$, coupon rate $b$ and yield $c$ maturing in $d$ periods | ℝ → ℝ → ℝ → ℝ → ℝ | `D/(1+y)` |
+| current yield of a bond with face value $a$ and coupon rate $b$ at the price $c$ | ℝ → ℝ → ℝ → ℝ | `cF/P` |
+| value of a perpetuity paying $a$ at the rate $b$ | ℝ → ℝ → ℝ | `C/r` |
+| value of a growing perpetuity paying $a$ at the rate $b$ with growth $c$ | ℝ → ℝ → ℝ → ℝ | `C/(r-g)` (Gordon) |
+| effective annual rate of the nominal rate $a$ compounded $b$ times a year | ℝ → ℝ → ℝ | `(1 + r/m)^m - 1` |
+| payment of a loan of $a$ over $b$ periods at the rate $c$ | ℝ → ℝ → ℝ → ℝ | `Lr/(1 - (1+r)^{-n})` |
+| balance of a loan of $a$ after $b$ payments of $c$ at the rate $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `L(1+r)^k - A((1+r)^k - 1)/r` |
+
+## `options`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| payoff of a call with strike $a$ at the price $b$ | ℝ → ℝ → ℝ | `max(S - K, 0)` |
+| payoff of a put with strike $a$ at the price $b$ | ℝ → ℝ → ℝ | `max(K - S, 0)` |
+| forward price of a stock with price $a$ for maturity $b$ at the rate $c$ | ℝ → ℝ → ℝ → ℝ | `Se^{rT}` |
+| put price by put-call parity for the call price $a$, the stock price $b$, the strike $c$, the maturity $d$ and the rate $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `C - S + Ke^{-rT}` |
+| risk-neutral probability of the binomial model with rate $a$, up factor $b$ and down factor $c$ over a step $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(e^{rΔt} - d)/(u - d)` |
+| cox-ross-rubinstein up factor for the volatility $a$ over a step $b$ | ℝ → ℝ → ℝ | `e^{σ√Δt}` |
+| one-step binomial price with values $a$ and $b$ for the risk-neutral probability $c$, the rate $d$ and the step $e$ | ℝ → ℝ → ℝ → ℝ → ℝ → ℝ | `e^{-rΔt}(q f_u + (1-q) f_d)` |
+
+## `poissonprocesses`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| probability of $a$ arrivals by time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | `e^{-λt}(λt)^k/k!` |
+| probability of an arrival by time $a$ at rate $b$ | ℝ → ℝ → ℝ | `1 - e^{-λt}` |
+| expected waiting time for the $a$ th arrival at rate $b$ | ℝ → ℝ → ℝ | `k/λ` (Erlang) |
+| probability that the $a$ th arrival comes after time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | `∑_{j=0}^{k-1} e^{-λt}(λt)^j/j!` |
+| rate of the process with rate $a$ thinned with probability $b$ | ℝ → ℝ → ℝ | `pλ`: each arrival kept with probability `p` |
+| mean of the compound poisson sum at time $a$ with rate $b$ and jump mean $c$ | ℝ → ℝ → ℝ → ℝ | `λtμ` |
+| variance of the compound poisson sum at time $a$ with rate $b$, jump mean $c$ and jump variance $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `λt(σ² + μ²)` |
+
+## `surveysampling`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| sample size for a proportion $a$ with margin of error $b$ at critical value $c$ | ℝ → ℝ → ℝ → ℝ | `z²p(1-p)/e²` |
+| sample size for a mean with standard deviation $a$ and margin of error $b$ at critical value $c$ | ℝ → ℝ → ℝ → ℝ | `(zσ/e)²` |
+| sample size $a$ corrected for a population of $b$ | ℝ → ℝ → ℝ | `n₀/(1 + (n₀ - 1)/N)` |
+| finite population correction for a sample of $a$ from a population of $b$ | ℝ → ℝ → ℝ | `√((N-n)/(N-1))` |
+| margin of error for a proportion $a$ with sample size $b$ at critical value $c$ | ℝ → ℝ → ℝ → ℝ | `z√(p(1-p)/n)` |
+| design effect of clusters of size $a$ with intraclass correlation $b$ | ℝ → ℝ → ℝ | `1 + (m-1)ρ` |
+| effective sample size of $a$ observations with design effect $b$ | ℝ → ℝ → ℝ | `n/deff` |
+| sampling fraction of a sample of $a$ from a population of $b$ | ℝ → ℝ → ℝ | `n/N` |
 

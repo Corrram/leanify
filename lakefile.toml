@@ -925,3 +925,27 @@ globs = ["MapProjections.+"]
 name = "Music"
 srcDir = "tests"
 globs = ["Music.+"]
+
+[[lean_lib]]
+# The field fixedincome: fixed income.
+name = "FixedIncome"
+srcDir = "tests"
+globs = ["FixedIncome.+"]
+
+[[lean_lib]]
+# The field options: options and forwards.
+name = "Options"
+srcDir = "tests"
+globs = ["Options.+"]
+
+[[lean_lib]]
+# The field poissonprocesses: Poisson processes.
+name = "PoissonProcesses"
+srcDir = "tests"
+globs = ["PoissonProcesses.+"]
+
+[[lean_lib]]
+# The field surveysampling: survey sampling.
+name = "SurveySampling"
+srcDir = "tests"
+globs = ["SurveySampling.+"]

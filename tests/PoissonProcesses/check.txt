@@ -1,0 +1,30 @@
+tests/PoissonProcesses/article.tex:9:1: info: defines \@n0 (n0)
+tests/PoissonProcesses/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (x!=0)))
+tests/PoissonProcesses/article.tex:10:1: info: defines \@n1 (n1)
+tests/PoissonProcesses/article.tex:11:1: info: defines \@n2 (n2)
+tests/PoissonProcesses/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0))
+tests/PoissonProcesses/article.tex:12:1: info: defines \@n3 (n3)
+tests/PoissonProcesses/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ \neg (s!=0))))
+tests/PoissonProcesses/article.tex:13:1: info: defines \@n4 (n4)
+tests/PoissonProcesses/article.tex:14:1: info: defines \@n5 (n5)
+tests/PoissonProcesses/article.tex:15:1: info: defines \@n6 (n6)
+tests/PoissonProcesses/article.tex:20:1: info: claim 0: \@n0(0,1,1)=\exp(-1)
+tests/PoissonProcesses/article.tex:20:1: info: claim 0 is meaningful if: 0<1\land 0\le 1\land 0\in \mathbb{Z}\land 0\le 0
+tests/PoissonProcesses/article.tex:20:1: info: claim 1: \@n1(0,1)=0
+tests/PoissonProcesses/article.tex:20:1: info: claim 1 is meaningful if: 0<1\land 0\le 0
+tests/PoissonProcesses/article.tex:20:1: info: claim 2: \@n2(3,2)=\frac{3}{2}
+tests/PoissonProcesses/article.tex:20:1: info: claim 2 is meaningful if: (0<2\land 3\in \mathbb{Z}\land 1\le 3)\land \neg (2=0)
+tests/PoissonProcesses/article.tex:20:1: info: claim 3: \@n4(4,\frac{1}{2})=2
+tests/PoissonProcesses/article.tex:20:1: info: claim 3 is meaningful if: \neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land 0<4\land \neg (2=0)
+tests/PoissonProcesses/article.tex:24:81: info: claim 4: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow \@n3(1,y,x)=1-\@n1(y,x))
+tests/PoissonProcesses/article.tex:24:81: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (0<x\land 0\le y\land 1\in \mathbb{Z}\land 1\le 1)\land 0<x\land 0\le y)
+tests/PoissonProcesses/article.tex:24:81: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow \@n0(0,y,x)=\@n3(1,y,x))
+tests/PoissonProcesses/article.tex:24:81: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow (0<x\land 0\le y\land 0\in \mathbb{Z}\land 0\le 0)\land 0<x\land 0\le y\land 1\in \mathbb{Z}\land 1\le 1)
+tests/PoissonProcesses/article.tex:30:1: info: claim 6: \@n5(2,3,1)=6
+tests/PoissonProcesses/article.tex:30:1: info: claim 6 is meaningful if: 0<3\land 0\le 2
+tests/PoissonProcesses/article.tex:30:1: info: claim 7: \@n6(1,1,1,1)=2
+tests/PoissonProcesses/article.tex:30:1: info: claim 7 is meaningful if: 0\le 1\land 0<1\land 0\le 1
+tests/PoissonProcesses/article.tex: 7 definitions, 8 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

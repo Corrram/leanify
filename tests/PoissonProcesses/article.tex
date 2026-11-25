@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={poissonprocesses}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $p(k,t,\lambda)$ for the probability of $k$ arrivals by time $t$ at rate $\lambda$.
+We write $a(t,\lambda)$ for the probability of an arrival by time $t$ at rate $\lambda$.
+We write $W(k,\lambda)$ for the expected waiting time for the $k$th arrival at rate $\lambda$.
+We write $S(k,t,\lambda)$ for the probability that the $k$th arrival comes after time $t$ at rate $\lambda$.
+We write $R(\lambda,x)$ for the rate of the process with rate $\lambda$ thinned with probability $x$.
+We write $M(t,\lambda,m)$ for the mean of the compound Poisson sum at time $t$ with rate $\lambda$ and jump mean $m$.
+We write $V(t,\lambda,m,v)$ for the variance of the compound Poisson sum at time $t$ with rate $\lambda$, jump mean $m$ and jump variance $v$.
+
+\section{Arrivals}
+
+\begin{lemma}\label{values}
+$p(0,1,1)=e^{-1}$, $a(0,1)=0$, $W(3,2)=\frac32$ and $R(4,\frac12)=2$.
+\end{lemma}
+
+\begin{lemma}\label{first}
+Let $t$ be a real number with $t\ge0$. Let $\lambda$ be a positive real number. Then $S(1,t,\lambda)=1-a(t,\lambda)$ and $p(0,t,\lambda)=S(1,t,\lambda)$.
+\end{lemma}
+
+\section{Compound sums}
+
+\begin{lemma}\label{compound}
+$M(2,3,1)=6$ and $V(1,1,1,1)=2$.
+\end{lemma}
+
+\end{document}

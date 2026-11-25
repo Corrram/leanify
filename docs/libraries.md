@@ -125,6 +125,7 @@ math
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
 │   │   │   ├── branching         Galton–Watson processes, extinction probabilities
 │   │   │   ├── randomwalks       gambler's ruin, Brownian hitting probabilities
+│   │   │   ├── poissonprocesses  arrivals, waiting times, thinning, compound sums
 │   │   │   ├── extremes          GEV and generalized Pareto laws, domains of attraction
 │   │   │   ├── populationgenetics Hardy–Weinberg, fixation probabilities, drift
 │   │   │   └── betting           implied probabilities, Kelly criterion, margins
@@ -135,10 +136,13 @@ math
 │   │   ├── bayesian              conjugate posteriors, Bayes' formula
 │   │   ├── diagnostictests       predictive values, likelihood ratios, odds ratios
 │   │   ├── learning              activations, losses, precision, recall, F1, MCC
+│   │   ├── surveysampling        sample sizes, finite population correction, design effects
 │   │   └── dependence
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   ├── finance                   interest, annuities, Black–Scholes
+│   ├── fixedincome               bond prices, durations, perpetuities, loans
+│   ├── options                   payoffs, forwards, put–call parity, binomial model
 │   ├── utility                   expected utility, risk aversion, certainty equivalents
 │   ├── economics                 elasticities, production functions, Lorenz curves, Gini
 │   ├── macroeconomics            Solow model, Fisher equation, multipliers, Taylor rule
@@ -333,6 +337,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`bayesian`](glossary.md#bayesian) | posterior mean, mode and parameters of a beta prior after binomial data, the posterior mean of a gamma prior after Poisson data, posterior mean and variance of a normal prior after normal data; Bayes' formula and the Bayes factor | |
 | [`diagnostictests`](glossary.md#diagnostictests) | positive and negative predictive values, accuracy, likelihood ratios and the Youden index of a test; post-test odds; the odds ratio and relative risk of a 2×2 table; the number needed to treat | |
 | [`learning`](glossary.md#learning) | the sigmoid, ReLU and softplus functions; binary cross-entropy and hinge loss; the precision, recall, F1 score, accuracy and Matthews correlation coefficient of confusion counts | |
+| [`surveysampling`](glossary.md#surveysampling) | sample sizes for proportions and means, with the finite population correction; margins of error; design effects and effective sample sizes; sampling fractions | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
 | [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
@@ -343,10 +348,13 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
 | [`randomwalks`](glossary.md#randomwalks) | gambler's ruin: the ruin probability and the expected duration, the probability of reaching the target; the distribution of the simple random walk after `n` steps; for Brownian motion the hitting probability, the expected exit time and the transition density | |
+| [`poissonprocesses`](glossary.md#poissonprocesses) | probabilities of arrival counts, waiting times for the `k`th arrival, thinned rates, the mean and variance of compound Poisson sums | |
 | [`extremes`](glossary.md#extremes) | the GEV, standard Gumbel, Fréchet and reversed Weibull distribution functions, return levels, the generalized Pareto distribution function and its mean excess; distribution functions in the maximum domain of attraction of the Gumbel, Fréchet or Weibull law, regularly varying tails | |
 | [`populationgenetics`](glossary.md#populationgenetics) | Hardy–Weinberg homozygote and heterozygote frequencies; allele frequencies after selection; Moran and Kimura fixation probabilities; heterozygosity under drift; the effective size of a population with males and females; mutation equilibria | |
 | [`betting`](glossary.md#betting) | implied probabilities and fair odds, odds in favour, the expected profit of a stake, the Kelly fraction and logarithmic growth, the bookmaker's margin | |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
+| [`fixedincome`](glossary.md#fixedincome) | the price, Macaulay and modified duration and current yield of a bond; perpetuities and growing perpetuities; effective annual rates; loan payments and balances | |
+| [`options`](glossary.md#options) | call and put payoffs, forward prices, put–call parity; the risk-neutral probability, Cox–Ross–Rubinstein factor and one-step price of the binomial model | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
 | [`economics`](glossary.md#economics) | elastic, inelastic and unit elastic functions, linearly homogeneous functions and constant returns to scale, Lorenz curves; elasticity and price elasticity, marginal and average values, Cobb–Douglas and CES functions, the Gini coefficient, consumer surplus | |
 | [`macroeconomics`](glossary.md#macroeconomics) | steady-state capital and output of the Solow model and its golden-rule saving rate; the Harrod–Domar growth rate; the real interest rate (Fisher); the compound annual growth rate; money and Keynesian multipliers; the Taylor rule | |
