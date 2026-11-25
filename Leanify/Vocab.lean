@@ -604,6 +604,8 @@ def phraseOf (s : String) : Except String Phrase := do
       | .punct 45 => go f ts (.w [45] :: acc)
       -- a comma (`with vertices $v$, $v$ and $v$`): the word `,`, which matches the comma
       | .punct 44 => go f ts (.w [44] :: acc)
+      -- a slash (`M/M/1 queue`): the word `/`, which matches the slash
+      | .punct 47 => go f ts (.w [47] :: acc)
       | _ => throw s!"unexpected token in phrase {s}"
   go (toks.length + 1) toks []
 

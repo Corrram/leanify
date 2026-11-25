@@ -58,6 +58,10 @@ import Leanify.Library.Curves
 import Leanify.Library.ContinuedFractions
 import Leanify.Library.Digits
 import Leanify.Library.Branching
+import Leanify.Library.Queues
+import Leanify.Library.Reliability
+import Leanify.Library.Codes
+import Leanify.Library.HigherFunctions
 
 /-! # The fields of the vocabulary
 
@@ -133,7 +137,11 @@ def all : List (String × Vocab) := [
   ("curves", Curves.vocab),
   ("continuedfractions", ContinuedFractions.vocab),
   ("digits", Digits.vocab),
-  ("branching", Branching.vocab)]
+  ("branching", Branching.vocab),
+  ("queues", Queues.vocab),
+  ("reliability", Reliability.vocab),
+  ("codes", Codes.vocab),
+  ("higherfunctions", HigherFunctions.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -165,11 +173,11 @@ def bundles : List (String × List String) := [
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
-  ("stochastic", ["statistics", "finance", "utility"]),
-  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences"]),
+  ("stochastic", ["statistics", "finance", "utility", "queues", "reliability"]),
+  ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
   -- the areas inside them
-  ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials"]),
+  ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices"]),
   ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains", "branching"]),
   ("dependence", ["copulas"]),

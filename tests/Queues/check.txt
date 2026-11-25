@@ -1,0 +1,34 @@
+tests/Queues/article.tex:9:1: info: defines \rho (rho)
+tests/Queues/article.tex:9:1: info: \rho is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0)
+tests/Queues/article.tex:10:1: info: defines \@n1 (n1)
+tests/Queues/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow \neg (y=0)\land \neg (y=0)\land \neg (1-\frac{x}{y}=0))
+tests/Queues/article.tex:11:1: info: defines \@n2 (n2)
+tests/Queues/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow (\neg (y=0)\land \neg (y=0))\land \neg (y=0)\land \neg (1-\frac{x}{y}=0))
+tests/Queues/article.tex:12:1: info: defines \@n3 (n3)
+tests/Queues/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow \neg (y-x=0))
+tests/Queues/article.tex:13:1: info: defines \@n4 (n4)
+tests/Queues/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<y\land y<z\Rightarrow \neg (z=0)\land \neg (z=0)))
+tests/Queues/article.tex:14:1: info: defines \@n5 (n5)
+tests/Queues/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (x!=0)\land (\forall z\in \mathbb{R},\ \neg (z!=0))\land \neg (\sum_{z=0}^{x}\frac{{y}^{z}}{z!}=0))
+tests/Queues/article.tex:15:1: info: defines \@n6 (n6)
+tests/Queues/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\land y<x\Rightarrow (\neg (x!=0)\land \neg (x-y=0))\land ((\forall z\in \mathbb{R},\ \neg (z!=0))\land \neg (x!=0)\land \neg (x-y=0))\land \neg (\sum_{z=0}^{x-1}\frac{{y}^{z}}{z!}+\frac{{y}^{x}}{x!}\,(\frac{x}{x-y})=0))
+tests/Queues/article.tex:20:1: info: claim 0: \rho(1,2)=\frac{1}{2}
+tests/Queues/article.tex:20:1: info: claim 0 is meaningful if: 0<2\land \neg (2=0)
+tests/Queues/article.tex:20:1: info: claim 1: \@n1(1,2)=1
+tests/Queues/article.tex:20:1: info: claim 1 is meaningful if: (0<1\land 1<2)\land 0<1
+tests/Queues/article.tex:20:1: info: claim 2: \@n2(1,2)=\frac{1}{2}
+tests/Queues/article.tex:20:1: info: claim 2 is meaningful if: ((0<1\land 1<2)\land 0<1)\land \neg (2=0)
+tests/Queues/article.tex:20:1: info: claim 3: \@n3(1,2)=1
+tests/Queues/article.tex:20:1: info: claim 3 is meaningful if: (0<1\land 1<2)\land 0<1
+tests/Queues/article.tex:20:1: info: claim 4: \@n4(0,1,2)=\frac{1}{2}
+tests/Queues/article.tex:20:1: info: claim 4 is meaningful if: ((0<1\land 1<2)\land 0<1\land 0\in \mathbb{Z}\land 0\le 0)\land \neg (2=0)
+tests/Queues/article.tex:24:57: info: claim 5: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow \@n1(x,y)=x\,\@n3(x,y)
+tests/Queues/article.tex:24:57: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<x\land x<y\Rightarrow ((0<x\land x<y)\land 0<x)\land (0<x\land x<y)\land 0<x
+tests/Queues/article.tex:30:1: info: claim 6: \@n5(1,1)=\frac{1}{2}
+tests/Queues/article.tex:30:1: info: claim 6 is meaningful if: (0<1\land 1\in \mathbb{Z}\land 1\le 1)\land \neg (2=0)
+tests/Queues/article.tex:30:1: info: claim 7: \@n6(2,1)=\frac{1}{3}
+tests/Queues/article.tex:30:1: info: claim 7 is meaningful if: ((0<1\land 1<2)\land 2\in \mathbb{Z}\land 1\le 2)\land \neg (3=0)
+tests/Queues/article.tex: 7 definitions, 8 claims
+  text: 7 compiled, 0 failed, 0 prose (of 7)
+  results: 4 compiled, 0 failed, 0 prose (of 4)
+  all: 11 compiled, 0 failed, 0 prose (of 11)

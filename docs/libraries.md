@@ -51,7 +51,8 @@ math
 │   │   ├── special               gamma, beta, zeta
 │   │   ├── hyperbolic, trigonometry
 │   │   ├── means                 the classical means of two numbers
-│   │   └── orthogonalpolynomials Legendre, Hermite, Laguerre, Chebyshev
+│   │   ├── orthogonalpolynomials Legendre, Hermite, Laguerre, Chebyshev
+│   │   └── higherfunctions       erf, Bessel, incomplete gamma, Lambert W, Li₂, Fresnel
 │   ├── complex                   the complex numbers
 │   └── torus                     functions on the torus
 ├── algebra
@@ -90,13 +91,16 @@ math
 │   │       └── copulas           copula families, Spearman's rho, Kendall's tau, Chatterjee's xi
 │   │                             (with markov: L², Markov operators; hilbert; unitsquare)
 │   ├── finance                   interest, annuities, Black–Scholes
-│   └── utility                   expected utility, risk aversion, certainty equivalents
+│   ├── utility                   expected utility, risk aversion, certainty equivalents
+│   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
+│   └── reliability               series, parallel, k-out-of-n systems; MTTF
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
 │   ├── permutations
 │   ├── graphs
-│   └── recurrences               progressions, Fibonacci and linear recurrences
+│   ├── recurrences               progressions, Fibonacci and linear recurrences
+│   └── codes                     binary words, Hamming distance, coding bounds
 └── numbertheory
     ├── numbers                   primes, divisibility, parity
     ├── arithmetic                arithmetic functions
@@ -193,6 +197,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
 | [`hyperbolic`](glossary.md#hyperbolic), [`trigonometry`](glossary.md#trigonometry) | `\sinh`, `\cosh`, `\tanh`; `\arcsin`, `\arccos`, `\arctan`, `\cot` with their domains | |
 | [`orthogonalpolynomials`](glossary.md#orthogonalpolynomials) | the Legendre, Hermite (physicists' and probabilists'), Laguerre and Chebyshev (first and second kind) polynomials of degree `n` | |
+| [`higherfunctions`](glossary.md#higherfunctions) | the error and complementary error functions, Bessel and modified Bessel functions of the first kind of integer order, the lower incomplete gamma function, the Lambert W function, the dilogarithm, the sine integral, the Fresnel integrals, Dawson's function | |
 | [`means`](glossary.md#means) | arithmetic, geometric, harmonic, quadratic, logarithmic, identric, power and Lehmer means of two numbers | |
 | [`complex`](glossary.md#complex) | the complex numbers, a type of its own with its arithmetic | |
 | [`torus`](glossary.md#torus) | smooth functions on `𝕋²`, `C^m` norms, directional derivatives | |
@@ -229,12 +234,15 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`branching`](glossary.md#branching) | offspring distributions on `ℕ₀` that are subcritical, critical or supercritical; the offspring mean and generating function, the expected size of generation `n`, the extinction probability | with `distributions` |
 | [`finance`](glossary.md#finance) | the standard normal distribution function; present and future values, continuous compounding, annuities; Black–Scholes prices of calls and puts, the delta | |
 | [`utility`](glossary.md#utility) | utility functions, risk averse, strictly risk averse, risk seeking and risk neutral, with decreasing absolute risk aversion; the Arrow–Pratt coefficients of absolute and relative risk aversion, exponential (CARA) and power (CRRA) utilities; expected value, expected utility, certainty equivalent and risk premium of a lottery with two outcomes | |
+| [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
+| [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |
 | [`permutations`](glossary.md#permutations) | permutations of `{1, …, n}`: sign, order, cycles, inversions | |
 | [`graphs`](glossary.md#graphs) | finite simple graphs: degrees, distances, chromatic and clique numbers, trees, complete and bipartite graphs | |
 | [`recurrences`](glossary.md#recurrences) | arithmetic and geometric progressions with their terms and sums, solutions of the Fibonacci recurrence and of linear recurrences of order two, characteristic roots | |
+| [`codes`](glossary.md#codes) | binary words of length `n`; the Hamming weight and distance of the first `n` letters, the volume of a Hamming ball; the sphere-packing, Singleton and Gilbert–Varshamov bounds; the rate of a code | |
 | **Number theory** (`numbertheory`) | | |
 | [`numbers`](glossary.md#numbers) | primes, divisibility, parity, the greatest common divisor | |
 | [`arithmetic`](glossary.md#arithmetic) | Euler's totient, the Möbius function, divisor functions, the prime-counting function, `p`-adic valuations | |

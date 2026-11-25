@@ -182,6 +182,7 @@ each form):
 | `If $a$ is a gradient descent sequence for $f$ with step size $h$ and $a(0)=4$, then $a(1)=2$ and $a(2)=1$.` | the hypothesis is one of every claim after `then` (`A and B`, `A, and B`), unless a later claim has an `if` of its own |
 | `Let $A$ be a symmetric $2\times2$ matrix.`, `an irreducible $2\times2$ stochastic matrix` | adjectives before a size: they are of the noun after it |
 | `Every Harshad number is a positive integer.`, `Every Liouville number is irrational.` | every object of the first noun is one of the second (or has the adjective); the sentence needs no variable |
+| `the mean number of customers in the M/M/1 queue with arrival rate $\lambda$ and service rate $\mu$` | a slash in a phrase of the vocabulary (`M/M/1`) is read as written |
 | `$f$ is bounded below`, `$f$ is bounded at infinity`, `$f$ is Lipschitz with respect to $d$`, `$U$ is open in $\tau$`, `$f$ is continuous from $\tau$ to $\sigma$`, `$f$ is Lipschitz in the second variable` | an adjective of the vocabulary that begins with a standard one (`bounded`, `Lipschitz`, `open`, `continuous`) and goes on |
 | `$f$ is smaller than $g$ in the hazard rate order` | a stochastic order (field `stochasticorders`), not a comparison of numbers |
 | `Let $f$ be a $3$ times differentiable function.`, `an $n$ times continuously differentiable function` | a number of times before the noun, the argument of a modifier (field `calculus`) |

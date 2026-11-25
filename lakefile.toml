@@ -511,3 +511,27 @@ globs = ["Digits.+"]
 name = "Branching"
 srcDir = "tests"
 globs = ["Branching.+"]
+
+[[lean_lib]]
+# The field queues: steady-state queueing formulas.
+name = "Queues"
+srcDir = "tests"
+globs = ["Queues.+"]
+
+[[lean_lib]]
+# The field reliability: reliability of systems.
+name = "Reliability"
+srcDir = "tests"
+globs = ["Reliability.+"]
+
+[[lean_lib]]
+# The field codes: binary words and coding bounds.
+name = "Codes"
+srcDir = "tests"
+globs = ["Codes.+"]
+
+[[lean_lib]]
+# The field higherfunctions: higher transcendental functions.
+name = "HigherFunctions"
+srcDir = "tests"
+globs = ["HigherFunctions.+"]

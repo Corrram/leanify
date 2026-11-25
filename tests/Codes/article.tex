@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={codes}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\mathrm{wt}_n(x)$ for the Hamming weight of the first $n$ terms of $x$.
+We write $d_n(x,y)$ for the Hamming distance between the first $n$ terms of $x$ and $y$.
+We write $V(r,n)$ for the volume of the Hamming ball of radius $r$ in dimension $n$.
+We write $H(n,d)$ for the sphere-packing bound for length $n$ and minimum distance $d$.
+We write $S(n,d)$ for the Singleton bound for length $n$ and minimum distance $d$.
+We write $G(n,d)$ for the Gilbert-Varshamov bound for length $n$ and minimum distance $d$.
+For every real number $i$, let $z(i)\coloneqq 0$.
+For every real number $i$, let $o(i)\coloneqq 1$.
+
+\section{Words}
+
+\begin{lemma}\label{words}
+$z$ is a binary word of length $3$, $o$ is a binary word of length $3$, and $\mathrm{wt}_3(o)=3$ and $d_3(z,o)=3$.
+\end{lemma}
+
+\begin{lemma}\label{triangle}
+Let $x,y:\mathbb{R}\to\mathbb{R}$ be functions and let $n$ be a positive integer. Then $d_n(x,y)\le\mathrm{wt}_n(x)+\mathrm{wt}_n(y)$.
+\end{lemma}
+
+\section{Bounds}
+
+\begin{lemma}\label{hamming}
+$V(1,7)=8$, $H(7,3)=16$, $S(7,3)=32$ and $G(7,3)=5$.
+\end{lemma}
+
+\end{document}

@@ -1,0 +1,26 @@
+tests/Reliability/article.tex:9:1: info: defines \@n0 (n0)
+tests/Reliability/article.tex:10:1: info: defines \@n1 (n1)
+tests/Reliability/article.tex:11:1: info: defines \@n2 (n2)
+tests/Reliability/article.tex:12:1: info: defines \beta (beta)
+tests/Reliability/article.tex:13:1: info: defines \@n4 (n4)
+tests/Reliability/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ \neg (z=0))\land \neg (y=0))
+tests/Reliability/article.tex:14:1: info: defines \@n5 (n5)
+tests/Reliability/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\Rightarrow \neg (x+y=0))
+tests/Reliability/article.tex:19:52: info: claim 0: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \@n2(x,x,y)=\@n0(x,y))
+tests/Reliability/article.tex:19:52: info: claim 0 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow ((0\le y\land y\le 1)\land ((x\in \mathbb{Z}\land 1\le x)\land x\le x)\land x\in \mathbb{Z}\land 1\le x)\land (0\le y\land y\le 1)\land x\in \mathbb{Z}\land 1\le x)
+tests/Reliability/article.tex:19:52: info: claim 1: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow \@n2(1,x,y)=\@n1(x,y))
+tests/Reliability/article.tex:19:52: info: claim 1 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow ((0\le y\land y\le 1)\land ((x\in \mathbb{Z}\land 1\le x)\land 1\le x)\land 1\in \mathbb{Z}\land 1\le 1)\land (0\le y\land y\le 1)\land x\in \mathbb{Z}\land 1\le x)
+tests/Reliability/article.tex:23:1: info: claim 2: \@n0(2,\frac{1}{2})=\frac{1}{4}
+tests/Reliability/article.tex:23:1: info: claim 2 is meaningful if: (\neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land (2\in \mathbb{Z}\land 1\le 2)\land \neg (2=0))\land \neg (4=0)
+tests/Reliability/article.tex:23:1: info: claim 3: \@n1(2,\frac{1}{2})=\frac{3}{4}
+tests/Reliability/article.tex:23:1: info: claim 3 is meaningful if: (\neg (2=0)\land (0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land (2\in \mathbb{Z}\land 1\le 2)\land \neg (2=0))\land \neg (4=0)
+tests/Reliability/article.tex:23:1: info: claim 4: \beta(\frac{1}{2})=\frac{1}{2}
+tests/Reliability/article.tex:23:1: info: claim 4 is meaningful if: (\neg (2=0)\land 0\le \frac{1}{2}\land \frac{1}{2}\le 1)\land \neg (2=0)
+tests/Reliability/article.tex:27:35: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow \@n4(2,x)=\frac{3}{2\,x}
+tests/Reliability/article.tex:27:35: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (0<x\land 2\in \mathbb{Z}\land 1\le 2)\land \neg (2\,x=0)
+tests/Reliability/article.tex:27:35: info: claim 6: \@n5(9,1)=\frac{9}{10}
+tests/Reliability/article.tex:27:35: info: claim 6 is meaningful if: (0\le 1\land 0<9)\land \neg (10=0)
+tests/Reliability/article.tex: 6 definitions, 7 claims
+  text: 6 compiled, 0 failed, 0 prose (of 6)
+  results: 5 compiled, 0 failed, 0 prose (of 5)
+  all: 11 compiled, 0 failed, 0 prose (of 11)

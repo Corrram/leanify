@@ -34,6 +34,7 @@ except a notion whose meanings take arguments of different types, which the type
       * `trigonometry`
       * `means`
       * `orthogonalpolynomials`
+      * `higherfunctions`
     * `complex`
     * `torus`
   * `algebra`
@@ -72,12 +73,15 @@ except a notion whose meanings take arguments of different types, which the type
         * `copulas`
     * `finance`
     * `utility`
+    * `queues`
+    * `reliability`
   * `discrete`
     * `combinatorics`
     * `counting`
     * `permutations`
     * `graphs`
     * `recurrences`
+    * `codes`
   * `numbertheory`
     * `numbers`
     * `arithmetic`
@@ -88,15 +92,15 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility` |
-| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences` |
+| `stochastic` | `statistics`, `finance`, `utility`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `samples`, `timeseries`, `testing`, `copulas`, `finance`, `utility`, `queues`, `reliability` |
+| `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
-| `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials` |
+| `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices` | `vectors`, `matrices` |
 | `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching` |
 | `dependence` | `copulas` | `copulas` |
@@ -2114,4 +2118,65 @@ except a notion whose meanings take arguments of different types, which the type
 | offspring generating function of $a$ | (ℝ → ℝ) → ℝ → ℝ | `s ↦ ∑_k p(k) s^k` (on `[-1,1]`, where the series converges) |
 | expected size of generation $a$ of the branching process with offspring distribution $b$ | ℝ → (ℝ → ℝ) → ℝ | `m^n`, from one ancestor |
 | extinction probability of the branching process with offspring distribution $a$ | (ℝ → ℝ) → ℝ | the least `q ∈ [0,1]` with `G(q) = q` for the offspring generating function `G` |
+
+## `queues`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| traffic intensity of the queue with arrival rate $a$ and service rate $b$ | ℝ → ℝ → ℝ | `ρ = λ/μ` |
+| mean number of customers in the m/m/1 queue with arrival rate $a$ and service rate $b$ | ℝ → ℝ → ℝ | `L = ρ/(1-ρ)` |
+| mean number of customers waiting in the m/m/1 queue with arrival rate $a$ and service rate $b$ | ℝ → ℝ → ℝ | `L_q = ρ²/(1-ρ)` |
+| mean sojourn time in the m/m/1 queue with arrival rate $a$ and service rate $b$ | ℝ → ℝ → ℝ | `W = 1/(μ-λ)` |
+| mean waiting time in the m/m/1 queue with arrival rate $a$ and service rate $b$ | ℝ → ℝ → ℝ | `W_q = ρ/(μ-λ)` |
+| probability of $a$ customers in the m/m/1 queue with arrival rate $b$ and service rate $c$ | ℝ → ℝ → ℝ → ℝ | `(1-ρ)ρ^n`, the stationary distribution |
+| erlang b formula for $a$ servers and offered load $b$ | ℝ → ℝ → ℝ | `(a^n/n!)/∑_{k=0}^{n} a^k/k!`, the blocking probability of M/M/n/n |
+| erlang c formula for $a$ servers and offered load $b$ | ℝ → ℝ → ℝ | the probability of waiting in M/M/n, for an offered load `a < n` |
+| pollaczek-khinchine mean waiting time for arrival rate $a$, mean service time $b$ and second moment $c$ | ℝ → ℝ → ℝ → ℝ | `λ E[S²]/(2(1 - λ E[S]))`, M/G/1 with `λ E[S] < 1` |
+
+## `reliability`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| reliability of the series system of $a$ components with reliability $b$ | ℝ → ℝ → ℝ | `p^n` |
+| reliability of the parallel system of $a$ components with reliability $b$ | ℝ → ℝ → ℝ | `1 - (1-p)^n` |
+| reliability of the $a$-out-of-$b$ system with component reliability $c$ | ℝ → ℝ → ℝ → ℝ | `∑_{i=k}^{n} \binom{n}{i} p^i (1-p)^{n-i}`: at least `k` of `n` independent components work |
+| reliability of the series system of the first $a$ components with reliabilities $b$ | ℝ → (ℝ → ℝ) → ℝ | `∏_{i=1}^{n} p_i` |
+| reliability of the parallel system of the first $a$ components with reliabilities $b$ | ℝ → (ℝ → ℝ) → ℝ | `1 - ∏_{i=1}^{n} (1-p_i)` |
+| reliability of the bridge system with component reliability $a$ | ℝ → ℝ | `2p² + 2p³ - 5p⁴ + 2p⁵`, five components |
+| reliability at time $a$ of a component with failure rate $b$ | ℝ → ℝ → ℝ | `e^{-λt}` |
+| mean time to failure of the series system of $a$ components with failure rate $b$ | ℝ → ℝ → ℝ | `1/(nλ)` |
+| mean time to failure of the parallel system of $a$ components with failure rate $b$ | ℝ → ℝ → ℝ | `(1/λ) ∑_{i=1}^{n} 1/i` |
+| availability with mean time to failure $a$ and mean time to repair $b$ | ℝ → ℝ → ℝ | `MTTF/(MTTF + MTTR)` |
+
+## `codes`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| binary word of length $x$ | ℝ → ℝ | `x_i ∈ {0,1}` for `1 ≤ i ≤ n` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| hamming weight of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `#{1 ≤ i ≤ n : x_i ≠ 0}` |
+| hamming distance between the first $a$ terms of $b$ and $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `#{1 ≤ i ≤ n : x_i ≠ y_i}` |
+| volume of the hamming ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `∑_{i=0}^{r} \binom{n}{i}`, binary words within distance `r` of one |
+| sphere-packing bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `⌊2^n / V(n, ⌊(d-1)/2⌋)⌋` (Hamming bound): no binary code is larger |
+| singleton bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `2^{n-d+1}`: no binary code is larger |
+| gilbert-varshamov bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `⌈2^n / V(n, d-1)⌉`: some binary code is at least as large |
+| rate of a code of length $a$ with $b$ codewords | ℝ → ℝ → ℝ | `log₂ M / n` |
+
+## `higherfunctions`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| error function at $a$ | ℝ → ℝ | `(2/√π) ∫_0^x e^{-t²} dt` |
+| complementary error function at $a$ | ℝ → ℝ | `1 - erf x` |
+| bessel function of the first kind of order $a$ | ℝ → ℝ → ℝ | `J_n(x) = ∑_{m≥0} (-1)^m (x/2)^{2m+n}/(m!(m+n)!)`, integer order `n ≥ 0` |
+| modified bessel function of the first kind of order $a$ | ℝ → ℝ → ℝ | `I_n(x) = ∑_{m≥0} (x/2)^{2m+n}/(m!(m+n)!)` |
+| lower incomplete gamma function at $a$ and $b$ | ℝ → ℝ → ℝ | `γ(s,x) = ∫_0^x t^{s-1} e^{-t} dt`, `s > 0`, `x ≥ 0` |
+| lambert w function at $a$ | ℝ → ℝ | the principal branch: the `w ≥ -1` with `w e^w = x`, for `x ≥ -1/e` |
+| dilogarithm of $a$ | ℝ → ℝ | `Li₂(x) = ∑_{k≥1} x^k/k²`, `\|x\| ≤ 1` |
+| sine integral of $a$ | ℝ → ℝ | `Si(x) = ∫_0^x (sin t)/t dt` |
+| fresnel sine integral of $a$ | ℝ → ℝ | `S(x) = ∫_0^x sin(t²) dt` |
+| fresnel cosine integral of $a$ | ℝ → ℝ | `C(x) = ∫_0^x cos(t²) dt` |
+| dawson function at $a$ | ℝ → ℝ | `D(x) = e^{-x²} ∫_0^x e^{t²} dt` |
 

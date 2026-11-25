@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={reliability}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S_n(p)$ for the reliability of the series system of $n$ components with reliability $p$.
+We write $P_n(p)$ for the reliability of the parallel system of $n$ components with reliability $p$.
+We write $R_{k,n}(p)$ for the reliability of the $k$-out-of-$n$ system with component reliability $p$.
+We write $\beta(p)$ for the reliability of the bridge system with component reliability $p$.
+We write $M_n(\lambda)$ for the mean time to failure of the parallel system of $n$ components with failure rate $\lambda$.
+We write $A(f,r)$ for the availability with mean time to failure $f$ and mean time to repair $r$.
+
+\section{Systems}
+
+\begin{lemma}\label{extremes}
+Let $n$ be a positive integer and let $p\in[0,1]$. Then $R_{n,n}(p)=S_n(p)$ and $R_{1,n}(p)=P_n(p)$.
+\end{lemma}
+
+\begin{lemma}\label{values}
+$S_2(\frac12)=\frac14$, $P_2(\frac12)=\frac34$ and $\beta(\frac12)=\frac12$.
+\end{lemma}
+
+\begin{lemma}\label{mttf}
+Let $\lambda>0$ be a real number. Then $M_2(\lambda)=\frac{3}{2\lambda}$, and $A(9,1)=\frac{9}{10}$.
+\end{lemma}
+
+\end{document}

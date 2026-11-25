@@ -76,3 +76,7 @@ article-reader/
 /tests/ContinuedFractions/article.leanify.*
 /tests/Digits/article.leanify.*
 /tests/Branching/article.leanify.*
+/tests/Queues/article.leanify.*
+/tests/Reliability/article.leanify.*
+/tests/Codes/article.leanify.*
+/tests/HigherFunctions/article.leanify.*

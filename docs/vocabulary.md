@@ -303,6 +303,14 @@ Further fields cover other branches of mathematics:
   repunits, Harshad and narcissistic numbers;
 * `branching`: Galton–Watson processes: subcritical, critical and supercritical offspring
   distributions, generation sizes, extinction probabilities.
+* `queues`: the M/M/1 queue (mean numbers, times, stationary probabilities), the Erlang B and
+  C formulas, the Pollaczek–Khinchine formula;
+* `reliability`: series, parallel, `k`-out-of-`n` and bridge systems, exponential
+  lifetimes, mean times to failure, availability;
+* `codes`: binary words, Hamming weight and distance, the sphere-packing, Singleton and
+  Gilbert–Varshamov bounds;
+* `higherfunctions`: error functions, Bessel functions, the lower incomplete gamma function,
+  Lambert W, the dilogarithm, the sine and Fresnel integrals, Dawson's function.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

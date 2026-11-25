@@ -389,6 +389,7 @@ def matchSlots : Phrase → List Chunk → List (List MTok) → Option (List (Li
   | [], [], acc => some acc.reverse
   | .w [45] :: ps, .p 45 :: cs, acc => matchSlots ps cs acc
   | .w [44] :: ps, .p 44 :: cs, acc => matchSlots ps cs acc
+  | .w [47] :: ps, .p 47 :: cs, acc => matchSlots ps cs acc
   | .w w :: ps, .p 45 :: .w v :: cs, acc => if v == w && ordinalSuffix w then matchSlots ps cs acc else none
   | .w w :: ps, .w v :: cs, acc => if v == w then matchSlots ps cs acc else none
   | .m t :: ps, .m u :: cs, acc => if t == u then matchSlots ps cs acc else none
@@ -404,6 +405,7 @@ def matchPrefix : Phrase → List Chunk → List (List MTok) → Option (List (L
   | [], cs, acc => some (acc.reverse, cs)
   | .w [45] :: ps, .p 45 :: cs, acc => matchPrefix ps cs acc
   | .w [44] :: ps, .p 44 :: cs, acc => matchPrefix ps cs acc
+  | .w [47] :: ps, .p 47 :: cs, acc => matchPrefix ps cs acc
   | .w w :: ps, .p 45 :: .w v :: cs, acc => if v == w && ordinalSuffix w then matchPrefix ps cs acc else none
   | .w w :: ps, .w v :: cs, acc => if v == w then matchPrefix ps cs acc else none
   | .m t :: ps, .m u :: cs, acc => if t == u then matchPrefix ps cs acc else none
@@ -572,6 +574,7 @@ def matchPhrase : Phrase → List Chunk → Option (Option (List MTok) × List C
   | [], cs => some (none, cs)
   | .w [45] :: ps, .p 45 :: cs => matchPhrase ps cs
   | .w [44] :: ps, .p 44 :: cs => matchPhrase ps cs
+  | .w [47] :: ps, .p 47 :: cs => matchPhrase ps cs
   -- (`$n$-th` for `$n$th`)
   | .w w :: ps, .p 45 :: .w v :: cs => if v == w && Notation.ordinalSuffix w then matchPhrase ps cs else none
   | .w w :: ps, .w v :: cs => if v == w then matchPhrase ps cs else none

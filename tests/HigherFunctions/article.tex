@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={higherfunctions}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\operatorname{erf}(x)$ for the error function at $x$.
+We write $\operatorname{erfc}(x)$ for the complementary error function at $x$.
+We write $J_n$ for the Bessel function of the first kind of order $n$.
+We write $I_n$ for the modified Bessel function of the first kind of order $n$.
+We write $\gamma(s,x)$ for the lower incomplete gamma function at $s$ and $x$.
+We write $W(x)$ for the Lambert W function at $x$.
+We write $\operatorname{Li}_2(x)$ for the dilogarithm of $x$.
+We write $\operatorname{Si}(x)$ for the sine integral of $x$.
+We write $D(x)$ for the Dawson function at $x$.
+
+\section{Values}
+
+\begin{lemma}\label{zero}
+$\operatorname{erf}(0)=0$, $\operatorname{erfc}(0)=1$, $J_0(0)=1$, $J_1(0)=0$, $I_0(0)=1$, $\operatorname{Si}(0)=0$ and $D(0)=0$.
+\end{lemma}
+
+\begin{lemma}\label{gamma}
+Let $x\ge0$ be a real number. Then $\gamma(1,x)=1-\exp(-x)$.
+\end{lemma}
+
+\begin{lemma}\label{lambert}
+$W(0)=0$ and $W(\exp(1))=1$.
+\end{lemma}
+
+\begin{lemma}\label{dilogarithm}
+$\operatorname{Li}_2(0)=0$ and $\operatorname{Li}_2(1)=\frac{\pi^2}{6}$.
+\end{lemma}
+
+\begin{lemma}\label{odd}
+Let $x$ be a real number. Then $\operatorname{erf}(-x)=-\operatorname{erf}(x)$.
+\end{lemma}
+
+\end{document}

@@ -395,7 +395,7 @@ where
 def phraseText (ws : List Codes) : String :=
   let parts := ws.map Codes.toString
   (parts.zip ((none :: parts.map some).take parts.length)).foldl (fun acc (w, prev) =>
-    if acc.isEmpty || w == "-" || prev == some "-" then acc ++ w else acc ++ " " ++ w) ""
+    if acc.isEmpty || w == "-" || prev == some "-" || w == "/" || prev == some "/" then acc ++ w else acc ++ " " ++ w) ""
 
 /-- The abbreviation among the names of a definition (`LTD`, beside
 `left-tail decreasing`): one short word, next to a name of several words. Words are

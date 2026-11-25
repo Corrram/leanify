@@ -146,8 +146,8 @@ matrices, polynomials, groups), `topology` (topologies and metrics on the line, 
 geometry, conics and curves), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods), `stochastic`
 (probability on the unit square, on the natural numbers and by densities, information,
-risk measures, stochastic orders, Markov chains, branching processes, copulas, samples, time series, tests, finance, expected utility), `discrete` (combinatorics, permutations,
-graphs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, continued
+risk measures, stochastic orders, Markov chains, branching processes, copulas, samples, time series, tests, finance, expected utility, queues, reliability), `discrete` (combinatorics, permutations,
+graphs, recurrences, codes) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, continued
 fractions, digits);
 `leanify fields article.tex` says which ones an article
 needs. Each one gives its words a meaning in mathlib, and some add proved
