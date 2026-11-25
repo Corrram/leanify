@@ -247,7 +247,8 @@ def table : List (Ty × Codes × Codes) := [
   (S ⟶ .prop, w!"\\operatorname{T_0}", w!"Leanify.Structures.T0"),                       -- 189
   (S ⟶ .prop, w!"\\operatorname{Perfect}", w!"Leanify.Structures.PerfectSpace'"),         -- 190
   (S ⟶ .real, w!"\\operatorname{diam}", w!"Leanify.Structures.diam"),                     -- 191
-  (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet")]            -- 192
+  (S ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedSet"),            -- 192
+  (S ⟶ .prop, w!"\\operatorname{RealVectorSpace}", w!"Leanify.Structures.RealVectorSpace")] -- 193
 
 /-! ## Helpers -/
 
@@ -370,6 +371,9 @@ def vocab : Vocab where
     -- modules and vector spaces
     nounOf phrase!"module" phrase!"modules" [w!"over"] (sP fun _ => tt) (relC 60) "a module over a ring (Mathlib `Module`)",
     nounOf phrase!"vector space" phrase!"vector spaces" [w!"over"] (sP fun _ => tt) (relC 61) "a vector space over a field (Mathlib `Module`)",
+    noun phrase!"vector space over $\\mathbb{R}$" phrase!"vector spaces over $\\mathbb{R}$" (c 193)
+      "a real vector space: its scalars are the real numbers (Mathlib `Module ℝ`)",
+    noun phrase!"real vector space" phrase!"real vector spaces" (c 193) "(Mathlib `Module ℝ`)",
     nounOf phrase!"subspace" phrase!"subspaces" [w!"of"] (c 62) (relC 63) "a linear subspace (Mathlib `Submodule`)",
     nounOf phrase!"linear subspace" phrase!"linear subspaces" [w!"of"] (c 62) (relC 63) "(Mathlib `Submodule`)",
     nounOf phrase!"vector subspace" phrase!"vector subspaces" [w!"of"] (c 62) (relC 63) "(Mathlib `Submodule`)",
@@ -537,6 +541,9 @@ def vocab : Vocab where
     postS phrase!"finite-dimensional over $v$" (close <| lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun v => app2 (const 65) k v) "(Mathlib `FiniteDimensional`)",
     postS phrase!"of dimension $v$ over $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun v =>
       and (app2 (const 65) k v) (eq (app2 (const 64) k v) n)) "(Mathlib `Module.finrank`)",
+    postS phrase!"of dimension $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun v =>
+      and (app (const 120) v) (eq (app (const 119) v) n)) "finite-dimensional over its scalars, with `n` vectors in a basis (Mathlib `Module.finrank`)",
+    postS phrase!"of finite dimension" (c 120) "(Mathlib `FiniteDimensional`)",
     mapM phrase!"injective" 155 "(Mathlib `Function.Injective`)",
     mapM phrase!"surjective" 156 "onto the codomain (Mathlib `Function.Surjective`)",
     mapM phrase!"bijective" 157 "(Mathlib `Function.Bijective`)",
@@ -640,6 +647,7 @@ def vocab : Vocab where
     ⟨M, .sig, 141, "`φ\\colon G\\to H` binds a map with domain `G` and codomain `H`", none⟩,
     ⟨M, .fn w!"\\circ", 142, "`ψ\\circ φ`", none⟩,
     ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
+    ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,
     ⟨M, .fn w!"im", 164, "`\\operatorname{im} φ`, the image", none⟩,
     ⟨M, .fn w!"rank", 165, "`\\operatorname{rank} T`", none⟩,

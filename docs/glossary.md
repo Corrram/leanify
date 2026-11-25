@@ -1054,6 +1054,8 @@ except a notion whose meanings take arguments of different types, which the type
 | principal ideal | $\mathrm{El}$ → Prop | (Mathlib `Submodule.IsPrincipal`) |
 | module | $\mathrm{El}$ → Prop | a module over a ring (Mathlib `Module`) |
 | vector space | $\mathrm{El}$ → Prop | a vector space over a field (Mathlib `Module`) |
+| vector space over $\mathbb{R}$ | $\mathrm{El}$ → Prop | a real vector space: its scalars are the real numbers (Mathlib `Module ℝ`) |
+| real vector space | $\mathrm{El}$ → Prop | (Mathlib `Module ℝ`) |
 | subspace | $\mathrm{El}$ → Prop | a linear subspace (Mathlib `Submodule`) |
 | linear subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
 | vector subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
@@ -1195,6 +1197,8 @@ except a notion whose meanings take arguments of different types, which the type
 | normal in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
 | finite-dimensional over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | of dimension $x$ over $a$ | $\mathrm{El}$ → Prop | (Mathlib `Module.finrank`) |
+| of dimension $x$ | $\mathrm{El}$ → Prop | finite-dimensional over its scalars, with `n` vectors in a basis (Mathlib `Module.finrank`) |
+| of finite dimension | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | injective | $\mathrm{Map}$ | (Mathlib `Function.Injective`) |
 | surjective | $\mathrm{Map}$ | onto the codomain (Mathlib `Function.Surjective`) |
 | bijective | $\mathrm{Map}$ | (Mathlib `Function.Bijective`) |
@@ -1290,6 +1294,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $f\colon A\to B$ | $\mathrm{Map}$ | `φ\colon G\to H` binds a map with domain `G` and codomain `H` |
 | $\circ$ | $\mathrm{Map}$ | `ψ\circ φ` |
 | $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
+| $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |
 | $\operatorname{im}$ | $\mathrm{Map}$ | `\operatorname{im} φ`, the image |
 | $\operatorname{rank}$ | $\mathrm{Map}$ | `\operatorname{rank} T` |

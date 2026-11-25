@@ -304,6 +304,11 @@ adjective of maps that is meant on a domain (`homomorphism`, `injective`) is abo
   infSeqs : List (Nat × Codes) := []
   /-- A noun of sequences was read in the current noun phrase. -/
   pendingSeq : Bool := false
+  /-- The objects bound by a noun with a complement (`Let $H$ be a subgroup of $G$`): the
+  environment, the name and the complement as written. An adjective of the object that the
+  vocabulary has relative to a structure (`normal in $G$`) is said relative to it (`$H$ is
+  normal`). -/
+  complements : List (Nat × Codes × List MTok) := []
   /-- The domains of the maps bound by a signature: the environment, the map's name and the
   domain as written (read again where a sentence says that the map is injective). -/
   sigDoms : List (Nat × Codes × MT × MT) := []
@@ -1854,7 +1859,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         -- type: the type's method of that name (`\exp`, `\Re` of a complex number)
         if (← get).vocab.methods.any (·.op == .fn n) && (← lookupGlob n).isNone then
           let at_ ← term f sc pf a
-          if (← ownTy at_.2) then
+          -- (also of a set of such elements, `\dim V` of a vector space)
+          if (← ownTy at_.2) || (← method at_.2 (.fn n)).isSome then
             if (← method at_.2 (.fn n)).isSome then return (← callMethod at_.2 (.fn n) [at_.1])
           let (h, hty, doms) ← head f sc (.id n)
           return (← applyAll h hty doms [at_])

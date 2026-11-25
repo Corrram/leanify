@@ -603,6 +603,10 @@ def RealScalars (S : El → Prop) : Prop :=
     (opsOf S).sops.add = (fun a b => e ((Classical.epsilon fun r => e r = a) + (Classical.epsilon fun r => e r = b))) ∧
     (opsOf S).sops.mul = (fun a b => e ((Classical.epsilon fun r => e r = a) * (Classical.epsilon fun r => e r = b)))
 
+/-- `V` is a real vector space: a vector space over a field whose elements are the real
+numbers, with their sum and product. -/
+def RealVectorSpace (V : El → Prop) : Prop := RealScalars V ∧ ∃ K, VectorSpaceOver K V
+
 /-- A normed real vector space on the points of `S` with its sum, zero, negation, norm,
 distance, open sets and real scalars. -/
 def NormedOn (S : El → Prop) (N : NormedAddCommGroup (carrier S)) (M : @NormedSpace ℝ (carrier S) _ N.toSeminormedAddCommGroup) : Prop :=

@@ -1422,7 +1422,7 @@ structure CClause where
 before a verb: a notion of the vocabulary with its arguments, as the formula
 `@the(WORDS, ARGS)` (each word a `text`, each argument a formula, in their order), which the
 elaboration looks up among the notions. -/
-def notionSubj (cs : List Chunk) : Option (MT × List Chunk) := do
+def notionSubj (cs : List Chunk) (obj : Bool := false) : Option (MT × List Chunk) := do
   let r ← kw [w!"the"] cs
   let verbs : List Codes := [w!"is", w!"are", w!"divides", w!"equals", w!"satisfies", w!"has", w!"lies",
     w!"belongs", w!"contains", w!"coincides", w!"does", w!"can", w!"exceeds", w!"agrees", w!"holds"]
@@ -1431,8 +1431,10 @@ def notionSubj (cs : List Chunk) : Option (MT × List Chunk) := do
     | .m _ => true
     | _ => false
   let rest := r.drop body.length
+  -- (an object, `… divides the order of $G$`, ends the sentence or a clause)
   match rest with
   | .w _ :: _ => pure ()
+  | [] | .p _ :: _ => if !obj then none
   | _ => none
   let items ← body.mapM fun (c : Chunk) => match c with
     | .w w => some (MT.text (lower w))
@@ -1442,7 +1444,7 @@ def notionSubj (cs : List Chunk) : Option (MT × List Chunk) := do
   if !(items.any fun m => match m with | .text _ => false | _ => true) then none
   -- (a preposition before the first argument: `the number $c$ is …` names its object)
   let before := items.takeWhile fun m => match m with | .text _ => true | _ => false
-  let preps : List Codes := [w!"of", w!"between", w!"from", w!"in", w!"on", w!"at", w!"over", w!"to", w!"with"]
+  let preps : List Codes := [w!"of", w!"between", w!"from", w!"in", w!"on", w!"at", w!"over", w!"to", w!"with", w!"by"]
   if !(before.any fun m => match m with | .text w => preps.contains w | _ => false) then none
   match items.head? with
   | some (.text _) => pure ()
@@ -1688,7 +1690,7 @@ def namedTerm (cs : List Chunk) : Option (MT × List Chunk) := do
         w!"before", w!"than", w!"as", w!"per", w!"via", w!"along", w!"across", w!"among", w!"within"]
       -- (or a notion of the vocabulary with its arguments: `the distance between $P$ and $Q$`)
       if ws.any (fun c => match c with | .w w => preps.contains (lower w) | _ => false) then
-        return ← notionSubj cs
+        return ← (notionSubj cs <|> notionSubj cs true)
       else some (r'.drop ws.length)
     | none => some cs
   formula r
@@ -1700,7 +1702,12 @@ def compareRel (cs : List Chunk) : Option (Rel × List Chunk) :=
   ((kw [w!"is", w!"at", w!"least"] cs).map (.ge, ·)) <|> ((kw [w!"is", w!"less", w!"than"] cs).map (.lt, ·)) <|>
   ((kw [w!"is", w!"smaller", w!"than"] cs).map (.lt, ·)) <|> ((kw [w!"is", w!"greater", w!"than"] cs).map (.gt, ·)) <|>
   ((kw [w!"is", w!"larger", w!"than"] cs).map (.gt, ·)) <|> ((kw [w!"is", w!"equal", w!"to"] cs).map (.eq, ·)) <|>
-  ((kw [w!"equals"] cs).map (.eq, ·))
+  ((kw [w!"equals"] cs).map (.eq, ·)) <|>
+  -- (`the identity of $G$ lies in $H$`, `the order of $H$ divides the order of $G$`)
+  ((kw [w!"lies", w!"in"] cs).map (.mem, ·)) <|> ((kw [w!"belongs", w!"to"] cs).map (.mem, ·)) <|>
+  ((kw [w!"does", w!"not", w!"lie", w!"in"] cs).map (.nmem, ·)) <|> ((kw [w!"does", w!"not", w!"belong", w!"to"] cs).map (.nmem, ·)) <|>
+  ((kw [w!"divides"] cs).map (.dvd, ·)) <|> ((kw [w!"does", w!"not", w!"divide"] cs).map (.ndvd, ·)) <|>
+  ((kw [w!"exceeds"] cs).map (.gt, ·))
 
 /-- `$A\to L$ as $v\to c$`, `$A\sim B$ as $v\to c$`, `$A=o(B)$ as $v\to c$`: the limit of `A`
 is `L`, of `A/B` is `1`, of `A/B` is `0` (a finite limit). -/
@@ -2277,7 +2284,33 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         let r3 ← kw [w!"in", w!"the"] r2
         (r3.take 6).find? fun (c : Chunk) => match c with | .w w => w == w!"order" | _ => false).isSome
       if isOrder then none
+      -- (membership, `lies in`, is the formula's `\in`)
+      if rel == Rel.mem || rel == Rel.nmem || rel == Rel.dvd || rel == Rel.ndvd then return (Clause.fact (.chain l [(rel, rr)]), r2)
       some (Clause.compare l rel rr, r2)) with
+  | some res => some res
+  | none =>
+  -- `$f$ has a [unique] fixed point`, `$G$ has an element of order $2$`: there is such an
+  -- object of the subject (the noun's complement `of $f$`, after the noun's words)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let r1 ← kw [w!"has"] r
+      let (unique, r2) ← (kw [w!"a", w!"unique"] r1).map (true, ·) <|> (kw [w!"exactly", w!"one"] r1).map (true, ·) <|>
+        (kw [w!"a"] r1).map (false, ·) <|> (kw [w!"an"] r1).map (false, ·)
+      let np := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | .m _ => true
+        | .p 45 => true
+        | _ => false
+      let rest := r2.drop np.length
+      let head := np.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"satisfying"].contains w
+        | .p 45 => true
+        | _ => false
+      if head.isEmpty || !(head.all fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false) then none
+      -- (`$x$ has a limit`: words about the formula's value, not a noun with a complement)
+      if (Math.parseFormula ts).isNone then none
+      some (Clause.existsNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ np.drop head.length) unique none, rest) :
+      Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- SUBJ is the only N with $φ$ (and $ψ$)* | SUBJ is <words> of OBJ
@@ -3655,7 +3688,7 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let tail := match r1.drop ws.length with
       | .m t :: _ =>
         match ws.getLast? with
-        | some (.w w) => if w == w!"on" || w == w!"in" then [Chunk.m t] else []
+        | some (.w w) => if w == w!"on" || w == w!"in" || w == w!"over" then [Chunk.m t] else []
         | _ => []
       | _ => []
     -- words and conditions after the formula (`with zero mean`), up to a comma or the end
@@ -3690,8 +3723,9 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     match argPhrase with
     | some (np, rest') =>
       -- (conditions after it, `with $φ$`, as for any noun)
+      -- (and another phrase of the noun, `a vector space over $K$ of dimension $3$`)
       let post' := match rest' with
-        | .w w :: _ => if w == w!"with" || w == w!"such" then
+        | .w w :: _ => if w == w!"with" || w == w!"such" || w == w!"of" then
             rest'.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true) else []
         | _ => []
       some (.noun (lead ++ np ++ post'), rest'.drop post'.length)
@@ -5003,6 +5037,17 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
   let _ ← kw [w!"is"] r1
   -- (the variable: the first formula, after the noun; a modifier may follow it, `every point
   -- $P$ lying on $\Gamma$ is …`)
+  -- (a formula after a preposition is a complement, `every subgroup of $G$ is normal`: the
+  -- object has a variable of its own)
+  let preps := [w!"of", w!"in", w!"on", w!"over", w!"to", w!"from", w!"with", w!"at", w!"by", w!"for"]
+  let firstAfterPrep : Bool := match np.findIdx? (fun c => match c with | .m _ => true | _ => false) with
+    | some (i + 1) => match np[i]? with
+      | some (.w w) => preps.contains w
+      | _ => false
+    | _ => false
+  if firstAfterPrep && (np.head?.map (fun c => match c with | .w _ => true | _ => false)).getD false then
+    let v : Codes := w!"ve"
+    return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1
   match np.find? (fun c => match c with | .m _ => true | _ => false) with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   | some (.m [.cmd v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.cmd v]] ++ r1)

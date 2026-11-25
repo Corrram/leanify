@@ -535,6 +535,10 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           | n :: m :: _ => lw n == some w!"to" && m.tok == .mopen
           | _ => false) then
         word w!"is" :: word w!"converging" :: standardForms f there cond (some (word w!"converging")) ts
+      -- `$B$ spans $V$`, `$S$ generates $G$`: a spanning or generating set of it
+      else if (v == w!"spans" || v == w!"generates") && afterMath && beforeMath then
+        word w!"is" :: word w!"a" :: word (if v == w!"spans" then w!"spanning" else w!"generating") :: word w!"set" ::
+          word w!"of" :: standardForms f there cond (some (word w!"of")) ts
       else if (v == w!"converges" || v == w!"diverges") && afterMath && beforeEnd then
         word w!"is" :: word (if v == w!"converges" then w!"convergent" else w!"divergent") ::
           standardForms f there cond (some (word w!"convergent")) ts
@@ -1304,6 +1308,21 @@ def numeralsIn (dt ct : Ty) (dp : Option Tm) : M (List Tm) := do
     (.app (.loc 1) (.app (.app (.const m.const) (shift 3 0 p)) (.loc 0)))
   pure [Tm.lam cty .tt (.all .real body)]
 
+/-- The complement of a noun phrase, `$G$` of `subgroup $H$ of $G$`: the formula after the
+first `of` that follows the noun's words. -/
+def complementOf (np : List Chunk) : Option (List MTok) :=
+  let rec go : List Chunk → Option (List MTok)
+    | .w w :: rest =>
+      match rest with
+      | .m ts :: _ => if w == w!"of" then some ts else go rest
+      | _ => go rest
+    | .m _ :: rest => go rest
+    | .p 45 :: rest => go rest
+    | _ => none
+  match np with
+  | .w _ :: _ => go np
+  | _ => none
+
 /-- A property of a sequence `t` of real numbers (a real function whose terms are its values
 at the natural numbers), said of its terms: `increasing` (Mathlib `Monotone`), `strictly
 increasing` (`StrictMono`), `decreasing`, `monotone`, `bounded`, `positive`, … -/
@@ -1333,8 +1352,14 @@ def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
 def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
   -- (`for every fixed real $c>0$`)
+  -- (not the word of a noun, `fixed point`)
+  let V0 := (← get).vocab
   let np := match np with
-    | .w w :: c :: rest => if w == w!"fixed" then c :: rest else np
+    | .w w :: c :: rest =>
+      let fixedNoun := match c with
+        | .w w' => V0.nouns.any fun n => (n.sing.take 2 == [.w w!"fixed", .w w'] || n.plural.take 2 == [.w w!"fixed", .w w'])
+        | _ => false
+      if w == w!"fixed" && !fixedNoun then c :: rest else np
     | _ => np
   -- `every $x\in[0,1]$` in a list of binders (`for every positive integer $n$ and every
   -- $x\in[0,1]$`): a variable and its domain
@@ -1410,6 +1435,12 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | some (.m v) =>
         let ws := np.dropLast
         let words (cs : List Chunk) : Bool := cs.all fun c => match c with | .w _ | .p 45 => true | _ => false
+        -- (a noun that ends in a fixed formula, `vector space over $\mathbb{R}$ $V$`: as it is)
+        let fixedNoun := V.nouns.any fun n => n.sing.any (fun i => match i with | .m _ => true | _ => false) &&
+          (List.range ws.length).any fun k => match matchPhrase n.sing (ws.drop k) with
+            | some (none, []) => true
+            | _ => false
+        if fixedNoun then np else
         -- (a modifier with formulas, `a vector in $\mathbb{R}^n$ $x$`: the shortest ending of
         -- the words that is one, after words only)
         if !words ws then
@@ -1790,6 +1821,11 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let (name, member) ← match var with
     | some ts => do let (v, d) ← varChunk ts outer; pure (v, d)
     | none => pure ([], none)
+  -- (an object of a noun with a complement: adjectives relative to it, `complements`)
+  if !name.isEmpty then
+    if let some ts := complementOf np then
+      if V.nouns.any (fun n => n.arg.isSome && n.ty == ty) then
+        modify fun st => { st with complements := (st.curEnv, name, ts) :: st.complements.filter (·.2.1 != name) }
   -- (a sequence: its terms are written `a_n`, also in its conditions)
   if (← get).pendingSeq && !name.isEmpty then
     modify fun st => { st with infSeqs := (st.curEnv, name) :: st.infSeqs.filter (·.2 != name), pendingSeq := false }
@@ -2256,7 +2292,8 @@ def clauseMaths : Clause → List MT
   | .fact f | .holds f => [f]
   | .deriv d _ c => [d, c]
   | .scoped f _ _ e => f :: e.toList
-  | .everyNP _ b _ => [b]
+  | .everyNP np b _ => b :: (mathsOf np).filterMap Math.parseFormula
+  | .everyIs np _ _ => (mathsOf np).filterMap Math.parseFormula
   | .extremumOf _ v f _ a _ => v :: f.toList ++ a.toList
   | .increasing ms => ms
   | .monoFns fs d _ => d :: fs.map fun f => match f with
@@ -3751,6 +3788,17 @@ def sigCodomain (sc : Scope) (k : Codes) : M (Option Tm) := do
   | some (_, _, _, c) => tryCatch (do let (_, p) ← domainOf false c sc; pure p) fun _ => pure none
   | none => pure none
 
+/-- The complement of the object `x` (`G` of `Let $H$ be a subgroup of $G$`), where the
+vocabulary has the adjective `a` relative to a structure (`normal in $G$`). -/
+def relativeAdj (sc : Scope) (x : Tm × Ty) (a : Codes) : M (Option (List MTok)) := do
+  let st ← get
+  let some k := (match x.1 with | .loc i => (sc[i]?).map (fun (p : Codes × Ty) => p.1) | _ => none) | return none
+  let some (_, _, ts) := st.complements.find? (fun ((e, n, _) : Nat × Codes × List MTok) => n == k && (e == st.curEnv || st.curProved == some e))
+    | return none
+  if st.vocab.mods.any (fun m => m.ty == x.2 && !m.prenominal && m.phrase == [PItem.w a, PItem.w w!"in", PItem.v]) then
+    return some ts
+  return none
+
 /-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
 (with its modifiers), or prenominal modifiers alone. The type of `x` decides between
 modifiers with the same words. -/
@@ -3834,6 +3882,16 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
         let cs := ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some).getD cs
         let cs := (kw [w!"and"] cs).getD cs
         if cs.isEmpty then pure acc.reverse else
+        -- (`$H$ is normal`, of a subgroup `H` of `G`: normal in `G`, where the vocabulary has the
+        -- adjective relative to a structure)
+        let cs : List Chunk ← match cs with
+          | .w a :: rest => do
+            let followed := match rest with | .w w :: _ => w == w!"in" | _ => false
+            let rel ← if followed then pure none else relativeAdj sc x a
+            match rel with
+            | some ts => pure ([Chunk.w a, Chunk.w w!"in", Chunk.m ts] ++ rest)
+            | none => pure cs
+          | _ => pure cs
         -- (a modifier that follows its noun is stated too: `$x$ is orthogonal to $y$`, `$S$ is of measure zero`)
         let cands := V.mods.filterMap fun m => if m.ty == x.2 then
             if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
@@ -3966,6 +4024,9 @@ def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List C
   let st0 ← get
   tryCatch (adjectiveTmCore sc t ty defDom a on defCod) fun e => do
     if on.isSome then throw e
+    -- (relative to the object's structure, `normal` of a subgroup: `vocabPredicate`)
+    if let [w] := a then
+      if (← relativeAdj sc (t, ty) w).isSome then throw e
     let m? := st0.vocab.mods.find? fun m => m.ty == ty && !Notation.hasSlots m.phrase && !m.onDomain &&
       m.phrase == a.map PItem.w
     match m? with
@@ -4352,7 +4413,9 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let b ← match ← pdeNoun np with
       | some [b] => pure b
       | _ => nounPhrase np sc
-    if b.name.isEmpty then fail E.unsupported
+    -- (`there is a fixed point of $f$`: an object without a name, about which nothing more
+    -- is said)
+    if b.name.isEmpty && cl.isSome then fail E.unsupported
     if let some cl := cl then checkDependence sc cl
     -- `P x`: the noun phrase and the clause about `x`, where `x` is bound (the
     -- predicate of a noun phrase is stated there)
@@ -4454,7 +4517,12 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         if e.code == E.noun || e.code == E.unsupported then fail E.prose e.detail else throw e
     pure (if neg then .not p else p)
   | .everyIs np names disj => do
-    let b ← nounPhrase np
+    -- (the noun's complement may be a variable of the scope: `every subgroup of $G$`)
+    let b ← nounPhrase np sc
+    -- (`every subgroup of $G$`: the object has no name, but the scope needs one)
+    let b := if b.name.isEmpty then { b with name := w!"\\everyobj" } else b
+    if let some ts := complementOf np then
+      modify fun st => { st with complements := (st.curEnv, b.name, ts) :: st.complements.filter (·.2.1 != b.name) }
     let st1 ← get
     -- (notions of the article; or adjectives and nouns of the vocabulary, `Every cyclic group
     -- $G$ is abelian`)
