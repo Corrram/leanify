@@ -179,7 +179,8 @@ def wOr : List Codes := [w!"lor", w!"vee"]
 def wAnd : List Codes := [w!"land", w!"wedge"]
 def wConnectives : List Codes := wIff ++ wImp ++ wOr ++ wAnd ++ [w!"neg", w!"lnot", w!"forall", w!"exists"]
 
-def wFonts : List Codes := [w!"mathcal", w!"mathbb", w!"mathbf", w!"mathrm", w!"operatorname", w!"mathit"]
+def wFonts : List Codes := [w!"mathcal", w!"mathbb", w!"mathbf", w!"mathrm", w!"operatorname", w!"mathit",
+  w!"mathsf", w!"mathfrak", w!"mathscr", w!"mathtt", w!"boldsymbol", w!"bm"]
 
 /-- Accents that make a new symbol (`\overline{\rho}` is not `\rho`). -/
 def decorations : List Codes := [w!"overline", w!"bar", w!"tilde", w!"underline", w!"check",

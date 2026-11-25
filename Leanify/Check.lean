@@ -15,9 +15,17 @@ namespace Leanify
 the reading of a version: reports and the PDF name it. -/
 def version : String := "0.9.0"
 
+/-- The text of a file. An article that is not UTF-8 (an older source in Latin-1) is read
+byte by byte, so that its formulas, which are ASCII, are read all the same. -/
+def readText (path : System.FilePath) : IO String := do
+  let b ← IO.FS.readBinFile path
+  match String.fromUTF8? b with
+  | some s => pure s
+  | none => pure (String.ofList (b.toList.map fun c => Char.ofNat c.toNat))
+
 /-- The file contents as lines of code points (CRLF normalized). -/
 def readLines (path : System.FilePath) : IO (List (List Nat)) := do
-  let s ← IO.FS.readFile path
+  let s ← readText path
   let s := s.replace "\r\n" "\n"
   let lines := s.splitOn "\n"
   let lines := if lines.getLast? == some "" then lines.dropLast else lines
@@ -87,7 +95,7 @@ def SourceFiles.push (s : SourceFiles) (l : List Char) (file : String) (n : Nat)
 /-- The lines of a file, numbered from 1 (CRLF normalized); of a file that is a
 document of its own, the lines of its body. -/
 def numberedLines (path : System.FilePath) (body : Bool) : IO (List (List Char × Nat)) := do
-  let s ← IO.FS.readFile path
+  let s ← readText path
   let lines := (s.replace "\r\n" "\n").splitOn "\n"
   let lines := if lines.getLast? == some "" then lines.dropLast else lines
   let ls := (lines.map String.toList).zipIdx.map fun (l, i) => (l, i + 1)
@@ -180,7 +188,7 @@ def structuralCmds : List String :=
   ["le", "leq", "ge", "geq", "in", "coloneqq", "neq", "ne", "frac", "tfrac", "dfrac", "sqrt",
    "min", "max", "int", "hat", "widehat", "cdot", "to", "mapsto", "longmapsto", "times", "top",
    "perp", "cup", "cap", "approx", "ldots", "quad", "qquad", "pm", "mp", "infty",
-   "text", "mathcal", "mathbb", "mathbf", "mathrm", "operatorname", "mathit", "overline", "bar",
+   "text", "mathcal", "mathbb", "mathbf", "mathrm", "operatorname", "mathit", "mathsf", "mathfrak", "mathscr", "mathtt", "boldsymbol", "bm", "overline", "bar",
    "tilde", "underline", "check", "sup", "inf", "sum", "prod", "circ", "exp", "log", "ln", "sin", "cos", "tan", "pi",
    "emptyset", "varnothing", "setminus", "notin", "forall", "exists", "neg", "lnot", "land", "lor",
    "wedge", "vee", "lfloor", "rfloor", "lceil", "rceil", "lim", "binom", "tbinom", "dbinom", "Rightarrow", "implies", "Longrightarrow", "iff", "Leftrightarrow", "Longleftrightarrow", "subseteq", "subseteqq", "supseteq", "supseteqq",

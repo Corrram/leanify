@@ -197,10 +197,12 @@ def report(a):
         if "crash" in d:
             crashes.append((key, d["crash"]))
             continue
-        cov = d.get("coverage", {})
-        res = cov.get("results", {})
-        total = sum(res.get(k, 0) for k in ("compiled", "failed", "prose"))
-        rows.append((key, entry["category"], res.get("compiled", 0), total, len(d.get("findings", [])), entry["title"][:60]))
+        # (the statements: theorems, lemmas, propositions, corollaries and the like, not
+        # remarks and examples, which are mostly prose)
+        stated = [x for x in d.get("sentences", []) if x.get("environment") not in ("text", "proof", "remark", "example")]
+        total = len(stated)
+        rows.append((key, entry["category"], sum(x.get("outcome") == "compiled" for x in stated), total,
+                     len(d.get("findings", [])), entry["title"][:60]))
         text_at = {(s["file"], s["line"]): s["text"] for s in d.get("sentences", [])}
         for f in d.get("findings", []):
             k = kind(f["message"])
@@ -217,12 +219,12 @@ def report(a):
                 unread.append((key, s["line"], s["text"][:230]))
     lines = ["# Leanify on a sample of arXiv", "",
              f"{len(rows)} articles read" + (f", {len(crashes)} without an answer" if crashes else "") + ".", "",
-             "## Articles", "", "| article | category | results read | findings | title |", "| --- | --- | --- | --- | --- |"]
+             "## Articles", "", "| article | category | statements read | findings | title |", "| --- | --- | --- | --- | --- |"]
     done = sum(r[2] for r in rows)
     tot = sum(r[3] for r in rows)
     for key, cat, c, t, nf, title in sorted(rows, key=lambda r: -(r[2] / r[3] if r[3] else 0)):
         lines.append(f"| {key} | {cat} | {c} of {t} | {nf} | {title} |")
-    lines += ["", f"In all, {done} of {tot} sentences of results are read as mathematics.", "",
+    lines += ["", f"In all, {done} of {tot} sentences of statements (not remarks or examples) are read as mathematics.", "",
               "## Findings by kind", ""]
     for k, n in kinds.most_common():
         lines += [f"### {n} × {k}", ""]
