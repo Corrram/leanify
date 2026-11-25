@@ -1438,6 +1438,16 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
                 if want != n.ty then fail E.type
           -- (a noun of maps meant on a domain needs one: without a signature, another noun)
           else if n.onDomain && (← get).sigDomPreset.isNone then fail E.type
+          -- (a variable with a domain, `an element $g\in G$`: the domain's type is the noun's)
+          if sigTs.isNone then
+            let varTs : Option (List MTok) := match v, r with
+              | some ts, _ => some ts
+              | none, .m ts :: _ => some ts
+              | _, _ => none
+            if let some ts := varTs then
+              if let some ([_], d) := Grammar.binderMath ts then
+                let (dty, _) ← domainOf false d outer
+                if dty != n.ty then fail E.type
           let _ ← nounArg n (afterVar n v r)
         match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
             (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) (rethrow := true) with

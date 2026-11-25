@@ -1184,6 +1184,9 @@ except a notion whose meanings take arguments of different types, which the type
 | well-ordered | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
 | orthogonal to $x$ | $\mathrm{El}$ | `⟪a, b⟫ = 0` (Mathlib `inner`) |
 | of order $x$ | $\mathrm{El}$ → Prop | with `n` elements (Mathlib `Nat.card`) |
+| of order $x$ | $\mathrm{El}$ | an element of order `n` (Mathlib `orderOf`) |
+| of finite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
+| of infinite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
 | $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |

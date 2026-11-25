@@ -3539,6 +3539,27 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let r1 ← kw [w!"be", w!"fixed"] r
     let b ← fixBinder ts
     some (b, r1)) <|>
+  -- `$x\in A$ be positive`, `$a\in L$ be algebraic over $K$`: an element of the domain
+  -- that is as the words say (the words before the noun `element`, or after it when they
+  -- have a formula)
+  (do
+    let (ts, r) ← mathChunk cs
+    let (vs, _) ← binderMath ts
+    let [v] := vs | none
+    let r1 ← kw [w!"be"] r
+    if (kw [w!"a"] r1).isSome || (kw [w!"an"] r1).isSome || (kw [w!"the"] r1).isSome then none else
+    let i ← ts.findIdx? (· == .cmd w!"in")
+    let dts := ts.drop (i + 1)
+    let body := r1.takeWhile fun (c : Chunk) => match c with
+      | .w w => ![w!"and", w!"with", w!"such", w!"where", w!"then", w!"fixed", w!"arbitrary", w!"given"].contains w
+      | .m _ => true
+      | .p 45 => true
+      | _ => false
+    if body.isEmpty then none
+    let hasMath := body.any fun (c : Chunk) => match c with | .m _ => true | _ => false
+    let np : List Chunk := if hasMath then [.w w!"element", .m [.id v], .w w!"of", .m dts] ++ body
+      else body ++ [.w w!"element", .m [.id v], .w w!"of", .m dts]
+    some (.noun np, r1.drop body.length)) <|>
   -- `$\varphi,\psi:[0,1]\to\mathbb{R}$ be continuous functions`: each of them is such a
   -- function
   (do

@@ -521,6 +521,12 @@ def vocab : Vocab where
     { phrase := phrase!"orthogonal to $v$", prenominal := false, ty := E,
       pred := close (lamT E (fun _ => tt) fun b => lamT E (fun _ => tt) fun a => app2 (const 129) a b), doc := "`⟪a, b⟫ = 0` (Mathlib `inner`)" },
     postS phrase!"of order $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun g => eq (cardOf g) n) "with `n` elements (Mathlib `Nat.card`)",
+    { phrase := phrase!"of order $v$", prenominal := false, ty := E,
+      pred := close (lamR fun n => lamT E (fun _ => tt) fun a => eq (app (const 23) a) n), doc := "an element of order `n` (Mathlib `orderOf`)" },
+    { phrase := phrase!"of finite order", prenominal := false, ty := E,
+      pred := close (lamT E (fun _ => tt) fun a => lt (num 0) (app (const 23) a)), doc := "(Mathlib `IsOfFinOrder`)" },
+    { phrase := phrase!"of infinite order", prenominal := false, ty := E,
+      pred := close (lamT E (fun _ => tt) fun a => eq (app (const 23) a) (num 0)), doc := "(Mathlib `IsOfFinOrder`)" },
     postS phrase!"of characteristic $v$" (close <| lamR fun p => lamT S (fun _ => tt) fun g => eq (app (const 47) g) p) "(Mathlib `ringChar`)",
     postS phrase!"isomorphic to $v$" (close <| lamT S (fun _ => tt) fun h => lamT S (fun _ => tt) fun g => app2 (const 36) g h) "(Mathlib `MulEquiv`)",
     postS phrase!"$v$-group" (close <| lamR fun p => lamT S (fun _ => tt) fun g => and (app (lift Core.posInt) p) (app2 (const 17) p g))

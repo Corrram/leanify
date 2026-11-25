@@ -28,9 +28,12 @@ tests/Structures/article.tex:105:87: info: claim 22: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:109:62: info: claim 23: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land \operatorname{FiniteExtension}(x)(y)\Rightarrow \operatorname{Algebraic}(x)(y))
 tests/Structures/article.tex:113:65: info: claim 24: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land \operatorname{FG}(x)(y)\Rightarrow 1\le [y:x])
 tests/Structures/article.tex:117:43: info: claim 25: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Monoid}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow y\,z\,s=y\,(z\,s))))
-tests/Structures/article.tex:121:51: info: claim 26: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\le x\Rightarrow \operatorname{Group}(y))
-tests/Structures/article.tex:125:77: info: claim 27: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(x)\land \operatorname{T_2}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Closed}(x)(y)\Rightarrow \operatorname{Compact}(y))
-tests/Structures/article.tex:129:83: info: claim 28: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Poset}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ (x(z)\land y\le z)\land z\le y\Rightarrow y=z))
-tests/Structures/article.tex: 0 definitions, 29 claims
-  results: 59 compiled, 0 failed, 0 prose (of 59)
-  all: 59 compiled, 0 failed, 0 prose (of 59)
+tests/Structures/article.tex:121:65: info: claim 26: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ \operatorname{ord}(y)=2\land x(y)\Rightarrow {y}^{2}=1)
+tests/Structures/article.tex:121:65: info: claim 26 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ \operatorname{ord}(y)=2\land x(y)\Rightarrow 2\in \mathbb{Z}\land (0\le 2\lor \operatorname{Invertible}(y)))
+tests/Structures/article.tex:125:97: info: claim 27: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(y)\land x\subseteq y\Rightarrow (\forall z\in \mathrm{El},\ y(z)\land \operatorname{Algebraic}(x)(z)\Rightarrow y(z)))
+tests/Structures/article.tex:129:51: info: claim 28: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\le x\Rightarrow \operatorname{Group}(y))
+tests/Structures/article.tex:133:77: info: claim 29: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(x)\land \operatorname{T_2}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Closed}(x)(y)\Rightarrow \operatorname{Compact}(y))
+tests/Structures/article.tex:137:83: info: claim 30: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Poset}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ (x(z)\land y\le z)\land z\le y\Rightarrow y=z))
+tests/Structures/article.tex: 0 definitions, 31 claims
+  results: 63 compiled, 0 failed, 0 prose (of 63)
+  all: 63 compiled, 0 failed, 0 prose (of 63)
