@@ -11,7 +11,7 @@ tests/Vocabulary/article.tex:26:48: info: claim 3: \operatorname{nondecreasing}(
 tests/Vocabulary/article.tex:30:20: info: claim 4: \forall x\in \mathbb{R},\ 0\le x\Rightarrow \mathrm{Poi}(x,0)=\exp(-x)
 tests/Vocabulary/article.tex:30:20: info: claim 5: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall z\in \mathbb{R},\ (z\in \mathbb{N}\Rightarrow 0\le \mathrm{Poi}(x)(z))\land (\neg z\in \mathbb{N}\Rightarrow \mathrm{Poi}(x)(z)=0))\land \sum_{z=0}^{\infty}\mathrm{Poi}(x)(z)\text{ converges}\land \sum_{z=0}^{\infty}\mathrm{Poi}(x)(z)=1
 tests/Vocabulary/article.tex:34:30: info: claim 6: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{distribution}(x)\Rightarrow x(1)\le 1
-tests/Vocabulary/article.tex:34:30: info: claim 7: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{distribution}(x)\Rightarrow \neg (\forall y\in \mathbb{R},\ x(y)=\begin{cases}1&y\in \mathbb{N}\land y=3\\\end{cases})
+tests/Vocabulary/article.tex:34:30: info: claim 7: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{distribution}(x)\Rightarrow \neg (\forall y\in \mathbb{R},\ x(y)=\begin{cases}1&y\in \mathbb{N}\land y=3\\0&\text{otherwise}\end{cases})
 tests/Vocabulary/article.tex:38:25: info: claim 8: \forall x\in \mathbb{R}\to \mathbb{R},\ \mathcal{P}(x)\Rightarrow 0\le x(2)
 tests/Vocabulary/article.tex:42:1: info: claim 9: \delta(3,3)=1
 tests/Vocabulary/article.tex:42:1: info: claim 10: \mathrm{Bin}(2,\frac{1}{2},1)=\frac{1}{2}

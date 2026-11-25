@@ -298,6 +298,12 @@ adjective of maps that is meant on a domain (`homomorphism`, `injective`) is abo
   is a homomorphism`). -/
   sigDomPreset : Option Tm := none
   sigCodPreset : Option Tm := none
+  /-- The infinite sequences bound by a noun of sequences (`Let $(a_n)$ be a sequence of real
+  numbers`): the environment and the name; `a_n` is the term at `n`, and `(a_n)` with an index
+  that nothing binds is the sequence. -/
+  infSeqs : List (Nat × Codes) := []
+  /-- A noun of sequences was read in the current noun phrase. -/
+  pendingSeq : Bool := false
   /-- The domains of the maps bound by a signature: the environment, the map's name and the
   domain as written (read again where a sentence says that the map is injective). -/
   sigDoms : List (Nat × Codes × MT × MT) := []
@@ -1359,6 +1365,46 @@ def upTo (dom : MT) : Option MT :=
   | .finset [.num 1, .id d, hi] => if d == w!"\\dots" || d == w!"\\ldots" then some hi else none
   | _ => none
 
+/-- The index `n` of a sequence written by its terms, `(a_n^2)`, `(a_n+b_n)`, `(\sqrt{a_n})`:
+an expression of numbers and the terms `a_n` of infinite sequences (`isSeq`). `none` when
+the expression is not of that form, `some none` when no such term occurs in it. -/
+def seqTermIndex (isSeq : Codes → Bool) : Nat → MT → Option (Option Codes)
+  | 0, _ => none
+  | f + 1, m =>
+    let both (x y : MT) : Option (Option Codes) := do
+      let a ← seqTermIndex isSeq f x
+      let b ← seqTermIndex isSeq f y
+      match a, b with
+      | some i, some j => if i == j then some (some i) else none
+      | some i, none | none, some i => some (some i)
+      | none, none => some none
+    match m with
+    | .num _ | .id _ => some none
+    | .sub (.id k) (.id i) => some (if isSeq k then some i else none)
+    | .sub _ _ => some none
+    | .sup b e => both b e
+    | .add x y | .minus x y | .mul x y | .div x y | .frac x y => both x y
+    | .neg x | .abs x => seqTermIndex isSeq f x
+    | .app (.id _) args => args.foldlM (fun acc a => do
+        let r ← seqTermIndex isSeq f a
+        match acc, r with
+        | some i, some j => if i == j then some (some i) else none
+        | some i, none | none, some i => some (some i)
+        | none, none => some none) none
+    | _ => none
+
+/-- The index of a sequence written by its terms in the scope (`seqTermIndex`), where it is
+bound nowhere; not for a single term `(a_n)`, which is the sequence. -/
+def seqTermVar (sc : Scope) (m : MT) : M (Option Codes) := do
+  let st ← get
+  if st.infSeqs.isEmpty then return none
+  if let .sub (.id _) (.id _) := m then return none
+  let isSeq (k : Codes) : Bool := (lookupLocal sc k).isSome &&
+    st.infSeqs.any fun (e, n) => n == k && (e == st.curEnv || st.curProved == some e)
+  let some (some i) := seqTermIndex isSeq 40 m | return none
+  if (lookupLocal sc i).isSome || (← lookupGlob i).isSome then return none
+  pure (some i)
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1382,6 +1428,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `R` for `R(C)`, after `a copula $C$ with maximal correlation $R=R(C)$`: the letter
     -- alone is the value, and before parentheses other than its own arguments a factor
     let stA ← get
+    -- `(a_n^2)`, `(a_n+b_n)`: the sequence of these terms, `0` at the numbers that are no
+    -- natural numbers (as the sequences of the article)
     let abbr (n : Codes) : Option (List Codes) :=
       if (lookupLocal sc n).isSome then none else
       (stA.abbrevs.find? fun (e, k, _) => k == n && (e == stA.curEnv || stA.curProved == some e)).map (·.2.2)
@@ -3169,6 +3217,18 @@ where
       | .id key => do
         -- (a finite field is not a set of real numbers)
         if key == w!"\\mathbb{F}" then fail E.finding finiteField
+        -- `a_n` for an infinite sequence `a` (`Let $(a_n)$ be a sequence of real numbers`): its
+        -- term at the natural number `n`; `(a_n)` with an index bound nowhere is the sequence
+        if let some (j, sty) := lookupLocal sc key then
+          let st ← get
+          if st.infSeqs.any (fun (e, k) => k == key && (e == st.curEnv || st.curProved == some e)) then
+            if let .fn .real et := sty then
+              let unbound ← match i with
+                | .id n => pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
+                | _ => pure false
+              if unbound then return (.loc j, sty)
+              let a ← asReal (← term f sc none i)
+              return (.guard (.app (.prim .isNat) a) (.app (.loc j) a), et)
         -- `x_i` for a sequence `x` of the scope (`x_1,\ldots,x_n`): its term, defined for
         -- the integers `i` from the first index to the last
         if let some (j, .fn .real .real) := lookupLocal sc key then

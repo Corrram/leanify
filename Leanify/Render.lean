@@ -389,7 +389,9 @@ where
     if cprec t < p then "(" ++ s ++ ")" else s
   cases : Tm → String
     | .cases c v r => v.tex cs gs ls ++ "&" ++ c.tex cs gs ls ++ "\\\\" ++ cases r
-    | _ => ""
+    | .undef _ => ""
+    -- (the value elsewhere)
+    | r => r.tex cs gs ls ++ "&\\text{otherwise}"
 
 /-- A phrase as text: words separated by spaces, hyphens joined (`left-tail`). -/
 def phraseText (ws : List Codes) : String :=

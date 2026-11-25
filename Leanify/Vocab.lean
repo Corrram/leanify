@@ -56,6 +56,12 @@ structure Noun where
   /-- With `onDomain`, the codomain of the signature too: `pred` takes the domain, the codomain
   and the map (`isomorphism`, `$\varphi\colon G\to H$`). -/
   onCodomain : Bool := false
+  /-- A noun of infinite sequences (a function of the natural numbers): its variable may be
+  written `(a_n)`, and `a_n` is its term at `n`. -/
+  seq : Bool := false
+  /-- The noun is read only with its complement (`sequence in $X$`): alone, its words may
+  belong to another phrase (`a subadditive sequence`). -/
+  needsArg : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives

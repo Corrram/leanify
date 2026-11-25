@@ -930,6 +930,14 @@ def npUpTo : Nat → List Chunk → List Chunk → List Chunk × List Chunk
       | _, _ => false
     if stop || andNext then (acc.reverse, c :: rest) else npUpTo f rest (c :: acc)
 
+/-- `(a_n)`: the name of a sequence, by its terms. -/
+def seqParenName (n : List MTok) : Bool :=
+  n.head? == some (.sym 40) && n.getLast? == some (.sym 41) && n.length ≥ 5 &&
+    (n.drop 1).dropLast.contains (.sym 95) && (n.drop 1).dropLast.all fun t => match t with
+      | .id _ | .digit _ | .sym 95 | .lb | .rb => true
+      | .cmd c => Math.greekNames.contains c
+      | _ => false
+
 /-- The variables of `a,b`, `a,b\ge1` or `c_1,c_2>0`, each with the bound written after the
 last (`a\ge1`, `b\ge1`). -/
 def splitVars (ts : List MTok) : Option (List (List MTok)) := do
@@ -940,20 +948,20 @@ def splitVars (ts : List MTok) : Option (List (List MTok)) := do
   let (lastName, suffix) := (last.take i, last.drop i)
   let names := parts.dropLast ++ [lastName]
   -- (each is the name of one variable: no relation, no operation)
-  if names.any (fun n => n.isEmpty || n.any fun t => match t with
+  if names.any (fun n => n.isEmpty || (!seqParenName n && n.any fun t => match t with
       | .id _ | .digit _ | .sym 95 | .lb | .rb => false
       | .cmd c => !Math.greekNames.contains c
-      | _ => true) then none
+      | _ => true)) then none
   else some (names.map (· ++ suffix))
 
 /-- The variables of `$x$ and $y$`, `$x$, $y$ and $z$` (each formula the name of one
 variable), joined as `x,y,z`; any other formula is returned as it is. -/
 def joinedVars (cs : List Chunk) : Option (List MTok × List Chunk) := do
   let (ts, r) ← mathChunk cs
-  let isName (n : List MTok) : Bool := !n.isEmpty && n.all fun t => match t with
+  let isName (n : List MTok) : Bool := seqParenName n || (!n.isEmpty && n.all fun t => match t with
     | .id _ | .digit _ | .sym 95 | .lb | .rb => true
     | .cmd c => Math.greekNames.contains c
-    | _ => false
+    | _ => false)
   let rec go : Nat → List MTok → List Chunk → List MTok × List Chunk
     | 0, acc, r => (acc, r)
     | f + 1, acc, r =>
@@ -1106,7 +1114,7 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   let r1 := r.drop ws.length
   -- (`graphs on $n$ vertices`, `polynomials of degree $n$`: a phrase with a number after
   -- the noun, which follows the variable)
-  let preps := [w!"on", w!"of", w!"in", w!"over"]
+  let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from"]
   let prepAt := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?.map (·.2)
   let slotted : Option (List Chunk × List Chunk × List Chunk) := match prepAt, r1 with
     | some i, .m t :: more =>

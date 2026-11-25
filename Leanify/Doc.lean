@@ -529,9 +529,24 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
     | some v =>
       -- `$φ$ holds`
       if (v == w!"holds" || v == w!"hold") && afterMath then standardForms f there cond prev ts
+      -- `$(a_n)$ converges to $l$`, `$(a_n)$ converges`, `$(a_n)$ diverges`: the modifiers
+      -- `converging to`, `convergent`, `divergent`
+      else if v == w!"converges" && afterMath && (match ts with
+          | n :: m :: _ => lw n == some w!"to" && m.tok == .mopen
+          | _ => false) then
+        word w!"is" :: word w!"converging" :: standardForms f there cond (some (word w!"converging")) ts
+      else if (v == w!"converges" || v == w!"diverges") && afterMath && beforeEnd then
+        word w!"is" :: word (if v == w!"converges" then w!"convergent" else w!"divergent") ::
+          standardForms f there cond (some (word w!"convergent")) ts
       -- `the inequality $φ$`
       else if v == w!"the" && (match ts with
           | k :: n :: _ => ((lw k).map kinds.contains).getD false && n.tok == .mopen
+          | _ => false) then standardForms f there cond prev (ts.drop 1)
+      -- `Then the sequence $(a_n^2)$ converges`: the sequence `$(a_n^2)$` (not after `of`:
+      -- `the limit of the sequence $a$` is a notion's)
+      else if v == w!"the" && (prev.isNone || prevWord == some w!"then" || prevWord == some w!"that" ||
+          prevWord == some w!"and" || prevWord == some w!"if") && (match ts with
+          | k :: n :: _ => lw k == some w!"sequence" && n.tok == .mopen
           | _ => false) then standardForms f there cond prev (ts.drop 1)
       -- `If $φ$ then $ψ$`
       else if v == w!"then" && afterMath then
@@ -567,6 +582,35 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
         let cond' := (cond || v == w!"if") && v != w!"then"
         t :: standardForms f there' cond' (some t) ts
     | none => t :: standardForms f there cond (some t) ts
+
+/-- `(a_n)_{n\ge1}`, `(a_n)_{n=1}^{\infty}`, `(a_n)_{n\in\mathbb{N}}`: a sequence written by its
+term, with the range of its index, is the sequence `(a_n)` (its terms are those at the
+natural numbers; the range says no more about the sequence). -/
+def seqRanges : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    -- (skip a group `{…}` or a single token)
+    let skipGroup (r : List PTok) : List PTok := match r with
+      | ⟨.lbrace, _, _⟩ :: r' =>
+        let rec go : Nat → Nat → List PTok → List PTok
+          | 0, _, r => r
+          | _ + 1, _, [] => []
+          | g + 1, d, ⟨.lbrace, _, _⟩ :: r => go g (d + 1) r
+          | g + 1, d, ⟨.rbrace, _, _⟩ :: r => if d == 0 then r else go g (d - 1) r
+          | g + 1, d, _ :: r => go g d r
+        go (r'.length + 1) 0 r'
+      | _ :: r' => r'
+      | [] => []
+    match t.tok, ts with
+    | .msym 40, ⟨.mvar a, pa, ma⟩ :: ⟨.msym 95, p9, m9⟩ :: i :: ⟨.msym 41, pc, mc⟩ :: ⟨.msym 95, _, _⟩ :: rest =>
+      if !(match i.tok with | .mvar _ => true | _ => false) then t :: seqRanges f ts else
+      let rest := skipGroup rest
+      let rest := match rest with
+        | ⟨.msym 94, _, _⟩ :: r => skipGroup r
+        | r => r
+      t :: ⟨.mvar a, pa, ma⟩ :: ⟨.msym 95, p9, m9⟩ :: i :: ⟨.msym 41, pc, mc⟩ :: seqRanges f rest
+    | _, _ => t :: seqRanges f ts
 
 /-- Replace the words of the article's conventions in the text of a sentence (not
 after `strictly` or `non`: `strictly increasing` keeps its meaning). -/
@@ -655,6 +699,19 @@ signature `$f:A\to B$`), at most one variable (possibly with a membership
 `$C\in\CC$`), and postnominal modifiers of the vocabulary. Its meaning is the
 conjunction of the predicates of its parts. Every chunk must be read. -/
 
+/-- `(a_n)`, `(a_n)_{n\ge1}`, `(a_n)_{n\in\mathbb{N}}`, `(a_n)_{n=1}^{\infty}`: a sequence
+written by its term (the name `a`). -/
+def seqVarName (ts : List MTok) : Option Codes := do
+  let .sym 40 :: rest := ts | none
+  let inner := rest.takeWhile (· != .sym 41)
+  let after := rest.drop (inner.length + 1)
+  match after.head? with
+  | none | some (.sym 95) | some (.sym 94) => pure ()
+  | _ => none
+  match Math.parseFormula inner with
+  | some (.sub (.id a) (.id _)) => some a
+  | _ => none
+
 /-- The name of a variable chunk: a letter, a command (`\gamma`), `\hat x`, or a letter
 with a subscript that is a letter or a number (`d_0`, `n_k`: the name a bound on it
 binds, as in `$d_0\ge1$`). -/
@@ -663,7 +720,7 @@ def varName : List MTok → Option Codes
   | [.cmd c] => some ([92] ++ c)
   | ts => match Grammar.hatName ts with
     | some (v, []) => some v
-    | _ => Grammar.subNameOf ts
+    | _ => (seqVarName ts) <|> Grammar.subNameOf ts
 
 /-- Match a vocabulary phrase at the start of `cs`. The variable slot matches a
 variable chunk (returned) or nothing. -/
@@ -1172,12 +1229,36 @@ def varChunk (ts : List MTok) (outer : Scope := []) : M (Codes × Option (Ty × 
       pure (v, some (ty, p.map (shift 1 0)))
     | _ => fail E.unsupported
 
+/-- `v` is an index of a subscript in the tokens (`a_n`, `a_{n+1}`). -/
+def indexedBy (v : Codes) : List MTok → Bool
+  | .sym 95 :: .id w :: rest => w == v || indexedBy v rest
+  | .sym 95 :: .lb :: rest =>
+    let (inner, _) := (rest.span (· != .rb))
+    inner.contains (.id v) || indexedBy v rest
+  | _ :: rest => indexedBy v rest
+  | [] => false
+
 /-- `$φ$ [and $ψ$]`: the conditions after `with` in a noun phrase. -/
 def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
   | f + 1, cs, acc =>
     match Grammar.formula cs with
-    | some (m, r) =>
+    | some (m0, r0) =>
+      -- `with $a_n\ge0$ for all $n$`: the condition for every value of the variables
+      let (m, r) : MT × List Chunk := match (Grammar.kw [w!"for", w!"all"] r0 <|> Grammar.kw [w!"for", w!"every"] r0 <|>
+          Grammar.kw [w!"for", w!"each"] r0) with
+        | some (.m ts :: r1) =>
+          match Grammar.binderMath ts with
+          | some (vs, d) => (.quant true vs d m0, r1)
+          | none => match varName ts with
+            -- (an index of a sequence, `a_n` for all `n`, is a natural number)
+            | some v =>
+              let idx := match cs.head? with
+                | some (.m ms) => indexedBy v ms
+                | _ => false
+              (.quant true [v] (.id (if idx then w!"\\mathbb{N}" else w!"\\mathbb{R}")) m0, r1)
+            | none => (m0, r0)
+        | _ => (m0, r0)
       -- `$φ$, $ψ$, or $χ$`: one of them
       match Grammar.orTail 6 r [] with
       | some (tl, r') =>
@@ -1222,6 +1303,31 @@ def numeralsIn (dt ct : Ty) (dp : Option Tm) : M (List Tm) := do
   let body := Tm.eq (.app (.loc 1) (.app (.const o.const) (.loc 0)))
     (.app (.loc 1) (.app (.app (.const m.const) (shift 3 0 p)) (.loc 0)))
   pure [Tm.lam cty .tt (.all .real body)]
+
+/-- A property of a sequence `t` of real numbers (a real function whose terms are its values
+at the natural numbers), said of its terms: `increasing` (Mathlib `Monotone`), `strictly
+increasing` (`StrictMono`), `decreasing`, `monotone`, `bounded`, `positive`, … -/
+def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
+  let nats : Tm := .lam .real .tt (.app (.prim .isNat) (.loc 0))
+  let on (p : Prim) : Tm := .app (.app (.prim p) t) nats
+  let terms (p : Tm → Tm) : Tm := .all .real (.imp (.app (.prim .isNat) (.loc 0)) (p (.app (shift 1 0 t) (.loc 0))))
+  let a := a.map Grammar.lower
+  -- (`non-decreasing`)
+  let a := match a with
+    | [n, w] => if n == w!"non" then [n ++ w] else a
+    | _ => a
+  if a == [w!"increasing"] || a == [w!"nondecreasing"] then some (on (.fnProp .monotone))
+  else if a == [w!"decreasing"] || a == [w!"nonincreasing"] then some (on (.fnProp .antitone))
+  else if a == [w!"strictly", w!"increasing"] then some (on .strictMonoOn)
+  else if a == [w!"strictly", w!"decreasing"] then some (on (.fnProp .strictAnti))
+  else if a == [w!"monotone"] then some (.or (on (.fnProp .monotone)) (on (.fnProp .antitone)))
+  else if a == [w!"strictly", w!"monotone"] then some (.or (on .strictMonoOn) (on (.fnProp .strictAnti)))
+  else if a == [w!"bounded"] then some (on (.fnProp .bounded))
+  else if a == [w!"positive"] then some (on (.fnProp .pos))
+  else if a == [w!"nonnegative"] then some (on (.fnProp .nonneg))
+  else if a == [w!"negative"] then some (terms fun x => .lt x (.num 0))
+  else if a == [w!"nonpositive"] then some (terms fun x => .le x (.num 0))
+  else none
 
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
@@ -1292,7 +1398,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `a small $\zeta>0$`: how small is not said
   if (wordsOf np).head? == some w!"small" || (wordsOf np).head? == some w!"large" then
     fail E.finding w!"`small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound"
-  modify fun st => { st with sigDom := st.sigDomPreset, sigCod := st.sigCodPreset }
+  modify fun st => { st with sigDom := st.sigDomPreset, sigCod := st.sigCodPreset, pendingSeq := false }
   let st ← get
   let V := st.vocab
   -- `a set of measure zero $S$` (as `Let $S$ be a set of measure zero` is read): a modifier
@@ -1369,13 +1475,15 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let nounArg (n : Noun) (rest : List Chunk) : M (List Tm × List Chunk) := do
     match n.arg, rest with
     | some (ws, aty, rel), .w w :: .m ts :: rest' =>
-      if !ws.contains (Grammar.lower w) then return ([], rest)
+      if !ws.contains (Grammar.lower w) then
+        if n.needsArg then fail E.type
+        return ([], rest)
       let some mt := Math.parseFormula ts | fail E.unsupported
       let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
       let (a, aty') ← Elab.term 100000 sc none mt
       let a ← if aty' == aty then pure a else if aty == .real then Elab.asReal (a, aty') else fail E.type
       pure ([Tm.lam n.ty .tt (Notation.betaApply rel [a, .loc 0])], rest')
-    | _, _ => pure ([], rest)
+    | _, _ => if n.needsArg then fail E.type else pure ([], rest)
   -- a noun's predicate; a noun of maps meant on a domain takes the domain of the signature
   let nounPred (n : Noun) : M Tm := do
     if !n.onDomain then return n.pred
@@ -1481,6 +1589,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             let (extra, rest) ← nounArg n r'
             pure (n.ty, [← nounPred n] ++ into ++ (← numeralsIn dt ct dp) ++ extra, some [.id f], rest)
           | _, _ =>
+          if n.seq then modify fun st => { st with pendingSeq := true }
           let np0 ← nounPred n
           let (ty, ps, var, rest) : Ty × List Tm × Option (List MTok) × List Chunk := match v, r with
             -- `a copula $C$`: the variable follows a noun without a slot
@@ -1549,10 +1658,20 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
                 -- (a vocabulary's type of maps between these elements: a map of that type)
                 if let some (mt, c) ← mapType dt ct then
                   return ((mt, [mapSigPred mt dt ct c dp cp], some [.id f], r), nms)
+                -- (`$a\colon\mathbb{N}\to\mathbb{R}$`: a sequence, whose terms are its values
+                -- at the natural numbers, `0` elsewhere)
+                let natDom := match d with
+                  | .id n => n == w!"\\mathbb{N}" || n == w!"\\mathbb{N}_0"
+                  | _ => false
+                let seqPreds : List Tm := if natDom && dt == .real && ct == .real then
+                    [.lam (.fn .real .real) .tt (.all .real (.imp (.not (.app (.prim .isNat) (.loc 0)))
+                      (.eq (.app (.loc 1) (.loc 0)) (.num 0))))]
+                  else []
+                if !seqPreds.isEmpty then modify fun st => { st with pendingSeq := true }
                 let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
                 let cod := (cp.map (shift 1 0)).getD (.lam ct .tt .tt)
                 modify fun st => { st with sigDom := some dom, sigCod := some cod, sigDoms := (st.curEnv, f, d, c) :: st.sigDoms.filter (·.2.1 != f) }
-                if cp.isNone then pure (Ty.fn dt ct, [], some [.id f], r) else
+                if cp.isNone then pure (Ty.fn dt ct, seqPreds, some [.id f], r) else
                 -- (the predicates of the domains are stated where the variable is bound)
                 let inDom : Tm := match dp with
                   | some p => .app (shift 3 0 p) (.loc 0)
@@ -1560,7 +1679,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
                 let inCod : Tm := match cp with
                   | some p => .app (shift 3 0 p) (.app (.loc 1) (.loc 0))
                   | none => .tt
-                pure (Ty.fn dt ct, [Tm.lam (.fn dt ct) .tt (.all dt (.imp inDom inCod))] ++ (← numeralsIn dt ct dp), some [.id f], r)
+                pure (Ty.fn dt ct, seqPreds ++ [Tm.lam (.fn dt ct) .tt (.all dt (.imp inDom inCod))] ++ (← numeralsIn dt ct dp), some [.id f], r)
               | _, _ =>
               if ds.any (·.2.isSome) || cp.isSome then fail E.unsupported
               pure (tyWrap (ds.map (·.1)) ct, [], some [.id f], r)
@@ -1604,6 +1723,11 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let pms ← pmGroups.mapM fun (cs, ms) => do
     let ms := ms.filter (·.ty == ty)
     if ms.isEmpty then fail E.type
+    -- (of a sequence, `an increasing sequence`: the property of its terms, at the natural
+    -- numbers)
+    if (← get).pendingSeq && ty == .fn .real .real then
+      let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
+      if let some body := seqAdjective (.loc 0) words then return Tm.lam ty .tt body
     match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (ms.map (·, [])) with
     | some (m, _) => slotPred m cs
     | none => fail E.type
@@ -1657,10 +1781,18 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let (conds, r2) := match r2 with
     | .w w :: r => if w == w!"with" then condsOf 4 r [] else ([], r2)
     | _ => ([], r2)
+  -- (`a sequence $(a_n)$ such that $a_n\le a_{n+1}$ for all $n$`)
+  let (conds, r2) := match conds, r2 with
+    | [], .w w :: .w t :: r@(.m _ :: .w f :: _) =>
+      if w == w!"such" && t == w!"that" && f == w!"for" then condsOf 4 r [] else (conds, r2)
+    | _, _ => (conds, r2)
   if !r2.isEmpty then fail E.noun (((wordsOf np).intersperse [32]).flatten)
   let (name, member) ← match var with
     | some ts => do let (v, d) ← varChunk ts outer; pure (v, d)
     | none => pure ([], none)
+  -- (a sequence: its terms are written `a_n`, also in its conditions)
+  if (← get).pendingSeq && !name.isEmpty then
+    modify fun st => { st with infSeqs := (st.curEnv, name) :: st.infSeqs.filter (·.2 != name), pendingSeq := false }
   let memberPred ← match member with
     | some (t, p) => if t == ty then pure p.toList else fail E.type
     | none => pure []
@@ -2480,6 +2612,15 @@ def predicate (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm
     let (t, _) ← applyAll (.glob i) g.ty g.doms [s, (ot, b)]
     pure t
   | _ => fail E.type
+
+/-- The subject of a predicate: a formula, or a sequence written by its terms (`$(a_n^2)$
+converges to $0$`, `0` at the numbers that are no natural numbers, as the article's
+sequences). -/
+def subjTerm (sc : Scope) (s : MT) : M (Tm × Ty) := do
+  if let some i ← Elab.seqTermVar sc s then
+    let b ← Elab.asReal (← term F ((i, .real) :: sc) none s)
+    return (.lam .real .tt (.cases (.app (.prim .isNat) (.loc 0)) b (.num 0)), .fn .real .real)
+  term F sc none s
 
 def subjectTm (sc : Scope) : Subj → M (Tm × Ty)
   | .math m => term F sc none m
@@ -3595,6 +3736,9 @@ def nameChunks (name : List Codes) : List Chunk :=
 def sigDomain (sc : Scope) (k : Codes) : M (Option Tm) := do
   let st ← get
   if (Elab.lookupLocal sc k).isNone then return none
+  -- (an infinite sequence `(a_n)`: its terms are those at the natural numbers)
+  if st.infSeqs.any (fun (e, n) => n == k && (e == st.curEnv || st.curProved == some e)) then
+    return some (.lam .real .tt (.app (.prim .isNat) (.loc 0)))
   match st.sigDoms.find? fun (e, n, _) => n == k && (e == st.curEnv || st.curProved == some e) with
   | some (_, _, d, _) => tryCatch (do let (_, p) ← domainOf false d sc; pure p) fun _ => pure none
   | none => pure none
@@ -3613,6 +3757,27 @@ modifiers with the same words. -/
 def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   let V := (← get).vocab
   let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
+  -- (adjectives of an infinite sequence, `$(a_n)$ is increasing and bounded`: properties of
+  -- its terms)
+  let stS ← get
+  let isSeq : Bool := match x with
+    | (.loc i, .fn .real .real) => match sc[i]? with
+      | some (k, _) => stS.infSeqs.any fun (e, n) => n == k && (e == stS.curEnv || stS.curProved == some e)
+      | none => false
+    -- (a sequence written by its terms, `$(a_n^2)$`: `subjTerm`)
+    | (.lam .real .tt (.cases (.app (.prim .isNat) (.loc 0)) _ (.num 0)), _) => true
+    | _ => false
+  if isSeq then
+    let rec parts : List Chunk → List (List Codes) → List Codes → Option (List (List Codes))
+      | [], acc, cur => if cur.isEmpty then none else some (acc ++ [cur])
+      | .w w :: r, acc, cur =>
+        if w == w!"and" then (if cur.isEmpty then none else parts r (acc ++ [cur]) [])
+        else parts r acc (cur ++ [w])
+      | .p 44 :: r, acc, cur => if cur.isEmpty then none else parts r (acc ++ [cur]) []
+      | .p 45 :: r, acc, cur => parts r acc cur
+      | _, _, _ => none
+    if let some ps := parts cs [] [] then
+      if let some ts := ps.mapM (seqAdjective x.1) then return conjAll ts
   -- (the subject's domain, for a noun of maps meant on one: `$\\varphi$ is a homomorphism`)
   let subjDom : Option Tm ← match x.1 with
     | .loc i => match sc[i]? with
@@ -3632,6 +3797,8 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
     if e.code == E.ambiguous then throw e else pure none
   modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
   let np := np.map fun b => if sc.isEmpty then b else { b with pred := b.pred.map (lowerBy 1) }
+  -- (a noun of another type: the words may be modifiers of the subject, below)
+  let np := np.filter (·.ty == x.2)
   -- a notion with its arguments: `$X$ is the Poisson distribution with mean $\lambda$`
   let notion ← if np.isSome then pure none else do
     let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
@@ -3737,10 +3904,19 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
       else ([([w!"convex"], FnProp.convex), ([w!"strictly", w!"convex"], .strictConvex),
           ([w!"strictly", w!"concave"], .strictConcave), ([w!"strictly", w!"decreasing"], .strictAnti),
           ([w!"nondecreasing"], .monotone), ([w!"nonincreasing"], .antitone), ([w!"bounded"], .bounded),
+          ([w!"increasing"], .monotone), ([w!"decreasing"], .antitone),
           ([w!"nonnegative"], .nonneg), ([w!"positive"], .pos), ([w!"differentiable"], .differentiable),
           ([w!"continuously", w!"differentiable"], .contDiff), ([w!"injective"], .injective),
           ([w!"lower", w!"semicontinuous"], .lowerSemicont), ([w!"upper", w!"semicontinuous"], .upperSemicont),
           ([w!"lipschitz"], .lipschitz)].lookup a).map Prim.fnProp
+    -- (`monotone`: nondecreasing or nonincreasing)
+    let p2 : Option (Prim × Prim) := if a == [w!"monotone"] then some (.fnProp .monotone, .fnProp .antitone)
+      else if a == [w!"strictly", w!"monotone"] then some (.strictMonoOn, .fnProp .strictAnti) else none
+    if let some (p, q) := p2 then
+      let own := defDom.getD (.lam .real .tt .tt)
+      match on with
+      | none => return .or (Tm.app (.app (.prim p) t) own) (Tm.app (.app (.prim q) t) own)
+      | some _ => fail E.unsupported
     let some p := p | fail E.type
     let own := defDom.getD (.lam .real .tt .tt)
     match on with
@@ -4134,7 +4310,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .notions s names disj => do
     let st ← get
     unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
-    let x ← term F sc none s
+    let x ← subjTerm sc s
     -- a name the article does not define is an adjective of the vocabulary
     let notions := (← get).notions
     let ps ← names.mapM fun n =>
@@ -4250,7 +4426,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
   | .isA s np neg => do
     -- words with which no phrase of the vocabulary starts are prose
     unless knownStart (← get) np do fail E.prose
-    let x ← term F sc none s
+    let x ← subjTerm sc s
     -- (a plural after `are`, `$x$ and $y$ are binary words of length $3$`: the phrase in the
     -- singular, with its article, one plural word at a time)
     let singulars : List (List Chunk) := match np with
@@ -4323,7 +4499,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         return conjAll ps
       else pure ()
     | _ => pure ()
-    let (t, ty) ← term F sc none s
+    let (t, ty) ← subjTerm sc s
     -- a function's domain is the one its definition states
     let defDom : Option Tm ← match Elab.symKey s with
       | some k => do
@@ -4337,7 +4513,20 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         | some _ => pure none
         | none => sigCodomain sc k
       | none => pure none
+    -- (an infinite sequence, `$(a_n)$ is increasing`: a property of its terms)
+    let stS ← get
+    let seqKey : Option Codes := match s with
+      | .id k | .sub (.id k) _ =>
+        if stS.infSeqs.any (fun (e, n) => n == k && (e == stS.curEnv || stS.curProved == some e)) &&
+          (Elab.lookupLocal sc k).isSome then some k else none
+      | _ => none
+    let seqKey := match seqKey, t with
+      | none, .lam .real .tt (.cases (.app (.prim .isNat) (.loc 0)) _ (.num 0)) => some []
+      | k, _ => k
     let ps ← adjs.mapM fun (a, on) =>
+      match seqKey, on, (if ty == .fn .real .real then seqAdjective t a else none) with
+      | some _, none, some p => pure p
+      | _, _, _ =>
       -- the standard adjectives, else the vocabulary's (`even` of an integer)
       tryCatch (adjectiveTm sc t ty defDom a on defCod) fun e =>
         if on.isSome then throw e else
@@ -6455,6 +6644,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let s := if capturedVar.isSome then { s with toks := toks0 } else s
   -- other wordings of the forms that are read, then the words of the article's conventions
   let stdToks := Notation.rewriteWords Notation.standardWords (s.toks.length + 1) none s.toks
+  let stdToks := Notation.seqRanges (stdToks.length + 1) stdToks
   let s := { s with toks := Notation.standardForms (stdToks.length + 1) false false none stdToks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }

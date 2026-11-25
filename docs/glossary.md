@@ -1800,8 +1800,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 ## `series`
 
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| sequence of real numbers | ℝ → ℝ | `a_0, a_1, …`: a function of the natural numbers (Mathlib `ℕ → ℝ`) |
+| real sequence | ℝ → ℝ | (Mathlib `ℕ → ℝ`) |
+| sequence of positive real numbers | ℝ → ℝ | `a_n > 0` |
+| sequence of nonnegative real numbers | ℝ → ℝ | `a_n ≥ 0` |
+| sequence of integers | ℝ → ℝ | (Mathlib `ℕ → ℤ`) |
+
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
+| converging to $x$ | ℝ → ℝ | `a_n → l` (Mathlib `Filter.Tendsto`) |
+| convergent | ℝ → ℝ | `a_n → l` for some `l` |
+| divergent | ℝ → ℝ | convergent to no number |
 | summable | ℝ → ℝ | `∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability) |
 | absolutely summable | ℝ → ℝ | `∑ \|a_k\|` converges (Mathlib `Summable`) |
 | conditionally summable | ℝ → ℝ | `∑ a_k` converges, `∑ \|a_k\|` does not |

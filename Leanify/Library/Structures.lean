@@ -468,7 +468,7 @@ def vocab : Vocab where
     -- sequences
     { sing := phrase!"sequence", plural := phrase!"sequences", ty := Q, pred := close (lamT Q (fun _ => tt) fun _ => tt),
       arg := some ([w!"in"], S, rel S Q fun x s => allR fun n => imp (isNat n) (app x (app s n))),
-      doc := "a sequence of elements of `X`: a function of the natural numbers" }]
+      doc := "a sequence of elements of `X`: a function of the natural numbers", seq := true, needsArg := true }]
   mods := [
     adjS phrase!"abelian" comm "any two elements commute (Mathlib `CommGroup`)",
     adjS phrase!"commutative" comm "any two elements commute (Mathlib `CommGroup`, `CommRing`)",

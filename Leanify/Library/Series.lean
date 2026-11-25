@@ -59,8 +59,34 @@ def adj (p : Phrase) (pre : Bool) (body : B → B) (doc : String) : Modifier :=
 def ofSeq (name : Phrase) (d : B → B) (body : B → B) (doc : String) : Notion :=
   { name, ty := F ⟶ .real, doms := [dom1 F d], doc, value := close <| lamT F d body }
 
+/-- A sequence of real numbers: a real function whose values at the natural numbers are its
+terms, `0` elsewhere (so that its supremum, boundedness and limit are those of its terms). -/
+def seqPred (p : Option (B → B)) : Tm := close <| lamT F (fun _ => tt) fun a =>
+  let zero := allR fun x => imp (not (nat x)) (eq (app a x) (num 0))
+  match p with
+  | some p => and zero (allR fun n => imp (nat n) (p (app a n)))
+  | none => zero
+
+def seqNoun (sing plural : Phrase) (p : Option (B → B)) (doc : String) : Noun :=
+  { sing, plural, ty := F, pred := seqPred p, doc, seq := true }
+
 def vocab : Vocab where
+  nouns := [
+    seqNoun phrase!"sequence of real numbers" phrase!"sequences of real numbers" none
+      "`a_0, a_1, …`: a function of the natural numbers (Mathlib `ℕ → ℝ`)",
+    seqNoun phrase!"real sequence" phrase!"real sequences" none "(Mathlib `ℕ → ℝ`)",
+    seqNoun phrase!"sequence of positive real numbers" phrase!"sequences of positive real numbers" (some fun x => lt (num 0) x)
+      "`a_n > 0`",
+    seqNoun phrase!"sequence of nonnegative real numbers" phrase!"sequences of nonnegative real numbers" (some fun x => le (num 0) x)
+      "`a_n ≥ 0`",
+    seqNoun phrase!"sequence of integers" phrase!"sequences of integers" (some fun x => isInt x) "(Mathlib `ℕ → ℤ`)"]
   mods := [
+    { phrase := phrase!"converging to $v$", prenominal := false, ty := F,
+      pred := close <| lamR fun l => lamT F (fun _ => tt) fun a => tendsTo a l, doc := "`a_n → l` (Mathlib `Filter.Tendsto`)" },
+    { phrase := phrase!"convergent", prenominal := true, ty := F,
+      pred := close <| lamT F (fun _ => tt) fun a => exR fun l => tendsTo a l, doc := "`a_n → l` for some `l`" },
+    { phrase := phrase!"divergent", prenominal := true, ty := F,
+      pred := close <| lamT F (fun _ => tt) fun a => not (exR fun l => tendsTo a l), doc := "convergent to no number" },
     adj phrase!"summable" true converges "`∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability)",
     adj phrase!"absolutely summable" true (fun a => converges (absTerms a)) "`∑ |a_k|` converges (Mathlib `Summable`)",
     adj phrase!"conditionally summable" true (fun a => and (converges a) (not (converges (absTerms a))))
