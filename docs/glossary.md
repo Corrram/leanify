@@ -31,6 +31,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `summability`
     * `functionsequences`
     * `odes`
+    * `epidemics`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -68,6 +69,8 @@ except a notion whose meanings take arguments of different types, which the type
         * `distributions`
         * `densities`
         * `information`
+        * `channels`
+        * `concentration`
         * `risk`
         * `stochasticorders`
         * `markovchains`
@@ -87,6 +90,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `games`
     * `queues`
     * `reliability`
+    * `actuarial`
   * `discrete`
     * `combinatorics`
     * `counting`
@@ -104,19 +108,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `curves` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `continuedfractions`, `digits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
-| `probability` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
+| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `copulas` |
 
 ## `core`
 
@@ -2431,4 +2435,63 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | supremum distance between the $a$ th term of $b$ and $c$ on $[d,e]$ | ℝ → (ℝ → ℝ → ℝ) → (ℝ → ℝ) → ℝ → ℝ → ℝ | `sup_{x∈[a,b]} \|f(n,x) - g(x)\|`, the least upper bound (where the differences are bounded) |
 | $a$ th partial sum of the series of functions $b$ at $c$ | ℝ → (ℝ → ℝ → ℝ) → ℝ → ℝ | `∑_{k=0}^{n} f(k,x)` |
+
+## `concentration`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| markov bound for the mean $a$ at the level $b$ | ℝ → ℝ → ℝ | `μ/a`: `P(X ≥ a) ≤ μ/a` for `X ≥ 0` |
+| chebyshev bound for the variance $a$ at the deviation $b$ | ℝ → ℝ → ℝ | `σ²/t²`: `P(\|X - μ\| ≥ t) ≤ σ²/t²` |
+| cantelli bound for the variance $a$ at the deviation $b$ | ℝ → ℝ → ℝ | `σ²/(σ² + t²)`: `P(X - μ ≥ t) ≤ σ²/(σ² + t²)` |
+| hoeffding bound for $a$ observations in an interval of length $b$ at the deviation $c$ | ℝ → ℝ → ℝ → ℝ | `2 exp(-2nt²/ℓ²)`: `P(\|X̄ - μ\| ≥ t)` for `n` independent observations in an interval of length `ℓ` |
+| bernstein bound for $a$ observations with variance $b$ and range $c$ at the deviation $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `2 exp(-nt²/(2σ² + 2ℓt/3))`, for `\|X_i - μ\| ≤ ℓ` |
+| chernoff bound for the mean $a$ at the relative deviation $b$ | ℝ → ℝ → ℝ | `exp(-δ²μ/3)`: `P(X ≥ (1+δ)μ)` for a sum of independent Bernoulli variables, `0 < δ ≤ 1` |
+| mcdiarmid bound for $a$ variables with bounded differences $b$ at the deviation $c$ | ℝ → ℝ → ℝ → ℝ | `2 exp(-2t²/(n c²))` |
+| hoeffding sample size for an interval of length $a$, accuracy $b$ and confidence parameter $c$ | ℝ → ℝ → ℝ → ℝ | `⌈ℓ² log(2/δ)/(2ε²)⌉` observations for `P(\|X̄ - μ\| ≥ ε) ≤ δ` |
+| realizable sample complexity of $a$ hypotheses with accuracy $b$ and confidence parameter $c$ | ℝ → ℝ → ℝ → ℝ | `⌈(log k + log(1/δ))/ε⌉`, a consistent learner over a finite class |
+| agnostic sample complexity of $a$ hypotheses with accuracy $b$ and confidence parameter $c$ | ℝ → ℝ → ℝ → ℝ | `⌈(log k + log(2/δ))/(2ε²)⌉`, empirical risk minimization over a finite class |
+
+## `channels`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| binary entropy in bits of $a$ | ℝ → ℝ | `-p log₂ p - (1-p) log₂(1-p)` |
+| capacity of the binary symmetric channel with crossover probability $a$ | ℝ → ℝ | `1 - h(p)` bits per use |
+| capacity of the binary erasure channel with erasure probability $a$ | ℝ → ℝ | `1 - ε` bits per use |
+| capacity of the z-channel with crossover probability $a$ | ℝ → ℝ | `log₂(1 + (1-p) p^{p/(1-p)})`, `0 ≤ p < 1` (`0^0 = 1`) |
+| capacity of the gaussian channel with signal-to-noise ratio $a$ | ℝ → ℝ | `½ log₂(1 + s)` bits per use |
+| capacity of the band-limited gaussian channel with bandwidth $a$ and signal-to-noise ratio $b$ | ℝ → ℝ → ℝ | `W log₂(1 + s)` bits per second (Shannon–Hartley) |
+| rate-distortion function of the bernoulli source with parameter $a$ at distortion $b$ | ℝ → ℝ → ℝ | `h(p) - h(D)` for `D < min(p, 1-p)`, and `0` otherwise |
+| rate-distortion function of the gaussian source with variance $a$ at distortion $b$ | ℝ → ℝ → ℝ | `½ log₂(σ²/D)` for `D < σ²`, and `0` otherwise |
+
+## `actuarial`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| survival function of the gompertz law with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `t ↦ exp(-B(c^t - 1)/log c)`, `B > 0`, `c > 1` |
+| survival function of the gompertz-makeham law with parameters $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | `t ↦ exp(-At - B(c^t - 1)/log c)` |
+| force of mortality of the gompertz law with parameters $a$ and $b$ | ℝ → ℝ → ℝ → ℝ | `t ↦ B c^t` |
+| life expectancy with force of mortality $a$ | ℝ → ℝ | `1/μ`, constant force |
+| net single premium of a whole life insurance with force of mortality $a$ and force of interest $b$ | ℝ → ℝ → ℝ | `μ/(μ+δ)`, constant forces |
+| present value of a continuous whole life annuity with force of mortality $a$ and force of interest $b$ | ℝ → ℝ → ℝ | `1/(μ+δ)`, constant forces |
+| present value of a continuous annuity-certain for $a$ years with force of interest $b$ | ℝ → ℝ → ℝ | `(1 - e^{-δn})/δ` |
+| complete expectation of life for the survival function $a$ | (ℝ → ℝ) → ℝ | `∫_0^∞ S(t) dt`, where `S` is integrable |
+| net single premium of an $a$-year pure endowment for the survival function $b$ with force of interest $c$ | ℝ → (ℝ → ℝ) → ℝ → ℝ | `e^{-δn} S(n)` |
+
+## `epidemics`
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| solution of the sis model with transmission rate $x$ and recovery rate $a$ | ℝ → ℝ | `i' = β i (1 - i) - γ i` everywhere (the infected fraction) |
+| solution of the exponential growth equation with rate $x$ | ℝ → ℝ | `y' = r y` everywhere |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| basic reproduction number of the sir model with transmission rate $a$ and recovery rate $b$ | ℝ → ℝ → ℝ | `R₀ = β/γ` |
+| basic reproduction number of the sir model with transmission rate $a$, recovery rate $b$ and mortality $c$ | ℝ → ℝ → ℝ → ℝ | `R₀ = β/(γ + μ)`, with births and deaths at rate `μ` |
+| herd immunity threshold for the basic reproduction number $a$ | ℝ → ℝ | `1 - 1/R₀`, `R₀ > 1` |
+| final size of the epidemic with basic reproduction number $a$ | ℝ → ℝ | the `z ∈ (0,1)` with `z = 1 - e^{-R₀ z}` (the final size equation), `R₀ > 1` |
+| doubling time for the growth rate $a$ | ℝ → ℝ | `log 2/r` |
+| endemic equilibrium of the sis model with basic reproduction number $a$ | ℝ → ℝ | `1 - 1/R₀`, the infected fraction at equilibrium |
+| critical vaccination coverage for the basic reproduction number $a$ and efficacy $b$ | ℝ → ℝ → ℝ | `(1 - 1/R₀)/e` |
 

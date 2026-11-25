@@ -74,6 +74,10 @@ import Leanify.Library.Majorization
 import Leanify.Library.Odes
 import Leanify.Library.RandomWalks
 import Leanify.Library.FunctionSequences
+import Leanify.Library.Concentration
+import Leanify.Library.Channels
+import Leanify.Library.Actuarial
+import Leanify.Library.Epidemics
 
 /-! # The fields of the vocabulary
 
@@ -165,7 +169,11 @@ def all : List (String × Vocab) := [
   ("majorization", Majorization.vocab),
   ("odes", Odes.vocab),
   ("randomwalks", RandomWalks.vocab),
-  ("functionsequences", FunctionSequences.vocab)]
+  ("functionsequences", FunctionSequences.vocab),
+  ("concentration", Concentration.vocab),
+  ("channels", Channels.vocab),
+  ("actuarial", Actuarial.vocab),
+  ("epidemics", Epidemics.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -194,17 +202,17 @@ def bundles : List (String × List String) := [
   -- the realms, and `math` with all of them
   ("math", ["analysis", "algebra", "topology", "numerics", "stochastic", "discrete", "numbertheory"]),
   ("analysis", ["realfunctions", "realsets", "calculus", "series", "integration", "optimization", "asymptotics",
-    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
+    "transforms", "fourier", "dynamics", "functionalequations", "convexity", "fractional", "summability", "functionsequences", "odes", "epidemics", "integralequations", "classicalpdes", "elementary", "complex", "torus"]),
   ("algebra", ["linearalgebra", "polynomials", "groups"]),
   ("topology", ["realsets", "topologies", "metricspaces", "geometry", "planegeometry", "curves"]),
   ("numerics", ["approximation", "iteration", "odesolvers", "matrixnorms", "descent"]),
-  ("stochastic", ["statistics", "finance", "utility", "economics", "games", "queues", "reliability"]),
+  ("stochastic", ["statistics", "finance", "utility", "economics", "games", "queues", "reliability", "actuarial"]),
   ("discrete", ["combinatorics", "counting", "permutations", "graphs", "recurrences", "codes"]),
   ("numbertheory", ["numbers", "arithmetic", "congruences", "specialnumbers", "continuedfractions", "digits"]),
   -- the areas inside them
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
-  ("probability", ["distributions", "densities", "information", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes"]),
+  ("probability", ["distributions", "densities", "information", "channels", "concentration", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "extremes"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "dependence"])]
 

@@ -472,6 +472,11 @@ def symbolOf (pat : List TItem) : Option Codes :=
   let pre := pat.takeWhile fun it => match it with | .fixed _ => true | _ => false
   let toks : List Tok := pre.filterMap fun it => match it with | .fixed t => some t | _ => none
   let toks := (toks.reverse.dropWhile fun t => t == .msym 95 || t == .msym 94 || t == .msym 40).reverse
+  -- (an accent before its argument, `\overline{A}`: the accent; a subscript keeps its brace,
+  -- `\phi_{\mu,v}` and `\phi` being two symbols)
+  let toks := match toks.reverse with
+    | .lbrace :: .cmd c :: rest => (Tok.cmd c :: rest).reverse
+    | _ => toks
   match toks with
   | .cmd _ :: _ =>
     let tx := texOf (toks.length + 1) toks

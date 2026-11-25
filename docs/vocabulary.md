@@ -331,6 +331,10 @@ Further fields cover other branches of mathematics:
   exit times;
 * `functionsequences`: pointwise and uniform convergence, equicontinuity of sequences of
   functions.
+* `concentration`: the classical tail bounds, sample sizes and sample complexities;
+* `channels`: capacities of the standard channels, rate-distortion functions;
+* `actuarial`: survival laws, life expectancies, premiums and annuities;
+* `epidemics`: reproduction numbers, thresholds and final sizes, the SIS model.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

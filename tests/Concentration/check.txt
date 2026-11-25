@@ -1,0 +1,30 @@
+tests/Concentration/article.tex:9:1: info: defines \@n0 (n0)
+tests/Concentration/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0))
+tests/Concentration/article.tex:10:1: info: defines \@n1 (n1)
+tests/Concentration/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y\,y=0))
+tests/Concentration/article.tex:11:1: info: defines \@n2 (n2)
+tests/Concentration/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (x+y\,y=0))
+tests/Concentration/article.tex:12:1: info: defines \@n3 (n3)
+tests/Concentration/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (y\,y=0)))
+tests/Concentration/article.tex:13:1: info: defines \@n4 (n4)
+tests/Concentration/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow \neg (z=0)\land \neg (2\,(y\,y)=0)))
+tests/Concentration/article.tex:14:1: info: defines \@n5 (n5)
+tests/Concentration/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\land z<1\Rightarrow \neg (z=0)\land \neg (y=0)))
+tests/Concentration/article.tex:19:1: info: claim 0: \@n0(1,4)=\frac{1}{4}
+tests/Concentration/article.tex:19:1: info: claim 0 is meaningful if: (0<4\land 0\le 1)\land \neg (4=0)
+tests/Concentration/article.tex:19:1: info: claim 1: \@n1(1,2)=\frac{1}{4}
+tests/Concentration/article.tex:19:1: info: claim 1 is meaningful if: (0<2\land 0\le 1)\land \neg (4=0)
+tests/Concentration/article.tex:19:1: info: claim 2: \@n2(1,1)=\frac{1}{2}
+tests/Concentration/article.tex:19:1: info: claim 2 is meaningful if: (0<1\land 0\le 1)\land \neg (2=0)
+tests/Concentration/article.tex:23:30: info: claim 3: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n2(x,y)\le \@n1(x,y))
+tests/Concentration/article.tex:23:30: info: claim 3 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<y\land 0\le x)\land 0<y\land 0\le x)
+tests/Concentration/article.tex:27:46: info: claim 4: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n3(x,1,y)=2\,\exp(-(2\,x\,{y}^{2})))
+tests/Concentration/article.tex:27:46: info: claim 4 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<y\land 0<1\land x\in \mathbb{Z}\land 1\le x)
+tests/Concentration/article.tex:31:1: info: claim 5: \@n5(1,1,\exp(-1))=1
+tests/Concentration/article.tex:31:1: info: claim 5 is meaningful if: (0<\exp(-1)\land \exp(-1)<1)\land 0<1\land 1\in \mathbb{Z}\land 1\le 1
+tests/Concentration/article.tex:31:1: info: claim 6: \@n4(1,1,2\,\exp(-2))=1
+tests/Concentration/article.tex:31:1: info: claim 6 is meaningful if: (0<2\,\exp(-2)\land 2\,\exp(-2)<1)\land 0<1\land 0<1
+tests/Concentration/article.tex: 6 definitions, 7 claims
+  text: 6 compiled, 0 failed, 0 prose (of 6)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

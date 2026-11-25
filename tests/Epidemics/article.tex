@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={epidemics}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $R_0(\beta,\gamma)$ for the basic reproduction number of the SIR model with transmission rate $\beta$ and recovery rate $\gamma$.
+We write $H(r)$ for the herd immunity threshold for the basic reproduction number $r$.
+We write $z(r)$ for the final size of the epidemic with basic reproduction number $r$.
+We write $T_d(r)$ for the doubling time for the growth rate $r$.
+We write $V(r,e)$ for the critical vaccination coverage for the basic reproduction number $r$ and efficacy $e$.
+For every real number $t$, let $g(t)\coloneqq\exp(2t)$.
+For every real number $t$, let $o(t)\coloneqq0$.
+
+\section{Thresholds}
+
+\begin{lemma}\label{thresholds}
+$R_0(2,1)=2$, $H(2)=\frac12$ and $V(2,\frac12)=1$.
+\end{lemma}
+
+\begin{lemma}\label{finalsize}
+$z(2)>\frac12$, and $T_d(\log 2)=1$.
+\end{lemma}
+
+\section{Dynamics}
+
+\begin{lemma}\label{growth}
+$g$ is a solution of the exponential growth equation with rate $2$, and $o$ is a solution of the SIS model with transmission rate $2$ and recovery rate $1$.
+\end{lemma}
+
+\end{document}

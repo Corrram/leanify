@@ -607,3 +607,27 @@ globs = ["RandomWalks.+"]
 name = "FunctionSequences"
 srcDir = "tests"
 globs = ["FunctionSequences.+"]
+
+[[lean_lib]]
+# The field concentration: tail bounds and sample complexity.
+name = "Concentration"
+srcDir = "tests"
+globs = ["Concentration.+"]
+
+[[lean_lib]]
+# The field channels: channel capacities and rate distortion.
+name = "Channels"
+srcDir = "tests"
+globs = ["Channels.+"]
+
+[[lean_lib]]
+# The field actuarial: life contingencies.
+name = "Actuarial"
+srcDir = "tests"
+globs = ["Actuarial.+"]
+
+[[lean_lib]]
+# The field epidemics: compartmental epidemic models.
+name = "Epidemics"
+srcDir = "tests"
+globs = ["Epidemics.+"]

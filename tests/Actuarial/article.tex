@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={actuarial}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $S_{B,c}$ for the survival function of the Gompertz law with parameters $B$ and $c$.
+We write $\mu_{B,c}$ for the force of mortality of the Gompertz law with parameters $B$ and $c$.
+We write $e(\mu)$ for the life expectancy with force of mortality $\mu$.
+We write $A(\mu,\delta)$ for the net single premium of a whole life insurance with force of mortality $\mu$ and force of interest $\delta$.
+We write $a(\mu,\delta)$ for the present value of a continuous whole life annuity with force of mortality $\mu$ and force of interest $\delta$.
+We write $E(S)$ for the complete expectation of life for the survival function $S$.
+For every real number $t$, let $X(t)\coloneqq\exp(-|t|)$.
+
+\section{Constant force}
+
+\begin{lemma}\label{constant}
+$e(\frac12)=2$, $A(1,1)=\frac12$ and $a(1,1)=\frac12$.
+\end{lemma}
+
+\begin{lemma}\label{identity}
+Let $\mu,\delta>0$ be real numbers. Then $A(\mu,\delta)+\delta a(\mu,\delta)=1$.
+\end{lemma}
+
+\section{Survival models}
+
+\begin{lemma}\label{gompertz}
+$S_{1,2}(0)=1$ and $\mu_{1,2}(1)=2$, and $E(X)=1$.
+\end{lemma}
+
+\end{document}

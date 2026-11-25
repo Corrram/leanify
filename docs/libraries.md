@@ -50,6 +50,7 @@ math
 │   ├── summability               Cesàro and Abel summability, sequences
 │   ├── functionsequences         pointwise and uniform convergence, equicontinuity
 │   ├── odes                      linear, Bernoulli, Riccati, Euler–Cauchy, oscillators
+│   ├── epidemics                 reproduction numbers, final sizes, the SIS model
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -86,6 +87,8 @@ math
 │   │   │   ├── distributions     distributions on ℕ₀ (Poisson, binomial, geometric, …)
 │   │   │   ├── densities         densities on the line
 │   │   │   ├── information       entropy and divergences
+│   │   │   ├── channels          channel capacities, rate distortion
+│   │   │   ├── concentration     tail bounds, sample sizes, sample complexity
 │   │   │   ├── risk              survival, hazard rate, value at risk, expected shortfall
 │   │   │   ├── stochasticorders  usual, hazard rate, likelihood ratio, convex orders
 │   │   │   ├── markovchains      transition matrices, stationary distributions (with matrixnorms)
@@ -105,7 +108,8 @@ math
 │   ├── economics                 elasticities, production functions, Lorenz curves, Gini
 │   ├── games                     two-by-two zero-sum games, values, optimal strategies
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
-│   └── reliability               series, parallel, k-out-of-n systems; MTTF
+│   ├── reliability               series, parallel, k-out-of-n systems; MTTF
+│   └── actuarial                 survival laws, premiums, annuities
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
@@ -209,6 +213,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`summability`](glossary.md#summability) | Cesàro and Abel summable sequences, convergent, null, Cauchy, eventually nondecreasing and bounded-variation sequences, subadditive and log-concave sequences; Cesàro means, arithmetic means, the Abel sum, forward differences | |
 | [`functionsequences`](glossary.md#functionsequences) | for a sequence of functions `f(n, x)`: pointwise and uniform convergence (on `[a,b]` or the line), uniformly Cauchy, uniformly bounded, equicontinuous, monotone in the index; the supremum distance to a limit, partial sums of a series of functions | |
 | [`odes`](glossary.md#odes) | solutions of first-order linear, separable, Bernoulli and Riccati equations, of second-order linear and Euler–Cauchy equations, of the harmonic and damped oscillator equations; the Wronskian | |
+| [`epidemics`](glossary.md#epidemics) | the basic reproduction number of the SIR model (with and without mortality), the herd immunity threshold, the final size, the doubling time, the endemic equilibrium of the SIS model and the critical vaccination coverage; solutions of the SIS model and of exponential growth | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -248,6 +253,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`bayesian`](glossary.md#bayesian) | posterior mean, mode and parameters of a beta prior after binomial data, the posterior mean of a gamma prior after Poisson data, posterior mean and variance of a normal prior after normal data; Bayes' formula and the Bayes factor | |
 | [`densities`](glossary.md#densities) | probability densities on the line: normal, exponential, uniform, gamma, beta, χ², Cauchy, Laplace, logistic, Pareto, Weibull, lognormal, Student t, F, Rayleigh, Gumbel, Fréchet, generalized Pareto, inverse Gaussian, Erlang, triangular; distribution function, mean, variance, moments, moment generating function, median, differential entropy, skewness, excess kurtosis | |
 | [`information`](glossary.md#information) | entropy, Rényi and binary entropy, Kullback–Leibler and χ² divergences, total variation and Hellinger distances | with `distributions` |
+| [`channels`](glossary.md#channels) | the binary entropy in bits; capacities of the binary symmetric, binary erasure, Z, Gaussian and band-limited Gaussian channels; rate-distortion functions of Bernoulli and Gaussian sources | |
+| [`concentration`](glossary.md#concentration) | Markov, Chebyshev, Cantelli, Hoeffding, Bernstein, Chernoff and McDiarmid bounds; the Hoeffding sample size; the realizable and agnostic sample complexity of a finite hypothesis class | |
 | [`risk`](glossary.md#risk) | survival function, hazard rate, cumulative hazard, quantile function, stop-loss transform, mean excess function; value at risk, expected shortfall; heavy- and light-tailed, increasing and decreasing failure rate | with `densities` |
 | [`stochasticorders`](glossary.md#stochasticorders) | `$f$ is smaller than $g$` in the usual stochastic, hazard rate, likelihood ratio, convex and increasing convex orders | with `densities` |
 | [`markovchains`](glossary.md#markovchains) | doubly stochastic, irreducible and primitive matrices; absorbing states; stationary and reversible distributions, distributions on `n` states; `k`-step transition probabilities, the distribution after `k` steps, the stationary probability of a state | loads `matrixnorms` |
@@ -260,6 +267,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`games`](glossary.md#games) | the value, lower and upper values and expected payoffs of a two-by-two zero-sum game; optimal strategies of the row and column players | |
 | [`queues`](glossary.md#queues) | the traffic intensity; for the M/M/1 queue the mean numbers in the system and waiting, the mean sojourn and waiting times, the probability of `n` customers; the Erlang B and C formulas; the Pollaczek–Khinchine mean waiting time of M/G/1 | |
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
+| [`actuarial`](glossary.md#actuarial) | survival functions and the force of mortality of the Gompertz and Gompertz–Makeham laws; life expectancy, net single premiums of whole life insurance and annuities under constant forces, annuities-certain, the complete expectation of life, pure endowments | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |

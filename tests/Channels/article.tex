@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={channels}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $h(p)$ for the binary entropy in bits of $p$.
+We write $C_{\mathrm{BSC}}(p)$ for the capacity of the binary symmetric channel with crossover probability $p$.
+We write $C_{\mathrm{BEC}}(\varepsilon)$ for the capacity of the binary erasure channel with erasure probability $\varepsilon$.
+We write $C_{\mathrm{AWGN}}(s)$ for the capacity of the Gaussian channel with signal-to-noise ratio $s$.
+We write $R(\sigma,D)$ for the rate-distortion function of the Gaussian source with variance $\sigma$ at distortion $D$.
+
+\section{Capacities}
+
+\begin{lemma}\label{bsc}
+$h(\frac12)=1$, $C_{\mathrm{BSC}}(\frac12)=0$ and $C_{\mathrm{BSC}}(0)=1$.
+\end{lemma}
+
+\begin{lemma}\label{bec}
+$C_{\mathrm{BEC}}(\frac14)=\frac34$ and $C_{\mathrm{AWGN}}(3)=1$.
+\end{lemma}
+
+\begin{lemma}\label{rd}
+$R(4,1)=1$ and $R(1,2)=0$.
+\end{lemma}
+
+\end{document}

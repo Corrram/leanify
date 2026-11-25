@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={concentration}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $M(\mu,a)$ for the Markov bound for the mean $\mu$ at the level $a$.
+We write $C(s,t)$ for the Chebyshev bound for the variance $s$ at the deviation $t$.
+We write $K(s,t)$ for the Cantelli bound for the variance $s$ at the deviation $t$.
+We write $H(n,\ell,t)$ for the Hoeffding bound for $n$ observations in an interval of length $\ell$ at the deviation $t$.
+We write $N(\ell,\varepsilon,\delta)$ for the Hoeffding sample size for an interval of length $\ell$, accuracy $\varepsilon$ and confidence parameter $\delta$.
+We write $m(k,\varepsilon,\delta)$ for the realizable sample complexity of $k$ hypotheses with accuracy $\varepsilon$ and confidence parameter $\delta$.
+
+\section{Bounds}
+
+\begin{lemma}\label{values}
+$M(1,4)=\frac14$, $C(1,2)=\frac14$ and $K(1,1)=\frac12$.
+\end{lemma}
+
+\begin{lemma}\label{cantelli}
+Let $s,t>0$ be real numbers. Then $K(s,t)\le C(s,t)$.
+\end{lemma}
+
+\begin{lemma}\label{hoeffding}
+Let $n$ be a positive integer and let $t>0$. Then $H(n,1,t)=2\exp(-2nt^2)$.
+\end{lemma}
+
+\begin{lemma}\label{samples}
+$m(1,1,\exp(-1))=1$ and $N(1,1,2\exp(-2))=1$.
+\end{lemma}
+
+\end{document}

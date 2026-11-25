@@ -92,3 +92,7 @@ article-reader/
 /tests/Odes/article.leanify.*
 /tests/RandomWalks/article.leanify.*
 /tests/FunctionSequences/article.leanify.*
+/tests/Concentration/article.leanify.*
+/tests/Channels/article.leanify.*
+/tests/Actuarial/article.leanify.*
+/tests/Epidemics/article.leanify.*
