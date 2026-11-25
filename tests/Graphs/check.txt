@@ -27,7 +27,14 @@ tests/Graphs/article.tex:45:71: info: claim 10: \forall x\in \mathbb{R},\ x\in \
 tests/Graphs/article.tex:49:39: info: claim 11: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow (\forall z\in \mathrm{Graph},\ (\operatorname{Regular}(z)\land (\forall a\in \mathbb{R},\ a\in V(z)\Rightarrow \deg_{z}(a)=x))\land \lvert V(z)\rvert=y\Rightarrow 2\,\@n1(z)=x\,y))
 tests/Graphs/article.tex:53:1: info: claim 12: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \lvert V(y)\rvert=x\Rightarrow \lvert E(y)\rvert=x-1
 tests/Graphs/article.tex:57:53: info: claim 13: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathrm{Graph},\ \lvert V(z)\rvert=x\land \lvert E(z)\rvert=y\Rightarrow \operatorname{Complete}(z)\Rightarrow 2\,y=x\,(x-1)
-tests/Graphs/article.tex: 8 definitions, 14 claims
+tests/Graphs/article.tex:61:21: info: claim 14: \forall x\in \mathrm{Graph},\ \lvert V_{\mathrm{odd}}(x)\rvert\le \lvert V(x)\rvert
+tests/Graphs/article.tex:65:69: info: claim 15: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z))\Rightarrow \operatorname{Eulerian}(x)
+tests/Graphs/article.tex:69:1: info: claim 16: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\Rightarrow \neg \operatorname{OddCycle}(x)
+tests/Graphs/article.tex:73:77: info: claim 17: \forall x\in \mathbb{R},\ 3\le x\Rightarrow (\forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\land \frac{x}{2}\le \delta(y)\Rightarrow \operatorname{Hamiltonian}(y))
+tests/Graphs/article.tex:73:77: info: claim 17 is meaningful if: \forall x\in \mathbb{R},\ 3\le x\Rightarrow (\forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\Rightarrow \neg (2=0))
+tests/Graphs/article.tex:77:1: info: claim 18: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\Rightarrow \operatorname{Colorable}(2)(x)
+tests/Graphs/article.tex:81:49: info: claim 19: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\Rightarrow (\forall y\in \mathbb{R},\ y\in V(x)\land \deg_{x}(y)=1\Rightarrow y\in V(x)\land \deg_{x}(y)=1)
+tests/Graphs/article.tex: 8 definitions, 20 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 14 compiled, 0 failed, 0 prose (of 14)
-  all: 22 compiled, 0 failed, 0 prose (of 22)
+  results: 24 compiled, 0 failed, 0 prose (of 24)
+  all: 32 compiled, 0 failed, 0 prose (of 32)

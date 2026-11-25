@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Graphs.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["graphs"]
 
-#leanify_article Graphs "article.tex" "fnv1a64:10aa2805a8bff85e" with Graphs.vocabulary
+#leanify_article Graphs "article.tex" "fnv1a64:16a7d6d6bdc91624" with Graphs.vocabulary

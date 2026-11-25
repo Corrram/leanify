@@ -1339,6 +1339,9 @@ inductive Clause where
   | notions (s : MT) (names : List (List Codes)) (disj : Bool)
   /-- `every NP is NAME [and|or NAME]`. -/
   | everyIs (np : List Chunk) (names : List (List Codes)) (disj : Bool)
+  /-- `every NP is MOD`, a modifier after the noun (`every vertex of $G$ is of even degree`,
+  `every element of $G$ is of order $2$`). -/
+  | everyMod (np : List Chunk) (mod : List Chunk)
   /-- `$φ$ if and only if $ψ$`. -/
   | iff (p q : MT)
   /-- `$X$ is [not] a|an NP`, `$X$ is [not] ADJ [and ADJ]`: a noun or adjectives of the
@@ -2174,7 +2177,20 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let (np, r1) ← chunksUntil [w!"is"] r []
       let r2 ← kw [w!"is"] r1
       let (names, disj, r3) ← notionList r2
-      some (.everyIs np names disj, r3))
+      some (.everyIs np names disj, r3)) <|>
+    (do
+      let (np, r1) ← chunksUntil [w!"is"] r []
+      let r2 ← kw [w!"is"] r1
+      -- (`every vertex of $G$ is of even degree`: a modifier that follows its noun)
+      match r2 with
+      | .w w :: _ => if ![w!"of", w!"with", w!"without"].contains w then none
+      | _ => none
+      let mod := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"or", w!"if", w!"then", w!"for", w!"whenever", w!"where", w!"since"].contains w
+        | .m _ | .p 45 => true
+        | _ => false
+      if mod.isEmpty || !clauseEnd (r2.drop mod.length) then none
+      some (.everyMod np mod, r2.drop mod.length))
   | none =>
   -- The maximum/minimum $F=m$ is attained only by SUBJ[, which REL]
   match kw [w!"the", w!"maximum"] cs, kw [w!"the", w!"minimum"] cs with
@@ -2347,6 +2363,35 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | _ => false
       if ws.isEmpty then none
       some (Clause.isA s ([Chunk.w w!"with", Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$G$ has no odd cycle`, `$G$ contains no triangle`: the modifier `without odd cycle`
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has", w!"no"] r <|> kw [w!"contains", w!"no"] r <|> kw [w!"have", w!"no"] r <|> kw [w!"contain", w!"no"] r
+      let ws := r1.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"of", w!"in", w!"with"].contains w
+        | .p 45 => true
+        | _ => false
+      if ws.isEmpty then none
+      some (Clause.isA s ([Chunk.w w!"without"] ++ ws) false, r1.drop ws.length) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$G$ contains a Hamiltonian cycle`: as `has` (words only, a modifier `with a …`)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let _ ← Math.parseFormula ts
+      let r1 ← kw [w!"contains"] r
+      let r2 ← kw [w!"a"] r1 <|> kw [w!"an"] r1
+      let ws := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"of", w!"in", w!"with", w!"that"].contains w
+        | .p 45 => true
+        | _ => false
+      if ws.isEmpty then none
+      let rest := r2.drop ws.length
+      if (match rest with | .m _ :: _ => true | _ => false) then none
+      some (Clause.existsNP (ws ++ [Chunk.w w!"of", Chunk.m ts]) false none, rest) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$f$ has a [unique] fixed point`, `$G$ has an element of order $2$`: there is such an
@@ -3635,6 +3680,9 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
       -- (`that is bounded above`: a relative clause after the noun, not its words)
       | .w w, .w i :: _ =>
         if (w == w!"that" || w == w!"which") && (i == w!"is" || i == w!"are") then acc.reverse
+        -- (`in which every vertex has even degree`: a relative clause)
+        else if (w == w!"in" || w == w!"for" || w == w!"on") && i == w!"which" then acc.reverse
+        else if w == w!"whose" then acc.reverse
         else if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
       | .w w, _ => if w != w!"with" && w != w!"such" then go f rest (c :: acc) else acc.reverse
       | .p 45, _ => go f rest (c :: acc)
@@ -5249,7 +5297,10 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     -- `Every Harshad number is a positive integer.`: a noun after `is a`, of an object
     -- that the sentence does not name (a variable of its own)
     let r2 ← kw [w!"is"] r1
-    let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2
+    -- (or an adjective with a formula, `is $2$-colorable`)
+    let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2 <|> (match r2 with
+      | .m _ :: .p 45 :: .w _ :: _ => some r2
+      | _ => none)
     if np.isEmpty then none
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
@@ -5259,8 +5310,8 @@ sequence of real numbers has a convergent subsequence.`): the noun phrase's vari
 of its own. -/
 def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
   let r ← kw [w!"every"] cs
-  let (np, r1) ← chunksUntil [w!"has"] r []
-  let _ ← kw [w!"has"] r1
+  let (np, r1) ← chunksUntil [w!"has"] r [] <|> chunksUntil [w!"contains"] r []
+  let _ ← kw [w!"has"] r1 <|> kw [w!"contains"] r1
   if np.isEmpty then none
   match np.getLast? with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
@@ -5698,6 +5749,49 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
       after.take j ++ [⟨.word w!"of", pos, false⟩] ++ v ++ after.drop j
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := whose then return ps.map fun ts => { s with toks := ts }
+  -- `Let $G$ be a connected graph in which every vertex has even degree.`: the binder,
+  -- then `Suppose that every vertex of $G$ has even degree.`
+  let inWhich : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let toks : List PTok := s.toks
+    let k : Nat ← (List.range toks.length).find? fun i =>
+      (toks[i]? >>= textWord) == some w!"in" && (toks[i + 1]? >>= textWord) == some w!"which"
+    let pos : Nat := (toks[k]?.map fun (t : PTok) => t.pos).getD 0
+    let mathAt (i : Nat) : Option (List PTok) := do
+      let t : PTok ← toks[i]?
+      if t.tok != Tok.mopen then none
+      let body := (toks.drop (i + 1)).takeWhile fun (u : PTok) => u.tok != Tok.mclose
+      let close : PTok ← toks[i + 1 + body.length]?
+      some ([t] ++ body ++ [close])
+    let i ← (List.range k).reverse.find? fun i =>
+      match mathAt i with
+      | some m => (toks[i + m.length]? >>= textWord) == some w!"be"
+      | none => false
+    let v ← mathAt i
+    let after : List PTok := toks.drop (k + 2)
+    -- (`every vertex` is of the object: `every vertex of $G$`)
+    let q ← after.head? >>= textWord
+    if ![w!"every", w!"each", w!"no", w!"all"].contains q then none
+    let nounLen := ((after.drop 1).takeWhile fun (t : PTok) => (textWord t).isSome &&
+      ![w!"has", w!"have", w!"is", w!"are", w!"lies", w!"belongs"].contains ((textWord t).getD [])).length
+    if nounLen == 0 then none
+    -- (`has even degree`: `is of even degree`, as after a formula)
+    let tail0 := after.drop (1 + nounLen)
+    let tail : List PTok := match tail0 with
+      | verb :: nxt :: more =>
+        let vw := textWord verb
+        let quantity := [w!"even", w!"odd", w!"finite", w!"infinite", w!"prime", w!"positive", w!"degree", w!"order",
+          w!"characteristic", w!"dimension", w!"index"]
+        if (vw == some w!"has" || vw == some w!"have") && ((textWord nxt).map quantity.contains).getD false then
+          [⟨.word (if vw == some w!"has" then w!"is" else w!"are"), verb.pos, false⟩, ⟨.word w!"of", verb.pos, false⟩, nxt] ++ more
+        else tail0
+      | _ => tail0
+    let clause : List PTok := after.take (1 + nounLen) ++ [⟨.word w!"of", pos, false⟩] ++ v ++ tail
+    let pre : List PTok := ((toks.take k).reverse.dropWhile isTextComma).reverse
+    let p1 : List PTok := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 : List PTok := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩] ++ clause
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := inWhich then return ps.map fun ts => { s with toks := ts }
   let (ts, pre) := match whereNotation s.toks with
     | some (rest, nt) => (rest, [nt])
     | none => (s.toks, [])

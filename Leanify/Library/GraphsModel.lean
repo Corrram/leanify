@@ -10,6 +10,7 @@ import Mathlib.Combinatorics.SimpleGraph.Metric
 import Mathlib.Combinatorics.SimpleGraph.Diam
 import Mathlib.Combinatorics.SimpleGraph.Girth
 import Mathlib.Combinatorics.SimpleGraph.Hamiltonian
+import Mathlib.Combinatorics.SimpleGraph.Trails
 
 /-! # The meaning of the field `graphs`
 
@@ -76,6 +77,21 @@ def completeBipartite (m n : ℝ) : Graph :=
   ⟨⌊m⌋₊ + ⌊n⌋₊, SimpleGraph.fromRel fun i j => (i : ℕ) < ⌊m⌋₊ ∧ ⌊m⌋₊ ≤ (j : ℕ)⟩
 
 def complement (G : Graph) : Graph := ⟨G.1, G.2ᶜ⟩
+
+/-- `G` is `k`-colorable (Mathlib `SimpleGraph.Colorable`). -/
+def Colorable (k : ℝ) (G : Graph) : Prop := ∃ m : ℕ, (m : ℝ) = k ∧ G.2.Colorable m
+/-- A closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`). -/
+def Eulerian (G : Graph) : Prop := ∃ v : Fin G.1, ∃ w : G.2.Walk v v, w.IsEulerian
+/-- A walk through every edge exactly once. -/
+def EulerTrail (G : Graph) : Prop := ∃ u v : Fin G.1, ∃ w : G.2.Walk u v, w.IsEulerian
+/-- A path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`). -/
+def HamiltonianPath (G : Graph) : Prop := ∃ u v : Fin G.1, ∃ w : G.2.Walk u v, w.IsHamiltonian
+/-- A cycle of odd length. -/
+def OddCycle (G : Graph) : Prop := ∃ v : Fin G.1, ∃ w : G.2.Walk v v, w.IsCycle ∧ Odd w.length
+/-- The number of vertices of odd degree. -/
+def numOddDegree (G : Graph) : ℝ := Nat.card {i : Fin G.1 // ∃ k : ℕ, degree ((i : ℝ) + 1) G = 2 * k + 1}
+/-- The number of vertices of degree `k`. -/
+def numOfDegree (k : ℝ) (G : Graph) : ℝ := Nat.card {i : Fin G.1 // degree ((i : ℝ) + 1) G = k}
 
 end
 

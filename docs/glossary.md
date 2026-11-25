@@ -619,6 +619,9 @@ except a notion whose meanings take arguments of different types, which the type
 | finite simple graph | $\mathrm{Graph}$ | (Mathlib `SimpleGraph (Fin n)`) |
 | tree | $\mathrm{Graph}$ | connected and acyclic (Mathlib `SimpleGraph.IsTree`) |
 | forest | $\mathrm{Graph}$ | acyclic (Mathlib `SimpleGraph.IsAcyclic`) |
+| vertex | ℝ | `v ∈ V(G)` |
+| leaf | ℝ | a vertex of degree `1` |
+| isolated vertex | ℝ | a vertex of degree `0` |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -634,7 +637,55 @@ except a notion whose meanings take arguments of different types, which the type
 | with $x$ vertices | $\mathrm{Graph}$ | with `n` vertices |
 | with $x$ edges | $\mathrm{Graph}$ | with `m` edges |
 | with $x$ vertices and $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
+| $x$-colorable | $\mathrm{Graph}$ | the vertices can be colored with `k` colors, adjacent ones differently (Mathlib `SimpleGraph.Colorable`) |
+| $x$-colourable | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.Colorable`) |
+| eulerian | $\mathrm{Graph}$ | with a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with minimum degree at least $x$ | $\mathrm{Graph}$ | `δ(G) ≥ k` (Mathlib `SimpleGraph.minDegree`) |
+| of minimum degree at least $x$ | $\mathrm{Graph}$ | `δ(G) ≥ k` |
+| with maximum degree at most $x$ | $\mathrm{Graph}$ | `Δ(G) ≤ k` (Mathlib `SimpleGraph.maxDegree`) |
+| of maximum degree at most $x$ | $\mathrm{Graph}$ | `Δ(G) ≤ k` |
 | on $x$ vertices with $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
+| with an odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
+| without odd cycles | $\mathrm{Graph}$ | a cycle of odd length |
+| without an odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
+| without odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
+| with a cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
+| without cycles | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
+| without a cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
+| without cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
+| with a triangle | $\mathrm{Graph}$ | three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`) |
+| without triangles | $\mathrm{Graph}$ | three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`) |
+| without a triangle | $\mathrm{Graph}$ | three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`) |
+| without triangle | $\mathrm{Graph}$ | three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`) |
+| with a hamiltonian cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsHamiltonian`) |
+| without hamiltonian cycles | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsHamiltonian`) |
+| without a hamiltonian cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsHamiltonian`) |
+| without hamiltonian cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsHamiltonian`) |
+| with a hamiltonian path | $\mathrm{Graph}$ | a path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`) |
+| without hamiltonian paths | $\mathrm{Graph}$ | a path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`) |
+| without a hamiltonian path | $\mathrm{Graph}$ | a path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`) |
+| without hamiltonian path | $\mathrm{Graph}$ | a path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`) |
+| with an eulerian circuit | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an eulerian cycle | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an euler circuit | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an euler tour | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without eulerian circuits | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without an eulerian circuit | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without eulerian circuit | $\mathrm{Graph}$ | a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an eulerian trail | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an eulerian path | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an euler trail | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without eulerian trails | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without an eulerian trail | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| without eulerian trail | $\mathrm{Graph}$ | a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`) |
+| with an isolated vertex | $\mathrm{Graph}$ | a vertex of degree `0` |
+| without isolated vertices | $\mathrm{Graph}$ | a vertex of degree `0` |
+| without an isolated vertex | $\mathrm{Graph}$ | a vertex of degree `0` |
+| without isolated vertex | $\mathrm{Graph}$ | a vertex of degree `0` |
+| of odd degree in $x$ | ℝ | a vertex with an odd number of neighbours |
+| of even degree in $x$ | ℝ | a vertex with an even number of neighbours |
+| of degree $x$ in $a$ | ℝ | a vertex with `k` neighbours |
+| adjacent to $x$ in $a$ | ℝ | (Mathlib `SimpleGraph.Adj`) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
@@ -662,6 +713,10 @@ except a notion whose meanings take arguments of different types, which the type
 | path graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | `P_n` (Mathlib `SimpleGraph.pathGraph`) |
 | empty graph on $a$ vertices | ℝ → $\mathrm{Graph}$ | no edges (Mathlib `⊥`) |
 | complete bipartite graph $K_{a,b}$ | ℝ → ℝ → $\mathrm{Graph}$ | parts `{1, …, m}` and `{m+1, …, m+n}` |
+| number of vertices of odd degree in $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
+| number of vertices of odd degree of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
+| number of leaves of $a$ | $\mathrm{Graph}$ → ℝ | vertices of degree `1` |
+| number of vertices of degree $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
 | complement of $a$ | $\mathrm{Graph}$ → $\mathrm{Graph}$ | the same vertices, the other pairs adjacent (Mathlib `Gᶜ`) |
 
 | Notation | On | Meaning |

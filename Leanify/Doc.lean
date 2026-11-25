@@ -544,7 +544,7 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       else if (v == w!"has" || v == w!"have") && afterMath && (match ts with
           | n :: m :: _ =>
             let quantity (x : Option Codes) : Bool := match x with
-              | some x => [w!"order", w!"characteristic", w!"dimension", w!"index"].contains x
+              | some x => [w!"order", w!"characteristic", w!"dimension", w!"index", w!"degree"].contains x
               | none => false
             (quantity (lw n) && m.tok == .mopen) ||
               (((lw n).map fun x => [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains x).getD false &&
@@ -1918,6 +1918,15 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           | .p 44 :: .w a :: rest => if a == w!"and" then rest else cs
           | .p 44 :: rest => rest
           | _ => cs) else cs
+      -- (`a graph with $n$ vertices and minimum degree at least $k$`: `and` between the
+      -- phrases of `with`)
+      let cs := if acc.isEmpty then cs else match cs with
+        | .w a :: rest =>
+          let alt := Chunk.w w!"with" :: rest
+          if a == w!"and" && V.mods.any (fun m => !m.prenominal && m.ty == ty &&
+              (if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase alt []).isSome
+               else ((matchPhrase m.phrase alt).bind fun (v, _) => if v.isNone then some () else none).isSome)) then alt else cs
+        | _ => cs
       let cands := V.mods.filterMap (fun m => if (rel || !m.prenominal) && m.ty == ty then
           if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
           (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
@@ -2363,8 +2372,11 @@ def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) :=
         if i ≤ i0 then none else
         match c, np[i - 1]? with
         | .m ts, some (.w w) =>
-          -- (a condition, `with $n\ge1$`, is not a slot)
-          if [w!"with", w!"that", w!"and", w!"where", w!"satisfying"].contains w then none else
+          -- (a condition, `with $n\ge1$`, is not a slot; `with $n\ge3$ vertices` is)
+          let slotAfter := match np[i + 1]? with
+            | some (.w x) => w == w!"with" && ![w!"and", w!"for", w!"then", w!"where", w!"such", w!"if"].contains x
+            | _ => false
+          if [w!"with", w!"that", w!"and", w!"where", w!"satisfying"].contains w && !slotAfter then none else
           match Math.parseFormula ts with
           | some m@(.chain (.id v) [(_, _)]) =>
             -- (nor a condition on the object's own variable)
@@ -2537,6 +2549,7 @@ def clauseMaths : Clause → List MT
   | .scoped f _ _ e => f :: e.toList
   | .everyNP np b _ => b :: (mathsOf np).filterMap Math.parseFormula
   | .everyIs np _ _ => (mathsOf np).filterMap Math.parseFormula
+  | .everyMod np md => ((mathsOf np) ++ (mathsOf md)).filterMap Math.parseFormula
   | .exists_ m => [m]
   | .extremumOf _ v f _ a _ => v :: f.toList ++ a.toList
   | .increasing ms => ms
@@ -4172,6 +4185,30 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
             | some ts => pure ([Chunk.w a, Chunk.w w!"in", Chunk.m ts] ++ rest)
             | none => pure cs
           | _ => pure cs
+        -- (`$v$ is of even degree`, of a vertex `v` of `G`: a modifier `of even degree in $v$`
+        -- that the words begin, of the object of the subject's complement)
+        let cs : List Chunk ← do
+          let stR ← get
+          let direct := V.mods.any fun m => m.ty == x.2 && (if Notation.hasSlots m.phrase then
+              (Notation.matchPrefix m.phrase cs []).isSome else (matchPhrase m.phrase cs).isSome)
+          let key : Option Codes := match x.1 with
+            | .loc i => (sc[i]?).map fun (p : Codes × Ty) => p.1
+            | _ => none
+          let comp? : Option (List MTok) := key.bind fun k =>
+            (stR.complements.find? fun ((e, n, _) : Nat × Codes × List MTok) => n == k && (e == stR.curEnv || stR.curProved == some e)).map
+              fun (q : Nat × Codes × List MTok) => q.2.2
+          match comp?, direct with
+          | some ts, false =>
+            let hit := V.mods.findSome? fun m => if m.ty != x.2 || m.prenominal then none else
+              match m.phrase.reverse with
+              | .v :: .w i :: front =>
+                if i != w!"in" || front.isEmpty then none else
+                (Notation.matchPrefix front.reverse cs []).bind fun (_, r) =>
+                  let next := match r with | .w w :: _ => w == w!"in" | _ => false
+                  if next then none else some (cs.take (cs.length - r.length) ++ [Chunk.w w!"in", Chunk.m ts] ++ r)
+              | _ => none
+            pure (hit.getD cs)
+          | _, _ => pure cs
         -- (a modifier that follows its noun is stated too: `$x$ is orthogonal to $y$`, `$S$ is of measure zero`)
         let cands := V.mods.filterMap fun m => if m.ty == x.2 then
             if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
@@ -4700,9 +4737,35 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         | some q => .imp (.app (shift k 0 q) (.loc 0)) acc
         | none => acc)) p)
   | .existsNP np unique cl => do
-    let b ← match ← pdeNoun np with
-      | some [b] => pure b
-      | _ => nounPhrase np sc
+    -- (`$G$ has a Hamiltonian cycle`, without a noun `Hamiltonian cycle of`: the modifier
+    -- `with a Hamiltonian cycle` of the subject)
+    let st0 ← get
+    let asMod : Option (MT × List Chunk) :=
+      if unique || cl.isSome then none else
+      let head := np.takeWhile fun ch => match ch with | .w w => w != w!"of" | .p 45 => true | _ => false
+      match np.drop head.length with
+      | [.w o, .m ts] =>
+        if o != w!"of" || head.isEmpty then none else
+        (Math.parseFormula ts).map fun s => (s, head)
+      | _ => none
+    let b? ← tryCatch (do
+        let b ← match ← pdeNoun np with
+          | some [b] => pure b
+          | _ => nounPhrase np sc
+        pure (some b)) fun e => do
+      if !(e.code == E.noun || e.code == E.nounWords || e.code == E.type) || asMod.isNone then throw e
+      set st0
+      pure none
+    match b?, asMod with
+    | none, some (s, head) =>
+      let first := match head.head? with
+        | some (.w w) => (w.head?.map fun ch => [97, 101, 105, 111, 117, 65, 69, 73, 79, 85].contains ch).getD false
+        | _ => false
+      let art := if first then w!"an" else w!"a"
+      let x ← subjTerm sc s
+      vocabPredicate sc x ([Chunk.w w!"with", Chunk.w art] ++ head)
+    | _, _ =>
+    let some b := b? | fail E.unsupported
     -- (`there is a fixed point of $f$`: an object without a name, about which nothing more
     -- is said)
     if b.name.isEmpty && cl.isSome then fail E.unsupported
@@ -4821,6 +4884,13 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       tryCatch (names.mapM fun nm => vocabPredicate ((b.name, b.ty) :: sc) (.loc 0, b.ty) (nameChunks nm))
         fun _ => throw e
     pure (wrap [b] (if disj then disjAll ps else conjAll ps))
+  | .everyMod np md => do
+    let b ← nounPhrase np sc
+    let b := if b.name.isEmpty then { b with name := w!"\\everyobj" } else b
+    if let some ts := complementOf np then
+      modify fun st => { st with complements := (st.curEnv, b.name, ts) :: st.complements.filter (·.2.1 != b.name) }
+    let p ← vocabPredicate ((b.name, b.ty) :: sc) (.loc 0, b.ty) md
+    pure (wrap [b] p)
   | .iff p q => do pure (.iff (← prop sc none p) (← prop sc none q))
   | .compare l r rr => do relTm r (← term F sc none l) (← term F sc none rr)
   | .adjectives s adjs => do

@@ -55,6 +55,13 @@ def emptyOn : Nat := 24
 def completeBip : Nat := 25
 def compl : Nat := 26
 def reachable : Nat := 27
+def colorable : Nat := 28
+def eulerian : Nat := 29
+def eulerTrail : Nat := 30
+def hamPath : Nat := 31
+def oddCycle : Nat := 32
+def numOddDeg : Nat := 33
+def numOfDeg : Nat := 34
 end Const
 open Const
 
@@ -100,6 +107,20 @@ def adjacency : Tm := close <| lamT G (fun _ => tt) fun g => lamR fun u => lamR 
 def mod (p : Phrase) (pre : Bool) (pred : Tm) (doc : String) : Modifier :=
   { phrase := p, prenominal := pre, ty := G, pred, doc }
 
+/-- `with a NOUN` and `without NOUNs` (also `without a NOUN`, `without NOUN`, which `has no
+NOUN` reads as): a graph that has one, and one that has none. -/
+def hasMods (withP : List Phrase) (withoutP : List Phrase) (p : B → B) (doc : String) : List Modifier :=
+  withP.map (fun ph => mod ph false (gPred p) doc) ++ withoutP.map (fun ph => mod ph false (gPred fun g => not (p g)) doc)
+
+/-- A noun of the vertices of a graph (`vertex of $G$`): a number, with the graph. -/
+def vertexNoun (sing plural : Phrase) (p : B → B → B) (doc : String) : Noun :=
+  { sing, plural, ty := .real, pred := close (lamR fun _ => tt), doc, needsArg := true,
+    arg := some ([w!"of", w!"in"], G, close <| lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (p v g)) }
+/-- A property of a vertex in a graph (`of even degree in $G$`; `of even degree` after `vertex of $G$`). -/
+def vertexMod (p : Phrase) (q : B → B → B) (doc : String) : Modifier :=
+  { phrase := p, prenominal := false, ty := .real, doc,
+    pred := close <| lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (q v g) }
+
 def nounG (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
   { sing, plural, ty := G, pred, doc }
 
@@ -108,14 +129,17 @@ def vocab : Vocab where
   consts := [G ⟶ .real ⟶ .prop, G ⟶ .real, G ⟶ .real, .real ⟶ G ⟶ .real, .real ⟶ .real ⟶ G ⟶ .prop,
     .real ⟶ .real ⟶ G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real,
     G ⟶ .real, G ⟶ .real, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop,
-    .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ .real ⟶ G, G ⟶ G, .real ⟶ .real ⟶ G ⟶ .prop]
+    .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ .real ⟶ G, G ⟶ G, .real ⟶ .real ⟶ G ⟶ .prop,
+    .real ⟶ G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .real, .real ⟶ G ⟶ .real]
   constNames := [w!"#2\\in V(#1)", w!"\\lvert V(#)\\rvert", w!"\\lvert E(#)\\rvert", w!"\\deg_{#2}(#1)",
     w!"\\operatorname{Adj}", w!"\\operatorname{dist}", w!"\\delta", w!"\\Delta", w!"\\chi", w!"\\omega",
     w!"\\alpha", w!"\\operatorname{c}", w!"\\operatorname{diam}", w!"\\operatorname{girth}",
     w!"\\operatorname{Connected}", w!"\\operatorname{Acyclic}", w!"\\operatorname{Tree}",
     w!"\\operatorname{Bipartite}", w!"\\operatorname{Regular}", w!"\\operatorname{Complete}",
     w!"\\operatorname{Hamiltonian}", w!"K_{#}", w!"C_{#}", w!"P_{#}", w!"\\overline{K_{#}}", w!"K_{#1,#2}",
-    w!"\\overline{#}", w!"\\operatorname{Reachable}"]
+    w!"\\overline{#}", w!"\\operatorname{Reachable}", w!"\\operatorname{Colorable}", w!"\\operatorname{Eulerian}",
+    w!"\\operatorname{EulerTrail}", w!"\\operatorname{HamiltonianPath}", w!"\\operatorname{OddCycle}",
+    w!"\\lvert V_{\\mathrm{odd}}(#)\\rvert", w!"\\lvert\\{v:\\deg(v)=#1\\}\\rvert"]
   constLean := [w!"Leanify.Graphs.IsVertex", w!"Leanify.Graphs.numVertices", w!"Leanify.Graphs.numEdges",
     w!"Leanify.Graphs.degree", w!"Leanify.Graphs.Adjacent", w!"Leanify.Graphs.dist", w!"Leanify.Graphs.minDegree",
     w!"Leanify.Graphs.maxDegree", w!"Leanify.Graphs.chromaticNumber", w!"Leanify.Graphs.cliqueNumber",
@@ -124,7 +148,9 @@ def vocab : Vocab where
     w!"Leanify.Graphs.Bipartite", w!"Leanify.Graphs.Regular", w!"Leanify.Graphs.Complete",
     w!"Leanify.Graphs.Hamiltonian", w!"Leanify.Graphs.completeGraph", w!"Leanify.Graphs.cycleGraph",
     w!"Leanify.Graphs.pathGraph", w!"Leanify.Graphs.emptyGraph", w!"Leanify.Graphs.completeBipartite",
-    w!"Leanify.Graphs.complement", w!"Leanify.Graphs.Reachable"]
+    w!"Leanify.Graphs.complement", w!"Leanify.Graphs.Reachable", w!"Leanify.Graphs.Colorable", w!"Leanify.Graphs.Eulerian",
+    w!"Leanify.Graphs.EulerTrail", w!"Leanify.Graphs.HamiltonianPath", w!"Leanify.Graphs.OddCycle",
+    w!"Leanify.Graphs.numOddDegree", w!"Leanify.Graphs.numOfDegree"]
   typeLean := [(w!"Leanify.Graphs.Graph", w!"Leanify.Graphs.Graph.empty")]
   modules := [w!"Leanify.Library.GraphsModel"]
   nouns := [
@@ -133,7 +159,11 @@ def vocab : Vocab where
     nounG phrase!"finite graph" phrase!"finite graphs" anyGraph "a finite simple graph (Mathlib `SimpleGraph (Fin n)`)",
     nounG phrase!"finite simple graph" phrase!"finite simple graphs" anyGraph "(Mathlib `SimpleGraph (Fin n)`)",
     nounG phrase!"tree" phrase!"trees" (gPred fun g => app (const isTree) g) "connected and acyclic (Mathlib `SimpleGraph.IsTree`)",
-    nounG phrase!"forest" phrase!"forests" (gPred fun g => app (const acyclic) g) "acyclic (Mathlib `SimpleGraph.IsAcyclic`)"]
+    nounG phrase!"forest" phrase!"forests" (gPred fun g => app (const acyclic) g) "acyclic (Mathlib `SimpleGraph.IsAcyclic`)",
+    { vertexNoun phrase!"vertex" phrase!"vertices" (fun _ _ => tt) "`v ∈ V(G)`" with
+      arg := some ([w!"of", w!"in"], G, close <| lamT G (fun _ => tt) fun g => lamR fun v => vert v g) },
+    vertexNoun phrase!"leaf" phrase!"leaves" (fun v g => eq (app2 (const degree) v g) (num 1)) "a vertex of degree `1`",
+    vertexNoun phrase!"isolated vertex" phrase!"isolated vertices" (fun v g => eq (app2 (const degree) v g) (num 0)) "a vertex of degree `0`"]
   mods := [
     mod phrase!"connected" true (.const connected) "nonempty, and any two vertices are joined by a walk (Mathlib `SimpleGraph.Connected`)",
     mod phrase!"acyclic" true (.const acyclic) "without cycles (Mathlib `SimpleGraph.IsAcyclic`)",
@@ -155,9 +185,48 @@ def vocab : Vocab where
     mod phrase!"with $v$ vertices and $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
         and (eq (nv g) n) (eq (app (const numEdges) g) m))
       "with `n` vertices and `m` edges",
+    mod phrase!"$v$-colorable" true (close <| lamR fun k => lamT G (fun _ => tt) fun g => app2 (const colorable) k g)
+      "the vertices can be colored with `k` colors, adjacent ones differently (Mathlib `SimpleGraph.Colorable`)",
+    mod phrase!"$v$-colourable" true (close <| lamR fun k => lamT G (fun _ => tt) fun g => app2 (const colorable) k g)
+      "(Mathlib `SimpleGraph.Colorable`)",
+    mod phrase!"Eulerian" true (.const eulerian) "with a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`)",
+    mod phrase!"with minimum degree at least $v$" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le k (app (const minDegree) g))
+      "`δ(G) ≥ k` (Mathlib `SimpleGraph.minDegree`)",
+    mod phrase!"of minimum degree at least $v$" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le k (app (const minDegree) g))
+      "`δ(G) ≥ k`",
+    mod phrase!"with maximum degree at most $v$" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le (app (const maxDegree) g) k)
+      "`Δ(G) ≤ k` (Mathlib `SimpleGraph.maxDegree`)",
+    mod phrase!"of maximum degree at most $v$" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le (app (const maxDegree) g) k)
+      "`Δ(G) ≤ k`",
     mod phrase!"on $v$ vertices with $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
         and (eq (nv g) n) (eq (app (const numEdges) g) m))
-      "with `n` vertices and `m` edges"]
+      "with `n` vertices and `m` edges"] ++
+    hasMods [phrase!"with an odd cycle"] [phrase!"without odd cycles", phrase!"without an odd cycle", phrase!"without odd cycle"]
+      (fun g => app (const oddCycle) g) "a cycle of odd length" ++
+    hasMods [phrase!"with a cycle"] [phrase!"without cycles", phrase!"without a cycle", phrase!"without cycle"]
+      (fun g => not (app (const acyclic) g)) "(Mathlib `SimpleGraph.IsAcyclic`)" ++
+    hasMods [phrase!"with a triangle"] [phrase!"without triangles", phrase!"without a triangle", phrase!"without triangle"]
+      (fun g => le (num 3) (app (const clique) g)) "three pairwise adjacent vertices (Mathlib `SimpleGraph.CliqueFree 3`)" ++
+    hasMods [phrase!"with a Hamiltonian cycle"] [phrase!"without Hamiltonian cycles", phrase!"without a Hamiltonian cycle", phrase!"without Hamiltonian cycle"]
+      (fun g => app (const hamiltonian) g) "(Mathlib `SimpleGraph.IsHamiltonian`)" ++
+    hasMods [phrase!"with a Hamiltonian path"] [phrase!"without Hamiltonian paths", phrase!"without a Hamiltonian path", phrase!"without Hamiltonian path"]
+      (fun g => app (const hamPath) g) "a path through every vertex (Mathlib `SimpleGraph.Walk.IsHamiltonian`)" ++
+    hasMods [phrase!"with an Eulerian circuit", phrase!"with an Eulerian cycle", phrase!"with an Euler circuit", phrase!"with an Euler tour"]
+      [phrase!"without Eulerian circuits", phrase!"without an Eulerian circuit", phrase!"without Eulerian circuit"]
+      (fun g => app (const eulerian) g) "a closed walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`)" ++
+    hasMods [phrase!"with an Eulerian trail", phrase!"with an Eulerian path", phrase!"with an Euler trail"]
+      [phrase!"without Eulerian trails", phrase!"without an Eulerian trail", phrase!"without Eulerian trail"]
+      (fun g => app (const eulerTrail) g) "a walk through every edge exactly once (Mathlib `SimpleGraph.Walk.IsEulerian`)" ++
+    hasMods [phrase!"with an isolated vertex"] [phrase!"without isolated vertices", phrase!"without an isolated vertex", phrase!"without isolated vertex"]
+      (fun g => le (num 1) (app2 (const numOfDeg) (num 0) g)) "a vertex of degree `0`"
+    ++ [vertexMod phrase!"of odd degree in $v$" (fun v g => exInt fun k => eq (app2 (const degree) v g) (add (mul (num 2) k) (num 1)))
+        "a vertex with an odd number of neighbours",
+      vertexMod phrase!"of even degree in $v$" (fun v g => exInt fun k => eq (app2 (const degree) v g) (mul (num 2) k))
+        "a vertex with an even number of neighbours",
+      { phrase := phrase!"of degree $v$ in $v$", prenominal := false, ty := .real, doc := "a vertex with `k` neighbours",
+        pred := close <| lamR fun k => lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (eq (app2 (const degree) v g) k) },
+      { phrase := phrase!"adjacent to $v$ in $v$", prenominal := false, ty := .real, doc := "(Mathlib `SimpleGraph.Adj`)",
+        pred := close <| lamR fun u => lamT G (fun _ => tt) fun g => lamR fun v => app (app (app (const adj) v) u) g }]
   notions := [
     { name := phrase!"vertex set of $v$", value := vertexSet, ty := G ⟶ .real ⟶ .prop,
       doc := "`{1, …, n}`" },
@@ -196,6 +265,12 @@ def vocab : Vocab where
     onN phrase!"empty graph on $v$ vertices" emptyOn natDom "no edges (Mathlib `⊥`)",
     { name := phrase!"complete bipartite graph $K_{v,v}$", value := .const completeBip, ty := .real ⟶ .real ⟶ G,
       doms := [natDom, natDom], doc := "parts `{1, …, m}` and `{m+1, …, m+n}`" },
+    ofG phrase!"number of vertices of odd degree in $v$" numOddDeg "(Mathlib `SimpleGraph.degree`)",
+    ofG phrase!"number of vertices of odd degree of $v$" numOddDeg "(Mathlib `SimpleGraph.degree`)",
+    { name := phrase!"number of leaves of $v$", value := close (lamT G (fun _ => tt) fun g => app2 (const numOfDeg) (num 1) g),
+      ty := G ⟶ .real, doc := "vertices of degree `1`" },
+    { name := phrase!"number of vertices of degree $v$ in $v$", value := .const numOfDeg, ty := .real ⟶ G ⟶ .real,
+      doc := "(Mathlib `SimpleGraph.degree`)" },
     { name := phrase!"complement of $v$", value := .const compl, ty := G ⟶ G,
       doc := "the same vertices, the other pairs adjacent (Mathlib `Gᶜ`)" }]
   methods := [
