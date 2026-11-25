@@ -142,13 +142,13 @@ end MT
 namespace Math
 
 /-- The named functions of one argument: LaTeX's operator names (`\sin`, `\cosh`,
-`\arctan`, `\deg`, `\det`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
+`\arctan`, `\deg`, `\det`, `\ker`; `\ln` is `\log`) and `\Re`, `\Im`. Such a name applies to what follows it,
 with or without parentheses (`\cosh x`, `\sin^2 x`). This is syntax: what a name means is
 said by the core (`\exp`, `\log`, `\sin`, `\cos`, `\tan`) or by a field of the
 vocabulary (`\cosh` in `hyperbolic`), and a name without a meaning is reported. -/
 def wFunctions : List Codes := [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan", w!"Re", w!"Im",
   w!"sinh", w!"cosh", w!"tanh", w!"coth", w!"cot", w!"sec", w!"csc",
-  w!"arcsin", w!"arccos", w!"arctan", w!"deg", w!"det"]
+  w!"arcsin", w!"arccos", w!"arctan", w!"deg", w!"det", w!"ker"]
 
 def isReals : MT → Bool
   | .id n => n == w!"\\mathbb{R}"

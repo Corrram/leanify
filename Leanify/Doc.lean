@@ -714,7 +714,8 @@ not fit are left out first (`fits` elaborates them; nothing it changes is kept):
 inverse of $A$` is the inverse of a matrix for a matrix `A` and of a permutation for a
 permutation, in a vocabulary that has both. Several meanings that fit are an error. -/
 def theMeaningBy {α β : Type} [BEq β] (key : α → β) (field : α → Codes) (fits : α → M Unit)
-    (cs : List Chunk) (cands : List (α × List Chunk)) (defn : Bool := false) : M (Option (α × List Chunk)) := do
+    (cs : List Chunk) (cands : List (α × List Chunk)) (defn : Bool := false) (rethrow : Bool := false) :
+    M (Option (α × List Chunk)) := do
   match (cands.map (·.2.length)).min? with
   | none => pure none
   | some k =>
@@ -732,6 +733,11 @@ def theMeaningBy {α β : Type} [BEq β] (key : α → β) (field : α → Codes
       | [c] => pure (some c)
       | [] =>
         let ws := wordsOf (cs.take (cs.length - k))
+        -- (none fits: the reason the first one does not, `unknown notation`)
+        if rethrow then
+          if let some c := distinct.head? then
+            fits c.1
+            set st
         -- (a definition whose letters have no type yet: the noun before a letter gives it)
         if defn then
           fail E.finding (quoted ws ++ w!" has a meaning for each kind of argument (in " ++
@@ -1185,6 +1191,24 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
       | _ => ((m :: acc).reverse, r)
     | none => (acc.reverse, cs)
 
+/-- The vocabulary's type of maps between sets of elements of `dt` and of `ct`, with its
+signature predicate (`$\\varphi\\colon G\\to H$` for structures). -/
+def mapType (dt ct : Ty) : M (Option (Ty × Tm)) := do
+  let st ← get
+  let ms := st.vocab.methods.filter (·.op == .sig)
+  pure <| ms.findSome? fun m =>
+    match (st.vocab.consts[m.const]? : Option Ty) with
+    | some (Ty.fn (Ty.fn d Ty.prop) (Ty.fn (Ty.fn c Ty.prop) (Ty.fn t Ty.prop))) =>
+      if d == dt && c == ct && t == m.ty then some (m.ty, Tm.const m.const) else none
+    | _ => none
+
+/-- The predicate of a map of such a type bound by a signature with the domain and codomain
+predicates `dp`, `cp` (of the scope outside the binder): stated where the variable is bound. -/
+def mapSigPred (mt dt ct : Ty) (c : Tm) (dp cp : Option Tm) : Tm :=
+  let d := (dp.map (shift 2 0)).getD (.lam dt .tt .tt)
+  let k := (cp.map (shift 2 0)).getD (.lam ct .tt .tt)
+  Tm.lam mt .tt (.app (.app (.app c d) k) (.loc 0))
+
 /-- A map bound by a signature on a set of elements of a vocabulary's type that has numbers
 in it (`$\\varphi\\colon G\\to H$`): its value at a number is its value at that element of
 the domain (`\\varphi(1)` at the identity of `G`). Stated where the map is bound. -/
@@ -1408,22 +1432,32 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               let ds ← domainsOf false d outer
               let (ct, _) ← domainOf false c outer
               if let [(dt, _)] := ds then
-                if Ty.fn dt ct != n.ty then fail E.type
+                let want := match ← mapType dt ct with
+                  | some (mt, _) => mt
+                  | none => Ty.fn dt ct
+                if want != n.ty then fail E.type
+          -- (a noun of maps meant on a domain needs one: without a signature, another noun)
+          else if n.onDomain && (← get).sigDomPreset.isNone then fail E.type
           let _ ← nounArg n (afterVar n v r)
         match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
-            (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) with
+            (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) (rethrow := true) with
         | some ((n, v, _), r) =>
           -- `a homomorphism $\varphi\colon G\to H$`: a noun of maps, with its signature
           let sigVar : Option (List MTok × List Chunk) := match v, r with
             | none, .m ts :: r' => if (Math.parseSig ts).isSome then some (ts, r') else none
             | some ts, r' => if (Math.parseSig ts).isSome then some (ts, r') else none
             | _, _ => none
-          match sigVar, n.ty with
-          | some (ts, r'), .fn _ _ =>
+          match sigVar, (match n.ty with | .fn _ _ => true | t => Elab.isBase t) with
+          | some (ts, r'), true =>
             let some (.sig (.id f) d c) := Math.parseSig ts | fail E.unsupported
             let ds ← domainsOf false d outer
             let (ct, cp) ← domainOf false c outer
             let [(dt, dp)] := ds | fail E.unsupported
+            -- (a noun of a vocabulary's type of maps: a map of that type)
+            if let some (mt, c) ← mapType dt ct then
+              if mt != n.ty then fail E.type
+              let (extra, rest) ← nounArg n r'
+              return ((n.ty, [n.pred, mapSigPred mt dt ct c dp cp] ++ extra, some [.id f], rest), nms)
             if Ty.fn dt ct != n.ty then fail E.type
             let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
             let cod := (cp.map (shift 1 0)).getD (.lam ct .tt .tt)
@@ -1502,6 +1536,9 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               -- that maps `A` into `B` (its values elsewhere are not used)
               match ds, cp with
               | [(dt, dp)], _ =>
+                -- (a vocabulary's type of maps between these elements: a map of that type)
+                if let some (mt, c) ← mapType dt ct then
+                  return ((mt, [mapSigPred mt dt ct c dp cp], some [.id f], r), nms)
                 let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
                 let cod := (cp.map (shift 1 0)).getD (.lam ct .tt .tt)
                 modify fun st => { st with sigDom := some dom, sigCod := some cod, sigDoms := (st.curEnv, f, d, c) :: st.sigDoms.filter (·.2.1 != f) }

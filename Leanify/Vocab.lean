@@ -121,6 +121,11 @@ inductive OpKey where
   /-- `x^{-1}`, the inverse, where the type has its own (`x^{-n}` is `(x^n)^{-1}`): `T → T`.
   Without it, `x^{-1}` is `1/x`. -/
   | inv
+  /-- The maps of the type between sets of elements of other types (`$\varphi\colon G\to H$`
+  for structures `G` and `H`): `(D → Prop) → (C → Prop) → T → Prop`, that the map has the
+  domain `G` and the codomain `H` and maps the one into the other. A signature on a set of
+  `D` into a set of `C` then binds an element of `T`, which `.call` applies. -/
+  | sig
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A method: the notation `op` on elements of `ty` is the constant `const`. -/

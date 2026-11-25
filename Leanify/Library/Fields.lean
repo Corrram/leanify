@@ -384,7 +384,9 @@ def collisions (V : Vocab) : List (Phrase × List Codes) :=
     let argTys : List (Option Ty) := meanings.map fun m => m.2.2.map (·.2.1)
     let byArg := argTys.all (·.isSome) && argTys.eraseDups.length == meanings.length
     -- (nouns of maps of different types: a signature says which, `a bijection $f\colon G\to H$`)
-    let bySig := meanings.all (fun m => match m.1 with | .fn _ _ => true | _ => false) &&
+    let bySig := meanings.all (fun m => match m.1 with
+        | .fn _ _ => true
+        | t => V.methods.any fun me => me.ty == t && me.op == .sig) &&
       (meanings.map (·.1)).eraseDups.length == meanings.length
     let byArg := byArg || bySig
     if !byArg && same.any (fun m => m.ty != n.ty || m.pred != n.pred) then some (n.sing, fields (·.field) same) else none

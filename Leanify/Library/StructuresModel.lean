@@ -331,8 +331,9 @@ def RingHomOn (R : El → Prop) (f : El → El) : Prop :=
 
 def InjOn (S : El → Prop) (f : El → El) : Prop := ∀ a b, S a → S b → eqv (f a) (f b) → eqv a b
 
-/-- The kernel of a homomorphism on `G`: the elements mapped to the identity. -/
-def kernel (G : El → Prop) (f : El → El) : El → Prop := fun a => G a ∧ eqv (f a) (.num 1)
+/-- The kernel of a homomorphism on `G`: the elements mapped to the identity (the zero; in a
+group, written either way, they are the same). -/
+def kernel (G : El → Prop) (f : El → El) : El → Prop := fun a => G a ∧ eqv (f a) (.num 0)
 /-- The image of `S` under `f`. -/
 def image (S : El → Prop) (f : El → El) : El → Prop := fun b => ∃ a, S a ∧ eqv b (f a)
 
@@ -729,6 +730,78 @@ def MinimalIn (S : El → Prop) (m : El) : Prop := S m ∧ ∀ a, S a → le a m
 def GreatestIn (S : El → Prop) (m : El) : Prop := S m ∧ ∀ a, S a → le a m
 def LeastIn (S : El → Prop) (m : El) : Prop := S m ∧ ∀ a, S a → le m a
 def MonotoneOn' (S : El → Prop) (f : El → El) : Prop := ∀ a b, S a → S b → le a b → le (f a) (f b)
+
+/-! ### Maps
+
+A map between structures with its domain and codomain, as Mathlib's bundled maps
+(`G →* H`, `V →ₗ[K] W`): `φ(g)` is its value, a number its value at that element of the
+domain (`φ(1)` at the identity of `G`), and its properties are about its domain. -/
+
+structure Map where
+  dom : El → Prop
+  cod : El → Prop
+  fn : El → El
+
+instance : Inhabited Map := ⟨⟨fun _ => False, fun _ => False, id⟩⟩
+def mapDefault : Map := default
+
+/-- `φ(a)`. -/
+def apply (φ : Map) : El → El
+  | .num r => φ.fn (ofRealIn φ.dom r)
+  | a => φ.fn a
+
+/-- `φ\colon G\to H`: the domain is `G`, the codomain `H`, and `φ` maps `G` into `H`. -/
+def MapSig (G H : El → Prop) (φ : Map) : Prop :=
+  (∀ a, φ.dom a ↔ G a) ∧ (∀ a, φ.cod a ↔ H a) ∧ ∀ a, G a → H (apply φ a)
+
+/-- `ψ ∘ φ`. -/
+def compose (ψ φ : Map) : Map := ⟨φ.dom, ψ.cod, fun a => apply ψ (apply φ a)⟩
+/-- Two maps are equal: the same domain and codomain, the same values on the domain. -/
+def mapEq (φ ψ : Map) : Prop :=
+  (∀ a, φ.dom a ↔ ψ.dom a) ∧ (∀ a, φ.cod a ↔ ψ.cod a) ∧ ∀ a, φ.dom a → eqv (apply φ a) (apply ψ a)
+/-- The identity map of `S`. -/
+def idMap (S : El → Prop) : Map := ⟨S, S, id⟩
+
+def mDom (φ : Map) : El → Prop := φ.dom
+def mCod (φ : Map) : El → Prop := φ.cod
+
+def IsHomM (φ : Map) : Prop := HomOn φ.dom (apply φ)
+def IsRingHomM (φ : Map) : Prop := RingHomOn φ.dom (apply φ)
+def LinearM (φ : Map) : Prop := LinearOn φ.dom (apply φ)
+def ContinuousM (φ : Map) : Prop := ContinuousOn' φ.dom (apply φ)
+def HomeoM (φ : Map) : Prop := HomeoOn φ.dom (apply φ) ∧ SurjOnto φ.dom φ.cod (apply φ)
+def IsometryM (φ : Map) : Prop := IsometryOn φ.dom (apply φ)
+def MonotoneM (φ : Map) : Prop := MonotoneOn' φ.dom (apply φ)
+def BoundedLinearM (φ : Map) : Prop := BoundedLinearOn φ.dom (apply φ)
+def InjectiveM (φ : Map) : Prop := InjOn φ.dom (apply φ)
+def SurjectiveM (φ : Map) : Prop := SurjOnto φ.dom φ.cod (apply φ)
+def BijectiveM (φ : Map) : Prop := BijOnto φ.dom φ.cod (apply φ)
+def IsoM (φ : Map) : Prop := IsoOnto φ.dom φ.cod (apply φ)
+/-- An isomorphism of a structure onto itself. -/
+def AutoM (φ : Map) : Prop := IsoM φ ∧ ∀ a, φ.dom a ↔ φ.cod a
+/-- A map of a structure into itself. -/
+def EndoM (φ : Map) : Prop := ∀ a, φ.dom a ↔ φ.cod a
+def LipschitzM (L : ℝ) (φ : Map) : Prop := LipschitzOn L φ.dom (apply φ)
+/-- A contraction: Lipschitz with a constant less than `1`. -/
+def ContractionM (φ : Map) : Prop := ∃ L : ℝ, 0 ≤ L ∧ L < 1 ∧ LipschitzOn L φ.dom (apply φ)
+
+/-- The kernel: the elements of the domain mapped to the identity (the zero). -/
+def kernelM (φ : Map) : El → Prop := kernel φ.dom (apply φ)
+/-- The image of the domain. -/
+def imageM (φ : Map) : El → Prop := image φ.dom (apply φ)
+/-- The rank and the nullity of a linear map (Mathlib `LinearMap.rank`). -/
+def rankM (φ : Map) : ℝ := dimS (imageM φ)
+def nullityM (φ : Map) : ℝ := dimS (kernelM φ)
+/-- The operator norm. -/
+def opNormM (φ : Map) : ℝ := opNorm φ.dom (apply φ)
+/-- `c` is an eigenvalue of `T`: `Tv = cv` for some nonzero `v` of the domain. -/
+def EigenvalueOf (T : Map) (c : El) : Prop :=
+  ∃ v, T.dom v ∧ ¬ eqv v (.num 0) ∧ eqv (apply T v) (mul c v)
+/-- `v` is an eigenvector of `T`: nonzero, and `Tv = cv` for a scalar `c` of its space. -/
+def EigenvectorOf (T : Map) (v : El) : Prop :=
+  T.dom v ∧ ¬ eqv v (.num 0) ∧ ∃ c ∈ (opsEl v).scalars, eqv (apply T v) (.el (opsEl v) ((opsEl v).smul c (ptEl v)))
+/-- `a` is a fixed point of `φ`. -/
+def FixedPointOf (φ : Map) (a : El) : Prop := φ.dom a ∧ eqv (apply φ a) a
 
 end
 

@@ -48,8 +48,10 @@ open Build Core
 abbrev E : Ty := .base 0
 /-- Structures: sets of elements. -/
 abbrev S : Ty := E ⟶ .prop
-/-- Maps between structures. -/
+/-- Functions of elements (the values of maps, and maps that are not bound by a signature). -/
 abbrev F : Ty := E ⟶ E
+/-- Maps between structures, with their domain and codomain: the field's second base type. -/
+abbrev M : Ty := .base 1
 
 /-- The constants, in the order of their indices: `(type, TeX name, Lean name)`. -/
 def table : List (Ty × Codes × Codes) := [
@@ -192,7 +194,38 @@ def table : List (Ty × Codes × Codes) := [
   ((.real ⟶ E) ⟶ E ⟶ .prop, w!"#1\\to #2", w!"Leanify.Structures.ConvergesTo"),           -- 136
   ((.real ⟶ E) ⟶ .prop, w!"\\operatorname{Cauchy}", w!"Leanify.Structures.CauchySeq'"),   -- 137
   (E ⟶ .real, w!"\\lVert #\\rVert", w!"Leanify.Structures.norm"),                        -- 138
-  (E ⟶ E ⟶ .real, w!"\\langle #1,#2\\rangle", w!"Leanify.Structures.inner")]             -- 139
+  (E ⟶ E ⟶ .real, w!"\\langle #1,#2\\rangle", w!"Leanify.Structures.inner"),            -- 139
+  (M ⟶ E ⟶ E, w!"#1(#2)", w!"Leanify.Structures.apply"),                                   -- 140
+  (S ⟶ S ⟶ M ⟶ .prop, w!"#3\\colon #1\\to #2", w!"Leanify.Structures.MapSig"),          -- 141
+  (M ⟶ M ⟶ M, w!"\\circ", w!"Leanify.Structures.compose"),                               -- 142
+  (M ⟶ M ⟶ .prop, w!"#1=#2", w!"Leanify.Structures.mapEq"),                                -- 143
+  (S ⟶ M, w!"\\operatorname{id}_{#}", w!"Leanify.Structures.idMap"),                     -- 144
+  (M ⟶ S, w!"\\operatorname{dom}", w!"Leanify.Structures.mDom"),                         -- 145
+  (M ⟶ S, w!"\\operatorname{cod}", w!"Leanify.Structures.mCod"),                         -- 146
+  (M ⟶ .prop, w!"\\operatorname{Hom}", w!"Leanify.Structures.IsHomM"),                   -- 147
+  (M ⟶ .prop, w!"\\operatorname{RingHom}", w!"Leanify.Structures.IsRingHomM"),           -- 148
+  (M ⟶ .prop, w!"\\operatorname{Linear}", w!"Leanify.Structures.LinearM"),               -- 149
+  (M ⟶ .prop, w!"\\operatorname{Continuous}", w!"Leanify.Structures.ContinuousM"),       -- 150
+  (M ⟶ .prop, w!"\\operatorname{Homeomorphism}", w!"Leanify.Structures.HomeoM"),         -- 151
+  (M ⟶ .prop, w!"\\operatorname{Isometry}", w!"Leanify.Structures.IsometryM"),           -- 152
+  (M ⟶ .prop, w!"\\operatorname{Monotone}", w!"Leanify.Structures.MonotoneM"),           -- 153
+  (M ⟶ .prop, w!"\\operatorname{BoundedLinear}", w!"Leanify.Structures.BoundedLinearM"), -- 154
+  (M ⟶ .prop, w!"\\operatorname{Injective}", w!"Leanify.Structures.InjectiveM"),         -- 155
+  (M ⟶ .prop, w!"\\operatorname{Surjective}", w!"Leanify.Structures.SurjectiveM"),       -- 156
+  (M ⟶ .prop, w!"\\operatorname{Bijective}", w!"Leanify.Structures.BijectiveM"),         -- 157
+  (M ⟶ .prop, w!"\\operatorname{Isomorphism}", w!"Leanify.Structures.IsoM"),             -- 158
+  (M ⟶ .prop, w!"\\operatorname{Automorphism}", w!"Leanify.Structures.AutoM"),           -- 159
+  (M ⟶ .prop, w!"\\operatorname{Endomorphism}", w!"Leanify.Structures.EndoM"),           -- 160
+  (.real ⟶ M ⟶ .prop, w!"\\operatorname{Lipschitz}", w!"Leanify.Structures.LipschitzM"), -- 161
+  (M ⟶ .prop, w!"\\operatorname{Contraction}", w!"Leanify.Structures.ContractionM"),     -- 162
+  (M ⟶ S, w!"\\ker", w!"Leanify.Structures.kernelM"),                                    -- 163
+  (M ⟶ S, w!"\\operatorname{im}", w!"Leanify.Structures.imageM"),                        -- 164
+  (M ⟶ .real, w!"\\operatorname{rank}", w!"Leanify.Structures.rankM"),                   -- 165
+  (M ⟶ .real, w!"\\operatorname{nullity}", w!"Leanify.Structures.nullityM"),             -- 166
+  (M ⟶ .real, w!"\\lVert #\\rVert", w!"Leanify.Structures.opNormM"),                    -- 167
+  (M ⟶ E ⟶ .prop, w!"\\operatorname{Eigenvalue}", w!"Leanify.Structures.EigenvalueOf"),  -- 168
+  (M ⟶ E ⟶ .prop, w!"\\operatorname{Eigenvector}", w!"Leanify.Structures.EigenvectorOf"), -- 169
+  (M ⟶ E ⟶ .prop, w!"\\operatorname{Fix}", w!"Leanify.Structures.FixedPointOf")]          -- 170
 
 /-! ## Helpers -/
 
@@ -216,6 +249,10 @@ def postS (p : Phrase) (pred : Tm) (doc : String) : Modifier := { phrase := p, p
 /-- A noun of maps meant on the domain of their signature: `pred : S → F → Prop`. -/
 def mapNoun (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
   { sing, plural, ty := F, pred, doc, onDomain := true }
+/-- A noun of maps between structures (the type `M`), by a constant `M → Prop`. -/
+def mapN (sing plural : Phrase) (i : Nat) (doc : String) : Noun := { sing, plural, ty := M, pred := .const i, doc }
+def mapM (p : Phrase) (i : Nat) (doc : String) : Modifier := { phrase := p, prenominal := true, ty := M, pred := .const i, doc }
+
 /-- A noun of maps meant on the domain and the codomain: `pred : S → S → F → Prop`. -/
 def mapNoun2 (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
   { sing, plural, ty := F, pred, doc, onDomain := true, onCodomain := true }
@@ -247,11 +284,12 @@ def isField : Tm := c 40
 def elemOf : Tm := rel S E fun g a => app g a
 
 def vocab : Vocab where
-  types := [w!"\\mathrm{El}"]
+  types := [w!"\\mathrm{El}", w!"\\mathrm{Map}"]
   consts := table.map (·.1)
   constNames := table.map (·.2.1)
   constLean := table.map (·.2.2)
-  typeLean := [(w!"Leanify.Structures.El", w!"Leanify.Structures.elDefault")]
+  typeLean := [(w!"Leanify.Structures.El", w!"Leanify.Structures.elDefault"),
+    (w!"Leanify.Structures.Map", w!"Leanify.Structures.mapDefault")]
   modules := [w!"Leanify.Library.StructuresModel"]
   nouns := [
     -- groups
@@ -338,32 +376,33 @@ def vocab : Vocab where
     noun phrase!"chain" phrase!"chains" (c 93) "a totally ordered set (Mathlib `IsChain`)",
     noun phrase!"lattice" phrase!"lattices" (c 94) "(Mathlib `Lattice`)",
     noun phrase!"well-ordered set" phrase!"well-ordered sets" (c 95) "(Mathlib `IsWellOrder`)",
-    -- maps, on the domain of their signature
-    mapNoun phrase!"homomorphism" phrase!"homomorphisms" (c 31) "`φ(ab) = φ(a)φ(b)` on the domain (Mathlib `MonoidHom`)",
-    mapNoun phrase!"group homomorphism" phrase!"group homomorphisms" (c 31) "(Mathlib `MonoidHom`)",
-    mapNoun phrase!"ring homomorphism" phrase!"ring homomorphisms" (c 32) "(Mathlib `RingHom`)",
-    mapNoun phrase!"linear map" phrase!"linear maps" (c 66) "(Mathlib `LinearMap`)",
-    mapNoun phrase!"linear transformation" phrase!"linear transformations" (c 66) "(Mathlib `LinearMap`)",
-    mapNoun phrase!"linear operator" phrase!"linear operators" (c 66) "(Mathlib `LinearMap`)",
-    mapNoun phrase!"continuous map" phrase!"continuous maps" (c 84) "(Mathlib `ContinuousOn`)",
-    mapNoun phrase!"homeomorphism" phrase!"homeomorphisms" (c 85) "onto its image (Mathlib `Homeomorph`)",
-    mapNoun phrase!"isometry" phrase!"isometries" (c 90) "`d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`)",
-    mapNoun phrase!"monotone map" phrase!"monotone maps" (c 102) "(Mathlib `MonotoneOn`)",
-    mapNoun phrase!"order-preserving map" phrase!"order-preserving maps" (c 102) "(Mathlib `MonotoneOn`)",
-    mapNoun phrase!"bounded linear operator" phrase!"bounded linear operators" (c 130) "(Mathlib `ContinuousLinearMap`)",
-    mapNoun phrase!"bounded linear map" phrase!"bounded linear maps" (c 130) "(Mathlib `ContinuousLinearMap`)",
-    mapNoun phrase!"continuous linear map" phrase!"continuous linear maps" (c 130) "(Mathlib `ContinuousLinearMap`)",
-    mapNoun phrase!"continuous linear operator" phrase!"continuous linear operators" (c 130) "(Mathlib `ContinuousLinearMap`)",
-    mapNoun phrase!"injection" phrase!"injections" (c 33) "an injective map (Mathlib `Set.InjOn`)",
-    mapNoun2 phrase!"surjection" phrase!"surjections" (c 132) "a map onto its codomain (Mathlib `Set.SurjOn`)",
-    mapNoun2 phrase!"bijection" phrase!"bijections" (c 133) "(Mathlib `Set.BijOn`)",
-    mapNoun2 phrase!"isomorphism" phrase!"isomorphisms" (c 134) "a bijective homomorphism onto the codomain (Mathlib `MulEquiv`, `RingEquiv`, `LinearEquiv`)",
-    mapNoun2 phrase!"group isomorphism" phrase!"group isomorphisms" (c 134) "(Mathlib `MulEquiv`)",
-    mapNoun2 phrase!"ring isomorphism" phrase!"ring isomorphisms" (c 134) "(Mathlib `RingEquiv`)",
-    mapNoun2 phrase!"linear isomorphism" phrase!"linear isomorphisms" (sP3 fun d c f => and (app (app2 (const 134) d c) f) (app2 (const 66) d f))
-      "(Mathlib `LinearEquiv`)",
-    mapNoun2 phrase!"automorphism" phrase!"automorphisms" (sP3 fun d c f => and (app (app2 (const 134) d c) f) (setEq d c))
-      "an isomorphism of a structure onto itself (Mathlib `MulAut`)",
+    -- maps between structures, with their domain and codomain
+    mapN phrase!"homomorphism" phrase!"homomorphisms" 147 "`φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`)",
+    mapN phrase!"group homomorphism" phrase!"group homomorphisms" 147 "(Mathlib `MonoidHom`)",
+    mapN phrase!"ring homomorphism" phrase!"ring homomorphisms" 148 "(Mathlib `RingHom`)",
+    mapN phrase!"linear map" phrase!"linear maps" 149 "(Mathlib `LinearMap`)",
+    mapN phrase!"linear transformation" phrase!"linear transformations" 149 "(Mathlib `LinearMap`)",
+    mapN phrase!"linear operator" phrase!"linear operators" 149 "(Mathlib `LinearMap`)",
+    mapN phrase!"continuous map" phrase!"continuous maps" 150 "(Mathlib `ContinuousMap`)",
+    mapN phrase!"homeomorphism" phrase!"homeomorphisms" 151 "(Mathlib `Homeomorph`)",
+    mapN phrase!"isometry" phrase!"isometries" 152 "`d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`)",
+    mapN phrase!"monotone map" phrase!"monotone maps" 153 "(Mathlib `Monotone`)",
+    mapN phrase!"order-preserving map" phrase!"order-preserving maps" 153 "(Mathlib `Monotone`)",
+    mapN phrase!"bounded linear operator" phrase!"bounded linear operators" 154 "(Mathlib `ContinuousLinearMap`)",
+    mapN phrase!"bounded linear map" phrase!"bounded linear maps" 154 "(Mathlib `ContinuousLinearMap`)",
+    mapN phrase!"continuous linear map" phrase!"continuous linear maps" 154 "(Mathlib `ContinuousLinearMap`)",
+    mapN phrase!"continuous linear operator" phrase!"continuous linear operators" 154 "(Mathlib `ContinuousLinearMap`)",
+    mapN phrase!"injection" phrase!"injections" 155 "an injective map (Mathlib `Function.Injective`)",
+    mapN phrase!"surjection" phrase!"surjections" 156 "a map onto its codomain (Mathlib `Function.Surjective`)",
+    mapN phrase!"bijection" phrase!"bijections" 157 "(Mathlib `Function.Bijective`)",
+    mapN phrase!"isomorphism" phrase!"isomorphisms" 158 "a bijective homomorphism (Mathlib `MulEquiv`, `RingEquiv`, `LinearEquiv`)",
+    mapN phrase!"group isomorphism" phrase!"group isomorphisms" 158 "(Mathlib `MulEquiv`)",
+    mapN phrase!"ring isomorphism" phrase!"ring isomorphisms" 158 "(Mathlib `RingEquiv`)",
+    { mapN phrase!"linear isomorphism" phrase!"linear isomorphisms" 158 "(Mathlib `LinearEquiv`)" with
+      pred := close (lamT M (fun _ => tt) fun f => and (app (const 158) f) (app (const 149) f)) },
+    mapN phrase!"automorphism" phrase!"automorphisms" 159 "an isomorphism of a structure onto itself (Mathlib `MulAut`)",
+    mapN phrase!"endomorphism" phrase!"endomorphisms" 160 "a map of a structure into itself (Mathlib `Monoid.End`)",
+    mapN phrase!"contraction" phrase!"contractions" 162 "Lipschitz with a constant below `1` (Mathlib `ContractingWith`)",
     -- normed and inner product spaces
     noun phrase!"normed space" phrase!"normed spaces" (c 125) "a real normed vector space (Mathlib `NormedSpace ℝ`)",
     noun phrase!"normed vector space" phrase!"normed vector spaces" (c 125) "(Mathlib `NormedSpace ℝ`)",
@@ -376,6 +415,13 @@ def vocab : Vocab where
     nounOf phrase!"basis" phrase!"bases" [w!"of", w!"for"] (sP fun _ => tt) (relC 123) "a linearly independent set spanning `V` (Mathlib `Basis`)",
     nounOf phrase!"spanning set" phrase!"spanning sets" [w!"of", w!"for"] (sP fun _ => tt) (relC 124) "(Mathlib `Submodule.span`)",
     nounOf phrase!"generating set" phrase!"generating sets" [w!"of", w!"for"] (sP fun _ => tt) (relC 124) "(Mathlib `Submodule.span`)",
+    -- elements about maps
+    { sing := phrase!"eigenvalue", plural := phrase!"eigenvalues", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], M, rel M E fun t a => app2 (const 168) t a), doc := "`Tv = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`)" },
+    { sing := phrase!"eigenvector", plural := phrase!"eigenvectors", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], M, rel M E fun t a => app2 (const 169) t a), doc := "(Mathlib `Module.End.HasEigenvector`)" },
+    { sing := phrase!"fixed point", plural := phrase!"fixed points", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of"], M, rel M E fun t a => app2 (const 170) t a), doc := "`φ(a) = a` (Mathlib `Function.IsFixedPt`)" },
     -- sequences
     { sing := phrase!"sequence", plural := phrase!"sequences", ty := Q, pred := close (lamT Q (fun _ => tt) fun _ => tt),
       arg := some ([w!"in"], S, rel S Q fun x s => allR fun n => imp (isNat n) (app x (app s n))),
@@ -429,14 +475,18 @@ def vocab : Vocab where
     postS phrase!"finite-dimensional over $v$" (close <| lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun v => app2 (const 65) k v) "(Mathlib `FiniteDimensional`)",
     postS phrase!"of dimension $v$ over $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun v =>
       and (app2 (const 65) k v) (eq (app2 (const 64) k v) n)) "(Mathlib `Module.finrank`)",
-    mapAdj phrase!"injective" (c 33) "(Mathlib `Set.InjOn`)",
-    mapAdj phrase!"continuous" (c 84) "(Mathlib `ContinuousOn`)",
-    mapAdj phrase!"linear" (c 66) "(Mathlib `LinearMap`)",
-    mapAdj phrase!"isometric" (c 90) "(Mathlib `Isometry`)",
-    mapAdj phrase!"monotone" (c 102) "(Mathlib `MonotoneOn`)",
-    mapAdj phrase!"bounded linear" (c 130) "(Mathlib `ContinuousLinearMap`)",
-    mapAdj2 phrase!"surjective" (c 132) "onto the codomain (Mathlib `Set.SurjOn`)",
-    mapAdj2 phrase!"bijective" (c 133) "(Mathlib `Set.BijOn`)",
+    mapM phrase!"injective" 155 "(Mathlib `Function.Injective`)",
+    mapM phrase!"surjective" 156 "onto the codomain (Mathlib `Function.Surjective`)",
+    mapM phrase!"bijective" 157 "(Mathlib `Function.Bijective`)",
+    mapM phrase!"continuous" 150 "(Mathlib `Continuous`)",
+    mapM phrase!"linear" 149 "(Mathlib `LinearMap`)",
+    mapM phrase!"isometric" 152 "(Mathlib `Isometry`)",
+    mapM phrase!"monotone" 153 "(Mathlib `Monotone`)",
+    mapM phrase!"order-preserving" 153 "(Mathlib `Monotone`)",
+    mapM phrase!"bounded linear" 154 "(Mathlib `ContinuousLinearMap`)",
+    mapM phrase!"contractive" 162 "(Mathlib `ContractingWith`)",
+    { phrase := phrase!"$v$-Lipschitz", prenominal := true, ty := M,
+      pred := close (lamR fun l => lamT M (fun _ => tt) fun f => app2 (const 161) l f), doc := "(Mathlib `LipschitzWith`)" },
     adjS phrase!"finite-dimensional" (c 120) "over its scalars (Mathlib `FiniteDimensional`)",
     adjS phrase!"finite dimensional" (c 120) "(Mathlib `FiniteDimensional`)",
     adjS phrase!"infinite-dimensional" (sP fun v => not (app (const 120) v)) "(Mathlib `FiniteDimensional`)",
@@ -451,13 +501,6 @@ def vocab : Vocab where
     { phrase := phrase!"continuous", prenominal := true, ty := E ⟶ .real, pred := c 135, onDomain := true,
       doc := "a real function on a space (Mathlib `ContinuousOn`)" }]
   adjectives := [
-    mapAdjective [w!"injective"] 33 "(Mathlib `Set.InjOn`)",
-    mapAdjective [w!"continuous"] 84 "(Mathlib `ContinuousOn`)",
-    mapAdjective [w!"linear"] 66 "(Mathlib `LinearMap`)",
-    mapAdjective [w!"isometric"] 90 "(Mathlib `Isometry`)",
-    mapAdjective [w!"monotone"] 102 "(Mathlib `MonotoneOn`)",
-    mapAdjective2 [w!"surjective"] 132 "(Mathlib `Set.SurjOn`)",
-    mapAdjective2 [w!"bijective"] 133 "(Mathlib `Set.BijOn`)",
     { words := [w!"continuous"], ty := E ⟶ .real, onDomain := true,
       pred := close (lamT (E ⟶ .real) (fun _ => tt) fun f => lamT S (fun _ => tt) fun d => app2 (const 135) d f),
       doc := "a real function on a space (Mathlib `ContinuousOn`)" }]
@@ -504,7 +547,18 @@ def vocab : Vocab where
     { name := phrase!"span of $v$", value := .const 122, ty := S ⟶ S, doc := "(Mathlib `Submodule.span`)" },
     { name := phrase!"linear span of $v$", value := .const 122, ty := S ⟶ S, doc := "(Mathlib `Submodule.span`)" },
     { name := phrase!"norm of $v$", value := .const 138, ty := E ⟶ .real, doc := "in a normed space (Mathlib `norm`)" },
-    { name := phrase!"inner product of $v$ and $v$", value := .const 139, ty := E ⟶ E ⟶ .real, doc := "(Mathlib `inner`)" }]
+    { name := phrase!"inner product of $v$ and $v$", value := .const 139, ty := E ⟶ E ⟶ .real, doc := "(Mathlib `inner`)" },
+    { name := phrase!"kernel of $v$", value := .const 163, ty := M ⟶ S, doc := "(Mathlib `MonoidHom.ker`, `LinearMap.ker`)" },
+    { name := phrase!"image of $v$", value := .const 164, ty := M ⟶ S, doc := "(Mathlib `MonoidHom.range`, `LinearMap.range`)" },
+    { name := phrase!"range of $v$", value := .const 164, ty := M ⟶ S, doc := "(Mathlib `LinearMap.range`)" },
+    { name := phrase!"rank of $v$", value := .const 165, ty := M ⟶ .real, doc := "(Mathlib `LinearMap.rank`)" },
+    { name := phrase!"nullity of $v$", value := .const 166, ty := M ⟶ .real, doc := "the dimension of the kernel" },
+    { name := phrase!"operator norm of $v$", value := .const 167, ty := M ⟶ .real, doc := "(Mathlib `ContinuousLinearMap.opNorm`)" },
+    { name := phrase!"domain of $v$", value := .const 145, ty := M ⟶ S, doc := "of a map" },
+    { name := phrase!"codomain of $v$", value := .const 146, ty := M ⟶ S, doc := "of a map" },
+    { name := phrase!"identity map of $v$", value := .const 144, ty := S ⟶ M, doc := "(Mathlib `MonoidHom.id`, `LinearMap.id`)" },
+    { name := phrase!"identity map on $v$", value := .const 144, ty := S ⟶ M, doc := "(Mathlib `id`)" },
+    { name := phrase!"composition of $v$ and $v$", value := .const 142, ty := M ⟶ M ⟶ M, doc := "`ψ ∘ φ`" }]
   methods := [
     ⟨E, .ofReal, 0, "a number as an element: `1` the identity, `0` the zero, `n` the sum of `n` identities", none⟩,
     ⟨E, .add, 1, "`x + y`", none⟩, ⟨E, .sub, 2, "`x - y`", none⟩,
@@ -518,6 +572,14 @@ def vocab : Vocab where
     ⟨E, .le, 8, "the order of a partially ordered set", none⟩, ⟨E, .lt, 9, "`x ≤ y`, `x ≠ y`", none⟩,
     ⟨E, .ofRealIn, 103, "a number as an element of a given structure (`φ(1)` for `φ : G → H`)", none⟩,
     ⟨E, .fn w!"@norm", 138, "`\\lVert x\\rVert`: the norm of a normed space", none⟩,
-    ⟨E, .fn w!"@inner", 139, "`\\langle x,y\\rangle`: the inner product of an inner product space", none⟩]
+    ⟨E, .fn w!"@inner", 139, "`\\langle x,y\\rangle`: the inner product of an inner product space", none⟩,
+    ⟨M, .call, 140, "`φ(a)`; a number is that element of the domain (`φ(1)`)", none⟩,
+    ⟨M, .sig, 141, "`φ\\colon G\\to H` binds a map with domain `G` and codomain `H`", none⟩,
+    ⟨M, .fn w!"\\circ", 142, "`ψ\\circ φ`", none⟩,
+    ⟨M, .eq, 143, "maps with the same domain and codomain and the same values", none⟩,
+    ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,
+    ⟨M, .fn w!"im", 164, "`\\operatorname{im} φ`, the image", none⟩,
+    ⟨M, .fn w!"rank", 165, "`\\operatorname{rank} T`", none⟩,
+    ⟨M, .fn w!"@norm", 167, "`\\|T\\|`, the operator norm", none⟩]
 
 end Leanify.Structures

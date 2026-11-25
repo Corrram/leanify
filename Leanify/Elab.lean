@@ -639,7 +639,7 @@ def opName : OpKey → Codes
   | .abs => w!"$\\lvert\\cdot\\rvert$" | .sum => w!"$\\sum$" | .prod => w!"$\\prod$"
   | .le | .lt => w!"an order ($\\le$, $<$)" | .fn n => w!"$" ++ n ++ w!"$"
   | .decor n => w!"$" ++ n ++ w!"$" | .call => w!"an application to a number"
-  | .eq => w!"$=$" | .ofRealIn => w!"a number in a set" | .inv => w!"an inverse"
+  | .eq => w!"$=$" | .ofRealIn => w!"a number in a set" | .inv => w!"an inverse" | .sig => w!"a signature"
 
 /-- `op` on elements of `t`, applied to `args`: the method's constant. -/
 def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
@@ -1789,7 +1789,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         -- permutation): the type's method for it
         else if (← ownTy t) && (← method t .call).isSome then do
           let some (i, _) := lookupLocal sc n | fail E.undefined n
-          let x ← asReal (← term f sc pf a)
+          -- (the argument's type is the method's: a number, or an element of another type,
+          -- `\varphi(g)` for a map of structures)
+          let argTy : Ty := match ← method t .call with
+            | some (_, .fn _ (.fn a' _)) => a'
+            | _ => .real
+          let x ← if argTy == .real then asReal (← term f sc pf a) else do
+            let (v, vt) ← term f sc pf a
+            coerce v vt argTy
           callMethod t .call [.loc i, x]
         else do
           let (h, hty, doms) ← head f sc (.id n)
@@ -1845,6 +1852,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           pure (gcdTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
         else
         if op == w!"\\cup" || op == w!"\\times" || op == w!"\\cap" || op == w!"\\setminus" then setOp f sc pf op x y
+        -- `\psi\circ\varphi`: the composition of a vocabulary's type of maps
+        else if op == w!"\\circ" && (← (do
+            let (_, t) ← term f sc pf x
+            pure ((← ownTy t) && (← method t (.fn w!"\\circ")).isSome))) then do
+          let (a', t) ← term f sc pf x
+          let (b', t') ← term f sc pf y
+          let b'' ← coerce b' t' t
+          callMethod t (.fn w!"\\circ") [a', b'']
         else do
           let (h, hty, doms) ← head f sc hd
           let xs ← args.mapM (term f sc pf)
@@ -2841,6 +2856,22 @@ where
           pure (p, .prop)
         | _, _ => fail E.unsupported
       else
+      -- `\ker\varphi=\{1\}`: a set of elements of a vocabulary's type and a finite set of
+      -- numbers, which are its elements (`1` the identity)
+      let finEls (t : Ty) (xs : List MT) : M Tm := do
+        let es ← xs.mapM fun e => do let (v, vt) ← term f ((w!"", t) :: sc) pf e; coerce v vt t
+        let some m ← method t .eq | fail E.type
+        let mem := es.map fun e => Tm.app (Tm.app m.1 (.loc 0)) e
+        pure (Tm.lam t .tt (mem.foldr (fun p acc => if acc == .not .tt then p else .or p acc) (.not .tt)))
+      match ts, rels, rest with
+      | [a, _], [.eq], [(_, .finset xs)] =>
+        match a.2 with
+        | .fn t .prop =>
+          if (← ownTy t) && (← method t .eq).isSome then
+            return (setEq a.2 a.1 (← finEls t xs), .prop)
+          else pure ()
+        | _ => pure ()
+      | _, _, _ => pure ()
       -- set equality between predicates
       match ts, rels with
       | [a, b], [.eq] =>

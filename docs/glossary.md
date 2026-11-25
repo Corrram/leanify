@@ -1080,29 +1080,31 @@ except a notion whose meanings take arguments of different types, which the type
 | chain | $\mathrm{El}$ → Prop | a totally ordered set (Mathlib `IsChain`) |
 | lattice | $\mathrm{El}$ → Prop | (Mathlib `Lattice`) |
 | well-ordered set | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
-| homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | `φ(ab) = φ(a)φ(b)` on the domain (Mathlib `MonoidHom`) |
-| group homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonoidHom`) |
-| ring homomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `RingHom`) |
-| linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
-| linear transformation | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
-| linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
-| continuous map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
-| homeomorphism | $\mathrm{El}$ → $\mathrm{El}$ | onto its image (Mathlib `Homeomorph`) |
-| isometry | $\mathrm{El}$ → $\mathrm{El}$ | `d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`) |
-| monotone map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
-| order-preserving map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
-| bounded linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
-| bounded linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
-| continuous linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
-| continuous linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
-| injection | $\mathrm{El}$ → $\mathrm{El}$ | an injective map (Mathlib `Set.InjOn`) |
-| surjection | $\mathrm{El}$ → $\mathrm{El}$ | a map onto its codomain (Mathlib `Set.SurjOn`) |
-| bijection | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
-| isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | a bijective homomorphism onto the codomain (Mathlib `MulEquiv`, `RingEquiv`, `LinearEquiv`) |
-| group isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MulEquiv`) |
-| ring isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `RingEquiv`) |
-| linear isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearEquiv`) |
-| automorphism | $\mathrm{El}$ → $\mathrm{El}$ | an isomorphism of a structure onto itself (Mathlib `MulAut`) |
+| homomorphism | $\mathrm{Map}$ | `φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`) |
+| group homomorphism | $\mathrm{Map}$ | (Mathlib `MonoidHom`) |
+| ring homomorphism | $\mathrm{Map}$ | (Mathlib `RingHom`) |
+| linear map | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
+| linear transformation | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
+| linear operator | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
+| continuous map | $\mathrm{Map}$ | (Mathlib `ContinuousMap`) |
+| homeomorphism | $\mathrm{Map}$ | (Mathlib `Homeomorph`) |
+| isometry | $\mathrm{Map}$ | `d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`) |
+| monotone map | $\mathrm{Map}$ | (Mathlib `Monotone`) |
+| order-preserving map | $\mathrm{Map}$ | (Mathlib `Monotone`) |
+| bounded linear operator | $\mathrm{Map}$ | (Mathlib `ContinuousLinearMap`) |
+| bounded linear map | $\mathrm{Map}$ | (Mathlib `ContinuousLinearMap`) |
+| continuous linear map | $\mathrm{Map}$ | (Mathlib `ContinuousLinearMap`) |
+| continuous linear operator | $\mathrm{Map}$ | (Mathlib `ContinuousLinearMap`) |
+| injection | $\mathrm{Map}$ | an injective map (Mathlib `Function.Injective`) |
+| surjection | $\mathrm{Map}$ | a map onto its codomain (Mathlib `Function.Surjective`) |
+| bijection | $\mathrm{Map}$ | (Mathlib `Function.Bijective`) |
+| isomorphism | $\mathrm{Map}$ | a bijective homomorphism (Mathlib `MulEquiv`, `RingEquiv`, `LinearEquiv`) |
+| group isomorphism | $\mathrm{Map}$ | (Mathlib `MulEquiv`) |
+| ring isomorphism | $\mathrm{Map}$ | (Mathlib `RingEquiv`) |
+| linear isomorphism | $\mathrm{Map}$ | (Mathlib `LinearEquiv`) |
+| automorphism | $\mathrm{Map}$ | an isomorphism of a structure onto itself (Mathlib `MulAut`) |
+| endomorphism | $\mathrm{Map}$ | a map of a structure into itself (Mathlib `Monoid.End`) |
+| contraction | $\mathrm{Map}$ | Lipschitz with a constant below `1` (Mathlib `ContractingWith`) |
 | normed space | $\mathrm{El}$ → Prop | a real normed vector space (Mathlib `NormedSpace ℝ`) |
 | normed vector space | $\mathrm{El}$ → Prop | (Mathlib `NormedSpace ℝ`) |
 | normed linear space | $\mathrm{El}$ → Prop | (Mathlib `NormedSpace ℝ`) |
@@ -1113,6 +1115,9 @@ except a notion whose meanings take arguments of different types, which the type
 | basis | $\mathrm{El}$ → Prop | a linearly independent set spanning `V` (Mathlib `Basis`) |
 | spanning set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
 | generating set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| eigenvalue | $\mathrm{El}$ | `Tv = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| eigenvector | $\mathrm{El}$ | (Mathlib `Module.End.HasEigenvector`) |
+| fixed point | $\mathrm{El}$ | `φ(a) = a` (Mathlib `Function.IsFixedPt`) |
 | sequence | ℝ → $\mathrm{El}$ | a sequence of elements of `X`: a function of the natural numbers |
 
 | Adjective or phrase | Of | Meaning |
@@ -1162,14 +1167,17 @@ except a notion whose meanings take arguments of different types, which the type
 | normal in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
 | finite-dimensional over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | of dimension $x$ over $a$ | $\mathrm{El}$ → Prop | (Mathlib `Module.finrank`) |
-| injective | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.InjOn`) |
-| continuous | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
-| linear | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
-| isometric | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
-| monotone | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
-| bounded linear | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
-| surjective | $\mathrm{El}$ → $\mathrm{El}$ | onto the codomain (Mathlib `Set.SurjOn`) |
-| bijective | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
+| injective | $\mathrm{Map}$ | (Mathlib `Function.Injective`) |
+| surjective | $\mathrm{Map}$ | onto the codomain (Mathlib `Function.Surjective`) |
+| bijective | $\mathrm{Map}$ | (Mathlib `Function.Bijective`) |
+| continuous | $\mathrm{Map}$ | (Mathlib `Continuous`) |
+| linear | $\mathrm{Map}$ | (Mathlib `LinearMap`) |
+| isometric | $\mathrm{Map}$ | (Mathlib `Isometry`) |
+| monotone | $\mathrm{Map}$ | (Mathlib `Monotone`) |
+| order-preserving | $\mathrm{Map}$ | (Mathlib `Monotone`) |
+| bounded linear | $\mathrm{Map}$ | (Mathlib `ContinuousLinearMap`) |
+| contractive | $\mathrm{Map}$ | (Mathlib `ContractingWith`) |
+| $x$-lipschitz | $\mathrm{Map}$ | (Mathlib `LipschitzWith`) |
 | finite-dimensional | $\mathrm{El}$ → Prop | over its scalars (Mathlib `FiniteDimensional`) |
 | finite dimensional | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | infinite-dimensional | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
@@ -1183,13 +1191,6 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Adjective | Of | Meaning |
 | --- | --- | --- |
-| injective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.InjOn`) |
-| continuous [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousOn`) |
-| linear [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
-| isometric [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
-| monotone [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
-| surjective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.SurjOn`) |
-| bijective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
 | continuous [on $A$] | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
 
 | Notion | Type | Meaning |
@@ -1228,6 +1229,17 @@ except a notion whose meanings take arguments of different types, which the type
 | linear span of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
 | norm of $a$ | $\mathrm{El}$ → ℝ | in a normed space (Mathlib `norm`) |
 | inner product of $a$ and $b$ | $\mathrm{El}$ → $\mathrm{El}$ → ℝ | (Mathlib `inner`) |
+| kernel of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.ker`, `LinearMap.ker`) |
+| image of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.range`, `LinearMap.range`) |
+| range of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `LinearMap.range`) |
+| rank of $a$ | $\mathrm{Map}$ → ℝ | (Mathlib `LinearMap.rank`) |
+| nullity of $a$ | $\mathrm{Map}$ → ℝ | the dimension of the kernel |
+| operator norm of $a$ | $\mathrm{Map}$ → ℝ | (Mathlib `ContinuousLinearMap.opNorm`) |
+| domain of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | of a map |
+| codomain of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | of a map |
+| identity map of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ | (Mathlib `MonoidHom.id`, `LinearMap.id`) |
+| identity map on $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ | (Mathlib `id`) |
+| composition of $a$ and $b$ | $\mathrm{Map}$ → $\mathrm{Map}$ → $\mathrm{Map}$ | `ψ ∘ φ` |
 
 | Notation | On | Meaning |
 | --- | --- | --- |
@@ -1245,6 +1257,14 @@ except a notion whose meanings take arguments of different types, which the type
 | a number in a set | $\mathrm{El}$ | a number as an element of a given structure (`φ(1)` for `φ : G → H`) |
 | $\operatorname{@norm}$ | $\mathrm{El}$ | `\lVert x\rVert`: the norm of a normed space |
 | $\operatorname{@inner}$ | $\mathrm{El}$ | `\langle x,y\rangle`: the inner product of an inner product space |
+| $x(t)$ | $\mathrm{Map}$ | `φ(a)`; a number is that element of the domain (`φ(1)`) |
+| $f\colon A\to B$ | $\mathrm{Map}$ | `φ\colon G\to H` binds a map with domain `G` and codomain `H` |
+| $\circ$ | $\mathrm{Map}$ | `ψ\circ φ` |
+| $=$ | $\mathrm{Map}$ | maps with the same domain and codomain and the same values |
+| $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |
+| $\operatorname{im}$ | $\mathrm{Map}$ | `\operatorname{im} φ`, the image |
+| $\operatorname{rank}$ | $\mathrm{Map}$ | `\operatorname{rank} T` |
+| $\operatorname{@norm}$ | $\mathrm{Map}$ | `\\|T\\|`, the operator norm |
 
 ## `means`
 
