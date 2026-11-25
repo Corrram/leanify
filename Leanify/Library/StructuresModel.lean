@@ -62,6 +62,20 @@ open Classical
 /-- The points on which structures are built. -/
 abbrev Pt : Type := Set ℝ
 
+/-- The operations of a ring: those of the scalars of a module. `real` embeds the real
+numbers, where the ring has them (`ℝ`, a real algebra): a number `r` is then `real r`, not
+only a rational multiple of `1`. -/
+structure ROps where
+  add : Pt → Pt → Pt
+  zero : Pt
+  neg : Pt → Pt
+  mul : Pt → Pt → Pt
+  one : Pt
+  inv : Pt → Pt
+  real : Option (ℝ → Pt)
+
+instance : Inhabited ROps := ⟨⟨fun a _ => a, ∅, id, fun a _ => a, ∅, id, none⟩⟩
+
 /-- The operations of a structure. Every structure has all of them; its noun says which it
 uses. -/
 structure Ops where
@@ -71,18 +85,25 @@ structure Ops where
   mul : Pt → Pt → Pt
   one : Pt
   inv : Pt → Pt
-  /-- The scalars of a module (the points of its ring of scalars) and their action. -/
+  /-- The real numbers in the structure, where it has them. -/
+  real : Option (ℝ → Pt)
+  /-- The scalars of a module (the points of its ring of scalars), their ring operations and
+  their action. A ring acts on itself by its product. -/
   scalars : Set Pt
+  sops : ROps
   smul : Pt → Pt → Pt
   /-- An order. -/
   le : Pt → Pt → Prop
   /-- A topology: its open sets. -/
   opens : Set (Set Pt)
-  /-- A distance. -/
+  /-- A distance, a norm and an inner product. -/
   dist : Pt → Pt → ℝ
+  norm : Pt → ℝ
+  inner : Pt → Pt → ℝ
 
 instance : Inhabited Ops :=
-  ⟨⟨fun a _ => a, ∅, id, fun a _ => a, ∅, id, ∅, fun _ a => a, fun _ _ => False, ∅, fun _ _ => 0⟩⟩
+  ⟨⟨fun a _ => a, ∅, id, fun a _ => a, ∅, id, none, ∅, default, fun _ a => a, fun _ _ => False, ∅,
+    fun _ _ => 0, fun _ => 0, fun _ _ => 0⟩⟩
 
 /-- An element: a point with the operations of its structure, or a numeral, whose meaning
 is given by the element it meets. -/
@@ -97,20 +118,36 @@ def elDefault : El := .num 0
 
 /-! ## Numerals -/
 
-/-- `n` as `1 + ⋯ + 1` in the operations `o`. -/
-def Ops.nat (o : Ops) : ℕ → Pt
-  | 0 => o.zero
-  | n + 1 => if n = 0 then o.one else o.add (o.nat n) o.one
+/-- `n` as `1 + ⋯ + 1`. -/
+def natIn (add : Pt → Pt → Pt) (zero one : Pt) : ℕ → Pt
+  | 0 => zero
+  | n + 1 => if n = 0 then one else add (natIn add zero one n) one
 
-def Ops.int (o : Ops) (k : ℤ) : Pt := if 0 ≤ k then o.nat k.toNat else o.neg (o.nat k.natAbs)
+def intIn (add : Pt → Pt → Pt) (zero one : Pt) (neg : Pt → Pt) (k : ℤ) : Pt :=
+  if 0 ≤ k then natIn add zero one k.toNat else neg (natIn add zero one k.natAbs)
 
-/-- A real number as an element of a structure: an integer `k` is `k·1`, a rational number
-`p/q` is `(p·1)(q·1)⁻¹`; others have no meaning (the zero). -/
-def Ops.numeral (o : Ops) (r : ℝ) : Pt :=
-  if h : ∃ q : ℚ, (q : ℝ) = r then
-    let q := Classical.choose h
-    if q.den = 1 then o.int q.num else o.mul (o.int q.num) (o.inv (o.int q.den))
-  else o.zero
+/-- A real number in a ring: by its embedding of the reals, if it has one; otherwise an
+integer `k` is `k·1`, a rational number `p/q` is `(p·1)(q·1)⁻¹`, and others have no meaning
+(the zero). -/
+def numeralIn (add : Pt → Pt → Pt) (zero one : Pt) (neg : Pt → Pt) (mul : Pt → Pt → Pt) (inv : Pt → Pt)
+    (real : Option (ℝ → Pt)) (r : ℝ) : Pt :=
+  match real with
+  | some e => e r
+  | none =>
+    if h : ∃ q : ℚ, (q : ℝ) = r then
+      let q := Classical.choose h
+      if q.den = 1 then intIn add zero one neg q.num
+      else mul (intIn add zero one neg q.num) (inv (intIn add zero one neg q.den))
+    else zero
+
+def Ops.numeral (o : Ops) (r : ℝ) : Pt := numeralIn o.add o.zero o.one o.neg o.mul o.inv o.real r
+def ROps.numeral (o : ROps) (r : ℝ) : Pt := numeralIn o.add o.zero o.one o.neg o.mul o.inv o.real r
+
+/-- The ring operations of a structure. -/
+def Ops.ring (o : Ops) : ROps := ⟨o.add, o.zero, o.neg, o.mul, o.one, o.inv, o.real⟩
+/-- A ring's operations as those of a structure. -/
+def ROps.lift (r : ROps) : Ops :=
+  { (default : Ops) with add := r.add, zero := r.zero, neg := r.neg, mul := r.mul, one := r.one, inv := r.inv, real := r.real }
 
 /-- `x ^ n` for a natural number `n`. -/
 def Ops.npow (o : Ops) (x : Pt) : ℕ → Pt
@@ -134,10 +171,13 @@ def sub : El → El → El := lift2 (fun o x y => o.add x (o.neg y)) (· - ·)
 def div : El → El → El := lift2 (fun o x y => o.mul x (o.inv y)) (· / ·)
 
 /-- `xy`: the product of a structure, or a scalar times an element of a module (`cv`, the
-scalar `c` an element of another structure). -/
+scalar `c` an element of another structure); a number times an element is the number as a
+scalar (in a ring, a multiple of `1`; in a real vector space, the real number). -/
 def mul : El → El → El
   | .el o x, .el o' y => if o = o' then .el o (o.mul x y) else .el o' (o'.smul x y)
-  | a, b => lift2 Ops.mul (· * ·) a b
+  | .num r, .el o y => .el o (o.smul (o.sops.numeral r) y)
+  | .el o x, .num s => .el o (o.smul (o.sops.numeral s) x)
+  | .num r, .num s => .num (r * s)
 
 def neg : El → El
   | .el o x => .el o (o.neg x)
@@ -176,6 +216,15 @@ element of a field, a unit of a ring): where `x/y` and `y^{-1}` are meant. -/
 def Invertible : El → Prop
   | .el o y => ∃ z, o.mul y z = o.one ∧ o.mul z y = o.one
   | .num r => r ≠ 0
+
+/-- The norm of an element of a normed space, the inner product of two elements of an inner
+product space. -/
+def norm : El → ℝ
+  | .el o x => o.norm x
+  | .num r => |r|
+def inner : El → El → ℝ
+  | .el o x, .el _ y => o.inner x y
+  | _, _ => 0
 
 /-- The distance between two elements of a metric space. -/
 def dist : El → El → ℝ
@@ -305,10 +354,14 @@ def InvOn (S : El → Prop) (R : Ring (carrier S)) : Prop :=
   letI := R
   ∀ a b : carrier S, a * b = 1 → ((b : carrier S) : Pt) = (opsOf S).inv a
 
-def IsRing (S : El → Prop) : Prop := Uniform S ∧ ∃ R, RingOn S R ∧ InvOn S R
+/-- A ring is its own ring of scalars, acting by its product (so that `2x` is `(1+1)x`). -/
+def SelfScalars (S : El → Prop) : Prop :=
+  (opsOf S).sops = (opsOf S).ring ∧ ∀ a ∈ carrier S, ∀ b ∈ carrier S, (opsOf S).smul a b = (opsOf S).mul a b
+
+def IsRing (S : El → Prop) : Prop := Uniform S ∧ SelfScalars S ∧ ∃ R, RingOn S R ∧ InvOn S R
 
 def ringHas (P : (α : Type) → Ring α → Prop) (S : El → Prop) : Prop :=
-  Uniform S ∧ ∃ R, RingOn S R ∧ InvOn S R ∧ P (carrier S) R
+  Uniform S ∧ SelfScalars S ∧ ∃ R, RingOn S R ∧ InvOn S R ∧ P (carrier S) R
 
 def CommRing' : (El → Prop) → Prop := ringHas fun α R => letI := R; ∀ a b : α, a * b = b * a
 def Domain : (El → Prop) → Prop := ringHas fun α R => letI := R; (∀ a b : α, a * b = b * a) ∧ IsDomain α
@@ -367,7 +420,7 @@ def AddOn (S : El → Prop) (A : AddCommGroup (carrier S)) : Prop :=
 /-- `V` is a module over the ring `R`: an additive group whose scalars are the points of
 `R`, acting by the scalar multiplication of `V` (Mathlib `Module`). -/
 def ModuleOver (R V : El → Prop) : Prop :=
-  Uniform V ∧ Uniform R ∧ (opsOf V).scalars = carrier R ∧
+  Uniform V ∧ Uniform R ∧ (opsOf V).scalars = carrier R ∧ (opsOf V).sops = (opsOf R).ring ∧
   ∃ (Rr : Ring (carrier R)) (A : AddCommGroup (carrier V)), RingOn R Rr ∧ AddOn V A ∧
     ∃ M : @Module (carrier R) (carrier V) Rr.toSemiring A.toAddCommMonoid,
       ∀ (c : carrier R) (v : carrier V), ((@HSMul.hSMul _ _ _ (@instHSMul _ _ M.toSMul) c v : carrier V) : Pt) =
@@ -412,6 +465,44 @@ def LinearOn (V : El → Prop) (f : El → El) : Prop :=
   ∀ c ∈ (opsOf V).scalars, ∀ x ∈ carrier V,
     eqv (f (.el (opsOf V) ((opsOf V).smul c x)))
       (match f (.el (opsOf V) x) with | .el o y => .el o (o.smul c y) | a => a)
+
+/-- The ring of scalars of a module, as a structure: its points, with its ring operations. -/
+def scal (V : El → Prop) : El → Prop :=
+  fun a => ∃ x ∈ (opsOf V).scalars, a = .el (opsOf V).sops.lift x
+
+/-- The dimension of `V` over its own scalars (Mathlib `Module.finrank`). -/
+def dimS (V : El → Prop) : ℝ := dim (scal V) V
+def FiniteDimS (V : El → Prop) : Prop := FiniteDim (scal V) V
+
+/-- A linear combination `c₁x₁ + ⋯ + cₙxₙ`, with the operations `o`. -/
+def lincomb (o : Ops) (l : List (Pt × Pt)) : Pt := l.foldr (fun p acc => o.add (o.smul p.1 p.2) acc) o.zero
+
+/-- `B` is linearly independent: a linear combination of distinct elements of `B` with
+scalars of its module is zero only with zero scalars (Mathlib `LinearIndependent`). -/
+def LinIndep (B : El → Prop) : Prop :=
+  Uniform B ∧ ∀ l : List (Pt × Pt), (l.map Prod.snd).Nodup → (∀ p ∈ l, p.2 ∈ carrier B ∧ p.1 ∈ (opsOf B).scalars) →
+    lincomb (opsOf B) l = (opsOf B).zero → ∀ p ∈ l, p.1 = (opsOf B).sops.zero
+
+/-- The span of `B`: the smallest subspace with its operations that contains it (Mathlib
+`Submodule.span`). -/
+def span (B : El → Prop) : El → Prop :=
+  fun a => ∀ W, Subspace W → opsOf W = opsOf B → (∀ b, B b → W b) → W a
+
+/-- `B` is a basis of `V`: linearly independent and spanning `V` (Mathlib `Basis`). -/
+def BasisOf (V B : El → Prop) : Prop := (∀ a, B a → V a) ∧ LinIndep B ∧ ∀ a, V a ↔ span B a
+
+/-- `B` spans `V`. -/
+def SpansOf (V B : El → Prop) : Prop := (∀ a, B a → V a) ∧ ∀ a, V a ↔ span B a
+
+/-! ### Maps with a codomain -/
+
+/-- `f` maps `X` onto `Y`. -/
+def SurjOnto (X Y : El → Prop) (f : El → El) : Prop := ∀ b, Y b → ∃ a, X a ∧ eqv (f a) b
+def BijOnto (X Y : El → Prop) (f : El → El) : Prop := InjOn X f ∧ SurjOnto X Y f
+/-- An isomorphism of `X` onto `Y`: a bijective homomorphism of groups (or rings, or a
+bijective linear map of modules), whatever operations they have (Mathlib `MulEquiv`). -/
+def IsoOnto (X Y : El → Prop) (f : El → El) : Prop :=
+  BijOnto X Y f ∧ HomOn X f ∧ ∀ a b, X a → X b → eqv (f (add a b)) (add (f a) (f b))
 
 /-! ### Topological and metric spaces -/
 
@@ -473,9 +564,87 @@ def CompleteS : (El → Prop) → Prop := metricHas fun α m => letI := m; Compl
 def TotallyBoundedS : (El → Prop) → Prop := metricHas fun α m => letI := m; TotallyBounded (Set.univ : Set α)
 def BoundedS : (El → Prop) → Prop := metricHas fun α m => letI := m; Bornology.IsBounded (Set.univ : Set α)
 
+/-- A real function on `X` is continuous (Mathlib `ContinuousOn`). -/
+def ContinuousReal (X : El → Prop) (f : El → ℝ) : Prop :=
+  ∀ U : Set ℝ, IsOpen U → ∃ V ∈ (opsOf X).opens, ∀ x ∈ carrier X, (x ∈ V ↔ f (.el (opsOf X) x) ∈ U)
+
+/-- The operations of an element (a numeral has none). -/
+def opsEl : El → Ops
+  | .el o _ => o
+  | .num _ => default
+def ptEl : El → Pt
+  | .el _ x => x
+  | .num _ => ∅
+
+/-- A sequence `s` (a function of the natural numbers) converges to `l`, in the topology of
+the space that `l` belongs to (Mathlib `Filter.Tendsto … atTop (nhds l)`). -/
+def ConvergesTo (s : ℝ → El) (l : El) : Prop :=
+  (∃ x, l = .el (opsEl l) x) ∧ ∀ U ∈ (opsEl l).opens, ptEl l ∈ U →
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∃ y ∈ U, s n = .el (opsEl l) y
+
+/-- A Cauchy sequence of a metric space: `d(s_m, s_n) < ε` for large `m`, `n`. -/
+def CauchySeq' (s : ℝ → El) : Prop :=
+  ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, ∀ m n : ℕ, N ≤ m → N ≤ n → dist (s m) (s n) < ε
+
 /-- `f` is an isometry on `X`. -/
 def IsometryOn (X : El → Prop) (f : El → El) : Prop := ∀ a b, X a → X b → dist (f a) (f b) = dist a b
 def LipschitzOn (L : ℝ) (X : El → Prop) (f : El → El) : Prop := ∀ a b, X a → X b → dist (f a) (f b) ≤ L * dist a b
+
+/-! ### Normed and inner product spaces
+
+A real normed space: the scalars are the real numbers (its ring of scalars embeds them). -/
+
+/-- The scalars of `S` are the real numbers, by an embedding of `ℝ`. -/
+def RealScalars (S : El → Prop) : Prop :=
+  ∃ e : ℝ → Pt, (opsOf S).sops.real = some e ∧ Function.Injective e ∧ (opsOf S).scalars = Set.range e ∧
+    (opsOf S).sops.add = (fun a b => e ((Classical.epsilon fun r => e r = a) + (Classical.epsilon fun r => e r = b))) ∧
+    (opsOf S).sops.mul = (fun a b => e ((Classical.epsilon fun r => e r = a) * (Classical.epsilon fun r => e r = b)))
+
+/-- A normed real vector space on the points of `S` with its sum, zero, negation, norm,
+distance, open sets and real scalars. -/
+def NormedOn (S : El → Prop) (N : NormedAddCommGroup (carrier S)) (M : @NormedSpace ℝ (carrier S) _ N.toSeminormedAddCommGroup) : Prop :=
+  letI := N
+  ((0 : carrier S) : Pt) = (opsOf S).zero ∧
+  (∀ a b : carrier S, ((a + b : carrier S) : Pt) = (opsOf S).add a b ∧ ((-a : carrier S) : Pt) = (opsOf S).neg a ∧
+    ‖a‖ = (opsOf S).norm a ∧ Dist.dist a b = (opsOf S).dist a b) ∧
+  TopOn S N.toUniformSpace.toTopologicalSpace ∧
+  ∃ e : ℝ → Pt, (opsOf S).sops.real = some e ∧
+    ∀ (r : ℝ) (a : carrier S), ((@HSMul.hSMul _ _ _ (@instHSMul _ _ M.toModule.toDistribMulAction.toSMul) r a : carrier S) : Pt) = (opsOf S).smul (e r) a
+
+def IsNormedSpace (S : El → Prop) : Prop := Uniform S ∧ RealScalars S ∧ ∃ N M, NormedOn S N M
+
+def normedHas (P : (α : Type) → (N : NormedAddCommGroup α) → @NormedSpace ℝ α _ N.toSeminormedAddCommGroup → Prop)
+    (S : El → Prop) : Prop :=
+  Uniform S ∧ RealScalars S ∧ ∃ N M, NormedOn S N M ∧ P (carrier S) N M
+
+/-- A Banach space: a complete normed space (Mathlib `CompleteSpace`). -/
+def Banach : (El → Prop) → Prop := normedHas fun α N _ => letI := N; CompleteSpace α
+
+/-- A real inner product space: a normed space whose norm comes from the inner product of `S`
+(Mathlib `InnerProductSpace ℝ`). -/
+def IsInnerProductSpace (S : El → Prop) : Prop :=
+  IsNormedSpace S ∧ (∀ a ∈ carrier S, (opsOf S).norm a = Real.sqrt ((opsOf S).inner a a)) ∧
+  (∀ a ∈ carrier S, ∀ b ∈ carrier S, (opsOf S).inner a b = (opsOf S).inner b a) ∧
+  (∀ a ∈ carrier S, ∀ b ∈ carrier S, ∀ c ∈ carrier S, (opsOf S).inner ((opsOf S).add a b) c =
+    (opsOf S).inner a c + (opsOf S).inner b c) ∧
+  ∀ (r : ℝ) (e : ℝ → Pt), (opsOf S).sops.real = some e → ∀ a ∈ carrier S, ∀ b ∈ carrier S,
+    (opsOf S).inner ((opsOf S).smul (e r) a) b = r * (opsOf S).inner a b
+
+/-- A Hilbert space: a complete inner product space. -/
+def Hilbert (S : El → Prop) : Prop := IsInnerProductSpace S ∧ Banach S
+
+/-- Orthogonal elements: their inner product is zero. -/
+def Orthogonal (a b : El) : Prop := inner a b = 0
+
+/-- `f` is a bounded linear map on the normed space `X`: linear, with `‖f(x)‖ ≤ C‖x‖`
+(Mathlib `ContinuousLinearMap`). -/
+def BoundedLinearOn (X : El → Prop) (f : El → El) : Prop :=
+  LinearOn X f ∧ ∃ C : ℝ, ∀ a, X a → norm (f a) ≤ C * norm a
+
+/-- The operator norm of a bounded linear map on `X` (Mathlib `ContinuousLinearMap.opNorm`):
+the least `C ≥ 0` with `‖f(x)‖ ≤ C‖x‖`. -/
+def opNorm (X : El → Prop) (f : El → El) : ℝ :=
+  sInf {C : ℝ | 0 ≤ C ∧ ∀ a, X a → norm (f a) ≤ C * norm a}
 
 /-! ### Counting -/
 

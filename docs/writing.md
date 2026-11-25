@@ -140,6 +140,10 @@ Structures with their elements (the field `structures`):
 | `Let $H$ be a subgroup of $G$.`, `Let $I$ be a prime ideal of $R$.`, `Let $V$ be a vector space over $K$.`, `Let $F$ be a closed subset of $X$.`, `$H$ is a normal subgroup of $G$.` | a noun with a complement (`of`, `over`, `in`): the object it names is a term of the sentence |
 | `Let $\varphi\colon G\to H$ be a homomorphism.`, `Let $T\colon V\to W$ be a linear map.`, `Let $f\colon X\to Y$ be a continuous map.` | a map bound by its signature: it maps `G` into `H`, and the noun (`homomorphism`, `linear map`, `isometry`) and adjectives (`injective`, `continuous`) are meant on its domain; `\varphi(1)` is its value at the identity of `G` |
 | `Let $A$ be a set of real numbers and $f\colon A\to A$ a function.`, `Let $B$ be a subset of $A$.` | the same for sets of real numbers: `f` maps `A` into `A`, `B\subseteq A` |
+| `Let $V$ be a vector space over a field $K$.`, `Let $H$ be a subgroup of a finite group $G$.` | a complement that introduces its own object binds it first: `K`, then `V` |
+| `Let $\varphi\colon G\to H$ be an isomorphism.`, `$\varphi$ is surjective`, `Let $f\colon G\to H$ be a bijection.` | nouns and adjectives about the codomain too (`isomorphism`, `automorphism`, `bijection`, `surjective`, `bijective`); a signature also decides between nouns of maps of different types |
+| `Let $X$ be a Banach space.`, `$\|x+y\|\le\|x\|+\|y\|$`, `$\langle x,y\rangle=0$`, `$\|cx\|=|c|\|x\|$` | real normed, Banach, inner product and Hilbert spaces: the norm and the inner product of the space; a real number times an element is the scalar multiple |
+| `Let $B$ be a basis of $V$.`, `$B$ is linearly independent`, `the dimension of $V$`, `$V$ is finite-dimensional` | linear algebra over the space's own scalars (those of `vector space over $K$`) |
 
 Further forms that the fields use (they are read for any vocabulary):
 

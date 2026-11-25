@@ -1268,7 +1268,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `a small $\zeta>0$`: how small is not said
   if (wordsOf np).head? == some w!"small" || (wordsOf np).head? == some w!"large" then
     fail E.finding w!"`small` and `large` alone are not read: say `sufficiently small` (`large`), or give a bound"
-  modify fun st => { st with sigDom := st.sigDomPreset }
+  modify fun st => { st with sigDom := st.sigDomPreset, sigCod := st.sigCodPreset }
   let st ← get
   let V := st.vocab
   -- `a set of measure zero $S$` (as `Let $S$ be a set of measure zero` is read): a modifier
@@ -1358,6 +1358,9 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     let some d := (← get).sigDom
       | fail E.finding (w!"a " ++ ((n.sing.filterMap fun i => match i with | .w w => some w | _ => none).intersperse [32]).flatten ++
           w!" is bound with its domain: $\\varphi\\colon G\\to H$")
+    if n.onCodomain then
+      let some c := (← get).sigCod | fail E.finding (w!"a map whose noun is about its codomain is bound with it: $\\varphi\\colon G\\to H$")
+      return Tm.lam n.ty .tt (Notation.betaApply n.pred [shift 1 0 d, shift 1 0 c, .loc 0])
     pure (Tm.lam n.ty .tt (Notation.betaApply n.pred [shift 1 0 d, .loc 0]))
   -- (the chunks after the noun's variable, if one follows it)
   let afterVar (n : Noun) (v : Option (List MTok)) (r : List Chunk) : List Chunk :=
@@ -1394,6 +1397,18 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         -- (nouns with the same words: their complements' types decide, `subset of $A$`)
         let fitsArg (nvr : Noun × Option (List MTok) × List Chunk) : M Unit := do
           let (n, v, r) := nvr
+          -- (nouns of maps of different types: the signature's type decides, `a bijection
+          -- $f\colon G\to H$`)
+          let sigTs : Option (List MTok) := match v, r with
+            | none, .m ts :: _ => if (Math.parseSig ts).isSome then some ts else none
+            | some ts, _ => if (Math.parseSig ts).isSome then some ts else none
+            | _, _ => none
+          if let some ts := sigTs then
+            if let some (.sig _ d c) := Math.parseSig ts then
+              let ds ← domainsOf false d outer
+              let (ct, _) ← domainOf false c outer
+              if let [(dt, _)] := ds then
+                if Ty.fn dt ct != n.ty then fail E.type
           let _ ← nounArg n (afterVar n v r)
         match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
             (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) with
@@ -1411,7 +1426,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             let [(dt, dp)] := ds | fail E.unsupported
             if Ty.fn dt ct != n.ty then fail E.type
             let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
-            modify fun st => { st with sigDom := some dom, sigDoms := (st.curEnv, f, d) :: st.sigDoms.filter (·.2.1 != f) }
+            let cod := (cp.map (shift 1 0)).getD (.lam ct .tt .tt)
+            modify fun st => { st with sigDom := some dom, sigCod := some cod, sigDoms := (st.curEnv, f, d, c) :: st.sigDoms.filter (·.2.1 != f) }
             let inDom : Tm := match dp with
               | some q => .app (shift 3 0 q) (.loc 0)
               | none => .tt
@@ -1487,7 +1503,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               match ds, cp with
               | [(dt, dp)], _ =>
                 let dom := (dp.map (shift 1 0)).getD (.lam dt .tt .tt)
-                modify fun st => { st with sigDom := some dom, sigDoms := (st.curEnv, f, d) :: st.sigDoms.filter (·.2.1 != f) }
+                let cod := (cp.map (shift 1 0)).getD (.lam ct .tt .tt)
+                modify fun st => { st with sigDom := some dom, sigCod := some cod, sigDoms := (st.curEnv, f, d, c) :: st.sigDoms.filter (·.2.1 != f) }
                 if cp.isNone then pure (Ty.fn dt ct, [], some [.id f], r) else
                 -- (the predicates of the domains are stated where the variable is bound)
                 let inDom : Tm := match dp with
@@ -1525,6 +1542,9 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     -- (a modifier of maps meant on a domain: the domain of the signature)
     if m.onDomain then
       let some d := (← get).sigDom | fail E.type
+      if m.onCodomain then
+        let some c := (← get).sigCod | fail E.type
+        return Tm.lam ty .tt (Notation.betaApply m.pred [shift 1 0 d, shift 1 0 c, .loc 0])
       return Tm.lam ty .tt (Notation.betaApply m.pred [shift 1 0 d, .loc 0])
     if !Notation.hasSlots m.phrase then return m.pred
     let some (args, _) := Notation.matchPrefix m.phrase cs [] | fail E.type
@@ -1901,12 +1921,41 @@ def attachCond (before out : List BindInfo) (φ : MT) : M (List BindInfo) := do
   for m in conjunctsOf 8 φ do o ← attachOne before o m
   pure o
 
+/-- `a vector space $V$ over a field $K$`: a complement that introduces its own object (a
+preposition, `a` or `an`, words and a variable). The noun phrase of that object, and the
+phrase with the variable in place of it. -/
+def splitNested (np : List Chunk) : Option (List Chunk × List Chunk) := do
+  let preps : List Codes := [w!"of", w!"over", w!"in", w!"on"]
+  let i ← (List.range np.length).find? fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk) with
+    | some (Chunk.w p), some (Chunk.w a) => preps.contains p && (a == w!"a" || a == w!"an")
+    | _, _ => false
+  let rest := np.drop (i + 2)
+  let ws := rest.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
+  if ws.isEmpty then none
+  let some (Chunk.m ts) := (rest[ws.length]? : Option Chunk) | none
+  let _ ← Math.parseFormula ts >>= fun m => match m with | .id _ => some () | _ => none
+  some (ws ++ [.m ts], np.take (i + 1) ++ [.m ts] ++ rest.drop (ws.length + 1))
+
+/-- The binders of a noun phrase: one, or two for a complement that introduces its own
+object (`a vector space $V$ over a field $K$` binds `K`, then `V`). -/
+def nounBinders (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
+  match splitNested np with
+  | some (inner, main) =>
+    let st0 ← get
+    tryCatch (do
+        let b1 ← nounPhrase inner outer
+        let b2 ← nounPhrase main ((b1.name, b1.ty) :: outer)
+        pure [b1, b2]) fun _ => do
+      set st0
+      pure [← nounPhrase np outer]
+  | none => pure [← nounPhrase np outer]
+
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
   match b with
   -- (a multi-index `I\in\mathbb{N}_0^n`: its components `I_1`, …, `I_n`)
   | .every vs d => everyIn outer vs d
-  | .noun np => do pure [← nounPhrase np outer]
+  | .noun np => nounBinders np outer
   | .hyp b => binderInfosRaw b before
   | .on _ => pure []
   | .ifCond φ => do
@@ -1998,7 +2047,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
         let cs := vs.map fun v => condOfDomain v d
         out ← attachCond before out (match cs with | [c] => c | _ => .conj cs)
       else out := out ++ (← binderInfosRaw.everyAfter (before ++ out) vs d)
-    | .noun np => out := out ++ [← nounPhrase np ((before ++ out).map fun b => (b.name, b.ty)).reverse]
+    | .noun np => out := out ++ (← nounBinders np ((before ++ out).map fun b => (b.name, b.ty)).reverse)
     | .ifCond φ => if restates out φ then out ← attachCond before out φ else out := out ++ (← binderInfosRaw b (before ++ out))
     | b => out := out ++ (← binderInfosRaw b (before ++ out))
   declaredInts out
@@ -3273,8 +3322,13 @@ def withoutSlotArgs (V : Vocab) (np : List Chunk) : List Chunk := Id.run do
   if (match np.head? with | some (.w w) => w == w!"@the" | _ => false) then
     return (match np.getLast? with | some c => [c] | none => [])
   let mods := V.mods.filter fun m => Notation.hasSlots m.phrase
-  if mods.isEmpty then return np
-  let mut drop : List Nat := []
+  -- (the object a noun's complement names, `subgroup of $G$`)
+  let preps : List Codes := (V.nouns.filterMap fun n => n.arg.map (·.1)).flatten.eraseDups
+  let argIdx : List Nat := (List.range np.length).filter fun k => match (np[k]? : Option Chunk), (np[k + 1]? : Option Chunk) with
+    | some (Chunk.w p), some (Chunk.m _) => k > 0 && preps.contains (Grammar.lower p)
+    | _, _ => false
+  if mods.isEmpty && argIdx.isEmpty then return np
+  let mut drop : List Nat := argIdx.map (· + 1)
   for k in List.range np.length do
     let suffix := np.drop k
     for m in mods do
@@ -3495,7 +3549,15 @@ def sigDomain (sc : Scope) (k : Codes) : M (Option Tm) := do
   let st ← get
   if (Elab.lookupLocal sc k).isNone then return none
   match st.sigDoms.find? fun (e, n, _) => n == k && (e == st.curEnv || st.curProved == some e) with
-  | some (_, _, d) => tryCatch (do let (_, p) ← domainOf false d sc; pure p) fun _ => pure none
+  | some (_, _, d, _) => tryCatch (do let (_, p) ← domainOf false d sc; pure p) fun _ => pure none
+  | none => pure none
+
+/-- The codomain of such a map, likewise. -/
+def sigCodomain (sc : Scope) (k : Codes) : M (Option Tm) := do
+  let st ← get
+  if (Elab.lookupLocal sc k).isNone then return none
+  match st.sigDoms.find? fun (e, n, _) => n == k && (e == st.curEnv || st.curProved == some e) with
+  | some (_, _, _, c) => tryCatch (do let (_, p) ← domainOf false c sc; pure p) fun _ => pure none
   | none => pure none
 
 /-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
@@ -3510,13 +3572,18 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
       | some (k, _) => sigDomain sc k
       | none => pure none
     | _ => pure none
+  let subjCod : Option Tm ← match x.1 with
+    | .loc i => match sc[i]? with
+      | some (k, _) => sigCodomain sc k
+      | none => pure none
+    | _ => pure none
   -- (the noun phrase is read in the scope of the sentence, `$H$ is a subgroup of $G$`; its
   -- predicate is stated where its variable would be bound, one binder further in)
-  modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0) }
+  modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0), sigCodPreset := subjCod.map (shift 1 0) }
   let np ← tryCatch (some <$> nounPhrase cs sc) fun e => do
-    modify fun st => { st with sigDomPreset := none }
+    modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
     if e.code == E.ambiguous then throw e else pure none
-  modify fun st => { st with sigDomPreset := none }
+  modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
   let np := np.map fun b => if sc.isEmpty then b else { b with pred := b.pred.map (lowerBy 1) }
   -- a notion with its arguments: `$X$ is the Poisson distribution with mean $\lambda$`
   let notion ← if np.isSome then pure none else do
@@ -3567,6 +3634,14 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
             let some mt := Math.parseFormula a | fail E.unsupported
             let v ← term F sc none mt
             if t == .real then Elab.asReal v else if v.2 == t then pure v.1 else fail E.type
+          -- (a modifier of maps meant on the domain, and the codomain, of the subject's signature)
+          if m.onDomain then
+            let some d := subjDom | fail E.type
+            if m.onCodomain then
+              let some c := subjCod | fail E.type
+              adjs f r (Notation.betaApply m.pred [d, c, x.1] :: acc)
+            else adjs f r (Notation.betaApply m.pred [d, x.1] :: acc)
+          else
           adjs f r ((if Notation.hasSlots m.phrase then Notation.betaApply m.pred (ts ++ [x.1]) else Tm.app m.pred x.1) :: acc)
         | none => fail E.noun ((wordsOf cs).intersperse [32]).flatten
     let ps ← adjs (cs.length + 1) cs []
@@ -3589,7 +3664,7 @@ points of the plane, of a real function (on its domain or on `A`), of a quantity
 functions on the unit square (on the class of its definition, or on `A`), or of a
 class of such functions. -/
 def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
-    (on : Option MT) : M Tm := do
+    (on : Option MT) (defCod : Option Tm := none) : M Tm := do
   if ty == .real then
     if on.isSome then fail E.unsupported
     if a == [w!"positive"] then pure (.lt (.num 0) t)
@@ -3648,6 +3723,9 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
         match on with
         | none =>
           let some d := defDom | fail E.unsupported
+          if e.onCodomain then
+            let some c := defCod | fail E.unsupported
+            return Tm.app (.app (.app e.pred t) d) c
           pure (Tm.app (.app e.pred t) d)
         | some m => do
           let (d, dt) ← Elab.term 100000 sc none m
@@ -3661,11 +3739,11 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
 modifier of the vocabulary with these words (`compact` of a set of real numbers in the
 field `realsets`, `even` of a real function in `realfunctions`). -/
 def adjectiveTm (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : List Codes)
-    (on : Option MT) : M Tm := do
+    (on : Option MT) (defCod : Option Tm := none) : M Tm := do
   let st0 ← get
-  tryCatch (adjectiveTmCore sc t ty defDom a on) fun e => do
+  tryCatch (adjectiveTmCore sc t ty defDom a on defCod) fun e => do
     if on.isSome then throw e
-    let m? := st0.vocab.mods.find? fun m => m.ty == ty && !Notation.hasSlots m.phrase &&
+    let m? := st0.vocab.mods.find? fun m => m.ty == ty && !Notation.hasSlots m.phrase && !m.onDomain &&
       m.phrase == a.map PItem.w
     match m? with
     | some m => set st0; pure (Tm.app m.pred t)
@@ -4206,9 +4284,15 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         | some (_, g) => pure (g.doms.head?).join
         | none => sigDomain sc k
       | none => pure none
+    let defCod : Option Tm ← match Elab.symKey s with
+      | some k => do
+        match ← lookupGlob k with
+        | some _ => pure none
+        | none => sigCodomain sc k
+      | none => pure none
     let ps ← adjs.mapM fun (a, on) =>
       -- the standard adjectives, else the vocabulary's (`even` of an integer)
-      tryCatch (adjectiveTm sc t ty defDom a on) fun e =>
+      tryCatch (adjectiveTm sc t ty defDom a on defCod) fun e =>
         if on.isSome then throw e else
         tryCatch (vocabPredicate sc (t, ty) (nameChunks a)) fun e' =>
           if e'.code == E.ambiguous then throw e' else throw e

@@ -292,12 +292,15 @@ structure St where
 (`$\varphi\colon G\to H$`), as a predicate stated where the variable is bound: what a noun or
 adjective of maps that is meant on a domain (`homomorphism`, `injective`) is about. -/
   sigDom : Option Tm := none
+  /-- The codomain of that signature, likewise. -/
+  sigCod : Option Tm := none
   /-- The domain a noun phrase starts with, before any signature (the subject's, in `$\varphi$
   is a homomorphism`). -/
   sigDomPreset : Option Tm := none
+  sigCodPreset : Option Tm := none
   /-- The domains of the maps bound by a signature: the environment, the map's name and the
   domain as written (read again where a sentence says that the map is injective). -/
-  sigDoms : List (Nat × Codes × MT) := []
+  sigDoms : List (Nat × Codes × MT × MT) := []
   /-- The environment of the current sentence, and the result its proof proves. -/
   curEnv : Nat := 0
   curProved : Option Nat := none

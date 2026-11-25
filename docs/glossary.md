@@ -1091,6 +1091,29 @@ except a notion whose meanings take arguments of different types, which the type
 | isometry | $\mathrm{El}$ → $\mathrm{El}$ | `d(f(x),f(y)) = d(x,y)` (Mathlib `Isometry`) |
 | monotone map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
 | order-preserving map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
+| bounded linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
+| bounded linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
+| continuous linear map | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
+| continuous linear operator | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
+| injection | $\mathrm{El}$ → $\mathrm{El}$ | an injective map (Mathlib `Set.InjOn`) |
+| surjection | $\mathrm{El}$ → $\mathrm{El}$ | a map onto its codomain (Mathlib `Set.SurjOn`) |
+| bijection | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
+| isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | a bijective homomorphism onto the codomain (Mathlib `MulEquiv`, `RingEquiv`, `LinearEquiv`) |
+| group isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MulEquiv`) |
+| ring isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `RingEquiv`) |
+| linear isomorphism | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearEquiv`) |
+| automorphism | $\mathrm{El}$ → $\mathrm{El}$ | an isomorphism of a structure onto itself (Mathlib `MulAut`) |
+| normed space | $\mathrm{El}$ → Prop | a real normed vector space (Mathlib `NormedSpace ℝ`) |
+| normed vector space | $\mathrm{El}$ → Prop | (Mathlib `NormedSpace ℝ`) |
+| normed linear space | $\mathrm{El}$ → Prop | (Mathlib `NormedSpace ℝ`) |
+| banach space | $\mathrm{El}$ → Prop | a complete normed space (Mathlib `CompleteSpace`) |
+| inner product space | $\mathrm{El}$ → Prop | (Mathlib `InnerProductSpace ℝ`) |
+| pre-hilbert space | $\mathrm{El}$ → Prop | (Mathlib `InnerProductSpace ℝ`) |
+| hilbert space | $\mathrm{El}$ → Prop | a complete inner product space (Mathlib `InnerProductSpace ℝ`, `CompleteSpace`) |
+| basis | $\mathrm{El}$ → Prop | a linearly independent set spanning `V` (Mathlib `Basis`) |
+| spanning set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| generating set | $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| sequence | ℝ → $\mathrm{El}$ | a sequence of elements of `X`: a function of the natural numbers |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -1129,6 +1152,7 @@ except a notion whose meanings take arguments of different types, which the type
 | open | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
 | totally ordered | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
 | well-ordered | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
+| orthogonal to $x$ | $\mathrm{El}$ | `⟪a, b⟫ = 0` (Mathlib `inner`) |
 | of order $x$ | $\mathrm{El}$ → Prop | with `n` elements (Mathlib `Nat.card`) |
 | of characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
@@ -1143,6 +1167,19 @@ except a notion whose meanings take arguments of different types, which the type
 | linear | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
 | isometric | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
 | monotone | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
+| bounded linear | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `ContinuousLinearMap`) |
+| surjective | $\mathrm{El}$ → $\mathrm{El}$ | onto the codomain (Mathlib `Set.SurjOn`) |
+| bijective | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
+| finite-dimensional | $\mathrm{El}$ → Prop | over its scalars (Mathlib `FiniteDimensional`) |
+| finite dimensional | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| infinite-dimensional | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| infinite dimensional | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
+| linearly independent | $\mathrm{El}$ → Prop | (Mathlib `LinearIndependent`) |
+| linearly dependent | $\mathrm{El}$ → Prop | not linearly independent |
+| cauchy | ℝ → $\mathrm{El}$ | (Mathlib `CauchySeq`) |
+| convergent to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
+| converging to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
+| continuous | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
 
 | Adjective | Of | Meaning |
 | --- | --- | --- |
@@ -1151,6 +1188,9 @@ except a notion whose meanings take arguments of different types, which the type
 | linear [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `LinearMap`) |
 | isometric [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Isometry`) |
 | monotone [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `MonotoneOn`) |
+| surjective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.SurjOn`) |
+| bijective [on $A$] | $\mathrm{El}$ → $\mathrm{El}$ | (Mathlib `Set.BijOn`) |
+| continuous [on $A$] | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
@@ -1183,6 +1223,11 @@ except a notion whose meanings take arguments of different types, which the type
 | dihedral group of order $a$ | ℝ → $\mathrm{El}$ → Prop | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
 | klein four-group | $\mathrm{El}$ → Prop | `C_2 × C_2` |
 | direct product of $a$ and $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `G × H` (Mathlib `Prod`) |
+| dimension of $a$ | ($\mathrm{El}$ → Prop) → ℝ | over its scalars (Mathlib `Module.finrank`) |
+| span of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| linear span of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Submodule.span`) |
+| norm of $a$ | $\mathrm{El}$ → ℝ | in a normed space (Mathlib `norm`) |
+| inner product of $a$ and $b$ | $\mathrm{El}$ → $\mathrm{El}$ → ℝ | (Mathlib `inner`) |
 
 | Notation | On | Meaning |
 | --- | --- | --- |
@@ -1198,6 +1243,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $\le$ | $\mathrm{El}$ | the order of a partially ordered set |
 | $<$ | $\mathrm{El}$ | `x ≤ y`, `x ≠ y` |
 | a number in a set | $\mathrm{El}$ | a number as an element of a given structure (`φ(1)` for `φ : G → H`) |
+| $\operatorname{@norm}$ | $\mathrm{El}$ | `\lVert x\rVert`: the norm of a normed space |
+| $\operatorname{@inner}$ | $\mathrm{El}$ | `\langle x,y\rangle`: the inner product of an inner product space |
 
 ## `means`
 

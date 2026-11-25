@@ -53,6 +53,9 @@ structure Noun where
   `(dom → Prop) → ty → Prop`, the domain of the signature that binds the map
   (`$\varphi\colon G\to H$`). -/
   onDomain : Bool := false
+  /-- With `onDomain`, the codomain of the signature too: `pred` takes the domain, the codomain
+  and the map (`isomorphism`, `$\varphi\colon G\to H$`). -/
+  onCodomain : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives
@@ -66,6 +69,8 @@ structure Modifier where
   doc : String := ""
   /-- A modifier of maps meant on a domain (`injective`): as `Noun.onDomain`. -/
   onDomain : Bool := false
+  /-- And on the codomain (`surjective`): as `Noun.onCodomain`. -/
+  onCodomain : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A named notion, for `NAME is denoted by $S$` and `let $S$ denote NAME`. A notion
@@ -155,6 +160,9 @@ structure Adjective where
   ty : Ty
   pred : Tm
   onDomain : Bool := false
+  /-- With `onDomain`, the codomain of a map bound by a signature too: `pred` takes the map,
+  its domain and its codomain (`surjective`). -/
+  onCodomain : Bool := false
   field : Codes := []
   doc : String := ""
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
