@@ -1,0 +1,46 @@
+tests/Materials/article.tex:9:1: info: defines \sigma (sigma)
+tests/Materials/article.tex:9:1: info: \sigma is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0)
+tests/Materials/article.tex:10:1: info: defines \varepsilon (varepsilon)
+tests/Materials/article.tex:10:1: info: \varepsilon is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (y=0)
+tests/Materials/article.tex:11:1: info: defines \@n2 (n2)
+tests/Materials/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (x=0)))
+tests/Materials/article.tex:12:1: info: defines \@n3 (n3)
+tests/Materials/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y+1\land 2\,y<1\Rightarrow \neg (2\,(1+y)=0))
+tests/Materials/article.tex:13:1: info: defines \@n4 (n4)
+tests/Materials/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y+1\land 2\,y<1\Rightarrow \neg (3\,(1-2\,y)=0))
+tests/Materials/article.tex:14:1: info: defines \@n5 (n5)
+tests/Materials/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (12=0))
+tests/Materials/article.tex:15:1: info: defines \@n6 (n6)
+tests/Materials/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (4=0)
+tests/Materials/article.tex:16:1: info: defines \delta (delta)
+tests/Materials/article.tex:16:1: info: \delta is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \neg (3\,(z\,s)=0)))
+tests/Materials/article.tex:17:1: info: defines \Delta (Delta)
+tests/Materials/article.tex:17:1: info: \Delta is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \neg (48\,(z\,s)=0)))
+tests/Materials/article.tex:18:1: info: defines \@n9 (n9)
+tests/Materials/article.tex:18:1: info: \@n9 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow \neg (x\,x=0)))
+tests/Materials/article.tex:23:1: info: claim 0: \sigma(10,2)=5
+tests/Materials/article.tex:23:1: info: claim 0 is meaningful if: 0<2
+tests/Materials/article.tex:23:1: info: claim 1: \varepsilon(1,100)=\frac{1}{100}
+tests/Materials/article.tex:23:1: info: claim 1 is meaningful if: 0<100\land \neg (100=0)
+tests/Materials/article.tex:23:1: info: claim 2: \@n2(2,3,4)=6
+tests/Materials/article.tex:23:1: info: claim 2 is meaningful if: 0<4\land 0<3\land 0<2
+tests/Materials/article.tex:23:1: info: claim 3: \@n5(1,2)=\frac{2}{3}
+tests/Materials/article.tex:23:1: info: claim 3 is meaningful if: (0<2\land 0<1)\land \neg (3=0)
+tests/Materials/article.tex:23:1: info: claim 4: \@n6(1)=\frac{\pi}{4}
+tests/Materials/article.tex:23:1: info: claim 4 is meaningful if: 0<1\land \neg (4=0)
+tests/Materials/article.tex:27:1: info: claim 5: \@n3(5,\frac{1}{4})=2
+tests/Materials/article.tex:27:1: info: claim 5 is meaningful if: \neg (4=0)\land (0<\frac{1}{4}+1\land 2\,\frac{1}{4}<1)\land 0<5\land \neg (4=0)
+tests/Materials/article.tex:27:1: info: claim 6: \@n4(3,0)=1
+tests/Materials/article.tex:27:1: info: claim 6 is meaningful if: (0<0+1\land 2\,0<1)\land 0<3
+tests/Materials/article.tex:31:68: info: claim 7: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ -1<y\land y<\frac{1}{2}\Rightarrow x=2\,(1+y)\,\@n3(x,y))
+tests/Materials/article.tex:31:68: info: claim 7 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ (-1<y\Rightarrow \neg (2=0))\land (-1<y\land y<\frac{1}{2}\Rightarrow (0<y+1\land 2\,y<1)\land 0<x))
+tests/Materials/article.tex:31:68: info: claim 8: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ -1<y\land y<\frac{1}{2}\Rightarrow x=3\,(1-2\,y)\,\@n4(x,y))
+tests/Materials/article.tex:31:68: info: claim 8 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ (-1<y\Rightarrow \neg (2=0))\land (-1<y\land y<\frac{1}{2}\Rightarrow (0<y+1\land 2\,y<1)\land 0<x))
+tests/Materials/article.tex:37:53: info: claim 9: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow \delta(x,y,z,s)=16\,\Delta(x,y,z,s))))
+tests/Materials/article.tex:37:53: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\forall s\in \mathbb{R},\ 0<s\Rightarrow (0<s\land 0<z\land 0<x)\land 0<s\land 0<z\land 0<x)))
+tests/Materials/article.tex:37:53: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<\@n9(x,y,z)))
+tests/Materials/article.tex:37:53: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow 0<z\land 0<y\land 0<x))
+tests/Materials/article.tex: 10 definitions, 11 claims
+  text: 10 compiled, 0 failed, 0 prose (of 10)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 16 compiled, 0 failed, 0 prose (of 16)

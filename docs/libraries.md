@@ -43,6 +43,7 @@ math
 │   ├── asymptotics               O, o, ~ at infinity; regular variation
 │   ├── transforms                Laplace, Mellin, Stieltjes transforms; convolution
 │   ├── fourier                   Fourier series, kernels, cosine and sine transforms
+│   ├── signals                   pulses, Nyquist rate, decibels, first-order filters
 │   ├── dynamics                  iterates, fixed and periodic points
 │   ├── functionalequations       Cauchy's and Jensen's equations, subadditivity, homogeneity
 │   ├── convexity                 log-, harmonically, s-, h-convex functions; Hermite–Hadamard
@@ -61,7 +62,9 @@ math
 │   │   ├── thermodynamics        Carnot efficiency, ideal gases, cooling, Boltzmann factors
 │   │   ├── kinetics              reaction orders, half-lives, Arrhenius, Michaelis–Menten, pH
 │   │   ├── fluids                Reynolds and Froude numbers, Poiseuille, drag, Stokes
-│   │   └── quantum               particle in a box, oscillator, hydrogen, de Broglie
+│   │   ├── quantum               particle in a box, oscillator, hydrogen, de Broglie
+│   │   ├── materials             stress, moduli, beam deflections, buckling
+│   │   └── astronomy             parallax, magnitudes, Hubble's law, Schwarzschild radius
 │   ├── integralequations         Volterra, Fredholm and Abel equations
 │   ├── classicalpdes             heat, wave, transport, Laplace, Burgers
 │   ├── elementary
@@ -130,7 +133,8 @@ math
 │   ├── queues                    M/M/1, Erlang B and C, Pollaczek–Khinchine
 │   ├── reliability               series, parallel, k-out-of-n systems; MTTF
 │   ├── actuarial                 survival laws, premiums, annuities
-│   └── inventory                 economic order quantity, newsvendor
+│   ├── inventory                 economic order quantity, newsvendor
+│   └── voting                    Hare and Droop quotas, D'Hondt and Webster divisors
 ├── discrete                      discrete mathematics
 │   ├── combinatorics
 │   ├── counting                  subsets, maps, surjections, compositions, lattice paths
@@ -156,7 +160,8 @@ math
 ```
 
 Areas group fields inside a realm (`physics` in `analysis`: `mechanics`, `waves`,
-`relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
+`relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`,
+`materials`, `astronomy`). A field may sit in two places (`realsets` is in `analysis` and in `topology`); a bundle has
 no words of its own, and an article that names one is read exactly as if it had named its
 fields. `lake exe glossary --bundles` checks the tree: every field is in a realm, and no
 phrase has two meanings in a bundle.
@@ -236,6 +241,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`asymptotics`](glossary.md#asymptotics) | asymptotically equivalent, dominated by (`O`), negligible compared to (`o`), of the same order (`Θ`); polynomial and exponential growth; slowly and regularly varying; the limit at infinity | with `realfunctions` |
 | [`transforms`](glossary.md#transforms) | Laplace, Mellin and Stieltjes transforms, convolution, cross-correlation, autocorrelation; of exponential order, causal | with `realfunctions` |
 | [`fourier`](glossary.md#fourier) | Fourier coefficients, partial sums and Fejér means, Dirichlet and Fejér kernels, cosine and sine transforms | with `realfunctions` |
+| [`signals`](glossary.md#signals) | the normalized sinc, rectangular, triangular and unit step functions and Gaussian pulses; the Nyquist rate; signal-to-noise ratios in decibels; the cutoff frequency of an RC filter and the gain of a first-order low-pass filter | |
 | [`dynamics`](glossary.md#dynamics) | iterates, orbits, fixed and periodic points and their stability, least period, Lyapunov exponent | with `realfunctions` |
 | [`functionalequations`](glossary.md#functionalequations) | additive (Cauchy), subadditive and superadditive, midpoint convex and concave, Jensen-affine, multiplicative on the reals, logarithmically additive, involutive, idempotent, homogeneous of degree `k` and positively homogeneous functions; solutions of d'Alembert's equation | |
 | [`convexity`](glossary.md#convexity) | log-convex, harmonically convex and concave, geometrically and GA-convex, star-shaped, quasiconcave, `$s$-convex in the second sense`, `$h$-convex`, Wright-convex functions, P-functions and Godunova–Levin functions; the integral mean on `[a,b]`, the Hermite–Hadamard gap, the Jensen gap | |
@@ -254,6 +260,8 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`kinetics`](glossary.md#kinetics) | concentrations in reactions of order zero, one and two; half-lives and decay constants; the Arrhenius rate constant; the Michaelis–Menten rate; the pH | |
 | [`fluids`](glossary.md#fluids) | the Reynolds and Froude numbers; hydrostatic and dynamic pressure; Torricelli's efflux speed; the Poiseuille flow rate; the drag force; the Stokes terminal velocity | |
 | [`quantum`](glossary.md#quantum) | the levels of a particle in a box, a harmonic oscillator and the hydrogen atom; the probability density in a box; de Broglie wavelengths, photon energies, hydrogen transition wavelengths (Rydberg), the Compton shift | |
+| [`materials`](glossary.md#materials) | stress and strain; the axial stiffness of a rod; shear and bulk moduli from Young's modulus and Poisson's ratio; second moments of area; deflections of cantilevers and simply supported beams; the Euler buckling load | |
+| [`astronomy`](glossary.md#astronomy) | distances from parallaxes, distance moduli, magnitude differences; redshifts, recession speeds (Hubble's law) and the Hubble time; the Schwarzschild radius; stellar luminosity; Wien's peak wavelength | |
 | [`integralequations`](glossary.md#integralequations) | solutions of Volterra and Fredholm equations of the second kind (and homogeneous ones) and of Abel's equation; symmetric kernels and kernels of Volterra type; the second iterated kernel, the integral operator | |
 | [`classicalpdes`](glossary.md#classicalpdes) | solutions of the heat, wave, transport, Laplace and Burgers equations in one space dimension, harmonic functions of two variables; partial derivatives, the heat kernel, d'Alembert's solution | |
 | [`special`](glossary.md#special) | gamma, beta and zeta functions, Bernoulli numbers, sinc, Euler–Mascheroni constant, golden ratio | |
@@ -318,6 +326,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`reliability`](glossary.md#reliability) | the reliability of series, parallel, `k`-out-of-`n` and bridge systems (equal or given component reliabilities), of a component with constant failure rate; mean times to failure of series and parallel systems; availability | |
 | [`actuarial`](glossary.md#actuarial) | survival functions and the force of mortality of the Gompertz and Gompertz–Makeham laws; life expectancy, net single premiums of whole life insurance and annuities under constant forces, annuities-certain, the complete expectation of life, pure endowments | |
 | [`inventory`](glossary.md#inventory) | the cost per unit time of a lot size, the economic order quantity and its cost, cycle lengths, reorder points, the economic order quantity with backorders, the economic production quantity; the critical fractile and the newsvendor quantity for uniform and exponential demand | |
+| [`voting`](glossary.md#voting) | the Hare, Droop and majority quotas; the D'Hondt and Webster quotients; the number of pairwise contests; the largest Borda score | |
 | **Discrete mathematics** (`discrete`) | | |
 | [`combinatorics`](glossary.md#combinatorics) | Fibonacci, Catalan, Bell and harmonic numbers, derangements, partitions, Stirling numbers | |
 | [`counting`](glossary.md#counting) | the numbers of `k`-element subsets, subsets, `k`-permutations, permutations, multisets, maps, injective and surjective maps, compositions and lattice paths; multinomial coefficients | |

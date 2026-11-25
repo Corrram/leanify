@@ -125,3 +125,7 @@ article-reader/
 /tests/Quantum/article.leanify.*
 /tests/Designs/article.leanify.*
 /tests/DiagnosticTests/article.leanify.*
+/tests/Signals/article.leanify.*
+/tests/Voting/article.leanify.*
+/tests/Materials/article.leanify.*
+/tests/Astronomy/article.leanify.*

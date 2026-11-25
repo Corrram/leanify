@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={voting}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $h(V,S)$ for the Hare quota for $V$ votes and $S$ seats.
+We write $q(V,S)$ for the Droop quota for $V$ votes and $S$ seats.
+We write $m(V)$ for the majority quota for $V$ votes.
+We write $d(V,s)$ for the D'Hondt quotient of $V$ votes after $s$ seats.
+We write $w(V,s)$ for the Webster quotient of $V$ votes after $s$ seats.
+We write $c(n)$ for the number of pairwise contests among $n$ candidates.
+We write $B(n,k)$ for the largest Borda score with $n$ candidates and $k$ voters.
+
+\section{Quotas}
+
+\begin{lemma}\label{quotas}
+$h(100,4)=25$, $q(100,4)=21$ and $m(100)=51$.
+\end{lemma}
+
+\begin{lemma}\label{droop}
+Let $V$ and $S$ be integers with $V\ge0$ and $S\ge1$. Then $(S+1)q(V,S)>V$.
+\end{lemma}
+
+\section{Divisors and counts}
+
+\begin{lemma}\label{divisors}
+$d(600,2)=200$, $w(600,2)=120$, $c(5)=10$ and $B(5,10)=40$.
+\end{lemma}
+
+\end{document}

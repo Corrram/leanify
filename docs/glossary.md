@@ -24,6 +24,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `asymptotics`
     * `transforms`
     * `fourier`
+    * `signals`
     * `dynamics`
     * `functionalequations`
     * `convexity`
@@ -43,6 +44,8 @@ except a notion whose meanings take arguments of different types, which the type
       * `kinetics`
       * `fluids`
       * `quantum`
+      * `materials`
+      * `astronomy`
     * `integralequations`
     * `classicalpdes`
     * `elementary`
@@ -112,6 +115,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `reliability`
     * `actuarial`
     * `inventory`
+    * `voting`
   * `discrete`
     * `combinatorics`
     * `counting`
@@ -137,15 +141,15 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
-| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
+| `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `groups` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `groups` |
 | `topology` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` | `realsets`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `sphericalgeometry`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint` |
-| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory` |
+| `stochastic` | `statistics`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `copulas`, `finance`, `utility`, `economics`, `games`, `queues`, `reliability`, `actuarial`, `inventory`, `voting` |
 | `discrete` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `permutations`, `graphs`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints` |
-| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum` |
+| `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
 | `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
 | `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `extremes`, `populationgenetics` |
@@ -2932,4 +2936,59 @@ except a notion whose meanings take arguments of different types, which the type
 | odds ratio of the table with entries $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `ad/(bc)` |
 | relative risk of the table with entries $a$, $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `(a/(a+b))/(c/(c+d))` |
 | number needed to treat for the control event rate $a$ and the treatment event rate $b$ | ℝ → ℝ → ℝ | `1/(r_c - r_t)`: the reciprocal of the absolute risk reduction |
+
+## `signals`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| normalized sinc function | ℝ → ℝ | `x ↦ sin(πx)/(πx)`, and `1` at `0` |
+| rectangular function | ℝ → ℝ | `1` on `\|x\| < 1/2`, `1/2` at `\|x\| = 1/2`, `0` elsewhere |
+| triangular function | ℝ → ℝ | `x ↦ max(1 - \|x\|, 0)` |
+| unit step function | ℝ → ℝ | `1` for `x ≥ 0`, `0` for `x < 0` (Heaviside, with value `1` at `0`) |
+| gaussian pulse of width $a$ | ℝ → ℝ → ℝ | `x ↦ e^{-x²/(2σ²)}` |
+| nyquist rate for the bandwidth $a$ | ℝ → ℝ | `2B`: the sampling rate above which a signal of bandwidth `B` is determined by its samples |
+| signal-to-noise ratio in decibels for signal power $a$ and noise power $b$ | ℝ → ℝ → ℝ | `10 log₁₀(S/N)` |
+| cutoff frequency of the rc filter with resistance $a$ and capacitance $b$ | ℝ → ℝ → ℝ | `1/(2πRC)` |
+| gain of the first-order low-pass filter with cutoff frequency $a$ at frequency $b$ | ℝ → ℝ → ℝ | `1/√(1 + (f/f_c)²)` |
+
+## `voting`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| hare quota for $a$ votes and $b$ seats | ℝ → ℝ → ℝ | `V/S` |
+| droop quota for $a$ votes and $b$ seats | ℝ → ℝ → ℝ | `⌊V/(S+1)⌋ + 1` |
+| majority quota for $a$ votes | ℝ → ℝ | `⌊V/2⌋ + 1` |
+| d'hondt quotient of $a$ votes after $b$ seats | ℝ → ℝ → ℝ | `V/(s+1)` |
+| webster quotient of $a$ votes after $b$ seats | ℝ → ℝ → ℝ | `V/(2s+1)` (Sainte-Laguë) |
+| number of pairwise contests among $a$ candidates | ℝ → ℝ | `n(n-1)/2` |
+| largest borda score with $a$ candidates and $b$ voters | ℝ → ℝ → ℝ | `(n-1)m`: first place on every ballot |
+
+## `materials`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| stress for the force $a$ on the area $b$ | ℝ → ℝ → ℝ | `F/A` |
+| strain for the extension $a$ of the length $b$ | ℝ → ℝ → ℝ | `ΔL/L` |
+| axial stiffness of a rod of length $a$ and cross-section $b$ with young's modulus $c$ | ℝ → ℝ → ℝ → ℝ | `EA/L` |
+| shear modulus for young's modulus $a$ and poisson's ratio $b$ | ℝ → ℝ → ℝ | `E/(2(1+ν))`, for `-1 < ν < 1/2` |
+| bulk modulus for young's modulus $a$ and poisson's ratio $b$ | ℝ → ℝ → ℝ | `E/(3(1-2ν))`, for `-1 < ν < 1/2` |
+| second moment of area of a rectangle of width $a$ and height $b$ | ℝ → ℝ → ℝ | `bh³/12`, about the centroidal axis parallel to the width |
+| second moment of area of a disk of radius $a$ | ℝ → ℝ | `πr⁴/4`, about a diameter |
+| deflection of a cantilever of length $a$ under the end load $b$ with young's modulus $c$ and second moment of area $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `FL³/(3EI)` |
+| midspan deflection of a simply supported beam of length $a$ under the central load $b$ with young's modulus $c$ and second moment of area $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `FL³/(48EI)` |
+| euler buckling load of a pinned column of length $a$ with young's modulus $b$ and second moment of area $c$ | ℝ → ℝ → ℝ → ℝ | `π²EI/L²` |
+
+## `astronomy`
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| distance in parsecs for the parallax of $a$ arcseconds | ℝ → ℝ | `1/p` |
+| distance modulus at the distance of $a$ parsecs | ℝ → ℝ | `5 log₁₀(d/10)`: `m - M` |
+| magnitude difference for the flux ratio $a$ | ℝ → ℝ | `-2.5 log₁₀ r`: `m₁ - m₂` for `F₁/F₂ = r` |
+| redshift for the emitted wavelength $a$ and the observed wavelength $b$ | ℝ → ℝ → ℝ | `(λ_o - λ_e)/λ_e` |
+| recession speed at the distance $a$ for the hubble constant $b$ | ℝ → ℝ → ℝ | `H₀d` (Hubble's law) |
+| hubble time for the hubble constant $a$ | ℝ → ℝ | `1/H₀` |
+| schwarzschild radius of the mass $a$ with gravitational constant $b$ and the speed of light $c$ | ℝ → ℝ → ℝ → ℝ | `2GM/c²` |
+| luminosity of a star of radius $a$ and temperature $b$ with stefan-boltzmann constant $c$ | ℝ → ℝ → ℝ → ℝ | `4πR²σT⁴` |
+| peak wavelength at the temperature $a$ with wien's constant $b$ | ℝ → ℝ → ℝ | `b/T` (Wien's displacement law) |
 

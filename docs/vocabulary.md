@@ -364,7 +364,11 @@ Further fields cover other branches of mathematics:
 * `fluids`: dimensionless numbers, pipe flow, drag;
 * `quantum`: energy levels and wavelengths of the solvable systems;
 * `designs`: block designs, Steiner triple systems, finite planes;
-* `diagnostictests`: predictive values, likelihood ratios, 2×2 tables.
+* `diagnostictests`: predictive values, likelihood ratios, 2×2 tables;
+* `signals`: pulses, sampling, decibels, filters;
+* `voting`: quotas and divisors of electoral systems;
+* `materials`: stresses, moduli, beams and columns;
+* `astronomy`: distances, magnitudes, Hubble's law, stellar radiation.
 
 `leanify fields article.tex` tries every field on an article and names those that read
 more of it, with the line for the preamble.

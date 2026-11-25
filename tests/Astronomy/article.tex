@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={astronomy}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $D(p)$ for the distance in parsecs for the parallax of $p$ arcseconds.
+We write $\mu(d)$ for the distance modulus at the distance of $d$ parsecs.
+We write $m(r)$ for the magnitude difference for the flux ratio $r$.
+We write $z(a,o)$ for the redshift for the emitted wavelength $a$ and the observed wavelength $o$.
+We write $v(d,H)$ for the recession speed at the distance $d$ for the Hubble constant $H$.
+We write $T(H)$ for the Hubble time for the Hubble constant $H$.
+We write $S(M,G,c)$ for the Schwarzschild radius of the mass $M$ with gravitational constant $G$ and the speed of light $c$.
+We write $L(R,t,s)$ for the luminosity of a star of radius $R$ and temperature $t$ with Stefan-Boltzmann constant $s$.
+We write $W(t,b)$ for the peak wavelength at the temperature $t$ with Wien's constant $b$.
+
+\section{Distances}
+
+\begin{lemma}\label{distances}
+$D(\frac{1}{10})=10$, $\mu(10)=0$, $\mu(100)=5$ and $m(100)=-5$.
+\end{lemma}
+
+\begin{lemma}\label{modulus}
+Let $d$ be a positive real number. Then $\mu(10d)=\mu(d)+5$.
+\end{lemma}
+
+\section{Cosmology and stars}
+
+\begin{lemma}\label{values}
+$z(1,2)=1$, $v(10,70)=700$, $T(\frac{1}{2})=2$, $S(1,1,1)=2$, $L(1,1,1)=4\pi$ and $W(2,6)=3$.
+\end{lemma}
+
+\end{document}

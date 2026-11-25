@@ -805,3 +805,27 @@ globs = ["Designs.+"]
 name = "DiagnosticTests"
 srcDir = "tests"
 globs = ["DiagnosticTests.+"]
+
+[[lean_lib]]
+# The field signals: signals and filters.
+name = "Signals"
+srcDir = "tests"
+globs = ["Signals.+"]
+
+[[lean_lib]]
+# The field voting: voting and apportionment.
+name = "Voting"
+srcDir = "tests"
+globs = ["Voting.+"]
+
+[[lean_lib]]
+# The field materials: mechanics of materials.
+name = "Materials"
+srcDir = "tests"
+globs = ["Materials.+"]
+
+[[lean_lib]]
+# The field astronomy: astronomy.
+name = "Astronomy"
+srcDir = "tests"
+globs = ["Astronomy.+"]

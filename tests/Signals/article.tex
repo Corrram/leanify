@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={signals}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $s$ for the normalized sinc function.
+We write $\Pi$ for the rectangular function.
+We write $\Lambda$ for the triangular function.
+We write $H$ for the unit step function.
+We write $g_\sigma$ for the Gaussian pulse of width $\sigma$.
+We write $N(B)$ for the Nyquist rate for the bandwidth $B$.
+We write $D(x,y)$ for the signal-to-noise ratio in decibels for signal power $x$ and noise power $y$.
+We write $F(R,C)$ for the cutoff frequency of the RC filter with resistance $R$ and capacitance $C$.
+We write $G(c,f)$ for the gain of the first-order low-pass filter with cutoff frequency $c$ at frequency $f$.
+
+\section{Pulses}
+
+\begin{lemma}\label{pulses}
+$s(0)=1$, $s(1)=0$, $\Pi(0)=1$, $\Pi(\frac12)=\frac12$, $\Lambda(\frac12)=\frac12$ and $H(0)=1$.
+\end{lemma}
+
+\begin{lemma}\label{step}
+For every real number $x$, $H(x)+H(-x)\ge1$.
+\end{lemma}
+
+\begin{lemma}\label{gauss}
+$g_1(0)=1$ and $N(5)=10$.
+\end{lemma}
+
+\section{Filters}
+
+\begin{lemma}\label{decibels}
+$D(100,1)=20$ and $G(1,1)=\frac{1}{\sqrt{2}}$.
+\end{lemma}
+
+\begin{lemma}\label{cutoff}
+Let $R$ and $C$ be positive real numbers. Then $G(F(R,C),F(R,C))=\frac{1}{\sqrt{2}}$.
+\end{lemma}
+
+\end{document}

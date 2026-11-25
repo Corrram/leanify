@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={materials}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Notation}
+
+We write $\sigma(F,A)$ for the stress for the force $F$ on the area $A$.
+We write $\varepsilon(d,L)$ for the strain for the extension $d$ of the length $L$.
+We write $k(L,A,E)$ for the axial stiffness of a rod of length $L$ and cross-section $A$ with Young's modulus $E$.
+We write $G(E,\nu)$ for the shear modulus for Young's modulus $E$ and Poisson's ratio $\nu$.
+We write $K(E,\nu)$ for the bulk modulus for Young's modulus $E$ and Poisson's ratio $\nu$.
+We write $I(b,h)$ for the second moment of area of a rectangle of width $b$ and height $h$.
+We write $J(r)$ for the second moment of area of a disk of radius $r$.
+We write $\delta(L,F,E,M)$ for the deflection of a cantilever of length $L$ under the end load $F$ with Young's modulus $E$ and second moment of area $M$.
+We write $\Delta(L,F,E,M)$ for the midspan deflection of a simply supported beam of length $L$ under the central load $F$ with Young's modulus $E$ and second moment of area $M$.
+We write $P(L,E,M)$ for the Euler buckling load of a pinned column of length $L$ with Young's modulus $E$ and second moment of area $M$.
+
+\section{Elasticity}
+
+\begin{lemma}\label{values}
+$\sigma(10,2)=5$, $\varepsilon(1,100)=\frac{1}{100}$, $k(2,3,4)=6$, $I(1,2)=\frac23$ and $J(1)=\frac{\pi}{4}$.
+\end{lemma}
+
+\begin{lemma}\label{moduli}
+$G(5,\frac14)=2$ and $K(3,0)=1$.
+\end{lemma}
+
+\begin{lemma}\label{relations}
+Let $E$ and $\nu$ be real numbers with $E>0$ and $-1<\nu<\frac12$. Then $E=2(1+\nu)G(E,\nu)$ and $E=3(1-2\nu)K(E,\nu)$.
+\end{lemma}
+
+\section{Beams}
+
+\begin{lemma}\label{beams}
+Let $L$, $F$, $E$ and $M$ be positive real numbers. Then $\delta(L,F,E,M)=16\Delta(L,F,E,M)$ and $P(L,E,M)>0$.
+\end{lemma}
+
+\end{document}
