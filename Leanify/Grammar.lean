@@ -310,6 +310,12 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
       | some (v, r') => (v :: ·) <$> names0 f r'
       | none => if Math.greekNames.contains n then (([92] ++ n) :: ·) <$> names0 f r else none
     | _, _ => none
+  -- `0\neq v\in V`, `0<x\in A`: an element of the domain with the relation
+  if !square then
+    if let some (.chain c [(r, .id v)]) := Math.parseFormula pre then
+      if r == .ne || r == .lt || r == .le || r == .gt || r == .ge then
+        if let some dom := Math.parseFormula (ts.drop (i + 1)) then
+          return ([v], .setOf (.id v) dom [.chain c [(r, .id v)]])
   let names ← names0 (pre.length + 1) pre
   let dom ← Math.parseFormula (ts.drop (i + 1))
   let dom ← if square then
@@ -6289,6 +6295,16 @@ def denoteAsLet (cs : List Chunk) : Option (List Chunk) :=
     let (ts, r1) ← mathChunk r
     let r2 ← kw [w!"denote", w!"the"] r1
     some ([.w w!"let", .m ts, .w w!"be", .w w!"the"] ++ r2)) <|>
+  -- `We denote the spectrum of $M$ by $\sigma(M)$.`
+  (do
+    let r ← kw [w!"we", w!"denote", w!"the"] cs <|> kw [w!"denote", w!"the"] cs <|> kw [w!"we", w!"will", w!"denote", w!"the"] cs
+    let i ← (List.range r.length).reverse.find? fun i => (match (r[i]? : Option Chunk) with
+      | some (Chunk.w b) => b == w!"by"
+      | _ => false)
+    let pre := r.take i
+    let (ts, r2) ← mathChunk (r.drop (i + 1))
+    if pre.isEmpty || !isEnd r2 || pre.any (fun c => match c with | .p 44 | .p 46 => true | _ => false) then none
+    some ([.w w!"let", .m ts, .w w!"be", .w w!"the"] ++ pre ++ [.p 46])) <|>
   (do
     let r ← kw [w!"the"] cs
     let i ← r.findIdx? fun c => match c with | .w w => w == w!"denoted" | _ => false

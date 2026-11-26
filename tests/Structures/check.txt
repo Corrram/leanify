@@ -156,6 +156,10 @@ tests/Structures/article.tex:494:116: info: claim 127 is meaningful if: \forall 
 tests/Structures/article.tex:494:227: info: claim 128: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Subspace}(z)\land z\le y\land \operatorname{FiniteDimensional}(z)\land \dim(z)=3\Rightarrow \operatorname{Subspace}(z)\land z\le y))
 tests/Structures/article.tex:498:75: info: claim 129: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall s\in \mathrm{El}\to \mathrm{Prop},\ y(s)\Leftrightarrow \operatorname{Group}(s)\land s\le x)\Rightarrow y(x))
 tests/Structures/article.tex:498:194: info: claim 130: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow (\forall z\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall t\in \mathrm{El}\to \mathrm{Prop},\ z(t)\Leftrightarrow \operatorname{Group}(t)\land t\le y)\Rightarrow (\forall s\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall a\in \mathrm{El}\to \mathrm{Prop},\ s(a)\Leftrightarrow \operatorname{Open}(a)\land (\forall q\in \mathrm{El},\ a(q)\Rightarrow x(q)))\Rightarrow s(x))))
-tests/Structures/article.tex: 13 definitions, 131 claims
-  results: 274 compiled, 0 failed, 0 prose (of 274)
-  all: 274 compiled, 0 failed, 0 prose (of 274)
+tests/Structures/article.tex:502:21: info: claim 131: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg 1=y\Rightarrow y\,(y)^{-1}=1)
+tests/Structures/article.tex:502:21: info: claim 131 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg 1=y\Rightarrow \operatorname{Invertible}(y))
+tests/Structures/article.tex:502:92: info: claim 132: \forall x\in \mathbb{R},\ 0<x\Rightarrow 0<{x}^{2}
+tests/Structures/article.tex:502:142: info: claim 133: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\land \neg 1=z\Rightarrow (\forall s\in \mathrm{El}\to \mathrm{Prop},\ (\forall a\in \mathrm{El},\ s(a)\Leftrightarrow Z(y)(a))\Rightarrow \operatorname{Group}(s)\land s\le y)))
+tests/Structures/article.tex: 13 definitions, 134 claims
+  results: 280 compiled, 0 failed, 0 prose (of 280)
+  all: 280 compiled, 0 failed, 0 prose (of 280)

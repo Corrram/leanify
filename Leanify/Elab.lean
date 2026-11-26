@@ -3775,7 +3775,14 @@ where
       | .id v, d => do
         -- (no stated domain: the real numbers)
         let d := if Math.isUnstatedReals d then .id w!"\\mathbb{R}" else d
-        let (ty, pred) ← elemDom g d
+        let st0 ← get
+        let (ty, pred) ← tryCatch (elemDom g d) fun e => do
+          set st0
+          -- (a set of the scope, not of numbers: `1\neq g\in G` for a group `G`)
+          let (p, t) ← tryCatch (term g sc none d) fun _ => do set st0; throw e
+          match t with
+          | .fn a .prop => pure (a, some (.app (shift 1 0 p) (.loc 0)))
+          | _ => do set st0; throw e
         let sc' := (v, ty) :: sc
         let cs ← conds.mapM fun c => do
           let (p, t) ← term g sc' none c
