@@ -608,6 +608,7 @@ form they stand for before the sentence is read, so they are read as that form:
 | `Let $X$ be a compact, connected metric space.` | `Let $X$ be a compact connected metric space.` (a comma between two adjectives after `a`, `every`, `any`, …) |
 | `Let $G$ be a (possibly infinite) group.`, `a (not necessarily commutative) ring` | `Let $G$ be a group.`, `a ring`: a parenthetical that says what need not hold constrains nothing |
 | `We denote by $Z$ the center of $G$.`, `Let $Z$ denote the center of $G$.`, `The center of $G$ is denoted by $Z$.` | `Let $Z$ be the center of $G$.` (where the words name a value of the vocabulary; `NAME is denoted by $S$` for a named constant comes first) |
+| `Let $\mathcal{S}$ denote the set of subgroups of $G$.`, `Let $S$ be the set of all open subsets of $X$.`, `… the class of …` | the set of the objects that the noun phrase describes: `H\in\mathcal{S}` exactly when `H` is a subgroup of `G` (the noun phrase may name variables of the result) |
 | `Neither $a$ nor $b$ is negative.` | `$a$ is not negative and $b$ is not negative.` |
 | `In particular, the metric space $X$ is a topological space.` | `$X$ is a metric space and $X$ is a topological space`: what `the NOUN` says of the symbol is a part of the claim |
 | `Let $x$ be real.`, `for all real $x$` | `Let $x$ be a real number.`, `for all real numbers $x$` |

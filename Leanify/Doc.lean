@@ -2565,6 +2565,27 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
 sequence `a`, each of whose terms `a_i`, for the integers `i` from the first index to the
 last, is as the noun phrase says of a single variable. -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  -- `Let $S$ be the set of [all] subgroups of $G$.`, `… the class of open subsets of $X$`: the
+  -- set of the objects that the noun phrase describes (`x ∈ S` exactly for them)
+  let setOf : Option (Codes × List Chunk) := match np with
+    | .w t :: rest =>
+      if t != w!"@the" then none else
+      match rest.getLast? with
+      | some (.m vts) =>
+        (varName vts).bind fun v =>
+          (Grammar.kw [w!"set", w!"of"] rest.dropLast <|> Grammar.kw [w!"class", w!"of"] rest.dropLast).map fun r =>
+            (v, (Grammar.kw [w!"all"] r).getD r)
+      | _ => none
+    | _ => none
+  if let some (v, members) := setOf then
+    if !members.isEmpty && members.all (fun c => match c with | .p 44 | .p 46 => false | _ => true) then
+      let b ← nounPhrase1 members outer
+      if !b.name.isEmpty then fail E.unsupported
+      let p := b.pred.getD (.lam b.ty .tt .tt)
+      -- (the members' predicate is stated under its own binder: under the set's binder, its
+      -- argument and the member, the variables of `outer` are two further out)
+      let body := Tm.all b.ty (.iff (.app (.loc 1) (.loc 0)) (.app (shift 2 1 p) (.loc 0)))
+      return ⟨v, .fn b.ty .prop, some (Tm.lam (.fn b.ty .prop) .tt body)⟩
   -- (the sequence after the noun, or before its complement: `elements $x_1,\ldots,x_n$
   -- of $R$`)
   let seqAt (ts : List MTok) := (Grammar.seqBound ts).bind fun (list, bound) =>

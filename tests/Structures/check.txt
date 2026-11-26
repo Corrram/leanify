@@ -154,6 +154,8 @@ tests/Structures/article.tex:494:27: info: claim 126: \forall x\in \mathrm{El}\t
 tests/Structures/article.tex:494:116: info: claim 127: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow y\,(y)^{-1}=1)
 tests/Structures/article.tex:494:116: info: claim 127 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow \operatorname{Invertible}(y))
 tests/Structures/article.tex:494:227: info: claim 128: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Subspace}(z)\land z\le y\land \operatorname{FiniteDimensional}(z)\land \dim(z)=3\Rightarrow \operatorname{Subspace}(z)\land z\le y))
-tests/Structures/article.tex: 13 definitions, 129 claims
-  results: 268 compiled, 0 failed, 0 prose (of 268)
-  all: 268 compiled, 0 failed, 0 prose (of 268)
+tests/Structures/article.tex:498:75: info: claim 129: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall s\in \mathrm{El}\to \mathrm{Prop},\ y(s)\Leftrightarrow \operatorname{Group}(s)\land s\le x)\Rightarrow y(x))
+tests/Structures/article.tex:498:194: info: claim 130: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow (\forall z\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall t\in \mathrm{El}\to \mathrm{Prop},\ z(t)\Leftrightarrow \operatorname{Group}(t)\land t\le y)\Rightarrow (\forall s\in (\mathrm{El}\to \mathrm{Prop})\to \mathrm{Prop},\ (\forall a\in \mathrm{El}\to \mathrm{Prop},\ s(a)\Leftrightarrow \operatorname{Open}(a)\land (\forall q\in \mathrm{El},\ a(q)\Rightarrow x(q)))\Rightarrow s(x))))
+tests/Structures/article.tex: 13 definitions, 131 claims
+  results: 274 compiled, 0 failed, 0 prose (of 274)
+  all: 274 compiled, 0 failed, 0 prose (of 274)
