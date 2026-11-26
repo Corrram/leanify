@@ -2139,11 +2139,16 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
   | none =>
   -- [the function|map|set] $X$ is ADJ, ADJ and ADJ
   match (do
+      let fn := (kw [w!"the", w!"function"] cs <|> kw [w!"the", w!"map"] cs).isSome
       let cs := match kw [w!"the", w!"function"] cs <|> kw [w!"the", w!"map"] cs <|> kw [w!"the", w!"set"] cs <|>
           kw [w!"the", w!"interval"] cs <|>
           kw [w!"the", w!"number"] cs <|> kw [w!"the", w!"class"] cs with
         | some r => r | none => cs
       let (m, r) ← formula cs
+      -- (`the function $f(x)=e^x$`: the map `x\mapsto e^x`)
+      let m := match fn, m with
+        | true, .chain (.app (.id _) [.id x]) [(.eq, e)] => MT.mapsto (.id x) e
+        | _, _ => m
       let r1 ← kw [w!"is"] r
       let (adjs, r2) ← adjectiveList 16 r1 []
       -- (`strictAdj`: not when a further adjective follows that is not a standard one,

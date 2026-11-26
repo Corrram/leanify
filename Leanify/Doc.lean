@@ -5260,6 +5260,11 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
           let fn := onDomain pd fn
           adjectiveTm sc fn (.fn .real .real) (some (pd.getD (.lam .real .tt .tt))) a on
         return conjAll ps
+      -- (without a domain, `the function $x\mapsto e^x$ is strictly increasing`: on the line)
+      else if adjs.all (fun (_, on) => on.isNone) then
+        let (fn, _) ← Elab.lam F sc (.id v) [.real] (some .real) body
+        let ps ← adjs.mapM fun (a, _) => adjectiveTm sc fn (.fn .real .real) (some (.lam .real .tt .tt)) a none
+        return conjAll ps
       else pure ()
     | _ => pure ()
     let (t, ty) ← subjTerm sc s
