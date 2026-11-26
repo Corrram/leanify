@@ -1036,6 +1036,25 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
         | .ge => Tm.le (val y.1) (val x.1)
         | _ => Tm.lt (val y.1) (val x.1)
       return tys.foldr (fun t acc => Tm.all t acc) body
+  -- (such a function and a number: at every point, `f\ge0` for `f\colon[0,1]\to\mathbb{R}`)
+  if r == .le || r == .lt || r == .ge || r == .gt then
+    let fnOrd (fx c : Tm × Ty) (flip : Bool) : M (Option Tm) := do
+      match ← pointFn fx.2 with
+      | some tys =>
+        if c.2 != .real then return none
+        let n := tys.length
+        let val := (List.range n).foldl (fun acc i => Tm.app acc (.loc (n - 1 - i))) (Tm.shift n 0 fx.1)
+        let cv := Tm.shift n 0 c.1
+        let (l, rr) := if flip then (cv, val) else (val, cv)
+        let body := match r with
+          | .le => Tm.le l rr
+          | .lt => Tm.lt l rr
+          | .ge => Tm.le rr l
+          | _ => Tm.lt rr l
+        pure (some (tys.foldr (fun t acc => Tm.all t acc) body))
+      | none => pure none
+    if let some t ← fnOrd x y false then return t
+    if let some t ← fnOrd y x true then return t
   -- (set functions on the square of an interval type, such as couplings: equal as measures,
   -- that is, on every measurable set, `\gamma=\gamma_T`)
   if (r == .eq || r == .ne) && x.2 == y.2 then
@@ -1497,6 +1516,20 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             | _, _ => false
           if !isArg then return ← term f sc pf (.mul (.id n) a)
     | _ => pure ()
+    -- `a_n\to L` (the marker `@tendsto` of the grammar): for every `ε>0` the terms from some
+    -- index on are within `ε` of `L` (as `converging to $L$`; no limit need exist beforehand)
+    if let .app (.id tn) [.limit v _ body, l] := m then
+      if tn == w!"@tendsto" then
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        -- (`L` outside, `ε` `loc 0`; then `N`, then the index)
+        let lv ← asReal (← term f sc pf l)
+        let sc3 : Scope := (v, .real) :: (w!"@N", .real) :: (w!"@e", .real) :: sc
+        let b ← asReal (← term f sc3 (pf.map fun (s, t) => (shift 3 0 s, t)) body)
+        let idx := Tm.and (.app (.prim .isNat) (.loc 0)) (.le (.loc 1) (.loc 0))
+        let close := Tm.lt (.abs (.sub b (shift 3 0 lv))) (.loc 2)
+        return (.all .real (.imp (.lt (.num 0) (.loc 0))
+          (.ex .real (.all .real (.imp idx (definedAnd b close)))))
+          , .prop)
     -- the notation of the field `hilbert`
     if let some r ← opTerm f sc pf m then return r
     -- expectations, probabilities, variances of random variables
@@ -1559,6 +1592,18 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if (← ownTy a.2) || (← ownTy b.2) then arith .sub a b
       else pure (.sub (← asReal a) (← asReal b), .real)
     | .mul x y => do
+      -- `\operatorname{rank} T`, `\operatorname{tr} A` without parentheses: the method of
+      -- that name, where the article defines no such symbol
+      if let .id n := x then
+        if (lookupLocal sc n).isNone && (← lookupGlob n).isNone && (← get).vocab.methods.any (·.op == .fn n) then
+          let st0 ← get
+          let r ← tryCatch (do
+              let a ← term f sc pf y
+              if (← method a.2 (.fn n)).isSome then pure (some (← callMethod a.2 (.fn n) [a.1])) else pure none)
+            fun _ => pure none
+          match r with
+          | some v => return v
+          | none => set st0
       -- `\Phi^2(C)` for a symbol named `\Phi^2` (a letter with a numeral as superscript,
       -- which the article defined while the letter alone named nothing)
       let named ← match x with
@@ -2285,6 +2330,38 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             || (match x with | .app (.id n) _ => (st.fields.lookup n).isSome | _ => false) then
           fieldEq f sc x y
         else chainRest f sc pf x rest
+      -- `f''\ge0`, `f\le g` of real functions: at every point of the domain of the
+      -- signature (of the line, without one)
+      | [(r, y)] =>
+        if !(r == .le || r == .lt || r == .ge || r == .gt) then chainRest f sc pf x rest else
+        let st0 ← get
+        let rec baseName : Nat → MT → Option Codes
+          | 0, _ => none
+          | k + 1, m => match m with
+            | .id n => some n
+            | .sup b _ => baseName k b
+            | .hat b => baseName k b
+            | _ => none
+        let fnRel ← tryCatch (do
+            let a ← term f sc pf x
+            let b ← term f sc pf y
+            let isF (t : Ty) : Bool := t == .fn .real .real
+            if !(isF a.2 || isF b.2) || !(a.2 == .real || isF a.2) || !(b.2 == .real || isF b.2) then return none
+            let dom? : Option MT := (baseName 8 x <|> baseName 8 y).bind fun n =>
+              (st0.sigDoms.find? fun (e, g, _, _) => g == n && (e == st0.curEnv || st0.curProved == some e)).map (·.2.2.1)
+            let val (t : Tm × Ty) : Tm := if t.2 == .real then shift 1 0 t.1 else .app (shift 1 0 t.1) (.loc 0)
+            let body := match r with
+              | .le => Tm.le (val a) (val b)
+              | .lt => Tm.lt (val a) (val b)
+              | .ge => Tm.le (val b) (val a)
+              | _ => Tm.lt (val b) (val a)
+            let inDom ← match dom? with
+              | some d => member f ((w!"@t", .real) :: sc) (.loc 0, .real) d
+              | none => pure .tt
+            pure (some (Tm.all .real (if inDom == .tt then body else .imp inDom body)))) fun _ => pure none
+        match fnRel with
+        | some p => pure (p, .prop)
+        | none => do set st0; chainRest f sc pf x rest
       | _ => chainRest f sc pf x rest
     | .conj xs => do
       let ps ← xs.mapM fun x => do

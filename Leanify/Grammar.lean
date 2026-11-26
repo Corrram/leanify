@@ -87,11 +87,27 @@ def mathChunk : List Chunk → Option (List MTok × List Chunk)
   | .m ts :: cs => some (ts, cs)
   | _ => none
 
+/-- `a_n\to L`: the limit of the term as its index tends to `∞` (a term with a letter as
+subscript). -/
+def seqLimitMT (ts : List MTok) : Option MT := do
+  let j ← ts.findIdx? (· == .cmd w!"to")
+  let a ← Math.parseFormula (ts.take j)
+  let l ← Math.parseFormula (ts.drop (j + 1))
+  let v ← match a with
+    | .sub _ (.id n) => some n
+    | .sup (.sub _ (.id n)) _ => some n
+    | _ => none
+  let c ← Math.parseFormula [.cmd w!"infty"]
+  some (.app (.id w!"@tendsto") [.limit v c a, l])
+
 def formula (cs : List Chunk) : Option (MT × List Chunk) := do
   let (ts, rest) ← mathChunk cs
   match Math.parseDisplay ts with
   | some m => some (m, rest)
   | none =>
+    -- (`$a_n\to0$`, without `as $n\to\infty$`)
+    if (kw [w!"as"] rest).isNone then
+      if let some m := seqLimitMT ts then return (m, rest)
     -- `$a,b>0$`: each name with the bound after the last (`a>0` and `b>0`)
     let parts := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
     if parts.length < 2 then none else
@@ -1807,6 +1823,13 @@ def asLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
       | _ => none
   some (.fact m, r2)
 
+/-- `$a_n\to L$` without `as …`: the limit as the index of the term tends to `∞`. -/
+def bareLimit (cs : List Chunk) : Option (Clause × List Chunk) := do
+  let (ts, r) ← mathChunk cs
+  if (kw [w!"as"] r).isSome then none
+  let m ← seqLimitMT ts
+  some (.fact m, r)
+
 /-- `the statement|claim|assertion|result|lemma|… holds|is true for $E$` (`for some $n$`,
 `for a given $n$`), `… for all|every|each $m<n$`, and `… for all smaller values`: the
 statement of the result that is being proved, about `E`, about every `m` of the binder,
@@ -2053,7 +2076,7 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
   | some ([c], r) => some (c, r)
   | some (cs', r) => some (.both cs', r)
   | none =>
-  match asLimit cs with
+  match asLimit cs <|> bareLimit cs with
   | some res => some res
   | none =>
   -- It holds that DISPLAY

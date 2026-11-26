@@ -586,7 +586,13 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
       -- `for all real $x$`
-      else if v == w!"real" && beforeMath then t :: word w!"number" :: standardForms f there cond (some t) ts
+      -- (not before a size and the noun it qualifies, `a real $2\times2$ matrix`, `a real
+      -- $n$-vector`)
+      else if v == w!"real" && beforeMath && !(match ts.dropWhile (·.tok != .mclose) with
+          | _ :: n :: _ => (lw n).any fun x => [w!"matrix", w!"matrices", w!"vector", w!"vectors", w!"polynomial",
+              w!"polynomials", w!"function", w!"functions", w!"sequence", w!"sequences", w!"random", w!"symmetric",
+              w!"square", w!"diagonal", w!"orthogonal", w!"invertible", w!"array", w!"arrays"].contains x
+          | _ => false) then t :: word w!"number" :: standardForms f there cond (some t) ts
       -- `Let $x$ be real.`
       else if v == w!"real" && prevWord == some w!"be" && beforeEnd then
         word w!"a" :: t :: word w!"number" :: standardForms f there cond (some t) ts
@@ -1308,7 +1314,14 @@ def indexedBy (v : Codes) : List MTok → Bool
 def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
   | f + 1, cs, acc =>
-    match Grammar.formula cs with
+    -- (`with $a_n\to0$ as $n\to\infty$`: the limit along the index of the term)
+    let asIdx : Option (MT × List Chunk) := match cs with
+      | .m ts :: .w a :: .m [.id v, .cmd t, .cmd i] :: rest =>
+        if a == w!"as" && t == w!"to" && i == w!"infty" && indexedBy v ts then
+          (Grammar.seqLimitMT ts).map (·, rest)
+        else none
+      | _ => none
+    match asIdx <|> Grammar.formula cs with
     | some (m0, r0) =>
       -- `with $a_n\ge0$ for all $n$`: the condition for every value of the variables
       -- (`for every real number $x$`, `for all integers $n$`: the noun's numbers)
