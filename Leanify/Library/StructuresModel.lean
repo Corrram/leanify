@@ -28,6 +28,7 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Topology.MetricSpace.Polish
 import Mathlib.Topology.LocallyClosed
+import Mathlib.Topology.Sequences
 
 /-! # The meaning of the field `structures`
 
@@ -783,12 +784,18 @@ def pair (x y : Pt) : Pt := (Real.exp '' x) ∪ ((fun t => -Real.exp t) '' y)
 def fst (z : Pt) : Pt := {t | Real.exp t ∈ z}
 def snd (z : Pt) : Pt := {t | -Real.exp t ∈ z}
 
+/-- The operations of the direct product: those of the factors, in each factor; the product
+topology (a set is open if it contains a product `U × V` of open sets around each of its
+pairs) and the maximum of the distances (Mathlib's `Prod` instances). -/
 def prodOps (o p : Ops) : Ops :=
   { (default : Ops) with
     add := fun a b => pair (o.add (fst a) (fst b)) (p.add (snd a) (snd b)), zero := pair o.zero p.zero,
     neg := fun a => pair (o.neg (fst a)) (p.neg (snd a)),
     mul := fun a b => pair (o.mul (fst a) (fst b)) (p.mul (snd a) (snd b)), one := pair o.one p.one,
-    inv := fun a => pair (o.inv (fst a)) (p.inv (snd a)) }
+    inv := fun a => pair (o.inv (fst a)) (p.inv (snd a)),
+    opens := {W | ∀ x y, pair x y ∈ W → ∃ U ∈ o.opens, ∃ V ∈ p.opens, x ∈ U ∧ y ∈ V ∧
+      ∀ x' ∈ U, ∀ y' ∈ V, pair x' y' ∈ W},
+    dist := fun a b => max (o.dist (fst a) (fst b)) (p.dist (snd a) (snd b)) }
 
 def prod (G H : El → Prop) : El → Prop :=
   fun a => ∃ x y, G (.el (opsOf G) x) ∧ H (.el (opsOf H) y) ∧ a = .el (prodOps (opsOf G) (opsOf H)) (pair x y)
@@ -928,6 +935,47 @@ def QuasiIsoEmbM (φ : Map) : Prop :=
 every point of the codomain. -/
 def QuasiIsometryM (φ : Map) : Prop :=
   QuasiIsoEmbM φ ∧ ∃ D : ℝ, 0 ≤ D ∧ ∀ b, φ.cod b → ∃ a, φ.dom a ∧ dist (apply φ a) b ≤ D
+
+
+/-! ### More classical notions -/
+
+/-- A Euclidean domain: an integral domain with a norm `N` into the natural numbers that
+allows division with remainder, `a = qb + r` with `r = 0` or `N(r) < N(b)` for `b ≠ 0`
+(Dummit–Foote; Mathlib's `EuclideanDomain` allows a well-founded order in place of the
+norm, and is implied). -/
+def EuclideanS : (El → Prop) → Prop :=
+  ringHas fun α R => letI := R; (∀ a b : α, a * b = b * a) ∧ IsDomain α ∧
+    ∃ N : α → ℕ, ∀ a b : α, b ≠ 0 → ∃ q r : α, a = q * b + r ∧ (r = 0 ∨ N r < N b)
+
+/-- A uniformly continuous map between metric spaces: for every `ε > 0` a `δ > 0` with
+`d(φ(a),φ(b)) < ε` whenever `d(a,b) < δ` (Mathlib `UniformContinuous`, by
+`Metric.uniformContinuous_iff`). -/
+def UniformContM (φ : Map) : Prop :=
+  ∀ ε : ℝ, 0 < ε → ∃ δ : ℝ, 0 < δ ∧ ∀ a b, φ.dom a → φ.dom b → dist a b < δ →
+    dist (apply φ a) (apply φ b) < ε
+
+/-- A vector space, over its scalars (some field): Mathlib `Module K V` for a field `K`. -/
+def VectorSpaceS (V : El → Prop) : Prop := VectorSpaceOver (scal V) V
+/-- A module, over its scalars (some ring): Mathlib `Module R M`. -/
+def ModuleS (V : El → Prop) : Prop := ModuleOver (scal V) V
+
+/-- A sequentially compact space: every sequence has a convergent subsequence (Mathlib
+`SeqCompactSpace`). -/
+def SeqCompactS : (El → Prop) → Prop := topHas fun α t => letI := t; SeqCompactSpace α
+
+/-- `a` is divisible by `b` in `R`: `a = bc` for some `c` of `R`. -/
+def DvdIn (R : El → Prop) (b a : El) : Prop := ∃ c, R c ∧ eqv a (mul b c)
+
+/-- An irreducible element of a ring: not a unit, and a product `bc` only if `b` or `c` is a
+unit (Mathlib `Irreducible`). -/
+def IrreducibleIn (R : El → Prop) (a : El) : Prop :=
+  R a ∧ ¬ UnitIn R a ∧ ∀ b c, R b → R c → eqv a (mul b c) → UnitIn R b ∨ UnitIn R c
+
+/-- A prime element of a ring: nonzero, not a unit, and dividing a product only if it
+divides a factor (Mathlib `Prime`). -/
+def PrimeElIn (R : El → Prop) (p : El) : Prop :=
+  R p ∧ ¬ eqv p (.num 0) ∧ ¬ UnitIn R p ∧
+    ∀ a b, R a → R b → DvdIn R p (mul a b) → DvdIn R p a ∨ DvdIn R p b
 
 end
 

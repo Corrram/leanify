@@ -20,9 +20,9 @@ tests/Groups/article.tex:33:34: info: claim 6 is meaningful if: \forall x\in \ma
 tests/Groups/article.tex:37:21: info: claim 7: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow ((\forall z\in \mathrm{El},\ \forall s\in \mathrm{El},\ x(z)\land x(s)\Rightarrow z\,s=s\,z)\Leftrightarrow \@n7(x)=\@n1(x))
 tests/Groups/article.tex:41:35: info: claim 8: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \lvert x\rvert=12\Rightarrow \@n6(3,x)=1\lor \@n6(3,x)=4
 tests/Groups/article.tex:41:35: info: claim 8 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \lvert x\rvert=12\Rightarrow (3\in \mathbb{Z}\land 0<3)\land (\neg (\@n6(3,x)=1)\Rightarrow 3\in \mathbb{Z}\land 0<3)
-tests/Groups/article.tex:45:51: info: claim 9: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall z\in \mathrm{El},\ x(z)\Leftrightarrow \times(\@n2(2))(\@n2(3))(z))\Rightarrow x\cong \@n2(6)
-tests/Groups/article.tex:45:51: info: claim 9 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall y\in \mathrm{El},\ (2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3)\land ((\forall z\in \mathrm{El},\ x(z)\Leftrightarrow \times(\@n2(2))(\@n2(3))(z))\Rightarrow 6\in \mathbb{Z}\land 0<6)
-tests/Groups/article.tex:45:51: info: claim 10: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall z\in \mathrm{El},\ x(z)\Leftrightarrow \times(\@n2(2))(\@n2(3))(z))\Rightarrow \operatorname{Cyclic}(x)
+tests/Groups/article.tex:45:51: info: claim 9: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall z\in \mathrm{El},\ x(z)\Leftrightarrow (\@n2(2)\times \@n2(3))(z))\Rightarrow x\cong \@n2(6)
+tests/Groups/article.tex:45:51: info: claim 9 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall y\in \mathrm{El},\ (2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3)\land ((\forall z\in \mathrm{El},\ x(z)\Leftrightarrow (\@n2(2)\times \@n2(3))(z))\Rightarrow 6\in \mathbb{Z}\land 0<6)
+tests/Groups/article.tex:45:51: info: claim 10: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall z\in \mathrm{El},\ x(z)\Leftrightarrow (\@n2(2)\times \@n2(3))(z))\Rightarrow \operatorname{Cyclic}(x)
 tests/Groups/article.tex:45:51: info: claim 10 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \forall y\in \mathrm{El},\ (2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3
 tests/Groups/article.tex: 8 definitions, 11 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)

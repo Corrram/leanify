@@ -547,7 +547,7 @@ def chunksUntil (stop : List Codes) : List Chunk → List Chunk → Option (List
     if stop.contains v then some (acc.reverse, .w v :: cs) else chunksUntil stop cs (.w v :: acc)
   | c :: cs, acc =>
     match c with
-    | .m _ => chunksUntil stop cs (c :: acc)
+    | .m _ | .p 45 => chunksUntil stop cs (c :: acc)
     | _ => none
 
 /-- Citations: `Lemma~\ref{l}`, `Theorem~\ref{l}`, `Claim~\ref{l}`, `\eqref{l}`, `\cref{l}`. -/
@@ -1119,6 +1119,8 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     | some (.w _), some (.m [.id _]) | some (.w _), some (.m [.cmd _]) => some (.noun np, r')
     -- `every integer $n\ge1$`, `every integer $n$ with $n\ge1$`: one variable with a bound
     | some (.w _), some (.m ts) =>
+      -- (`every continuous map $f\colon X\to Y$`: a map with its signature)
+      if (Math.parseSig ts).isSome then some (.noun np, r') else
       match binderMath ts, hatName ts with
       | some ([_], _), _ | _, some (_, []) => some (.noun np, r')
       -- `every integer $n_0$`
@@ -6462,6 +6464,368 @@ def denoteAlt (s : Sentence) : Option Sent := do
   let cs ← chunks (s.toks.length + 1) s.toks []
   let cs' ← denoteAsLet cs
   sentence0 cs' <|> (letTheSent cs' >>= sentence0)
+
+/-- The words at which the noun phrase after the `a` of a nested indefinite ends (`every
+subgroup of a cyclic group is …`). -/
+def nestStops : List Codes :=
+  [w!"is", w!"are", w!"has", w!"have", w!"contains", w!"contain", w!"satisfies", w!"satisfy", w!"admits",
+   w!"admit", w!"attains", w!"attain", w!"can", w!"does", w!"do", w!"converges", w!"converge", w!"lies",
+   w!"lie", w!"belongs", w!"belong", w!"with", w!"such", w!"that", w!"which", w!"whose", w!"and", w!"or",
+   w!"if", w!"iff", w!"to", w!"from", w!"of", w!"in", w!"on", w!"over", w!"for", w!"then", w!"where",
+   w!"under", w!"at", w!"into", w!"onto", w!"be", w!"must", w!"will", w!"equals", w!"divides", w!"maps",
+   w!"generates", w!"acts", w!"act", w!"extends", w!"extend", w!"embeds", w!"embed", w!"splits", w!"vanishes"]
+
+/-- The noun phrase of a nested indefinite: its words (with hyphens, and a formula before a
+hyphen, `$p$-group`), up to a stop; and the chunks after it. -/
+def nestNP : Nat → List Chunk → List Chunk → List Chunk × List Chunk
+  | 0, acc, cs => (acc.reverse, cs)
+  | f + 1, acc, cs =>
+    match cs with
+    | .w w :: r => if nestStops.contains w then (acc.reverse, cs) else nestNP f (.w w :: acc) r
+    | .p 45 :: r => nestNP f (.p 45 :: acc) r
+    | .m ts :: .p 45 :: r => nestNP f (.p 45 :: .m ts :: acc) r
+    | _ => (acc.reverse, cs)
+
+/-- The words of a noun phrase before a complement (`compact subset` of `compact subset of a
+Hausdorff space`): words and hyphens only. -/
+def plainWords (cs : List Chunk) : Bool :=
+  !cs.isEmpty && cs.all fun c => match c with
+    | .w w => !nestStops.contains w
+    | .p 45 => true
+    | _ => false
+
+/-- The first `PREP a NP` after the words of a noun phrase, with `PREP` one of `of`, `on`,
+`in`, `over`, `from`: the words before it, the preposition, the inner noun phrase, the
+variable written after it (if any), and the chunks after. -/
+def nestSplit (cs : List Chunk) : Option (List Chunk × Codes × List Chunk × Option Codes × List Chunk) := do
+  let i ← cs.findIdx? fun c => match c with
+    | .w w => [w!"of", w!"on", w!"in", w!"over", w!"from"].contains w
+    | _ => true
+  let front := cs.take i
+  if !plainWords front then none
+  let .w prep := (← cs[i]?) | none
+  let det ← cs[i + 1]?
+  if !(match det with | .w d => d == w!"a" || d == w!"an" | _ => false) then none
+  let (np, after) := nestNP (cs.length + 1) [] (cs.drop (i + 2))
+  if !(match np.getLast? with | some (.w _) => true | _ => false) then none
+  match after with
+  | .m [.id v] :: r => some (front, prep, np, some v, r)
+  | _ => some (front, prep, np, none, after)
+
+/-- A letter for the object of a nested indefinite: not among `avoid` nor in the sentence. -/
+def nestVar (avoid : List Codes) (cs : List Chunk) (k : Nat := 0) : Codes :=
+  let used : List Codes := avoid ++ cs.flatMap fun c => match c with
+    | .m ts | .d ts _ => ts.filterMap fun t => match t with | .id v => some v | _ => none
+    | _ => []
+  let free := [w!"X", w!"Y", w!"Z", w!"W", w!"U", w!"V", w!"T", w!"S", w!"Q", w!"P", w!"M", w!"N"].filter (!used.contains ·)
+  free[k]?.getD w!"X"
+
+/-- `a`, `an`. -/
+def isIndef (c : Chunk) : Bool := match c with
+  | .w d => d == w!"a" || d == w!"an"
+  | _ => false
+
+/-- The complements after a nested noun phrase that introduce their own objects (`of a
+topological space` after `connected subset`), each with its letter if written: the chunks of
+the chain, and the chunks after it. -/
+def nestChain : Nat → List Chunk → List Chunk × List Chunk
+  | 0, cs => ([], cs)
+  | f + 1, cs =>
+    match cs with
+    | .w p :: a :: r =>
+      if [w!"of", w!"on", w!"in", w!"over"].contains p && isIndef a then
+        let (np, after) := nestNP (r.length + 1) [] r
+        if !(match np.getLast? with | some (.w _) => true | _ => false) then ([], cs) else
+        let (v, after) : List Chunk × List Chunk := match after with
+          | .m [.id x] :: r' => ([.m [.id x]], r')
+          | _ => ([], after)
+        let (more, rest) := nestChain f after
+        ([.w p, a] ++ np ++ v ++ more, rest)
+      else ([], cs)
+    | _ => ([], cs)
+
+/-- The variables of `Let $u$ and $v$ be …` (formulas joined by `and` and commas): their
+chunks, and the chunks after them. -/
+def letVars : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
+  | 0, _, _ => none
+  | f + 1, acc, cs =>
+    match cs with
+    | .m [.id v] :: .w a :: r => if a == w!"and" then letVars f (acc ++ [.m [.id v], .w a]) r
+        else if acc.isEmpty then none else some (acc ++ [.m [.id v]], .w a :: r)
+    | .m [.id v] :: .p 44 :: r => letVars f (acc ++ [.m [.id v], .p 44]) r
+    | _ => none
+
+/-- The nouns of maps whose signature's letters are objects of a kind (`Let
+$\varphi\colon G\to H$ be a group homomorphism`: `G` and `H` are groups). -/
+def sigKinds : List (List Codes × List Codes) :=
+  [([w!"group", w!"homomorphism"], [w!"group"]), ([w!"homomorphism", w!"of", w!"groups"], [w!"group"]),
+   ([w!"group", w!"isomorphism"], [w!"group"]), ([w!"isomorphism", w!"of", w!"groups"], [w!"group"]),
+   ([w!"ring", w!"homomorphism"], [w!"ring"]), ([w!"homomorphism", w!"of", w!"rings"], [w!"ring"]),
+   ([w!"ring", w!"isomorphism"], [w!"ring"]),
+   ([w!"linear", w!"map"], [w!"vector", w!"space"]), ([w!"linear", w!"transformation"], [w!"vector", w!"space"]),
+   ([w!"linear", w!"operator"], [w!"vector", w!"space"]), ([w!"linear", w!"isomorphism"], [w!"vector", w!"space"]),
+   ([w!"continuous", w!"map"], [w!"topological", w!"space"]), ([w!"homeomorphism"], [w!"topological", w!"space"]),
+   ([w!"continuous", w!"bijection"], [w!"topological", w!"space"]), ([w!"open", w!"map"], [w!"topological", w!"space"]),
+   ([w!"isometry"], [w!"metric", w!"space"]), ([w!"isometric", w!"embedding"], [w!"metric", w!"space"]),
+   ([w!"contraction"], [w!"metric", w!"space"]),
+   ([w!"monotone", w!"map"], [w!"partially", w!"ordered", w!"set"]),
+   ([w!"order-preserving", w!"map"], [w!"partially", w!"ordered", w!"set"])]
+
+/-- The formula of `the OP of two NOUNS` for its two objects: `$X\cap Y$`. -/
+def twoOp (op : Codes) (x y : Codes) : Option (List MTok) :=
+  if op == w!"intersection" then some [.id x, .cmd w!"cap", .id y]
+  else if op == w!"union" then some [.id x, .cmd w!"cup", .id y]
+  else if op == w!"product" then some [.id x, .cmd w!"times", .id y]
+  else none
+
+/-- One step of reading nested indefinites and the idioms around them, as sentences with
+more variables. An indefinite inside `every`, `let` or `the` is universal: its object is one
+more variable, bound as widely as the noun phrase around it.
+
+* `Every subgroup of a cyclic group is cyclic.`: `For every cyclic group $X$, every subgroup
+  of $X$ is cyclic.`; `every continuous map from a compact space to a Hausdorff space …`:
+  `for every compact space $X$ and every Hausdorff space $Y$, every continuous map
+  $f\colon X\to Y$ …`;
+* `The center of a group $G$ is …`: `For every group $G$, the center of $G$ is …`;
+* `For every subgroup $H$ of a cyclic group, …`: `For every cyclic group $X$ and every
+  subgroup $H$ of $X$, …`;
+* `Let $H$ be a subgroup of a cyclic group.`: `Let $X$ be a cyclic group and let $H$ be a
+  subgroup of $X$.`; `Let $f\colon X\to Y$ be a continuous bijection from a compact space to a
+  Hausdorff space.`, `Let $T\colon V\to V$ be a linear operator on a finite-dimensional
+  vector space.`: the letters of the signature are those objects;
+* `Let $\varphi\colon G\to H$ be a group homomorphism.`, with `G` and `H` new letters: `Let
+  $G$ be a group, let $H$ be a group and let …` (`sigKinds`);
+* `Let $G$ be a group of order $p^2$, where $p$ is a prime.`: `Let $p$ be a prime and let $G$
+  be a group of order $p^2$.`; `Let $p$ be a prime dividing $n$.`: `… with $p\mid n$`;
+* `The intersection of two normal subgroups of $G$ is …`: `For all normal subgroups $X$ and
+  $Y$ of $G$, $X\cap Y$ is …` (`union`, `product`);
+* `The continuous image of a compact space is compact.`: `For every compact space $X$, every
+  topological space $Y$ and every continuous map $f\colon X\to Y$, the image of $f$ is
+  compact.`;
+* in a statement, `A metric space is compact if and only if it is sequentially compact.`:
+  `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.`
+
+`avoid`: the letters in use; `generic`: the sentence states a result (not a definition). -/
+def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option (List Chunk) :=
+  let sig (f x y : Codes) : Chunk := .m [.id f, .sym 58, .id x, .cmd w!"to", .id y]
+  let fresh (k : Nat) : Codes := nestVar avoid cs k
+  let mapLetter (xs : List Codes) : Codes := ([w!"f", w!"g", w!"h", w!"\\varphi"].find? fun c =>
+    !(avoid ++ xs).contains c && !cs.any (fun ch => match ch with | .m ts => ts.contains (.id c) | _ => false)).getD w!"f"
+  let plain (ws : List Chunk) : List Codes := ws.filterMap fun c => match c with | .w w => some w | _ => none
+  -- `every NP1 PREP a NP2 …`
+  let quant : Option (List Chunk) := do
+    let .w q :: rest := cs | none
+    if ![w!"every", w!"each", w!"any"].contains q then none
+    let (front, prep, np, v?, after) ← nestSplit rest
+    let x := v?.getD (fresh 0)
+    if prep == w!"from" then
+      let .w t :: a2 :: r2 := after | none
+      if t != w!"to" || !isIndef a2 then none
+      let (np2, after2) := nestNP (r2.length + 1) [] r2
+      if np2.isEmpty then none
+      let (y, after2) := match after2 with
+        | .m [.id v] :: r => (v, r)
+        | _ => (fresh 1, after2)
+      some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .w w!"and", .w w!"every"] ++ np2 ++ [.m [.id y], .p 44, .w q] ++
+        front ++ [sig (mapLetter [x, y]) x y] ++ after2)
+    else
+      let (chain, after) := nestChain 4 after
+      some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.p 44, .w q] ++ front ++ [.w prep, .m [.id x]] ++ after)
+  -- `the continuous image of a NP is …`
+  let image : Option (List Chunk) := do
+    let r ← kw [w!"the", w!"continuous", w!"image", w!"of"] cs
+    let .w a :: r1 := r | none
+    if !isIndef (.w a) then none
+    let (np, after) := nestNP (r1.length + 1) [] r1
+    if np.isEmpty then none
+    let x := fresh 0
+    let y := fresh 1
+    let f := mapLetter [x, y]
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w w!"every", .w w!"topological", .w w!"space", .m [.id y],
+      .w w!"and", .w w!"every", .w w!"continuous", .w w!"map", sig f x y, .p 44, .w w!"the", .w w!"image", .w w!"of", .m [.id f]] ++ after)
+  -- `the OP of two NOUNS [of $G$] …`
+  let two : Option (List Chunk) := do
+    let .w t :: .w op :: .w o :: .w n :: r := cs | none
+    if t != w!"the" || o != w!"of" || n != w!"two" then none
+    let (np, after) := nestNP (r.length + 1) [] r
+    if np.isEmpty then none
+    -- (the complement of the noun, `of $G$`, or a chain `of a group`)
+    let (comp, after) : List Chunk × List Chunk := match after with
+      | .w p :: .m g :: r' => if [w!"of", w!"in", w!"over"].contains p then ([.w p, .m g], r') else ([], after)
+      | _ => nestChain 4 after
+    let x := fresh 0
+    let y := fresh 1
+    -- (the object of an indefinite complement, `of a topological space`: one, for both)
+    let (pre, comp) : List Chunk × List Chunk := match comp with
+      | .w p :: a :: rest =>
+        if !isIndef a then ([], comp) else
+        let words := rest.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
+        let (z, more) := match rest.drop words.length with
+          | .m [.id v] :: m => (v, m)
+          | m => (fresh 2, m)
+        if !more.isEmpty then ([], comp) else
+        ([.w w!"for", .w w!"every"] ++ words ++ [.m [.id z], .w w!"and"], [.w p, .m [.id z]])
+      | _ => ([], comp)
+    let fm ← twoOp op x y
+    -- (each object with its own binder: `for every normal subgroup $X$ of $G$ and every
+    -- normal subgroup $Y$ of $G$`)
+    let .w last := (← np.getLast?) | none
+    let one := np.dropLast ++ [.w ((DefForm.singular last).getD last)]
+    let lead := if pre.isEmpty then [.w w!"for", .w w!"every"] else pre ++ [.w w!"every"]
+    some (lead ++ one ++ [.m [.id x]] ++ comp ++ [.w w!"and", .w w!"every"] ++ one ++ [.m [.id y]] ++ comp ++
+      [.p 44, .m fm] ++ after)
+  -- `the FRONT of a NP …`
+  let theOf : Option (List Chunk) := do
+    let .w t :: rest := cs | none
+    if t != w!"the" then none
+    let (front, prep, np, v?, after) ← nestSplit rest
+    if prep != w!"of" then none
+    if [[w!"set"], [w!"class"], [w!"number"], [w!"continuous", w!"image"]].contains (plain front) then none
+    let x := v?.getD (fresh 0)
+    let (chain, after) := nestChain 4 after
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.p 44, .w w!"the"] ++ front ++ [.w w!"of", .m [.id x]] ++ after)
+  -- `for every NP1 $v$ PREP a NP3 …, …`
+  let forEvery : Option (List Chunk) := do
+    let .w fo :: .w q :: rest := cs | none
+    if fo != w!"for" || ![w!"every", w!"each", w!"all", w!"any"].contains q then none
+    let i ← rest.findIdx? fun c => match c with | .m _ => true | _ => false
+    let np1 := rest.take i
+    if !plainWords np1 then none
+    let (vars, r1) ← match letVars 6 [] (rest.drop i) with
+      | some (vs, r) => some (vs, r)
+      | none => match rest.drop i with
+        | .m [.id v] :: r => some ([Chunk.m [.id v]], r)
+        | _ => none
+    let .w prep :: a :: r2 := r1 | none
+    if ![w!"of", w!"on", w!"in", w!"over"].contains prep || !isIndef a then none
+    let (np3, after) := nestNP (r2.length + 1) [] r2
+    if !(match np3.getLast? with | some (.w _) => true | _ => false) then none
+    let (y, after) := match after with
+      | .m [.id v] :: r => (v, r)
+      | _ => (fresh 0, after)
+    let (chain, after) := nestChain 4 after
+    some ([.w w!"for", .w w!"every"] ++ np3 ++ [.m [.id y]] ++ chain ++ [.w w!"and", .w q] ++ np1 ++ vars ++ [.w prep, .m [.id y]] ++ after)
+  -- `Let VARS be a NP1 PREP a NP2 …`
+  let letB : Option (List Chunk) := do
+    let r ← kw [w!"let"] cs
+    let (vars, r1) ← match letVars 6 [] r with
+      | some (vs, r') => some (vs, r')
+      | none => match r with
+        | .m ts :: r' => some ([Chunk.m ts], r')
+        | _ => none
+    let r2 ← kw [w!"be"] r1
+    let .w det :: r3 := r2 | none
+    let indef := det == w!"a" || det == w!"an"
+    -- (several variables: a plural noun phrase without an article)
+    let (det?, r3) : List Chunk × List Chunk := if indef then ([.w det], r3) else ([], .w det :: r3)
+    if vars.length > 1 && indef then none
+    let (front, prep, np, v?, after) ← nestSplit r3
+    let one : Option (List MTok) := match vars with
+      | [.m ts] => some ts
+      | _ => none
+    match one.bind Math.parseSig with
+    | some (.sig _ (.id d) (.id c)) =>
+      let vts := one.getD []
+      if prep == w!"from" then
+        let .w t :: a2 :: r4 := after | none
+        if t != w!"to" || !isIndef a2 || d == c then none
+        let (np2, after2) := nestNP (r4.length + 1) [] r4
+        if np2.isEmpty || v?.isSome then none
+        some ([.w w!"let", .m [.id d], .w w!"be", .w w!"a"] ++ np ++ [.p 44, .w w!"let", .m [.id c], .w w!"be", .w w!"a"] ++
+          np2 ++ [.w w!"and", .w w!"let", .m vts, .w w!"be"] ++ det? ++ front ++ after2)
+      else if prep == w!"on" && d == c && v?.isNone then
+        some ([.w w!"let", .m [.id d], .w w!"be", .w w!"a"] ++ np ++ [.w w!"and", .w w!"let", .m vts, .w w!"be"] ++ det? ++
+          front ++ after)
+      else none
+    | _ =>
+      if prep == w!"from" then none
+      let x := v?.getD (fresh 0)
+      let (chain, after) := nestChain 4 after
+      -- (`a linear operator on a vector space`: a map of it into itself)
+      let endo := prep == w!"on" && (match front.getLast? with
+        | some (.w w) => [w!"operator", w!"endomorphism", w!"transformation", w!"automorphism"].contains w
+        | _ => false)
+      match vars, endo with
+      | [.m [.id v]], true =>
+        some ([.w w!"let", .m [.id x], .w w!"be", .w w!"a"] ++ np ++ chain ++ [.w w!"and", .w w!"let", sig v x x, .w w!"be"] ++ det? ++
+          front ++ after)
+      | _, _ =>
+        some ([.w w!"let", .m [.id x], .w w!"be", .w w!"a"] ++ np ++ chain ++ [.w w!"and", .w w!"let"] ++ vars ++ [.w w!"be"] ++ det? ++
+          front ++ [.w prep, .m [.id x]] ++ after)
+  -- `Let $\varphi\colon G\to H$ be a group homomorphism`, with new letters `G`, `H`
+  let sigLet : Option (List Chunk) := do
+    let r ← kw [w!"let"] cs
+    let (vts, r1) ← mathChunk r
+    let .sig _ (.id d) (.id c) ← Math.parseSig vts | none
+    let r2 ← kw [w!"be"] r1
+    let .w det :: r3 := r2 | none
+    if !isIndef (.w det) then none
+    let ws := r3.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
+    let words := (plain ws).filter (· != w!"-")
+    let kind ← sigKinds.findSome? fun (n, k) => if words.length ≥ n.length && words.drop (words.length - n.length) == n then some k else none
+    let bound (v : Codes) : Bool := avoid.contains v
+    let news := ([d, c].eraseDups).filter (!bound ·)
+    if news.isEmpty then none
+    let kindCs : List Chunk := kind.map Chunk.w
+    let lets := news.flatMap fun v => [.w w!"let", .m [.id v], .w w!"be", .w w!"a"] ++ kindCs ++ [.p 44]
+    some (lets.dropLast ++ [.w w!"and", .w w!"let", .m vts, .w w!"be", .w det] ++ r3)
+  -- `Let …, where $v$ is a NP.`
+  let whereB : Option (List Chunk) := do
+    let _ ← kw [w!"let"] cs
+    let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk) with
+      | some (.p 44), some (.w w) => w == w!"where"
+      | _, _ => false
+    let head := cs.take i
+    let .m [.id v] :: .w is :: a :: r := cs.drop (i + 2) | none
+    if is != w!"is" || !isIndef a then none
+    let np := r.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
+    if np.isEmpty || !isEnd (r.drop np.length) then none
+    some ([.w w!"let", .m [.id v], .w w!"be", a] ++ np ++ [.w w!"and"] ++ head ++ [.p 46])
+  -- `Let $p$ be a NP dividing $X$.`
+  let dividing : Option (List Chunk) := do
+    let _ ← kw [w!"let"] cs
+    let i ← cs.findIdx? fun ch => match ch with | .w w => w == w!"dividing" | _ => false
+    -- (the variable of the latest `let $v$ be` before it)
+    let j ← (List.range i).reverse.find? fun j => match (cs[j]? : Option Chunk), (cs[j + 1]? : Option Chunk), (cs[j + 2]? : Option Chunk) with
+      | some (.w l), some (.m [.id _]), some (.w b) => l == w!"let" && b == w!"be"
+      | _, _, _ => false
+    let .m [.id v] := (← cs[j + 1]?) | none
+    let .m x :: rest := cs.drop (i + 1) | none
+    some (cs.take i ++ [.w w!"with", .m ([.id v, .cmd w!"mid"] ++ x)] ++ rest)
+  -- `A NP is …`, `A NP $X$ is … if and only if it is …` (in a statement)
+  let genericB : Option (List Chunk) := do
+    if !generic then none
+    let .w a :: rest := cs | none
+    if !isIndef (.w a) then none
+    let j ← rest.findIdx? fun ch => match ch with | .w w => w == w!"is" | .m _ => false | .p 45 => false | _ => true
+    let np := rest.take j
+    let .w is :: _ := rest.drop j | none
+    if is != w!"is" then none
+    let (np, x) : List Chunk × Codes := match np.getLast? with
+      | some (.m [.id v]) => (np.dropLast, v)
+      | _ => (np, fresh 0)
+    if !plainWords np then none
+    let body := DefForm.resolveIt x (rest.length + 1) (rest.drop j)
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body)
+  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> genericB
+
+/-- The readings of `nestedIndef`, one step after another (the last first), as readings of
+the sentence where its own reading does not compile. -/
+def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
+  if s.ctx.kind == .proof then return []
+  let some cs := chunks (s.toks.length + 1) s.toks [] | return []
+  let generic := match s.ctx.kind with
+    | .result e => e.take 3 != w!"def"
+    | _ => false
+  let mut cur := cs
+  let mut out : List Sent := []
+  for _ in [0:5] do
+    match nestedIndef avoid generic cur with
+    | some cs' =>
+      cur := cs'
+      if let some sn := sentence cs' then out := sn :: out
+    | none => break
+  return out
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

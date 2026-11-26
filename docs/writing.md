@@ -632,6 +632,38 @@ the old switches `{\cal G}`, `\bf x`, `\Bbb R` (`\mathcal{G}`, `\mathbf{x}`, `\m
 B` the same the other way; `Let $A\subsetneq X$.` binds a subset of `X` other than `X`. `\subset`
 alone stays ambiguous (see the finding it gets).
 
+### Indefinites inside other noun phrases
+
+An object that a noun phrase names with `a` inside `every`, `let` or `the` is one more
+variable, bound as widely as the phrase around it: in a statement, such an indefinite is
+universal. These sentences are read as the sentences on the right, with a letter for the
+object that is not in use:
+
+| written | read as |
+| --- | --- |
+| `Every subgroup of a cyclic group is cyclic.` | `For every cyclic group $X$, every subgroup of $X$ is cyclic.` |
+| `Every continuous map from a compact metric space to a metric space is uniformly continuous.` | `For every compact metric space $X$ and every metric space $Y$, every continuous map $f\colon X\to Y$ is uniformly continuous.` |
+| `The center of a group $G$ is a normal subgroup of $G$.` | `For every group $G$, the center of $G$ is a normal subgroup of $G$.` |
+| `For every closed subset $F$ of a compact space, …` | `For every compact space $X$ and every closed subset $F$ of $X$, …` |
+| `Let $H$ be a subgroup of a cyclic group.` | `Let $X$ be a cyclic group and let $H$ be a subgroup of $X$.` |
+| `Let $f\colon X\to Y$ be a continuous bijection from a compact space to a Hausdorff space.` | `Let $X$ be a compact space, let $Y$ be a Hausdorff space and let $f\colon X\to Y$ be a continuous bijection.` |
+| `Let $T\colon V\to V$ be a linear operator on a finite-dimensional vector space.` | `Let $V$ be a finite-dimensional vector space and let $T\colon V\to V$ be a linear operator.` |
+| `Let $\varphi\colon G\to H$ be a group homomorphism.`, with new letters `G`, `H` | `Let $G$ be a group, let $H$ be a group and let $\varphi\colon G\to H$ be a group homomorphism.` (the noun of the map says what its domain and codomain are: groups, rings, vector spaces, topological or metric spaces, partially ordered sets) |
+| `The intersection of two normal subgroups of $G$ is a normal subgroup of $G$.` (`union`, `product`) | `For every normal subgroup $X$ of $G$ and every normal subgroup $Y$ of $G$, $X\cap Y$ is a normal subgroup of $G$.` |
+| `The continuous image of a compact space is compact.` | `For every compact space $X$, every topological space $Y$ and every continuous map $f\colon X\to Y$, the image of $f$ is compact.` |
+| in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
+| `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |
+| `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |
+
+A noun whose meaning is in its complement (`prime ideal of $R$`, `normal subgroup of $G$`,
+`element of $G$`) is read with its complement, written or implied: alone, it would say less
+than the noun means, and the sentence is not read (`"ideal" is read with its complement`).
+The complement is implied by the variable's domain (`a subgroup $H\le G$`, `an element
+$g\in G$`) and, after `is`, by the complement the subject was introduced with: of an ideal `I`
+of `R`, `$I$ is a prime ideal` and `$I$ is prime` say that `I` is a prime ideal of `R`; of a
+subgroup `H` of `G`, `$H$ is a normal subgroup` that `H` is normal in `G`. `vector space` and
+`module` without `over $K$` are over their scalars, some field (some ring).
+
 ### Notions that the article defines in words that are not read
 
 A definition whose condition Leanify does not read still introduces its notion. A sentence

@@ -1997,6 +1997,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let some ([_], d) := Grammar.binderMath ts | fail E.type
       let x := match d with
         | .app (.id s) [x] => if s == w!"@subsets" || s == w!"@psubsets" then x else d
+        -- (`a subgroup $H\le G$`: of `G`)
+        | .ival (.neg (.id inf)) b true false => if inf == w!"\\infty" && n.ty != .real then b else d
         | _ => d
       let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
       let (a, aty') ← Elab.term 100000 sc none x
@@ -2006,10 +2008,27 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if r == Tm.app a (.loc 0) then return ([], rest)
       pure ([Tm.lam n.ty .tt r], rest)
     -- (a complement that the noun may have: the domain's set, if the variable has one)
+    -- (a noun with a complement, `normal subgroup of $G$`, needs it: alone, it would say
+    -- less than the noun means)
     let optional : M (List Tm × List Chunk) := do
       if n.needsArg then return ← implicit
       let st0 ← get
-      tryCatch implicit fun _ => do set st0; pure ([], rest)
+      tryCatch implicit fun e => do
+        set st0
+        -- (a complement that is the membership the variable's domain states, `an element
+        -- $g\in G$`: nothing more to say, where the domain is read in another scope)
+        let some (ws, _, rel) := n.arg | throw e
+        let domainSays : Bool := match var with
+          | some ts => (Grammar.binderMath ts).isSome && Notation.betaApply rel [.glob 1000000, .loc 0] == Tm.app (.glob 1000000) (.loc 0)
+          | none => false
+        if domainSays then return ([], rest)
+        let words := n.sing.filterMap fun i => match i with | .w w => some w | _ => none
+        let art : Codes := match words.head? >>= List.head? with
+          | some ch => if [97, 101, 105, 111, 117].contains ch then w!"an " else w!"a "
+          | none => w!"a "
+        let phrase := (words.intersperse [32]).flatten
+        fail E.finding ([34] ++ phrase ++ w!"\" is read with its complement: say which object it is " ++
+          (ws.headD w!"of") ++ w!" (" ++ art ++ phrase ++ [32] ++ (ws.headD w!"of") ++ w!" $X$)")
     match n.arg, rest with
     | some (ws, aty, rel), .w w :: .m ts :: rest' =>
       if !ws.contains (Grammar.lower w) then return ← optional
@@ -2879,6 +2898,11 @@ def splitNested (np : List Chunk) : Option (List Chunk × List Chunk) := do
   if ws.isEmpty then none
   let some (Chunk.m ts) := (rest[ws.length]? : Option Chunk) | none
   let _ ← Math.parseFormula ts >>= fun m => match m with | .id _ => some () | _ => none
+  -- (the variable at the end, with none before: the object's own, which a `Let` puts
+  -- there, `Let $H$ be a subgroup of a cyclic group` as `subgroup of a cyclic group $H$`;
+  -- the complement's object has no letter)
+  let isMath (c : Chunk) : Bool := match c with | .m _ => true | _ => false
+  if (rest.drop (ws.length + 1)).isEmpty && !(np.take i).any isMath then none
   some (ws ++ [.m ts], np.take (i + 1) ++ [.m ts] ++ rest.drop (ws.length + 1))
 
 /-- The binders of a noun phrase: one, or two for a complement that introduces its own
@@ -4788,7 +4812,25 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   -- modifiers before it: `$h$ is a subadditive sequence`)
   let exactMod := V.mods.any fun m => m.ty == x.2 && !Notation.hasSlots m.phrase &&
     (match matchPhrase m.phrase cs with | some (none, []) => true | _ => false)
+  -- (`$I$ is a prime ideal`, of an ideal `I` of `R`: a prime ideal of `R`, the object of the
+  -- subject's complement, where the noun says nothing without one)
+  let subjComp : Option (List MTok) := match x.1 with
+    | .loc i => (sc[i]?).bind fun (p : Codes × Ty) =>
+      (stS.complements.find? fun ((e, n, _) : Nat × Codes × List MTok) => n == p.1 && (e == stS.curEnv || stS.curProved == some e)).map
+        fun (q : Nat × Codes × List MTok) => q.2.2
+    | _ => none
+  let withComp (e : Err) : M (Option BindInfo) := do
+    let some ts := subjComp | throw e
+    if !cs.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then throw e
+    let stC ← get
+    let rec tryPreps : List Codes → M (Option BindInfo)
+      | [] => do set stC; throw e
+      | p :: ps => do
+        set stC
+        tryCatch (some <$> nounPhrase (cs ++ [.w p, .m ts]) sc) fun _ => tryPreps ps
+    tryPreps [w!"of", w!"in", w!"over"]
   let np ← if exactMod then pure none else tryCatch (some <$> nounPhrase cs sc) fun e => do
+    tryCatch (withComp e) fun e => do
     modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
     if e.code == E.ambiguous then throw e else pure none
   modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
@@ -5302,7 +5344,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       -- `every $(x,z)\in[0,1]^2$ satisfies φ`
       | some (vs, d) => binderInfos (.every vs d)
       | none => do
-        let b ← nounPhrase np
+        let b ← nounPhrase np sc
         if b.name.isEmpty then fail E.unsupported
         pure [b]
     -- `… for all $u,v\in A$`, inside
@@ -7797,6 +7839,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     else { st0 with unreadLocal := st0.unreadLocal ++ unread.map (s.ctx.env, ·) }
   -- a symbol for a quantity that the article does not define (`Let $\chi(G)$ denote the
   -- chromatic number of a graph $G$.`), if the sentence has no other reading
+  -- (the letters in use, which a reading must not bind again)
+  let avoidVars : List Codes := st0.envBinders.map (·.name) ++ (st0.fixed.map (·.2.name)) ++
+    (st0.globs.zipIdx.filter fun (_, i) => Elab.visibleIn st0 i).map (·.1.key)
   let undefinedAlt : Option Grammar.Sent := match s.ctx.kind with
     | .text => Grammar.undefinedOf s
     | _ => none
@@ -7809,6 +7854,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- or if its reading as a whole does not compile)
   let partsOf : Unit → Option (List (Sentence × Grammar.Sent)) := fun _ =>
     (Grammar.partsOf s).bind fun ps => ps.mapM fun p => (Grammar.parseSentence p).map (p, ·)
+  -- (in a result, a sentence with nested indefinites, `The continuous image of a compact space
+  -- is compact.`, that has no other reading: its reading with more variables, if it compiles)
+  let inResult := match s.ctx.kind with | .result _ => true | _ => false
   let parsed : Option (List (Sentence × Grammar.Sent)) :=
     match (Grammar.parseSentence s).orElse fun _ => undefinedAlt with
     | some sent => some [(s, sent)]
@@ -7819,9 +7867,10 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     let ops : List (List Codes × Codes) := st0.ops.filterMap fun (nm, i) => (st0.globs[i]?).map fun g => (nm, g.key)
     (Flex.variants (st0.globs.map (·.key)) ops st0.forPrefixes st0.lastAttained s).filterMap fun (v, x) =>
       (v.mapM fun p => (Grammar.parseSentence p).map (p, ·)).map (·, x)
+  let nestedPre : Unit → List Grammar.Sent := fun _ => if inResult then Grammar.nestedAlts avoidVars s else []
   let parsed := match parsed with
     | some p => some p
-    | none => if (flex ()).isEmpty then none else some []
+    | none => if (flex ()).isEmpty && (nestedPre ()).isEmpty then none else some []
   match parsed with
   | none => { c with st := st0u, idx := c.idx + 1, outcomesRev := .prose :: c.outcomesRev, proofs := incomplete ps }
   | some parts =>
@@ -7829,7 +7878,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       | [(_, sn)] => sn
       | _ => .constDefs none [] []
     let sc : SentCtx := ⟨s.ctx, (envs.lookup s.ctx.proves).getD 0, c.idx⟩
-    let one (part : Sentence) (sent : Grammar.Sent) (ptoks0 : List PTok) (alt : Option Grammar.Sent) :
+    let one (part : Sentence) (sent : Grammar.Sent) (ptoks0 : List PTok) (alts : List Grammar.Sent) :
         M (List Nat × List Nat) := do
         let before ← get
         let explicit := ptoks0.any (·.tok == .cmd w!"coloneqq")
@@ -7850,15 +7899,20 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
               set st
               Compile.sentence sc sent
           | _ => Compile.sentence sc sent
-        -- (if no reading of the sentence compiles: the quantity it names, undefined)
+        -- (if no reading of the sentence compiles: its other readings in turn, the quantity it
+        -- names, undefined, first)
         let (ds, cs) ← tryCatch primary fun e =>
-          match alt, sent with
-          | _, .undefined .. => throw e
-          | some alt, _ => do
-            set before
-            -- (a finding about the quantity says more than the reading that failed)
-            tryCatch (Compile.sentence sc alt) fun e' => throw (if e'.code == E.finding then e' else e)
-          | none, _ => throw e
+          match sent with
+          | .undefined .. => throw e
+          | _ =>
+            let rec others : List Grammar.Sent → M (List Nat × List Nat)
+              | [] => throw e
+              | alt :: rest => do
+                set before
+                -- (a finding about the quantity says more than the reading that failed)
+                tryCatch (Compile.sentence sc alt) fun e' =>
+                  if e'.code == E.finding && rest.isEmpty then throw e' else others rest
+            others alts
         -- a definition made under hypotheses takes those about its variables
         Compile.defsUnderHyps sc ds
         -- the introduction of a definition (`For a copula $C$, …`), for later definitions
@@ -7894,7 +7948,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
           | some sn' => (p', sn')
           | none => (p, sn)
         let st1 ← get
-        let (d, cl) ← tryCatch (one p sn p.toks none) fun e => do
+        let (d, cl) ← tryCatch (one p sn p.toks []) fun e => do
           set st1
           -- (a part that does not compile may itself be made of sentences: `Assume that
           -- $a>0$ and let $n$ be an integer such that $n>a$.`)
@@ -7903,7 +7957,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
             let mut d' : List Nat := []
             let mut c' : List Nat := []
             for (q, sq) in sub do
-              let (a, b) ← one q sq q.toks none
+              let (a, b) ← one q sq q.toks []
               d' := d' ++ a
               c' := c' ++ b
             pure (d', c')
@@ -7919,13 +7973,21 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
           let r ← runParts v
           unless x.isEmpty do modify fun st => { st with lastAttained := x }
           pure r) fun _ => next) (do set st; throw e)
+    -- (the readings with nested indefinites of a sentence without a reading of its own, or
+    -- whose parts do not compile; then the freer wordings)
+    let tryNested (e : Err) : M (List Nat × List Nat) := do
+      let st ← get
+      match nestedPre () with
+      | sn :: rest => tryCatch (one s sn toks0 rest) fun _ => do set st; tryFlex e
+      | [] => tryFlex e
     let labelled : M (List Nat × List Nat) :=
       match parts with
-      | [] => tryFlex ⟨E.prose, []⟩
+      | [] => tryNested ⟨E.prose, []⟩
       | [(_, sn)] => do
         let st ← get
-        tryCatch (one s sn toks0 (((undefinedAlt.orElse fun _ => Grammar.thatIsSentence s).orElse fun _ => Grammar.defAlt s).orElse
-            fun _ => Grammar.denoteAlt s)) fun e =>
+        let alts : List Grammar.Sent := [((undefinedAlt.orElse fun _ => Grammar.thatIsSentence s).orElse
+          fun _ => Grammar.defAlt s).orElse fun _ => Grammar.denoteAlt s].filterMap id ++ Grammar.nestedAlts avoidVars s
+        tryCatch (one s sn toks0 alts) fun e =>
           match partsOf () with
           | some ps@(_ :: _ :: _) => do
             set st
@@ -7939,7 +8001,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
         let st ← get
         tryCatch (runParts parts) fun e => do
           set st
-          tryFlex e
+          tryNested e
     let (r, st) := labelled.run.run st0
     match r with
     | .ok (ds, cs) =>
