@@ -16,6 +16,7 @@ import Leanify.Library.PolynomialsModel
 import Leanify.Library.StructuresModel
 import Leanify.Library.TopologiesModel
 import Leanify.Library.GeometryModel
+import Leanify.Library.RandomVariablesModel
 import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 import Leanify.Library.MatricesModel
 import Leanify.Library.UnitSquareModel
