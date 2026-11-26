@@ -38,6 +38,9 @@ def expand(fs):
 def closure(fs):
     return set(fs) | {g for f in fs for g in inc.get(f, [])}
 bad = n = 0
+# (the readings are independent: several at a time, reported in order)
+import concurrent.futures, os
+runs = []
 for args in sorted(list(pathlib.Path('tests').glob('*/*check.args')) + list(pathlib.Path('examples').glob('*/*check.args'))):
     a = args.read_text().split()
     if '--vocab' not in a: continue
@@ -47,7 +50,12 @@ for args in sorted(list(pathlib.Path('tests').glob('*/*check.args')) + list(path
     want = exp.read_text().replace('\r\n', '\n')
     for b in bundles:
         if not set(fields) <= closure(expand([b])): continue
-        got = subprocess.run([*exe, 'check', str(art), *a[:i], '--vocab', b, *a[i + 2:]], capture_output=True, text=True, encoding='utf-8').stdout.replace('\r\n', '\n')
+        runs.append((art, b, fields, want, [*exe, 'check', str(art), *a[:i], '--vocab', b, *a[i + 2:]]))
+def run(r):
+    return subprocess.run(r[4], capture_output=True, text=True, encoding='utf-8').stdout.replace('\r\n', '\n')
+with concurrent.futures.ThreadPoolExecutor(int(os.environ.get('JOBS') or os.cpu_count() or 2)) as pool:
+    gots = list(pool.map(run, runs))
+for (art, b, fields, want, _), got in zip(runs, gots):
         n += 1
         if 'unitsquare' in closure(expand([b])) and 'unitsquare' not in closure(fields):
             brief = lambda t: [l for l in t.splitlines() if ': info: ' not in l]

@@ -21,6 +21,10 @@ TMP=${RUNNER_TEMP:-$(mktemp -d)}
 group() { if [ -n "${GITHUB_ACTIONS:-}" ]; then echo "::group::$1"; else echo "== $1"; fi; }
 endgroup() { if [ -n "${GITHUB_ACTIONS:-}" ]; then echo "::endgroup::"; fi; }
 fail() { echo "FAILED: $1" >&2; exit 1; }
+# The articles are independent of one another: JOBS of them at a time (JOBS=1: one by one).
+JOBS=${JOBS:-$(nproc 2>/dev/null || echo 2)}
+# `throttle` before each background job keeps at most JOBS of them running.
+throttle() { while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n || true; done; }
 
 libraries() { awk '/^\[\[lean_lib\]\]/{lib=1; next} lib && /^name *=/{gsub(/[" ]/,"",$0); sub(/^name=/,"",$0); if ($0 != "Leanify") print $0; lib=0}' lakefile.toml; }
 articles() { for f in examples/*/Compiled.lean tests/*/Compiled.lean; do echo "$(dirname "$f")/article.tex"; done; }
@@ -38,13 +42,20 @@ build() {
 
 checks() {
   group "The articles are read as their expected outputs say"
-  local bad=0
+  local bad=0 out="$TMP/checks" exp art
+  rm -rf "$out"; mkdir -p "$out"
+  # (read in parallel, compared in order)
   for exp in $(expectations); do
-    local art; art=$(article_of "$exp")
+    art=$(article_of "$exp")
+    throttle
     # shellcheck disable=SC2046
-    $LEANIFY check "$art" $(args_of "$exp") > "$TMP/check.out" 2>&1 || true
-    if [ "${UPDATE:-}" = 1 ]; then cp "$TMP/check.out" "$exp"; echo "wrote $exp"
-    elif diff "$exp" "$TMP/check.out" > "$TMP/check.diff"; then echo "ok   $exp"
+    $LEANIFY check "$art" $(args_of "$exp") > "$out/${exp//\//_}" 2>&1 &
+  done
+  wait || true
+  for exp in $(expectations); do
+    local got="$out/${exp//\//_}"
+    if [ "${UPDATE:-}" = 1 ]; then cp "$got" "$exp"; echo "wrote $exp"
+    elif diff "$exp" "$got" > "$TMP/check.diff"; then echo "ok   $exp"
     else echo "DIFF $exp"; head -20 "$TMP/check.diff"; bad=1; fi
   done
   [ $bad = 0 ] || fail "an article is not read as its check.txt says (bash scripts/ci.sh update rewrites them)"
@@ -209,7 +220,18 @@ PY
 
 audit() {
   group "The kernel evaluates the compiler on the articles (the audit)"
-  for a in $(articles); do $LEANIFY audit "$a" | tail -1; done
+  local out="$TMP/audit" bad=0 a
+  rm -rf "$out"; mkdir -p "$out"
+  for a in $(articles); do
+    throttle
+    { $LEANIFY audit "$a" > "$out/${a//\//_}" 2>&1 || touch "$out/${a//\//_}.failed"; } &
+  done
+  wait || true
+  for a in $(articles); do
+    if [ -e "$out/${a//\//_}.failed" ]; then cat "$out/${a//\//_}"; echo "FAILED: the audit of $a" >&2; bad=1
+    else tail -1 "$out/${a//\//_}"; fi
+  done
+  [ $bad = 0 ] || fail "the kernel did not confirm the compilation of an article"
   endgroup
 }
 
