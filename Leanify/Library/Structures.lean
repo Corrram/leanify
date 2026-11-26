@@ -17,6 +17,7 @@ are bound by their signatures.
 * nouns of structures: `group`, `subgroup of $G$`, `normal subgroup of $G$`, `ring`,
   `commutative ring`, `integral domain`, `field`, `division ring`, `Euclidean domain`,
   `principal ideal domain`, `unique factorization domain`, `local ring`, `subring of $R$`,
+  `Sylow $p$-subgroup of $G$` (for a prime `p`),
   `subfield of $L$`, `field extension of $K$`, `ideal of $R$` (also `prime`, `maximal`,
   `principal`, `proper`; `$I$ is prime` of an ideal of `R`), `module over $R$`, `vector space
   over $K$` (`module` and `vector space` alone: over their scalars), `subspace of $V$`,
@@ -52,6 +53,8 @@ are bound by their signatures.
   factors, the product topology and the maximum of the distances;
 * the sum `U+W` of two subspaces of one module and the direct sum `U\oplus W` (`V=U\oplus W`:
   the sum is direct and is `V`);
+* quotients `G/N`, `R/I`, `V/W` (`the quotient of $G$ by $N$`): of a group by a normal subgroup,
+  of a ring by an ideal, of a module by a subspace, with the operations on the classes;
 * notation on elements: `gh`, `g\cdot h`, `g^{-1}`, `g^n`, `x+y`, `x-y`, `-x`, `x/y`, `cv` (a
   scalar times a vector), `1` and `0` (the identity and the zero of the structure they are
   compared with), `x\le y`, `x<y`.
@@ -290,7 +293,10 @@ def table2 : List (Ty × Codes × Codes) := [
   (M ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedM"),                      -- 212
   (S ⟶ S ⟶ S, w!"(#1+#2)", w!"Leanify.Structures.sumS"),                                       -- 213
   (S ⟶ S ⟶ .prop, w!"\\operatorname{SameSpaces}", w!"Leanify.Structures.SameSpaces"),         -- 214
-  (S ⟶ S ⟶ S, w!"(#1\\oplus #2)", w!"Leanify.Structures.dsumS")]                             -- 215
+  (S ⟶ S ⟶ S, w!"(#1\\oplus #2)", w!"Leanify.Structures.dsumS"),                             -- 215
+  (S ⟶ S ⟶ S, w!"(#1/#2)", w!"Leanify.Structures.quotS"),                                        -- 216
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{QuotientOk}", w!"Leanify.Structures.QuotientOk"),         -- 217
+  (.real ⟶ S ⟶ S ⟶ .prop, w!"\\operatorname{Syl}_{#1}(#2)(#3)", w!"Leanify.Structures.SylowIn")] -- 218
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -642,6 +648,9 @@ def vocab : Vocab where
           (imp (not (eq m n)) (eq (app2 (const 139) (app q m) (app q n)) (num 0))))),
       doc := "of an inner product space: `⟪e_m, e_n⟫ = 1` if `m = n`, `0` otherwise (Mathlib `Orthonormal`)" },
     adjS phrase!"geodesic" (c 198) "any two points are joined by a geodesic",
+    { phrase := phrase!"with $v$ as Sylow prime in $v$", prenominal := false, ty := S,
+      pred := close <| lamR fun p => lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun h => app (app2 (const 218) p g) h,
+      doc := "a Sylow `p`-subgroup of `G` for a prime `p`: a `p`-subgroup in no larger one (Mathlib `Sylow`); `Sylow $p$-subgroup of $G$` is read as `subgroup of $G$ with $p$ as Sylow prime`" },
     postS phrase!"locally closed in $v$" (close <| lamT S (fun _ => tt) fun x => lamT S (fun _ => tt) fun a => app2 (const 199) x a)
       "(Mathlib `IsLocallyClosed`)",
     postS phrase!"with generator $v$" (close <| lamT E (fun _ => tt) fun g => lamT S (fun _ => tt) fun h => setEq h (app (const 30) g))
@@ -809,6 +818,9 @@ def vocab : Vocab where
       doc := "of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`)" },
     { name := phrase!"Klein four-group", value := .const 114, ty := S, doc := "`C_2 × C_2`" },
     { name := phrase!"direct product of $v$ and $v$", value := .const 115, ty := S ⟶ S ⟶ S, doc := "`G × H` (Mathlib `Prod`)" },
+    { name := phrase!"quotient of $v$ by $v$", ty := S ⟶ S ⟶ S,
+      value := close <| lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun n => guard (app2 (const 217) g n) (app2 (const 216) g n),
+      doc := "`G/N`: of a group by a normal subgroup, of a ring by an ideal, of a module by a subspace (Mathlib `G ⧸ N`)" },
     { name := phrase!"multiplicative group of $v$", value := .const 210, ty := S ⟶ S,
       doc := "of a field, its nonzero elements with the product; of a ring, its units (Mathlib `Units`)" },
     { name := phrase!"group of units of $v$", value := .const 210, ty := S ⟶ S, doc := "the invertible elements, with the product (Mathlib `Units`)" },
@@ -859,6 +871,8 @@ def vocab : Vocab where
     ⟨S, .fn w!"@bracket", 196, "`[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension", none⟩,
     ⟨S, .add, 213, "`U + W`, the sum of two subspaces of one module: the sums `u + w` (Mathlib `U ⊔ W`)",
       some (c 214)⟩,
+    ⟨S, .div, 216, "`G/N`, `R/I`, `V/W`: the quotient of a group by a normal subgroup, of a ring by an ideal, of a module by a subspace (Mathlib `G ⧸ N`), one element for each class",
+      some (c 217)⟩,
     ⟨S, .fn w!"\\oplus", 215, "`U \\oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \\oplus W` says that the sum is direct",
       some (c 214)⟩,
     ⟨S, .fn w!"\\times", 115, "`G\\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric", none⟩,

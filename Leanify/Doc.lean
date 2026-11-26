@@ -2428,6 +2428,15 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
           (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
         else none)
+      -- (several fields with the words: those whose variables the formulas fit)
+      let cands ← if (cands.map (·.1.field)).eraseDups.length > 1 then do
+          let st ← get
+          let fit ← cands.filterM fun (m, _) => do
+            let ok ← tryCatch (do let _ ← slotPred m cs; pure true) fun _ => pure false
+            set st
+            pure ok
+          pure (if fit.isEmpty then cands else fit)
+        else pure cands
       match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
       | some (m, r) => post f r ((← slotPred m cs) :: acc)
       | none =>
@@ -4999,6 +5008,24 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
             if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs []).map fun (_, r) => (m, r) else
             (matchPhrase m.phrase cs).bind fun (v, r) => if v.isNone then some (m, r) else none
           else none
+        -- (several fields with the words: those whose variables the formulas fit, `dense in
+        -- $[0,1]$` of a set of numbers, `dense in $\tau$` of a topology)
+        let fitsSlots (m : Modifier) : M Bool := do
+          if !Notation.hasSlots m.phrase then return true
+          let some (args, _) := Notation.matchPrefix m.phrase cs [] | return false
+          let st ← get
+          let ok ← tryCatch (do
+              for (a, t) in args.zip (Notation.slotTys args.length m.pred) do
+                let some mt := Math.parseFormula a | fail E.unsupported
+                let v ← term F sc none mt
+                if t == .real then let _ ← Elab.asReal v else if v.2 != t then fail E.type
+              pure true) fun _ => pure false
+          set st
+          pure ok
+        let cands ← if (cands.map (·.1.field)).eraseDups.length > 1 then do
+            let fit ← cands.filterM fun (m, _) => fitsSlots m
+            pure (if fit.isEmpty then cands else fit)
+          else pure cands
         match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
         | some (m, r) =>
           -- (`$G$ is $3$-regular`: a modifier with variables, of their values)
@@ -5547,7 +5574,18 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         if o != w!"of" || head.isEmpty then none else
         (Math.parseFormula ts).map fun s => (s, head)
       | _ => none
+    -- (`there is a unique $y\in C$`: the variable with its domain)
+    let mathVar : Option (Codes × MT) := match np with
+      | [.m ts] => match Grammar.binderMath ts with
+        | some ([v], d) => some (v, d)
+        | _ => none
+      | _ => none
     let b? ← tryCatch (do
+        if let some (v, d) := mathVar then
+          let before : List BindInfo := sc.reverse.map fun (n, t) => ⟨n, t, none⟩
+          match ← binderInfosRaw (.every [v] d) before with
+          | [b] => return some b
+          | _ => fail E.unsupported
         let b ← match ← pdeNoun np with
           | some [b] => pure b
           | _ => nounPhrase np sc

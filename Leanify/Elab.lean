@@ -1783,6 +1783,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- (a quotient ring `\mathbb{Z}/p\mathbb{Z}` is not a set of real numbers)
       if let .id z := x then if z == w!"\\mathbb{Z}" then fail E.finding finiteField
       let a ← term f sc pf x; let b ← term f sc pf y
+      -- (two objects of a type of the vocabulary that is not a base type and has a quotient of
+      -- its own: `G/N`, `R/I`)
+      if a.2 == b.2 && !isBase a.2 && a.2 != .real && (← method a.2 .div).isSome then
+        return ← callMethod a.2 .div [a.1, b.1]
       -- (a function of points divided by a number)
       if (← pointFn a.2).isSome && (← pointFn b.2).isNone then
         if let some r ← pointwise Tm.div true a b then return r
@@ -2569,12 +2573,20 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       let body := Tm.and (.app (.glob dp) (.loc 0)) (.and (.eq a (.loc 2)) (.eq b (.loc 1)))
       pure (.lam .real .tt (.lam .real .tt (.ex vty body)), .fn .real (.fn .real .prop))
     | .image e v (.id dom) => do
-      -- {e(v) : v ∈ D} as the set y ↦ ∃ v ∈ D, e = y
-      let (dp, dg) ← liftO (← lookupGlob dom) E.undefined dom
-      let vty ← match dg.ty with | .fn a .prop => pure a | _ => fail E.type
+      -- {e(v) : v ∈ D} as the set y ↦ ∃ v ∈ D, e = y (`D` a set of the sentence, or of the
+      -- article)
+      let (d, vty) ← match lookupLocal sc dom with
+        | some (i, .fn a .prop) => pure (Tm.loc (i + 2), a)
+        | some _ => fail E.type
+        | none => do
+          let (dp, dg) ← liftO (← lookupGlob dom) E.undefined dom
+          match dg.ty with
+          | .fn a .prop => pure (Tm.glob dp, a)
+          | _ => fail E.type
+      if (lookupLocal sc v).isSome then fail E.shadow v
       let sc' := (v, vty) :: (w!"", .real) :: sc
       let a ← asReal (← term f sc' none e)
-      pure (.lam .real .tt (.ex vty (.and (.app (.glob dp) (.loc 0)) (.eq a (.loc 1)))), .fn .real .prop)
+      pure (.lam .real .tt (.ex vty (.and (.app d (.loc 0)) (.eq a (.loc 1)))), .fn .real .prop)
     | .image (.image e v d2) u d1 => do
       -- {e(u,v) : u ∈ D₁, v ∈ D₂} for sets of real numbers: y ↦ ∃ u ∈ D₁, ∃ v ∈ D₂, e = y
       -- (`\max_{(u,v)\in[0,1]^2} e`, `\sup_{u,v\in A} e`)

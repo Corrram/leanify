@@ -1015,6 +1015,68 @@ element, no element (so that `V = U ⊕ W` says that the sum is direct). -/
 def dsumS (U W : El → Prop) : El → Prop :=
   fun a => (∀ b, U b → W b → eqv b (.num 0)) ∧ sumS U W a
 
+/-- A Sylow `p`-subgroup of `G`, for a prime `p`: a subgroup of `G` that is a `p`-group and
+is contained in no larger `p`-subgroup of `G` (Mathlib `Sylow`). -/
+def SylowIn (p : ℝ) (G P : El → Prop) : Prop :=
+  (∃ k : ℕ, (k : ℝ) = p ∧ k.Prime) ∧ SubgroupOf G P ∧ PGroup p P ∧
+    ∀ Q, SubgroupOf G Q → PGroup p Q → (∀ a, P a → Q a) → ∀ a, Q a → P a
+
+/-! ### Quotients -/
+
+/-- The class of the point `x` of `S` modulo `N`: the points `y` of `S` with `x⁻¹y ∈ N` (a
+coset of a subgroup), or with `x - y ∈ N` (modulo an ideal or a subspace). -/
+def qClass (S N : El → Prop) (byProduct : Bool) (x : Pt) : Set Pt :=
+  {y | y ∈ carrier S ∧ N (if byProduct then mul (inv (at' S x)) (at' S y) else sub (at' S x) (at' S y))}
+
+/-- The chosen point of the class of `x` (`x` itself where the class is empty). -/
+def qRep (S N : El → Prop) (byProduct : Bool) (x : Pt) : Pt :=
+  if h : ∃ y, y ∈ qClass S N byProduct x then Classical.choose h else x
+
+/-- The points of the quotient: the chosen points of the classes of the points of `S`. -/
+def qCarrier (S N : El → Prop) (byProduct : Bool) : Set Pt :=
+  {z | ∃ x ∈ carrier S, z = qRep S N byProduct x}
+
+/-- The ring operations of `R/I`: those of `R` on the chosen points, followed by the chosen
+point of the class of the result; the inverse of a class that has one. -/
+def qROps (R I : El → Prop) : ROps :=
+  let o := opsOf R
+  let r := qRep R I false
+  let add := fun x y => r (o.add x y)
+  let mul := fun x y => r (o.mul x y)
+  let one := r o.one
+  ⟨add, r o.zero, fun x => r (o.neg x), mul, one,
+    fun x => if h : ∃ y ∈ qCarrier R I false, mul x y = one then Classical.choose h else r o.zero, none⟩
+
+/-- The operations of a quotient `S/N`: of a ring by an ideal (a ring, its own scalars), of a
+group by a normal subgroup (written either way), of a module by a subspace (with the scalars
+of the module). -/
+def qOps (S N : El → Prop) : Ops :=
+  let o := opsOf S
+  if IdealOf S N then
+    let q := qROps S N
+    { q.lift with scalars := qCarrier S N false, sops := q, smul := q.mul }
+  else if NormalIn S N then
+    let r := qRep S N true
+    let mul := fun x y => r (o.mul x y)
+    let inv := fun x => r (o.inv x)
+    { (default : Ops) with add := mul, zero := r o.one, neg := inv, mul := mul, one := r o.one, inv := inv }
+  else
+    let r := qRep S N false
+    let add := fun x y => r (o.add x y)
+    let neg := fun x => r (o.neg x)
+    let smul := fun c x => r (o.smul c x)
+    { (default : Ops) with add := add, zero := r o.zero, neg := neg, scalars := o.scalars, sops := o.sops, smul := smul }
+
+/-- The quotient `S/N` (Mathlib `HasQuotient`: `R ⧸ I`, `G ⧸ N`, `V ⧸ W`): one element for
+each class of `S` modulo `N`, with the operations of `S` on the classes. -/
+def quotS (S N : El → Prop) : El → Prop :=
+  fun a => ∃ x ∈ carrier S, a = .el (qOps S N) (qRep S N (if IdealOf S N then false else decide (NormalIn S N)) x)
+
+/-- `S/N` is meant for an ideal of a ring, a normal subgroup of a group, or a subspace of a
+module. -/
+def QuotientOk (S N : El → Prop) : Prop :=
+  IdealOf S N ∨ NormalIn S N ∨ (ModuleS S ∧ SubspaceOf S N ∧ opsOf N = opsOf S)
+
 end
 
 end Leanify.Structures

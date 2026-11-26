@@ -11,7 +11,7 @@ be a nonempty compact set.`, `every open subset $U$ of $\mathbb{R}$`) and writes
 * adjectives: `open`, `closed`, `compact`, `bounded`, `bounded above`, `bounded below`,
   `connected`, `dense`, `nowhere dense`, `perfect`, `discrete`, `finite`, `infinite`,
   `countable`, `uncountable`, `nonempty`, `empty`, `convex`, `measurable`,
-  `of measure zero`;
+  `of measure zero`, `dense in $B$`;
 * notions: the closure, interior, boundary and complement of a set, its limit points and
   isolated points, its supremum, infimum and diameter, its Lebesgue measure, its number
   of elements, the distance from a point to a set, and the Cantor set.
@@ -104,6 +104,9 @@ def vocab : Vocab where
     mod phrase!"bounded below" true (.const 4) "(Mathlib `BddBelow`)",
     mod phrase!"connected" true (.const 5) "an interval, possibly empty (Mathlib `IsPreconnected`)",
     mod phrase!"dense" true (.const 6) "(Mathlib `Dense`)",
+    mod phrase!"dense in $v$" false (close <| lamT S (fun _ => tt) fun b => lamT S (fun _ => tt) fun a =>
+        and (allR fun x => imp (app a x) (app b x)) (allR fun x => imp (app b x) (app (app (const 14) a) x)))
+      "a subset of `B` whose closure contains `B` (`\\mathbb{Q}` is dense in `\\mathbb{R}`; Mathlib `Dense` in the subspace)",
     mod phrase!"nowhere dense" true (.const 7) "the closure has empty interior (Mathlib `IsNowhereDense`)",
     mod phrase!"perfect" true (.const 8) "closed, without isolated points (Mathlib `Perfect`)",
     mod phrase!"discrete" true (sPred fun s => allR fun x => imp (app s x) (not (app (app (const 17) s) x)))

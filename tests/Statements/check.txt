@@ -140,9 +140,11 @@ tests/Statements/article.tex:498:1: info: claim 111: \forall x\in \mathbb{C}\to 
 tests/Statements/article.tex:502:103: info: claim 112: \forall x\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(x)\land (\forall s\in \mathbb{C},\ x(s+1)=x(s)\land x(s+\mathrm{i})=x(s))\Rightarrow \operatorname{Constant}((z\in \mathbb{C}\mapsto \top))(x)
 tests/Statements/article.tex:506:101: info: claim 113: \forall x\in \mathbb{C}\to \mathrm{Prop},\ \operatorname{Connected}(x)\land \operatorname{Open}(x)\Rightarrow (\forall y\in \mathbb{C}\to \mathbb{C},\ \operatorname{Holomorphic}(x)(y)\Rightarrow \operatorname{Holomorphic}(x)(y))
 tests/Statements/article.tex:506:204: info: claim 114: \forall x\in \mathbb{C}\to \mathrm{Prop},\ \operatorname{Open}(x)\land \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(y)\Rightarrow \operatorname{Holomorphic}(x)(y))
-tests/Statements/article.tex: 8 definitions, 115 claims
+tests/Statements/article.tex:510:1: info: claim 115: \exists x\in \mathbb{R},\ (0<x\land {x}^{2}=2)\land (\forall y\in \mathbb{R},\ 0<y\land {y}^{2}=2\Rightarrow y=x)
+tests/Statements/article.tex:510:44: info: claim 116: \exists x\in \mathbb{R},\ (\top\land {x}^{3}=2)\land (\forall y\in \mathbb{R},\ \top\land {y}^{3}=2\Rightarrow y=x)
+tests/Statements/article.tex: 8 definitions, 117 claims
   text: 9 compiled, 1 failed, 17 prose (of 27)
-  results: 115 compiled, 16 failed, 3 prose (of 134)
+  results: 117 compiled, 16 failed, 3 prose (of 136)
   proofs: 2 compiled, 0 failed, 0 prose (of 2)
-  all: 126 compiled, 17 failed, 20 prose (of 163)
+  all: 128 compiled, 17 failed, 20 prose (of 165)
   complete proofs: 1 of 1 (a result is derived from a proof that is read completely)

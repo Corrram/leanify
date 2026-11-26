@@ -3064,6 +3064,15 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
       let (unique, r) ← (kw [w!"exactly", w!"one"] r).map (true, ·) <|> (kw [w!"a", w!"unique"] r).map (true, ·) <|>
         (kw [w!"a"] r).map (false, ·) <|> (kw [w!"an"] r).map (false, ·) <|> (kw [w!"one"] r).map (false, ·)
       match r with
+      -- `there is a unique $y\in C$ with …`: one variable with its domain
+      | .m ts :: r1 =>
+        if !unique then none else
+        let ([_], _) ← binderMath ts | none
+        match followingProperty r1 <|> kw [w!"such", w!"that"] r1 <|> kw [w!"with"] r1 with
+        | some r2 => do
+          let (c, r4) ← suchThatClauses sub r2
+          some (Clause.existsNP [.m ts] true (some c), r4)
+        | none => if clauseEnd r1 then some (Clause.existsNP [.m ts] true none, r1) else none
       | .w _ :: _ =>
         -- the noun phrase ends at `such that` or at the end of the clause
         let rec upTo : Nat → List Chunk → List Chunk → Option (List Chunk × List Chunk)
@@ -5607,6 +5616,19 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     | _ => false
   if firstAfterPrep && (np.head?.map (fun c => match c with | .w _ => true | _ => false)).getD false then
     let v : Codes := w!"ve"
+    -- (with a formula after the complement, `every subgroup of $G$ of order $p$`, the variable
+    -- follows the noun's words: `subgroup $x$ of $G$ of order $p$`)
+    let rec headLen : Nat → List Chunk → Nat
+      | 0, _ => 0
+      | f + 1, cs => match cs with
+        | .w w :: r => if preps.contains w || [w!"that", w!"which", w!"such", w!"whose"].contains w then 0 else headLen f r + 1
+        | .p 45 :: r => headLen f r + 1
+        | .m _ :: .p 45 :: r => headLen f r + 2
+        | _ => 0
+    let k := headLen (np.length + 1) np
+    let afterComp := (np.drop k).drop 2
+    if afterComp.any (fun c => match c with | .m _ => true | _ => false) then
+      return [.w w!"for", .w w!"every"] ++ np.take k ++ [.m [.id v]] ++ np.drop k ++ [.p 44, .m [.id v]] ++ r1
     return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1
   match np.find? (fun c => match c with | .m _ => true | _ => false) with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
@@ -6432,9 +6454,36 @@ def sentence1 (cs : List Chunk) : Option Sent :=
             | some s => some s
             | none => pluralSubjSent cs >>= sentence0
 
+/-- `Sylow $p$-subgroup[s] [of $G$]` as `subgroup[s] [of $G$] with $p$ as Sylow prime`: the noun
+`subgroup` with its complement, and the modifier that says it is a Sylow `p`-subgroup of it
+(not after `number of`, a notion of its own). -/
+def sylowForms : Nat → List Chunk → List Chunk → List Chunk
+  | 0, _, cs => cs
+  | f + 1, prev, cs =>
+    match cs with
+    | .w s :: .m p :: .p 45 :: .w n :: rest =>
+      let afterNumber := match prev with
+        | .w o :: .w nb :: _ => o == w!"of" && nb == w!"number"
+        | _ => false
+      if lower s == w!"sylow" && (n == w!"subgroup" || n == w!"subgroups") && !afterNumber then
+        -- (a variable after the noun, `Sylow $p$-subgroup $P$ of $G$`, stays there)
+        let (var, rest) : List Chunk × List Chunk := match rest with
+          | .m v :: .w o :: r => if o == w!"of" then ([.m v], .w o :: r) else ([], rest)
+          | _ => ([], rest)
+        let (comp, rest') : List Chunk × List Chunk := match rest with
+          | .w o :: .m x :: r => if o == w!"of" then ([.w o, .m x], r) else ([], rest)
+          | _ => ([], rest)
+        let out : List Chunk := (.w n :: var ++ comp) ++ [.w w!"with", .m p, .w w!"as", .w w!"sylow", .w w!"prime"]
+        out ++ sylowForms f (out.reverse ++ prev) rest'
+      else .w s :: sylowForms f (.w s :: prev) (.m p :: .p 45 :: .w n :: rest)
+    | c :: rest => c :: sylowForms f (c :: prev) rest
+    | [] => []
+
 /-- A sentence; or, of `INFORMAL, that is, FORMAL`, the formal restatement read with the
 forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies …`). -/
 def sentence (cs : List Chunk) : Option Sent :=
+  let cs := if cs.any (fun c => match c with | .w s => lower s == w!"sylow" | _ => false) then
+    sylowForms (cs.length + 1) [] cs else cs
   match sentence1 cs with
   | some s => some s
   | none => skipThatIs cs >>= sentence1
