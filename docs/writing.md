@@ -611,6 +611,8 @@ form they stand for before the sentence is read, so they are read as that form:
 | `Neither $a$ nor $b$ is negative.` | `$a$ is not negative and $b$ is not negative.` |
 | `In particular, the metric space $X$ is a topological space.` | `$X$ is a metric space and $X$ is a topological space`: what `the NOUN` says of the symbol is a part of the claim |
 | `Let $x$ be real.`, `for all real $x$` | `Let $x$ be a real number.`, `for all real numbers $x$` |
+| `Let $g$ be an arbitrary element of $G$.`, `a given group`, `a fixed integer` | `Let $g$ be an element of $G$.`: the words say how the object is chosen, not what it is |
+| `a one-to-one map` | `an injective map` (not `one-to-one correspondence`, a bijection) |
 
 In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\defeq` are
 `\coloneqq`, `\backslash` and `\smallsetminus` are `\setminus`, `\thicksim` is `\sim`,

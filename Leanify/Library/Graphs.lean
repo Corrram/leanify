@@ -7,7 +7,9 @@ A graph is a finite simple graph whose vertices are the integers `1, …, n` (Ma
 binds graphs as it binds numbers (`Let $G$ be a connected graph on $n$ vertices.`) and names
 vertices by numbers (`$\deg_G(v)$ for $v\in V(G)$`, `\sum_{v=1}^{n}`).
 
-* nouns: `graph`, `simple graph`, `finite graph`, `tree`, `forest`;
+* nouns: `graph`, `simple graph`, `finite graph`, `tree`, `forest`, `spanning subgraph of $G$`,
+  `spanning tree of $G$` (a subgraph on other vertices is not a graph of this field: its
+  vertices would not be `1, …, m`);
 * adjectives: `connected`, `acyclic`, `bipartite`, `regular`, `complete`, `triangle-free`,
   `Hamiltonian`, `on $n$ vertices`, `with $m$ edges`, `$k$-regular`;
 * notions: the vertex set, the number of vertices and of edges, the degree of a vertex, the
@@ -62,6 +64,7 @@ def hamPath : Nat := 31
 def oddCycle : Nat := 32
 def numOddDeg : Nat := 33
 def numOfDeg : Nat := 34
+def spanningSub : Nat := 35
 end Const
 open Const
 
@@ -130,7 +133,7 @@ def vocab : Vocab where
     .real ⟶ .real ⟶ G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real,
     G ⟶ .real, G ⟶ .real, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop,
     .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ .real ⟶ G, G ⟶ G, .real ⟶ .real ⟶ G ⟶ .prop,
-    .real ⟶ G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .real, .real ⟶ G ⟶ .real]
+    .real ⟶ G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .real, .real ⟶ G ⟶ .real, G ⟶ G ⟶ .prop]
   constNames := [w!"#2\\in V(#1)", w!"\\lvert V(#)\\rvert", w!"\\lvert E(#)\\rvert", w!"\\deg_{#2}(#1)",
     w!"\\operatorname{Adj}", w!"\\operatorname{dist}", w!"\\delta", w!"\\Delta", w!"\\chi", w!"\\omega",
     w!"\\alpha", w!"\\operatorname{c}", w!"\\operatorname{diam}", w!"\\operatorname{girth}",
@@ -139,7 +142,8 @@ def vocab : Vocab where
     w!"\\operatorname{Hamiltonian}", w!"K_{#}", w!"C_{#}", w!"P_{#}", w!"\\overline{K_{#}}", w!"K_{#1,#2}",
     w!"\\overline{#}", w!"\\operatorname{Reachable}", w!"\\operatorname{Colorable}", w!"\\operatorname{Eulerian}",
     w!"\\operatorname{EulerTrail}", w!"\\operatorname{HamiltonianPath}", w!"\\operatorname{OddCycle}",
-    w!"\\lvert V_{\\mathrm{odd}}(#)\\rvert", w!"\\lvert\\{v:\\deg(v)=#1\\}\\rvert"]
+    w!"\\lvert V_{\\mathrm{odd}}(#)\\rvert", w!"\\lvert\\{v:\\deg(v)=#1\\}\\rvert",
+    w!"\\operatorname{SpanningSub}"]
   constLean := [w!"Leanify.Graphs.IsVertex", w!"Leanify.Graphs.numVertices", w!"Leanify.Graphs.numEdges",
     w!"Leanify.Graphs.degree", w!"Leanify.Graphs.Adjacent", w!"Leanify.Graphs.dist", w!"Leanify.Graphs.minDegree",
     w!"Leanify.Graphs.maxDegree", w!"Leanify.Graphs.chromaticNumber", w!"Leanify.Graphs.cliqueNumber",
@@ -150,7 +154,7 @@ def vocab : Vocab where
     w!"Leanify.Graphs.pathGraph", w!"Leanify.Graphs.emptyGraph", w!"Leanify.Graphs.completeBipartite",
     w!"Leanify.Graphs.complement", w!"Leanify.Graphs.Reachable", w!"Leanify.Graphs.Colorable", w!"Leanify.Graphs.Eulerian",
     w!"Leanify.Graphs.EulerTrail", w!"Leanify.Graphs.HamiltonianPath", w!"Leanify.Graphs.OddCycle",
-    w!"Leanify.Graphs.numOddDegree", w!"Leanify.Graphs.numOfDegree"]
+    w!"Leanify.Graphs.numOddDegree", w!"Leanify.Graphs.numOfDegree", w!"Leanify.Graphs.SpanningSub"]
   typeLean := [(w!"Leanify.Graphs.Graph", w!"Leanify.Graphs.Graph.empty")]
   modules := [w!"Leanify.Library.GraphsModel"]
   nouns := [
@@ -160,6 +164,12 @@ def vocab : Vocab where
     nounG phrase!"finite simple graph" phrase!"finite simple graphs" anyGraph "(Mathlib `SimpleGraph (Fin n)`)",
     nounG phrase!"tree" phrase!"trees" (gPred fun g => app (const isTree) g) "connected and acyclic (Mathlib `SimpleGraph.IsTree`)",
     nounG phrase!"forest" phrase!"forests" (gPred fun g => app (const acyclic) g) "acyclic (Mathlib `SimpleGraph.IsAcyclic`)",
+    { nounG phrase!"spanning subgraph" phrase!"spanning subgraphs" anyGraph
+        "the same vertices, and edges among those of `G` (Mathlib `SimpleGraph` `≤`)" with
+      arg := some ([w!"of"], G, close <| lamT G (fun _ => tt) fun g => lamT G (fun _ => tt) fun h => app2 (const spanningSub) g h) },
+    { nounG phrase!"spanning tree" phrase!"spanning trees" (gPred fun g => app (const isTree) g)
+        "a spanning subgraph that is a tree" with
+      arg := some ([w!"of"], G, close <| lamT G (fun _ => tt) fun g => lamT G (fun _ => tt) fun h => app2 (const spanningSub) g h) },
     { vertexNoun phrase!"vertex" phrase!"vertices" (fun _ _ => tt) "`v ∈ V(G)`" with
       arg := some ([w!"of", w!"in"], G, close <| lamT G (fun _ => tt) fun g => lamR fun v => vert v g) },
     vertexNoun phrase!"leaf" phrase!"leaves" (fun v g => eq (app2 (const degree) v g) (num 1)) "a vertex of degree `1`",

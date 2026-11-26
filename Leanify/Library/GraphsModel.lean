@@ -93,6 +93,11 @@ def numOddDegree (G : Graph) : ℝ := Nat.card {i : Fin G.1 // ∃ k : ℕ, degr
 /-- The number of vertices of degree `k`. -/
 def numOfDegree (k : ℝ) (G : Graph) : ℝ := Nat.card {i : Fin G.1 // degree ((i : ℝ) + 1) G = k}
 
+/-- `H` is a spanning subgraph of `G`: the same vertices, and every edge of `H` is an edge of
+`G` (Mathlib `SimpleGraph` `≤`). -/
+def SpanningSub (G H : Graph) : Prop :=
+  ∃ h : H.1 = G.1, ∀ i j : Fin H.1, H.2.Adj i j → G.2.Adj (Fin.cast h i) (Fin.cast h j)
+
 end
 
 end Leanify.Graphs

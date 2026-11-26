@@ -600,6 +600,19 @@ def annotatedRel : Nat → List PTok → List PTok
       | _ => keep
     | [] => keep
 
+/-- `one-to-one` as `injective` (not in `one-to-one correspondence`, a bijection). -/
+def oneToOne : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    match Grammar.textWord t, ts with
+    | some o1, h1 :: t2 :: h2 :: o2 :: rest =>
+      if o1 == w!"one" && h1.tok == .punct 45 && Grammar.textWord t2 == some w!"to" && h2.tok == .punct 45 &&
+          Grammar.textWord o2 == some w!"one" && !(rest.head?.any fun u => Grammar.textWord u == some w!"correspondence") then
+        ⟨.word w!"injective", t.pos, false⟩ :: oneToOne f rest
+      else t :: oneToOne f ts
+    | _, _ => t :: oneToOne f ts
+
 /-- The number of letters in the formulas between a `let` and a `be`, from the tokens before
 `be` (the latest first); `none` if a token that is not a letter, a comma, `and` or `let`
 comes first. -/
@@ -1175,7 +1188,7 @@ def knownHead (V : Vocab) (own : List (List Codes × Nat)) (ws : List Codes) :
         if r.length < cs.length then some r else none)
   let modAt (cs : List Chunk) : Option (List Chunk) :=
     match cs with
-    | .w w :: r => if w == w!"fixed" then some r else
+    | .w w :: r => if w == w!"fixed" || w == w!"arbitrary" || w == w!"given" then some r else
       shortest (V.mods.filterMap fun m => if m.prenominal then
           (matchPhrase m.phrase cs).bind fun (v, r) =>
             if v.isNone && r.length < cs.length then some r else none
@@ -1799,7 +1812,10 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let fixedNoun := match c with
         | .w w' => V0.nouns.any fun n => (n.sing.take 2 == [.w w!"fixed", .w w'] || n.plural.take 2 == [.w w!"fixed", .w w'])
         | _ => false
-      if w == w!"fixed" && !fixedNoun then c :: rest else np
+      if w == w!"fixed" && !fixedNoun then c :: rest
+      -- (`an arbitrary element of $G$`, `a given group`: the same noun phrase)
+      else if (w == w!"arbitrary" || w == w!"given") && (match c with | .w _ => true | _ => false) then c :: rest
+      else np
     | _ => np
   -- `a continuous function $f$ on $[0,1]$`: the function `f\colon[0,1]\to\mathbb{R}`
   -- (not where the vocabulary has a noun `… function on …` with the word before,
@@ -7746,6 +7762,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- connected metric space)
   let s := { s with toks := Notation.dropUnconstraining (s.toks.length + 1) s.toks }
   let s := { s with toks := Notation.dropCounts s.toks }
+  let s := { s with toks := Notation.oneToOne (s.toks.length + 1) s.toks }
   -- (`{n\choose k}`, `\stackrel{(a)}{\le}`)
   let s := { s with toks := Notation.annotatedRel (s.toks.length + 1) (Notation.chooseBinom (s.toks.length + 1) s.toks) }
   let s := { s with toks := Notation.unbraceFont (s.toks.length + 1) s.toks }

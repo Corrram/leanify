@@ -26,6 +26,8 @@ import Mathlib.GroupTheory.SpecificGroups.Alternating
 import Mathlib.Algebra.Group.Conj
 import Mathlib.Data.ZMod.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Topology.MetricSpace.Polish
+import Mathlib.Topology.LocallyClosed
 
 /-! # The meaning of the field `structures`
 
@@ -892,6 +894,40 @@ def FixedPointOf (φ : Map) (a : El) : Prop := φ.dom a ∧ eqv (apply φ a) a
 /-- `[A:B]`: the degree of a field extension where both are fields, the index of a
 subgroup otherwise. -/
 def bracketIndex (A B : El → Prop) : ℝ := if IsFieldS A ∧ IsFieldS B then degree A B else index A B
+
+/-! ### More spaces and maps -/
+
+/-- A Polish space: separable and completely metrizable (Mathlib `PolishSpace`). -/
+def PolishS : (El → Prop) → Prop := topHas fun α t => letI := t; PolishSpace α
+
+/-- A geodesic metric space: any two points `x`, `y` are joined by a path of length
+`d(x,y)` parametrized by arc length, `γ : [0, d(x,y)] → X` with `γ(0) = x`, `γ(d(x,y)) = y` and
+`d(γ(s), γ(t)) = |s - t|`. -/
+def GeodesicS : (El → Prop) → Prop := metricHas fun α m => letI := m;
+  ∀ x y : α, ∃ γ : ℝ → α, γ 0 = x ∧ γ (Dist.dist x y) = y ∧
+    ∀ s t : ℝ, 0 ≤ s → s ≤ Dist.dist x y → 0 ≤ t → t ≤ Dist.dist x y → Dist.dist (γ s) (γ t) = |s - t|
+
+/-- `A` is a locally closed subset of the space `X`: the intersection of an open and a closed
+set of `X` (Mathlib `IsLocallyClosed`). -/
+def LocallyClosedIn (X A : El → Prop) : Prop :=
+  (∀ a, A a → X a) ∧ Uniform X ∧ ∃ t, TopOn X t ∧ @IsLocallyClosed (carrier X) t {x | x.1 ∈ carrier A}
+
+/-- An open map: the image of an open set of the domain is open in the codomain (Mathlib
+`IsOpenMap`, for the topologies of the domain and the codomain). -/
+def OpenMapM (φ : Map) : Prop :=
+  ∀ V ∈ (opsOf φ.dom).opens, ∃ W ∈ (opsOf φ.cod).opens, ∀ y ∈ carrier φ.cod,
+    (y ∈ W ↔ ∃ x ∈ V, x ∈ carrier φ.dom ∧ eqv (apply φ (.el (opsOf φ.dom) x)) (.el (opsOf φ.cod) y))
+
+/-- A quasi-isometric embedding: there are `L ≥ 1` and `C ≥ 0` with
+`d(x,y)/L - C ≤ d(φ(x),φ(y)) ≤ L d(x,y) + C` for all points `x`, `y` of the domain. -/
+def QuasiIsoEmbM (φ : Map) : Prop :=
+  ∃ L C : ℝ, 1 ≤ L ∧ 0 ≤ C ∧ ∀ a b, φ.dom a → φ.dom b →
+    dist a b / L - C ≤ dist (apply φ a) (apply φ b) ∧ dist (apply φ a) (apply φ b) ≤ L * dist a b + C
+
+/-- A quasi-isometry: a quasi-isometric embedding whose image is within a bounded distance of
+every point of the codomain. -/
+def QuasiIsometryM (φ : Map) : Prop :=
+  QuasiIsoEmbM φ ∧ ∃ D : ℝ, 0 ≤ D ∧ ∀ b, φ.cod b → ∃ a, φ.dom a ∧ dist (apply φ a) b ≤ D
 
 end
 

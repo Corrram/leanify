@@ -35,7 +35,9 @@ tests/Graphs/article.tex:73:77: info: claim 17 is meaningful if: \forall x\in \m
 tests/Graphs/article.tex:77:1: info: claim 18: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\Rightarrow \operatorname{Colorable}(2)(x)
 tests/Graphs/article.tex:81:49: info: claim 19: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\Rightarrow (\forall y\in \mathbb{R},\ y\in V(x)\land \deg_{x}(y)=1\Rightarrow y\in V(x)\land \deg_{x}(y)=1)
 tests/Graphs/article.tex:85:1: info: claim 20: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\land 2\le \lvert V(x)\rvert\Rightarrow 2\le \lvert\{v:\deg(v)=1\}\rvert
-tests/Graphs/article.tex: 8 definitions, 21 claims
+tests/Graphs/article.tex:89:69: info: claim 21: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \operatorname{SpanningSub}(x)(y)\Rightarrow \operatorname{Tree}(y))
+tests/Graphs/article.tex:89:128: info: claim 22: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \operatorname{SpanningSub}(x)(y)\Rightarrow (\forall z\in \mathrm{Graph},\ \operatorname{SpanningSub}(x)(z)\Rightarrow \top))
+tests/Graphs/article.tex: 8 definitions, 23 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 25 compiled, 0 failed, 0 prose (of 25)
-  all: 33 compiled, 0 failed, 0 prose (of 33)
+  results: 29 compiled, 0 failed, 0 prose (of 29)
+  all: 37 compiled, 0 failed, 0 prose (of 37)
