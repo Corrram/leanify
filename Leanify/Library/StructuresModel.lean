@@ -987,6 +987,20 @@ elements, with the product (Mathlib `Units`). -/
 def unitsS (R : El → Prop) : El → Prop :=
   fun a => ∃ x, UnitIn R (.el (opsOf R) x) ∧ a = .el (unitOps (opsOf R)) x
 
+
+/-- A convex subset of a real vector space: with any two of its points, the segment between them
+(`ta + (1 - t)b` for `0 ≤ t ≤ 1`; Mathlib `Convex ℝ`). -/
+def ConvexS (C : El → Prop) : Prop :=
+  ∀ a b, C a → C b → ∀ t : ℝ, 0 ≤ t → t ≤ 1 → C (add (mul (.num t) a) (mul (.num (1 - t)) b))
+
+
+/-- A bounded map: of a linear map between normed spaces, `‖φ(a)‖ ≤ C‖a‖` for some `C`
+(Mathlib `ContinuousLinearMap`, a bounded linear operator); of any other map, its values
+lie within a bounded distance of each other (a bounded range, Mathlib `Bornology.IsBounded`). -/
+def BoundedM (φ : Map) : Prop :=
+  (LinearM φ → ∃ C : ℝ, ∀ a, φ.dom a → norm (apply φ a) ≤ C * norm a) ∧
+  (¬ LinearM φ → ∃ D : ℝ, ∀ a b, φ.dom a → φ.dom b → dist (apply φ a) (apply φ b) ≤ D)
+
 end
 
 end Leanify.Structures

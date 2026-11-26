@@ -1941,7 +1941,11 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             let head := ws.take (ws.length - k)
             let tail := ws.drop (ws.length - k)
             if !words head then none else
-            if V.mods.any (fun m => !m.prenominal && Notation.hasSlots m.phrase &&
+            -- (not a noun after a formula, `$p$-group`: the formula is a modifier before it)
+            let nounEnd := match tail with
+              | [.m _, .p 45, .w w] => V.nouns.any fun n => n.sing == [.w w] || n.plural == [.w w]
+              | _ => false
+            if !nounEnd && V.mods.any (fun m => !m.prenominal && Notation.hasSlots m.phrase &&
                 (Notation.matchSlots m.phrase tail []).isSome) then some k else
             -- (a noun's complement, `subgroup of $G$ $H$`)
             match tail with
@@ -2212,6 +2216,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
                 | _ => false
               let numeral := match ts.head? with | some (.digit _) => true | _ => false
               if !relation && (numeral || ts.contains (.cmd w!"times")) then fail E.type
+              -- (a formula before a hyphen, `a finite $p$-group`: a modifier of the noun after it)
+              if (match r with | .p 45 :: _ => true | _ => false) then fail E.type
               -- (`every positive $n$`: an index name is usually an integer; without a
               -- domain, what it ranges over is not said)
               let stI ← get
@@ -2589,7 +2595,7 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
 (`positive integers $a_1,\ldots,a_n$`, `integers $a_1,\ldots,a_n\ge1$`) binds the
 sequence `a`, each of whose terms `a_i`, for the integers `i` from the first index to the
 last, is as the noun phrase says of a single variable. -/
-def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+def nounPhraseCore (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `Let $S$ be the set of [all] subgroups of $G$.`, `… the class of open subsets of $X$`: the
   -- set of the objects that the noun phrase describes (`x ∈ S` exactly for them)
   let setOf : Option (Codes × List Chunk) := match np with
@@ -2636,6 +2642,41 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     let b ← nounPhrase1 np outer
     modify fun st => { st with seqs := st.seqs.filter (·.1 != b.name) }
     pure b
+
+/-- `nounPhraseCore`, and an adjective that the vocabulary has relative to a structure only. -/
+def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  let st00 ← get
+  tryCatch (nounPhraseCore np outer) fun e00 => do
+  set st00
+  -- `a closed subspace of $X$`, `a dense subset of $X$`: an adjective that the vocabulary has
+  -- relative to a structure only (`closed in $X$`), relative to the noun's complement
+  let V0 := (← get).vocab
+  -- (the leading words of the noun phrase, before its complement `of $X$`)
+  let k := (np.findIdx? fun c => match c with | .w w => w == w!"of" | _ => true).getD np.length
+  -- (the noun's variable may come before the complement: `closed subspace $Y$ of $X$`)
+  let comp : Option (List MTok) := match np.drop k with
+    | .w o :: .m x :: _ => if o == w!"of" then some x else none
+    | .m [.id _] :: .w o :: .m x :: _ => if o == w!"of" then some x else none
+    | _ => none
+  let rels : List (Nat × Modifier) := ((np.take k).zipIdx.filterMap fun (c, i) => match c with
+    | .w a => (V0.mods.find? fun m => !m.prenominal && m.phrase == [.w a, .w w!"in", .v] &&
+        !V0.mods.any (fun m' => m'.prenominal && m'.phrase == [.w a] && m'.ty == m.ty)).map (i, ·)
+    | _ => none)
+  if let some x := comp then
+    if !rels.isEmpty && rels.length < k then
+      let st0 ← get
+      let rest := np.zipIdx.filterMap fun (c, i) => if rels.any (·.1 == i) then none else some c
+      let r ← tryCatch (do
+          let b ← nounPhraseCore rest outer
+          let some mx := Math.parseFormula x | fail E.unsupported
+          let sc : Scope := [([], b.ty)] ++ (if outer.isEmpty then [] else [([], b.ty)]) ++ outer
+          let (a, aty) ← Elab.term 100000 sc none mx
+          let ps ← rels.mapM fun (_, m) => do
+            if b.ty != m.ty || some aty != (Notation.slotTys 1 m.pred).head? then fail E.type
+            pure (Tm.lam b.ty .tt (Notation.betaApply m.pred [a, .loc 0]))
+          pure (some { b with pred := conjPreds b.ty (b.pred.toList ++ ps) })) fun _ => do set st0; pure none
+      if let some b := r then return b
+  throw e00
 
 /-- The subformulas of a formula. -/
 def mtChildren : MT → List MT
@@ -2956,6 +2997,11 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
         | _ => false
       let varOfNoun := np.any fun c => match c with | .m [.id w] => w == v | _ => false
       if !single || !inPhrase || (outer.any (·.1 == v)) then throw e
+      -- (not the prime of a `$p$-group`: a prime that the sentence binds, not any number)
+      let pGroupLetter := (List.range np.length).any fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk), (np[i + 2]? : Option Chunk) with
+        | some (.m [.id u]), some (.p 45), some (.w g) => u == v && [w!"group", w!"groups", w!"subgroup", w!"subgroups"].contains g
+        | _, _, _ => false
+      if pGroupLetter then throw e
       -- (not the noun's own variable: `a graph $n$`)
       if varOfNoun && (np.filter fun c => match c with | .m _ => true | _ => false).length < 2 then throw e
       set st0

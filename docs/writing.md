@@ -654,6 +654,10 @@ object that is not in use:
 | in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
 | `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |
 | `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |
+| `Let $T$ be a linear operator between normed spaces.` | `Let $X$ be a normed space, let $Y$ be a normed space and let $T\colon X\to Y$ be a linear operator.` |
+| `For all vectors $x$ and $y$ in an inner product space, …` | `For every inner product space $X$ and every vector $x$ in $X$ and every vector $y$ in $X$, …` |
+| `Every subgroup of index $2$ is normal.` | `For every group $X$ and every subgroup $Y$ of $X$ of index $2$ in $X$, $Y$ is normal.` |
+| `Let $G$ be a finite $p$-group.`, with a new letter `p` | `Let $p$ be a prime and let $G$ be a finite $p$-group.` (the letter of a `$p$-group` is a prime, not any number) |
 | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ attains its maximum and its minimum.`, `$f$ attains its maximum on $[a,b]$` | `For every continuous function $f\colon[a,b]\to\mathbb{R}$, there is $c\in[a,b]$ such that $f(x)\le f(c)$ for all $x\in[a,b]$, and there is …` (the domain is the signature's, or written after `on`) |
 | `Every continuous function on $[a,b]$ is …` | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ is …` |
 | `In a principal ideal domain, every irreducible element is prime.` | `For every principal ideal domain $X$, every irreducible element of $X$ is prime.` |
@@ -669,7 +673,11 @@ The complement is implied by the variable's domain (`a subgroup $H\le G$`, `an e
 $g\in G$`) and, after `is`, by the complement the subject was introduced with: of an ideal `I`
 of `R`, `$I$ is a prime ideal` and `$I$ is prime` say that `I` is a prime ideal of `R`; of a
 subgroup `H` of `G`, `$H$ is a normal subgroup` that `H` is normal in `G`. `vector space` and
-`module` without `over $K$` are over their scalars, some field (some ring).
+`module` without `over $K$` are over their scalars, some field (some ring). An adjective that
+the vocabulary has only relative to a structure is relative to the noun's complement: `a
+closed subspace of $X$` is a subspace of `X` closed in `X` (`dense`, `normal`, `prime`, …).
+`orthogonal` (`pairwise`, `mutually`) of several vectors (`Let $x$ and $y$ be orthogonal
+vectors in $H$`) says that any two of them are orthogonal; of matrices, each is orthogonal.
 
 ### Notions that the article defines in words that are not read
 

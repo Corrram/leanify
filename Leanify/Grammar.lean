@@ -197,7 +197,11 @@ def collectiveWords : Nat → List Chunk → List Chunk × List Codes
       ((kw [w!"identically", w!"distributed"] ws).map (w!"identically distributed", ·)) <|>
       -- (of vectors: the family)
       ((kw [w!"linearly", w!"independent"] ws).map (w!"linearly independent", ·)) <|>
-      ((kw [w!"linearly", w!"dependent"] ws).map (w!"linearly dependent", ·))
+      ((kw [w!"linearly", w!"dependent"] ws).map (w!"linearly dependent", ·)) <|>
+      -- (of vectors of an inner product space: any two; `orthogonal matrices` are each orthogonal)
+      (if !(ws.any fun c => match c with | .w w => w == w!"vectors" || w == w!"elements" | _ => false) then none else
+        (kw [w!"pairwise", w!"orthogonal"] ws <|> kw [w!"mutually", w!"orthogonal"] ws <|> kw [w!"orthogonal"] ws).map
+          (w!"orthogonal", ·))
     match found, ws with
     | some (p, rest), _ => let (ws', ps) := collectiveWords f rest; (ws', p :: ps)
     | none, c :: rest => let (ws', ps) := collectiveWords f rest; (c :: ws', ps)
@@ -210,6 +214,7 @@ coprime`; `coprime` of exactly two variables: of more it is ambiguous). -/
 def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
   let pairCond (p : Codes) (a b : MT) : MT :=
     if p == w!"distinct" then .chain a [(.ne, b)]
+    else if p == w!"orthogonal" then .chain (.app (.id w!"@inner") [a, b]) [(.eq, .num 0)]
     else .chain (.app (.id w!"\\gcd") [.tuple [a, b]]) [(.eq, .num 1)]
   let name (v : List MTok) : List MTok := v.takeWhile fun t => (Math.relOf t).isNone
   -- (random variables: independent, identically distributed, both)
@@ -6637,7 +6642,11 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
         front ++ [sig (mapLetter [x, y]) x y] ++ after2)
     else
       let (chain, after) := nestChain 4 after
-      some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.p 44, .w q] ++ front ++ [.w prep, .m [.id x]] ++ after)
+      -- (the object of the noun phrase, with a letter: `For every cyclic group $X$ and every
+      -- subgroup $Y$ of $X$, $Y$ is cyclic.`)
+      let y := fresh 1
+      some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.w w!"and", .w w!"every"] ++ front ++
+        [.m [.id y], .w prep, .m [.id x], .p 44, .m [.id y]] ++ after)
   -- `the continuous image of a NP is …`
   let image : Option (List Chunk) := do
     let r ← kw [w!"the", w!"continuous", w!"image", w!"of"] cs
@@ -6711,6 +6720,16 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | .m [.id v] :: r => (v, r)
       | _ => (fresh 0, after)
     let (chain, after) := nestChain 4 after
+    -- (several variables: each with its own binder, `every vector $x$ in $X$ and every vector $y$
+    -- in $X$`)
+    let names := vars.filterMap fun c => match c with | .m [.id v] => some v | _ => none
+    if names.length > 1 then
+      let .w last := (← np1.getLast?) | none
+      let one := np1.dropLast ++ [.w ((DefForm.singular last).getD last)]
+      let each := names.map fun v => [.w w!"every"] ++ one ++ [.m [.id v], .w prep, .m [.id y]]
+      some ([.w w!"for", .w w!"every"] ++ np3 ++ [.m [.id y]] ++ chain ++ [.w w!"and"] ++
+        (each.intersperse [.w w!"and"]).flatten ++ after)
+    else
     some ([.w w!"for", .w w!"every"] ++ np3 ++ [.m [.id y]] ++ chain ++ [.w w!"and", .w q] ++ np1 ++ vars ++ [.w prep, .m [.id y]] ++ after)
   -- `Let VARS be a NP1 PREP a NP2 …`
   let letB : Option (List Chunk) := do
@@ -6929,8 +6948,52 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | .w p :: _ => if [w!"of", w!"in", w!"over"].contains p then [] else [.w w!"of", .m [.id x]]
       | _ => [.w w!"of", .m [.id x]]
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w q] ++ np1 ++ comp ++ after)
+  -- `Let $T$ be a linear operator between normed spaces.`: `Let $X$ be a normed space, let $Y$
+  -- be a normed space and let $T\colon X\to Y$ be a linear operator.`
+  let between : Option (List Chunk) := do
+    let r ← kw [w!"let"] cs
+    let .m [.id v] :: .w be :: .w det :: r1 := r | none
+    if be != w!"be" || !isIndef (.w det) then none
+    let i ← r1.findIdx? fun ch => match ch with | .w w => w == w!"between" | _ => false
+    let front := r1.take i
+    if !plainWords front then none
+    let (np2, after) := nestNP (r1.length + 1) [] (r1.drop (i + 1))
+    let .w last := (← np2.getLast?) | none
+    let one := np2.dropLast ++ [.w ((DefForm.singular last).getD last)]
+    let x := fresh 0
+    let y := fresh 1
+    some ([.w w!"let", .m [.id x], .w w!"be", .w w!"a"] ++ one ++ [.p 44, .w w!"let", .m [.id y], .w w!"be", .w w!"a"] ++ one ++
+      [.w w!"and", .w w!"let", sig v x y, .w w!"be", .w det] ++ front ++ after)
+  -- `Every subgroup of index $2$ is normal.`: of every group, `For every group $X$, every subgroup
+  -- of $X$ of index $2$ in $X$ is normal.`
+  let ofIndex : Option (List Chunk) := do
+    let .w q :: rest := cs | none
+    if ![w!"every", w!"each", w!"any"].contains q then none
+    let i ← rest.findIdx? fun ch => match ch with | .w w => w == w!"of" | _ => false
+    let front := rest.take i
+    if !(plain front == [w!"subgroup"] || plain front == [w!"normal", w!"subgroup"]) then none
+    let .w ix :: .m n :: after := rest.drop (i + 1) | none
+    if ix != w!"index" then none
+    let x := fresh 0
+    let h := fresh 1
+    some ([.w w!"for", .w w!"every", .w w!"group", .m [.id x], .w w!"and", .w w!"every"] ++ front ++
+      [.m [.id h], .w w!"of", .m [.id x], .w w!"of", .w w!"index", .m n, .w w!"in", .m [.id x], .p 44, .m [.id h]] ++ after)
+  -- `Let $G$ be a finite $p$-group.`, with a new letter `p`: `Let $p$ be a prime and let $G$ be …`
+  let pGroup : Option (List Chunk) := do
+    let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk), (cs[i + 2]? : Option Chunk) with
+      | some (.m [.id _]), some (.p 45), some (.w g) => g == w!"group" || g == w!"groups" || g == w!"subgroup" || g == w!"subgroups"
+      | _, _, _ => false
+    let .m [.id p] := (← cs[i]?) | none
+    let before : List Codes := (cs.take i).flatMap fun ch => match ch with
+      | .m ts => ts.filterMap fun t => match t with | .id v => some v | _ => none
+      | _ => []
+    if avoid.contains p || before.contains p then none
+    let .w l :: _ := cs | none
+    if l == w!"let" then some ([.w w!"let", .m [.id p], .w w!"be", .w w!"a", .w w!"prime", .w w!"and"] ++ cs)
+    else if [w!"every", w!"each", w!"any"].contains l then some ([.w w!"for", .w w!"every", .w w!"prime", .m [.id p], .p 44] ++ cs)
+    else none
   image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> inA <|>
-    genericB <|> appositive <|> eitherOr
+    between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr
 
 /-- The readings of `nestedIndef`, one step after another (the last first), as readings of
 the sentence where its own reading does not compile. -/

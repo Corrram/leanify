@@ -32,12 +32,14 @@ are bound by their signatures.
   homomorphism`, `linear map`, `continuous map`, `uniformly continuous map`, `homeomorphism`,
   `isometry`, `isometric embedding`, `quasi-isometric embedding`, `quasi-isometry`, `open
   map`, `monotone map`; and the adjectives `injective` (`one-to-one`), `continuous`,
-  `uniformly continuous`, `linear`, `isometric`, `quasi-isometric`, `open`, `monotone`;
+  `uniformly continuous`, `bounded` (of a linear map, a bounded operator), `linear`,
+  `isometric`, `quasi-isometric`, `open`, `monotone`; of sequences, `orthonormal`;
 * adjectives of structures: `abelian`, `commutative`, `cyclic`, `simple`, `solvable`,
   `nilpotent`, `finite`, `infinite`, `countable`, `trivial`, `nontrivial`, `Noetherian`,
   `reduced`, `algebraically closed`, `perfect`, `Hausdorff`, `compact`, `connected`,
   `path-connected`, `locally compact`, `sequentially compact`, `second countable`, `separable`, `metrizable`,
   `discrete`, `regular`, `normal`, `complete`, `totally bounded`, `bounded`, `open`, `Polish`,
+  `convex` (of a real vector space), `nonempty`, `$p$-` before `group` (`a finite $p$-group`),
   `geodesic`, `$d$-dimensional`; and `of order $n$`, `of characteristic $p$`, `isomorphic to
   $H$`, `$p$-group`, `locally closed in $X$`;
 * notions: the order of a group and of an element, the index of a subgroup, the centre, the
@@ -280,7 +282,9 @@ def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ .prop, w!"\\operatorname{SeqCompact}", w!"Leanify.Structures.SeqCompactS"),          -- 207
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Irreducible}", w!"Leanify.Structures.IrreducibleIn"),  -- 208
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Prime}", w!"Leanify.Structures.PrimeElIn"),            -- 209
-  (S ⟶ S, w!"#^\\times", w!"Leanify.Structures.unitsS")]                                     -- 210
+  (S ⟶ S, w!"#^\\times", w!"Leanify.Structures.unitsS"),                                     -- 210
+  (S ⟶ .prop, w!"\\operatorname{Convex}", w!"Leanify.Structures.ConvexS"),                      -- 211
+  (M ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedM")]                      -- 212
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -544,6 +548,8 @@ def vocab : Vocab where
     noun phrase!"finitely generated abelian group" phrase!"finitely generated abelian groups"
       (sP fun g => and (app (const 173) g) (app (lift comm) g)) "(Mathlib `AddGroup.FG`)",
     nounOf phrase!"finitely generated module" phrase!"finitely generated modules" [w!"over"] (sP fun _ => tt) (relC 174) "(Mathlib `Module.Finite`)",
+    nounOf phrase!"finite module" phrase!"finite modules" [w!"over"] (sP fun _ => tt) (relC 174)
+      "a finitely generated module, as commutative algebra says (`a finite $A$-module`; Mathlib `Module.Finite`)",
     nounOf phrase!"finitely generated field extension" phrase!"finitely generated field extensions" [w!"of"] isField (relC 175)
       "(Mathlib `IntermediateField.FG`)",
     nounOf phrase!"finitely generated extension" phrase!"finitely generated extensions" [w!"of"] isField (relC 175)
@@ -615,6 +621,13 @@ def vocab : Vocab where
     adjS phrase!"second-countable" (c 76) "(Mathlib `SecondCountableTopology`)",
     adjS phrase!"Polish" (c 197) "(Mathlib `PolishSpace`)",
     adjS phrase!"sequentially compact" (c 207) "every sequence has a convergent subsequence (Mathlib `SeqCompactSpace`)",
+    adjS phrase!"convex" (c 211) "of a real vector space: with two points, the segment between them (Mathlib `Convex ℝ`)",
+    adjS phrase!"nonempty" (sP fun s => exT E fun a => app s a) "with an element (Mathlib `Set.Nonempty`)",
+    { phrase := phrase!"orthonormal", prenominal := true, ty := Q,
+      pred := close (lamT Q (fun _ => tt) fun q => allR fun m => allR fun n => imp (and (isNat m) (isNat n))
+        (and (imp (eq m n) (eq (app2 (const 139) (app q m) (app q n)) (num 1)))
+          (imp (not (eq m n)) (eq (app2 (const 139) (app q m) (app q n)) (num 0))))),
+      doc := "of an inner product space: `⟪e_m, e_n⟫ = 1` if `m = n`, `0` otherwise (Mathlib `Orthonormal`)" },
     adjS phrase!"geodesic" (c 198) "any two points are joined by a geodesic",
     postS phrase!"locally closed in $v$" (close <| lamT S (fun _ => tt) fun x => lamT S (fun _ => tt) fun a => app2 (const 199) x a)
       "(Mathlib `IsLocallyClosed`)",
@@ -677,6 +690,9 @@ def vocab : Vocab where
     postS phrase!"isomorphic to $v$" (close <| lamT S (fun _ => tt) fun h => lamT S (fun _ => tt) fun g => app2 (const 36) g h) "(Mathlib `MulEquiv`)",
     postS phrase!"$v$-group" (close <| lamR fun p => lamT S (fun _ => tt) fun g => and (app (lift Core.posInt) p) (app2 (const 17) p g))
       "every element has order a power of `p` (Mathlib `IsPGroup`)",
+    { phrase := phrase!"$v$-", prenominal := true, ty := S,
+      pred := close <| lamR fun p => lamT S (fun _ => tt) fun g => and (app (lift Core.posInt) p) (app2 (const 17) p g),
+      doc := "`a $p$-group`, `a finite $p$-group`: a group whose elements have orders powers of `p` (Mathlib `IsPGroup`)" },
     postS phrase!"closed in $v$" (close <| lamT S (fun _ => tt) fun x => lamT S (fun _ => tt) fun f => app2 (const 81) x f) "(Mathlib `IsClosed`)",
     postS phrase!"dense in $v$" (close <| lamT S (fun _ => tt) fun x => lamT S (fun _ => tt) fun d => app2 (const 82) x d) "(Mathlib `Dense`)",
     postS phrase!"normal in $v$" (close <| lamT S (fun _ => tt) fun g => lamT S (fun _ => tt) fun n => app2 (const 19) g n) "(Mathlib `Subgroup.Normal`)",
@@ -709,6 +725,7 @@ def vocab : Vocab where
     mapM phrase!"bounded linear" 154 "(Mathlib `ContinuousLinearMap`)",
     mapM phrase!"contractive" 162 "(Mathlib `ContractingWith`)",
     mapM phrase!"uniformly continuous" 204 "(Mathlib `UniformContinuous`)",
+    mapM phrase!"bounded" 212 "of a linear map, `‖φ(a)‖ ≤ C‖a‖` (a bounded operator); of another map, a bounded range",
     { phrase := phrase!"$v$-Lipschitz", prenominal := true, ty := M,
       pred := close (lamR fun l => lamT M (fun _ => tt) fun f => app2 (const 161) l f), doc := "(Mathlib `LipschitzWith`)" },
     adjS phrase!"finite-dimensional" (c 120) "over its scalars (Mathlib `FiniteDimensional`)",
