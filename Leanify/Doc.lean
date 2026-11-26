@@ -1842,6 +1842,12 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         | .w fw :: .m v :: .w df :: .w o :: .m d :: rest =>
           if fw == w!"function" && df == w!"defined" && o == w!"on" && single v then .w fw :: .m (sig v d) :: rest
           else .w fw :: go k (some fw) (.m v :: .w df :: .w o :: .m d :: rest)
+        -- (`every continuous function on $[a,b]$`: a function without a letter, on a set)
+        | .w fw :: .w o :: .m d :: rest =>
+          if (fw == w!"function" || fw == w!"functions") && (o == w!"on" || o == w!"over") && !fixedBefore prev
+              && (match rest with | .m _ :: _ => false | _ => true) then
+            .w fw :: .m (sig [.id w!"\\everyobj"] d) :: rest
+          else .w fw :: go k (some fw) (.w o :: .m d :: rest)
         | .w w :: rest => .w w :: go k (some w) rest
         | c :: rest => c :: go k none rest
         | [] => []
@@ -2971,6 +2977,8 @@ def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) :=
             | some (.w x) => w == w!"with" && ![w!"and", w!"for", w!"then", w!"where", w!"such", w!"if"].contains x
             | _ => false
           if [w!"with", w!"that", w!"and", w!"where", w!"satisfying"].contains w && !slotAfter then none else
+          -- (nor the binder of a condition, `with $f'(x)>0$ for all $x\in I$`)
+          if [w!"all", w!"every", w!"each", w!"any"].contains w then none else
           match Math.parseFormula ts with
           | some m@(.chain (.id v) [(_, _)]) =>
             -- (nor a condition on the object's own variable)
@@ -4805,6 +4813,10 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
         let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
         if !ws.isEmpty && cs.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
           if let some body := fnAdjectiveOnNeg x.1 ws d then return body
+          -- (an adjective of the vocabulary meant on the domain, `Riemann integrable`)
+          if let some e := V.adjectives.find? (fun e => e.ty == x.2 && e.onDomain && !e.onCodomain &&
+              e.words == ws.map Grammar.lower) then
+            return Notation.betaApply e.pred [x.1, d]
   -- (the noun phrase is read in the scope of the sentence, `$H$ is a subgroup of $G$`; its
   -- predicate is stated where its variable would be bound, one binder further in)
   modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0), sigCodPreset := subjCod.map (shift 1 0) }
@@ -4996,6 +5008,15 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
       match on with
       | none => return .or (Tm.app (.app (.prim p) t) own) (Tm.app (.app (.prim q) t) own)
       | some _ => fail E.unsupported
+    -- (the other standard words, `constant`, `uniformly continuous`, `negative`, …, and the
+    -- vocabulary's adjectives meant on a domain, `Riemann integrable`: on the domain)
+    if p.isNone then
+      let d ← match on with
+        | some m => do let (_, d) ← domainOf true m sc; pure (d.getD (.lam .real .tt .tt))
+        | none => pure (defDom.getD (.lam .real .tt .tt))
+      if let some body := fnAdjectiveOnNeg t a d then return body
+      if let some e := (← get).vocab.adjectives.find? (fun e => e.ty == ty && e.onDomain && !e.onCodomain && e.words == a) then
+        return Notation.betaApply e.pred [t, d]
     let some p := p | fail E.type
     let own := defDom.getD (.lam .real .tt .tt)
     match on with

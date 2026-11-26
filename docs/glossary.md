@@ -925,6 +925,7 @@ except a notion whose meanings take arguments of different types, which the type
 | set of real numbers | ℝ → Prop | (Mathlib `Set ℝ`) |
 | subset $x$ of $\mathbb{R}$ | ℝ → Prop | (Mathlib `Set ℝ`) |
 | null set | ℝ → Prop | of Lebesgue measure zero |
+| interval | ℝ → Prop | every number between two of its numbers is in it (Mathlib `Set.OrdConnected`, `Convex ℝ`): possibly empty, a point or unbounded |
 | subset | ℝ → Prop | a set of real numbers inside another |
 | element | ℝ | a number in a set of real numbers |
 | upper bound | ℝ | a number `u` with `a ≤ u` for every `a` of the set (Mathlib `upperBounds`) |
@@ -1026,8 +1027,13 @@ except a notion whose meanings take arguments of different types, which the type
 | measurable | ℝ → ℝ | (Mathlib `Measurable`) |
 | integrable | ℝ → ℝ | Lebesgue integrable on the line (Mathlib `MeasureTheory.Integrable`) |
 | of bounded variation on $[x,a]$ | ℝ → ℝ | (Mathlib `BoundedVariationOn`) |
+| riemann integrable on $[x,a]$ | ℝ → ℝ | bounded on `[a,b]`, with partitions whose upper and lower sums are arbitrarily close (Darboux) |
 | hölder continuous with exponent $x$ | ℝ → ℝ | `\|f(x) - f(y)\| ≤ C\|x - y\|^α` (Mathlib `HolderWith`) |
 | holder continuous with exponent $x$ | ℝ → ℝ | (Mathlib `HolderWith`) |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| riemann integrable [on $A$] | ℝ → ℝ | on the domain of the signature, a closed bounded interval up to its end points (Darboux) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |

@@ -654,6 +654,9 @@ object that is not in use:
 | in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
 | `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |
 | `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |
+| `Every continuous function $f\colon[a,b]\to\mathbb{R}$ attains its maximum and its minimum.`, `$f$ attains its maximum on $[a,b]$` | `For every continuous function $f\colon[a,b]\to\mathbb{R}$, there is $c\in[a,b]$ such that $f(x)\le f(c)$ for all $x\in[a,b]$, and there is …` (the domain is the signature's, or written after `on`) |
+| `Every continuous function on $[a,b]$ is …` | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ is …` |
+| `Let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$ with $f(a)=f(b)$.` | the map, `Suppose that $f$ is continuous on $[a,b]$ and differentiable on $(a,b)$.` and `Suppose that $f(a)=f(b)$.` |
 
 A noun whose meaning is in its complement (`prime ideal of $R$`, `normal subgroup of $G$`,
 `element of $G$`) is read with its complement, written or implied: alone, it would say less

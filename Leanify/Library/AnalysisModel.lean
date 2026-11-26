@@ -31,4 +31,18 @@ noncomputable def totalVariation (f : ℝ → ℝ) (a b : ℝ) : ℝ := (eVariat
 noncomputable def integral (f : ℝ → ℝ) : ℝ := ∫ x, f x
 noncomputable def inverse (f : ℝ → ℝ) : ℝ → ℝ := Function.invFun f
 
+/-- Riemann integrable on `[a, b]` (Darboux's criterion; Mathlib has no Riemann integral): `a ≤ b`,
+bounded on `[a, b]`, and for every `ε > 0` a partition `a = x₀ ≤ x₁ ≤ ⋯ ≤ xₙ = b` whose upper
+and lower sums differ by less than `ε`. -/
+def RiemannOn (a b : ℝ) (f : ℝ → ℝ) : Prop :=
+  a ≤ b ∧ BddAbove (f '' Set.Icc a b) ∧ BddBelow (f '' Set.Icc a b) ∧
+  ∀ ε : ℝ, 0 < ε → ∃ (n : ℕ) (x : ℕ → ℝ), x 0 = a ∧ x n = b ∧ (∀ i < n, x i ≤ x (i + 1)) ∧
+    ∑ i ∈ Finset.range n, (x (i + 1) - x i) *
+      (sSup (f '' Set.Icc (x i) (x (i + 1))) - sInf (f '' Set.Icc (x i) (x (i + 1)))) < ε
+
+/-- Riemann integrable on a domain whose closure is a closed bounded interval `[a, b]`: on
+`[a, b]` (the values at the end points do not matter). -/
+def RiemannOnSet (D : ℝ → Prop) (f : ℝ → ℝ) : Prop :=
+  ∃ a b : ℝ, _root_.closure {x | D x} = Set.Icc a b ∧ RiemannOn a b f
+
 end Leanify.Analysis

@@ -12,7 +12,8 @@ continuous function.` or `every bounded increasing function $f$`.
   `increasing` and `nondecreasing`, `decreasing` and `nonincreasing`, `strictly
   increasing`, `strictly decreasing`, `monotone`, `convex`, `concave`, `strictly convex`,
   `even`, `odd`, `periodic`, `$T$-periodic`, `injective`, `surjective`, `bijective`,
-  `constant`, `measurable`, `integrable`, `of bounded variation on $[a,b]$`,
+  `constant`, `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
+  integrable on $[a,b]$` (and `Riemann integrable` of a function on a domain `[a,b]`),
   `Hölder continuous with exponent $\alpha$`;
 * notions: the derivative, the supremum norm, the Lipschitz constant, the total variation
   on an interval, the integral over the line, the inverse and the composition, the range,
@@ -42,7 +43,9 @@ def table : List (Ty × Codes × Codes) := [
   (F ⟶ .real ⟶ .real ⟶ .real, w!"\\operatorname{V}", w!"Leanify.Analysis.totalVariation"),       -- 10
   (F ⟶ .real, w!"\\int_{\\mathbb{R}}", w!"Leanify.Analysis.integral"),                            -- 11
   (F ⟶ F, w!"#^{-1}", w!"Leanify.Analysis.inverse"),                                              -- 12
-  (F ⟶ .prop, w!"\\operatorname{C^1}", w!"Leanify.Analysis.ContinuouslyDifferentiable")]         -- 13
+  (F ⟶ .prop, w!"\\operatorname{C^1}", w!"Leanify.Analysis.ContinuouslyDifferentiable"),         -- 13
+  (.real ⟶ .real ⟶ F ⟶ .prop, w!"\\operatorname{R}", w!"Leanify.Analysis.RiemannOn"),            -- 14
+  ((.real ⟶ .prop) ⟶ F ⟶ .prop, w!"\\operatorname{R}", w!"Leanify.Analysis.RiemannOnSet")]     -- 15
 
 def all : B := lamR fun _ => tt
 def fPred (p : B → B) : Tm := close <| lamT F (fun _ => tt) p
@@ -130,8 +133,14 @@ def vocab : Vocab where
     mod phrase!"measurable" true (.const 3) "(Mathlib `Measurable`)",
     mod phrase!"integrable" true (.const 4) "Lebesgue integrable on the line (Mathlib `MeasureTheory.Integrable`)",
     mod phrase!"of bounded variation on $[v,v]$" false (.const 5) "(Mathlib `BoundedVariationOn`)",
+    mod phrase!"Riemann integrable on $[v,v]$" false (.const 14)
+      "bounded on `[a,b]`, with partitions whose upper and lower sums are arbitrarily close (Darboux)",
     mod phrase!"Hölder continuous with exponent $v$" false (.const 6) "`|f(x) - f(y)| ≤ C|x - y|^α` (Mathlib `HolderWith`)",
     mod phrase!"Holder continuous with exponent $v$" false (.const 6) "(Mathlib `HolderWith`)"]
+  adjectives := [
+    { words := [w!"riemann", w!"integrable"], ty := F, onDomain := true,
+      pred := close (lamT F (fun _ => tt) fun f => lamT (.real ⟶ .prop) (fun _ => tt) fun d => app2 (const 15) d f),
+      doc := "on the domain of the signature, a closed bounded interval up to its end points (Darboux)" }]
   notions := [
     ofF phrase!"derivative of $v$" (.const 7) (F ⟶ F) (some differentiable) "of a differentiable function (Mathlib `deriv`)",
     ofF phrase!"supremum norm of $v$" (.const 8) (F ⟶ .real) (some (fPred fun f => bounded f))

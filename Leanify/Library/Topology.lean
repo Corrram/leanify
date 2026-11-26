@@ -6,7 +6,8 @@ The topology and measure of the real line. A set is a set of real numbers (a pre
 real numbers, as everywhere in Leanify), so that an article binds sets by a noun (`Let $S$
 be a nonempty compact set.`, `every open subset $U$ of $\mathbb{R}$`) and writes `x\in S`.
 
-* nouns: `set`, `set of real numbers`, `subset of $\mathbb{R}$`, `null set`;
+* nouns: `set`, `set of real numbers`, `subset of $\mathbb{R}$`, `null set`, `interval` (`open
+  interval`, `closed bounded interval`, … with the adjectives);
 * adjectives: `open`, `closed`, `compact`, `bounded`, `bounded above`, `bounded below`,
   `connected`, `dense`, `nowhere dense`, `perfect`, `discrete`, `finite`, `infinite`,
   `countable`, `uncountable`, `nonempty`, `empty`, `convex`, `measurable`,
@@ -78,6 +79,8 @@ def vocab : Vocab where
     nounS phrase!"set of real numbers" phrase!"sets of real numbers" anySet "(Mathlib `Set ℝ`)",
     nounS phrase!"subset $v$ of $\\mathbb{R}$" phrase!"subsets $v$ of $\\mathbb{R}$" anySet "(Mathlib `Set ℝ`)",
     nounS phrase!"null set" phrase!"null sets" (.const 12) "of Lebesgue measure zero",
+    nounS phrase!"interval" phrase!"intervals" (.const 25)
+      "every number between two of its numbers is in it (Mathlib `Set.OrdConnected`, `Convex ℝ`): possibly empty, a point or unbounded",
     { nounS phrase!"subset" phrase!"subsets" anySet "a set of real numbers inside another" with
       arg := some ([w!"of"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamT (.real ⟶ .prop) (fun _ => tt) fun b =>
         allR fun x => imp (app b x) (app a x)) },

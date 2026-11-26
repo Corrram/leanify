@@ -1670,6 +1670,12 @@ def wAdjectives : List (List Codes × List Codes) :=
     same [w!"continuous"], same [w!"differentiable"], same [w!"injective"], same [w!"bounded"],
     same [w!"closed"], same [w!"open"], same [w!"connected"] ]
 
+/-- Adjectives that are read here only with a domain (`constant on $I$`): alone, the
+vocabulary reads them (`uniformly continuous`, Mathlib's `UniformContinuous`). -/
+def wAdjectivesOn : List (List Codes) :=
+  [[w!"uniformly", w!"continuous"], [w!"constant"], [w!"strictly", w!"monotone"], [w!"monotone"],
+   [w!"riemann", w!"integrable"]]
+
 /-- Exact words, where a hyphen may join two of them (`non-decreasing`). -/
 def kwH : List Codes → List Chunk → Option (List Chunk)
   | [], cs => some cs
@@ -1681,7 +1687,8 @@ def kwH : List Codes → List Chunk → Option (List Chunk)
   | _ :: _, _ => none
 
 def adjective (cs : List Chunk) : Option (List Codes × List Chunk) :=
-  wAdjectives.findSome? fun (pat, a) => (kwH pat cs).map (a, ·)
+  (wAdjectives.findSome? fun (pat, a) => (kwH pat cs).map (a, ·)) <|>
+  wAdjectivesOn.findSome? fun pat => (kwH pat cs).bind fun r => if (kw [w!"on"] r).isSome then some (pat, r) else none
 
 /-- `ADJ, ADJ [on $A$] and ADJ`. -/
 def adjectiveList : Nat → List Chunk → List (List Codes × Option MT) →
@@ -6807,7 +6814,58 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     if !plainWords np then none
     let body := DefForm.resolveIt x (rest.length + 1) (rest.drop j)
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body)
-  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> genericB
+  -- `$f$ attains its maximum on $D$`, `every continuous function $f\colon D\to\mathbb{R}$ attains its
+  -- maximum and its minimum`: a point of `D` where the value is largest (smallest)
+  let attains : Option (List Chunk) := do
+    let i ← cs.findIdx? fun ch => match ch with | .w w => w == w!"attains" | _ => false
+    let used : List Codes := avoid ++ cs.flatMap fun c => match c with
+      | .m ts => ts.filterMap fun t => match t with | .id v => some v | _ => none
+      | _ => []
+    let lows := [w!"c", w!"x", w!"t", w!"s", w!"u", w!"y"].filter (!used.contains ·)
+    let c ← lows[0]?
+    let x ← lows[1]?
+    let ext (r : List Chunk) : Option (Bool × List Chunk) := match r with
+      | .w a :: .w m :: r' =>
+        if (a == w!"its" || a == w!"a") && (m == w!"maximum" || m == w!"minimum") then some (m == w!"maximum", r') else none
+      | _ => none
+    let (mx1, r1) ← ext (cs.drop (i + 1))
+    let (two, r2) : List Bool × List Chunk := match r1 with
+      | .w a :: r => if a == w!"and" then match ext r with
+          | some (mx2, r') => ([mx1, mx2], r')
+          | none => ([mx1], r1)
+        else ([mx1], r1)
+      | _ => ([mx1], r1)
+    let (onD, r3) : Option (List MTok) × List Chunk := match r2 with
+      | .w o :: .m d :: r => if o == w!"on" || o == w!"over" then (some d, r) else (none, r2)
+      | _ => (none, r2)
+    if !isEnd r3 then none
+    let subj := cs.take i
+    let (lead, fn, dom) ← match subj with
+      | [.m [.id f]] => onD.map fun d => ([], f, d)
+      | [.w t, .m [.id f]] => if t == w!"then" then onD.map fun d => ([.w t], f, d) else none
+      | .w q :: rest =>
+        if ![w!"every", w!"each", w!"any"].contains q then none else
+        match rest.getLast? with
+        | some (.m sg) => match Math.parseSig sg with
+          | some (.sig (.id f) _ _) =>
+            let i' ← sg.findIdx? (· == .sym 58) <|> sg.findIdx? (· == .cmd w!"colon")
+            let j ← sg.findIdx? (· == .cmd w!"to")
+            let d := (sg.drop (i' + 1)).take (j - i' - 1)
+            if !plainWords rest.dropLast then none
+            some ([.w w!"for", .w w!"every"] ++ rest ++ [.p 44], f, onD.getD d)
+          | _ => none
+        | _ => none
+      | _ => none
+    let app (v : Codes) : List MTok := [.id fn, .sym 40, .id v, .sym 41]
+    let clause (mx : Bool) : List Chunk :=
+      [.w w!"there", .w w!"is", .m ([.id c, .cmd w!"in"] ++ dom), .w w!"such", .w w!"that",
+       .m ((if mx then app x else app c) ++ [.cmd w!"le"] ++ (if mx then app c else app x)),
+       .w w!"for", .w w!"all", .m ([.id x, .cmd w!"in"] ++ dom)]
+    let body := match two with
+      | [a, b] => clause a ++ [.p 44, .w w!"and"] ++ clause b
+      | _ => clause mx1
+    some (lead ++ body ++ [.p 46])
+  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> genericB
 
 /-- The readings of `nestedIndef`, one step after another (the last first), as readings of
 the sentence where its own reading does not compile. -/
@@ -7055,7 +7113,12 @@ def partsOfAt : Nat → Sentence → Option (List Sentence)
     let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
     let p1 := s.toks.take (k + 1) ++ [w w!"be", w w!"a", w w!"function", ⟨.punct 46, pos, false⟩]
     let p2 := [w w!"suppose", w w!"that", t1] ++ name ++ [⟨.mclose, pos, true⟩, w w!"is"] ++ rest
-    if parses p1 && parses p2 then some [p1, p2] else none
+    if parses p1 && parses p2 then some [p1, p2] else
+    -- (`… differentiable on $(a,b)$ with $f(a)=f(b)$`: the condition, a hypothesis of its own)
+    let wi ← rest.findIdx? fun t => textWord t == some w!"with"
+    let p2 := [w w!"suppose", w w!"that", t1] ++ name ++ [⟨.mclose, pos, true⟩, w w!"is"] ++ rest.take wi ++ [⟨.punct 46, pos, false⟩]
+    let p3 := [w w!"suppose", w w!"that"] ++ rest.drop (wi + 1)
+    if parses p1 && parses p2 && parses p3 then some [p1, p2, p3] else none
   if let some ps := sigOn then return ps.map fun ts => { s with toks := ts }
   -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
   -- hypothesis `Suppose that the order of $G$ is divisible by $p$.`
