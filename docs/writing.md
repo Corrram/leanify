@@ -187,6 +187,9 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $f$ be an integrable function on $[0,1]$.` (field `unitsquare`) | Lebesgue integrable on `[0,1]` |
 | `The function $f(x)=x^3$ is injective.`, `The function $x\mapsto e^x$ is strictly increasing.` | the map `x\mapsto e`, on the whole line (with `on $D$`, on `D`) |
 | `Let $a,b,c$ be the side lengths of a triangle.`, `Let $a$, $b$, $c$ be the sides of a triangle.`, `the lengths of the sides of a triangle` | real numbers with `a,b,c>0`, `a<b+c`, `b<a+c`, `c<a+b` |
+| `Let $\mathcal{F}$ be a family of subgroups of $G$.`, `a collection of real numbers`, `a set of finite subsets of $\mathbb{R}$` | a set each of whose elements is as the plural noun phrase says (`family` and `collection` are `set`) |
+| `Let $\varphi\colon G\to G$ be a mapping.`, `an injective mapping` | `mapping` is `map` |
+| `Let $(a,b)$ be a pair of integers with $a<b$.`, `a triple of positive integers`, `an ordered pair of …` | as `Let $a,b$ be integers with $a<b$.` |
 | `Then either $n$ is even or $n$ is odd.`, `Then $n$ has a prime factor $p\le\sqrt{n}$ or $n$ is prime.` | one of the clauses (`either` is left out; the noun phrase after `has a` ends before `or`) |
 | `Let $X$ be a Poisson random variable with parameter $\lambda>0$.`, `a binomial random variable with parameters $n$ and $p$`, `a normal random variable with mean $\mu$ and variance $\sigma^2$`, `an exponential random variable with rate $\lambda$` | as `a random variable that is Poisson distributed with parameter $\lambda>0$` (and so on) |
 | `Every bounded sequence of real numbers has a convergent subsequence.`, `Let $(x_n)$ be a sequence in $X$. Then $(x_n)$ has a convergent subsequence.` | a strictly increasing `φ : ℕ → ℕ` with `x_{φ(n)}` convergent (in the space, to one of its points) |

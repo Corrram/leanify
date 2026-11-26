@@ -37,7 +37,8 @@ tests/Analysis/article.tex:101:24: info: claim 24: \forall x\in \mathbb{R}\to \m
 tests/Analysis/article.tex:105:74: info: claim 25: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ \lvert s-0\rvert<z\Rightarrow \lvert x(s)-x(0)\rvert<y)))\Rightarrow 0<x(0)\Rightarrow 0\le x(0)
 tests/Analysis/article.tex:109:1: info: claim 26: \operatorname{injective}((x\in \mathbb{R}\mapsto {x}^{3}))\text{ on }\{x:\top\}
 tests/Analysis/article.tex:109:1: info: claim 27: \operatorname{convex}((x\in \mathbb{R}\mapsto {x}^{2}))\text{ on }\{x:\top\}
-tests/Analysis/article.tex: 4 definitions, 28 claims
+tests/Analysis/article.tex:113:63: info: claim 28: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s)\Rightarrow z=s)\Rightarrow \operatorname{injective}(x)\text{ on }\{y:\top\}
+tests/Analysis/article.tex: 4 definitions, 29 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 47 compiled, 0 failed, 0 prose (of 47)
-  all: 51 compiled, 0 failed, 0 prose (of 51)
+  results: 49 compiled, 0 failed, 0 prose (of 49)
+  all: 53 compiled, 0 failed, 0 prose (of 53)

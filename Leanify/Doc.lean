@@ -503,6 +503,10 @@ def standardWords : List (List Codes × List Tok) :=
    ([w!"one", w!"obtains"], w [w!"we", w!"have"]),
    ([w!"there", w!"is", w!"some"], w [w!"there", w!"is", w!"a"]),
    ([w!"there", w!"exists", w!"some"], w [w!"there", w!"exists", w!"a"]),
+   -- (`mapping` for `map`; a `family` or a `collection` of objects is a set of them)
+   ([w!"mapping"], w [w!"map"]), ([w!"mappings"], w [w!"maps"]),
+   ([w!"family", w!"of"], w [w!"set", w!"of"]), ([w!"families", w!"of"], w [w!"sets", w!"of"]),
+   ([w!"collection", w!"of"], w [w!"set", w!"of"]), ([w!"collections", w!"of"], w [w!"sets", w!"of"]),
    ([w!"be", w!"two"], w [w!"be"]), ([w!"be", w!"three"], w [w!"be"]), ([w!"be", w!"four"], w [w!"be"])]
 
 /-- Words around a formula that say nothing more than the formula: `$φ$ holds` is `$φ$`,
@@ -590,6 +594,30 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           | a :: e :: _ => lw a == some w!"absolutely" && (match e.tok with | .punct _ => true | _ => false)
           | _ => false) then
         word w!"is" :: word w!"absolutely" :: word w!"convergent" :: standardForms f there cond (some t) (ts.drop 1)
+      -- `Let $(a,b)$ be a pair of integers`, `a triple of …`, `an ordered pair of …`: `Let
+      -- $a,b$ be integers` (letters and commas only between the parentheses)
+      else if v == w!"let" && (match ts with
+          | o :: l :: _ => o.tok == .mopen && l.tok == .msym 40
+          | _ => false) && (
+          let inner := (ts.drop 2).takeWhile (·.tok != .mclose)
+          let after := ts.drop (inner.length + 3)
+          let after := match after with
+            | b :: a :: rest => if lw b == some w!"be" && (lw a == some w!"a" || lw a == some w!"an") then rest else []
+            | _ => []
+          let after := match after with | o :: rest => if lw o == some w!"ordered" then rest else after | [] => []
+          inner.getLast?.map (·.tok) == some (.msym 41) && inner.length ≥ 4 &&
+          (inner.dropLast.all fun p => match p.tok with | .mvar _ | .msym 44 | .cmd _ => true | _ => false) &&
+          (match after with
+            | k :: o :: _ => (lw k).any (fun x => [w!"pair", w!"triple", w!"tuple", w!"quadruple"].contains x) && lw o == some w!"of"
+            | _ => false)) then
+        let inner := (ts.drop 2).takeWhile (·.tok != .mclose)
+        let after := ts.drop (inner.length + 3)
+        -- (after `be a [ordered] pair of`)
+        let rest := (after.dropWhile fun p => lw p != some w!"of").drop 1
+        match ts with
+        | o :: _ =>
+          t :: o :: inner.dropLast ++ [⟨.mclose, t.pos, false⟩, word w!"be"] ++ standardForms f there cond (some (word w!"be")) rest
+        | [] => [t]
       -- `either A or B`: `A or B`
       else if v == w!"either" && ts.any (fun p => lw p == some w!"or") then standardForms f there cond prev ts
       -- `NP can be written as a NP'`, `… can be expressed as …`: `NP is a NP'`
@@ -2232,6 +2260,23 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     (· != Tm.lam ty .tt .tt)).eraseDups
   pure ⟨name, ty, conjPreds ty all⟩
 
+/-- `set of subgroups $F$ of $G$`, `set of finite subsets $F$ of $\mathbb{R}$` (`family`,
+`collection`): the phrase of one of its elements, the plural noun in the singular. -/
+def setOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk) := do
+  let rest ← Grammar.kw [w!"set", w!"of"] np
+  let words := rest.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+  -- (the longest plural noun among the words before the variable, the latest start)
+  let cands := V.nouns.filterMap fun n =>
+    if n.plural == n.sing || n.plural.isEmpty || !(n.plural.all fun i => match i with | .w _ => true | _ => false) then none else
+    (List.range words.length).reverse.findSome? fun i =>
+      match matchPhrase n.plural (words.drop i) with
+      | some (none, []) => some (i, n)
+      | _ => none
+  let (i, n) ← cands.foldl (fun (best : Option (Nat × Noun)) c => match best with
+    | some b => if c.1 < b.1 then some c else some b
+    | none => some c) none
+  some (rest.take i ++ n.sing.filterMap (fun it => match it with | .w w => some (Chunk.w w) | _ => none) ++ rest.drop words.length)
+
 /-- `nounPhrase1Core`; and where words stand between the noun and its variable that are a
 modifier of the noun (`an integer coprime $a$ to $n$`, as `Let $a$ be an integer coprime to
 $n$` is read: the variable is put before the last preposition), the phrase with the
@@ -2253,6 +2298,16 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       else none
     | _ => none
   tryCatch (nounPhrase1Core np outer) fun e => do
+    -- (a set of objects of a noun: each of its elements is one)
+    if let some np' := setOfElems V0 np then
+      set st0
+      if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then
+        let sty : Ty := .fn b.ty .prop
+        let each : Tm := match b.pred with
+          | some p => .app (shift 2 0 p) (.loc 0)
+          | none => .tt
+        return ⟨b.name, sty, some (.lam sty .tt (.all b.ty (.imp (.app (.loc 1) (.loc 0)) each)))⟩
+      set st0
     if let some np' := asNoun then
       set st0
       if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then return b
