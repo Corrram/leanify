@@ -107,6 +107,8 @@ def vocab : Vocab where
     mod phrase!"nonnegative" true (rvPred fun x => eq (probSet fun w => le (num 0) (ev x w)) (num 1)) "`X ≥ 0` almost surely",
     mod phrase!"non-negative" true (rvPred fun x => eq (probSet fun w => le (num 0) (ev x w)) (num 1)) "`X ≥ 0` almost surely",
     mod phrase!"positive" true (rvPred fun x => eq (probSet fun w => lt (num 0) (ev x w)) (num 1)) "`X > 0` almost surely",
+    mod phrase!"with values in $v$" false (close <| lamT (.real ⟶ .prop) (fun _ => tt) fun S => lamT R (fun _ => tt) fun x =>
+        eq (probSet fun w => app S (ev x w)) (num 1)) "`X ∈ S` almost surely",
     mod phrase!"integrable" true (rvPred fun x => integ fun w => ev x w) "`𝔼|X| < ∞` (Mathlib `Integrable`)",
     mod phrase!"square-integrable" true (rvPred fun x => integ fun w => sq (ev x w)) "`𝔼[X²] < ∞` (Mathlib `MemLp X 2`)",
     mod phrase!"bounded" true (rvPred fun x => exR fun c => eq (probSet fun w => le (abs (ev x w)) c) (num 1))

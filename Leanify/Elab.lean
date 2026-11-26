@@ -1556,6 +1556,13 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         | _ => none
       if let some k := k? then
         if (lookupLocal sc [67]).isNone && (← lookupGlob [67]).isNone then
+          -- (`[0,1]` a type of a field: its functions, with the field's `continuous`)
+          if let some iv ← intervalType d then
+            let fty : Ty := .fn iv.ty .real
+            let some md := (← get).vocab.mods.find? (fun md => md.phrase == [.w w!"continuous"] && md.ty == fty && !md.onDomain)
+              | fail E.unsupported
+            if k != 0 then fail E.unsupported
+            return (md.pred, .fn fty .prop)
           let (dt, dty) ← term f sc pf d
           if dty == .fn .real .prop then
             let prop : Prim := if k == 0 then .continuousOn else .fnProp .contDiff
@@ -2297,7 +2304,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
               | some a' => pure (a', bty, b, bty)
               | none => pure (a, aty, b, bty) : M (Tm × Ty × Tm × Ty))
           match predArgs aty with
-          | some tys => pure (if aty == bty && 2 ≤ tys.length then some (setSubN tys a b) else none)
+          -- (and sets of elements of a vocabulary's type, `A\subseteq X` in a space: over its
+          -- elements, not over numbers)
+          | some tys => pure (if aty == bty && (2 ≤ tys.length || tys.any (· != .real)) then some (setSubN tys a b) else none)
           | none => pure none) fun _ => pure none
       match sets with
       | some p => pure (p, .prop)
@@ -2326,6 +2335,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             Tm.app (.app (.prim (.supportIn s)) slice) (if i.periodic then latticeSet s kt else kt))
         pure (conjAll ps.flatten, .prop)
     | .chain x [(.supset, y)] => do
+      -- (sets of elements of a vocabulary's type: over its elements)
+      let st0 ← get
+      let elems ← tryCatch (do
+          let (a, aty) ← term f sc pf x
+          let (b, bty) ← term f sc pf y
+          match predArgs aty with
+          | some tys => pure (if aty == bty && tys.any (· != .real) then some (setSubN tys b a) else none)
+          | none => pure none) fun _ => pure none
+      if let some p := elems then return (p, .prop)
+      set st0
       let sc' : Scope := (w!"@x", Ty.real) :: sc
       let a ← member f sc' (.loc 0, .real) x
       let b ← member f sc' (.loc 0, .real) y

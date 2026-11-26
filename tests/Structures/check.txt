@@ -93,6 +93,8 @@ tests/Structures/article.tex:338:99: info: claim 74: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:342:21: info: claim 75: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg y=0\Rightarrow \operatorname{Invertible}(y))
 tests/Structures/article.tex:346:39: info: claim 76: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{Finite}(x)\land \lvert x\rvert=6\Rightarrow \operatorname{Finite}(x)
 tests/Structures/article.tex:350:53: info: claim 77: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow d(y,s)\le d(y,z)+d(z,s))))
-tests/Structures/article.tex: 5 definitions, 78 claims
-  results: 161 compiled, 0 failed, 0 prose (of 161)
-  all: 161 compiled, 0 failed, 0 prose (of 161)
+tests/Structures/article.tex:354:66: info: claim 78: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Closed}(x)(y)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow x(z)))
+tests/Structures/article.tex:358:28: info: claim 79: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{El},\ (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow x(y(t)))\land (\exists t\in \mathrm{El},\ y\to t)\Rightarrow \operatorname{Cauchy}(y))
+tests/Structures/article.tex: 5 definitions, 80 claims
+  results: 165 compiled, 0 failed, 0 prose (of 165)
+  all: 165 compiled, 0 failed, 0 prose (of 165)

@@ -1383,6 +1383,7 @@ except a notion whose meanings take arguments of different types, which the type
 | cauchy | ℝ → $\mathrm{El}$ | (Mathlib `CauchySeq`) |
 | bounded | ℝ → $\mathrm{El}$ | its terms lie in a ball (Mathlib `Bornology.IsBounded (Set.range x)`) |
 | convergent to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
+| convergent | ℝ → $\mathrm{El}$ | converging to some point (Mathlib `Filter.Tendsto`) |
 | converging to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
 | continuous | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
 
@@ -3861,6 +3862,7 @@ except a notion whose meanings take arguments of different types, which the type
 | nonnegative | $\mathrm{RV}$ | `X ≥ 0` almost surely |
 | non-negative | $\mathrm{RV}$ | `X ≥ 0` almost surely |
 | positive | $\mathrm{RV}$ | `X > 0` almost surely |
+| with values in $x$ | $\mathrm{RV}$ | `X ∈ S` almost surely |
 | integrable | $\mathrm{RV}$ | `𝔼\|X\| < ∞` (Mathlib `Integrable`) |
 | square-integrable | $\mathrm{RV}$ | `𝔼[X²] < ∞` (Mathlib `MemLp X 2`) |
 | bounded | $\mathrm{RV}$ | `\|X\| ≤ c` almost surely, for some `c` |

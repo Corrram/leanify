@@ -1006,6 +1006,18 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       let l ← if Elab.isInfty false lo then pure none else some <$> closedBound lo sc
       let h ← if Elab.isInfty true hi then pure none else some <$> closedBound hi sc
       pure (.real, some (.lam .real .tt (Elab.rayTm (l.map (shift 1 0)) (h.map (shift 1 0)) true true (.loc 0))))
+    -- `A\subseteq X` as a binder: the subsets of `X`, a set of numbers or of the elements of a
+    -- structure (`Let $X$ be a topological space and let $A\subseteq X$.`)
+    | .app (.id sub) [x] =>
+      if sub != w!"@subsets" then do
+        let (p, t) ← Elab.term 100000 sc none d
+        match t with
+        | .fn a .prop => pure (a, some p)
+        | _ => fail E.unsupported
+      else do
+        let (xt, xty) ← Elab.term 100000 sc none x
+        let .fn a .prop := xty | fail E.type
+        pure (.fn a .prop, some (.lam (.fn a .prop) .tt (.all a (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 xt) (.loc 0))))))
     | .id n => do
       -- the real numbers, and all the elements of a vocabulary's type (`\mathbb{C}`)
       if n == w!"\\mathbb{R}" then pure (.real, none) else
@@ -1067,11 +1079,11 @@ def binderDomain (vs : List Codes) (d : MT) (sc : Scope := []) : M (Ty × Option
       | _ => none
     let r ← domainOf false d sc
     if let some dm := space? then
-      -- (only a set of real numbers as `D`; where `[0,1]` is a type of the vocabulary, its
-      -- functions are not these, and the adjectives would be said on the whole line)
+      -- (a set of real numbers as `D`; where `[0,1]` is a type of the vocabulary, the
+      -- functions are of that type, and their adjectives are said on it anyway)
       let (dty, dp) ← domainOf false dm sc
-      if dty != .real || dp.isNone then fail E.unsupported
-      if r.1 == Ty.rfun then
+      if dty == .real && dp.isNone then fail E.unsupported
+      if dty == .real && r.1 == Ty.rfun then
         let st ← get
         let entries : List (Nat × Codes × MT × MT) := vs.map fun v => (st.curEnv, v, dm, MT.id w!"\\mathbb{R}")
         set { st with sigDoms := entries ++ st.sigDoms.filter (fun (e : Nat × Codes × MT × MT) => !vs.contains e.2.1) }

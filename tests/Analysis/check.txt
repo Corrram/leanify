@@ -33,7 +33,7 @@ tests/Analysis/article.tex:85:103: info: claim 20 is meaningful if: \forall x\in
 tests/Analysis/article.tex:89:22: info: claim 21: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ \lvert z-1\rvert<y\Rightarrow \lvert {z}^{2}-1\rvert<x))
 tests/Analysis/article.tex:93:54: info: claim 22: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(y)\text{ on }\{s:\top\}\Rightarrow \operatorname{convex}((z\in \mathbb{R}\mapsto x(z)+y(z)))\text{ on }\{z:\top\})
 tests/Analysis/article.tex:97:22: info: claim 23: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{z:0\le z\land z\le 1\}\Rightarrow \operatorname{bounded}(x)\text{ on }\{y:0\le y\land y\le 1\}
-tests/Analysis/article.tex:101:24: info: claim 24: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{C^1}(x)\text{ on }\{z:0\le z\land z\le 1\}\Rightarrow \operatorname{continuous}(x)\text{ on }\{y:0\le y\land y\le 1\}
+tests/Analysis/article.tex:101:24: info: claim 24: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{C^1}(x)\text{ on }\{z:0\le z\land z\le 2\}\Rightarrow \operatorname{continuous}(x)\text{ on }\{y:0\le y\land y\le 2\}
 tests/Analysis/article.tex:105:74: info: claim 25: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ \lvert s-0\rvert<z\Rightarrow \lvert x(s)-x(0)\rvert<y)))\Rightarrow 0<x(0)\Rightarrow 0\le x(0)
 tests/Analysis/article.tex: 4 definitions, 26 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)

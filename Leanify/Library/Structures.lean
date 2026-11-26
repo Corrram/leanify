@@ -637,6 +637,8 @@ def vocab : Vocab where
       doc := "its terms lie in a ball (Mathlib `Bornology.IsBounded (Set.range x)`)" },
     { phrase := phrase!"convergent to $v$", prenominal := false, ty := Q,
       pred := close (lamT E (fun _ => tt) fun l => lamT Q (fun _ => tt) fun q => app2 (const 136) q l), doc := "(Mathlib `Filter.Tendsto`)" },
+    { phrase := phrase!"convergent", prenominal := true, ty := Q,
+      pred := close (lamT Q (fun _ => tt) fun q => exT E fun l => app2 (const 136) q l), doc := "converging to some point (Mathlib `Filter.Tendsto`)" },
     { phrase := phrase!"converging to $v$", prenominal := false, ty := Q,
       pred := close (lamT E (fun _ => tt) fun l => lamT Q (fun _ => tt) fun q => app2 (const 136) q l), doc := "(Mathlib `Filter.Tendsto`)" },
     { phrase := phrase!"continuous", prenominal := true, ty := E ⟶ .real, pred := c 135, onDomain := true,
