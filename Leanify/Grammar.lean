@@ -6006,8 +6006,9 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let p2 := s.toks.drop (k + 1)
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := andSuppose then return ps.map fun ts => { s with toks := ts }
-  -- `Let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$.`:
-  -- the map, then the hypothesis `Suppose that $f$ is continuous on $[a,b]$ and …`
+  -- `Let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$.`,
+  -- `… be continuous at $0$`: the map, then the hypothesis `Suppose that $f$ is continuous on
+  -- $[a,b]$ and …`
   let sigOn : Option (List (List PTok)) := do
     if (s.toks.head? >>= textWord) != some w!"let" then none
     -- (the signature after a `let`, the first or a later one: `Let $a<b$ and let $f\colon…$ be …`)
@@ -6025,7 +6026,7 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let rest := s.toks.drop (k + 2)
     let first ← rest.head? >>= textWord
     if [w!"a", w!"an", w!"the"].contains first then none
-    if !(rest.any fun t => textWord t == some w!"on") then none
+    if !(rest.any fun t => textWord t == some w!"on" || textWord t == some w!"at") then none
     let pos := t1.pos
     let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
     let p1 := s.toks.take (k + 1) ++ [w w!"be", w w!"a", w w!"function", ⟨.punct 46, pos, false⟩]

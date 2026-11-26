@@ -1543,6 +1543,23 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         return (.all .real (.imp (.lt (.num 0) (.loc 0))
           (.ex .real (.all .real (.imp idx (definedAnd b close)))))
           , .prop)
+    -- `C(D)`, `C^1(D)` (where the article defines no `C`): the real functions continuous
+    -- (continuously differentiable) on the set `D`
+    -- (`C^1([0,1])` is read as a product: the same)
+    let m := match m with
+      | .mul (.sup (.id c) (.num 1)) d => if c == [67] then MT.app (.sup (.id c) (.num 1)) [d] else m
+      | _ => m
+    if let .app h [d] := m then
+      let k? : Option Nat := match h with
+        | .id c => if c == [67] then some 0 else none
+        | .sup (.id c) (.num 1) => if c == [67] then some 1 else none
+        | _ => none
+      if let some k := k? then
+        if (lookupLocal sc [67]).isNone && (← lookupGlob [67]).isNone then
+          let (dt, dty) ← term f sc pf d
+          if dty == .fn .real .prop then
+            let prop : Prim := if k == 0 then .continuousOn else .fnProp .contDiff
+            return (.lam Ty.rfun .tt (.app (.app (.prim prop) (.loc 0)) (shift 1 0 dt)), .fn Ty.rfun .prop)
     -- `@family(@A, a, b, …)`, `@familyseq(@A, x, lo, hi)` (of the grammar, for `$v_1,\ldots,v_n$
     -- are linearly independent`): the terms are distinct, and their set has the vocabulary's
     -- adjective `A` of sets of their type

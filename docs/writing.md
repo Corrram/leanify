@@ -177,6 +177,8 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Then $n^2>n$ if $n$ is odd.`, `Then $\sqrt{n}$ is irrational if $n$ is not a perfect square.`, `Then $p$ divides $k^p-k$ for $k>0$.` | as `If $n$ is odd, then $n^2>n$.` (not `if and only if`, `only if`, `even if`; and not after a clause that binds variables of its own, `there exists $\delta>0$ such that …`, where the condition is part of that clause) |
 | `there exists $\delta>0$ such that $|x^2-1|<\varepsilon$ whenever $|x-1|<\delta$` | `whenever $ψ$` is `for $ψ$`: for every value of the new variables of `ψ`, inside the clause |
 | `Let $(X,d)$ be a metric space.` | the space `X`, with the vocabulary's distance `d` |
+| `Let $f\in C([0,1])$.`, `Let $f\in C^1([a,b])$.` | a real function continuous (continuously differentiable) on the set, which is its domain, as for `f\colon[0,1]\to\mathbb{R}`: its adjectives are said there. Not where `[0,1]` is a type of a field (`unitsquare`) |
+| `Let $f\colon\mathbb{R}\to\mathbb{R}$ be continuous at $0$.` | the map, then the hypothesis `Suppose that $f$ is continuous at $0$.` |
 | `$\operatorname{Var}(X_1+\dots+X_n)$`, `$\frac{x_1+\cdots+x_n}{n}$` | a sum (product) with an ellipsis inside brackets as well |
 | `Let $S$ be a finite set with $n$ elements.`, `Let $G$ be a group with $6$ elements.`, `every nonzero element of $K$ is invertible` | a finite set with `n` elements; a finite structure of order `n`; elements `a\ne0`, and with an inverse |
 | `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |

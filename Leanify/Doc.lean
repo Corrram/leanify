@@ -1058,7 +1058,24 @@ def binderDomain (vs : List Codes) (d : MT) (sc : Scope := []) : M (Ty × Option
     pure (.fn .real ty, some (seqPred 2 l h p ty))
   | _ => do
     modify fun st => { st with seqs := st.seqs.filter fun e => !vs.contains e.1 }
-    domainOf false d sc
+    -- (`f\in C([0,1])`, `f\in C^1(D)`: a function on `D`, as `f\colon D\to\mathbb{R}`; its
+    -- adjectives are said on `D`)
+    let space? : Option MT := match d with
+      | .app (.id c) [dm] => if c == [67] then some dm else none
+      | .app (.sup (.id c) (.num 1)) [dm] => if c == [67] then some dm else none
+      | .mul (.sup (.id c) (.num 1)) dm => if c == [67] then some dm else none
+      | _ => none
+    let r ← domainOf false d sc
+    if let some dm := space? then
+      -- (only a set of real numbers as `D`; where `[0,1]` is a type of the vocabulary, its
+      -- functions are not these, and the adjectives would be said on the whole line)
+      let (dty, dp) ← domainOf false dm sc
+      if dty != .real || dp.isNone then fail E.unsupported
+      if r.1 == Ty.rfun then
+        let st ← get
+        let entries : List (Nat × Codes × MT × MT) := vs.map fun v => (st.curEnv, v, dm, MT.id w!"\\mathbb{R}")
+        set { st with sigDoms := entries ++ st.sigDoms.filter (fun (e : Nat × Codes × MT × MT) => !vs.contains e.2.1) }
+    pure r
 
 def lamWrap : List Ty → Tm → Tm
   | [], b => b
