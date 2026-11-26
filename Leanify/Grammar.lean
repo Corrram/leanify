@@ -6759,23 +6759,28 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | _, _ =>
         some ([.w w!"let", .m [.id x], .w w!"be", .w w!"a"] ++ np ++ chain ++ [.w w!"and", .w w!"let"] ++ vars ++ [.w w!"be"] ++ det? ++
           front ++ [.w prep, .m [.id x]] ++ after)
-  -- `Let $\varphi\colon G\to H$ be a group homomorphism`, with new letters `G`, `H`
+  -- `Let $\varphi\colon G\to H$ be a group homomorphism`, with new letters `G`, `H` (also in a later
+  -- `let`, `… and let $T\colon V\to W$ be a linear map`)
   let sigLet : Option (List Chunk) := do
-    let r ← kw [w!"let"] cs
-    let (vts, r1) ← mathChunk r
+    let k ← (List.range cs.length).find? fun k => match (cs[k]? : Option Chunk), (cs[k + 1]? : Option Chunk) with
+      | some (.w l), some (.m ts) => l == w!"let" && (Math.parseSig ts).isSome
+      | _, _ => false
+    let .m vts := (← cs[k + 1]?) | none
     let .sig _ (.id d) (.id c) ← Math.parseSig vts | none
-    let r2 ← kw [w!"be"] r1
+    let r2 ← kw [w!"be"] (cs.drop (k + 2))
     let .w det :: r3 := r2 | none
     if !isIndef (.w det) then none
     let ws := r3.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
     let words := (plain ws).filter (· != w!"-")
     let kind ← sigKinds.findSome? fun (n, k) => if words.length ≥ n.length && words.drop (words.length - n.length) == n then some k else none
-    let bound (v : Codes) : Bool := avoid.contains v
-    let news := ([d, c].eraseDups).filter (!bound ·)
+    let before : List Codes := (cs.take k).flatMap fun ch => match ch with
+      | .m ts => ts.filterMap fun t => match t with | .id v => some v | _ => none
+      | _ => []
+    let news := ([d, c].eraseDups).filter fun v => !avoid.contains v && !before.contains v
     if news.isEmpty then none
     let kindCs : List Chunk := kind.map Chunk.w
     let lets := news.flatMap fun v => [.w w!"let", .m [.id v], .w w!"be", .w w!"a"] ++ kindCs ++ [.p 44]
-    some (lets.dropLast ++ [.w w!"and", .w w!"let", .m vts, .w w!"be", .w det] ++ r3)
+    some (cs.take k ++ lets.dropLast ++ [.w w!"and"] ++ cs.drop k)
   -- `Let …, where $v$ is a NP.`
   let whereB : Option (List Chunk) := do
     let _ ← kw [w!"let"] cs
@@ -6865,7 +6870,67 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | [a, b] => clause a ++ [.p 44, .w w!"and"] ++ clause b
       | _ => clause mx1
     some (lead ++ body ++ [.p 46])
-  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> genericB
+  -- `SUBJ is [either] X or Y`: `SUBJ is X or SUBJ is Y`
+  let eitherOr : Option (List Chunk) := do
+    -- (after the binders of `For every NP $X$, …`)
+    let (pre, cs) : List Chunk × List Chunk := match cs with
+      | .w f :: _ =>
+        if f != w!"for" then ([], cs) else
+        match cs.findIdx? (fun ch => match ch with | .p 44 => true | _ => false) with
+        | some c => (cs.take (c + 1), cs.drop (c + 1))
+        | none => ([], cs)
+      | _ => ([], cs)
+    let i ← cs.findIdx? fun ch => match ch with | .w w => w == w!"is" | _ => false
+    let subj := cs.take i
+    if subj.isEmpty then none
+    let r := cs.drop (i + 1)
+    let r := (kw [w!"either"] r).getD r
+    let j ← r.findIdx? fun ch => match ch with | .w w => w == w!"or" | _ => false
+    let x := r.take j
+    let rest := r.drop (j + 1)
+    let k ← rest.findIdx? fun ch => match ch with | .p 46 => true | _ => false
+    let y := rest.take k
+    if x.isEmpty || y.isEmpty || k + 1 != rest.length then none
+    if (cs.filter fun ch => match ch with | .w w => w == w!"is" || w == w!"or" | _ => false).length != 2 then none
+    some (pre ++ subj ++ [.w w!"is"] ++ x ++ [.w w!"or"] ++ subj ++ [.w w!"is"] ++ y ++ [.p 46])
+  -- `The number $\sqrt2$ is irrational.`, `The polynomial $x^2-2$ is …`: what the noun says of the
+  -- formula, and the claim (`$\sqrt2$ is a number and $\sqrt2$ is irrational`)
+  let appositive : Option (List Chunk) := do
+    let .w t :: rest := cs | none
+    if t != w!"the" then none
+    let ws := rest.takeWhile fun ch => match ch with | .w w => !nestStops.contains w | .p 45 => true | _ => false
+    if ws.isEmpty then none
+    let .m f :: after := rest.drop ws.length | none
+    -- (not a letter: `the group $G$` is read on its own)
+    if (match f with | [.id _] => true | _ => false) then none
+    let .w v :: _ := after | none
+    if ![w!"is", w!"are", w!"has", w!"divides", w!"converges", w!"diverges", w!"satisfies"].contains v then none
+    let trivial := [[w!"number"], [w!"real", w!"number"], [w!"integer"]].contains (plain ws)
+    if trivial then some ([.m f] ++ after)
+    else some ([.m f, .w w!"is", .w (if (match (plain ws).head? >>= List.head? with
+        | some ch => [97, 101, 105, 111, 117].contains ch | none => false) then w!"an" else w!"a")] ++ ws ++ [.w w!"and", .m f] ++ after)
+  -- `In a principal ideal domain, every irreducible element is prime.`: `For every principal ideal
+  -- domain $X$, every irreducible element of $X$ is prime.`
+  let inA : Option (List Chunk) := do
+    let .w i :: a :: r := cs | none
+    if i != w!"in" || !isIndef a then none
+    let np := r.takeWhile fun ch => match ch with | .w w => !nestStops.contains w | .p 45 => true | _ => false
+    if np.isEmpty then none
+    let (x, r1) := match r.drop np.length with
+      | .m [.id v] :: r' => (v, r')
+      | r' => (fresh 0, r')
+    let r2 ← punct 44 r1
+    let .w q :: r3 := r2 | none
+    if ![w!"every", w!"each", w!"any", w!"all"].contains q then none
+    let np1 := r3.takeWhile fun ch => match ch with | .w w => !nestStops.contains w | .p 45 => true | _ => false
+    if np1.isEmpty then none
+    let after := r3.drop np1.length
+    let comp : List Chunk := match after with
+      | .w p :: _ => if [w!"of", w!"in", w!"over"].contains p then [] else [.w w!"of", .m [.id x]]
+      | _ => [.w w!"of", .m [.id x]]
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w q] ++ np1 ++ comp ++ after)
+  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> inA <|>
+    genericB <|> appositive <|> eitherOr
 
 /-- The readings of `nestedIndef`, one step after another (the last first), as readings of
 the sentence where its own reading does not compile. -/
@@ -6875,15 +6940,30 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
   let generic := match s.ctx.kind with
     | .result e => e.take 3 != w!"def"
     | _ => false
+  -- (`Then …`: the rest, after `then`)
+  let (lead, cs) : List Chunk × List Chunk := match cs with
+    | .w t :: rest => if t == w!"then" then ([.w t], rest) else ([], cs)
+    | _ => ([], cs)
   let mut cur := cs
   let mut out : List Sent := []
   for _ in [0:5] do
     match nestedIndef avoid generic cur with
     | some cs' =>
       cur := cs'
-      if let some sn := sentence cs' then out := sn :: out
+      if let some sn := sentence (lead ++ cs') then out := sn :: out
     | none => break
-  return out
+  -- `The set of nilpotent elements of $R$ is an ideal of $R$.`: the set, bound as `Let $X$ be the
+  -- set of …` binds it, and the claim about it
+  let theSet : Option Sent := do
+    let .w t :: .w st :: .w o :: rest := cs | none
+    if t != w!"the" || !(st == w!"set" || st == w!"class") || o != w!"of" then none
+    let i ← rest.findIdx? fun ch => match ch with | .w w => w == w!"is" || w == w!"are" | _ => false
+    let members := rest.take i
+    if members.isEmpty || members.any (fun ch => match ch with | .p _ => true | _ => false) then none
+    let x := nestVar avoid cs 0
+    let .claims tp bs cls ← sentence (lead ++ .m [.id x] :: rest.drop i) | none
+    some (.claims tp (.noun ([.w w!"@the", .w st, .w o] ++ members ++ [.m [.id x]]) :: bs) cls)
+  return out ++ theSet.toList
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

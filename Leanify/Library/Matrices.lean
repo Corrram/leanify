@@ -14,7 +14,8 @@ is the `1 × 1` matrix: the product of such a matrix with another is the scalar 
 * adjectives: `square`, `symmetric`, `skew-symmetric`, `orthogonal`, `invertible`,
   `singular`, `nonsingular`, `positive definite`, `positive semidefinite`, `diagonal`,
   `upper triangular`, `lower triangular`, `nilpotent`, `idempotent`, `stochastic`,
-  `$m\times n$`, `of size $m\times n$`, `of rank $r$`;
+  `diagonalizable`, `orthogonally diagonalizable`, `similar to $B$`, `$m\times n$`, `of size
+  $m\times n$`, `of rank $r$`;
 * notions: the numbers of rows and columns, the entry in row `i` and column `j`, the
   determinant, trace, rank, transpose and inverse, the identity and zero matrices, the
   characteristic polynomial (a real function, `t ↦ det(tI - A)`), the set of (real)
@@ -65,6 +66,9 @@ def lower : Nat := 32
 def nilpotent : Nat := 33
 def idempotent : Nat := 34
 def stochastic : Nat := 35
+def similar : Nat := 36
+def diagonalizable : Nat := 37
+def orthDiagonalizable : Nat := 38
 end Const
 open Const
 
@@ -98,7 +102,7 @@ def vocab : Vocab where
     M ⟶ .real, M ⟶ .real, M ⟶ .real, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real ⟶ .real ⟶ .real,
     M ⟶ .real ⟶ .real ⟶ .prop, .real ⟶ M, .real ⟶ .real ⟶ M, M ⟶ Ty.rfun, M ⟶ .real ⟶ .prop,
     M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop,
-    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop]
+    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop]
   constNames := [w!"\\operatorname{rows}", w!"\\operatorname{cols}", w!"", w!"\\operatorname{Square}",
     w!"\\operatorname{SameSize}(#1,#2)", w!"\\operatorname{Mulable}(#1,#2)", w!"+", w!"-", w!"-", w!"\\cdot", w!"^",
     w!"#^{-1}", w!"#^{\\top}", w!"/", w!"\\det", w!"\\operatorname{tr}", w!"\\operatorname{rank}",
@@ -107,7 +111,8 @@ def vocab : Vocab where
     w!"\\operatorname{Symmetric}", w!"\\operatorname{SkewSymmetric}", w!"\\operatorname{Orthogonal}",
     w!"\\operatorname{PosDef}", w!"\\operatorname{PosSemidef}", w!"\\operatorname{Diagonal}",
     w!"\\operatorname{UpperTriangular}", w!"\\operatorname{LowerTriangular}", w!"\\operatorname{Nilpotent}",
-    w!"\\operatorname{Idempotent}", w!"\\operatorname{Stochastic}"]
+    w!"\\operatorname{Idempotent}", w!"\\operatorname{Stochastic}", w!"#2\\sim #1", w!"\\operatorname{Diagonalizable}",
+    w!"\\operatorname{OrthDiagonalizable}"]
   constLean := [w!"Leanify.Matrices.rows", w!"Leanify.Matrices.cols", w!"Leanify.Matrices.ofReal",
     w!"Leanify.Matrices.Square", w!"Leanify.Matrices.SameSize", w!"Leanify.Matrices.Mulable",
     w!"Leanify.Matrices.add", w!"Leanify.Matrices.sub", w!"Leanify.Matrices.neg", w!"Leanify.Matrices.mul",
@@ -119,7 +124,8 @@ def vocab : Vocab where
     w!"Leanify.Matrices.SkewSymmetric", w!"Leanify.Matrices.Orthogonal", w!"Leanify.Matrices.PosDef",
     w!"Leanify.Matrices.PosSemidef", w!"Leanify.Matrices.Diagonal", w!"Leanify.Matrices.UpperTriangular",
     w!"Leanify.Matrices.LowerTriangular", w!"Leanify.Matrices.Nilpotent", w!"Leanify.Matrices.Idempotent",
-    w!"Leanify.Matrices.Stochastic"]
+    w!"Leanify.Matrices.Stochastic", w!"Leanify.Matrices.Similar", w!"Leanify.Matrices.Diagonalizable",
+    w!"Leanify.Matrices.OrthDiagonalizable"]
   typeLean := [(w!"Leanify.Matrices.Mat", w!"Leanify.Matrices.Mat.empty")]
   modules := [w!"Leanify.Library.MatricesModel"]
   nouns := [
@@ -144,6 +150,10 @@ def vocab : Vocab where
     mod phrase!"nilpotent" true (.const nilpotent) "square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`)",
     mod phrase!"idempotent" true (.const idempotent) "square, `A² = A`",
     mod phrase!"stochastic" true (.const stochastic) "square, nonnegative entries, rows summing to `1`",
+    mod phrase!"diagonalizable" true (.const diagonalizable) "`P⁻¹AP` diagonal for an invertible real `P`",
+    mod phrase!"orthogonally diagonalizable" true (.const orthDiagonalizable) "`QᵀAQ` diagonal for an orthogonal `Q`",
+    mod phrase!"similar to $v$" false (close <| lamT M (fun _ => tt) fun a => lamT M (fun _ => tt) fun b => app2 (const similar) a b)
+      "`B = P⁻¹AP` for an invertible `P`",
     mod phrase!"$v\\times v$" true ofSize "of size `m × n`",
     mod phrase!"of size $v\\times v$" false ofSize "`m × n`",
     mod phrase!"of order $v$" false ofSizeSq "`n × n`",

@@ -102,6 +102,18 @@ def Idempotent (A : Mat) : Prop := Square A ∧ sq A * sq A = sq A
 def Stochastic (A : Mat) : Prop :=
   Square A ∧ (∀ i j, 0 ≤ at' A i j) ∧ ∀ i < A.1, ∑ j ∈ Finset.range A.2.1, at' A i j = 1
 
+/-- `B` is similar to `A`: square matrices of the same size with `B = P⁻¹AP` for an invertible
+`P`. -/
+def Similar (A B : Mat) : Prop :=
+  Square A ∧ SameSize A B ∧ ∃ P : Matrix (Fin A.1) (Fin A.1) ℝ, P.det ≠ 0 ∧ ∀ i j : Fin A.1,
+    at' B i j = (P⁻¹ * sq A * P) i j
+/-- Diagonalizable over the real numbers: `P⁻¹AP` is diagonal for an invertible real `P`. -/
+def Diagonalizable (A : Mat) : Prop :=
+  Square A ∧ ∃ P : Matrix (Fin A.1) (Fin A.1) ℝ, P.det ≠ 0 ∧ ∀ i j : Fin A.1, i ≠ j → (P⁻¹ * sq A * P) i j = 0
+/-- Orthogonally diagonalizable: `QᵀAQ` is diagonal for an orthogonal `Q`. -/
+def OrthDiagonalizable (A : Mat) : Prop :=
+  Square A ∧ ∃ Q : Matrix (Fin A.1) (Fin A.1) ℝ, Qᵀ * Q = 1 ∧ ∀ i j : Fin A.1, i ≠ j → (Qᵀ * sq A * Q) i j = 0
+
 end
 
 end Leanify.Matrices

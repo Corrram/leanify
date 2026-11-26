@@ -34,7 +34,11 @@ tests/Matrices/article.tex:53:49: info: claim 15: \forall x\in \mathbb{R},\ \for
 tests/Matrices/article.tex:57:80: info: claim 16: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0<y\Rightarrow (\forall z\in \mathrm{Mat},\ \operatorname{rows}(z)=x\land \operatorname{cols}(z)=y\Rightarrow \operatorname{rank}(z)\le x))
 tests/Matrices/article.tex:61:53: info: claim 17: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{Invertible}(y)\land \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow (\forall z\in \mathrm{Mat},\ \operatorname{Invertible}(z)\land \operatorname{rows}(z)=x\land \operatorname{cols}(z)=x\Rightarrow \frac{1}{{(y\,z)}^{1}}=\frac{1}{{z}^{1}}\,\frac{1}{{y}^{1}})
 tests/Matrices/article.tex:61:53: info: claim 17 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{Invertible}(y)\land \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow (\forall z\in \mathrm{Mat},\ \operatorname{Invertible}(z)\land \operatorname{rows}(z)=x\land \operatorname{cols}(z)=x\Rightarrow ((\operatorname{Mulable}(y,z)\land \operatorname{Square}(y\,z))\land \neg ({(y\,z)}^{1}=0)\land (\operatorname{Mulable}(y,z)\land \operatorname{Square}(y\,z))\land \operatorname{Divisible}(1,{(y\,z)}^{1}))\land ((\operatorname{Square}(z)\land \neg ({z}^{1}=0)\land \operatorname{Square}(z)\land \operatorname{Divisible}(1,{z}^{1}))\land \operatorname{Square}(y)\land \neg ({y}^{1}=0)\land \operatorname{Square}(y)\land \operatorname{Divisible}(1,{y}^{1}))\land \operatorname{Mulable}(\frac{1}{{z}^{1}},\frac{1}{{y}^{1}}))
-tests/Matrices/article.tex: 4 definitions, 18 claims
+tests/Matrices/article.tex:65:1: info: claim 18: \forall x\in \mathrm{Mat},\ \operatorname{Symmetric}(x)\Rightarrow \operatorname{OrthDiagonalizable}(x)
+tests/Matrices/article.tex:65:61: info: claim 19: \forall x\in \mathrm{Mat},\ \operatorname{Diagonalizable}(x)\Rightarrow \operatorname{Square}(x)
+tests/Matrices/article.tex:65:168: info: claim 20: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow y\sim x\Rightarrow \det(x)=\det(y))
+tests/Matrices/article.tex:65:168: info: claim 20 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow y\sim x\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y))
+tests/Matrices/article.tex: 4 definitions, 21 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 20 compiled, 0 failed, 0 prose (of 20)
-  all: 24 compiled, 0 failed, 0 prose (of 24)
+  results: 24 compiled, 0 failed, 0 prose (of 24)
+  all: 28 compiled, 0 failed, 0 prose (of 28)

@@ -977,6 +977,16 @@ def PrimeElIn (R : El → Prop) (p : El) : Prop :=
   R p ∧ ¬ eqv p (.num 0) ∧ ¬ UnitIn R p ∧
     ∀ a b, R a → R b → DvdIn R p (mul a b) → DvdIn R p a ∨ DvdIn R p b
 
+
+/-- The operations of the group of units of a ring: its product, as the group's operation in
+both notations (its sum and its product are the ring's product). -/
+def unitOps (o : Ops) : Ops := { o with add := o.mul, zero := o.one, neg := o.inv }
+
+/-- The group of units of a ring, the multiplicative group of a field: its invertible
+elements, with the product (Mathlib `Units`). -/
+def unitsS (R : El → Prop) : El → Prop :=
+  fun a => ∃ x, UnitIn R (.el (opsOf R) x) ∧ a = .el (unitOps (opsOf R)) x
+
 end
 
 end Leanify.Structures

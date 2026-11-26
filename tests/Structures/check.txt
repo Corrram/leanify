@@ -180,6 +180,11 @@ tests/Structures/article.tex:566:1: info: claim 150: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:566:135: info: claim 151: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PID}(x)\Rightarrow (\forall y\in \mathrm{El},\ \operatorname{Irreducible}(x)(y)\Rightarrow \operatorname{Prime}(x)(y))
 tests/Structures/article.tex:570:47: info: claim 152: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)\land \operatorname{FiniteDimensional}(x)\Rightarrow \operatorname{VectorSpace}(x)
 tests/Structures/article.tex:570:75: info: claim 153: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\land \operatorname{PathConnected}(x)\Rightarrow \operatorname{Connected}(x)
-tests/Structures/article.tex: 13 definitions, 154 claims
-  results: 309 compiled, 0 failed, 0 prose (of 309)
-  all: 309 compiled, 0 failed, 0 prose (of 309)
+tests/Structures/article.tex:574:1: info: claim 154: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PID}(x)\Rightarrow (\forall y\in \mathrm{El},\ \operatorname{Irreducible}(x)(y)\Rightarrow \operatorname{Prime}(x)(y))
+tests/Structures/article.tex:574:66: info: claim 155: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow \operatorname{char}(x)=0\lor 0<\operatorname{char}(x)
+tests/Structures/article.tex:578:32: info: claim 156: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{CommRing}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Leftrightarrow \operatorname{IsNilpotent}(x)(s))\Rightarrow y\trianglelefteq x)
+tests/Structures/article.tex:578:94: info: claim 157: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\land \operatorname{Finite}(x)\Rightarrow \operatorname{Cyclic}(x^\times)
+tests/Structures/article.tex:582:88: info: claim 158: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)\land \operatorname{FiniteDimensional}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Linear}(z)\land z\colon x\to y\Rightarrow \dim(x)=\dim(\ker(z))+\dim(\operatorname{im}(z))))
+tests/Structures/article.tex: 13 definitions, 159 claims
+  results: 316 compiled, 0 failed, 0 prose (of 316)
+  all: 316 compiled, 0 failed, 0 prose (of 316)

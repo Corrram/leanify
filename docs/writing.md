@@ -648,7 +648,7 @@ object that is not in use:
 | `Let $H$ be a subgroup of a cyclic group.` | `Let $X$ be a cyclic group and let $H$ be a subgroup of $X$.` |
 | `Let $f\colon X\to Y$ be a continuous bijection from a compact space to a Hausdorff space.` | `Let $X$ be a compact space, let $Y$ be a Hausdorff space and let $f\colon X\to Y$ be a continuous bijection.` |
 | `Let $T\colon V\to V$ be a linear operator on a finite-dimensional vector space.` | `Let $V$ be a finite-dimensional vector space and let $T\colon V\to V$ be a linear operator.` |
-| `Let $\varphi\colon G\to H$ be a group homomorphism.`, with new letters `G`, `H` | `Let $G$ be a group, let $H$ be a group and let $\varphi\colon G\to H$ be a group homomorphism.` (the noun of the map says what its domain and codomain are: groups, rings, vector spaces, topological or metric spaces, partially ordered sets) |
+| `Let $\varphi\colon G\to H$ be a group homomorphism.`, with new letters `G`, `H` (also in a later `let`: `Let $V$ be a vector space and let $T\colon V\to W$ be a linear map.`) | `Let $G$ be a group, let $H$ be a group and let $\varphi\colon G\to H$ be a group homomorphism.` (the noun of the map says what its domain and codomain are: groups, rings, vector spaces, topological or metric spaces, partially ordered sets) |
 | `The intersection of two normal subgroups of $G$ is a normal subgroup of $G$.` (`union`, `product`) | `For every normal subgroup $X$ of $G$ and every normal subgroup $Y$ of $G$, $X\cap Y$ is a normal subgroup of $G$.` |
 | `The continuous image of a compact space is compact.` | `For every compact space $X$, every topological space $Y$ and every continuous map $f\colon X\to Y$, the image of $f$ is compact.` |
 | in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
@@ -656,6 +656,10 @@ object that is not in use:
 | `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |
 | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ attains its maximum and its minimum.`, `$f$ attains its maximum on $[a,b]$` | `For every continuous function $f\colon[a,b]\to\mathbb{R}$, there is $c\in[a,b]$ such that $f(x)\le f(c)$ for all $x\in[a,b]$, and there is …` (the domain is the signature's, or written after `on`) |
 | `Every continuous function on $[a,b]$ is …` | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ is …` |
+| `In a principal ideal domain, every irreducible element is prime.` | `For every principal ideal domain $X$, every irreducible element of $X$ is prime.` |
+| `The characteristic of $R$ is either $0$ or a prime.` | `The characteristic of $R$ is $0$ or the characteristic of $R$ is a prime.` |
+| `The set of nilpotent elements of $R$ is an ideal of $R$.` | the set, bound as `Let $X$ be the set of nilpotent elements of $R$.` binds it, and `$X$ is an ideal of $R$` |
+| `The number $\sqrt2$ is irrational.`, `The polynomial $x^2-2$ is …` | `$\sqrt2$ is irrational.`; `$x^2-2$ is a polynomial and $x^2-2$ is …` (what the noun says of a formula is a part of the claim; `number`, `real number` and `integer` say nothing more) |
 | `Let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$ with $f(a)=f(b)$.` | the map, `Suppose that $f$ is continuous on $[a,b]$ and differentiable on $(a,b)$.` and `Suppose that $f(a)=f(b)$.` |
 
 A noun whose meaning is in its complement (`prime ideal of $R$`, `normal subgroup of $G$`,
