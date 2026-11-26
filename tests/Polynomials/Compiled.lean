@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Polynomials.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["polynomials"]
 
-#leanify_article Polynomials "article.tex" "fnv1a64:e1d7895f14633e68" with Polynomials.vocabulary
+#leanify_article Polynomials "article.tex" "fnv1a64:cd262cef292be6ad" with Polynomials.vocabulary

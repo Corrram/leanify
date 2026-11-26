@@ -41,7 +41,8 @@ tests/Arithmetic/article.tex:51:1: info: claim 20: \exists y\in \mathbb{R},\ y\i
 tests/Arithmetic/article.tex:55:1: info: claim 21: \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land 7=y\,y+z\,z+(s\,s+t\,t))))
 tests/Arithmetic/article.tex:59:45: info: claim 22: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land (\neg (x=0)\lor \neg (y=0))\Rightarrow 0<{x}^{2}+{y}^{2})
 tests/Arithmetic/article.tex:63:46: info: claim 23: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land \neg (x=0\land y=0)\Rightarrow \neg (x=0)\lor \neg (y=0))
-tests/Arithmetic/article.tex: 10 definitions, 24 claims
+tests/Arithmetic/article.tex:67:32: info: claim 24: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land \neg (x=0)\Rightarrow 1\le {x}^{2}
+tests/Arithmetic/article.tex: 10 definitions, 25 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 15 compiled, 0 failed, 0 prose (of 15)
-  all: 25 compiled, 0 failed, 0 prose (of 25)
+  results: 17 compiled, 0 failed, 0 prose (of 17)
+  all: 27 compiled, 0 failed, 0 prose (of 27)

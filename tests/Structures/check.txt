@@ -82,6 +82,8 @@ tests/Structures/article.tex:294:72: info: claim 63: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:298:74: info: claim 64: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow \lvert y\rvert=x\Rightarrow \operatorname{Finite}(y))
 tests/Structures/article.tex:302:32: info: claim 65: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Domain}(x)\Rightarrow (\forall y\in \mathrm{El},\ \forall z\in \mathrm{El},\ (x(y)\land x(z))\land y\,z=0\Rightarrow y=0\lor z=0)
 tests/Structures/article.tex:306:81: info: claim 66: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Hom}(z)\land z\colon x\to y\Rightarrow \operatorname{Group}(\ker(z))\land \ker(z)\trianglelefteq x))
-tests/Structures/article.tex: 5 definitions, 67 claims
-  results: 140 compiled, 0 failed, 0 prose (of 140)
-  all: 140 compiled, 0 failed, 0 prose (of 140)
+tests/Structures/article.tex:310:33: info: claim 67: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \neg (\forall t\in \mathrm{El},\ \forall a\in \mathrm{El},\ x(t)\land x(a)\Rightarrow t\,a=a\,t)\Rightarrow \neg (\lvert x\rvert=1)
+tests/Structures/article.tex:314:1: info: claim 68: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \neg (\forall t\in \mathrm{El},\ \forall a\in \mathrm{El},\ x(t)\land x(a)\Rightarrow t\,a=a\,t)\Rightarrow \neg (\lvert x\rvert=1)
+tests/Structures/article.tex: 5 definitions, 69 claims
+  results: 143 compiled, 0 failed, 0 prose (of 143)
+  all: 143 compiled, 0 failed, 0 prose (of 143)

@@ -176,7 +176,9 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   unless unread.isEmpty do
     logWarning m!"{rel}: notions: {String.intercalate ", " (unread.map Codes.toString)} not read: an entry is \
       a noun in words of letters, with its plural in parentheses if it is irregular"
-  let V := V.declare declared
+  -- (and the negations `nonX` of adjectives that its text uses)
+  let negs := Vocab.nonWords (src.drop ((src.findIdx? isBeginDocument).getD src.length))
+  let V := (V.declare declared).negations negs
   -- the certificate pins this file alone
   let files ← readSource path
   unless files.inputs.isEmpty do
@@ -193,13 +195,16 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     liftCoreM <| addAndCompile <| Declaration.defnDecl
       { name := n, levelParams := [], type := ty, value := val,
         hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
-  if declared.isEmpty then
+  if declared.isEmpty && negs.isEmpty then
     defineLiteral (ns ++ `declared) declared
     defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
   else
     compiled (ns ++ `declared) (toTypeExpr (List Declared)) (toExpr declared)
+    compiled (ns ++ `negations) (toTypeExpr (List Codes)) (toExpr negs)
     compiled (ns ++ `vocab) (Lean.mkConst ``Vocab)
-      (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
+      (mkApp2 (Lean.mkConst ``Vocab.negations)
+        (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
+        (Lean.mkConst (ns ++ `negations)))
   defineLiteral (ns ++ `source) src
   -- by default, the compiler is run by Lean's evaluator, and that is all
   unless leanify.kernel.get (← getOptions) do

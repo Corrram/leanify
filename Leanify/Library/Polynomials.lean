@@ -74,6 +74,8 @@ def vocab : Vocab where
     nounP phrase!"polynomial function" phrase!"polynomial functions",
     nounP phrase!"real polynomial" phrase!"real polynomials"]
   mods := [
+    -- (`$f\colon\mathbb{R}\to\mathbb{R}$ be a polynomial function`: the function of the signature)
+    mod phrase!"polynomial" true polyPred "given by a polynomial with real coefficients (Mathlib `Polynomial.eval`)",
     mod phrase!"monic" true (withPoly monic) "leading coefficient 1 (Mathlib `Polynomial.Monic`)",
     mod phrase!"with a real root" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (exR fun x => eq (app f x) (num 0)))
       "`p(x) = 0` for some real `x`",

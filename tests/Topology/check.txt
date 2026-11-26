@@ -28,7 +28,8 @@ tests/Topology/article.tex:60:66: info: claim 15 is meaningful if: \forall x\in 
 tests/Topology/article.tex:64:1: info: claim 16: \operatorname{Compact}((x\in \mathbb{R}\mapsto 0\le x\land x\le 1))
 tests/Topology/article.tex:68:52: info: claim 17: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ (x(y)\land (\forall z\in \mathbb{R},\ x(z)\Rightarrow z\le y))\land (\forall z\in \mathbb{R},\ x(z)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\Rightarrow z=y))
 tests/Topology/article.tex:72:46: info: claim 18: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\Rightarrow \operatorname{Closed}(x)\land \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
-tests/Topology/article.tex: 7 definitions, 19 claims
+tests/Topology/article.tex:76:56: info: claim 19: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
+tests/Topology/article.tex: 7 definitions, 20 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 25 compiled, 0 failed, 0 prose (of 25)
-  all: 32 compiled, 0 failed, 0 prose (of 32)
+  results: 27 compiled, 0 failed, 0 prose (of 27)
+  all: 34 compiled, 0 failed, 0 prose (of 34)

@@ -18,7 +18,8 @@ tests/Polynomials/article.tex:41:54: info: claim 7: \forall x\in \mathbb{R}\to \
 tests/Polynomials/article.tex:41:54: info: claim 7 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land \operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0)\Rightarrow (\forall y\in \mathbb{R},\ \operatorname{IsPoly}(x))
 tests/Polynomials/article.tex:45:32: info: claim 8: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land (\operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0))\land \deg(x)=3\Rightarrow \operatorname{IsPoly}(x)\land (\exists z\in \mathbb{R},\ x(z)=0)
 tests/Polynomials/article.tex:49:59: info: claim 9: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land ((\operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0))\land \deg(x)=2)\land \operatorname{IsPoly}(x)\land (\forall s\in \mathbb{R},\ \neg (x(s)=0))\Rightarrow \neg (x(0)=0)
-tests/Polynomials/article.tex: 4 definitions, 10 claims
+tests/Polynomials/article.tex:53:77: info: claim 10: \forall x\in \mathbb{R}\to \mathbb{R},\ ((\operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0))\land 1\le \deg(x))\land \operatorname{IsPoly}(x)\Rightarrow \operatorname{IsPoly}(x)\land \operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0)
+tests/Polynomials/article.tex: 4 definitions, 11 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 18 compiled, 0 failed, 0 prose (of 18)
-  all: 22 compiled, 0 failed, 0 prose (of 22)
+  results: 20 compiled, 0 failed, 0 prose (of 20)
+  all: 24 compiled, 0 failed, 0 prose (of 24)

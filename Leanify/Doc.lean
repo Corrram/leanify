@@ -585,6 +585,14 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
+      -- `non-abelian`, `non-empty`: one word, `nonabelian` (the negation of the adjective,
+      -- where the vocabulary does not name the word itself)
+      else if v == w!"non" && (match ts with
+          | h :: x :: _ => h.tok == .punct 45 && (lw x).isSome
+          | _ => false) then
+        match ts with
+        | _ :: x :: rest => standardForms f there cond prev (word (w!"non" ++ (lw x).getD []) :: rest)
+        | _ => t :: standardForms f there cond (some t) ts
       -- `for all real $x$`
       -- (not before a size and the noun it qualifies, `a real $2\times2$ matrix`, `a real
       -- $n$-vector`)
@@ -1904,7 +1912,11 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             | _ => false
           let nounNext := match h.2.2.2 with
             | .w _ :: _ => lead.any fun c => match c with
-              | .w w => V.nouns.any fun n => n.sing.head? == some (.w w) || n.plural.head? == some (.w w)
+              | .w w => V.nouns.any (fun n => n.sing.head? == some (.w w) || n.plural.head? == some (.w w)) ||
+                -- (`map` and `function` before a signature, `a polynomial map $f\colon…$`)
+                ([w!"map", w!"maps", w!"function", w!"functions"].contains w && lead.any fun c => match c with
+                  | .m ts => (Math.parseSig ts).isSome
+                  | _ => false)
               | _ => false
             | _ => false
           if nounNext && k < pmAll.length then

@@ -596,10 +596,57 @@ def declareOne (V : Vocab) (d : Declared) : Vocab :=
 /-- `V` with the notions that an article declares. -/
 def declare (V : Vocab) (ds : List Declared) : Vocab := ds.foldl declareOne V
 
-/-- The vocabulary an article is read with: `V` and the notions of its preamble. -/
+/-- The words `nonX` and `non-X` of a text (as `nonX`, lower-cased), in order of their
+first use. -/
+def nonWords (src : List Codes) : List Codes :=
+  let letter (c : Nat) : Bool := (65 ≤ c && c ≤ 90) || (97 ≤ c && c ≤ 122)
+  let low (c : Nat) : Nat := if 65 ≤ c && c ≤ 90 then c + 32 else c
+  let rec scan : Nat → Bool → List Nat → List Codes → List Codes
+    | 0, _, _, acc => acc
+    | _ + 1, _, [], acc => acc
+    | f + 1, afterLetter, c :: cs, acc =>
+      if !afterLetter && (c == 110 || c == 78) && cs.take 2 == [111, 110] then
+        let r := cs.drop 2
+        let r := match r with | 45 :: r' => r' | _ => r
+        let x := r.takeWhile letter
+        if x.length ≥ 3 then
+          let w := w!"non" ++ x.map low
+          scan f true (r.drop x.length) (if acc.contains w then acc else acc ++ [w])
+        else scan f true cs acc
+      else scan f (letter c) cs acc
+  src.foldl (fun acc l => scan (l.length + 1) false l acc) []
+
+/-- `V` with the adjectives `nonX` (also written `non-X`) of the words `ws`: the negation of
+each one-word modifier and adjective `X` whose negation the vocabulary does not name
+itself. `positive`, `negative`, `increasing` and `decreasing` are left out: their `non`
+words are no negations (`nonnegative`, `nondecreasing`), and the vocabulary has them where
+they are meant. -/
+def negations (V : Vocab) (ws : List Codes) : Vocab :=
+  let kept := [w!"positive", w!"negative", w!"increasing", w!"decreasing"]
+  let ws := ws.filter fun w => !V.mods.any (·.phrase == [.w w]) && !V.adjectives.any (·.words == [w])
+  if ws.isEmpty then V else
+  let neg (ty : Ty) (p : Tm) : Tm := .lam ty .tt (.not (.app p (.loc 0)))
+  let mods := ws.flatMap fun w =>
+    let x := w.drop 3
+    if kept.contains x then [] else
+    V.mods.filterMap fun m =>
+      if m.phrase == [.w x] && !m.onDomain && !m.onCodomain then
+        some { m with phrase := [.w w], pred := neg m.ty m.pred, doc := s!"not {Codes.toString x}" }
+      else none
+  let adjs := ws.flatMap fun w =>
+    let x := w.drop 3
+    if kept.contains x then [] else
+    V.adjectives.filterMap fun a =>
+      if a.words == [x] && !a.onDomain && !a.onCodomain then
+        some { a with words := [w], pred := neg a.ty a.pred }
+      else none
+  { V with mods := V.mods ++ mods, adjectives := V.adjectives ++ adjs }
+
+/-- The vocabulary an article is read with: `V` and the notions of its preamble, and the
+negations `nonX` of its adjectives that the article uses. -/
 def forArticle (V : Vocab) (src : List Codes) : Vocab :=
   let k := (src.findIdx? fun l => l.take 16 == w!"\\begin{document}").getD src.length
-  V.declare (Declared.ofPreamble (src.take k)).1
+  (V.declare (Declared.ofPreamble (src.take k)).1).negations (nonWords (src.drop k))
 
 /-- The nouns and adjectives that the article declares (`graph`, `finite graph`). -/
 def declaredPhrases (V : Vocab) : List Codes :=
