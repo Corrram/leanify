@@ -95,6 +95,10 @@ tests/Structures/article.tex:346:39: info: claim 76: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:350:53: info: claim 77: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow d(y,s)\le d(y,z)+d(z,s))))
 tests/Structures/article.tex:354:66: info: claim 78: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Closed}(x)(y)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow x(z)))
 tests/Structures/article.tex:358:28: info: claim 79: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{El},\ (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow x(y(t)))\land (\exists t\in \mathrm{El},\ y\to t)\Rightarrow \operatorname{Cauchy}(y))
-tests/Structures/article.tex: 5 definitions, 80 claims
-  results: 165 compiled, 0 failed, 0 prose (of 165)
-  all: 165 compiled, 0 failed, 0 prose (of 165)
+tests/Structures/article.tex:362:65: info: claim 80: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\trianglelefteq x\land (\forall t\in \mathrm{El},\ y(t)\Rightarrow x(t))\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow x(z)))
+tests/Structures/article.tex:366:47: info: claim 81: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Ring}(x)\Rightarrow (\forall y\in \mathrm{El},\ y\in x^\times\land x(y)\Rightarrow x(y))
+tests/Structures/article.tex:370:49: info: claim 82: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\land \neg (\operatorname{Finite}(x)\land \lvert x\rvert<4)\Rightarrow \operatorname{Field}(x)
+tests/Structures/article.tex:374:41: info: claim 83: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{CommRing}(x)\Rightarrow \operatorname{Ring}(x)
+tests/Structures/article.tex: 5 definitions, 84 claims
+  results: 173 compiled, 0 failed, 0 prose (of 173)
+  all: 173 compiled, 0 failed, 0 prose (of 173)

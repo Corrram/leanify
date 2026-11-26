@@ -524,6 +524,15 @@ def vocab : Vocab where
     adjS phrase!"finite" (c 21) "with finitely many elements (Mathlib `Finite`)",
     postS phrase!"with $v$ elements" (close <| lamR fun n => lamT S (fun _ => tt) fun g => and (app (const 21) g) (eq (app (const 20) g) n))
       "finite, of order `n`",
+    postS phrase!"with at least $v$ elements" (close <| lamR fun n => lamT S (fun _ => tt) fun g => not (and (app (const 21) g) (lt (app (const 20) g) n)))
+      "infinite, or of order at least `n`",
+    postS phrase!"with at most $v$ elements" (close <| lamR fun n => lamT S (fun _ => tt) fun g => and (app (const 21) g) (le (app (const 20) g) n))
+      "finite, of order at most `n`",
+    -- (every ring of the vocabulary has an identity)
+    postS phrase!"with $1$" (sP fun _ => tt) "with an identity (every ring is: Mathlib `Ring`)",
+    postS phrase!"with identity" (sP fun _ => tt) "(every ring is: Mathlib `Ring`)",
+    postS phrase!"with unity" (sP fun _ => tt) "(every ring is: Mathlib `Ring`)",
+    postS phrase!"with an identity" (sP fun _ => tt) "(every ring is: Mathlib `Ring`)",
     adjS phrase!"infinite" (sP fun g => not (app (const 21) g)) "(Mathlib `Infinite`)",
     adjS phrase!"countable" (c 22) "(Mathlib `Countable`)",
     adjS phrase!"trivial" (sP fun g => eq (cardOf g) (num 1)) "with one element",

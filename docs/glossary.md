@@ -1291,6 +1291,12 @@ except a notion whose meanings take arguments of different types, which the type
 | nilpotent | $\mathrm{El}$ → Prop | (Mathlib `Group.IsNilpotent`) |
 | finite | $\mathrm{El}$ → Prop | with finitely many elements (Mathlib `Finite`) |
 | with $x$ elements | $\mathrm{El}$ → Prop | finite, of order `n` |
+| with at least $x$ elements | $\mathrm{El}$ → Prop | infinite, or of order at least `n` |
+| with at most $x$ elements | $\mathrm{El}$ → Prop | finite, of order at most `n` |
+| with $1$ | $\mathrm{El}$ → Prop | with an identity (every ring is: Mathlib `Ring`) |
+| with identity | $\mathrm{El}$ → Prop | (every ring is: Mathlib `Ring`) |
+| with unity | $\mathrm{El}$ → Prop | (every ring is: Mathlib `Ring`) |
+| with an identity | $\mathrm{El}$ → Prop | (every ring is: Mathlib `Ring`) |
 | infinite | $\mathrm{El}$ → Prop | (Mathlib `Infinite`) |
 | countable | $\mathrm{El}$ → Prop | (Mathlib `Countable`) |
 | trivial | $\mathrm{El}$ → Prop | with one element |

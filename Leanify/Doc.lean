@@ -1728,12 +1728,31 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | none => (acc.reverse, cs)
   -- a noun's complement (`subgroup of $G$`): the relation to the object it names, as a
   -- predicate of the variable, stated where the variable is bound (as a modifier's)
-  let nounArg (n : Noun) (rest : List Chunk) : M (List Tm × List Chunk) := do
+  let nounArg (n : Noun) (rest : List Chunk) (var : Option (List MTok) := none) : M (List Tm × List Chunk) := do
+    -- (a noun that needs a complement, without one: the set of the variable's domain, `Let
+    -- $W\subset K$ be a subfield.`, `Let $I\subseteq R$ be an ideal.`)
+    let implicit : M (List Tm × List Chunk) := do
+      let some (_, aty, rel) := n.arg | fail E.type
+      let some ts := var | fail E.type
+      let some ([_], d) := Grammar.binderMath ts | fail E.type
+      let x := match d with
+        | .app (.id s) [x] => if s == w!"@subsets" then x else d
+        | _ => d
+      let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
+      let (a, aty') ← Elab.term 100000 sc none x
+      if aty' != aty then fail E.type
+      let r := Notation.betaApply rel [a, .loc 0]
+      -- (the membership that the domain states already, `an element $g\in G$`: nothing more)
+      if r == Tm.app a (.loc 0) then return ([], rest)
+      pure ([Tm.lam n.ty .tt r], rest)
+    -- (a complement that the noun may have: the domain's set, if the variable has one)
+    let optional : M (List Tm × List Chunk) := do
+      if n.needsArg then return ← implicit
+      let st0 ← get
+      tryCatch implicit fun _ => do set st0; pure ([], rest)
     match n.arg, rest with
     | some (ws, aty, rel), .w w :: .m ts :: rest' =>
-      if !ws.contains (Grammar.lower w) then
-        if n.needsArg then fail E.type
-        return ([], rest)
+      if !ws.contains (Grammar.lower w) then return ← optional
       let some mt := Math.parseFormula ts | fail E.unsupported
       let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
       let (a, aty') ← Elab.term 100000 sc none mt
@@ -1751,7 +1770,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           | none => pure (.lam .real .tt .tt)
         return ([Tm.lam n.ty .tt (Notation.betaApply rel [domTm, a, .loc 0])], rest')
       pure ([Tm.lam n.ty .tt (Notation.betaApply rel [a, .loc 0])], rest')
-    | _, _ => if n.needsArg then fail E.type else pure ([], rest)
+    | some _, _ => optional
+    | none, _ => pure ([], rest)
   -- a noun's predicate; a noun of maps meant on a domain takes the domain of the signature
   let nounPred (n : Noun) : M Tm := do
     if !n.onDomain then return n.pred
@@ -1841,7 +1861,11 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
                   | some (ws, aty, _) => ws.contains (Grammar.lower w) && cty == some aty
                   | none => false) then fail E.type
             | _ => pure ()
-          let _ ← nounArg n (afterVar n v r)
+          let varOf : Option (List MTok) := match v, r with
+            | some ts, _ => some ts
+            | none, .m ts :: _ => some ts
+            | _, _ => none
+          let _ ← nounArg n (afterVar n v r) varOf
         match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
             (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) (rethrow := true) with
         | some ((n, v, _), r) =>
@@ -1883,7 +1907,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               if (Math.parseSig ts).isSome || (!(n.sing.all fun p => p != .v) && !r'.isEmpty && !single) then (n.ty, [np0], v, r)
               else (n.ty, [np0], some ts, r')
             | _, _ => (n.ty, [np0], v, r)
-          let (extra, rest) ← nounArg n rest
+          let (extra, rest) ← nounArg n rest var
           pure (ty, ps ++ extra, var, rest)
         | none =>
           -- `$f:A\to B$`, optionally after the noun `map` or `function`
@@ -2187,7 +2211,25 @@ $n$` is read: the variable is put before the last preposition), the phrase with 
 variable further left, after the noun. -/
 def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st0 ← get
+  -- (`$a\in R$ be a unit`, which the grammar reads as `unit element $a$ of $R$`, where that
+  -- is not read: a noun of the vocabulary with the variable's domain, `unit $a\in R$`)
+  let V0 := st0.vocab
+  let asNoun : Option (List Chunk) := match np with
+    | .w n :: .w e :: .m [.id v] :: .w o :: .m x :: rest =>
+      let isNoun := V0.nouns.any fun nn => nn.sing == [.w n]
+      let both := V0.nouns.any fun nn => nn.sing == [.w n, .w e]
+      -- (an adjective of the same objects as well, `idempotent element`, is read so)
+      let adj := V0.mods.any fun m => m.prenominal && m.phrase == [.w n] &&
+        V0.nouns.any fun nn => nn.sing == [.w n] && nn.ty == m.ty
+      if isNoun && !both && !adj && o == w!"of" && (e == w!"element" || e == w!"subset") then
+        some (.w n :: .m ([.id v, .cmd (if e == w!"element" then w!"in" else w!"subseteq")] ++ x) :: rest)
+      else none
+    | _ => none
   tryCatch (nounPhrase1Core np outer) fun e => do
+    if let some np' := asNoun then
+      set st0
+      if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then return b
+      set st0
     if !(e.code == E.nounWords || e.code == E.noun) then throw e
     let k := (np.takeWhile fun c => match c with | .w _ => true | _ => false).length
     match np[k]? with

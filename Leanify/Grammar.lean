@@ -3879,7 +3879,8 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let r1 ← match kw [w!"a"] r1 <|> kw [w!"an"] r1 with
       | some (.w n :: rest) =>
         let ends := match rest with | [] | .p _ :: _ => true | .w w :: _ => w == w!"and" | _ => false
-        if ends && ![w!"number", w!"integer", w!"point", w!"element", w!"vector", w!"function", w!"map", w!"prime",
+        -- (not of a subset: `$W\subset K$ be a subfield` is a subfield with its domain, below)
+        if ends && noun != w!"subset" && ![w!"number", w!"integer", w!"point", w!"element", w!"vector", w!"function", w!"map", w!"prime",
             w!"set", w!"subset", w!"matrix", w!"polynomial", w!"sequence"].contains n then some (.w n :: rest) else none
       | some _ => none
       | none => if (kw [w!"the"] r1).isSome then none else some r1

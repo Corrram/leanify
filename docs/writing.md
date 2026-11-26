@@ -179,6 +179,8 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $(X,d)$ be a metric space.` | the space `X`, with the vocabulary's distance `d` |
 | `Let $f\in C([0,1])$.`, `Let $f\in C^1([a,b])$.` | a real function continuous (continuously differentiable) on the set, which is its domain, as for `f\colon[0,1]\to\mathbb{R}`: its adjectives are said there. Where `[0,1]` is a type of a field (`unitsquare`), `C([0,1])` is the continuous functions on that type (`C^1([0,1])` is not read) |
 | `Let $X$ be a topological space and let $A\subseteq X$ be closed.`, `$A\subseteq X$` | a subset of the space (of its elements, not of numbers) |
+| `Let $H\subseteq G$ be a normal subgroup.`, `Let $I\subseteq R$ be an ideal.`, `Let $a\in R$ be a unit.` | a noun whose complement is left out takes the set of the variable's domain (`a normal subgroup of $G$`, `a unit of $R$`) |
+| `Let $F$ be a field with at least four elements.`, `with at most $n$ elements`, `a commutative ring with $1$` (`with identity`, `with unity`) | infinite or of order at least `n`; finite of order at most `n`; every ring of the vocabulary has an identity |
 | `Let $X$ be a random variable with values in $\{0,1\}$.` | `X\in\{0,1\}` almost surely |
 | `Let $f\colon\mathbb{R}\to\mathbb{R}$ be continuous at $0$.` | the map, then the hypothesis `Suppose that $f$ is continuous at $0$.` |
 | `$\operatorname{Var}(X_1+\dots+X_n)$`, `$\frac{x_1+\cdots+x_n}{n}$` | a sum (product) with an ellipsis inside brackets as well |
