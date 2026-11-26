@@ -509,6 +509,27 @@ except a notion whose meanings take arguments of different types, which the type
 | Noun | Of | Meaning |
 | --- | --- | --- |
 | complex number | $\mathbb{C}$ | a complex number (Mathlib `ℂ`) |
+| entire function | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at every point (Mathlib `Differentiable ℂ`) |
+| subset $x$ of $\mathbb{C}$ | $\mathbb{C}$ → Prop | a set of complex numbers |
+| set of complex numbers | $\mathbb{C}$ → Prop | (Mathlib `Set ℂ`) |
+| domain in $\mathbb{C}$ | $\mathbb{C}$ → Prop | an open connected set of complex numbers |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| entire | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at every point (Mathlib `Differentiable ℂ`) |
+| bounded | $\mathbb{C}$ → $\mathbb{C}$ | `‖f(z)‖ ≤ M` for all `z` |
+| constant | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = f(w)` for all `z`, `w` |
+| nonconstant | $\mathbb{C}$ → $\mathbb{C}$ | not constant |
+| holomorphic on $x$ | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at the points of `U` (Mathlib `DifferentiableOn ℂ`) |
+| holomorphic | $\mathbb{C}$ → $\mathbb{C}$ | on the domain of the signature `f\colon U\to\mathbb{C}` (Mathlib `DifferentiableOn ℂ`) |
+| open | $\mathbb{C}$ → Prop | (Mathlib `IsOpen`) |
+| connected | $\mathbb{C}$ → Prop | nonempty, and connected (Mathlib `IsConnected`) |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| holomorphic [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | on the domain of its signature, or on the set after `on` (Mathlib `DifferentiableOn ℂ`) |
+| bounded [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | `‖f(z)‖ ≤ M` on the domain |
+| constant [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | the same value at any two points of the domain |
 
 | Symbol | Type | Meaning |
 | --- | --- | --- |

@@ -1673,7 +1673,7 @@ def wAdjectives : List (List Codes × List Codes) :=
     same [w!"positive"], same [w!"negative"],
     same [w!"compact"], same [w!"convex"], same [w!"concave"], same [w!"centrally", w!"symmetric"],
     same [w!"continuous"], same [w!"differentiable"], same [w!"injective"], same [w!"bounded"],
-    same [w!"closed"], same [w!"open"], same [w!"connected"] ]
+    same [w!"closed"], same [w!"open"], same [w!"connected"], same [w!"holomorphic"] ]
 
 /-- Adjectives that are read here only with a domain (`constant on $I$`): alone, the
 vocabulary reads them (`uniformly continuous`, Mathlib's `UniformContinuous`). -/

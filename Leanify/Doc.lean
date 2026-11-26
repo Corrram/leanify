@@ -1626,6 +1626,20 @@ def indexedBy (v : Codes) : List MTok → Bool
 def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
   | f + 1, cs, acc =>
+    -- (`with $φ$ and $ψ$ for all $z\in A$`: both for every value)
+    let both : Option (MT × List Chunk) := match cs with
+      | .m t1 :: .w a :: .m t2 :: .w fo :: .w q :: .m b :: rest =>
+        if a == w!"and" && fo == w!"for" && (q == w!"all" || q == w!"every" || q == w!"each") then
+          match Math.parseFormula t1, Math.parseFormula t2, Grammar.binderMath b with
+          | some m1, some m2, some (vs, d) => some (.quant true vs d (.conj [m1, m2]), rest)
+          | _, _, _ => none
+        else none
+      | _ => none
+    if let some (m, rest) := both then
+      match rest with
+      | .w w :: r' => if w == w!"and" then condsOf f r' (m :: acc) else ((m :: acc).reverse, rest)
+      | _ => ((m :: acc).reverse, rest)
+    else
     -- (`with $a_n\to0$ as $n\to\infty$`: the limit along the index of the term)
     let asIdx : Option (MT × List Chunk) := match cs with
       | .m ts :: .w a :: .m [.id v, .cmd t, .cmd i] :: rest =>
@@ -4851,6 +4865,15 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
       | some (k, _) => sigCodomain sc k
       | none => pure none
     | _ => pure none
+  -- (an adjective of the vocabulary meant on the domain of the subject's signature,
+  -- `$f$ is holomorphic` for `f\colon U\to\mathbb{C}`)
+  if x.2 != .fn .real .real then
+    if let some d := subjDom then
+      let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
+      if !ws.isEmpty && cs.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
+        if let some e := V.adjectives.find? (fun e => e.ty == x.2 && e.onDomain && !e.onCodomain &&
+            e.words == ws.map Grammar.lower) then
+          return Notation.betaApply e.pred [x.1, d]
   -- (of a real function on the domain of its signature, `$f$ is uniformly continuous` for
   -- `f\colon[0,1]\to\mathbb{R}`: the property on that domain)
   if x.2 == .fn .real .real then
@@ -5710,14 +5733,17 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     | _ => pure ()
     let (t, ty) ← subjTerm sc s
     -- a function's domain is the one its definition states
+    -- (a variable of the sentence comes before a definition of the article with its letter)
     let defDom : Option Tm ← match Elab.symKey s with
       | some k => do
+        if (Elab.lookupLocal sc k).isSome then sigDomain sc k else
         match ← lookupGlob k with
         | some (_, g) => pure (g.doms.head?).join
         | none => sigDomain sc k
       | none => pure none
     let defCod : Option Tm ← match Elab.symKey s with
       | some k => do
+        if (Elab.lookupLocal sc k).isSome then sigCodomain sc k else
         match ← lookupGlob k with
         | some _ => pure none
         | none => sigCodomain sc k

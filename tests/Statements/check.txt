@@ -136,9 +136,13 @@ tests/Statements/article.tex:486:1: info: claim 107: \forall x\in \mathbb{R},\ 0
 tests/Statements/article.tex:490:68: info: claim 108: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 2\le y\land (\forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (t\in \mathbb{N}\land a\in \mathbb{N})\land t\,a=y\Rightarrow t=1\lor a=1))\land y\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land x=y\,t)\Rightarrow y\le x)
 tests/Statements/article.tex:490:156: info: claim 109: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 2\le y\land y={x}^{2}\Rightarrow \neg (x=0))
 tests/Statements/article.tex:494:1: info: claim 110: \neg (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \neg (z=0)\land {2}^{\frac{1}{2}}=\frac{y}{z}))
-tests/Statements/article.tex: 8 definitions, 111 claims
+tests/Statements/article.tex:498:1: info: claim 111: \forall x\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(x)\land \operatorname{Bounded}((s\in \mathbb{C}\mapsto \top))(x)\Rightarrow \operatorname{Constant}((z\in \mathbb{C}\mapsto \top))(x)
+tests/Statements/article.tex:502:103: info: claim 112: \forall x\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(x)\land (\forall s\in \mathbb{C},\ x(s+1)=x(s)\land x(s+\mathrm{i})=x(s))\Rightarrow \operatorname{Constant}((z\in \mathbb{C}\mapsto \top))(x)
+tests/Statements/article.tex:506:101: info: claim 113: \forall x\in \mathbb{C}\to \mathrm{Prop},\ \operatorname{Connected}(x)\land \operatorname{Open}(x)\Rightarrow (\forall y\in \mathbb{C}\to \mathbb{C},\ \operatorname{Holomorphic}(x)(y)\Rightarrow \operatorname{Holomorphic}(x)(y))
+tests/Statements/article.tex:506:204: info: claim 114: \forall x\in \mathbb{C}\to \mathrm{Prop},\ \operatorname{Open}(x)\land \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(y)\Rightarrow \operatorname{Holomorphic}(x)(y))
+tests/Statements/article.tex: 8 definitions, 115 claims
   text: 9 compiled, 1 failed, 17 prose (of 27)
-  results: 108 compiled, 16 failed, 3 prose (of 127)
+  results: 115 compiled, 16 failed, 3 prose (of 134)
   proofs: 2 compiled, 0 failed, 0 prose (of 2)
-  all: 119 compiled, 17 failed, 20 prose (of 156)
+  all: 126 compiled, 17 failed, 20 prose (of 163)
   complete proofs: 1 of 1 (a result is derived from a proof that is read completely)

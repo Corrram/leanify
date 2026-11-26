@@ -1,6 +1,8 @@
 import Leanify.Library.Complex
 import Leanify.Denote
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Analysis.Calculus.FDeriv.Basic
+import Mathlib.Topology.Connected.Basic
 
 /-! # The meaning of the complex numbers
 
@@ -19,6 +21,23 @@ noncomputable def finSum (a b : ℝ) (f : ℝ → ℂ) : ℂ :=
 /-- `∏_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`. -/
 noncomputable def finProd (a b : ℝ) (f : ℝ → ℂ) : ℂ :=
   Finset.prod (Finset.Icc ⌈a⌉ ⌊b⌋) fun k : ℤ => f k
+
+/-! ### Functions of a complex variable -/
+
+/-- An entire function: complex differentiable at every point (Mathlib `Differentiable ℂ`). -/
+def Entire (f : ℂ → ℂ) : Prop := Differentiable ℂ f
+/-- Holomorphic on `U`: complex differentiable at the points of `U` (Mathlib `DifferentiableOn ℂ`;
+on an open set, at every point of it). -/
+def HolomorphicOn (U : ℂ → Prop) (f : ℂ → ℂ) : Prop := DifferentiableOn ℂ f {z | U z}
+/-- Bounded on `U`: `‖f(z)‖ ≤ M` there. -/
+def BoundedOn (U : ℂ → Prop) (f : ℂ → ℂ) : Prop := ∃ M : ℝ, ∀ z, U z → ‖f z‖ ≤ M
+/-- Constant on `U`. -/
+def ConstantOn (U : ℂ → Prop) (f : ℂ → ℂ) : Prop := ∀ z w, U z → U w → f z = f w
+/-- An open set of complex numbers (Mathlib `IsOpen`). -/
+def OpenSet (U : ℂ → Prop) : Prop := IsOpen {z | U z}
+/-- A connected set of complex numbers: nonempty and not the union of two disjoint relatively
+open nonempty parts (Mathlib `IsConnected`). -/
+def ConnectedSet (U : ℂ → Prop) : Prop := IsConnected {z | U z}
 
 /-! The meanings of the constants, by name (`Complex.vocab.constLean`). -/
 namespace Lean
@@ -56,6 +75,12 @@ noncomputable def model : Model where
     ⟨C ⟶ C, _root_.Complex.exp⟩,
     ⟨C, _root_.Complex.I⟩,
     ⟨.real ⟶ .real ⟶ (.real ⟶ C) ⟶ C, finSum⟩,
-    ⟨.real ⟶ .real ⟶ (.real ⟶ C) ⟶ C, finProd⟩]
+    ⟨.real ⟶ .real ⟶ (.real ⟶ C) ⟶ C, finProd⟩,
+    ⟨(C ⟶ C) ⟶ .prop, Entire⟩,
+    ⟨(C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, HolomorphicOn⟩,
+    ⟨(C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, BoundedOn⟩,
+    ⟨(C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, ConstantOn⟩,
+    ⟨(C ⟶ .prop) ⟶ .prop, OpenSet⟩,
+    ⟨(C ⟶ .prop) ⟶ .prop, ConnectedSet⟩]
 
 end Leanify.Complex

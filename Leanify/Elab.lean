@@ -2253,6 +2253,16 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let pf' := pf.map fun (s, t) => (shift 1 0 s, t)
         -- (a set of elements of a vocabulary's type, `for all $g\in G$` of a group: the
         -- variable is one of them, not a number)
+        -- (`for all $z\in\mathbb{C}$`: the type that the vocabulary's symbol names, every object
+        -- of it)
+        let symTy : Option Ty ← match dom with
+          | .id n => do
+            if (lookupLocal sc n).isSome then pure none else
+            pure (((← get).vocab.symbols.find? fun sy => sy.sym == n && sy.const.isNone && isBase sy.ty).map (·.ty))
+          | _ => pure none
+        if let some t := symTy then
+          let b ← propOf f ((v, t) :: sc) pf' (.quant isAll rest dom body)
+          return (if isAll then .all t b else .ex t b, .prop)
         let elTy : Option Ty ← match dom with
           | .id n => match lookupLocal sc n with
             | some (_, .fn a .prop) => pure (if isBase a then some a else none)
