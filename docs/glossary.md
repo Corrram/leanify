@@ -1389,6 +1389,7 @@ except a notion whose meanings take arguments of different types, which the type
 | cauchy | ℝ → $\mathrm{El}$ | (Mathlib `CauchySeq`) |
 | bounded | ℝ → $\mathrm{El}$ | its terms lie in a ball (Mathlib `Bornology.IsBounded (Set.range x)`) |
 | convergent to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
+| with a convergent subsequence | ℝ → $\mathrm{El}$ | `x_{φ(n)} → l` for some strictly increasing `φ : ℕ → ℕ` and some point `l` |
 | convergent | ℝ → $\mathrm{El}$ | converging to some point (Mathlib `Filter.Tendsto`) |
 | converging to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
 | continuous | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
@@ -1998,6 +1999,7 @@ except a notion whose meanings take arguments of different types, which the type
 | converging to $x$ | ℝ → ℝ | `a_n → l` (Mathlib `Filter.Tendsto`) |
 | convergent | ℝ → ℝ | `a_n → l` for some `l` |
 | divergent | ℝ → ℝ | convergent to no number |
+| with a convergent subsequence | ℝ → ℝ | `a_{φ(n)} → l` for some strictly increasing `φ : ℕ → ℕ` and some `l` |
 | summable | ℝ → ℝ | `∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability) |
 | absolutely summable | ℝ → ℝ | `∑ \|a_k\|` converges (Mathlib `Summable`) |
 | conditionally summable | ℝ → ℝ | `∑ a_k` converges, `∑ \|a_k\|` does not |

@@ -180,6 +180,7 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $f\in C([0,1])$.`, `Let $f\in C^1([a,b])$.` | a real function continuous (continuously differentiable) on the set, which is its domain, as for `f\colon[0,1]\to\mathbb{R}`: its adjectives are said there. Where `[0,1]` is a type of a field (`unitsquare`), `C([0,1])` is the continuous functions on that type (`C^1([0,1])` is not read) |
 | `Let $X$ be a topological space and let $A\subseteq X$ be closed.`, `$A\subseteq X$` | a subset of the space (of its elements, not of numbers) |
 | `Let $H\subseteq G$ be a normal subgroup.`, `Let $I\subseteq R$ be an ideal.`, `Let $a\in R$ be a unit.` | a noun whose complement is left out takes the set of the variable's domain (`a normal subgroup of $G$`, `a unit of $R$`) |
+| `Every bounded sequence of real numbers has a convergent subsequence.`, `Let $(x_n)$ be a sequence in $X$. Then $(x_n)$ has a convergent subsequence.` | a strictly increasing `φ : ℕ → ℕ` with `x_{φ(n)}` convergent (in the space, to one of its points) |
 | `Let $F$ be a field with at least four elements.`, `with at most $n$ elements`, `a commutative ring with $1$` (`with identity`, `with unity`) | infinite or of order at least `n`; finite of order at most `n`; every ring of the vocabulary has an identity |
 | `Let $X$ be a random variable with values in $\{0,1\}$.` | `X\in\{0,1\}` almost surely |
 | `Let $f\colon\mathbb{R}\to\mathbb{R}$ be continuous at $0$.` | the map, then the hypothesis `Suppose that $f$ is continuous at $0$.` |

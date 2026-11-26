@@ -94,6 +94,12 @@ def vocab : Vocab where
       pred := close <| lamT F (fun _ => tt) fun a => exR fun l => tendsTo a l, doc := "`a_n → l` for some `l`" },
     { phrase := phrase!"divergent", prenominal := true, ty := F,
       pred := close <| lamT F (fun _ => tt) fun a => not (exR fun l => tendsTo a l), doc := "convergent to no number" },
+    -- (Bolzano–Weierstrass: `$(a_n)$ has a convergent subsequence`)
+    adj phrase!"with a convergent subsequence" false (fun a => exT F fun p =>
+        and (allR fun n => imp (nat n) (nat (app p n)))
+          (and (allR fun n => imp (nat n) (lt (app p n) (app p (add n (num 1)))))
+            (exR fun l => tendsTo (lamR fun n => app a (app p n)) l)))
+      "`a_{φ(n)} → l` for some strictly increasing `φ : ℕ → ℕ` and some `l`",
     adj phrase!"summable" true converges "`∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability)",
     adj phrase!"absolutely summable" true (fun a => converges (absTerms a)) "`∑ |a_k|` converges (Mathlib `Summable`)",
     adj phrase!"conditionally summable" true (fun a => and (converges a) (not (converges (absTerms a))))
