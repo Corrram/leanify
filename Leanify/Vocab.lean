@@ -438,6 +438,9 @@ structure Declared where
   /-- A word for a real number (`degree`, `distance`: the option `quantities`), not a kind of
   object of its own. -/
   number : Bool := false
+  /-- A noun whose objects these are (`Kripke frame`, a kind of `pair`): the new noun is of
+  that noun's type, with a property that Lean knows nothing of. -/
+  base : List Codes := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 namespace Declared
@@ -541,7 +544,8 @@ def pluralOf (d : Declared) : List Codes :=
 
 /-- `finite field` as `FiniteField`. -/
 def ident (ws : List Codes) : Codes :=
-  (ws.map fun w => match w with | c :: r => (if 97 ≤ c && c ≤ 122 then c - 32 else c) :: r | [] => []).flatten
+  -- (words of letters: a hyphen between words is left out)
+  ((ws.filter fun w => !w.isEmpty && w.all fun x => (97 ≤ x && x ≤ 122) || (65 ≤ x && x ≤ 90)).map fun w => match w with | c :: r => (if 97 ≤ c && c ≤ 122 then c - 32 else c) :: r | [] => []).flatten
 
 end Declared
 
@@ -565,6 +569,21 @@ def declareOne (V : Vocab) (d : Declared) : Vocab :=
     { V with nouns := V.nouns ++ [{
         sing := ph d.words, plural := ph d.pluralOf, ty := Ty.real,
         pred := Tm.lam .real .tt .tt, field := articleField, doc := "a real number, not defined in the article" }] }
+  else
+  -- a noun of the objects of another noun (`base`): of its type, with an opaque property
+  if let some n := (if d.base.isEmpty then none else V.nouns.find? fun n => n.sing == ph d.base) then
+    let c := V.consts.length
+    let pad (xs : List Codes) : List Codes := xs ++ List.replicate (c - xs.length) []
+    { V with
+      consts := V.consts ++ [.fn n.ty .prop]
+      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ (d.words.intersperse [92, 32]).flatten ++ w!"}(#)"]
+      constLean := pad V.constLean ++ [[64] ++ Declared.ident d.words]
+      nouns := V.nouns ++ [{
+        sing := ph d.words, plural := ph d.pluralOf, ty := n.ty, arg := n.arg,
+        -- (one of the objects of the noun, with the property)
+        pred := if n.onDomain then Tm.const c else
+          Tm.lam n.ty .tt (.and (.app n.pred (.loc 0)) (.app (.const c) (.loc 0))),
+        field := articleField, doc := "defined in the article in words that are not read" }] }
   else
   -- the noun at the end, the longest first
   let ending : Option (List Codes × Noun) :=
@@ -653,7 +672,8 @@ def forArticle (V : Vocab) (src : List Codes) : Vocab :=
 /-- The nouns and adjectives that the article declares (`graph`, `finite graph`). -/
 def declaredPhrases (V : Vocab) : List Codes :=
   let text (p : Phrase) : Codes := ((p.filterMap fun i => match i with | .w w => some w | _ => none).intersperse [32]).flatten
-  let nounOfTy (t : Ty) : Codes := ((V.nouns.find? fun n => n.ty == t && n.field == articleField).map (text ·.sing)).getD
+  -- (the noun of a declared kind of object; of a type of the vocabulary, its first noun)
+  let nounOfTy (t : Ty) : Codes := ((V.nouns.find? fun n => n.ty == t && n.field != articleField).map (text ·.sing)).getD
     (((V.nouns.find? fun n => n.ty == t).map (text ·.sing)).getD [])
   (V.nouns.filter (·.field == articleField)).map (fun n =>
       text n.sing ++ (if n.ty == .real then w!" (a number)" else [])) ++

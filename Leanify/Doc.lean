@@ -645,13 +645,14 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       else if v == w!"whenever" && beforeMath then word w!"for" :: standardForms f there cond (some (word w!"for")) ts
       -- `Let $(X,d)$ be a metric space`: the space `X`, whose distance `d` is the vocabulary's
       -- (`(V,\|\cdot\|)`, a normed space, likewise)
-      else if v == w!"let" && (match ts with
+      else if (v == w!"let" || v == w!"and") && (match ts with
           | o :: l :: x :: c :: _ => o.tok == .mopen && l.tok == .msym 40 && (match x.tok with | .mvar _ => true | _ => false) && c.tok == .msym 44
           | _ => false) && (
           let inner := (ts.drop 1).takeWhile (·.tok != .mclose)
           let after := ts.drop (inner.length + 2)
           inner.getLast?.map (·.tok) == some (.msym 41) &&
-          (after.take 6).any (fun p => lw p == some w!"space") && (after.head? >>= lw) == some w!"be") then
+          (after.take 12).any (fun p => lw p == some w!"space" || lw p == some w!"spaces") &&
+          ((after.head? >>= lw) == some w!"be" || (after.head? >>= lw) == some w!"and")) then
         match ts with
         | o :: _ :: x :: rest =>
           let inner := rest.takeWhile (·.tok != .mclose)
@@ -2308,6 +2309,33 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           | none => .tt
         return ⟨b.name, sty, some (.lam sty .tt (.all b.ty (.imp (.app (.loc 1) (.loc 0)) each)))⟩
       set st0
+    -- (`a finite $A$-module $M$`, `a $K$-vector space`: `a finite module $M$ over $A$`, for a
+    -- noun with a complement after `over`; `complete and separable metric space`: adjectives
+    -- joined by `and`)
+    let overNoun (ws : List Chunk) : Bool := V0.nouns.any fun n =>
+      (match n.arg with | some (ps, _, _) => ps.contains w!"over" | none => false) &&
+      (match matchPhrase n.sing ws with | some (none, _) => true | _ => false)
+    let hyphened : Option (List Chunk) := (List.range np.length).findSome? fun i =>
+      match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk) with
+      | some (Chunk.m x), some (Chunk.p 45) =>
+        let rest := np.drop (i + 2)
+        if !overNoun rest then none else
+        let j := (rest.findIdx? fun c => match c with | .m _ => true | _ => false).getD rest.length
+        -- (after the noun's variable, or after its words)
+        let k := if j < rest.length then j + 1 else rest.length
+        some (np.take i ++ rest.take k ++ [.w w!"over", .m x] ++ rest.drop k)
+      | _, _ => none
+    let noAnd : Option (List Chunk) :=
+      let lead := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+      if lead.any (fun (c : Chunk) => match c with | .w w => w == w!"and" | _ => false) && !(lead.take 1).any (fun (c : Chunk) => match c with | .w w => w == w!"and" | _ => false) then
+        some (lead.filter (fun c => !(fun (c : Chunk) => match c with | .w w => w == w!"and" | _ => false) c) ++ np.drop lead.length) else none
+    for alt in [hyphened, noAnd, hyphened.bind fun h =>
+        let lead := h.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+        if lead.any (fun (c : Chunk) => match c with | .w w => w == w!"and" | _ => false) then some (lead.filter (fun c => !(fun (c : Chunk) => match c with | .w w => w == w!"and" | _ => false) c) ++ h.drop lead.length) else none] do
+      if let some np' := alt then
+        set st0
+        if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then return b
+        set st0
     if let some np' := asNoun then
       set st0
       if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then return b
@@ -7758,6 +7786,178 @@ def compileArticle (V : Vocab) (src : Source) : Option Doc := do
   let bs := blocksOf (src.drop (k + 1)) (linesOffset (src.take (k + 1))) none []
   let (ss, _, s) ← lexSeg ms bs [] {}
   some (assemble V (ss ++ segFinish s))
+
+/-! ## The article's own notions
+
+A definition that is not read still says that there is such a notion. `A metric space is
+\emph{homogeneous} if its isometry group acts transitively on points.` makes `homogeneous`
+an adjective of metric spaces, and `A \emph{Kripke frame} is an ordered pair …` makes
+`Kripke frame` a noun, each without a meaning in Lean: what the article states about them
+is read, and holds for whatever the definition means (as for the notions that the preamble
+declares, `Declared`). -/
+
+namespace DefinedTerms
+
+def lowerC (c : Nat) : Nat := if 65 ≤ c && c ≤ 90 then c + 32 else c
+def letterC (c : Nat) : Bool := (97 ≤ c && c ≤ 122) || (65 ≤ c && c ≤ 90)
+
+/-- The words of a text, lower-cased, for the shape of a sentence: a formula `$…$` is the
+word `$`, a hyphen between letters the word `-`; commands and other signs are left out. -/
+def wordsOfText : Nat → Codes → List Codes → List Codes
+  | 0, _, acc => acc.reverse
+  | _ + 1, [], acc => acc.reverse
+  | f + 1, c :: cs, acc =>
+    if c == 36 then
+      let r := cs.dropWhile (· != 36)
+      wordsOfText f (r.drop 1) ([36] :: acc)
+    else if c == 92 then wordsOfText f (cs.dropWhile letterC) acc
+    else if letterC c then
+      let w := (c :: cs).takeWhile letterC
+      wordsOfText f ((c :: cs).drop w.length) (w.map lowerC :: acc)
+    else if c == 45 && (acc.head?.any fun w => w != [36] && w != [45]) && (cs.head?.any letterC) then
+      wordsOfText f cs ([45] :: acc)
+    else wordsOfText f cs acc
+
+/-- The text of a group `{…}` after its opening brace, and what follows it. -/
+def group : Nat → Nat → Codes → Codes → Option (Codes × Codes)
+  | 0, _, _, _ => none
+  | _ + 1, _, [], _ => none
+  | f + 1, d, c :: cs, acc =>
+    if c == 125 && d == 0 then some (acc.reverse, cs)
+    else group f (if c == 123 then d + 1 else if c == 125 then d - 1 else d) cs (c :: acc)
+
+def emphCmds : List Codes := [w!"emph", w!"textit", w!"textbf", w!"term", w!"textsl", w!"defn", w!"textsf", w!"df"]
+def emphOld : List Codes := [w!"em", w!"it", w!"bf", w!"sl"]
+
+/-- `\textbf{saturated subalgebra}` as `saturated subalgebra` (emphasis inside emphasis). -/
+def unwrap (t : Codes) : Codes :=
+  match t.dropWhile (· == 32) with
+  | 92 :: cs =>
+    let name := cs.takeWhile letterC
+    match cs.drop name.length with
+    | 123 :: r =>
+      if emphCmds.contains name then
+        match group (r.length + 1) 0 r [] with
+        | some (inner, rest) => if rest.all (· == 32) then inner else t
+        | none => t
+      else t
+    | _ => t
+  | _ => t
+
+/-- The emphasized phrases of a text, each with the text before it and the text after it. -/
+def emphasized : Nat → Codes → Codes → List (Codes × Codes × Codes) → List (Codes × Codes × Codes)
+  | 0, _, _, acc => acc.reverse
+  | _ + 1, [], _, acc => acc.reverse
+  | f + 1, c :: cs, before, acc =>
+    let hit : Option (Codes × Codes) :=
+      if c == 92 then
+        let name := cs.takeWhile letterC
+        match cs.drop name.length with
+        | 123 :: r => if emphCmds.contains name then group (r.length + 1) 0 r [] else none
+        | _ => none
+      else if c == 123 then
+        match cs with
+        | 92 :: r =>
+          let name := r.takeWhile letterC
+          if emphOld.contains name then group (r.length + 1) 0 (r.drop name.length) [] else none
+        | _ => none
+      else none
+    match hit with
+    | some (inner, rest) =>
+      -- (`\emph{\textbf{saturated subalgebra}}`: the inner text)
+      let inner := unwrap inner
+      emphasized f rest (inner.reverse ++ before) ((inner, before.reverse, rest) :: acc)
+    | none => emphasized f cs (c :: before) acc
+
+/-- The words of a name: letters, with hyphens between them; at most five words. -/
+def nameWords (t : Codes) : Option (List Codes) :=
+  if t.any (fun c => !(letterC c || c == 32 || c == 45 || c == 10)) then none else
+  let ws := wordsOfText (t.length + 1) t []
+  let n := (ws.filter (· != [45])).length
+  if n == 0 || n > 5 || ws.head? == some [45] || ws.getLast? == some [45] then none else some ws
+
+/-- The first noun of the vocabulary among the words (the earliest, the longest there), in
+the singular or the plural. -/
+def firstNoun (V : Vocab) (ws : List Codes) : Option Noun :=
+  let nouns := V.nouns.filter fun n => !n.sing.isEmpty && n.sing.all fun i => match i with | .w _ => true | _ => false
+  (List.range ws.length).findSome? fun i =>
+    let here := nouns.filter fun n =>
+      let fits (p : Phrase) : Bool := !p.isEmpty && (ws.drop i).take p.length == p.filterMap fun it => match it with | .w w => some w | _ => none
+      fits n.sing || fits n.plural
+    here.foldl (fun (best : Option Noun) n => match best with
+      | some b => if n.sing.length > b.sing.length then some n else some b
+      | none => some n) none
+
+def singWords (n : Noun) : List Codes := n.sing.filterMap fun it => match it with | .w w => some w | _ => none
+
+/-- What an emphasized phrase of a definition declares, by the words around it:
+`… NOUN … is [called|said to be] \emph{ADJ}`: an adjective of the noun; `a|an \emph{NAME}`:
+a noun, of the objects of the noun that the sentence says it is (`is a|an … NOUN`, or the
+noun before `is called a`), or else of objects of its own. -/
+def declaredBy (V : Vocab) (before name after : Codes) : Option Declared := do
+  let ws ← nameWords name
+  -- (a name, not a phrase that goes on: `bisimulation between`)
+  if (ws.getLast?.any fun w => [w!"between", w!"of", w!"in", w!"on", w!"for", w!"to", w!"with", w!"and", w!"or", w!"the", w!"a", w!"an", w!"is", w!"if", w!"arbitrary"].contains w) then none
+  let bw := wordsOfText (before.length + 1) before []
+  let aw := wordsOfText (after.length + 1) after []
+  let ends (xs : List Codes) : Bool := bw.reverse.take xs.length == xs.reverse
+  let ph (xs : List Codes) : Phrase := xs.map PItem.w
+  if ends [w!"a"] || ends [w!"an"] then
+    -- a noun
+    if V.nouns.any (fun n => n.sing == ph ws) then none else
+    -- (`… is called a NAME`: the objects of the noun before; `A NAME is a|an … NOUN`: after)
+    let called := bw.contains w!"called" || bw.contains w!"call"
+    let base : Option Noun := if called then firstNoun V bw else
+      match aw with
+      | i :: a :: rest => if (i == w!"is" || i == w!"consists") && (a == w!"a" || a == w!"an") then firstNoun V (rest.take 6) else none
+      | _ => none
+    -- (a name that ends with a noun is an adjective of that noun, as a declared one)
+    let endsNoun := (List.range ws.length).drop 1 |>.any fun p => V.nouns.any fun n => n.sing == ph (ws.drop p)
+    if endsNoun then some { words := ws }
+    else match base with
+      | some n => some { words := ws, base := singWords n }
+      | none => some { words := ws }
+  else if ends [w!"is"] || ends [w!"is", w!"called"] || ends [w!"said", w!"to", w!"be"] || ends [w!"are"] ||
+      ends [w!"are", w!"called"] || ends [w!"be"] then
+    -- an adjective, of the first noun of the sentence
+    let n ← firstNoun V bw
+    let words := ws ++ singWords n
+    if V.mods.any (fun m => m.phrase == ph ws && m.ty == n.ty) then none else some { words }
+  else none
+
+end DefinedTerms
+
+/-- The notions that the article defines in sentences that are not read (definitions, and
+sentences of the text), with the vocabulary `V`: to be declared (`Vocab.declare`), so that
+the article is read with them. -/
+def definedTerms (V : Vocab) (src : Source) : List Declared :=
+  match compileArticle V src with
+  | none => []
+  | some d =>
+    let all := joinLines src
+    let unread := (d.sentences.zip d.outcomes).filter fun ((ctx, _, _), o) =>
+      (match o with | .compiled _ _ => false | _ => true) &&
+      (match ctx.kind with
+        | .result e => e.take 3 == w!"def"
+        | .text => true
+        | .proof => false)
+    -- (declared one after another: a later name may end with an earlier noun)
+    let (_, ds) := unread.foldl (fun (acc : Vocab × List Declared) ((_, a, b), _) =>
+      let text := (all.drop a).take (b + 1 - a)
+      (DefinedTerms.emphasized (text.length + 1) text [] []).foldl (fun (acc : Vocab × List Declared) (name, before, after) =>
+        match DefinedTerms.declaredBy acc.1 before name after with
+        | some dcl =>
+          let W := acc.1.declareOne dcl
+          if W == acc.1 then acc else (W, acc.2 ++ [dcl])
+        | none => acc) acc) (V, [])
+    ds
+
+/-- The vocabulary an article is read with: `V`, the notions of its preamble (`extra`: and
+of the command line), the negations it uses, and the notions that it defines in sentences
+that are not read. -/
+def Vocab.forArticleRead (V : Vocab) (src : Source) (extra : List Declared := []) : Vocab :=
+  let V := (V.forArticle src).declare extra
+  V.declare (definedTerms V src)
 
 /-- Staged kernel certificates compose to the compilation of the whole source. -/
 theorem compileArticle_eq {V : Vocab} {src : Source} {k : Nat} {ms : Macros} {bs : List (Nat × List Codes)}

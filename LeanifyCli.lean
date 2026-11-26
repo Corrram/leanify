@@ -382,7 +382,7 @@ def initArticle (path : System.FilePath) (opts : List String) : IO UInt32 := do
   noteInputs path
   let contents ← IO.FS.readFile path
   let lines ← readLines path
-  let V := V.forArticle lines
+  let V := V.forArticleRead lines
   let some d := compileArticle V lines
     | IO.eprintln s!"{path}: error: the article could not be read (no \\begin\{document}, or unbalanced math)"; pure 1
   let pin := sourcePin contents
@@ -608,7 +608,7 @@ def splitFinding (f : String) : Option (String × Nat × String × String) :=
 def checkRecs (V : Vocab) (path : System.FilePath) : IO (Array Rec) := do
   let src ← readSource path
   let lines := src.lines.toList
-  let V := V.forArticle lines
+  let V := V.forArticleRead lines
   match compileArticle V lines with
   | none => pure #[.warn "Leanify could not read the article (no \\begin{document}, or unbalanced math)"]
   | some d =>

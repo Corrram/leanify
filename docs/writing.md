@@ -190,6 +190,8 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $\mathcal{F}$ be a family of subgroups of $G$.`, `a collection of real numbers`, `a set of finite subsets of $\mathbb{R}$` | a set each of whose elements is as the plural noun phrase says (`family` and `collection` are `set`) |
 | `Let $\varphi\colon G\to G$ be a mapping.`, `an injective mapping` | `mapping` is `map` |
 | `Let $(a,b)$ be a pair of integers with $a<b$.`, `a triple of positive integers`, `an ordered pair of …` | as `Let $a,b$ be integers with $a<b$.` |
+| `Let $M$ be a finitely generated $R$-module.`, `a finite-dimensional $K$-vector space` | `a … module over $R$`: a formula and a hyphen before a noun that has a complement after `over` |
+| `Let $X$ be a complete and separable metric space.` | adjectives before a noun joined by `and` |
 | `Then either $n$ is even or $n$ is odd.`, `Then $n$ has a prime factor $p\le\sqrt{n}$ or $n$ is prime.` | one of the clauses (`either` is left out; the noun phrase after `has a` ends before `or`) |
 | `Let $X$ be a Poisson random variable with parameter $\lambda>0$.`, `a binomial random variable with parameters $n$ and $p$`, `a normal random variable with mean $\mu$ and variance $\sigma^2$`, `an exponential random variable with rate $\lambda$` | as `a random variable that is Poisson distributed with parameter $\lambda>0$` (and so on) |
 | `Every bounded sequence of real numbers has a convergent subsequence.`, `Let $(x_n)$ be a sequence in $X$. Then $(x_n)$ has a convergent subsequence.` | a strictly increasing `φ : ℕ → ℕ` with `x_{φ(n)}` convergent (in the space, to one of its points) |
@@ -608,6 +610,24 @@ In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\def
 `\coloneqq`, `\backslash` and `\smallsetminus` are `\setminus`; the sizes `\bigg`, `\Bigg`,
 `\middle` and the old font switches `\rm`, `\sf` are skipped; `\mathsf`, `\mathfrak`,
 `\mathscr`, `\mathtt`, `\boldsymbol` and `\bm` name a symbol as `\mathcal` does.
+
+### Notions that the article defines in words that are not read
+
+A definition whose condition Leanify does not read still introduces its notion. The
+emphasized name (`\emph`, `\textit`, `\textbf`, `\term`, `{\em …}`) in a definition, or in a
+sentence of the text, that is not read becomes a notion of the article, as if the preamble
+had declared it (below), and the statements about it are read:
+
+| Write | Reading |
+| --- | --- |
+| `A metric space is \emph{homogeneous} if its isometry group acts transitively on points.`, `A subgroup $H$ of a group $G$ is called \textbf{malnormal} if …` | after `is`, `is called`, `is said to be`: an adjective of the first noun of the sentence (`a homogeneous metric space`, `$X$ is homogeneous`, `a malnormal subgroup of $G$`), a property of which nothing is known |
+| `A group $G$ is called a \emph{Tarski monster} if …`, `A \emph{code} is a subset of …` | after `a`/`an`: a noun, of the objects of the noun that the sentence names (a Tarski monster is a group with a property of which nothing is known) |
+| `A \emph{Kripke frame} is an ordered pair $(W,R)$ where …` | with no noun of the vocabulary in the sentence: a kind of object of its own (`\mathrm{KripkeFrame}`) |
+
+The check lists them as *defined here in sentences that are not read, and taken as given*.
+A definition that is read (`We call a copula $C$ \emph{SI} if DISPLAY`) defines its notion
+as before, with its meaning. As for a declared notion, what is proved about such a notion
+is proved for whatever it means: in Lean it is an `opaque` constant.
 
 ### Notions that the article does not define
 

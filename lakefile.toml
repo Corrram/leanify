@@ -1011,6 +1011,12 @@ srcDir = "tests"
 globs = ["Default.+"]
 
 [[lean_lib]]
+# The notions of definitions that are not read: adjectives and nouns taken as given.
+name = "Defined"
+srcDir = "tests"
+globs = ["Defined.+"]
+
+[[lean_lib]]
 # Groups, rings, fields, vector spaces and spaces with their elements.
 name = "Structures"
 srcDir = "tests"

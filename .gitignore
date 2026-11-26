@@ -159,4 +159,5 @@ article-reader/
 /tests/GeometricProbability/article.leanify.*
 /tests/RandomVariables/article.leanify.*
 /tests/Default/article.leanify.*
+/tests/Defined/article.leanify.*
 /tests/Structures/article.leanify.*

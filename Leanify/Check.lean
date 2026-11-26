@@ -968,6 +968,12 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
   let lines := src.lines.toList
   -- the notions that the article declares in its preamble (and those of `--notions`)
   let V := (V.forArticle lines).declare extra
+  -- (and those that it defines in sentences that are not read: taken as given)
+  let own := definedTerms V lines
+  let before := V.declaredPhrases.map Codes.toString
+  let V := V.declare own
+  -- (named apart from the notions that the article does not define at all)
+  let ownNames := (V.declaredPhrases.map Codes.toString).filter (!before.contains ·)
   let k := (lines.findIdx? isBeginDocument).getD lines.length
   let bad := (Declared.ofPreamble (lines.take k)).2
   unless bad.isEmpty || json do
@@ -990,8 +996,12 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
       | 0 => pure ()
       | 1 => IO.println s!"{path}: 1 of the {d.claims.length} claims follows a sentence of its result or proof that is not read: its reading may lack a hypothesis, or keep one that has ended (--claims names it)"
       | n => IO.println s!"{path}: {n} of the {d.claims.length} claims follow a sentence of their result or proof that is not read: their readings may lack a hypothesis, or keep one that has ended (--claims names them)"
+      -- the notions of definitions that are not read
+      unless own.isEmpty do
+        let name (d : Declared) : String := Codes.toString ((d.words.intersperse [32]).flatten) |>.replace " - " "-"
+        IO.println s!"{path}: defined here in sentences that are not read, and taken as given (what is stated about them is read, and holds whatever they mean): {String.intercalate ", " (own.map name)}"
       -- what the article uses without defining it, and what it could declare so
-      match notDefinedHere V d with
+      match (notDefinedHere V d).filter (!ownNames.contains ·) with
       | [] => pure ()
       | ns => IO.println s!"{path}: not defined here (a kind of object among them is assumed to have an element): {String.intercalate ", " ns}"
       -- the results quoted from the literature, which the article assumes
@@ -1017,7 +1027,7 @@ that reads the most first, then the one that adds the most to it, and so on. -/
 
 /-- The sentences of the article that are read with the vocabulary (compiled), by index. -/
 def readWith (V : Vocab) (lines : List (List Nat)) (extra : List Declared) : Option (List Nat) :=
-  (compileArticle ((V.forArticle lines).declare extra) lines).map fun d =>
+  (compileArticle (V.forArticleRead lines extra) lines).map fun d =>
     (d.outcomes.zipIdx.filter fun (o, _) => match o with | .compiled _ _ => true | _ => false).map (·.2)
 
 /-- The fields named by the option `vocab` of `\usepackage[…]{leanify}` in the preamble. -/

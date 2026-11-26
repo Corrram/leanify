@@ -179,6 +179,9 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
   -- (and the negations `nonX` of adjectives that its text uses)
   let negs := Vocab.nonWords (src.drop ((src.findIdx? isBeginDocument).getD src.length))
   let V := (V.declare declared).negations negs
+  -- (and the notions that it defines in sentences that are not read)
+  let own := definedTerms V src
+  let V := V.declare own
   -- the certificate pins this file alone
   let files ← readSource path
   unless files.inputs.isEmpty do
@@ -195,16 +198,19 @@ stages (`start`, `preamble`, `paragraphs`, `lex{i}`, `seg{i}`, `segFinished`,
     liftCoreM <| addAndCompile <| Declaration.defnDecl
       { name := n, levelParams := [], type := ty, value := val,
         hints := ReducibilityHints.abbrev, safety := DefinitionSafety.safe }
-  if declared.isEmpty && negs.isEmpty then
+  if declared.isEmpty && negs.isEmpty && own.isEmpty then
     defineLiteral (ns ++ `declared) declared
     defineExpr (ns ++ `vocab) (Lean.mkConst ``Vocab) (Lean.mkConst vocabName)
   else
     compiled (ns ++ `declared) (toTypeExpr (List Declared)) (toExpr declared)
     compiled (ns ++ `negations) (toTypeExpr (List Codes)) (toExpr negs)
+    compiled (ns ++ `defined) (toTypeExpr (List Declared)) (toExpr own)
     compiled (ns ++ `vocab) (Lean.mkConst ``Vocab)
-      (mkApp2 (Lean.mkConst ``Vocab.negations)
-        (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
-        (Lean.mkConst (ns ++ `negations)))
+      (mkApp2 (Lean.mkConst ``Vocab.declare)
+        (mkApp2 (Lean.mkConst ``Vocab.negations)
+          (mkApp2 (Lean.mkConst ``Vocab.declare) (Lean.mkConst vocabName) (Lean.mkConst (ns ++ `declared)))
+          (Lean.mkConst (ns ++ `negations)))
+        (Lean.mkConst (ns ++ `defined)))
   defineLiteral (ns ++ `source) src
   -- by default, the compiler is run by Lean's evaluator, and that is all
   unless leanify.kernel.get (← getOptions) do
@@ -393,7 +399,7 @@ syntax (name := leanifyCheck) "#leanify_check " str (" with " ident)? : command
   let V ← liftCoreM <| evalVocab vocabName
   let path ← liftCoreM (resolvePath rel)
   let lines ← readLines path
-  let V := V.forArticle lines
+  let V := V.forArticleRead lines
   match compileArticle V lines with
   | none => throwError "{rel} could not be read (no \\begin\{document}, or unbalanced math)"
   | some d =>
