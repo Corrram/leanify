@@ -48,7 +48,8 @@ tests/Arithmetic/article.tex:75:28: info: claim 26: \forall x\in \mathbb{R},\ x\
 tests/Arithmetic/article.tex:79:1: info: claim 27: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1<x\Rightarrow (\exists y\in \mathbb{R},\ ((y\in \mathbb{Z}\land 2\le y\land (\forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (t\in \mathbb{N}\land a\in \mathbb{N})\land t\,a=y\Rightarrow t=1\lor a=1))\land x\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land x=y\,t))\land \top)
 tests/Arithmetic/article.tex:83:21: info: claim 28: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow x\in \mathbb{Z}\land {y}^{x}-y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {y}^{x}-y=x\,z))
 tests/Arithmetic/article.tex:83:21: info: claim 28 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow x\in \mathbb{Z}\Rightarrow 0\le y\land ({y}^{x}-y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\Rightarrow 0\le y)))
-tests/Arithmetic/article.tex: 10 definitions, 29 claims
+tests/Arithmetic/article.tex:87:1: info: claim 29: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land 2\le x\Rightarrow (\exists z\in \mathbb{R},\ (z\in \mathbb{N}\land 1\le z)\land (\exists s\in \mathbb{R}\to \mathbb{R},\ (\forall t\in \mathbb{R},\ t\in \mathbb{Z}\land 1\le t\land t\le z\Rightarrow s(t)\in \mathbb{Z}\land 2\le s(t)\land (\forall a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (a\in \mathbb{N}\land b\in \mathbb{N})\land a\,b=s(t)\Rightarrow a=1\lor b=1))\land \prod(1)(z)(s)=x))
+tests/Arithmetic/article.tex: 10 definitions, 30 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 23 compiled, 0 failed, 0 prose (of 23)
-  all: 33 compiled, 0 failed, 0 prose (of 33)
+  results: 24 compiled, 0 failed, 0 prose (of 24)
+  all: 34 compiled, 0 failed, 0 prose (of 34)

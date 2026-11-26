@@ -585,6 +585,26 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
+      -- `NP can be written as a NP'`, `… can be expressed as …`: `NP is a NP'`
+      else if v == w!"can" && (match ts with
+          | b :: w :: a :: _ => lw b == some w!"be" && (lw w == some w!"written" || lw w == some w!"expressed" || lw w == some w!"represented") && lw a == some w!"as"
+          | _ => false) then
+        word w!"is" :: standardForms f there cond (some (word w!"is")) (ts.drop 3)
+      -- `a Poisson random variable with parameter $\lambda$` (binomial, exponential, normal,
+      -- Gaussian, Bernoulli): `a random variable that is Poisson distributed with …`
+      else if (match lw t with
+          | some d => [w!"poisson", w!"binomial", w!"exponential", w!"normal", w!"gaussian", w!"bernoulli"].contains d
+          | none => false) && (match ts with
+          | r :: va :: wi :: _ => lw r == some w!"random" && (lw va == some w!"variable" || lw va == some w!"variables") && lw wi == some w!"with"
+          | _ => false) then
+        match ts with
+        | r :: va :: rest =>
+          let d := (lw t).getD []
+          let adv : Codes := if d == w!"poisson" then w!"Poisson" else if d == w!"binomial" then w!"binomially"
+            else if d == w!"exponential" then w!"exponentially" else if d == w!"bernoulli" then w!"Bernoulli" else w!"normally"
+          r :: va :: word w!"that" :: word (if lw va == some w!"variables" then w!"are" else w!"is") :: word adv :: word w!"distributed" ::
+            standardForms f there cond (some (word w!"distributed")) rest
+        | _ => t :: standardForms f there cond (some t) ts
       -- `φ whenever $ψ$`: `φ for $ψ$` (for every value of the new variables of `ψ`, inside the
       -- clause that `φ` is part of: `there is $\delta>0$ such that … whenever $|x|<\delta$`)
       else if v == w!"whenever" && beforeMath then word w!"for" :: standardForms f there cond (some (word w!"for")) ts
@@ -4471,6 +4491,12 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
         let cs := ((punct 44 cs).bind fun r => (kw [w!"and"] r).getD r |> some).getD cs
         let cs := (kw [w!"and"] cs).getD cs
         if cs.isEmpty then pure acc.reverse else
+        -- (`$(x_n)$ is a Cauchy sequence`, of a sequence in a space: after the adjectives, a noun
+        -- of the subject's own objects, which says nothing more, `sequence in $X$`)
+        if !acc.isEmpty && V.nouns.any (fun n => n.ty == x.2 &&
+            ((n.sing.filterMap fun i => match i with | .w w => some w | _ => none).take (wordsOf cs).length == wordsOf cs ||
+             (n.plural.filterMap fun i => match i with | .w w => some w | _ => none).take (wordsOf cs).length == wordsOf cs)) &&
+            cs.all (fun c => match c with | .w _ => true | _ => false) then pure acc.reverse else
         -- (`$H$ is normal`, of a subgroup `H` of `G`: normal in `G`, where the vocabulary has the
         -- adjective relative to a structure)
         let cs : List Chunk ← match cs with

@@ -100,6 +100,7 @@ tests/Structures/article.tex:366:47: info: claim 81: \forall x\in \mathrm{El}\to
 tests/Structures/article.tex:370:49: info: claim 82: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\land \neg (\operatorname{Finite}(x)\land \lvert x\rvert<4)\Rightarrow \operatorname{Field}(x)
 tests/Structures/article.tex:374:41: info: claim 83: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{CommRing}(x)\Rightarrow \operatorname{Ring}(x)
 tests/Structures/article.tex:378:73: info: claim 84: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\land \operatorname{Compact}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{El},\ (\forall s\in \mathbb{R},\ s\in \mathbb{N}\Rightarrow x(y(s)))\Rightarrow (\exists s\in \mathbb{R}\to \mathbb{R},\ (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow s(t)\in \mathbb{N})\land (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow s(t)<s(t+1))\land (\exists t\in \mathrm{El},\ (a\in \mathbb{R}\mapsto y(s(a)))\to t)))
-tests/Structures/article.tex: 5 definitions, 85 claims
-  results: 175 compiled, 0 failed, 0 prose (of 175)
-  all: 175 compiled, 0 failed, 0 prose (of 175)
+tests/Structures/article.tex:382:76: info: claim 85: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{El},\ (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow x(y(t)))\land (\exists t\in \mathrm{El},\ y\to t)\Rightarrow \operatorname{Cauchy}(y))
+tests/Structures/article.tex: 5 definitions, 86 claims
+  results: 177 compiled, 0 failed, 0 prose (of 177)
+  all: 177 compiled, 0 failed, 0 prose (of 177)
