@@ -101,6 +101,7 @@ except a notion whose meanings take arguments of different types, which the type
   * `stochastic`
     * `statistics`
       * `probability`
+        * `randomvariables`
         * `distributions`
         * `densities`
         * `information`
@@ -170,12 +171,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` |
 | `topology` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` |
-| `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
+| `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
 | `discrete` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` |
@@ -184,9 +185,9 @@ except a notion whose meanings take arguments of different types, which the type
 | `groups` | `structures` | `structures` |
 | `rings` | `structures` | `structures` |
 | `spaces` | `structures` | `structures` |
-| `probability` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
+| `probability` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `dependence` | `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `dependence` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas` |
 
 ## `core`
 
@@ -3774,4 +3775,78 @@ except a notion whose meanings take arguments of different types, which the type
 | expected distance between two random points in the unit disk | ℝ | `(1/π²)∫_{D×D} \|P - Q\|` (which is `128/(45π)`) |
 | expected area of a triangle with random vertices in the unit square | ℝ | `∫_{[0,1]⁶} area(PQR)` (which is `11/144`) |
 | probability that three random points on a circle form an acute triangle | ℝ | `(2π)^{-3}` times the measure of the angles `(α, β, γ) ∈ [0, 2π)³` whose points form an acute triangle (which is `1/4`) |
+
+## `randomvariables`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| random variable | $\mathrm{RV}$ | a measurable function of the outcome (Mathlib `Measurable`), on `[0,1]` with Lebesgue measure |
+| real random variable | $\mathrm{RV}$ | (Mathlib `Measurable`) |
+| real-valued random variable | $\mathrm{RV}$ | (Mathlib `Measurable`) |
+| event | ℝ → Prop | a set of outcomes, whose probability is `P(A)` |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| nonnegative | $\mathrm{RV}$ | `X ≥ 0` almost surely |
+| non-negative | $\mathrm{RV}$ | `X ≥ 0` almost surely |
+| positive | $\mathrm{RV}$ | `X > 0` almost surely |
+| integrable | $\mathrm{RV}$ | `𝔼\|X\| < ∞` (Mathlib `Integrable`) |
+| square-integrable | $\mathrm{RV}$ | `𝔼[X²] < ∞` (Mathlib `MemLp X 2`) |
+| bounded | $\mathrm{RV}$ | `\|X\| ≤ c` almost surely, for some `c` |
+| normally distributed | $\mathrm{RV}$ | with a normal distribution |
+| exponentially distributed | $\mathrm{RV}$ | with an exponential distribution |
+| poisson distributed | $\mathrm{RV}$ | with a Poisson distribution |
+| uniformly distributed | $\mathrm{RV}$ | uniform on some `[a,b]` |
+| standard normal | $\mathrm{RV}$ | with the distribution `N(0,1)` |
+| normal | $\mathrm{RV}$ | with a normal distribution `N(μ,σ²)`, `σ² > 0` |
+| gaussian | $\mathrm{RV}$ | with a normal distribution |
+| exponential | $\mathrm{RV}$ | with an exponential distribution |
+| poisson | $\mathrm{RV}$ | with a Poisson distribution |
+| bernoulli | $\mathrm{RV}$ | with values `0` and `1` |
+| binomial | $\mathrm{RV}$ | with a binomial distribution |
+| with finite mean | $\mathrm{RV}$ | `𝔼\|X\| < ∞` |
+| with finite expectation | $\mathrm{RV}$ | `𝔼\|X\| < ∞` |
+| with finite variance | $\mathrm{RV}$ | `𝔼[X²] < ∞` |
+| with finite second moment | $\mathrm{RV}$ | `𝔼[X²] < ∞` |
+| with mean zero | $\mathrm{RV}$ | `𝔼X = 0` |
+| with zero mean | $\mathrm{RV}$ | `𝔼X = 0` |
+| with mean $x$ | $\mathrm{RV}$ | `𝔼X = μ` |
+| with expectation $x$ | $\mathrm{RV}$ | `𝔼X = μ` |
+| with expected value $x$ | $\mathrm{RV}$ | `𝔼X = μ` |
+| with variance $x$ | $\mathrm{RV}$ | `Var X = σ²` |
+| with finite variance $x$ | $\mathrm{RV}$ | `Var X = σ² < ∞` |
+| with finite mean $x$ | $\mathrm{RV}$ | `𝔼X = μ` |
+| with mean $x$ and variance $a$ | $\mathrm{RV}$ | `𝔼X = μ`, `Var X = σ²` |
+| normally distributed with mean $x$ and variance $a$ | $\mathrm{RV}$ | `N(μ,σ²)`, `σ² > 0` |
+| with a normal distribution with mean $x$ and variance $a$ | $\mathrm{RV}$ | `N(μ,σ²)` |
+| with the normal distribution with mean $x$ and variance $a$ | $\mathrm{RV}$ | `N(μ,σ²)` |
+| standard normally distributed | $\mathrm{RV}$ | `N(0,1)` |
+| with a standard normal distribution | $\mathrm{RV}$ | `N(0,1)` |
+| with the standard normal distribution | $\mathrm{RV}$ | `N(0,1)` |
+| exponentially distributed with rate $x$ | $\mathrm{RV}$ | `P(X ≤ t) = 1 - e^{-λt}`, `t ≥ 0` |
+| exponentially distributed with parameter $x$ | $\mathrm{RV}$ | the rate `λ` |
+| with an exponential distribution with rate $x$ | $\mathrm{RV}$ | `P(X ≤ t) = 1 - e^{-λt}` |
+| with an exponential distribution with parameter $x$ | $\mathrm{RV}$ | the rate `λ` |
+| uniformly distributed on $[x,a]$ | $\mathrm{RV}$ | `P(X ≤ t) = (t-a)/(b-a)` on `[a,b]` |
+| with a uniform distribution on $[x,a]$ | $\mathrm{RV}$ | on `[a,b]` |
+| with the uniform distribution on $[x,a]$ | $\mathrm{RV}$ | on `[a,b]` |
+| poisson distributed with parameter $x$ | $\mathrm{RV}$ | `P(X = k) = e^{-λ}λ^k/k!` |
+| poisson distributed with mean $x$ | $\mathrm{RV}$ | `P(X = k) = e^{-λ}λ^k/k!` |
+| with a poisson distribution with parameter $x$ | $\mathrm{RV}$ | `P(X = k) = e^{-λ}λ^k/k!` |
+| with a poisson distribution with mean $x$ | $\mathrm{RV}$ | `P(X = k) = e^{-λ}λ^k/k!` |
+| bernoulli distributed with parameter $x$ | $\mathrm{RV}$ | `P(X = 1) = p`, `P(X = 0) = 1-p` |
+| with a bernoulli distribution with parameter $x$ | $\mathrm{RV}$ | `P(X = 1) = p`, `P(X = 0) = 1-p` |
+| binomially distributed with parameters $x$ and $a$ | $\mathrm{RV}$ | `P(X = k) = C(n,k)pᵏ(1-p)ⁿ⁻ᵏ` |
+| with a binomial distribution with parameters $x$ and $a$ | $\mathrm{RV}$ | `P(X = k) = C(n,k)pᵏ(1-p)ⁿ⁻ᵏ` |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| expectation of $a$ | $\mathrm{RV}$ → ℝ | `𝔼X`, for an integrable `X` |
+| expected value of $a$ | $\mathrm{RV}$ → ℝ | `𝔼X` |
+| standard deviation of $a$ | $\mathrm{RV}$ → ℝ | `√Var X` |
+| probability of $a$ | (ℝ → Prop) → ℝ | `P(A)` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| $\operatorname{@at}$ | $\mathrm{RV}$ | the value at an outcome, inside `\mathbb{E}[…]` and `P(…)` |
 

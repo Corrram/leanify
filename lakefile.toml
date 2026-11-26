@@ -999,6 +999,12 @@ srcDir = "tests"
 globs = ["GeometricProbability.+"]
 
 [[lean_lib]]
+# The field randomvariables: real random variables, expectations and probabilities.
+name = "RandomVariables"
+srcDir = "tests"
+globs = ["RandomVariables.+"]
+
+[[lean_lib]]
 # The default vocabulary: every field.
 name = "Default"
 srcDir = "tests"

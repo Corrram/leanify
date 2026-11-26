@@ -54,6 +54,7 @@ import Leanify.Library.Convexity
 import Leanify.Library.Fractional
 import Leanify.Library.Utility
 import Leanify.Library.MarkovChains
+import Leanify.Library.RandomVariables
 import Leanify.Library.Curves
 import Leanify.Library.ContinuedFractions
 import Leanify.Library.Digits
@@ -293,7 +294,8 @@ def all : List (String × Vocab) := [
   ("orbits", Orbits.vocab),
   ("variograms", Variograms.vocab),
   ("traffic", Traffic.vocab),
-  ("geometricprobability", GeometricProbability.vocab)]
+  ("geometricprobability", GeometricProbability.vocab),
+  ("randomvariables", RandomVariables.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -335,7 +337,7 @@ def bundles : List (String × List String) := [
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
   -- names of parts of `structures`, kept for articles that name them
   ("groups", ["structures"]), ("rings", ["structures"]), ("spaces", ["structures"]),
-  ("probability", ["distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
+  ("probability", ["randomvariables", "distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "learning", "surveysampling", "variograms", "dependence"])]
 

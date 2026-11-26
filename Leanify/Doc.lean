@@ -571,6 +571,15 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       -- `we obtain $φ$`
       else if (v == w!"get" || v == w!"obtain" || v == w!"find") && prevWord == some w!"we" && beforeMath then
         word w!"have" :: standardForms f there cond (some t) ts
+      -- `Let $X$ follow a normal distribution with …`, `$X$ has a Poisson distribution with
+      -- …`: a random variable with it
+      else if (v == w!"follow" || v == w!"follows" || v == w!"have" || v == w!"has") && (match ts with
+            | a :: d :: _ => (lw a == some w!"a" || lw a == some w!"an" || lw a == some w!"the") &&
+                (lw d).any fun x => [w!"normal", w!"standard", w!"poisson", w!"exponential", w!"uniform", w!"bernoulli", w!"binomial"].contains x
+            | _ => false) && afterMath then
+        let verb := if v == w!"follow" || v == w!"have" then w!"be" else w!"is"
+        word verb :: word w!"a" :: word w!"random" :: word w!"variable" :: word w!"with" ::
+          standardForms f there cond (some (word w!"with")) ts
       -- `at least two vertices`: the number `$2$`
       else if (prevWord == some w!"least" || prevWord == some w!"most" || prevWord == some w!"exactly") &&
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
@@ -2048,7 +2057,8 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         | j + 1 => do
           set st0
           tryCatch (nounPhrase1Core (np.take (j + 1) ++ [.m v] ++ (np.take k).drop (j + 1) ++ np.drop (k + 1)) outer)
-            fun _ => tryAt j
+            -- (read but for a letter that nothing defines: that letter, for the caller to bind)
+            fun e' => if e'.code == E.undefined || e'.code == E.free then throw e' else tryAt j
       tryAt (k - 1)
     | _ => throw e
 
@@ -2210,7 +2220,14 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .minm xs | .maxm xs | .tuple xs | .conj xs => xs.flatMap (freeIds f bound)
     | .int lo hi b v => freeIds f bound lo ++ freeIds f bound hi ++ freeIds f (v :: bound) b
     | .interval a b => freeIds f bound a ++ freeIds f bound b
-    | .chain x rs => freeIds f bound x ++ rs.flatMap (fun r => freeIds f bound r.2)
+    -- (`X\sim\mathrm{Bin}(n,p)`: the name of the distribution is no variable)
+    | .chain x rs => freeIds f bound x ++ rs.flatMap (fun r =>
+        if r.1 == .sim then (match r.2 with
+          | .app _ args => args.flatMap (freeIds f bound)
+          | .mul _ y => freeIds f bound y
+          | .id _ => []
+          | d => freeIds f bound d)
+        else freeIds f bound r.2)
     | .mapsto p b => freeIds f (freeIds f [] p ++ bound) b
     | .ival a b _ _ => freeIds f bound a ++ freeIds f bound b
     | .setOf p d cs => freeIds f bound d ++ cs.flatMap (freeIds f (freeIds f [] p ++ bound))
@@ -2369,8 +2386,14 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
     tryCatch (nounBinders np outer) fun e => do
       if e.code != E.undefined && e.code != E.free then throw e
       let v := e.detail
-      let single := match v with | [c] => (c ≥ 97 && c ≤ 122) || (c ≥ 65 && c ≤ 90) | _ => false
-      let inPhrase := np.any fun c => match c with | .m ts => ts.contains (.id v) | _ => false
+      -- (a Latin or Greek letter: `with mean $\mu$ and variance $\sigma^2$`)
+      let greek := [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta", w!"theta",
+        w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"rho", w!"sigma", w!"tau", w!"phi", w!"varphi", w!"chi", w!"psi", w!"omega"]
+      let isGreek := v.head? == some 92 && greek.contains (v.drop 1)
+      let single := isGreek || match v with | [c] => (c ≥ 97 && c ≤ 122) || (c ≥ 65 && c ≤ 90) | _ => false
+      let inPhrase := np.any fun c => match c with
+        | .m ts => ts.contains (.id v) || (isGreek && (ts.contains (.cmd (v.drop 1)) || ts.contains (.id v)))
+        | _ => false
       let varOfNoun := np.any fun c => match c with | .m [.id w] => w == v | _ => false
       if !single || !inPhrase || (outer.any (·.1 == v)) then throw e
       -- (not the noun's own variable: `a graph $n$`)
@@ -2446,7 +2469,19 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
         | .chain (.tuple xs) [(.mem, d)] => xs.filterMap fun x => match x with | .id v => some (v, d) | _ => none
         | _ => []
     let mems := memsOf 8 φ
+    -- (`Let $X\sim N(\mu,\sigma^2)$`: `X` is a random variable)
+    let rvTy : Option Ty := ((← get).vocab.methods.find? (·.op == .fn w!"@at")).map (·.ty)
+    let rec simsOf : Nat → MT → List Codes
+      | 0, _ => []
+      | f + 1, m => match m with
+        | .conj xs => xs.flatMap (simsOf f)
+        | .land x y => simsOf f x ++ simsOf f y
+        | .chain (.id v) [(.sim, _)] => [v]
+        | _ => []
+    let sims := simsOf 8 φ
     let tyOf (v : Codes) : M Ty := do
+      if sims.contains v then
+        if let some t := rvTy then return t
       match mems.find? (·.1 == v) with
       | some (_, d) =>
         let st0 ← get

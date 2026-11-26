@@ -19,6 +19,8 @@ inductive Rel where
   | ll | gg
   /-- `a\asymp b`: `a\ll b` and `b\ll a`. -/
   | asymp
+  /-- `X\sim D`: the random variable `X` has the distribution `D`. -/
+  | sim
   /-- `a\mid b`, `a\nmid b`: divisibility of integers. -/
   | dvd | ndvd
   /-- `a\equiv b`: a congruence, read only with its modulus (`\pmod m`). -/
@@ -295,6 +297,7 @@ def relOf : MTok → Option Rel
     else if n == w!"ll" then some .ll
     else if n == w!"gg" then some .gg
     else if n == w!"asymp" then some .asymp
+    else if n == w!"sim" then some .sim
     else if n == w!"mid" || n == w!"divides" then some .dvd
     else if n == w!"nmid" then some .ndvd
     else if n == w!"equiv" then some .equiv

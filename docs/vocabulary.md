@@ -298,6 +298,10 @@ Further fields cover other branches of mathematics:
 * `utility`: utility functions that are risk averse, risk seeking or risk neutral; the
   Arrow–Pratt coefficients, CARA and CRRA utilities, expected utility, certainty
   equivalents and risk premia of a two-outcome lottery;
+* `randomvariables`: real random variables on one probability space, with
+  `\mathbb{E}[…]`, `P(…)`, `P(A\mid B)`, `\operatorname{Var}`, `\operatorname{Cov}`,
+  independence and identical distribution, the normal, exponential, uniform, Poisson,
+  Bernoulli and binomial distributions (also `$X\sim N(\mu,\sigma^2)$`), and events;
 * `markovchains` (loads `matrixnorms`): doubly stochastic, irreducible and primitive
   transition matrices, absorbing states, stationary and reversible distributions,
   `k`-step transition probabilities.

@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage[vocab={randomvariables}]{leanify}
+\newtheorem{lemma}{Lemma}
+\begin{document}
+
+\section{Expectations and variances}
+
+\begin{lemma}\label{variance}
+Let $X$ be a random variable with $\mathbb{E}[X^2]<\infty$. Then $\operatorname{Var}(X)=\mathbb{E}[X^2]-\mathbb{E}[X]^2$.
+\end{lemma}
+
+\begin{lemma}\label{linearity}
+Let $X$ and $Y$ be integrable random variables. Then $\mathbb{E}[X+Y]=\mathbb{E}[X]+\mathbb{E}[Y]$.
+\end{lemma}
+
+\begin{lemma}\label{product}
+Let $X$ and $Y$ be independent random variables. Then $\mathbb{E}[XY]=\mathbb{E}[X]\mathbb{E}[Y]$.
+\end{lemma}
+
+\begin{lemma}\label{covariance}
+Let $X$ and $Y$ be random variables. If $X$ and $Y$ are independent, then $\operatorname{Cov}(X,Y)=0$.
+\end{lemma}
+
+\begin{lemma}\label{variance-sum}
+Let $X$ and $Y$ be independent random variables with finite variance. Then $\operatorname{Var}(X+Y)=\operatorname{Var}(X)+\operatorname{Var}(Y)$.
+\end{lemma}
+
+\begin{lemma}\label{sample-mean}
+Let $X_1,\dots,X_n$ be independent and identically distributed random variables with mean $\mu$. Then $\mathbb{E}[\frac{1}{n}\sum_{i=1}^n X_i]=\mu$.
+\end{lemma}
+
+\section{Inequalities}
+
+\begin{lemma}\label{markov}
+Let $X$ be a nonnegative random variable and let $a>0$. Then $P(X\ge a)\le \mathbb{E}[X]/a$.
+\end{lemma}
+
+\begin{lemma}\label{chebyshev}
+Let $X$ be a random variable with finite variance $\sigma^2$ and mean $\mu$. Then $P(|X-\mu|\ge k\sigma)\le 1/k^2$ for every $k>0$.
+\end{lemma}
+
+\section{Distributions}
+
+\begin{lemma}\label{normal-mean}
+Let $X$ be a normally distributed random variable with mean $\mu$ and variance $\sigma^2$. Then $\mathbb{E}[X]=\mu$.
+\end{lemma}
+
+\begin{lemma}\label{poisson-mean}
+Let $X$ follow a Poisson distribution with parameter $\lambda>0$. Then $\mathbb{E}[X]=\lambda$.
+\end{lemma}
+
+\begin{lemma}\label{binomial-variance}
+Let $X\sim \mathrm{Bin}(n,p)$. Then $\operatorname{Var}(X)=np(1-p)$.
+\end{lemma}
+
+\begin{lemma}\label{standard-normal}
+Let $X\sim N(0,1)$. Then $P(X\le 0)=1/2$.
+\end{lemma}
+
+\begin{lemma}\label{uniform-mean}
+Let $X$ be a random variable uniformly distributed on $[0,1]$. Then $\mathbb{E}[X]=1/2$.
+\end{lemma}
+
+\begin{lemma}\label{exponential-memoryless}
+Let $X$ be a random variable exponentially distributed with rate $\lambda$ and let $s,t\ge0$. Then $P(X>s+t\mid X>s)=P(X>t)$.
+\end{lemma}
+
+\section{Events}
+
+\begin{lemma}\label{conditional}
+Let $A$ and $B$ be events with $P(B)>0$. Then $P(A\mid B)=P(A\cap B)/P(B)$.
+\end{lemma}
+
+\begin{lemma}\label{complement}
+Let $A$ be an event. Then $P(A)\le1$.
+\end{lemma}
+
+\end{document}

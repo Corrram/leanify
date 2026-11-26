@@ -1410,6 +1410,45 @@ def seqTermVar (sc : Scope) (m : MT) : M (Option Codes) := do
   if (lookupLocal sc i).isSome || (← lookupGlob i).isSome then return none
   pure (some i)
 
+/-- `f a₁ … aₙ`, β-reduced where `f` is a λ without a domain. -/
+def betaAll : Tm → List Tm → Tm
+  | .lam _ .tt b, a :: as => betaAll (Tm.subst a 0 b) as
+  | f, as => as.foldl .app f
+
+/-- The value at the outcome `ω` (`@omega`) of each random variable of a formula: the
+variables `rvs` and the terms `X_i` of the sequences `seqs` of random variables, as
+`@at(X, ω)`, so that the formula is a real number (or a condition) about the outcome. -/
+def atOmega (rvs seqs : List Codes) : Nat → MT → MT
+  | 0, m => m
+  | f + 1, m =>
+    let go := atOmega rvs seqs f
+    let at_ (x : MT) : MT := .app (.id w!"@at") [x, .id w!"@omega"]
+    match m with
+    | .id n => if rvs.contains n then at_ m else m
+    | .sub (.id n) i => if seqs.contains n then at_ m else .sub (.id n) (go i)
+    | .sub b i => .sub (go b) (go i)
+    | .sup b e => .sup (go b) (go e)
+    | .app g as => .app g (as.map go)
+    | .add x y => .add (go x) (go y)
+    | .minus x y => .minus (go x) (go y)
+    | .mul x y => .mul (go x) (go y)
+    | .div x y => .div (go x) (go y)
+    | .frac x y => .frac (go x) (go y)
+    | .neg x => .neg (go x)
+    | .abs x => .abs (go x)
+    | .minm xs => .minm (xs.map go)
+    | .maxm xs => .maxm (xs.map go)
+    | .tuple xs => .tuple (xs.map go)
+    | .chain x rs => .chain (go x) (rs.map fun (r, y) => (r, go y))
+    | .conj xs => .conj (xs.map go)
+    | .land x y => .land (go x) (go y)
+    | .lor x y => .lor (go x) (go y)
+    | .limp x y => .limp (go x) (go y)
+    | .liff x y => .liff (go x) (go y)
+    | .lnot x => .lnot (go x)
+    | .bigop s v lo hi b => .bigop s v (go lo) (go hi) (go b)
+    | _ => m
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1460,6 +1499,8 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | _ => pure ()
     -- the notation of the field `hilbert`
     if let some r ← opTerm f sc pf m then return r
+    -- expectations, probabilities, variances of random variables
+    if let some r ← probTerm f sc pf m then return r
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
@@ -3304,6 +3345,195 @@ where
         let (h0, ty0, doms0) ← withImplicit sc h g
         applyAll h0 ty0 doms0 as
       | _ => fail E.finding w!"a subscript on a formula, such as $(B_k)_L$: name the quantity (Set $C_k\\coloneqq …$) and subscript the name"
+  /-- The notation of the field `randomvariables`: `\mathbb{E}[e]`, `P(φ)`, `P(A\mid B)`,
+  `\operatorname{Var}(e)`, `\operatorname{Cov}(e,f)` and the collective conditions of
+  independence and identical distribution. `none` for any other formula, or without the
+  field. -/
+  probTerm : Nat → Scope → PF → MT → M (Option (Tm × Ty))
+    | 0, _, _, _ => pure none
+    | g + 1, sc, pf, m => do
+      let st0 ← get
+      let some meth := st0.vocab.methods.find? (·.op == .fn w!"@at") | return none
+      let rv := meth.ty
+      let ev := meth.const
+      let free (n : Codes) : M Bool := do pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
+      let expNames := [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}", w!"@expect"]
+      let probNames := [w!"P", w!"\\mathbb{P}", w!"\\Pr", w!"\\operatorname{P}", w!"\\mathrm{P}", w!"@prob"]
+      let varNames := [w!"Var", w!"var", w!"\\mathbb{V}", w!"\\operatorname{Var}", w!"\\mathrm{Var}"]
+      let covNames := [w!"Cov", w!"cov", w!"\\operatorname{Cov}", w!"\\mathrm{Cov}"]
+      let isName (ns : List Codes) (n : Codes) : M Bool := do
+        if !ns.contains n then return false
+        if n.head? == some 64 then return true
+        free n
+      let rvNames := sc.filterMap fun (n, t) => if t == rv then some n else none
+      let seqNames := sc.filterMap fun (n, t) => if t == .fn .real rv then some n else none
+      let sc1 : Scope := (w!"@omega", .real) :: sc
+      let pf1 : PF := pf.map fun (s, t) => (shift 1 0 s, t)
+      -- the real function of the outcome that `e` is
+      let pw (e : MT) : M Tm := do
+        let r ← term g sc1 pf1 (atOmega rvNames seqNames 64 e)
+        pure (.lam .real .tt (← asReal r))
+      -- the set of the outcomes where the condition (or the event) `e` holds
+      let pwSet (e : MT) : M Tm := do
+        let stE ← get
+        tryCatch (do
+            let (p, t) ← term g sc1 pf1 (atOmega rvNames seqNames 64 e)
+            if t != .prop then fail E.type
+            pure (Tm.lam .real .tt p)) fun _ => do
+          set stE
+          let (a, t) ← term g sc pf e
+          if t != .fn .real .prop then fail E.type
+          pure a
+      let omega : Tm := .lam .real .tt (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))
+      let integ (fn : Tm) : Tm := .app (.app (.prim .integrableOn) fn) omega
+      let expect (fn : Tm) : Tm := .guard (integ fn) (.app (.app (.prim .integralOn) omega) fn)
+      let prob (set : Tm) : Tm :=
+        .app (.app (.prim .integralOn) (.lam .real .tt (.and (.app omega (.loc 0)) (.app (shift 1 0 set) (.loc 0)))))
+          (.lam .real .tt (.num 1))
+      let condProb (a b : MT) : M Tm := do
+        let sa ← pwSet a
+        let sb ← pwSet b
+        let both : Tm := .lam .real .tt (.and (.app (shift 1 0 sa) (.loc 0)) (.app (shift 1 0 sb) (.loc 0)))
+        pure (.guard (.lt (.num 0) (prob sb)) (.div (prob both) (prob sb)))
+      -- (the collective conditions first: any number of arguments)
+      let collective : Bool := match m with
+        | .app (.id n) _ => [w!"@indep", w!"@identdist", w!"@indepseq", w!"@identdistseq"].contains n
+        | _ => false
+      -- `\mathbb{E}[X^2]<\infty`, `\operatorname{Var}(X)<\infty`: integrable
+      if let .chain (.app (.id n) [e]) [(.lt, .id inf)] := m then
+        if inf == w!"\\infty" then
+          if (← isName expNames n) || (n == w!"@rexp" && st0.randomPair.isNone) then return some (integ (← pw e), .prop)
+          if ← isName varNames n then return some (integ (← pw (.sup e (.num 2))), .prop)
+      -- `X\sim N(\mu,\sigma^2)`, `X\sim\mathrm{Poi}(\lambda)`, `X\sim\mathrm{Bin}(n,p)`,
+      -- `X\sim\mathcal{U}[a,b]`: the modifier of the vocabulary for that distribution
+      if let .chain x [(.sim, d)] := m then
+        let strip (k : Codes) : Codes :=
+          let pre := [w!"\\mathrm{", w!"\\operatorname{", w!"\\mathcal{", w!"\\mathbb{", w!"\\text{", w!"\\textrm{", w!"\\mathsf{"]
+          match pre.find? (fun p => p.isPrefixOf k) with
+          | some p => (k.drop p.length).dropLast
+          | none => k
+        let (hd, args) : MT × List MT := match d with
+          | .app h [.tuple xs] => (h, xs)
+          | .app h [.interval a b] => (h, [a, b])
+          | .app h xs => (h, xs)
+          | .mul h (.interval a b) => (h, [a, b])
+          | .mul h (.tuple xs) => (h, xs)
+          | h => (h, [])
+        let some k := symKey hd | fail E.unsupported
+        let k := strip k
+        let kinds : List (List Codes × List Codes) := [
+          ([w!"N", w!"Normal", w!"Gauss", w!"Gaussian"], [w!"normally", w!"distributed", w!"with", w!"mean", w!"and", w!"variance"]),
+          ([w!"Poi", w!"Pois", w!"Poisson", w!"Po"], [w!"Poisson", w!"distributed", w!"with", w!"parameter"]),
+          ([w!"Bin", w!"Binom", w!"Binomial", w!"B"], [w!"binomially", w!"distributed", w!"with", w!"parameters", w!"and"]),
+          ([w!"Ber", w!"Bern", w!"Bernoulli"], [w!"Bernoulli", w!"distributed", w!"with", w!"parameter"]),
+          ([w!"Exp", w!"Expo", w!"Exponential"], [w!"exponentially", w!"distributed", w!"with", w!"rate"]),
+          ([w!"U", w!"Unif", w!"Uniform"], [w!"uniformly", w!"distributed", w!"on"])]
+        let some (_, words) := kinds.find? (·.1.contains k)
+          | fail E.finding (w!"the distribution " ++ k ++ w!" after \\sim is not one the vocabulary knows (N, Poi, Bin, Ber, Exp, U)")
+        let words0 (p : Phrase) : List Codes := p.filterMap fun i => match i with | .w w => some w | _ => none
+        let some md := st0.vocab.mods.find? (fun md => md.ty == rv && words0 md.phrase == words) | fail E.unsupported
+        let (xt, xty) ← term g sc pf x
+        if xty != rv then fail E.type
+        let ats ← args.mapM fun a => do asReal (← term g sc pf a)
+        let slots := md.phrase.foldl (fun n i => match i with | .v => n + 1 | .f segs => n + segs.length - 1 | _ => n) 0
+        if ats.length != slots then fail E.type
+        -- (and a random variable, as the noun says)
+        let law := betaAll md.pred (ats ++ [xt])
+        match st0.vocab.nouns.find? (·.ty == rv) with
+        | some nn => return some (.and (betaAll nn.pred [xt]) law, .prop)
+        | none => return some (law, .prop)
+      if !collective then
+        match m with
+        | .app (.id n) [x, w] =>
+          if n == w!"@at" then
+            let (xt, xty) ← term g sc pf x
+            if xty != rv then fail E.type
+            let wt ← asReal (← term g sc pf w)
+            return some (.app (.app (.const ev) xt) wt, .real)
+          if ← isName covNames n then
+            let a ← pw x
+            let b ← pw w
+            let ab ← pw (.mul x w)
+            return some (.guard (.and (integ a) (.and (integ b) (integ ab)))
+              (.sub (.app (.app (.prim .integralOn) omega) ab)
+                (.mul (.app (.app (.prim .integralOn) omega) a) (.app (.app (.prim .integralOn) omega) b))), .real)
+          pure ()
+        | .app (.id n) [e] =>
+          if (← isName expNames n) || (n == w!"@rexp" && st0.randomPair.isNone) then
+            return some (expect (← pw e), .real)
+          if ← isName probNames n then
+            -- (`P(A\mid B)`, `P(X>s+t\mid X>s)`: the bar splits the chain into two conditions)
+            match e with
+            | .chain x rs =>
+              match rs.findIdx? (·.1 == .dvd) with
+              | some i =>
+                let before := rs.take i
+                let some (_, z) := rs[i]? | return none
+                let after := rs.drop (i + 1)
+                let a : MT := if before.isEmpty then x else .chain x before
+                let b : MT := if after.isEmpty then z else .chain z after
+                return some (← condProb a b, .real)
+              | none => return some (prob (← pwSet e), .real)
+            | _ => return some (prob (← pwSet e), .real)
+          if ← isName varNames n then
+            let fn ← pw e
+            let fn2 ← pw (.sup e (.num 2))
+            return some (.guard (integ fn2) (.sub (.app (.app (.prim .integralOn) omega) fn2)
+              (.mul (.app (.app (.prim .integralOn) omega) fn) (.app (.app (.prim .integralOn) omega) fn))), .real)
+          pure ()
+        | _ => pure ()
+      match m with
+      | .app (.id n) xs =>
+        -- `@indep(X, Y, …)`: the joint distribution function is the product of theirs
+        if n == w!"@indep" && xs.length ≥ 2 then
+          let ts := (List.range xs.length).map fun k => w!"@t" ++ (Nat.toDigits 10 k).map Char.toNat
+          let le (x : MT) (t : Codes) : MT := .chain x [(.le, .id t)]
+          let conds := (xs.zip ts).map fun (x, t) => le x t
+          let joint := conds.drop 1 |>.foldl (fun acc c => MT.land acc c) conds.head!
+          let prod := (conds.map fun c => MT.app (.id w!"@prob") [c])
+          let rhs := prod.drop 1 |>.foldl (fun acc p => MT.mul acc p) prod.head!
+          let body : MT := .chain (.app (.id w!"@prob") [joint]) [(.eq, rhs)]
+          let p ← propOf g sc pf (.quant true ts (.id w!"\\mathbb{R}") body)
+          return some (p, .prop)
+        -- `@identdist(X, Y, …)`: the same distribution function
+        if n == w!"@identdist" && xs.length ≥ 2 then
+          let t := w!"@t"
+          let x0 := xs.head!
+          let eqs := (xs.drop 1).map fun x =>
+            MT.chain (.app (.id w!"@prob") [.chain x [(.le, .id t)]]) [(.eq, .app (.id w!"@prob") [.chain x0 [(.le, .id t)]])]
+          let body := eqs.drop 1 |>.foldl (fun acc c => MT.land acc c) eqs.head!
+          let p ← propOf g sc pf (.quant true [t] (.id w!"\\mathbb{R}") body)
+          return some (p, .prop)
+        -- `@indepseq(X, lo, hi)`: the terms `X_lo, …, X_hi` are independent;
+        -- `@identdistseq(X, lo, hi)`: they have the distribution function of `X_lo`
+        if (n == w!"@indepseq" || n == w!"@identdistseq") && xs.length == 3 then
+          let [x, lo, hi] := xs | return none
+          let (xt, xty) ← term g sc pf x
+          if xty != .fn .real rv then fail E.type
+          let l ← asReal (← term g sc pf lo)
+          let h ← asReal (← term g sc pf hi)
+          let range (i : Tm) (k : Nat) : Tm := .and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
+          -- (in a scope of `k` more binders: `X_i(ω)`)
+          let at_ (k : Nat) (i w : Tm) : Tm := .app (.app (.const ev) (.app (shift k 0 xt) i)) w
+          if n == w!"@indepseq" then
+            -- ∀ t, P(∀ i, X_i ≤ t_i) = ∏_i P(X_i ≤ t_i)
+            -- (scope: t; inside the set: ω, t; inside ∀ i: i, ω, t)
+            let joint : Tm := .lam .real .tt (.all .real (.imp (range (.loc 0) 3)
+              (.le (at_ 3 (.loc 0) (.loc 1)) (.app (.loc 2) (.loc 0)))))
+            let one : Tm := .lam .real .tt (prob (.lam .real .tt (.le (at_ 3 (.loc 1) (.loc 0)) (.app (.loc 2) (.loc 1)))))
+            let fp : Tm := .app (.app (.app (.prim .finProd) (shift 1 0 l)) (shift 1 0 h)) one
+            return some (.all (.fn .real .real) (.eq (prob joint) fp), .prop)
+          else
+            -- ∀ i, ∀ t, P(X_i ≤ t) = P(X_lo ≤ t) (scope: t, i)
+            let pi : Tm := prob (.lam .real .tt (.le (at_ 3 (.loc 2) (.loc 0)) (.loc 1)))
+            let p0 : Tm := prob (.lam .real .tt (.le (at_ 3 (shift 3 0 l) (.loc 0)) (.loc 1)))
+            return some (.all .real (.imp (range (.loc 0) 1) (.all .real (.eq pi p0))), .prop)
+        return none
+      | .mul (.id n) x =>
+        -- `\mathbb{E}X`
+        if (← isName expNames n) && n.head? != some 64 then return some (expect (← pw x), .real)
+        return none
+      | _ => return none
   propOf : Nat → Scope → PF → MT → M Tm
     | 0, _, _, _ => fail E.unsupported
     | g + 1, sc, pf, x => do

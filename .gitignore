@@ -157,5 +157,6 @@ article-reader/
 /tests/Variograms/article.leanify.*
 /tests/Traffic/article.leanify.*
 /tests/GeometricProbability/article.leanify.*
+/tests/RandomVariables/article.leanify.*
 /tests/Default/article.leanify.*
 /tests/Structures/article.leanify.*

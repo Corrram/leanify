@@ -149,6 +149,15 @@ def seqBound (ts : List MTok) : Option (List MTok × List MTok) := do
   let _ ← seqVars list
   some (list, ts.drop list.length)
 
+/-- `independent and identically distributed` as the one word `iid` (the `and` is not
+between two adjectives of the noun, `with $φ$ and …`). -/
+def normIID : List Chunk → List Chunk
+  | .w a :: .w b :: .w c :: .w d :: rest =>
+    if a == w!"independent" && b == w!"and" && c == w!"identically" && d == w!"distributed" then .w w!"iid" :: normIID rest
+    else .w a :: normIID (.w b :: .w c :: .w d :: rest)
+  | c :: rest => c :: normIID rest
+  | [] => []
+
 /-- Adjectives about several variables together, among the words `ws`: `distinct`
 (`pairwise distinct`), `relatively prime` or `coprime` (`pairwise …`). The other words, and
 the properties found (`distinct`, `coprime`, `pairwise coprime`). -/
@@ -159,7 +168,12 @@ def collectiveWords : Nat → List Chunk → List Chunk × List Codes
       ((kw [w!"pairwise", w!"distinct"] ws <|> kw [w!"distinct"] ws).map (w!"distinct", ·)) <|>
       ((kw [w!"pairwise", w!"relatively", w!"prime"] ws <|> kw [w!"pairwise", w!"coprime"] ws).map
         (w!"pairwise coprime", ·)) <|>
-      ((kw [w!"relatively", w!"prime"] ws <|> kw [w!"coprime"] ws).map (w!"coprime", ·))
+      ((kw [w!"relatively", w!"prime"] ws <|> kw [w!"coprime"] ws).map (w!"coprime", ·)) <|>
+      -- (of random variables)
+      ((kw [w!"independent", w!"and", w!"identically", w!"distributed"] ws <|> kw [w!"i.i.d."] ws <|>
+        kw [w!"iid"] ws <|> kw [w!"i", w!"."] ws).map (w!"iid", ·)) <|>
+      ((kw [w!"independent"] ws <|> kw [w!"mutually", w!"independent"] ws).map (w!"independent", ·)) <|>
+      ((kw [w!"identically", w!"distributed"] ws).map (w!"identically distributed", ·))
     match found, ws with
     | some (p, rest), _ => let (ws', ps) := collectiveWords f rest; (ws', p :: ps)
     | none, c :: rest => let (ws', ps) := collectiveWords f rest; (c :: ws', ps)
@@ -174,7 +188,23 @@ def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
     if p == w!"distinct" then .chain a [(.ne, b)]
     else .chain (.app (.id w!"\\gcd") [.tuple [a, b]]) [(.eq, .num 1)]
   let name (v : List MTok) : List MTok := v.takeWhile fun t => (Math.relOf t).isNone
+  -- (random variables: independent, identically distributed, both)
+  let rvConds (p : Codes) : Option (List MT) := do
+    let kinds : List Codes :=
+      if p == w!"independent" then [w!"@indep"] else if p == w!"identically distributed" then [w!"@identdist"]
+      else if p == w!"iid" then [w!"@indep", w!"@identdist"] else []
+    if kinds.isEmpty then none
+    match vars with
+    | [ts] => do
+      let (list, _) ← seqBound ts
+      let (x, _, lo, hi) ← seqVars list
+      some (kinds.map fun k => MT.app (.id (k ++ w!"seq")) [.id x, lo, hi])
+    | _ => do
+      let ms ← vars.mapM fun v => Math.parseFormula (name v)
+      some (kinds.map fun k => MT.app (.id k) ms)
   let conds ← ps.mapM fun p => do
+    if let some cs := rvConds p then
+      return (cs.drop 1).foldl (fun acc c => MT.land acc c) (cs.headD (.id w!"@none"))
     match vars with
     | [ts] => do
       -- a sequence: any two terms with different indices of its range
@@ -1126,6 +1156,7 @@ conditions (`with $a<b$`): a binder for each variable (a sequence `x_1,\ldots,x_
 then the conditions. -/
 def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) := do
   let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+  let r := normIID r
   -- (a singular noun is read where its variable is)
   if (kw [w!"a"] r).isSome || (kw [w!"an"] r).isSome then none else
   -- (`$n\times n$ matrices`, `$k$-regular graphs`: a formula before the noun)
@@ -1168,13 +1199,20 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
     return (.many (.every vs d :: together), r1)
   -- `$f$ and $g$ be probability densities with finite mean`: words after the noun (a
   -- modifier of the vocabulary), said of each of them
+  -- (also with formulas, `with mean $\mu$ and variance $\sigma^2$`; not `and let`)
+  let rec postOf : Nat → List Chunk → List Chunk
+    | 0, _ => []
+    | k + 1, cs => match cs with
+      | .w a :: rest@(.w n :: _) =>
+        if a == w!"and" then (if n == w!"let" || n == w!"then" then [] else .w a :: postOf k rest)
+        else if a == w!"then" || a == w!"such" then [] else .w a :: postOf k rest
+      | .w a :: rest => if a == w!"and" || a == w!"then" || a == w!"such" then [] else .w a :: postOf k rest
+      | .m t :: rest => .m t :: postOf k rest
+      | .p 45 :: rest => .p 45 :: postOf k rest
+      | _ => []
   let post : List Chunk := match r1 with
     | .w w :: .w _ :: _ =>
-      if w != w!"with" then [] else
-      r1.takeWhile fun c => match c with
-        | .w w' => w' != w!"and" && w' != w!"then"
-        | .p 45 => true
-        | _ => false
+      if w != w!"with" then [] else postOf (r1.length + 1) r1
     | _ => []
   let r1 := r1.drop post.length
   let nouns := vars.map fun v => Bind.noun (lead ++ ws ++ [.m v] ++ post)
@@ -2395,6 +2433,19 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | _ => false
       if ws.isEmpty then none
       some (Clause.isA s ([Chunk.w w!"with", Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$X$ and $Y$ are independent`, `$X_1,\ldots,X_n$ are independent and identically
+  -- distributed`: the collective condition of random variables
+  match (do
+      let (ts, r) ← joinedVars cs
+      let r1 ← kw [w!"are"] r
+      let (p, r2) ← ((kw [w!"independent", w!"and", w!"identically", w!"distributed"] r1 <|> kw [w!"iid"] r1).map (w!"iid", ·)) <|>
+        ((kw [w!"mutually", w!"independent"] r1 <|> kw [w!"independent"] r1).map (w!"independent", ·)) <|>
+        ((kw [w!"identically", w!"distributed"] r1).map (w!"identically distributed", ·))
+      let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+      let c ← collectiveCond [p] vars
+      some (Clause.fact c, r2) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ has no odd cycle`, `$G$ contains no triangle`: the modifier `without odd cycle`
@@ -3697,7 +3748,7 @@ where
 /-- A condition on variables, `$c>0$`, `$0<x\le1$`: a chain of order relations (not a
 definition, an equation or a membership). -/
 def isCondition : MT → Bool
-  | .chain _ rs => !rs.isEmpty && rs.all fun (r, _) => r == .lt || r == .le || r == .gt || r == .ge || r == .ne
+  | .chain _ rs => !rs.isEmpty && rs.all fun (r, _) => r == .lt || r == .le || r == .gt || r == .ge || r == .ne || r == .sim
   | _ => false
 
 /-- The words of a noun phrase before its variable, with the formulas of its modifiers
@@ -3938,8 +3989,13 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let opensPost := match rest with
       | .w w :: _ => w == w!"with" || w == w!"of" || w == w!"such" || w == w!"that" || w == w!"which"
       | _ => false
-    let post := if tail.isEmpty && !opensPost then [] else
-      rest.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+    -- (up to a comma or the end, not into the next binder `and let`)
+    let upToNext (cs : List Chunk) : List Chunk :=
+      let k := (cs.zipIdx.find? fun (c, i) => match c, cs[i + 1]? with
+        | .w a, some (.w l) => a == w!"and" && l == w!"let"
+        | _, _ => false).map (·.2)
+      (cs.take (k.getD cs.length)).takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+    let post := if tail.isEmpty && !opensPost then [] else upToNext rest
     if ws.isEmpty then none else
     -- `a graph on $n$ vertices`, `a polynomial of degree $n$`: a phrase with a number after
     -- the noun (a modifier of the vocabulary with an argument), not a noun ending in a fixed

@@ -194,7 +194,7 @@ def structuralCmds : List String :=
    "wedge", "vee", "lfloor", "rfloor", "lceil", "rceil", "lim", "binom", "tbinom", "dbinom", "Rightarrow", "implies", "Longrightarrow", "iff", "Leftrightarrow", "Longleftrightarrow", "subseteq", "subseteqq", "supseteq", "supseteqq",
    "mid", "nmid", "divides", "equiv", "pmod", "bmod", "mod", "gcd", "dot", "ddot", "breve", "acute",
    "grave", "vec", "mathring", "widetilde", "widecheck", "overrightarrow", "substack", "#", "ll", "gg", "asymp",
-   "limsup", "liminf", "cdots", "dots"]
+   "limsup", "liminf", "cdots", "dots", "sim"]
 
 /-- A symbol written as a command that is not a variable name (a Greek letter):
 notation the article or its vocabulary must define. -/
