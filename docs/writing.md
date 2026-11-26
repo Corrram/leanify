@@ -174,7 +174,10 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $(a_n)$ be a sequence with $a_n\to s$ and $(b_n)$ a sequence with $b_n\to t$.`, `Then $a_n+b_n\to s+t$.` | two binders (`be` left out in the second); a limit of a term with a subscript, along its index |
 | `Every integer $n>1$ has a prime divisor.` | for every such `n` |
 | `$f$ has at most $n$ real roots`, `exactly`, `at least` (field `polynomials`) | the set of real roots is finite with at most `n` elements (the zero polynomial has infinitely many) |
-| `Then $n^2>n$ if $n$ is odd.`, `Then $\sqrt{n}$ is irrational if $n$ is not a perfect square.` | as `If $n$ is odd, then $n^2>n$.` (not `if and only if`, `only if`, `even if`) |
+| `Then $n^2>n$ if $n$ is odd.`, `Then $\sqrt{n}$ is irrational if $n$ is not a perfect square.`, `Then $p$ divides $k^p-k$ for $k>0$.` | as `If $n$ is odd, then $n^2>n$.` (not `if and only if`, `only if`, `even if`; and not after a clause that binds variables of its own, `there exists $\delta>0$ such that …`, where the condition is part of that clause) |
+| `there exists $\delta>0$ such that $|x^2-1|<\varepsilon$ whenever $|x-1|<\delta$` | `whenever $ψ$` is `for $ψ$`: for every value of the new variables of `ψ`, inside the clause |
+| `Let $(X,d)$ be a metric space.` | the space `X`, with the vocabulary's distance `d` |
+| `$\operatorname{Var}(X_1+\dots+X_n)$`, `$\frac{x_1+\cdots+x_n}{n}$` | a sum (product) with an ellipsis inside brackets as well |
 | `Let $S$ be a finite set with $n$ elements.`, `Let $G$ be a group with $6$ elements.`, `every nonzero element of $K$ is invertible` | a finite set with `n` elements; a finite structure of order `n`; elements `a\ne0`, and with an inverse |
 | `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |
 | `Let $T$ be the closure of $S$.`, `let $\ell$ denote the line through $A$ and $B$` | `be the` and `denote the` alike; the value of the notion may be a set or a function (then the variable is that set: `$M\in\ell$`) |

@@ -1374,15 +1374,21 @@ def sumEllipsis (ts : List MTok) : Option (List MTok) := do
   let ds := depths ts
   let n := ts.length
   let at_ (k : Nat) : MTok := ts.getD k (.sym 0)
-  let k ← (List.range n).find? fun k =>
-    ds.getD k 1 == 0 && isDots (at_ (k + 1)) &&
+  -- (outside brackets first; then inside them, `\operatorname{Var}(X_1+\cdots+X_n)`)
+  let isEll (k : Nat) : Bool := isDots (at_ (k + 1)) &&
       ((at_ k == .sym 43 && at_ (k + 2) == .sym 43) || (at_ k == .cmd w!"cdot" && at_ (k + 2) == .cmd w!"cdot"))
+  let k ← (List.range n).find? (fun k => ds.getD k 1 == 0 && isEll k) <|> (List.range n).find? isEll
+  let d0 := ds.getD k 0
   let isSum := at_ k == .sym 43
   let boundary (t : MTok) : Bool :=
     t == .sym 43 || t == .sym 45 || t == .sym 44 || (relOf t).isSome || t == .cmd w!"quad" ||
       t == .cmd w!"qquad" || isCmdIn wConnectives t || (!isSum && t == .cmd w!"cdot")
-  let start := ((List.range k).filter fun j => ds.getD j 1 == 0 && boundary (at_ j)).getLast?.map (· + 1) |>.getD 0
-  let stop := ((List.range n).find? fun j => k + 2 < j && ds.getD j 1 == 0 && boundary (at_ j)).getD n
+  let isClose (t : MTok) : Bool := match t with
+    | .rb | .setr | .sym 41 | .sym 93 | .finish _ => true
+    | _ => false
+  -- (the group of the ellipsis: from after its opening bracket to before its closing one)
+  let start := ((List.range k).filter fun j => (ds.getD j 1 == d0 && boundary (at_ j)) || ds.getD j 1 < d0).getLast?.map (· + 1) |>.getD 0
+  let stop := ((List.range n).find? fun j => k + 2 < j && ds.getD j 1 == d0 && (boundary (at_ j) || isClose (at_ j))).getD n
   let a := (ts.take k).drop start
   let b := (ts.take stop).drop (k + 3)
   let (v, tmpl, lo, hi) ← instances ts a b

@@ -30,7 +30,9 @@ tests/Analysis/article.tex:77:47: info: claim 18: \forall x\in \mathbb{R}\to \ma
 tests/Analysis/article.tex:81:90: info: claim 19: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ 0\le x(y))\Rightarrow 0\le x(1)
 tests/Analysis/article.tex:85:103: info: claim 20: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\land \operatorname{differentiable}(z)\text{ on }\{s:y<s\land s<x\}\Rightarrow (\exists s\in \mathbb{R},\ (y<s\land s<x)\land (\tfrac{\mathrm{d}}{\mathrm{d}b}z(b)\big|_{b=s})=\frac{z(x)-z(y)}{x-y}))
 tests/Analysis/article.tex:85:103: info: claim 20 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ ((\forall s\in \mathbb{R},\ y\le s\land s\le x\Rightarrow y\le s\land s\le x)\land (\operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\Rightarrow (\forall s\in \mathbb{R},\ y<s\land s<x\Rightarrow y\le s\land s\le x)))\land (\operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\land \operatorname{differentiable}(z)\text{ on }\{s:y<s\land s<x\}\Rightarrow (\forall s\in \mathbb{R},\ y<s\land s<x\Rightarrow (\exists t\in \mathbb{R},\ ((a\in \mathbb{R}\mapsto z(a)))'(s)=t\text{ within }(a\in \mathbb{R}\mapsto \top)\land (\forall a\in \mathbb{R},\ ((b\in \mathbb{R}\mapsto z(b)))'(s)=a\text{ within }(b\in \mathbb{R}\mapsto \top)\Rightarrow a=t))\land \neg (x-y=0))))
-tests/Analysis/article.tex: 4 definitions, 21 claims
+tests/Analysis/article.tex:89:22: info: claim 21: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ 0<y\land (\forall z\in \mathbb{R},\ \lvert z-1\rvert<y\Rightarrow \lvert {z}^{2}-1\rvert<x))
+tests/Analysis/article.tex:93:54: info: claim 22: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(y)\text{ on }\{s:\top\}\Rightarrow \operatorname{convex}((z\in \mathbb{R}\mapsto x(z)+y(z)))\text{ on }\{z:\top\})
+tests/Analysis/article.tex: 4 definitions, 23 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 36 compiled, 0 failed, 0 prose (of 36)
-  all: 40 compiled, 0 failed, 0 prose (of 40)
+  results: 40 compiled, 0 failed, 0 prose (of 40)
+  all: 44 compiled, 0 failed, 0 prose (of 44)

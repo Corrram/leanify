@@ -585,6 +585,23 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
+      -- `φ whenever $ψ$`: `φ for $ψ$` (for every value of the new variables of `ψ`, inside the
+      -- clause that `φ` is part of: `there is $\delta>0$ such that … whenever $|x|<\delta$`)
+      else if v == w!"whenever" && beforeMath then word w!"for" :: standardForms f there cond (some (word w!"for")) ts
+      -- `Let $(X,d)$ be a metric space`: the space `X`, whose distance `d` is the vocabulary's
+      -- (`(V,\|\cdot\|)`, a normed space, likewise)
+      else if v == w!"let" && (match ts with
+          | o :: l :: x :: c :: _ => o.tok == .mopen && l.tok == .msym 40 && (match x.tok with | .mvar _ => true | _ => false) && c.tok == .msym 44
+          | _ => false) && (
+          let inner := (ts.drop 1).takeWhile (·.tok != .mclose)
+          let after := ts.drop (inner.length + 2)
+          inner.getLast?.map (·.tok) == some (.msym 41) &&
+          (after.take 6).any (fun p => lw p == some w!"space") && (after.head? >>= lw) == some w!"be") then
+        match ts with
+        | o :: _ :: x :: rest =>
+          let inner := rest.takeWhile (·.tok != .mclose)
+          t :: o :: x :: standardForms f there cond (some x) (rest.drop inner.length)
+        | _ => t :: standardForms f there cond (some t) ts
       -- `non-abelian`, `non-empty`: one word, `nonabelian` (the negation of the adjective,
       -- where the vocabulary does not name the word itself)
       else if v == w!"non" && (match ts with
@@ -1528,7 +1545,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | 0, _, cs => cs
       | k + 1, prev, cs => match cs with
         | .w fw :: .m v :: .w o :: .m d :: rest =>
-          if fw == w!"function" && (o == w!"on" || o == w!"over") && single v && !fixedBefore prev then .w fw :: .m (sig v d) :: rest
+          if (fw == w!"function" || fw == w!"functions") && (o == w!"on" || o == w!"over") && single v && !fixedBefore prev then .w fw :: .m (sig v d) :: rest
           else .w fw :: go k (some fw) (.m v :: .w o :: .m d :: rest)
         | .w fw :: .w o :: .m d :: .m v :: rest =>
           if fw == w!"function" && (o == w!"on" || o == w!"over") && single v && !fixedBefore prev then .w fw :: .m (sig v d) :: rest
@@ -2557,7 +2574,9 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     -- (not a variable that the result or the sentence has bound: `Let $T$ be …. If
     -- $K\subseteq\{…T(x)…\}$, …`)
-    if let some v := free.find? (fun n => st.unreadIds.contains n && !before.any (·.name == n)) then
+    let unreadHere (n : Codes) : Bool := st.unreadIds.contains n ||
+      st.unreadLocal.any fun (e, m) => m == n && (e == st.curEnv || st.curProved == some e)
+    if let some v := free.find? (fun n => unreadHere n && !before.any (·.name == n)) then
       fail E.undefined v
     -- (`U_1` of a sequence `U` bound before is its term, not a variable)
     let free := free.filter fun n => (termOfSeq before n).isNone
@@ -7297,7 +7316,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   -- the symbols this sentence introduces, if it is not read
   let unread : List Codes := introducedSymbols s.toks
-  let st0u := { st0 with unreadIds := (st0.unreadIds ++ unread.filter (!st0.unreadIds.contains ·)) }
+  -- (of prose, symbols of the article; of a result or a proof, of that result only)
+  let st0u := if s.ctx.kind == .text then { st0 with unreadIds := (st0.unreadIds ++ unread.filter (!st0.unreadIds.contains ·)) }
+    else { st0 with unreadLocal := st0.unreadLocal ++ unread.map (s.ctx.env, ·) }
   -- a symbol for a quantity that the article does not define (`Let $\chi(G)$ denote the
   -- chromatic number of a graph $G$.`), if the sentence has no other reading
   let undefinedAlt : Option Grammar.Sent := match s.ctx.kind with

@@ -5513,7 +5513,35 @@ def postIfSent (cs : List Chunk) : Option (List Chunk) := do
   if a.isEmpty || b.isEmpty then none
   -- (one condition: no second `if`)
   if b.any (fun c => match c with | .w w => w == w!"if" | _ => false) then none
+  -- (not a claim that binds variables of its own, which the condition may be about)
+  let binding := [w!"there", w!"exists", w!"exist", w!"such", w!"some", w!"every", w!"all", w!"each", w!"any", w!"unique"]
+  if a.any (fun c => match c with | .w w => binding.contains w | _ => false) then none
   some ([.w w!"if"] ++ b ++ [.p 44, .w w!"then"] ++ a ++ stop)
+
+/-- `[Then] CLAUSE for $φ$.` with a condition `φ` of order relations (`for $0<k<p$`) as
+`If $φ$, then CLAUSE.`: for every value of its new variables. -/
+def postForSent (cs : List Chunk) : Option (List Chunk) := do
+  let (cs, stop) : List Chunk × List Chunk := match cs.getLast? with
+    | some (.p 46) => (cs.dropLast, [.p 46])
+    | _ => (cs, [])
+  let body := (kw [w!"then"] cs).getD cs
+  let n := body.length
+  if n < 3 then none
+  let .w fw := body[n - 2]! | none
+  if fw != w!"for" then none
+  let .m ts := body[n - 1]! | none
+  let c ← Math.parseFormula ts
+  match c with
+  | .chain _ rs =>
+    if !(rs.all fun (rel, _) => rel == .lt || rel == .le || rel == .gt || rel == .ge || rel == .ne) then none
+  | _ => none
+  let a := (body.take (n - 2)).reverse.dropWhile (fun c => match c with | .p 44 => true | _ => false) |>.reverse
+  if a.isEmpty then none
+  -- (not a clause that binds variables of its own, which the condition may be about:
+  -- `there exists $\delta>0$ such that … for $|x-1|<\delta$`)
+  let binding := [w!"there", w!"exists", w!"exist", w!"such", w!"some", w!"every", w!"all", w!"each", w!"any", w!"unique"]
+  if a.any (fun c => match c with | .w w => binding.contains w | _ => false) then none
+  some ([.w w!"if", .m ts, .p 44, .w w!"then"] ++ a ++ stop)
 
 /-- `Every bounded monotone sequence converges.`, `Every NP diverges`, `… vanishes …`, `…
 divides $n$`: as `For every NP $v$, $v$ converges.` (a verb of the third person, without a
@@ -5664,6 +5692,13 @@ def sentence0 (cs : List Chunk) : Option Sent :=
 def sentence1 (cs : List Chunk) : Option Sent :=
   -- (`Then CLAUSE if CLAUSE'.`: the condition first, before the words after `is` would take it)
   let postIf : Option Sent := if (kw [w!"then"] cs).isSome then postIfSent cs >>= sentence0 else none
+  -- (`Then CLAUSE for $0<k<p$.`, a clause in words: the condition first; a formula keeps
+  -- `for` as its own condition)
+  let postIf := postIf <|> (do
+    let r ← kw [w!"then"] cs
+    let words := r.any fun c => match c with | .w w => w != w!"for" | _ => false
+    if !words then none
+    postForSent cs >>= sentence0)
   match postIf with
   | some s => some s
   | none =>
@@ -5703,6 +5738,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
         | some s => some s
         | none =>
         match postIfSent cs >>= sentence0 with
+        | some s => some s
+        | none =>
+        match postForSent cs >>= sentence0 with
         | some s => some s
         | none =>
           match adjCommaSent cs >>= sentence0 with
