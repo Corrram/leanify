@@ -77,7 +77,11 @@ def vocab : Vocab where
     nounF phrase!"function" phrase!"functions" (fPred fun _ => tt) "a real function on the line (`ℝ → ℝ`)",
     nounF phrase!"real function" phrase!"real functions" (fPred fun _ => tt) "`ℝ → ℝ`",
     nounF phrase!"bijection" phrase!"bijections" (fPred fun f => and (injective f) (surjective f))
-      "of the line (Mathlib `Function.Bijective`)"]
+      "of the line (Mathlib `Function.Bijective`)",
+    { sing := phrase!"fixed point", plural := phrase!"fixed points", ty := .real, pred := close (lamR fun _ => tt),
+      arg := some ([w!"of"], Ty.rfun, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun d => lamT Ty.rfun (fun _ => tt) fun f =>
+        lamR fun x => and (app d x) (eq (app f x) x)), argOnDomain := true,
+      doc := "a point `x` of the domain with `f(x) = x` (Mathlib `Function.IsFixedPt`)" }]
   mods := [
     mod phrase!"continuous" true (onLine .continuousOn) "(Mathlib `Continuous`)",
     mod phrase!"uniformly continuous" true (.const 0) "(Mathlib `UniformContinuous`)",

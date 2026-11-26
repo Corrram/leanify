@@ -62,6 +62,10 @@ structure Noun where
   /-- The noun is read only with its complement (`sequence in $X$`): alone, its words may
   belong to another phrase (`a subadditive sequence`). -/
   needsArg : Bool := false
+  /-- The relation of the complement takes the domain of the complement's signature first
+  (a predicate of its points): `fixed point of $f$` for `f\colon[0,1]\to\mathbb{R}` is a
+  point of `[0,1]`. -/
+  argOnDomain : Bool := false
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives

@@ -219,6 +219,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
+| fixed point | $[0,1]$ | a point `x` of `[0,1]` with `f(x) = x`, of a map `f` of `[0,1]` (Mathlib `Function.IsFixedPt`) |
 | distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
@@ -235,6 +236,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
@@ -270,6 +272,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
+| fixed point | $[0,1]$ | a point `x` of `[0,1]` with `f(x) = x`, of a map `f` of `[0,1]` (Mathlib `Function.IsFixedPt`) |
 | distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
@@ -287,6 +290,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
@@ -327,6 +331,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
+| fixed point | $[0,1]$ | a point `x` of `[0,1]` with `f(x) = x`, of a map `f` of `[0,1]` (Mathlib `Function.IsFixedPt`) |
 | distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
@@ -344,6 +349,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |
@@ -580,6 +586,10 @@ except a notion whose meanings take arguments of different types, which the type
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | monic | ℝ → ℝ | leading coefficient 1 (Mathlib `Polynomial.Monic`) |
+| with a real root | ℝ → ℝ | `p(x) = 0` for some real `x` |
+| without real roots | ℝ → ℝ | `p(x) ≠ 0` for every real `x` (also `has no real roots`) |
+| without real root | ℝ → ℝ | `p(x) ≠ 0` for every real `x` |
+| without a real root | ℝ → ℝ | `p(x) ≠ 0` for every real `x` |
 | quadratic | ℝ → ℝ | a polynomial of degree 2 |
 | cubic | ℝ → ℝ | a polynomial of degree 3 |
 | quartic | ℝ → ℝ | a polynomial of degree 4 |
@@ -929,6 +939,7 @@ except a notion whose meanings take arguments of different types, which the type
 | function | ℝ → ℝ | a real function on the line (`ℝ → ℝ`) |
 | real function | ℝ → ℝ | `ℝ → ℝ` |
 | bijection | ℝ → ℝ | of the line (Mathlib `Function.Bijective`) |
+| fixed point | ℝ | a point `x` of the domain with `f(x) = x` (Mathlib `Function.IsFixedPt`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -1924,6 +1935,7 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | sequence of real numbers | ℝ → ℝ | `a_0, a_1, …`: a function of the natural numbers (Mathlib `ℕ → ℝ`) |
 | real sequence | ℝ → ℝ | (Mathlib `ℕ → ℝ`) |
+| sequence | ℝ → ℝ | a sequence of real numbers (Mathlib `ℕ → ℝ`) |
 | sequence of positive real numbers | ℝ → ℝ | `a_n > 0` |
 | sequence of nonnegative real numbers | ℝ → ℝ | `a_n ≥ 0` |
 | sequence of integers | ℝ → ℝ | (Mathlib `ℕ → ℤ`) |
@@ -2159,6 +2171,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
+| fixed point | $[0,1]$ | a point `x` of `[0,1]` with `f(x) = x`, of a map `f` of `[0,1]` (Mathlib `Function.IsFixedPt`) |
 | distribution function on $[0,1]^2$ | $[0,1]$ → $[0,1]$ → ℝ | `(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²` |
 | probability measure $x$ on $[0,1]^2$ | ($[0,1]$ → $[0,1]$ → Prop) → ℝ | agrees with a probability measure (Mathlib `IsProbabilityMeasure`) on measurable sets |
 | bivariate copula | $[0,1]$ → $[0,1]$ → ℝ | a distribution function on `[0,1]²` with uniform marginals |
@@ -2176,6 +2189,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
 | borel measurable | $[0,1]$ → $[0,1]$ | a Borel measurable map of `[0,1]` (Mathlib `Measurable`) |

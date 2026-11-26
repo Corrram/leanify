@@ -23,7 +23,8 @@ tests/Analysis/article.tex:53:44: info: claim 11: \forall x\in \mathbb{R}\to \ma
 tests/Analysis/article.tex:57:24: info: claim 12: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s))\Leftrightarrow (\forall z\in \mathbb{R},\ x(-z)=x(z))
 tests/Analysis/article.tex:57:24: info: claim 13: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{nondecreasing}(x)\text{ on }\{z:\top\}\lor \operatorname{nonincreasing}(x)\text{ on }\{z:\top\}
 tests/Analysis/article.tex:61:65: info: claim 14: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{s:0\le s\land s\le 1\}\land x(0)<0\land 0<x(1)\Rightarrow (\exists y\in \mathbb{R},\ (0<y\land y<1)\land x(y)=0)
-tests/Analysis/article.tex: 4 definitions, 15 claims
+tests/Analysis/article.tex:65:43: info: claim 15: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ 0\le s\land s\le 1\Rightarrow 0\le x(s)\land x(s)\le 1)\land \operatorname{continuous}(x)\text{ on }\{s:0\le s\land s\le 1\}\Rightarrow (\exists y\in \mathbb{R},\ ((0\le y\land y\le 1)\land x(y)=y)\land \top)
+tests/Analysis/article.tex: 4 definitions, 16 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 23 compiled, 0 failed, 0 prose (of 23)
-  all: 27 compiled, 0 failed, 0 prose (of 27)
+  results: 25 compiled, 0 failed, 0 prose (of 25)
+  all: 29 compiled, 0 failed, 0 prose (of 29)

@@ -229,6 +229,9 @@ def vocab : Vocab where
     { words := [w!"closed"] ++ uniformly, ty := Class, pred := .const 11,
       doc := "`IsClosed` for the topology of uniform convergence on `[0,1]²`" }]
   nouns := [
+    { sing := phrase!"fixed point", plural := phrase!"fixed points", ty := I01,
+      pred := .lam I01 .tt .tt, arg := some ([w!"of"], self, .lam self .tt (.lam I01 .tt (.eq (.app (.loc 1) (.loc 0)) (.loc 0)))),
+      doc := "a point `x` of `[0,1]` with `f(x) = x`, of a map `f` of `[0,1]` (Mathlib `Function.IsFixedPt`)" },
     { sing := phrase!"distribution function on $[0,1]^2$",
       plural := phrase!"distribution functions on $[0,1]^2$", ty := sq, pred := .const 0,
       doc := "`(u,v) ↦ μ([0,u]×[0,v])` for a probability measure `μ` on `[0,1]²`" },
@@ -295,6 +298,9 @@ def vocab : Vocab where
     { phrase := phrase!"continuous", prenominal := true, ty := I01 ⟶ .real,
       pred := .lam (I01 ⟶ .real) .tt (.app (.const continuous1) (.loc 0)),
       doc := "a continuous real function on `[0,1]` (Mathlib `Continuous`)" },
+    { phrase := phrase!"continuous", prenominal := true, ty := self,
+      pred := .lam self .tt (.app (.const continuous1) (.lam I01 .tt (.app (.const val) (.app (.loc 1) (.loc 0))))),
+      doc := "a continuous map of `[0,1]` to itself (Mathlib `Continuous`)" },
     { phrase := phrase!"continuous", prenominal := true, ty := sq,
       pred := .lam sq .tt (.app (.const continuous2) (.loc 0)),
       doc := "a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function)" },

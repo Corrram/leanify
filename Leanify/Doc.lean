@@ -1640,6 +1640,18 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
       let (a, aty') ← Elab.term 100000 sc none mt
       let a ← if aty' == aty then pure a else if aty == .real then Elab.asReal (a, aty') else fail E.type
+      -- (the domain of the complement's signature, where the relation takes it)
+      if n.argOnDomain then
+        let stD ← get
+        let dom? : Option MT := match mt with
+          | .id f => (stD.sigDoms.find? fun (e, g, _, _) => g == f && (e == stD.curEnv || stD.curProved == some e)).map (·.2.2.1)
+          | _ => none
+        let domTm ← match dom? with
+          | some d => do
+            let (_, p) ← domainOf false d sc
+            pure (p.getD (.lam .real .tt .tt))
+          | none => pure (.lam .real .tt .tt)
+        return ([Tm.lam n.ty .tt (Notation.betaApply rel [domTm, a, .loc 0])], rest')
       pure ([Tm.lam n.ty .tt (Notation.betaApply rel [a, .loc 0])], rest')
     | _, _ => if n.needsArg then fail E.type else pure ([], rest)
   -- a noun's predicate; a noun of maps meant on a domain takes the domain of the signature
@@ -1714,6 +1726,15 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               if let some ([_], d) := Grammar.binderMath ts then
                 let (dty, _) ← domainOf false d outer
                 if dty != n.ty then fail E.type
+          -- (a noun without a complement before the complement of another with the same
+          -- words, `sequence in $X$`: the other)
+          if n.arg.isNone then
+            match afterVar n v r with
+            | .w w :: .m _ :: _ =>
+              if cands.any (fun ((n', _), _) => match n'.arg with
+                  | some (ws, _, _) => ws.contains (Grammar.lower w)
+                  | none => false) then fail E.type
+            | _ => pure ()
           let _ ← nounArg n (afterVar n v r)
         match ← theMeaningBy (fun (nvr : Noun × Option (List MTok) × List Chunk) => (nvr.1.ty, nvr.1.pred, nvr.2.1))
             (·.1.field) fitsArg r0 (cands.map fun ((n, v), r) => ((n, v, r), r)) (rethrow := true) with
@@ -1931,6 +1952,16 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     | _ => fail E.type
   -- (`a set of real numbers that is bounded above [and closed]`: the adjectives after
   -- `that is`, as modifiers after the noun)
+  -- (`a polynomial that has no real roots`, `a graph which has a Hamiltonian cycle`: the
+  -- modifiers `without real roots`, `with a Hamiltonian cycle`)
+  let r1 : List Chunk := match r1 with
+    | .w t :: .w h :: rest =>
+      if (t == w!"that" || t == w!"which") && (h == w!"has" || h == w!"have" || h == w!"contains") then
+        match rest with
+        | .w n :: rest' => if n == w!"no" then .w w!"without" :: rest' else .w w!"with" :: rest
+        | _ => .w w!"with" :: rest
+      else r1
+    | _ => r1
   let (rel, r1) : Bool × List Chunk := match r1 with
     | .w t :: .w i :: rest =>
       if (t == w!"that" || t == w!"which") && (i == w!"is" || i == w!"are") then (true, rest) else (false, r1)
@@ -4133,6 +4164,18 @@ def sigCodomain (sc : Scope) (k : Codes) : M (Option Tm) := do
   | some (_, _, _, c) => tryCatch (do let (_, p) ← domainOf false c sc; pure p) fun _ => pure none
   | none => pure none
 
+/-- Does the complement `ts` elaborate to the type of the slot of `in $v$` of `m`? -/
+def complementFits (sc : Scope) (m : Modifier) (ts : List MTok) : M Bool := do
+  let some mt := Math.parseFormula ts | return false
+  let st0 ← get
+  let r ← tryCatch (do let (_, t) ← Elab.term 100000 sc none mt; pure (some t)) fun _ => pure none
+  set st0
+  -- (the slot of `in $v$`, the last one)
+  let k := m.phrase.foldl (fun n i => match i with | .v => n + 1 | _ => n) 0
+  match r, (Notation.slotTys k m.pred).getLast? with
+  | some t, some want => pure (t == want)
+  | _, _ => pure false
+
 /-- The complement of the object `x` (`G` of `Let $H$ be a subgroup of $G$`), where the
 vocabulary has the adjective `a` relative to a structure (`normal in $G$`). -/
 def relativeAdj (sc : Scope) (x : Tm × Ty) (a : Codes) : M (Option (List MTok)) := do
@@ -4140,9 +4183,12 @@ def relativeAdj (sc : Scope) (x : Tm × Ty) (a : Codes) : M (Option (List MTok))
   let some k := (match x.1 with | .loc i => (sc[i]?).map (fun (p : Codes × Ty) => p.1) | _ => none) | return none
   let some (_, _, ts) := st.complements.find? (fun ((e, n, _) : Nat × Codes × List MTok) => n == k && (e == st.curEnv || st.curProved == some e))
     | return none
-  if st.vocab.mods.any (fun m => m.ty == x.2 && !m.prenominal && m.phrase == [PItem.w a, PItem.w w!"in", PItem.v]) then
-    return some ts
-  return none
+  let some m := st.vocab.mods.find? (fun m => m.ty == x.2 && !m.prenominal && m.phrase == [PItem.w a, PItem.w w!"in", PItem.v])
+    | return none
+  -- (only of an object of the modifier's kind: `closed in $\tau$` is of a topology, not of
+  -- the set `\mathbb{R}` that `compact subset of $\mathbb{R}$` names)
+  if !(← complementFits sc m ts) then return none
+  return some ts
 
 /-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
 (with its modifiers), or prenominal modifiers alone. The type of `x` decides between
@@ -4185,7 +4231,11 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   -- (the noun phrase is read in the scope of the sentence, `$H$ is a subgroup of $G$`; its
   -- predicate is stated where its variable would be bound, one binder further in)
   modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0), sigCodPreset := subjCod.map (shift 1 0) }
-  let np ← tryCatch (some <$> nounPhrase cs sc) fun e => do
+  -- (a modifier of the subject's type with exactly these words is meant, not a noun with
+  -- modifiers before it: `$h$ is a subadditive sequence`)
+  let exactMod := V.mods.any fun m => m.ty == x.2 && !Notation.hasSlots m.phrase &&
+    (match matchPhrase m.phrase cs with | some (none, []) => true | _ => false)
+  let np ← if exactMod then pure none else tryCatch (some <$> nounPhrase cs sc) fun e => do
     modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
     if e.code == E.ambiguous then throw e else pure none
   modify fun st => { st with sigDomPreset := none, sigCodPreset := none }
@@ -4251,15 +4301,16 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
               fun (q : Nat × Codes × List MTok) => q.2.2
           match comp?, direct with
           | some ts, false =>
-            let hit := V.mods.findSome? fun m => if m.ty != x.2 || m.prenominal then none else
+            let cands := V.mods.filterMap fun m => if m.ty != x.2 || m.prenominal then none else
               match m.phrase.reverse with
               | .v :: .w i :: front =>
                 if i != w!"in" || front.isEmpty then none else
                 (Notation.matchPrefix front.reverse cs []).bind fun (_, r) =>
                   let next := match r with | .w w :: _ => w == w!"in" | _ => false
-                  if next then none else some (cs.take (cs.length - r.length) ++ [Chunk.w w!"in", Chunk.m ts] ++ r)
+                  if next then none else some (m, cs.take (cs.length - r.length) ++ [Chunk.w w!"in", Chunk.m ts] ++ r)
               | _ => none
-            pure (hit.getD cs)
+            let fitting ← cands.filterM fun (m, _) => complementFits sc m ts
+            pure ((fitting.head?.map (·.2)).getD cs)
           | _, _ => pure cs
         -- (a modifier that follows its noun is stated too: `$x$ is orthogonal to $y$`, `$S$ is of measure zero`)
         let cands := V.mods.filterMap fun m => if m.ty == x.2 then

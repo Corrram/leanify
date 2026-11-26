@@ -75,6 +75,7 @@ def vocab : Vocab where
     seqNoun phrase!"sequence of real numbers" phrase!"sequences of real numbers" none
       "`a_0, a_1, …`: a function of the natural numbers (Mathlib `ℕ → ℝ`)",
     seqNoun phrase!"real sequence" phrase!"real sequences" none "(Mathlib `ℕ → ℝ`)",
+    seqNoun phrase!"sequence" phrase!"sequences" none "a sequence of real numbers (Mathlib `ℕ → ℝ`)",
     seqNoun phrase!"sequence of positive real numbers" phrase!"sequences of positive real numbers" (some fun x => lt (num 0) x)
       "`a_n > 0`",
     seqNoun phrase!"sequence of nonnegative real numbers" phrase!"sequences of nonnegative real numbers" (some fun x => le (num 0) x)

@@ -75,6 +75,14 @@ def vocab : Vocab where
     nounP phrase!"real polynomial" phrase!"real polynomials"]
   mods := [
     mod phrase!"monic" true (withPoly monic) "leading coefficient 1 (Mathlib `Polynomial.Monic`)",
+    mod phrase!"with a real root" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (exR fun x => eq (app f x) (num 0)))
+      "`p(x) = 0` for some real `x`",
+    mod phrase!"without real roots" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (allR fun x => not (eq (app f x) (num 0))))
+      "`p(x) ≠ 0` for every real `x` (also `has no real roots`)",
+    mod phrase!"without real root" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (allR fun x => not (eq (app f x) (num 0))))
+      "`p(x) ≠ 0` for every real `x`",
+    mod phrase!"without a real root" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (allR fun x => not (eq (app f x) (num 0))))
+      "`p(x) ≠ 0` for every real `x`",
     mod phrase!"quadratic" true (ofDegree 2) "a polynomial of degree 2",
     mod phrase!"cubic" true (ofDegree 3) "a polynomial of degree 3",
     mod phrase!"quartic" true (ofDegree 4) "a polynomial of degree 4",

@@ -3762,7 +3762,7 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
       match c, rest with
       -- (`that is bounded above`: a relative clause after the noun, not its words)
       | .w w, .w i :: _ =>
-        if (w == w!"that" || w == w!"which") && (i == w!"is" || i == w!"are") then acc.reverse
+        if (w == w!"that" || w == w!"which") && (i == w!"is" || i == w!"are" || i == w!"has" || i == w!"have" || i == w!"contains") then acc.reverse
         -- (`in which every vertex has even degree`: a relative clause)
         else if (w == w!"in" || w == w!"for" || w == w!"on") && i == w!"which" then acc.reverse
         else if w == w!"whose" then acc.reverse

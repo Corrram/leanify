@@ -185,9 +185,10 @@ tests/Square/article.tex:278:1: info: claim 74: \forall x\in \mathbb{R}\to [0,1]
 tests/Square/article.tex:278:1: info: claim 74 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ \forall y\in \mathbb{R}\to [0,1],\ (1\in \mathbb{N}\land 1\in \mathbb{N})\land (x(1)\le y(1)\Rightarrow 1\in \mathbb{N}\land 1\in \mathbb{N})
 tests/Square/article.tex:280:1: info: claim 75: \forall x\in \mathbb{R}\to [0,1],\ x(1)\le 1
 tests/Square/article.tex:280:1: info: claim 75 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ 1\in \mathbb{N}
-tests/Square/article.tex: 35 definitions, 76 claims
+tests/Square/article.tex:283:43: info: claim 76: \forall x\in [0,1]\to [0,1],\ \operatorname{Continuous}((z\in [0,1]\mapsto x(z)))\Rightarrow (\exists y\in [0,1],\ x(y)=y\land \top)
+tests/Square/article.tex: 35 definitions, 77 claims
   text: 30 compiled, 0 failed, 32 prose (of 62)
-  results: 51 compiled, 0 failed, 0 prose (of 51)
+  results: 53 compiled, 0 failed, 0 prose (of 53)
   proofs: 3 compiled, 0 failed, 1 prose (of 4)
-  all: 84 compiled, 0 failed, 33 prose (of 117)
+  all: 86 compiled, 0 failed, 33 prose (of 119)
   complete proofs: 0 of 1 (a result is derived from a proof that is read completely)
