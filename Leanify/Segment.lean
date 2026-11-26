@@ -76,8 +76,12 @@ def abbrevBefore : List PTok → Bool
 /-- Does the current sentence (latest token first) end with `the following are
 equivalent:`? Its list then belongs to it. -/
 def tfaeIntro : List PTok → Bool
-  | ⟨.punct 58, _, false⟩ :: ⟨.word e, _, _⟩ :: ⟨.word a, _, _⟩ :: ⟨.word f, _, _⟩ :: _ =>
-    e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following")
+  | ⟨.punct 58, _, false⟩ :: ⟨.word e, _, _⟩ :: ⟨.word a, _, _⟩ :: ⟨.word f, _, _⟩ :: rest =>
+    e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following" ||
+      ([w!"statements", w!"conditions", w!"assertions", w!"properties"].contains f &&
+        (match rest with
+          | ⟨.word g, _, _⟩ :: _ => g == w!"following" || g == w!"Following"
+          | _ => false)))
   | _ => false
 
 /-- Does the current sentence (latest token first) run on into a list? It does when it

@@ -569,7 +569,7 @@ citations.
 | several subjects | `$a$ and $b$ are positive`, `$a,b$ are odd integers`, `$x_1,\ldots,x_n$ are positive` (each of them is as the words say) |
 | a statement as a hypothesis | `If $n$ is even, then …`, `For all integers $a,b$, if $a$ and $b$ are odd, then …`, `Let $k\ge1$ be an integer. If $k$ is an even integer, then …` (a statement about variables bound before, by the result or by the sentence's binders, as a hypothesis; `If $n$ is an even integer` about an `n` not bound yet binds it, as `For every even integer $n$`) |
 | adjectives without a noun | `for every positive $a\in J$`, `for every nonzero $x$`, `a rational $s\in(0,1)$`, `for all sufficiently small positive $\varepsilon$` (a real number with the adjectives, in the domain if one is written; before an index name, `n`, `m`, `k`, `j`, `i`, `N`, `M`, `K`, without a domain, refused with a finding: say `every positive integer $n$`) |
-| equivalent statements | `Then the following are equivalent: \begin{enumerate}\item $x^2=1$; \item $\lvert x\rvert=1$; \item $(x-1)(x+1)=0$. \end{enumerate}` (each item a formula; each is equivalent to the next) |
+| equivalent statements | `Then the following are equivalent: \begin{enumerate}\item $x^2=1$; \item $\lvert x\rvert=1$; \item $(x-1)(x+1)=0$. \end{enumerate}` (each item a formula, or a statement: `\item[(i)] $G$ is abelian;`; each is equivalent to the next). The list may also follow `the following statements are equivalent:` (`conditions`, `assertions`, `properties`); its items are then parts of the claim, not claims of their own |
 | several facts | `We have $(\sqrt a)^2=a$, $(\sqrt b)^2=b$ and $\sqrt a\sqrt b=\sqrt{ab}$.` (each fact is a claim of the same sentence) |
 | facts used by a step | `Since $G\le A$ and $G>0$, it follows that $H=G\cdot\frac{G}{A}\le G$.` (the facts after "Since" are premises of the step, so the step may use them) |
 | a reason in words | `Moreover, $\sqrt a=\sqrt b$ if and only if $a=b$, since the square root is injective.` (the reason is prose, the claim before it is checked) |
@@ -604,7 +604,12 @@ form they stand for before the sentence is read, so they are read as that form:
 | `$φ$ holds`, `the inequality $φ$` (also `identity`, `equality`, `estimate`, `bound`, `formula`, `relation`) | `$φ$` |
 | `If $φ$ then $ψ$`, `For all $x$ we have $φ$` | the same with the comma (`If $φ$, then $ψ$`) |
 | `there is some $y>0$ with $y<x$` | `there is a $y>0$ such that $y<x$` |
-| `Let $x$ and $y$ be two positive real numbers.` | `Let $x$ and $y$ be positive real numbers.` (`two`, `three`, `four` do not say that the objects differ) |
+| `Let $x$ and $y$ be two positive real numbers.`, `let $x$, $y$ be two elements of $G$` | `Let $x$ and $y$ be positive real numbers.` (`two`, `three`, `four` do not say that the objects differ; the word goes where it counts the letters before it) |
+| `Let $X$ be a compact, connected metric space.` | `Let $X$ be a compact connected metric space.` (a comma between two adjectives after `a`, `every`, `any`, …) |
+| `Let $G$ be a (possibly infinite) group.`, `a (not necessarily commutative) ring` | `Let $G$ be a group.`, `a ring`: a parenthetical that says what need not hold constrains nothing |
+| `We denote by $Z$ the center of $G$.`, `Let $Z$ denote the center of $G$.`, `The center of $G$ is denoted by $Z$.` | `Let $Z$ be the center of $G$.` (where the words name a value of the vocabulary; `NAME is denoted by $S$` for a named constant comes first) |
+| `Neither $a$ nor $b$ is negative.` | `$a$ is not negative and $b$ is not negative.` |
+| `In particular, the metric space $X$ is a topological space.` | `$X$ is a metric space and $X$ is a topological space`: what `the NOUN` says of the symbol is a part of the claim |
 | `Let $x$ be real.`, `for all real $x$` | `Let $x$ be a real number.`, `for all real numbers $x$` |
 
 In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\defeq` are
@@ -749,6 +754,12 @@ place. `tests/Arguments/article.tex` uses each form.
 | --- | --- |
 | `Assume that $x>1$.`, `Suppose $0<x$ and $x<y$.`, `We assume that $n$ is even.`, `Let us assume …` | hypotheses of the following sentences of the result or proof (inside an item of a list: of the item). In the statement of a result they are hypotheses of the result, and its proof starts with them |
 | `Assume $c>0$.`, `Suppose $x\in A$.` about a variable that is not bound yet | the variable, as `Let $c>0$.` |
+| `Let $G$ and $H$ be groups, with $H$ abelian.`, `…, with $n\ge3$.` | the variables, then the hypothesis `Suppose that $H$ is abelian.` |
+| `Assume that $a>0$ and let $n$ be an integer such that $n>a$.` | the hypothesis, then the variable (each part read as a sentence of its own, and split again where it needs to be) |
+| `For a group $G$, let $H$ be a subgroup of $G$.`, `Given $x\in A$, let …` (in a result or a proof) | `Let $G$ be a group.`, then the rest |
+| `Let $Q\in\mathbb{R}^{n\times m}$ have orthonormal columns.` (`satisfy`, `contain`, `admit`, `lie`, `belong`) | the variable, then `Suppose that $Q$ has orthonormal columns.` |
+| `Let $G$, $n$ and $H$ be as in Theorem~\ref{t}.` | the variables of the result `t`, with its hypotheses: the letters name all of its variables, and they are the first of this result |
+| `Fix $a>0$, $b\in A$ and $c$.` | each of them fixed, as `Fix $a>0$.` |
 | a second `Assume that $y>x$.` | one more hypothesis: assumptions add up. Each can end on its own |
 | `Assume further that $y>0$.` (`moreover`, `furthermore`, `in addition`, `also`) | one more hypothesis, which belongs to the assumption before it: the two end together |
 | `Assume now that $x<0$.` (`next`, `instead`, `conversely`, `otherwise`, `secondly`, `finally`, `on the other hand`) | another case: the hypothesis takes the place of the latest assumption (with what `further` added to it). `Assume first that …` is an assumption like any other, which the next case replaces |

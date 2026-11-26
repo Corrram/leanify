@@ -509,6 +509,100 @@ def standardWords : List (List Codes × List Tok) :=
    ([w!"collection", w!"of"], w [w!"set", w!"of"]), ([w!"collections", w!"of"], w [w!"sets", w!"of"]),
    ([w!"be", w!"two"], w [w!"be"]), ([w!"be", w!"three"], w [w!"be"]), ([w!"be", w!"four"], w [w!"be"])]
 
+/-- The number of letters in the formulas between a `let` and a `be`, from the tokens before
+`be` (the latest first); `none` if a token that is not a letter, a comma, `and` or `let`
+comes first. -/
+def letVarCount : Nat → List PTok → Bool → Int → Nat → Option Nat
+  | 0, _, _, _, _ => none
+  | _ + 1, [], _, _, _ => none
+  | f + 1, t :: ts, inMath, depth, n =>
+    if inMath then
+      match t.tok with
+      | .mopen => letVarCount f ts false 0 (n + 1)
+      | .rbrace | .msym 41 | .msym 93 => letVarCount f ts true (depth + 1) n
+      | .lbrace | .msym 40 | .msym 91 => letVarCount f ts true (depth - 1) n
+      | .msym 44 => letVarCount f ts true depth (if depth == 0 then n + 1 else n)
+      | .cmd c => if c == w!"in" || c == w!"subseteq" || c == w!"colon" then none else letVarCount f ts true depth n
+      | .msym 58 | .msym 61 | .msym 60 | .msym 62 => none
+      | _ => letVarCount f ts true depth n
+    else if t.tok == .mclose then letVarCount f ts true 0 n
+    else if !t.math && t.tok == .punct 44 then letVarCount f ts false 0 n
+    else match Grammar.textWord t with
+      | some w => if w == w!"let" then (if n > 0 then some n else none)
+        else if w == w!"and" then letVarCount f ts false 0 n else none
+      | none => none
+
+/-- The number words of `dropCounts`. -/
+def countWords : List (Codes × Nat) := [(w!"two", 2), (w!"three", 3), (w!"four", 4), (w!"five", 5), (w!"six", 6)]
+
+/-- `dropCounts`, with the tokens before (the latest first). -/
+def dropCountsAux : List PTok → List PTok → List PTok
+  | _, [] => []
+  | before, t :: ts =>
+    let drop : Bool := match Grammar.textWord t >>= (fun w => List.lookup w countWords), before with
+      | some n, b :: bs => Grammar.textWord b == some w!"be" && letVarCount (bs.length + 1) bs false 0 0 == some n
+      | _, _ => false
+    if drop then dropCountsAux (t :: before) ts else t :: dropCountsAux (t :: before) ts
+
+/-- Without the number word of `let $x$, $y$ be two NOUNS` (`$x,y$`, `$x$ and $y$`) where it
+counts the variables: they are such objects, as `let $x$, $y$ be NOUNS` (`two` does not
+say that they are distinct; `two distinct` does, and keeps its word). -/
+def dropCounts (ts : List PTok) : List PTok := dropCountsAux [] ts
+
+/-- Without the parentheticals that constrain nothing: `(possibly infinite)`, `(not
+necessarily commutative)`, `(possibly empty)`. -/
+def dropUnconstraining : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _, [] => []
+  | f + 1, t :: ts =>
+    if !t.math && t.tok == .punct 40 then
+      let inner := ts.takeWhile fun u => !(u.tok == .punct 41)
+      let closes := (ts.drop inner.length).head?.any fun u => u.tok == .punct 41 && !u.math
+      let words := inner.filterMap fun u => if u.math then none else match u.tok with
+        | .word w => some (Grammar.lower w)
+        | _ => none
+      let plain := inner.all fun u => !u.math && (match u.tok with
+        | .word _ | .punct 45 | .punct 44 => true
+        | _ => false)
+      let lead := words.take 1 == [w!"possibly"] || words.take 2 == [w!"not", w!"necessarily"]
+      if closes && plain && lead && words.length ≥ 2 then dropUnconstraining f (ts.drop (inner.length + 1))
+      else t :: dropUnconstraining f ts
+    else t :: dropUnconstraining f ts
+
+/-- Is there a determiner before (the tokens before, the latest first), with words, hyphens
+and commas between? -/
+def detBefore : Nat → List PTok → Bool
+  | 0, _ => false
+  | _ + 1, [] => false
+  | f + 1, u :: us =>
+    if u.math then false else
+    match Grammar.textWord u with
+    | some w => if [w!"a", w!"an", w!"every", w!"each", w!"any", w!"some", w!"all", w!"no"].contains w then true else detBefore f us
+    | none => if u.tok == .punct 45 || u.tok == .punct 44 then detBefore f us else false
+
+/-- `adjectiveCommas`, with the tokens before (the latest first). -/
+def adjCommasAux (firsts lasts : List Codes) : List PTok → List PTok → List PTok
+  | _, [] => []
+  | before, t :: ts =>
+    let drop : Bool := !t.math && t.tok == .punct 44 && (match before, ts with
+      | b :: bs, a :: _ => (match Grammar.textWord b, Grammar.textWord a with
+          | some wb, some wa => lasts.contains wb && firsts.contains wa && detBefore (bs.length + 1) bs
+          | _, _ => false)
+      | _, _ => false)
+    if drop then adjCommasAux firsts lasts (t :: before) ts else t :: adjCommasAux firsts lasts (t :: before) ts
+
+/-- Without the commas between the adjectives before a noun: `a compact, connected metric
+space` as `a compact connected metric space`. A comma goes where it follows a determiner
+(`a`, `an`, `every`, `each`, `any`, `some`, `all`, `no`) and words only, the word before it
+ends an adjective and the word after it begins one (of the vocabulary, or a notion of the
+article). -/
+def adjectiveCommas (V : Vocab) (notions : List (List Codes)) (ts : List PTok) : List PTok :=
+  let firsts : List Codes := V.adjectives.filterMap (·.words.head?) ++
+    V.mods.filterMap (fun m => match m.phrase.head? with | some (.w w) => some w | _ => none) ++ notions.filterMap (·.head?)
+  let lasts : List Codes := V.adjectives.filterMap (·.words.getLast?) ++
+    V.mods.filterMap (fun m => match m.phrase.getLast? with | some (.w w) => some w | _ => none) ++ notions.filterMap (·.getLast?)
+  adjCommasAux firsts lasts [] ts
+
 /-- Words around a formula that say nothing more than the formula: `$φ$ holds` is `$φ$`,
 `the inequality $φ$` is `$φ$`; and `If $φ$ then $ψ$` has its comma, `real $x$` its noun,
 `there is … $y$ with $φ$` is `such that $φ$`. `there` says whether `there is|exists` came
@@ -6374,6 +6468,21 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let bs := ctx.filter (fun x => !own.any (·.name == x.name)) ++ own
     descDef c bs lhs kind np cond
   | .assumeAll binds defs => assumeIn c binds defs
+  | .asIn vars label => do
+    -- `Let $x$, $y$ and $z$ be as in Theorem~\ref{t}.`: the variables of `t`, all of them, with
+    -- its hypotheses, as the first variables of this result or proof
+    if c.ctx.kind == .text then fail E.prose
+    let st ← get
+    let some e := st.resultEnvs.lookup label | fail E.unsupported label
+    let bs := (st.resultBinders.lookup e).getD []
+    let names := bs.map (·.name)
+    if bs.isEmpty || vars.length != bs.length || !names.all vars.contains || !vars.all names.contains then
+      fail E.finding (w!"`be as in` the result " ++ label ++ w!" names all of its variables: " ++
+        ((names.map fun n => w!"$" ++ n ++ w!"$").intersperse w!", ").flatten)
+    if !st.envBinders.isEmpty then fail E.unsupported
+    let hyps := ((st.resultHyps.lookup e).getD []).filter fun h => h.item == 0 && !h.contra
+    modify fun st => { st with envBinders := bs, envHyps := st.envHyps ++ hyps }
+    pure ([], [])
   | .letSuchThatNP np hyp => do
     -- the object, then the property it is chosen with
     let (d1, c1) ← assumeIn c [.noun np] []
@@ -7539,6 +7648,11 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       stdToks.map fun p => if lw p == some w!"whenever" then { p with tok := .word w!"if" } else p
     else stdToks
   let s := { s with toks := Notation.standardForms (stdToks.length + 1) false false none stdToks }
+  -- (`a (possibly infinite) group`: a group; `a compact, connected metric space`: a compact
+  -- connected metric space)
+  let s := { s with toks := Notation.dropUnconstraining (s.toks.length + 1) s.toks }
+  let s := { s with toks := Notation.dropCounts s.toks }
+  let s := { s with toks := Notation.adjectiveCommas st0.vocab (st0.notions.map (·.1)) s.toks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
   -- the symbols this sentence introduces, if it is not read
@@ -7644,7 +7758,21 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
           match Grammar.parseSentence p' with
           | some sn' => (p', sn')
           | none => (p, sn)
-        let (d, cl) ← one p sn p.toks none
+        let st1 ← get
+        let (d, cl) ← tryCatch (one p sn p.toks none) fun e => do
+          set st1
+          -- (a part that does not compile may itself be made of sentences: `Assume that
+          -- $a>0$ and let $n$ be an integer such that $n>a$.`)
+          match (Grammar.partsOfAt 0 p).bind fun qs => qs.mapM fun q => (Grammar.parseSentence q).map (q, ·) with
+          | some sub@(_ :: _ :: _) =>
+            let mut d' : List Nat := []
+            let mut c' : List Nat := []
+            for (q, sq) in sub do
+              let (a, b) ← one q sq q.toks none
+              d' := d' ++ a
+              c' := c' ++ b
+            pure (d', c')
+          | _ => throw e
         ds := ds ++ d
         cs := cs ++ cl
       pure (ds, cs)
@@ -7661,7 +7789,8 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       | [] => tryFlex ⟨E.prose, []⟩
       | [(_, sn)] => do
         let st ← get
-        tryCatch (one s sn toks0 ((undefinedAlt.orElse fun _ => Grammar.thatIsSentence s).orElse fun _ => Grammar.defAlt s)) fun e =>
+        tryCatch (one s sn toks0 (((undefinedAlt.orElse fun _ => Grammar.thatIsSentence s).orElse fun _ => Grammar.defAlt s).orElse
+            fun _ => Grammar.denoteAlt s)) fun e =>
           match partsOf () with
           | some ps@(_ :: _ :: _) => do
             set st

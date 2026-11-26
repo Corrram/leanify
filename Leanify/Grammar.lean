@@ -3542,6 +3542,9 @@ inductive Sent where
   $a,b\in A$, and let $X\coloneqq e$.`: variables of the rest of the result or proof,
   and definitions local to it. -/
   | assumeAll (binds : List Bind) (defs : List MT)
+  /-- `Let $x$, $y$ and $z$ be as in Theorem~\ref{t}.`: the variables of the result `t`,
+  with its hypotheses (the letters are all of its variables). -/
+  | asIn (vars : List Codes) (label : Codes)
   /-- `Let $m$ be such that CLAUSE[, and let $X\coloneqq e$]`: a variable of the rest of the
   result or proof, chosen with the property that the clause states (a hypothesis about it),
   and definitions. -/
@@ -4217,15 +4220,45 @@ def itemFormula (it : List Chunk) : Option MT :=
   | [.d ts _] => Math.parseDisplay ts
   | _ => none
 
-/-- `the following are equivalent:` and a list of formulas: each is equivalent to
-the next (and so all are). -/
-def tfae (cs : List Chunk) : Option (List (MT × MT)) := do
-  let r ← kw [w!"the", w!"following", w!"are", w!"equivalent"] cs >>= punct 58
+/-- The words that announce a list of equivalent statements. -/
+def tfaeIntros : List (List Codes) :=
+  [[w!"the", w!"following", w!"are", w!"equivalent"], [w!"the", w!"following", w!"statements", w!"are", w!"equivalent"],
+   [w!"the", w!"following", w!"conditions", w!"are", w!"equivalent"], [w!"the", w!"following", w!"assertions", w!"are", w!"equivalent"],
+   [w!"the", w!"following", w!"properties", w!"are", w!"equivalent"]]
+
+/-- The statement of an item (`[(ii)] $f$ is continuous and bounded;`): its label and its
+final `;`, `.`, `,` or `, and` removed, read as one or several clauses joined by `and`. -/
+def itemClause (it : List Chunk) : Option Clause := do
+  let it := match it with
+    | .p 91 :: rest => (rest.dropWhile (fun (c : Chunk) => match c with
+        | .p 93 => false | .w _ | .p _ => true | _ => false)).drop 1
+    | _ => it
+  let it := match it.reverse with
+    | .w a :: .p 44 :: r => if a == w!"and" then r.reverse else it
+    | .w a :: r => if a == w!"and" then r.reverse else it
+    | _ => it
+  let it := match it.reverse with
+    | .p c :: r => if c == 59 || c == 46 || c == 44 then r.reverse else it
+    | _ => it
+  if it.isEmpty then none
+  let (c, r) ← andClauses (it ++ [.p 46])
+  if isEnd r then some c else none
+
+/-- `the following [statements] are equivalent:` and a list of formulas, or of statements:
+each is equivalent to the next (and so all are). -/
+def tfae (cs : List Chunk) : Option (List CClause) := do
+  let r ← tfaeIntros.findSome? (kw · cs) >>= punct 58
   let items := (listItems r [] []).filter fun it => match it with
     | [] | [.p 46] => false
     | _ => true
-  let fs ← items.mapM itemFormula
-  if fs.length < 2 then none else some (fs.zip (fs.drop 1))
+  match items.mapM itemFormula with
+  | some fs =>
+    if fs.length < 2 then none
+    else some ((fs.zip (fs.drop 1)).map fun (p, q) => ({ cites := [], clause := .iff p q } : CClause))
+  | none =>
+    let cls ← items.mapM itemClause
+    if cls.length < 2 then none
+    else some ((cls.zip (cls.drop 1)).map fun (p, q) => ({ cites := [], clause := .iffC p q } : CClause))
 
 /-- `We write $T$ for $F$.`, `We write $T$ if|when $F$.`, `We write $T$ for [the] NAME.` -/
 def notationSent (cs : List Chunk) : Option Sent := do
@@ -4898,7 +4931,7 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
   | none =>
   let (topic, cs) := marker cs
   match tfae cs with
-  | some ps => some (.claims topic [] (ps.map fun (p, q) => ({ cites := [], clause := .iff p q } : CClause)))
+  | some ps => some (.claims topic [] ps)
   | none =>
   match notionDef cs with
   | some s => some s
@@ -5108,7 +5141,20 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
       some (.fix (.noun np) [] [])) <|> do
     let (ts, r1) ← mathChunk r
     let b ← fixBinder ts
-    if isEnd r1 then some (.fix b [] []) else do
+    if isEnd r1 then some (.fix b [] []) else
+    -- `Fix $a>0$, $b\in A$ and $c$.`: several binders
+    let rec more : Nat → List Chunk → List Bind → List Bind × List Chunk
+      | 0, r, acc => (acc.reverse, r)
+      | f + 1, r, acc =>
+        match (do
+            let r' ← kw [w!"and"] r <|> (do let r'' ← punct 44 r; some ((kw [w!"and"] r'').getD r''))
+            let (ts', r2) ← mathChunk r'
+            let b' ← fixBinder ts'
+            some (b', r2)) with
+        | some (b', r2) => more f r2 (b' :: acc)
+        | none => (acc.reverse, r)
+    let (bs, rb) := more 6 r1 []
+    if !bs.isEmpty && isEnd rb then some (.fix (.many (b :: bs)) [] []) else do
     let r2 ← kw [w!"and"] r1
     let r3 ← kw [w!"define"] r2 <|> kw [w!"set"] r2 <|> kw [w!"put"] r2
     let (items, ls, r4) ← defList 6 r3 [] []
@@ -6155,6 +6201,106 @@ def defAlt (s : Sentence) : Option Sent := do
 def defSentence (inDef : Bool) (cs : List Chunk) : Option Sent :=
   (DefForm.forms inDef cs).findSome? fun f => if f.cond.isEmpty then none else notionDefWide f.canon
 
+/-- `Let $x$, $y$ and $z$ be as in Theorem~\ref{t}.`, `Let $x,y$ be as in \cref{t}.` -/
+def asInSent (cs : List Chunk) : Option Sent := do
+  let r ← kw [w!"let"] cs
+  -- the letters: `$x$, $y$, and $z$`, `$x,y,z$`
+  let letters (ts : List MTok) : Option (List Codes) :=
+    ((Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)).mapM fun p =>
+      match Math.parseFormula p with
+      | some (.id v) => some v
+      | _ => none
+  let rec vars : Nat → List Chunk → List Codes → Option (List Codes × List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, acc => do
+      let (ts, r1) ← mathChunk cs
+      let vs ← letters ts
+      let acc := acc ++ vs
+      match r1 with
+      | .p 44 :: .w a :: rest@(.m _ :: _) => if a == w!"and" then vars f rest acc else none
+      | .p 44 :: rest@(.m _ :: _) => vars f rest acc
+      | .w a :: rest@(.m _ :: _) => if a == w!"and" then vars f rest acc else none
+      | _ => some (acc, r1)
+  let (vs, r1) ← vars 8 r []
+  let r2 ← kw [w!"be", w!"as", w!"in"] r1
+  let (l, r3) ← cite r2 <|> (match r2 with
+    | .r .ref l :: rest => some (l, rest)
+    | _ => none)
+  if vs.isEmpty || !isEnd r3 then none
+  some (.asIn vs l)
+
+/-- `[In particular,] the NOUN $x$ is …`, `the WORDS $x$ has …`: the clause about `x`, with what
+`the NOUN` says of it (`x` is a NOUN) as a part of what is stated. -/
+def theNounSubjSent (cs : List Chunk) : Option Sent := do
+  let (topic, cs) := marker cs
+  let r ← kw [w!"the"] cs
+  let ws := r.takeWhile fun c => match c with
+    | .w w => !notionStops.contains w
+    | .p 45 => true
+    | _ => false
+  let nw := (ws.filter fun c => match c with | .w _ => true | _ => false).length
+  if nw == 0 || nw > 4 then none
+  let rest := r.drop ws.length
+  let (ts, r1) ← mathChunk rest
+  -- (a symbol: a letter, a command, with indices)
+  let single := match Math.parseFormula ts with
+    | some (.id _) | some (.sub (.id _) _) | some (.sup (.id _) _) => true
+    | _ => false
+  if !single then none
+  let v ← r1.head?
+  if !(match v with
+      | .w w => [w!"is", w!"are", w!"has", w!"have", w!"contains", w!"satisfies", w!"admits", w!"lies", w!"belongs", w!"does"].contains w
+      | _ => false) then none
+  let (pre, e1) ← clause ([.m ts, .w w!"is", .w w!"a"] ++ ws ++ [.p 46])
+  if !isEnd e1 then none
+  let (c, e2) ← andClauses ([.m ts] ++ r1)
+  if !isEnd e2 then none
+  some (.claims topic [] [{ cites := [], clause := .both [pre, c] }])
+
+/-- `Neither $A$ nor $B$ is REST.`: `$A$ is not REST` and `$B$ is not REST`. -/
+def neitherNorSent (cs : List Chunk) : Option Sent := do
+  let (topic, cs) := marker cs
+  let r ← kw [w!"neither"] cs
+  let i ← r.findIdx? fun c => match c with | .w w => w == w!"nor" | _ => false
+  let a := r.take i
+  let r1 := r.drop (i + 1)
+  let j ← r1.findIdx? fun c => match c with | .w w => w == w!"is" || w == w!"are" | _ => false
+  let b := r1.take j
+  if a.isEmpty || b.isEmpty then none
+  let rest := r1.drop (j + 1)
+  if (kw [w!"not"] rest).isSome then none
+  let (c1, e1) ← clause (a ++ [.w w!"is", .w w!"not"] ++ rest)
+  let (c2, e2) ← clause (b ++ [.w w!"is", .w w!"not"] ++ rest)
+  if !isEnd e1 || !isEnd e2 then none
+  some (.claims topic [] [{ cites := [], clause := .both [c1, c2] }])
+
+/-- `We denote by $Z$ the WORDS.`, `Let $Z$ denote the WORDS.`, `The WORDS is denoted by $Z$.`:
+as `Let $Z$ be the WORDS.` (a symbol for an object that the words name). -/
+def denoteAsLet (cs : List Chunk) : Option (List Chunk) :=
+  (do
+    let r ← kw [w!"we", w!"denote", w!"by"] cs <|> kw [w!"denote", w!"by"] cs <|>
+      kw [w!"let", w!"us", w!"denote", w!"by"] cs <|> kw [w!"we", w!"will", w!"denote", w!"by"] cs
+    let (ts, r1) ← mathChunk r
+    let r2 ← kw [w!"the"] r1
+    some ([.w w!"let", .m ts, .w w!"be", .w w!"the"] ++ r2)) <|>
+  (do
+    let r ← kw [w!"let"] cs
+    let (ts, r1) ← mathChunk r
+    let r2 ← kw [w!"denote", w!"the"] r1
+    some ([.w w!"let", .m ts, .w w!"be", .w w!"the"] ++ r2)) <|>
+  (do
+    let r ← kw [w!"the"] cs
+    let i ← r.findIdx? fun c => match c with | .w w => w == w!"denoted" | _ => false
+    if i < 2 then none
+    let pre := r.take (i - 1)
+    let verb := r[i - 1]?
+    if !(match verb with | some (Chunk.w w) => w == w!"is" | _ => false) then none
+    let r1 ← kw [w!"by"] (r.drop (i + 1))
+    let (ts, r2) ← mathChunk r1
+    if !isEnd r2 then none
+    if pre.any (fun c => match c with | .p 44 | .p 46 => true | _ => false) then none
+    some ([.w w!"let", .m ts, .w w!"be", .w w!"the"] ++ pre ++ [.p 46]))
+
 def sentence1 (cs : List Chunk) : Option Sent :=
   -- (`Then CLAUSE if CLAUSE'.`: the condition first, before the words after `is` would take it)
   let postIf : Option Sent := if (kw [w!"then"] cs).isSome then postIfSent cs >>= sentence0 else none
@@ -6172,7 +6318,8 @@ def sentence1 (cs : List Chunk) : Option Sent :=
   -- to be a definition, or not read)
   let s0 := match sentence0 cs with
     | some (.notionSubject np) => (notionDefWide cs).orElse fun _ => some (.notionSubject np)
-    | none => notionDefWide cs
+    | none => notionDefWide cs <|> asInSent cs <|> neitherNorSent cs <|> theNounSubjSent cs <|>
+      (denoteAsLet cs >>= fun cs' => sentence0 cs' <|> (letTheSent cs' >>= sentence0))
     | s => s
   match s0 with
   | some s => some s
@@ -6289,6 +6436,15 @@ def undefinedOf (s : Sentence) : Option Sent :=
   let first := s.toks.findSome? fun p => match p.tok with | .word w => some (lower w) | _ => none
   if !(first.any fun w => [w!"let", w!"we", w!"write", w!"denote"].contains w) then none else
   (chunks (s.toks.length + 1) s.toks []).bind undefinedSent
+
+/-- `The center of $G$ is denoted by $C$.`, `We denote by $C$ the …`: the reading `Let $C$ be the
+center of $G$.`, for a sentence whose reading (`NAME is denoted by $S$`, a constant of the
+vocabulary) does not compile. -/
+def denoteAlt (s : Sentence) : Option Sent := do
+  if s.ctx.kind == .proof then none
+  let cs ← chunks (s.toks.length + 1) s.toks []
+  let cs' ← denoteAsLet cs
+  sentence0 cs' <|> (letTheSent cs' >>= sentence0)
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/
@@ -6459,8 +6615,15 @@ def considerAsSet (ts : List PTok) : Option (List PTok) := do
 
 /-- The sentences that a sentence of several parts is made of, if each of them is read
 (see above). -/
-def partsOf (s : Sentence) : Option (List Sentence) := do
+def partsOfAt : Nat → Sentence → Option (List Sentence)
+  | fuel, s => do
   let parses (ts : List PTok) : Bool := (parseSentence { s with toks := ts }).isSome
+  -- (a part that is a sentence, or, with fuel left, the sentences it is made of)
+  let accept (ts : List PTok) : Option (List (List PTok)) :=
+    if parses ts then some [ts] else
+    match fuel with
+    | 0 => none
+    | f + 1 => (partsOfAt f { s with toks := ts }).map (·.map (·.toks))
   -- `Let $(a_n)$ be a sequence such that $\sum a_n$ converges.`: the binder, then the
   -- hypothesis `Suppose that $\sum a_n$ converges.` (a condition that is a clause)
   let suchThat : Option (List (List PTok)) := do
@@ -6592,6 +6755,116 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let p2 : List PTok := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩] ++ clause
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := inWhich then return ps.map fun ts => { s with toks := ts }
+  -- `Let $G$ and $H$ be groups, with $H$ abelian.`: the binders, then `Suppose that $H$ is
+  -- abelian.` (`, with $x$ WORDS [and $y$ WORDS]`, or `, with $φ$`)
+  let withAbs : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let toks : List PTok := s.toks
+    let k ← (List.range toks.length).reverse.find? fun i =>
+      (toks[i]?.map isTextComma).getD false && (toks[i + 1]? >>= textWord) == some w!"with" &&
+        (toks[i + 2]?.map fun (t : PTok) => t.tok == Tok.mopen).getD false
+    let pos : Nat := (toks[k]?.map fun (t : PTok) => t.pos).getD 0
+    let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
+    -- (the parts `$x$ WORDS`, joined by `and` or `,`)
+    let rec parts : Nat → List PTok → List (List PTok) → Option (List (List PTok))
+      | 0, _, _ => none
+      | f + 1, ts, acc => do
+        let t ← ts.head?
+        if t.tok != Tok.mopen then none
+        let body := (ts.drop 1).takeWhile fun (u : PTok) => u.tok != Tok.mclose
+        let cls ← ts[1 + body.length]?
+        let rest := ts.drop (2 + body.length)
+        let words := rest.takeWhile fun (u : PTok) => !u.math && (match u.tok with
+          | .word v => Grammar.lower v != w!"and"
+          | .punct 45 => true
+          | _ => false)
+        let part := [t] ++ body ++ [cls] ++ (if words.isEmpty then [] else [w w!"is"] ++ words)
+        let rest := rest.drop words.length
+        match rest with
+        | [] => some ((part :: acc).reverse)
+        | [u] => if !u.math && u.tok == .punct 46 then some ((part :: acc).reverse) else none
+        | u :: v :: more =>
+          if !u.math && textWord u == some w!"and" then parts f (v :: more) (part :: acc)
+          else if isTextComma u then parts f ((if textWord v == some w!"and" then more else v :: more)) (part :: acc)
+          else none
+    let ps ← parts 6 (toks.drop (k + 2)) []
+    -- (a part without words is a condition alone; with several parts, each has its words)
+    if ps.length > 1 && ps.any (fun p => !(p.any fun (u : PTok) => textWord u == some w!"is")) then none
+    let pre : List PTok := toks.take k
+    let p1 : List PTok := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 : List PTok := [w w!"suppose", w w!"that"] ++ (ps.intersperse [w w!"and"]).flatten ++ [⟨.punct 46, pos, false⟩]
+    let a1 ← accept p1
+    let a2 ← accept p2
+    some (a1 ++ a2)
+  if let some ps := withAbs then return ps.map fun ts => { s with toks := ts }
+  -- `Assume that $a>0$ and let $n$ be …`: the hypothesis, then the binder
+  let assumeLet : Option (List (List PTok)) := do
+    let w0 ← s.toks.head? >>= textWord
+    if w0 != w!"assume" && w0 != w!"suppose" then none
+    let toks : List PTok := s.toks
+    let k ← (List.range toks.length).find? fun i =>
+      (toks[i]? >>= textWord) == some w!"and" && (toks[i + 1]? >>= textWord) == some w!"let"
+    let pos : Nat := (toks[k]?.map fun (t : PTok) => t.pos).getD 0
+    let pre : List PTok := ((toks.take k).reverse.dropWhile isTextComma).reverse
+    let p1 : List PTok := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 : List PTok := toks.drop (k + 1)
+    let a1 ← accept p1
+    let a2 ← accept p2
+    some (a1 ++ a2)
+  if let some ps := assumeLet then return ps.map fun ts => { s with toks := ts }
+  -- `For a group $G$, let $H$ be …`, `Given $x\in A$, let …`: in a result or a proof, the
+  -- object (`Let $G$ be a group.`), then the rest
+  let forLet : Option (List (List PTok)) := do
+    if s.ctx.kind == .text then none
+    let w0 ← s.toks.head? >>= textWord
+    if w0 != w!"for" && w0 != w!"given" then none
+    let toks : List PTok := s.toks
+    let k ← (List.range toks.length).find? fun i =>
+      (toks[i]?.map isTextComma).getD false && ((toks[i + 1]? >>= textWord).map ([w!"let", w!"we"].contains ·)).getD false
+    let mid : List PTok := (toks.take k).drop 1
+    let pos : Nat := (toks[k]?.map fun (t : PTok) => t.pos).getD 0
+    let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
+    let first ← mid.head?
+    let binder : List PTok ← if first.tok == Tok.mopen then some ([w w!"let"] ++ mid ++ [⟨.punct 46, pos, false⟩]) else do
+      let a ← textWord first
+      if ![w!"a", w!"an", w!"any", w!"some"].contains a then none
+      -- (the variable: the first formula, a letter)
+      let i ← mid.findIdx? fun (t : PTok) => t.tok == Tok.mopen
+      let body := (mid.drop (i + 1)).takeWhile fun (u : PTok) => u.tok != Tok.mclose
+      let var := (mid.drop i).take (body.length + 2)
+      some ([w w!"let"] ++ var ++ [w w!"be", w (if a == w!"an" then w!"an" else w!"a")] ++ (mid.take i).drop 1 ++
+        mid.drop (i + body.length + 2) ++ [⟨.punct 46, pos, false⟩])
+    let rest : List PTok := toks.drop (k + 1)
+    let a1 ← accept binder
+    let a2 ← accept rest
+    some (a1 ++ a2)
+  if let some ps := forLet then return ps.map fun ts => { s with toks := ts }
+  -- `Let $Q\in\mathbb{R}^{n\times m}$ have orthonormal columns.`: the binder, then `Suppose
+  -- that $Q$ has orthonormal columns.` (`have`, `satisfy`, `contain`, `admit`, `lie`, `belong`)
+  let letVerb : Option (List (List PTok)) := do
+    let toks : List PTok := s.toks
+    let verbs : List (Codes × Codes) := [(w!"have", w!"has"), (w!"satisfy", w!"satisfies"), (w!"contain", w!"contains"),
+      (w!"admit", w!"admits"), (w!"lie", w!"lies"), (w!"belong", w!"belongs")]
+    let closeAfter (i : Nat) : Nat := i + 2 + ((toks.drop (i + 2)).takeWhile fun (u : PTok) => u.tok != Tok.mclose).length
+    let i ← (List.range toks.length).find? fun i =>
+      (toks[i]? >>= textWord) == some w!"let" && (toks[i + 1]?.map fun (t : PTok) => t.tok == Tok.mopen).getD false &&
+        ((toks[closeAfter i + 1]? >>= textWord).map fun v => (verbs.lookup v).isSome).getD false
+    let k := closeAfter i
+    let body : List PTok := (toks.drop (i + 2)).take (k - i - 2)
+    let v ← toks[k + 1]? >>= textWord
+    let third ← verbs.lookup v
+    -- (the variable: the letter before `\in`, `\colon`, `:` or `\subseteq`)
+    let cut ← body.findIdx? fun (t : PTok) => t.tok == .cmd w!"in" || t.tok == .cmd w!"colon" || t.tok == .msym 58 || t.tok == .cmd w!"subseteq"
+    if cut == 0 || (body.take cut).any (fun (t : PTok) => t.tok == .msym 44) then none
+    let opn ← toks[i + 1]?
+    let pos : Nat := (toks[k + 1]?.map fun (t : PTok) => t.pos).getD 0
+    let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
+    let p1 : List PTok := toks.take (k + 1) ++ [⟨.punct 46, pos, false⟩]
+    let p2 : List PTok := [w w!"suppose", w w!"that", opn] ++ body.take cut ++ [⟨.mclose, pos, true⟩, w third] ++ toks.drop (k + 2)
+    let a1 ← accept p1
+    let a2 ← accept p2
+    some (a1 ++ a2)
+  if let some ps := letVerb then return ps.map fun ts => { s with toks := ts }
   let (ts, pre) := match whereNotation s.toks with
     | some (rest, nt) => (rest, [nt])
     | none => (s.toks, [])
@@ -6618,6 +6891,10 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
   let all := pre ++ parts
   if all.length < 2 && consider.isNone then none else
   some (all.map fun ts => { s with toks := ts })
+
+/-- The sentences a sentence is made of (see `partsOfAt`): a part may itself be made of
+sentences, once. -/
+def partsOf (s : Sentence) : Option (List Sentence) := partsOfAt 1 s
 
 end Grammar
 end Leanify
