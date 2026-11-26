@@ -2542,8 +2542,9 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let r1 ← kw [w!"has"] r
       let (unique, r2) ← (kw [w!"a", w!"unique"] r1).map (true, ·) <|> (kw [w!"exactly", w!"one"] r1).map (true, ·) <|>
         (kw [w!"a"] r1).map (false, ·) <|> (kw [w!"an"] r1).map (false, ·)
+      -- (not past `or`, `… or $n$ is prime`: another clause)
       let np := r2.takeWhile fun (c : Chunk) => match c with
-        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | .w w => ![w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
         | .m _ => true
         | .p 45 => true
         | _ => false

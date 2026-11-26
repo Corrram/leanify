@@ -585,6 +585,8 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
+      -- `either A or B`: `A or B`
+      else if v == w!"either" && ts.any (fun p => lw p == some w!"or") then standardForms f there cond prev ts
       -- `NP can be written as a NP'`, `… can be expressed as …`: `NP is a NP'`
       else if v == w!"can" && (match ts with
           | b :: w :: a :: _ => lw b == some w!"be" && (lw w == some w!"written" || lw w == some w!"expressed" || lw w == some w!"represented") && lw a == some w!"as"
