@@ -1159,6 +1159,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 ## `congruences`
 
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| primitive root | ℝ | an integer whose powers are all units modulo `n` (Mathlib `orderOf` in `ZMod n` is `φ(n)`) |
+| quadratic residue | ℝ | an integer coprime to `n` that is a square modulo `n` (Mathlib `IsSquare` in `ZMod n`) |
+| quadratic nonresidue | ℝ | an integer coprime to `n` that is not a square modulo `n` |
+
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | congruent to $x$ modulo $a$ | ℝ | `n ∣ a - b`, for integers `a`, `b` and `n ≥ 1` (Mathlib `Int.ModEq`) |
@@ -1379,6 +1385,8 @@ except a notion whose meanings take arguments of different types, which the type
 | sequentially compact | $\mathrm{El}$ → Prop | every sequence has a convergent subsequence (Mathlib `SeqCompactSpace`) |
 | convex | $\mathrm{El}$ → Prop | of a real vector space: with two points, the segment between them (Mathlib `Convex ℝ`) |
 | nonempty | $\mathrm{El}$ → Prop | with an element (Mathlib `Set.Nonempty`) |
+| orthonormal | $\mathrm{El}$ → Prop | of a subset of an inner product space: `⟪a, a⟫ = 1` and `⟪a, b⟫ = 0` for distinct elements (Mathlib `Orthonormal`) |
+| orthogonal | $\mathrm{El}$ → Prop | of a subset of an inner product space: `⟪a, b⟫ = 0` for distinct elements (Mathlib `Pairwise` of `⟂`) |
 | orthonormal | ℝ → $\mathrm{El}$ | of an inner product space: `⟪e_m, e_n⟫ = 1` if `m = n`, `0` otherwise (Mathlib `Orthonormal`) |
 | geodesic | $\mathrm{El}$ → Prop | any two points are joined by a geodesic |
 | locally closed in $x$ | $\mathrm{El}$ → Prop | (Mathlib `IsLocallyClosed`) |
@@ -1553,6 +1561,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $\dim$ | $\mathrm{El}$ → Prop | `\dim V`, the dimension over its scalars |
 | $\lvert x\rvert$ | $\mathrm{El}$ → Prop | `\|G\|`, the number of elements (Mathlib `Nat.card`) |
 | $\operatorname{@bracket}$ | $\mathrm{El}$ → Prop | `[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension |
+| $+$ | $\mathrm{El}$ → Prop | `U + W`, the sum of two subspaces of one module: the sums `u + w` (Mathlib `U ⊔ W`) |
+| $\oplus$ | $\mathrm{El}$ → Prop | `U \oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \oplus W` says that the sum is direct |
 | $\times$ | $\mathrm{El}$ → Prop | `G\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |

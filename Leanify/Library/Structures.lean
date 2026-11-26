@@ -33,7 +33,8 @@ are bound by their signatures.
   `isometry`, `isometric embedding`, `quasi-isometric embedding`, `quasi-isometry`, `open
   map`, `monotone map`; and the adjectives `injective` (`one-to-one`), `continuous`,
   `uniformly continuous`, `bounded` (of a linear map, a bounded operator), `linear`,
-  `isometric`, `quasi-isometric`, `open`, `monotone`; of sequences, `orthonormal`;
+  `isometric`, `quasi-isometric`, `open`, `monotone`; of sequences and of subsets,
+  `orthonormal` (of subsets also `orthogonal`);
 * adjectives of structures: `abelian`, `commutative`, `cyclic`, `simple`, `solvable`,
   `nilpotent`, `finite`, `infinite`, `countable`, `trivial`, `nontrivial`, `Noetherian`,
   `reduced`, `algebraically closed`, `perfect`, `Hausdorff`, `compact`, `connected`,
@@ -49,6 +50,8 @@ are bound by their signatures.
   between two points;
 * the direct product `G\times H` (`the product of $X$ and $Y$`), with the operations of the
   factors, the product topology and the maximum of the distances;
+* the sum `U+W` of two subspaces of one module and the direct sum `U\oplus W` (`V=U\oplus W`:
+  the sum is direct and is `V`);
 * notation on elements: `gh`, `g\cdot h`, `g^{-1}`, `g^n`, `x+y`, `x-y`, `-x`, `x/y`, `cv` (a
   scalar times a vector), `1` and `0` (the identity and the zero of the structure they are
   compared with), `x\le y`, `x<y`.
@@ -284,7 +287,10 @@ def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ E ⟶ .prop, w!"\\operatorname{Prime}", w!"Leanify.Structures.PrimeElIn"),            -- 209
   (S ⟶ S, w!"#^\\times", w!"Leanify.Structures.unitsS"),                                     -- 210
   (S ⟶ .prop, w!"\\operatorname{Convex}", w!"Leanify.Structures.ConvexS"),                      -- 211
-  (M ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedM")]                      -- 212
+  (M ⟶ .prop, w!"\\operatorname{Bounded}", w!"Leanify.Structures.BoundedM"),                      -- 212
+  (S ⟶ S ⟶ S, w!"(#1+#2)", w!"Leanify.Structures.sumS"),                                       -- 213
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{SameSpaces}", w!"Leanify.Structures.SameSpaces"),         -- 214
+  (S ⟶ S ⟶ S, w!"(#1\\oplus #2)", w!"Leanify.Structures.dsumS")]                             -- 215
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -623,6 +629,13 @@ def vocab : Vocab where
     adjS phrase!"sequentially compact" (c 207) "every sequence has a convergent subsequence (Mathlib `SeqCompactSpace`)",
     adjS phrase!"convex" (c 211) "of a real vector space: with two points, the segment between them (Mathlib `Convex ℝ`)",
     adjS phrase!"nonempty" (sP fun s => exT E fun a => app s a) "with an element (Mathlib `Set.Nonempty`)",
+    adjS phrase!"orthonormal" (sP fun s => allT E fun a => allT E fun b => imp (and (app s a) (app s b))
+        (and (imp (app2 (const 7) a b) (eq (app2 (const 139) a b) (num 1)))
+          (imp (not (app2 (const 7) a b)) (eq (app2 (const 139) a b) (num 0)))))
+      "of a subset of an inner product space: `⟪a, a⟫ = 1` and `⟪a, b⟫ = 0` for distinct elements (Mathlib `Orthonormal`)",
+    adjS phrase!"orthogonal" (sP fun s => allT E fun a => allT E fun b => imp (and (and (app s a) (app s b)) (not (app2 (const 7) a b)))
+        (eq (app2 (const 139) a b) (num 0)))
+      "of a subset of an inner product space: `⟪a, b⟫ = 0` for distinct elements (Mathlib `Pairwise` of `⟂`)",
     { phrase := phrase!"orthonormal", prenominal := true, ty := Q,
       pred := close (lamT Q (fun _ => tt) fun q => allR fun m => allR fun n => imp (and (isNat m) (isNat n))
         (and (imp (eq m n) (eq (app2 (const 139) (app q m) (app q n)) (num 1)))
@@ -844,6 +857,10 @@ def vocab : Vocab where
     ⟨S, .fn w!"\\dim", 119, "`\\dim V`, the dimension over its scalars", none⟩,
     ⟨S, .abs, 20, "`|G|`, the number of elements (Mathlib `Nat.card`)", none⟩,
     ⟨S, .fn w!"@bracket", 196, "`[G:H]`, the index of a subgroup; `[L:K]`, the degree of a field extension", none⟩,
+    ⟨S, .add, 213, "`U + W`, the sum of two subspaces of one module: the sums `u + w` (Mathlib `U ⊔ W`)",
+      some (c 214)⟩,
+    ⟨S, .fn w!"\\oplus", 215, "`U \\oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \\oplus W` says that the sum is direct",
+      some (c 214)⟩,
     ⟨S, .fn w!"\\times", 115, "`G\\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric", none⟩,
     ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,

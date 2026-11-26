@@ -1021,6 +1021,16 @@ def isPredTy : Ty → Bool
   | .fn _ (.fn _ .prop) => true
   | _ => false
 
+/-- `x ∈ p` for a set `p` of elements of type `a`: a number is the element of the set's own
+structure that it names, where the vocabulary has such numbers (`0\notin B` for a subset of
+a vector space: its zero; `1\in H` for a subgroup: its identity). -/
+def memberOf (p : Tm) (x : Tm × Ty) (a : Ty) : M Tm := do
+  if x.2 == .real && a != .real then
+    if let some (c, _) ← method a .ofRealIn then
+      return .app p (.app (.app c p) x.1)
+  let x' ← coerce x.1 x.2 a
+  pure (.app p x')
+
 def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
   -- (elements of a vocabulary's type: a real number among them is one of them, and
   -- an order is the type's method)
@@ -1652,6 +1662,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       -- (two real functions: their sum, value by value: `e_t+e_{1-t}`)
       if a.2 == Ty.rfun && b.2 == Ty.rfun then
         return (.lam .real .tt (.add (.app (shift 1 0 a.1) (.loc 0)) (.app (shift 1 0 b.1) (.loc 0))), Ty.rfun)
+      -- (two objects of a type of the vocabulary that is not a base type and has a sum of its
+      -- own: the sum `U+W` of two subspaces)
+      if a.2 == b.2 && !isBase a.2 && a.2 != .real && (← method a.2 .add).isSome then
+        return ← callMethod a.2 .add [a.1, b.1]
       if let some r ← pointwise Tm.add false a b then pure r else
       if (← ownTy a.2) || (← ownTy b.2) then arith .add a b
       else pure (.add (← asReal a) (← asReal b), .real)
@@ -2114,6 +2128,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           pure (lcmTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
         else
         if op == w!"\\cup" || op == w!"\\times" || op == w!"\\cap" || op == w!"\\setminus" then setOp f sc pf op x y
+        -- `U\oplus W`: the direct sum of a vocabulary's type of structures
+        else if op == w!"\\oplus" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do
+          let (a', t) ← term f sc pf x
+          let (b', t') ← term f sc pf y
+          if t != t' then fail E.type
+          callMethod t (.fn w!"\\oplus") [a', b']
         -- `\psi\circ\varphi`: the composition of a vocabulary's type of maps
         else if op == w!"\\circ" && (← (do
             let (_, t) ← term f sc pf x
@@ -3763,20 +3783,19 @@ where
         if n == w!"\\mathbb{R}" then do let _ ← asReal x; pure .tt else
         -- (a set that a sentence binds: `Let $S$ be a compact set`, then `$x\in S$`)
         if let some (i, .fn a .prop) := lookupLocal sc n then
-          let x' ← coerce x.1 x.2 a
-          return .app (.loc i) x'
+          return ← memberOf (.loc i) x a
         match ← lookupGlob n, builtinConst n with
         | none, some (p, .fn a .prop) => do let x' ← coerce x.1 x.2 a; pure (.app p x')
         | _, _ =>
         let (i, gl) ← liftO (← lookupGlob n) E.undefined n
         match gl.ty with
-        | .fn a .prop => do let x' ← coerce x.1 x.2 a; pure (.app (.glob i) x')
+        | .fn a .prop => memberOf (.glob i) x a
         | _ => fail E.type
       | _ => do
         -- any other set of real numbers: `\{x\in A : …\}`, `A\cup B`, …
         let (p, t) ← term g sc none dom
         match t with
-        | .fn a .prop => do let x' ← coerce x.1 x.2 a; pure (.app p x')
+        | .fn a .prop => memberOf p x a
         | _ => fail E.type
   setOf : Nat → Scope → MT → MT → List MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported

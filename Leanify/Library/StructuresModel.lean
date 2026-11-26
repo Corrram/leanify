@@ -1001,6 +1001,20 @@ def BoundedM (φ : Map) : Prop :=
   (LinearM φ → ∃ C : ℝ, ∀ a, φ.dom a → norm (apply φ a) ≤ C * norm a) ∧
   (¬ LinearM φ → ∃ D : ℝ, ∀ a b, φ.dom a → φ.dom b → dist (apply φ a) (apply φ b) ≤ D)
 
+
+/-- `U + W`: the sums of an element of `U` and an element of `W` (Mathlib `U ⊔ W`, the sum of
+two subspaces). -/
+def sumS (U W : El → Prop) : El → Prop := fun a => ∃ u w, U u ∧ W w ∧ a = add u w
+
+/-- `U + W` is meant for two subspaces with the same operations (of one module). -/
+def SameSpaces (U W : El → Prop) : Prop := Subspace U ∧ Subspace W ∧ opsOf U = opsOf W
+
+/-- `U ⊕ W`: the sum of two subspaces whose only common element is the zero (an internal
+direct sum, Mathlib `DirectSum.IsInternal` of `U` and `W`); where they have another common
+element, no element (so that `V = U ⊕ W` says that the sum is direct). -/
+def dsumS (U W : El → Prop) : El → Prop :=
+  fun a => (∀ b, U b → W b → eqv b (.num 0)) ∧ sumS U W a
+
 end
 
 end Leanify.Structures

@@ -453,7 +453,7 @@ def startsFactor : MTok → Bool
       n == w!"tbinom" || n == w!"dbinom" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
-        n != w!"cup" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
+        n != w!"cup" && n != w!"oplus" && n != w!"cap" && n != w!"circ" && n != w!"setminus" && !wConnectives.contains n && n != w!"rfloor" && n != w!"rceil" &&
         n != w!"approx" && n != w!"ldots" && n != w!"rVert" && n != w!"rangle" && n != w!"pmod" && n != w!"cdots" &&
         n != w!"dots")
   | _ => false
@@ -1003,6 +1003,10 @@ where
       | .cmd [99, 117, 112] :: rest => do
         let (y, rest') ← run g (.product bar) rest
         addRest g bar (.app (.id w!"\\cup") [x, y]) rest'
+      -- `U\oplus W`
+      | .cmd [111, 112, 108, 117, 115] :: rest => do
+        let (y, rest') ← run g (.product bar) rest
+        addRest g bar (.app (.id w!"\\oplus") [x, y]) rest'
       -- `A\setminus B`
       | .cmd [115, 101, 116, 109, 105, 110, 117, 115] :: rest => do
         let (y, rest') ← run g (.product bar) rest

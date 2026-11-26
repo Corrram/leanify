@@ -1181,10 +1181,35 @@ def everyLead (r : List Chunk) : Option (Bind × List Chunk) :=
     | _ => none
   | _ => none
 
-/-- Further binders: `and every NP $y$`, `and $y\in B$`. -/
+/-- The variables that a binder of a `for every` list binds, as far as its words show them:
+those of a formula binder and of the first formula of a noun phrase. -/
+def shallowVars (b : Bind) : List Codes :=
+  let one (b : Bind) : List Codes := match b with
+    | .every vs _ => vs
+    | .noun np => match np.find? (fun c => match c with | .m _ => true | _ => false) with
+      | some (.m ts) => ((splitVars ts).map (·.map toksName) <|> (binderMath ts).map (·.1)).getD [toksName ts]
+      | _ => []
+    | _ => []
+  match b with
+  | .many bs => bs.flatMap one
+  | b => one b
+
+/-- Further binders: `and every NP $y$`, `and $y\in B$`. A formula after `and` about
+variables that the list has already bound (`for every integer $x$ with $x>1$ and $x<5$`) is
+a condition on them, not a new variable with the same letter. -/
 def everyMore : Nat → List Chunk → List Bind → List Bind × List Chunk
   | 0, cs, acc => (acc.reverse, cs)
   | f + 1, cs, acc =>
+    let seen := acc.flatMap shallowVars
+    match (do
+        let r ← kw [w!"and"] cs
+        let (ts, r') ← mathChunk r
+        let (vs, _) ← binderMath ts
+        if vs.isEmpty || !vs.all seen.contains then none else
+        let φ ← Math.parseFormula ts
+        some (Bind.ifCond φ, r')) with
+    | some (b, r) => everyMore f r (b :: acc)
+    | none =>
     let next := (kw [w!"and", w!"every"] cs <|> kw [w!"and", w!"each"] cs <|> kw [w!"and", w!"all"] cs <|>
       (do let r ← kw [w!"and"] cs; match r with | .m _ :: _ => some r | _ => none) <|>
       -- `For every $k$, every $N$ and every $x$`
@@ -1199,9 +1224,9 @@ def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
   let flat (b : Bind) : List Bind := match b with | .many bs => bs | _ => [b]
   match everyOne r <|> everyLead r with
   | some (b, r') =>
-    match everyMore 4 r' [] with
-    | ([], _) => some (b, r')
-    | (bs, r'') => some (.many ((b :: bs).flatMap flat), r'')
+    match everyMore 4 r' [b] with
+    | ([_], _) => some (b, r')
+    | (bs, r'') => some (.many (bs.flatMap flat), r'')
   | none => none
 
 /-- `positive integers` after the variables `ts` of `$a,b$ are` (`be`), possibly with
@@ -2997,7 +3022,14 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
                 let (c, r'') := everyNPAfter c r'
                 more f r'' (c :: acc)
               | none => some (acc.reverse, cs)
-          | none => some (acc.reverse, cs)
+          | none =>
+            -- `such that $φ$ and $ψ$`: one more condition, as after one object
+            match (do
+                let r1 ← kw [w!"and"] cs
+                let (c', r2) ← underBinder sub r1 <|> sub r1
+                some (everyNPAfter c' r2)) with
+            | some (c', r2) => more f r2 (c' :: acc)
+            | none => some (acc.reverse, cs)
       -- (a display may end with a comma)
       let r2 := if hasSat then match punct 44 r2 with
           | some r' => if (kw [w!"such", w!"that"] r').isSome then r' else r2
@@ -6512,6 +6544,7 @@ variable written after it (if any), and the chunks after. -/
 def nestSplit (cs : List Chunk) : Option (List Chunk × Codes × List Chunk × Option Codes × List Chunk) := do
   let i ← cs.findIdx? fun c => match c with
     | .w w => [w!"of", w!"on", w!"in", w!"over", w!"from"].contains w
+    | .p 45 => false
     | _ => true
   let front := cs.take i
   if !plainWords front then none

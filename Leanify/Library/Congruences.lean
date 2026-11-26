@@ -9,6 +9,8 @@ Legendre symbol, primitive roots, and inverses modulo `n`.
   `divisible by $d$`, `invertible modulo $n$`, `quadratic residue modulo $n$`,
   `quadratic nonresidue modulo $n$`, `primitive root modulo $n$` (`$a$ is congruent
   to $b$ modulo $n$`, `every integer $a$ coprime to $n$`);
+* nouns with their modulus: `primitive root modulo $n$`, `quadratic residue modulo $n$`,
+  `quadratic nonresidue modulo $n$` (`there exists a primitive root modulo $p$`);
 * notions: the Legendre symbol, the inverse of `a` modulo `n`, the least primitive root
   modulo `n`, the numbers of quadratic residues and of primitive roots modulo `n`, and the
   set of units modulo `n`.
@@ -65,6 +67,16 @@ def vocab : Vocab where
       "coprime to `n`, and not a square modulo `n`",
     modN phrase!"primitive root modulo $v$" (fun n a => and (unit n a) (app2 (const 2) a n))
       "its powers are all units modulo `n` (Mathlib `orderOf` in `ZMod n` is `φ(n)`)"]
+  nouns := [
+    { noun phrase!"primitive root" phrase!"primitive roots" (close <| lamR fun _ => tt)
+        "an integer whose powers are all units modulo `n` (Mathlib `orderOf` in `ZMod n` is `φ(n)`)" with
+      arg := some ([w!"modulo"], .real, close <| lamR fun n => lamR fun g => and (unit n g) (app2 (const 2) g n)) },
+    { noun phrase!"quadratic residue" phrase!"quadratic residues" (close <| lamR fun _ => tt)
+        "an integer coprime to `n` that is a square modulo `n` (Mathlib `IsSquare` in `ZMod n`)" with
+      arg := some ([w!"modulo"], .real, close <| lamR fun n => lamR fun a => qr n a) },
+    { noun phrase!"quadratic nonresidue" phrase!"quadratic nonresidues" (close <| lamR fun _ => tt)
+        "an integer coprime to `n` that is not a square modulo `n`" with
+      arg := some ([w!"modulo"], .real, close <| lamR fun n => lamR fun a => and (unit n a) (not (app2 (const 1) a n))) }]
   notions := [
     { name := phrase!"Legendre symbol of $v$ modulo $v$", ty := .real ⟶ .real ⟶ .real,
       doc := "`1`, `-1` or `0`, for an integer `a` and an odd prime `p` (Mathlib `legendreSym`)",
