@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Triangles.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["triangles"]
 
-#leanify_article Triangles "article.tex" "fnv1a64:08feb1de63353c58" with Triangles.vocabulary
+#leanify_article Triangles "article.tex" "fnv1a64:227c9b50903ee467" with Triangles.vocabulary

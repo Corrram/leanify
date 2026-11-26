@@ -36,7 +36,9 @@ tests/Triangles/article.tex:31:1: info: claim 9: \@n7(5)=5
 tests/Triangles/article.tex:31:1: info: claim 9 is meaningful if: 5\in \mathbb{Z}\land 3\le 5
 tests/Triangles/article.tex:35:66: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow 2\,\@n3(x,y,z)\le \@n4(x,y,z)))
 tests/Triangles/article.tex:35:66: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y))
-tests/Triangles/article.tex: 8 definitions, 11 claims
+tests/Triangles/article.tex:39:48: info: claim 11: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow {x}^{2}+{y}^{2}+{z}^{2}<2\,(x\,y+y\,z+z\,x)))
+tests/Triangles/article.tex:43:47: info: claim 12: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow \lvert x-y\rvert<z))
+tests/Triangles/article.tex: 8 definitions, 13 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 5 compiled, 0 failed, 0 prose (of 5)
-  all: 13 compiled, 0 failed, 0 prose (of 13)
+  results: 9 compiled, 0 failed, 0 prose (of 9)
+  all: 17 compiled, 0 failed, 0 prose (of 17)

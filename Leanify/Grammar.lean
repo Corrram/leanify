@@ -4877,6 +4877,33 @@ def sentenceCore (cs : List Chunk) : Option Sent :=
   -- let $S$ denote the class of NOUNS, that is, NP.
   match kw [w!"let"] cs with
   | some r =>
+    -- `Let $a,b,c$ be the side lengths of a triangle.` (`the sides of a triangle`, `the lengths
+    -- of the sides of a triangle`): positive numbers with the triangle inequalities
+    (do
+      -- (the letters in one formula, `$a,b,c$`, or in three, `$a$, $b$, and $c$`)
+      let (vs, r1) ← (do
+          let (ts, r1) ← mathChunk r
+          let parts := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+          let vs ← parts.mapM (fun (p : List MTok) => match p with | [.id v] => some v | _ => none)
+          if vs.length == 3 then some (vs, r1) else none) <|> (do
+          let rec letters : Nat → List Chunk → List Codes → Option (List Codes × List Chunk)
+            | 0, _, _ => none
+            | f + 1, cs, acc => match cs with
+              | .m [.id v] :: rest =>
+                let rest' := ((punct 44 rest).getD rest)
+                let rest' := (kw [w!"and"] rest').getD rest'
+                if rest'.length == rest.length then some ((v :: acc).reverse, rest) else letters f rest' (v :: acc)
+              | _ => none
+          letters 4 r [])
+      let [a, b, c] := vs | none
+      let r2 ← kw [w!"be", w!"the", w!"side", w!"lengths", w!"of", w!"a", w!"triangle"] r1 <|>
+        kw [w!"be", w!"the", w!"sides", w!"of", w!"a", w!"triangle"] r1 <|>
+        kw [w!"be", w!"the", w!"lengths", w!"of", w!"the", w!"sides", w!"of", w!"a", w!"triangle"] r1
+      if !isEnd r2 then none
+      let lt (x y : MT) : MT := .chain x [(.lt, y)]
+      let (x, y, z) := (MT.id a, MT.id b, MT.id c)
+      some (.assumeAll [.every [a, b, c] (.id w!"\\mathbb{R}"),
+        .ifCond (.conj [lt (.num 0) x, lt (.num 0) y, lt (.num 0) z, lt x (.add y z), lt y (.add x z), lt z (.add x y)])] [])) <|>
     -- `Let $Y$ be an integrable random variable [with [continuous] distribution function $F$]`
     (do
       let (ts, r1) ← mathChunk r
