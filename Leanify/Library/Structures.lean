@@ -345,6 +345,9 @@ def vocab : Vocab where
     nounOf phrase!"proper subgroup" phrase!"proper subgroups" [w!"of"] (c 11)
       (rel S S fun g h => and (app2 (const 18) g h) (not (subOf h g))) "a subgroup other than `G`",
     -- elements
+    { sing := phrase!"vector", plural := phrase!"vectors", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"in"], S, elemOf), needsArg := true,
+      doc := "an element of a vector space, with it: `vectors in $V$` (`v ∈ V`)" },
     { sing := phrase!"element", plural := phrase!"elements", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of"], S, elemOf), doc := "an element of a structure: `g ∈ G`" },
     { sing := phrase!"unit", plural := phrase!"units", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),

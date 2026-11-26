@@ -585,6 +585,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
+| polynomial | ℝ → ℝ | given by a polynomial with real coefficients (Mathlib `Polynomial.eval`) |
 | monic | ℝ → ℝ | leading coefficient 1 (Mathlib `Polynomial.Monic`) |
 | with a real root | ℝ → ℝ | `p(x) = 0` for some real `x` |
 | without real roots | ℝ → ℝ | `p(x) ≠ 0` for every real `x` (also `has no real roots`) |
@@ -1116,6 +1117,7 @@ except a notion whose meanings take arguments of different types, which the type
 | subgroup | $\mathrm{El}$ → Prop | a group with the operations of `G` inside `G` (Mathlib `Subgroup`) |
 | normal subgroup | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
 | proper subgroup | $\mathrm{El}$ → Prop | a subgroup other than `G` |
+| vector | $\mathrm{El}$ | an element of a vector space, with it: `vectors in $V$` (`v ∈ V`) |
 | element | $\mathrm{El}$ | an element of a structure: `g ∈ G` |
 | unit | $\mathrm{El}$ | an invertible element of a ring (Mathlib `IsUnit`) |
 | zero divisor | $\mathrm{El}$ | `ab = 0` for some `b ≠ 0` |

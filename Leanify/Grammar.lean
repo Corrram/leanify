@@ -189,7 +189,10 @@ def collectiveWords : Nat → List Chunk → List Chunk × List Codes
       ((kw [w!"independent", w!"and", w!"identically", w!"distributed"] ws <|> kw [w!"i.i.d."] ws <|>
         kw [w!"iid"] ws <|> kw [w!"i", w!"."] ws).map (w!"iid", ·)) <|>
       ((kw [w!"independent"] ws <|> kw [w!"mutually", w!"independent"] ws).map (w!"independent", ·)) <|>
-      ((kw [w!"identically", w!"distributed"] ws).map (w!"identically distributed", ·))
+      ((kw [w!"identically", w!"distributed"] ws).map (w!"identically distributed", ·)) <|>
+      -- (of vectors: the family)
+      ((kw [w!"linearly", w!"independent"] ws).map (w!"linearly independent", ·)) <|>
+      ((kw [w!"linearly", w!"dependent"] ws).map (w!"linearly dependent", ·))
     match found, ws with
     | some (p, rest), _ => let (ws', ps) := collectiveWords f rest; (ws', p :: ps)
     | none, c :: rest => let (ws', ps) := collectiveWords f rest; (c :: ws', ps)
@@ -218,7 +221,22 @@ def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
     | _ => do
       let ms ← vars.mapM fun v => Math.parseFormula (name v)
       some (kinds.map fun k => MT.app (.id k) ms)
+  -- (a family with an adjective of sets of the vocabulary, `linearly independent`: its terms
+  -- are distinct and their set has it; `linearly dependent`: not so)
+  let famCond (p : Codes) : Option MT := do
+    let (adj, neg) ← if p == w!"linearly independent" then some (p, false)
+      else if p == w!"linearly dependent" then some (w!"linearly independent", true) else none
+    let c ← match vars with
+      | [ts] => do
+        let (list, _) ← seqBound ts
+        let (x, _, lo, hi) ← seqVars list
+        some (MT.app (.id w!"@familyseq") [.id ([64] ++ adj), .id x, lo, hi])
+      | _ => do
+        let ms ← vars.mapM fun v => Math.parseFormula (name v)
+        some (MT.app (.id w!"@family") (.id ([64] ++ adj) :: ms))
+    some (if neg then .lnot c else c)
   let conds ← ps.mapM fun p => do
+    if let some c := famCond p then return c
     if let some cs := rvConds p then
       return (cs.drop 1).foldl (fun acc c => MT.land acc c) (cs.headD (.id w!"@none"))
     match vars with
@@ -5829,6 +5847,19 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let p2 := [⟨.word w!"suppose", pos, false⟩, ⟨.word w!"that", pos, false⟩] ++ s.toks.drop (k + 2)
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := suchThat then return ps.map fun ts => { s with toks := ts }
+  -- `Let $V$ be a vector space, let $v_1,\ldots,v_n\in V$, and suppose that CLAUSE.`: the
+  -- binders, then the hypothesis `Suppose that CLAUSE.` (`assume`, with or without `that`)
+  let andSuppose : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let k ← (List.range s.toks.length).find? fun i =>
+      (s.toks[i]? >>= textWord) == some w!"and" &&
+        ((s.toks[i + 1]? >>= textWord) == some w!"suppose" || (s.toks[i + 1]? >>= textWord) == some w!"assume")
+    let pos := (s.toks[k]?.map (·.pos)).getD 0
+    let pre := (s.toks.take k).reverse.dropWhile isTextComma |>.reverse
+    let p1 := pre ++ [⟨.punct 46, pos, false⟩]
+    let p2 := s.toks.drop (k + 1)
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := andSuppose then return ps.map fun ts => { s with toks := ts }
   -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
   -- hypothesis `Suppose that the order of $G$ is divisible by $p$.`
   let whose : Option (List (List PTok)) := do

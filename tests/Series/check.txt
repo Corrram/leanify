@@ -60,7 +60,11 @@ tests/Series/article.tex:121:81: info: claim 28 is meaningful if: \forall x\in \
 tests/Series/article.tex:125:1: info: claim 29: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ 0<t\Rightarrow (\exists a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (b\in \mathbb{Z}\land 0\le b)\land a\le b\Rightarrow \lvert x(b)-s\rvert<t))\Rightarrow (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ \lvert x(s)\rvert\le z)
 tests/Series/article.tex:129:48: info: claim 30: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land (\forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ a\in \mathbb{N}\land t\le a\Rightarrow a\in \mathbb{N}\land \lvert x(a)-0\rvert<s))\Rightarrow \operatorname{bounded}(x)\text{ on }\{y:y\in \mathbb{N}\}
 tests/Series/article.tex:133:64: info: claim 31: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land (\forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ a\in \mathbb{N}\land t\le a\Rightarrow a\in \mathbb{N}\land \lvert x(a)-1\rvert<s))\Rightarrow \operatorname{bounded}(x)\text{ on }\{y:y\in \mathbb{N}\}
-tests/Series/article.tex: 10 definitions, 32 claims
+tests/Series/article.tex:137:51: info: claim 32: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \neg (z\in \mathbb{Z}\land 0\le z)\Rightarrow x(z)=0)\Rightarrow 0<x(1)\Rightarrow 0\le x(1)
+tests/Series/article.tex:137:51: info: claim 32 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \neg (z\in \mathbb{Z}\land 0\le z)\Rightarrow x(z)=0)\Rightarrow 1\in \mathbb{N}\land (0<x(1)\Rightarrow 1\in \mathbb{N})
+tests/Series/article.tex:141:75: info: claim 33: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow \top)\Rightarrow 0<y(1)\Rightarrow 0\le y(1))
+tests/Series/article.tex:141:75: info: claim 33 is meaningful if: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ s\in \mathbb{Z}\land 1\le s\land s\le x\Rightarrow \top)\Rightarrow (1\in \mathbb{Z}\land 1\le 1\land 1\le x)\land (0<y(1)\Rightarrow 1\in \mathbb{Z}\land 1\le 1\land 1\le x))
+tests/Series/article.tex: 10 definitions, 34 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 49 compiled, 0 failed, 0 prose (of 49)
-  all: 59 compiled, 0 failed, 0 prose (of 59)
+  results: 54 compiled, 0 failed, 0 prose (of 54)
+  all: 64 compiled, 0 failed, 0 prose (of 64)

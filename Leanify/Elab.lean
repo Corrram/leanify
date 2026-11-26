@@ -1530,6 +1530,38 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         return (.all .real (.imp (.lt (.num 0) (.loc 0))
           (.ex .real (.all .real (.imp idx (definedAnd b close)))))
           , .prop)
+    -- `@family(@A, a, b, …)`, `@familyseq(@A, x, lo, hi)` (of the grammar, for `$v_1,\ldots,v_n$
+    -- are linearly independent`): the terms are distinct, and their set has the vocabulary's
+    -- adjective `A` of sets of their type
+    if let .app (.id fn) (.id adj :: xs) := m then
+      if fn == w!"@family" || fn == w!"@familyseq" then
+        let words : Phrase := ((adj.drop 1).splitOn 32).map PItem.w
+        let adjOf (et : Ty) : M Tm := do
+          let V := (← get).vocab
+          match V.mods.find? (fun md => md.phrase == words && md.ty == .fn et .prop && !md.onDomain) with
+          | some md => pure md.pred
+          | none => fail E.type
+        if fn == w!"@familyseq" then
+          let [x, lo, hi] := xs | fail E.unsupported
+          let (xt, xty) ← term f sc pf x
+          let .fn .real et := xty | fail E.type
+          if !isBase et then fail E.type
+          let l ← asReal (← term f sc pf lo)
+          let h ← asReal (← term f sc pf hi)
+          let range (i : Tm) (k : Nat) : Tm := .and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
+          -- (the set: `a` `loc 1`, the index `loc 0`)
+          let set : Tm := .lam et .tt (.ex .real (.and (range (.loc 0) 2) (.eq (.loc 1) (.app (shift 2 0 xt) (.loc 0)))))
+          let distinct : Tm := .all .real (.all .real (.imp (.and (range (.loc 1) 2) (.and (range (.loc 0) 2) (.not (.eq (.loc 1) (.loc 0)))))
+            (.not (.eq (.app (shift 2 0 xt) (.loc 1)) (.app (shift 2 0 xt) (.loc 0))))))
+          return (.and distinct (.app (← adjOf et) set), .prop)
+        else
+          let ts ← xs.mapM (term f sc pf)
+          let some et := ts.head?.map (·.2) | fail E.unsupported
+          if !isBase et || !ts.all (·.2 == et) then fail E.type
+          let eqs := ts.map fun (t, _) => Tm.eq (.loc 0) (shift 1 0 t)
+          let set : Tm := .lam et .tt ((eqs.drop 1).foldl (fun acc e => Tm.or acc e) (eqs.headD (.not .tt)))
+          let pairs := ts.zipIdx.flatMap fun (a, k) => (ts.drop (k + 1)).map fun b => Tm.not (.eq a.1 b.1)
+          return (conjAll (pairs ++ [.app (← adjOf et) set]), .prop)
     -- the notation of the field `hilbert`
     if let some r ← opTerm f sc pf m then return r
     -- expectations, probabilities, variances of random variables

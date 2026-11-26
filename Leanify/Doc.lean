@@ -1033,11 +1033,12 @@ def binderDomain (vs : List Codes) (d : MT) (sc : Scope := []) : M (Ty × Option
   | .app (.id s) [lo, hi, d'] =>
     if s != w!"@seq" then domainOf false d sc else do
     let (ty, p) ← domainOf true d' sc
-    if ty != .real then fail E.unsupported
+    -- (numbers, or elements of a structure: `v_1,\ldots,v_n\in V`)
+    if ty != .real && !Elab.isBase ty then fail E.unsupported
     let l ← closedBound lo sc
     let h ← closedBound hi sc
     modify fun st => { st with seqs := vs.map (·, lo, hi) ++ st.seqs.filter fun e => !vs.contains e.1 }
-    pure (.fn .real .real, some (seqPred 2 l h p))
+    pure (.fn .real ty, some (seqPred 2 l h p ty))
   | _ => do
     modify fun st => { st with seqs := st.seqs.filter fun e => !vs.contains e.1 }
     domainOf false d sc
@@ -1751,9 +1752,17 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           -- words, `sequence in $X$`: the other)
           if n.arg.isNone then
             match afterVar n v r with
-            | .w w :: .m _ :: _ =>
+            | .w w :: .m ts :: _ =>
+              -- (only where the complement is of the other's type: `vector in $\mathbb{R}^n$`
+              -- is no vector of a vector space)
+              let st0 ← get
+              let cty : Option Ty ← tryCatch (do
+                  let some mt := Math.parseFormula ts | pure none
+                  let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
+                  pure (some (← Elab.term 100000 sc none mt).2)) fun _ => pure none
+              set st0
               if cands.any (fun ((n', _), _) => match n'.arg with
-                  | some (ws, _, _) => ws.contains (Grammar.lower w)
+                  | some (ws, aty, _) => ws.contains (Grammar.lower w) && cty == some aty
                   | none => false) then fail E.type
             | _ => pure ()
           let _ ← nounArg n (afterVar n v r)
@@ -2423,6 +2432,17 @@ object (`a vector space $V$ over a field $K$` binds `K`, then `V`). -/
 def nounBinders (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
   match splitNested np with
   | some (inner, main) =>
+    -- (the object bound already, by the phrase before in the same binder: `Let $V$ and $W$
+    -- be vector spaces over a field $K$` has one field)
+    let innerVar : Option Codes := match inner.getLast? with
+      | some (.m [.id v]) => some v
+      | _ => none
+    if let some v := innerVar then
+      if outer.any (·.1 == v) then
+        let st0 ← get
+        return ← tryCatch (do pure [← nounPhrase main outer]) fun _ => do
+          set st0
+          pure [← nounPhrase np outer]
     let st0 ← get
     tryCatch (do
         let b1 ← nounPhrase inner outer
@@ -2580,10 +2600,20 @@ where
     let (vs, d) := match vs, multiIndex d with
       | [v], some (base, n) => ((List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, base)
       | _, _ => (vs, d)
-    let (ty, p) ← binderDomain vs d sc
+    -- (`x_1,\ldots,x_n\in\mathbb{R}` with a letter `n` that nothing defines: a number bound
+    -- with the sequence, before it)
+    let st0 ← get
+    let (ty, p, pre) ← tryCatch (do let (t, q) ← binderDomain vs d sc; pure (t, q, ([] : List BindInfo))) fun e => do
+      let some h := (match d with
+          | .app (.id s) [_, .id h, _] => if s == w!"@seq" then some h else none
+          | _ => none) | throw e
+      if !(e.code == E.undefined || e.code == E.free) || e.detail != h || sc.any (·.1 == h) then throw e
+      set st0
+      let (t, q) ← binderDomain vs d ((h, .real) :: sc)
+      pure (t, q, [(⟨h, .real, none⟩ : BindInfo)])
     let (bis, _) := vs.foldl (fun (acc, j) v =>
       (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
-    pure bis
+    pure (pre ++ bis)
 
 /-- The binders among `bs` whose variables are `used`, in their order. A used binder
 whose domain uses the binders before it (`e\in[0,x]`) keeps them all. -/
@@ -3930,7 +3960,13 @@ def withoutSlotArgs (V : Vocab) (np : List Chunk) : List Chunk := Id.run do
 free variables of `φ` other than those of `env` (the variables of the result) and the
 terms of sequences. -/
 def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
-  | .every vs _ => vs
+  -- (`Suppose that $x_1>0$.` after a sequence `x` of the scope: its term, no new variable)
+  | .every vs _ => vs.map fun v =>
+    let bs := st.envBinders ++ st.fixed.map (·.2)
+    ((bs.find? fun b =>
+      (match b.ty with | .fn .real t => t == .real || Elab.isBase t | _ => false) &&
+      v.length > b.name.length + 1 && v.take (b.name.length + 1) == b.name ++ [95] &&
+      (v.drop (b.name.length + 1)).all fun c => 48 ≤ c && c ≤ 57).map (·.name)).getD v
   | .noun np => (mathsOf (withoutSlotArgs st.vocab np)).flatMap fun ts =>
     match (Grammar.seqBound ts).bind fun (l, _) => Grammar.seqVars l with
     | some (x, _, _, _) => [x]
