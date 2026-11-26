@@ -625,8 +625,9 @@ had declared it (below), and the statements about it are read:
 | `A \emph{Kripke frame} is an ordered pair $(W,R)$ where …` | with no noun of the vocabulary in the sentence: a kind of object of its own (`\mathrm{KripkeFrame}`) |
 
 The check lists them as *defined here in sentences that are not read, and taken as given*.
-A definition that is read (`We call a copula $C$ \emph{SI} if DISPLAY`) defines its notion
-as before, with its meaning. As for a declared notion, what is proved about such a notion
+A definition that is read defines its notion with its meaning: the condition after `if`
+may be a formula or any statement that is read as a claim (`We call a metric space $X$
+\emph{homogeneous} if for all $x,y\in X$ there is an isometry $f\colon X\to X$ with $f(x)=y$.`). As for a declared notion, what is proved about such a notion
 is proved for whatever it means: in Lean it is an `opaque` constant.
 
 ### Notions that the article does not define

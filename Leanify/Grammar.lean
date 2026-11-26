@@ -3791,7 +3791,7 @@ def notionCond (cs : List Chunk) : Option NotionCond :=
 
 /-- A notion defined in the text: `We call a NOUN $x$ NAME [(ABBR)] if COND.`,
 `[A NOUN] $x$ is called NAME [(ABBR)] if COND.`, `[A NOUN] $x$ is NAME [(ABBR)] if COND.` -/
-def notionDef (cs : List Chunk) : Option Sent :=
+def notionDefWith (notionCond : List Chunk → Option NotionCond) (cs : List Chunk) : Option Sent :=
   let article (r : List Chunk) := (kw [w!"a"] r <|> kw [w!"an"] r).getD r
   (do
     let r ← kw [w!"we", w!"call"] cs
@@ -3821,6 +3821,8 @@ where
       if named && np.length ≥ 2 && (kw [w!"and", w!"only", w!"if"] r).isNone then
         some (.notionSubject np)
       else none
+
+def notionDef (cs : List Chunk) : Option Sent := notionDefWith notionCond cs
 
 /-- A condition on variables, `$c>0$`, `$0<x\le1$`: a chain of order relations (not a
 definition, an equation or a membership). -/
@@ -5743,6 +5745,25 @@ def sentence0 (cs : List Chunk) : Option Sent :=
       | _ => none
     | none => sentenceCore cs
 
+/-- The condition of a notion as a statement: whatever is read as a claim (`for all
+$x,y\in X$ there is an isometry $f\colon X\to X$ with $f(x)=y$`), its binders around its
+clauses. -/
+def claimCond (r : List Chunk) : Option NotionCond := do
+  let r := optPunct 44 r
+  let .claims _ binds cls ← sentenceCore r | none
+  if cls.isEmpty || cls.any (fun c => !c.defs.isEmpty || !c.forDefs.isEmpty || !c.cites.isEmpty) then none
+  let each := cls.map fun c => c.binds.foldr (fun b acc => Clause.under b acc) c.clause
+  let body := match each with | [c] => c | cs => Clause.both cs
+  some (.clause (binds.foldr (fun b acc => Clause.under b acc) body))
+
+/-- A notion whose condition is a statement that is read as a claim, where the forms of
+`notionCond` do not read it. -/
+def notionDefWide (cs : List Chunk) : Option Sent :=
+  let (_, cs) := marker cs
+  match notionDefWith (fun r => notionCond r <|> claimCond r) cs with
+  | some (.defNotion np name abbr cond) => some (.defNotion np name abbr cond)
+  | _ => none
+
 def sentence1 (cs : List Chunk) : Option Sent :=
   -- (`Then CLAUSE if CLAUSE'.`: the condition first, before the words after `is` would take it)
   let postIf : Option Sent := if (kw [w!"then"] cs).isSome then postIfSent cs >>= sentence0 else none
@@ -5756,7 +5777,13 @@ def sentence1 (cs : List Chunk) : Option Sent :=
   match postIf with
   | some s => some s
   | none =>
-  match sentence0 cs with
+  -- (a notion with a statement as its condition, where the sentence is otherwise only known
+  -- to be a definition, or not read)
+  let s0 := match sentence0 cs with
+    | some (.notionSubject np) => (notionDefWide cs).orElse fun _ => some (.notionSubject np)
+    | none => notionDefWide cs
+    | s => s
+  match s0 with
   | some s => some s
   | none =>
     -- `INFORMAL, that is, FORMAL`: the formal restatement (a sentence of its own)

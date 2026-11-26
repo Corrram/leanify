@@ -7918,7 +7918,9 @@ def declaredBy (V : Vocab) (before name after : Codes) : Option Declared := do
       | some n => some { words := ws, base := singWords n }
       | none => some { words := ws }
   else if ends [w!"is"] || ends [w!"is", w!"called"] || ends [w!"said", w!"to", w!"be"] || ends [w!"are"] ||
-      ends [w!"are", w!"called"] || ends [w!"be"] then
+      ends [w!"are", w!"called"] || ends [w!"be"] ||
+      -- (`We call a metric space $X$ \emph{homogeneous} if …`)
+      (ends [[36]] && (bw.contains w!"call" || bw.contains w!"called")) then
     -- an adjective, of the first noun of the sentence
     let n ← firstNoun V bw
     let words := ws ++ singWords n
