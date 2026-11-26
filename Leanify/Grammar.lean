@@ -5479,6 +5479,29 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
 
+/-- `[Then] CLAUSE if CLAUSE'.` as `If CLAUSE', then CLAUSE.`: a condition after the claim
+(not `if and only if`, `only if`, `even if`). -/
+def postIfSent (cs : List Chunk) : Option (List Chunk) := do
+  let (cs, stop) : List Chunk × List Chunk := match cs.getLast? with
+    | some (.p 46) => (cs.dropLast, [.p 46])
+    | _ => (cs, [])
+  let body := (kw [w!"then"] cs).getD cs
+  let i ← (List.range body.length).find? fun i => match (body[i]? : Option Chunk) with
+    | some (Chunk.w w) => w == w!"if" && i > 0 &&
+      (match (body[i - 1]? : Option Chunk) with
+        | some (Chunk.w p) => p != w!"only" && p != w!"even" && p != w!"and"
+        | _ => true) &&
+      (match (body[i + 1]? : Option Chunk) with
+        | some (Chunk.w a) => a != w!"and"
+        | _ => true)
+    | _ => false
+  let a := (body.take i).reverse.dropWhile (fun c => match c with | .p 44 => true | _ => false) |>.reverse
+  let b := body.drop (i + 1)
+  if a.isEmpty || b.isEmpty then none
+  -- (one condition: no second `if`)
+  if b.any (fun c => match c with | .w w => w == w!"if" | _ => false) then none
+  some ([.w w!"if"] ++ b ++ [.p 44, .w w!"then"] ++ a ++ stop)
+
 /-- `Every bounded monotone sequence converges.`, `Every NP diverges`, `… vanishes …`, `…
 divides $n$`: as `For every NP $v$, $v$ converges.` (a verb of the third person, without a
 variable after the noun phrase: a fresh one). -/
@@ -5626,6 +5649,11 @@ def sentence0 (cs : List Chunk) : Option Sent :=
     | none => sentenceCore cs
 
 def sentence1 (cs : List Chunk) : Option Sent :=
+  -- (`Then CLAUSE if CLAUSE'.`: the condition first, before the words after `is` would take it)
+  let postIf : Option Sent := if (kw [w!"then"] cs).isSome then postIfSent cs >>= sentence0 else none
+  match postIf with
+  | some s => some s
+  | none =>
   match sentence0 cs with
   | some s => some s
   | none =>
@@ -5659,6 +5687,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
         | some s => some s
         | none =>
         match everyVerbSent body >>= sentence0 with
+        | some s => some s
+        | none =>
+        match postIfSent cs >>= sentence0 with
         | some s => some s
         | none =>
           match adjCommaSent cs >>= sentence0 with

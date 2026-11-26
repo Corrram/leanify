@@ -106,6 +106,8 @@ def vocab : Vocab where
     mod phrase!"discrete" true (sPred fun s => allR fun x => imp (app s x) (not (app (app (const 17) s) x)))
       "every point is isolated",
     mod phrase!"finite" true (.const 9) "(Mathlib `Set.Finite`)",
+    mod phrase!"with $v$ elements" false (close <| lamR fun n => lamT S (fun _ => tt) fun a => app2 (prim .cardIs) a n)
+      "finite, with `n` elements (Mathlib `Set.ncard`)",
     mod phrase!"infinite" true (sPred fun s => not (c1 9 s)) "(Mathlib `Set.Infinite`)",
     mod phrase!"countable" true (.const 10) "finite or countably infinite (Mathlib `Set.Countable`)",
     mod phrase!"uncountable" true (sPred fun s => not (c1 10 s)) "not countable",

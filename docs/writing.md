@@ -170,6 +170,8 @@ Further forms that the fields use (they are read for any vocabulary):
 | `$\gcd(a,b)\cdot\operatorname{lcm}(a,b)=ab$`, `$\dim\ker T+\dim\operatorname{im}T=\dim V$` | the least common multiple (a natural number, `0` if `a` or `b` is); an operator name after another applies to what follows (`\dim(\operatorname{im}(T))`) |
 | `Suppose that $f(x)\ge0$ for all $x$.`, `… for all $a_n$` | a letter without a domain after `for all`: a real number (a natural number where it is the index of a subscript) |
 | `Every bounded monotone sequence converges.`, `Every NP diverges`, `… vanishes`, `… divides $n$` | for every object of the noun phrase, the verb said of it |
+| `Then $n^2>n$ if $n$ is odd.`, `Then $\sqrt{n}$ is irrational if $n$ is not a perfect square.` | as `If $n$ is odd, then $n^2>n$.` (not `if and only if`, `only if`, `even if`) |
+| `Let $S$ be a finite set with $n$ elements.`, `Let $G$ be a group with $6$ elements.`, `every nonzero element of $K$ is invertible` | a finite set with `n` elements; a finite structure of order `n`; elements `a\ne0`, and with an inverse |
 | `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |
 | `Let $T$ be the closure of $S$.`, `let $\ell$ denote the line through $A$ and $B$` | `be the` and `denote the` alike; the value of the notion may be a set or a function (then the variable is that set: `$M\in\ell$`) |
 | `Let $\varphi$ denote Euler's totient function.` | as `We write $\varphi$ for Euler's totient function.`: a symbol for a notion of the vocabulary |

@@ -29,7 +29,9 @@ tests/Topology/article.tex:64:1: info: claim 16: \operatorname{Compact}((x\in \m
 tests/Topology/article.tex:68:52: info: claim 17: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ (x(y)\land (\forall z\in \mathbb{R},\ x(z)\Rightarrow z\le y))\land (\forall z\in \mathbb{R},\ x(z)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\Rightarrow z=y))
 tests/Topology/article.tex:72:46: info: claim 18: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\Rightarrow \operatorname{Closed}(x)\land \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
 tests/Topology/article.tex:76:56: info: claim 19: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
-tests/Topology/article.tex: 7 definitions, 20 claims
+tests/Topology/article.tex:80:44: info: claim 20: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(y)\land \operatorname{card}(y)(x)\Rightarrow (\#y)=x
+tests/Topology/article.tex:80:44: info: claim 20 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(y)\land \operatorname{card}(y)(x)\Rightarrow (\exists z\in \mathbb{R},\ \operatorname{card}(y)(z)\land (\forall s\in \mathbb{R},\ \operatorname{card}(y)(s)\Rightarrow s=z))
+tests/Topology/article.tex: 7 definitions, 21 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 27 compiled, 0 failed, 0 prose (of 27)
-  all: 34 compiled, 0 failed, 0 prose (of 34)
+  results: 29 compiled, 0 failed, 0 prose (of 29)
+  all: 36 compiled, 0 failed, 0 prose (of 36)

@@ -90,6 +90,8 @@ tests/Structures/article.tex:326:132: info: claim 71: \forall x\in \mathrm{El}\t
 tests/Structures/article.tex:330:77: info: claim 72: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow (\forall s\in \mathrm{El},\ y(s)\Rightarrow z=s\Rightarrow \neg (\neg (z=s)\land \operatorname{LinearIndependent}((t\in \mathrm{El}\mapsto t=z\lor t=s))))))
 tests/Structures/article.tex:334:93: info: claim 73: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(z)\Rightarrow (\forall s\in \mathrm{Map},\ \operatorname{Linear}(s)\land s\colon y\to z\Rightarrow \operatorname{Linear}(s))))
 tests/Structures/article.tex:338:99: info: claim 74: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{VectorSpace}(x)(y)\land \operatorname{FiniteDimensional}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Linear}(z)\land z\colon y\to y\Rightarrow \dim(\ker(z))+\dim(\operatorname{im}(z))=\dim(y)))
-tests/Structures/article.tex: 5 definitions, 75 claims
-  results: 155 compiled, 0 failed, 0 prose (of 155)
-  all: 155 compiled, 0 failed, 0 prose (of 155)
+tests/Structures/article.tex:342:21: info: claim 75: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg y=0\Rightarrow \operatorname{Invertible}(y))
+tests/Structures/article.tex:346:39: info: claim 76: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{Finite}(x)\land \lvert x\rvert=6\Rightarrow \operatorname{Finite}(x)
+tests/Structures/article.tex: 5 definitions, 77 claims
+  results: 159 compiled, 0 failed, 0 prose (of 159)
+  all: 159 compiled, 0 failed, 0 prose (of 159)

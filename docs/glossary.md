@@ -936,6 +936,7 @@ except a notion whose meanings take arguments of different types, which the type
 | perfect | ℝ → Prop | closed, without isolated points (Mathlib `Perfect`) |
 | discrete | ℝ → Prop | every point is isolated |
 | finite | ℝ → Prop | (Mathlib `Set.Finite`) |
+| with $x$ elements | ℝ → Prop | finite, with `n` elements (Mathlib `Set.ncard`) |
 | infinite | ℝ → Prop | (Mathlib `Set.Infinite`) |
 | countable | ℝ → Prop | finite or countably infinite (Mathlib `Set.Countable`) |
 | uncountable | ℝ → Prop | not countable |
@@ -1286,6 +1287,7 @@ except a notion whose meanings take arguments of different types, which the type
 | solvable | $\mathrm{El}$ → Prop | (Mathlib `IsSolvable`) |
 | nilpotent | $\mathrm{El}$ → Prop | (Mathlib `Group.IsNilpotent`) |
 | finite | $\mathrm{El}$ → Prop | with finitely many elements (Mathlib `Finite`) |
+| with $x$ elements | $\mathrm{El}$ → Prop | finite, of order `n` |
 | infinite | $\mathrm{El}$ → Prop | (Mathlib `Infinite`) |
 | countable | $\mathrm{El}$ → Prop | (Mathlib `Countable`) |
 | trivial | $\mathrm{El}$ → Prop | with one element |
@@ -1293,6 +1295,8 @@ except a notion whose meanings take arguments of different types, which the type
 | cancellative | $\mathrm{El}$ → Prop | `ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`) |
 | left cancellative | $\mathrm{El}$ → Prop | `ab = ac` implies `b = c` (Mathlib `IsLeftCancelMul`) |
 | right cancellative | $\mathrm{El}$ → Prop | `ba = ca` implies `b = c` (Mathlib `IsRightCancelMul`) |
+| nonzero | $\mathrm{El}$ | `a ≠ 0` |
+| invertible | $\mathrm{El}$ | with an inverse: `ab = ba = 1` for some `b` (Mathlib `IsUnit`) |
 | idempotent | $\mathrm{El}$ | `e² = e` (Mathlib `IsIdempotentElem`) |
 | noetherian | $\mathrm{El}$ → Prop | every ideal is finitely generated (Mathlib `IsNoetherianRing`) |
 | noetherian | $\mathrm{El}$ → Prop | (Mathlib `IsNoetherianRing`) |
