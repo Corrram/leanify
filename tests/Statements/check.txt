@@ -117,7 +117,7 @@ tests/Statements/article.tex:378:1: info: claim 96: \forall x\in \mathbb{R},\ 2<
 tests/Statements/article.tex:384:1: warning: e is not defined: sentence not checked
 tests/Statements/article.tex:388:1: warning: Lemma apposition is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 tests/Statements/article.tex:409:1: warning: unknown noun: copula: the field unitsquare of the vocabulary has it (\usepackage[vocab=unitsquare]{leanify}): sentence not checked
-tests/Statements/article.tex:415:1: warning: "positive integer" is read, but not the words after it ("with at least two divisors"): sentence not checked
+tests/Statements/article.tex:415:1: warning: "positive integer" is read, but not the words after it ("with at least divisors"): sentence not checked
 tests/Statements/article.tex:423:1: warning: unknown noun: polynomial of degree: the field polynomials of the vocabulary has the noun "polynomial" (\usepackage[vocab=polynomials]{leanify}): sentence not checked
 tests/Statements/article.tex:427:1: warning: Lemma known-nouns is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
 tests/Statements/article.tex:432:1: warning: Lemma noun-with-a-formula is not checked: Leanify cannot read its statement; not read as a noun: "finite $K_r$-free graph"

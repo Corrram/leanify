@@ -198,6 +198,17 @@ def vocab : Vocab where
       "`Δ(G) ≤ k` (Mathlib `SimpleGraph.maxDegree`)",
     mod phrase!"of maximum degree at most $v$" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le (app (const maxDegree) g) k)
       "`Δ(G) ≤ k`",
+    mod phrase!"with at least $v$ vertices" false (close <| lamR fun n => lamT G (fun _ => tt) fun g => le n (nv g)) "`|V(G)| ≥ n`",
+    mod phrase!"on at least $v$ vertices" false (close <| lamR fun n => lamT G (fun _ => tt) fun g => le n (nv g)) "`|V(G)| ≥ n`",
+    mod phrase!"with at most $v$ vertices" false (close <| lamR fun n => lamT G (fun _ => tt) fun g => le (nv g) n) "`|V(G)| ≤ n`",
+    mod phrase!"with at least $v$ edges" false (close <| lamR fun m => lamT G (fun _ => tt) fun g => le m (app (const numEdges) g)) "`|E(G)| ≥ m`",
+    mod phrase!"with at most $v$ edges" false (close <| lamR fun m => lamT G (fun _ => tt) fun g => le (app (const numEdges) g) m) "`|E(G)| ≤ m`",
+    mod phrase!"with at least $v$ leaves" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => le k (app2 (const numOfDeg) (num 1) g))
+      "at least `k` vertices of degree `1`",
+    mod phrase!"with exactly $v$ leaves" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => eq (app2 (const numOfDeg) (num 1) g) k)
+      "`k` vertices of degree `1`",
+    mod phrase!"with $v$ leaves" false (close <| lamR fun k => lamT G (fun _ => tt) fun g => eq (app2 (const numOfDeg) (num 1) g) k)
+      "`k` vertices of degree `1`",
     mod phrase!"on $v$ vertices with $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
         and (eq (nv g) n) (eq (app (const numEdges) g) m))
       "with `n` vertices and `m` edges"] ++

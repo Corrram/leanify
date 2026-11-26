@@ -128,6 +128,7 @@ def vocab : Vocab where
     nounM phrase!"square matrix" phrase!"square matrices" squarePred "an `n × n` matrix"]
   mods := [
     mod phrase!"square" true squarePred "`n × n`",
+    mod phrase!"real" true (mPred fun _ => tt) "a matrix of real numbers (every matrix is)",
     mod phrase!"symmetric" true (.const symmetric) "`Aᵀ = A` (Mathlib `Matrix.IsSymm`)",
     mod phrase!"skew-symmetric" true (.const skewSymmetric) "`Aᵀ = -A`",
     mod phrase!"orthogonal" true (.const orthogonal) "`AᵀA = I`",

@@ -1002,7 +1002,23 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     if ws.isEmpty then none else
     let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws0.length, r' with
       | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
-      | [.m ts], _ => ((seqBound ts).map fun _ => ([ts], [], r')) <|> (splitVars ts).map (·, [], r')
+      | [.m ts], _ => ((seqBound ts).map fun _ => ([ts], [], r')) <|> (splitVars ts).map (·, [], r') <|>
+        -- `all integers $n\ge k\ge0$`: the variables of the chain, and the chain (after a
+        -- plural noun; `every integer $b\ge c$` bounds `b` by `c`)
+        (do
+          let plural := match ws.getLast? with
+            | some (.w w) => w.getLast? == some 115
+            | _ => false
+          if !plural then none
+          let m ← Math.parseFormula ts
+          let .chain (.id x) rest := m | none
+          let ys ← rest.mapM fun (_, y) => match y with
+            | .id y => some (some y)
+            | .num _ => some none
+            | _ => none
+          let ys := ys.filterMap id
+          if ys.isEmpty then none
+          some ((x :: ys).map fun n => [MTok.id n], [Bind.ifCond m], r'))
       -- `all real numbers $x,y$ with $y\ne0$`: a condition on all of them
       | .m ts :: post, _ => do
         let (c, rest) ← withConds post
@@ -2350,6 +2366,22 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           (kw [w!"supremum"] r1).map (MT.bound true m, ·) <|> (kw [w!"infimum"] r1).map (MT.bound false m, ·) <|>
           (kw [w!"largest", w!"element"] r1).map (MT.extr true m, ·) <|> (kw [w!"smallest", w!"element"] r1).map (MT.extr false m, ·)
         some (Clause.exists_ t, r2) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$T$ has at least $2$ leaves`: the modifier `with at least $2$ leaves`
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has"] r
+      let (q, r1') ← (kw [w!"at", w!"least"] r1).map ([Chunk.w w!"at", Chunk.w w!"least"], ·) <|>
+        (kw [w!"at", w!"most"] r1).map ([Chunk.w w!"at", Chunk.w w!"most"], ·) <|>
+        (kw [w!"exactly"] r1).map ([Chunk.w w!"exactly"], ·)
+      let (k, r2) ← mathChunk r1'
+      let ws := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | _ => false
+      if ws.isEmpty then none
+      some (Clause.isA s ([Chunk.w w!"with"] ++ q ++ [Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ has $n-1$ edges`: the modifier `with $n-1$ edges` of the vocabulary
@@ -3851,7 +3883,12 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let r1 ← kw [w!"be"] r
     let m ← Math.parseFormula ts
     let .chain (.id x) rest := m | none
-    let ys ← rest.mapM fun (_, y) => match y with | .id y => some y | _ => none
+    -- (`$n\ge k\ge0$ be integers`: numbers in the chain are bounds)
+    let ys ← rest.mapM fun (_, y) => match y with
+      | .id y => some (some y)
+      | .num _ => some none
+      | _ => none
+    let ys := ys.filterMap id
     if ys.isEmpty then none
     let joined : List MTok := ((x :: ys).map fun n => [MTok.id n]).intersperse [MTok.sym 44] |>.flatten
     let (b, r2) ← pluralNoun joined r1

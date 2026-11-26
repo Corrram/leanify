@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Combinatorics.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["combinatorics"]
 
-#leanify_article Combinatorics "article.tex" "fnv1a64:c40266a6d4b0ca1b" with Combinatorics.vocabulary
+#leanify_article Combinatorics "article.tex" "fnv1a64:086997ddb33c6a5d" with Combinatorics.vocabulary

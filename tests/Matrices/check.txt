@@ -30,7 +30,8 @@ tests/Matrices/article.tex:45:1: info: claim 13: \forall x\in \mathrm{Mat},\ \op
 tests/Matrices/article.tex:45:1: info: claim 13 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Nilpotent}(x)\Rightarrow \operatorname{Square}(x)
 tests/Matrices/article.tex:49:35: info: claim 14: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow \det(y^{\top})=\det(y)
 tests/Matrices/article.tex:49:35: info: claim 14 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow \operatorname{Square}(y^{\top})\land \operatorname{Square}(y)
-tests/Matrices/article.tex: 4 definitions, 15 claims
+tests/Matrices/article.tex:53:49: info: claim 15: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{Symmetric}(y)\land \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow y^{\top}=y
+tests/Matrices/article.tex: 4 definitions, 16 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 14 compiled, 0 failed, 0 prose (of 14)
-  all: 18 compiled, 0 failed, 0 prose (of 18)
+  results: 16 compiled, 0 failed, 0 prose (of 16)
+  all: 20 compiled, 0 failed, 0 prose (of 20)

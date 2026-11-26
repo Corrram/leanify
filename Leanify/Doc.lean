@@ -571,6 +571,11 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       -- `we obtain $φ$`
       else if (v == w!"get" || v == w!"obtain" || v == w!"find") && prevWord == some w!"we" && beforeMath then
         word w!"have" :: standardForms f there cond (some t) ts
+      -- `at least two vertices`: the number `$2$`
+      else if (prevWord == some w!"least" || prevWord == some w!"most" || prevWord == some w!"exactly") &&
+          ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
+        let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
+        ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
       -- `for all real $x$`
       else if v == w!"real" && beforeMath then t :: word w!"number" :: standardForms f there cond (some t) ts
       -- `Let $x$ be real.`
@@ -1848,13 +1853,25 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           let (h, nms) ← headOf (restAt k) (k > 0)
           -- (a noun that is also a modifier, `idempotent`: before another noun, the modifier,
           -- `an idempotent element`)
+          -- (or a noun after more modifiers, `a real symmetric $n\times n$ matrix`)
+          let stops := [w!"that", w!"which", w!"of", w!"with", w!"such", w!"in", w!"on", w!"for", w!"over", w!"whose", w!"and"]
+          let lead := h.2.2.2.takeWhile fun c => match c with
+            | .w w => !stops.contains w
+            | .m _ | .p 45 => true
+            | _ => false
           let nounNext := match h.2.2.2 with
-            | .w w :: _ => V.nouns.any fun n => n.sing.head? == some (.w w) || n.plural.head? == some (.w w)
+            | .w _ :: _ => lead.any fun c => match c with
+              | .w w => V.nouns.any fun n => n.sing.head? == some (.w w) || n.plural.head? == some (.w w)
+              | _ => false
             | _ => false
           if nounNext && k < pmAll.length then
             let st2 ← get
             set st1
-            tryCatch (tryK f (k + 1)) fun _ => do set st2; pure (k, h, nms)
+            -- (only where the modifiers before the other noun are of its type)
+            tryCatch (do
+                let (k', h', nms') ← tryK f (k + 1)
+                if !((pmAll.take k').all fun (_, ms) => ms.any (·.ty == h'.1)) then fail E.type
+                pure (k', h', nms')) fun _ => do set st2; pure (k, h, nms)
           else pure (k, h, nms)) fun _ => tryK f (k + 1)
   let (k, (ty, preds, var, r1), nms) ← tryK (pmAll.length + 1) 0
   let pmGroups := pmAll.take k

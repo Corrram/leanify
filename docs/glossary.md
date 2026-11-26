@@ -644,6 +644,14 @@ except a notion whose meanings take arguments of different types, which the type
 | of minimum degree at least $x$ | $\mathrm{Graph}$ | `δ(G) ≥ k` |
 | with maximum degree at most $x$ | $\mathrm{Graph}$ | `Δ(G) ≤ k` (Mathlib `SimpleGraph.maxDegree`) |
 | of maximum degree at most $x$ | $\mathrm{Graph}$ | `Δ(G) ≤ k` |
+| with at least $x$ vertices | $\mathrm{Graph}$ | `\|V(G)\| ≥ n` |
+| on at least $x$ vertices | $\mathrm{Graph}$ | `\|V(G)\| ≥ n` |
+| with at most $x$ vertices | $\mathrm{Graph}$ | `\|V(G)\| ≤ n` |
+| with at least $x$ edges | $\mathrm{Graph}$ | `\|E(G)\| ≥ m` |
+| with at most $x$ edges | $\mathrm{Graph}$ | `\|E(G)\| ≤ m` |
+| with at least $x$ leaves | $\mathrm{Graph}$ | at least `k` vertices of degree `1` |
+| with exactly $x$ leaves | $\mathrm{Graph}$ | `k` vertices of degree `1` |
+| with $x$ leaves | $\mathrm{Graph}$ | `k` vertices of degree `1` |
 | on $x$ vertices with $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
 | with an odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
 | without odd cycles | $\mathrm{Graph}$ | a cycle of odd length |
@@ -779,6 +787,7 @@ except a notion whose meanings take arguments of different types, which the type
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | square | $\mathrm{Mat}$ | `n × n` |
+| real | $\mathrm{Mat}$ | a matrix of real numbers (every matrix is) |
 | symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
 | skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
 | orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
@@ -2027,6 +2036,7 @@ except a notion whose meanings take arguments of different types, which the type
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | square | $\mathrm{Mat}$ | `n × n` |
+| real | $\mathrm{Mat}$ | a matrix of real numbers (every matrix is) |
 | symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
 | skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
 | orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
@@ -2413,6 +2423,7 @@ except a notion whose meanings take arguments of different types, which the type
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | square | $\mathrm{Mat}$ | `n × n` |
+| real | $\mathrm{Mat}$ | a matrix of real numbers (every matrix is) |
 | symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
 | skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
 | orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
