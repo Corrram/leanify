@@ -12,6 +12,8 @@ inductive Rel where
   | eq | lt | le | gt | ge | mem | defeq | ne
   /-- `A\subseteq B` and `A\supseteq B`. -/
   | subset | supset
+  /-- `A\subsetneq B` and `A\supsetneq B`: inclusion and inequality. -/
+  | psubset | psupset
   /-- `x\notin A`. -/
   | nmem
   /-- `a\ll b`: in a binder, `a/b` sufficiently small; in a claim, `|a|\le Cb` for an implied
@@ -294,6 +296,8 @@ def relOf : MTok → Option Rel
     else if n == w!"notin" then some .nmem
     else if n == w!"subseteq" || n == w!"subseteqq" then some .subset
     else if n == w!"supseteq" || n == w!"supseteqq" then some .supset
+    else if n == w!"subsetneq" || n == w!"subsetneqq" || n == w!"varsubsetneq" || n == w!"varsubsetneqq" then some .psubset
+    else if n == w!"supsetneq" || n == w!"supsetneqq" || n == w!"varsupsetneq" || n == w!"varsupsetneqq" then some .psupset
     else if n == w!"ll" then some .ll
     else if n == w!"gg" then some .gg
     else if n == w!"asymp" then some .asymp

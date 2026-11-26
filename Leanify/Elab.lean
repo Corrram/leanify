@@ -1105,6 +1105,8 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
     pure (.and (.app (.prim .isInt) a) (.and (.app (.prim .isInt) b) (.not (dvdTm a b))))
   | .subset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 x.1 y.1) else fail E.type
   | .supset => if isPredTy x.2 && x.2 == y.2 then pure (setSub x.2 y.1 x.1) else fail E.type
+  | .psubset => if isPredTy x.2 && x.2 == y.2 then pure (.and (setSub x.2 x.1 y.1) (.not (.eq x.1 y.1))) else fail E.type
+  | .psupset => if isPredTy x.2 && x.2 == y.2 then pure (.and (setSub x.2 y.1 x.1) (.not (.eq x.1 y.1))) else fail E.type
   | _ => fail E.unsupported
 
 def conjAll : List Tm → Tm
@@ -2747,6 +2749,12 @@ where
           if aty != rset then fail E.type
           return some (.lam rset .tt (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0)))),
             Ty.fn rset .prop)
+        -- (the proper subsets: the domain of `S\subsetneq A`)
+        if n == w!"@psubsets" then
+          let (at_, aty) ← term f sc pf x
+          if aty != rset then fail E.type
+          return some (.lam rset .tt (.and (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0))))
+            (.not (.eq (.loc 0) (shift 1 0 at_)))), Ty.fn rset .prop)
         -- `\lVert f\rVert`, `\lVert T|_{A}\rVert`
         if n != w!"@norm" then return none
         match x with

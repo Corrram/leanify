@@ -196,6 +196,13 @@ def structuralCmds : List String :=
    "grave", "vec", "mathring", "widetilde", "widecheck", "overrightarrow", "substack", "#", "ll", "gg", "asymp",
    "limsup", "liminf", "cdots", "dots", "sim"]
 
+/-- Commands that the formula grammar reads besides `structuralCmds`: named functions
+(`Math.wFunctions`) are added where they are used. -/
+def parserCmds : List String :=
+  ["ast", "nabla", "Vert", "lVert", "rVert", "langle", "rangle", "otimes", "div", "uparrow", "downarrow", "perp",
+   "cases", "aligned", "gathered", "split", "subsetneq", "subsetneqq", "supsetneq", "supsetneqq", "varsubsetneq",
+   "varsubsetneqq", "varsupsetneq", "varsupsetneqq", "binom", "notin"]
+
 /-- A symbol written as a command that is not a variable name (a Greek letter):
 notation the article or its vocabulary must define. -/
 def isNotation (d : String) : Bool :=
@@ -461,11 +468,16 @@ and the symbols the article defines. -/
 def unknownNotation (d : Doc) (toks : List PTok) : List String :=
   let keys := d.globs.map fun g => Codes.toString g.key
   let known (n : String) : Bool :=
-    greekNames.contains n || structuralCmds.contains n || keys.any fun k =>
+    greekNames.contains n || structuralCmds.contains n || parserCmds.contains n ||
+      Math.wFunctions.any (fun w => Codes.toString w == n) || keys.any fun k =>
       let c := "\\" ++ n
       k == c || (k.startsWith c && !((k.toList.drop c.length).head?.any Char.isAlpha))
-  (toks.filterMap fun p => match p.tok with
-    | .cmd n => if p.math && !known (Codes.toString n) then some ("\\" ++ Codes.toString n) else none
+  -- (a decoration after `_` or `^`, `W_\bullet`, `f^\ast`, is a part of a name)
+  let decor (prev : Option PTok) (n : String) : Bool :=
+    ["bullet", "ast", "star", "prime", "dagger", "circ", "natural", "sharp", "flat", "diamond"].contains n &&
+      (prev.any fun q => q.tok == .msym 95 || q.tok == .msym 94)
+  ((toks.zip ((none :: toks.map some).take toks.length)).filterMap fun (p, prev) => match p.tok with
+    | .cmd n => if p.math && !known (Codes.toString n) && !decor prev (Codes.toString n) then some ("\\" ++ Codes.toString n) else none
     | _ => none).eraseDups
 
 /-- The noun phrases with which a sentence introduces objects: the words after `be a`,

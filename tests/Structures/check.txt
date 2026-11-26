@@ -135,6 +135,14 @@ tests/Structures/article.tex:466:34: info: claim 108: \forall x\in \mathbb{R},\ 
 tests/Structures/article.tex:470:28: info: claim 109: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow \operatorname{MetricSpace}(x)\land \operatorname{TopologicalSpace}(x)
 tests/Structures/article.tex:474:57: info: claim 110: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Leftrightarrow Z(x)(s))\Rightarrow \operatorname{Group}(y)\land y\le x)
 tests/Structures/article.tex:474:125: info: claim 111: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Leftrightarrow Z(x)(s))\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ (\forall t\in \mathrm{El},\ z(t)\Leftrightarrow Z(x)(t))\Rightarrow \operatorname{Group}(z)\land z\trianglelefteq x))
-tests/Structures/article.tex: 13 definitions, 112 claims
-  results: 239 compiled, 0 failed, 0 prose (of 239)
-  all: 239 compiled, 0 failed, 0 prose (of 239)
+tests/Structures/article.tex:478:57: info: claim 112: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Rightarrow x(s))\land \neg (y=x)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow x(z)))
+tests/Structures/article.tex:478:57: info: claim 113: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Rightarrow x(s))\land \neg (y=x)\Rightarrow \neg (y=x))
+tests/Structures/article.tex:478:148: info: claim 114: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ (\forall s\in \mathrm{El},\ y(s)\Rightarrow x(s))\land \neg (y=x)\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ (\forall t\in \mathrm{El},\ z(t)\Rightarrow x(t))\Rightarrow (\forall s\in \mathrm{El}\to \mathrm{Prop},\ (\forall b\in \mathrm{El},\ s(b)\Rightarrow x(b))\land (\forall a\in \mathrm{El},\ z(a)\Rightarrow s(a))\land \neg (z=s)\Rightarrow (\forall t\in \mathrm{El},\ z(t)\Rightarrow s(t)))))
+tests/Structures/article.tex:482:51: info: claim 115: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow x(y))
+tests/Structures/article.tex:482:75: info: claim 116: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow \binom{x}{2}=\frac{x\,(x-1)}{2}
+tests/Structures/article.tex:482:75: info: claim 116 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\Rightarrow (2\in \mathbb{N}\land x\in \mathbb{N})\land \neg (2=0)
+tests/Structures/article.tex:482:187: info: claim 117: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow 0<{x}^{2}
+tests/Structures/article.tex:482:187: info: claim 118: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow 0\le {x}^{2}
+tests/Structures/article.tex: 13 definitions, 119 claims
+  results: 248 compiled, 0 failed, 0 prose (of 248)
+  all: 248 compiled, 0 failed, 0 prose (of 248)

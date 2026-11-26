@@ -389,9 +389,10 @@ def boundBinders (ts : List MTok) : Option (List Codes × MT) := do
 def binderSubset (ts : List MTok) : Option (List Codes × MT) := do
   match ts with
   | .id v :: .cmd c :: rest =>
-    if c != w!"subseteq" then none
+    let proper := c == w!"subsetneq" || c == w!"subsetneqq" || c == w!"varsubsetneq" || c == w!"varsubsetneqq"
+    if c != w!"subseteq" && !proper then none
     let dom ← Math.parseFormula rest
-    some ([v], .app (.id w!"@subsets") [dom])
+    some ([v], .app (.id (if proper then w!"@psubsets" else w!"@subsets")) [dom])
   | _ => none
 
 /-- A binder: `x\in A`, or a bound on one real variable (`c>0`) or several (`a,b>0`). -/

@@ -509,6 +509,97 @@ def standardWords : List (List Codes × List Tok) :=
    ([w!"collection", w!"of"], w [w!"set", w!"of"]), ([w!"collections", w!"of"], w [w!"sets", w!"of"]),
    ([w!"be", w!"two"], w [w!"be"]), ([w!"be", w!"three"], w [w!"be"]), ([w!"be", w!"four"], w [w!"be"])]
 
+/-- The tokens of a group of a formula up to its closing brace (the opening one read), and
+those after it. -/
+def groupBody : Nat → Nat → List PTok → List PTok → Option (List PTok × List PTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, [], _ => none
+  | f + 1, d, t :: ts, acc =>
+    if t.tok == .rbrace then (if d == 0 then some (acc.reverse, ts) else groupBody f (d - 1) ts (t :: acc))
+    else if t.tok == .lbrace then groupBody f (d + 1) ts (t :: acc)
+    else groupBody f d ts (t :: acc)
+
+/-- The tokens of a group before and after its `\choose` (at the depth of the group). -/
+def splitChoose : Nat → Nat → List PTok → List PTok → Option (List PTok × List PTok)
+  | 0, _, _, _ => none
+  | _ + 1, _, [], _ => none
+  | f + 1, d, t :: ts, acc =>
+    if d == 0 && t.tok == .cmd w!"choose" then some (acc.reverse, ts)
+    else if t.tok == .lbrace then splitChoose f (d + 1) ts (t :: acc)
+    else if t.tok == .rbrace then splitChoose f (d - 1) ts (t :: acc)
+    else splitChoose f d ts (t :: acc)
+
+/-- `{n \choose k}` as `\binom{n}{k}`. -/
+def chooseBinom : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    if t.tok == .lbrace then
+      match groupBody (ts.length + 1) 0 ts [] with
+      | some (inner, rest) =>
+        match splitChoose (inner.length + 1) 0 inner [] with
+        | some (a, b) =>
+          let mk (k : Tok) : PTok := ⟨k, t.pos, t.math⟩
+          [mk (.cmd w!"binom"), mk .lbrace] ++ chooseBinom f a ++ [mk .rbrace, mk .lbrace] ++ chooseBinom f b ++
+            [mk .rbrace] ++ chooseBinom f rest
+        | none => t :: chooseBinom f ts
+      | none => t :: chooseBinom f ts
+    else t :: chooseBinom f ts
+
+/-- `{\mathcal{G}}` (as `{\cal G}` is lexed) as `\mathcal{G}`: braces around one letter in a
+font are no group. -/
+def unbraceFont : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    match t.tok, ts with
+    | .lbrace, c :: o :: x :: cl :: cl2 :: rest =>
+      let font := match c.tok with
+        | .cmd n => [w!"mathcal", w!"mathbb", w!"mathbf", w!"mathfrak", w!"mathscr", w!"mathit", w!"mathrm", w!"mathsf"].contains n
+        | _ => false
+      let letter := match x.tok with | .mvar _ => true | _ => false
+      if font && o.tok == .lbrace && letter && cl.tok == .rbrace && cl2.tok == .rbrace then
+        c :: o :: x :: cl :: unbraceFont f rest
+      else t :: unbraceFont f ts
+    | _, _ => t :: unbraceFont f ts
+
+/-- A token that is a relation of the formula grammar (`=`, `<`, `\le`, `\subseteq`, …). -/
+def relationTok (t : Tok) : Bool :=
+  match t with
+  | .msym c => c == 61 || c == 60 || c == 62
+  | .cmd c => [w!"le", w!"leq", w!"ge", w!"geq", w!"ne", w!"neq", w!"subseteq", w!"supseteq", w!"in", w!"sim", w!"equiv",
+      w!"subsetneq", w!"supsetneq", w!"coloneqq"].contains c
+  | _ => false
+
+/-- `\stackrel{(a)}{\le}`, `\overset{\text{def}}{=}`: the relation, its annotation dropped (a
+reason for it, or a reference); `def`, `\triangle` or `:` above `=` make it `\coloneqq`. -/
+def annotatedRel : Nat → List PTok → List PTok
+  | 0, ts => ts
+  | _ + 1, [] => []
+  | f + 1, t :: ts =>
+    let keep := t :: annotatedRel f ts
+    if t.tok != .cmd w!"stackrel" && t.tok != .cmd w!"overset" then keep else
+    match ts with
+    | a :: r1 =>
+      if a.tok != .lbrace then keep else
+      match groupBody (r1.length + 1) 0 r1 [] with
+      | some (above, b :: r3) =>
+        if b.tok != .lbrace then keep else
+        match groupBody (r3.length + 1) 0 r3 [] with
+        | some ([rel], r4) =>
+          if !relationTok rel.tok then keep else
+          let letters : Codes := above.flatMap fun u => match u.tok with
+            | .mvar c => [c]
+            | .word w => w
+            | _ => []
+          let isDef := letters == w!"def" || letters == w!"Def" ||
+            (above.length == 1 && (above.head?.any fun u => u.tok == .cmd w!"triangle" || u.tok == .msym 58))
+          if isDef && rel.tok == .msym 61 then ⟨.cmd w!"coloneqq", rel.pos, rel.math⟩ :: annotatedRel f r4
+          else rel :: annotatedRel f r4
+        | _ => keep
+      | _ => keep
+    | [] => keep
+
 /-- The number of letters in the formulas between a `let` and a `be`, from the tokens before
 `be` (the latest first); `none` if a token that is not a letter, a comma, `and` or `let`
 comes first. -/
@@ -1159,7 +1250,7 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
     -- `A\subseteq X` as a binder: the subsets of `X`, a set of numbers or of the elements of a
     -- structure (`Let $X$ be a topological space and let $A\subseteq X$.`)
     | .app (.id sub) [x] =>
-      if sub != w!"@subsets" then do
+      if sub != w!"@subsets" && sub != w!"@psubsets" then do
         let (p, t) ← Elab.term 100000 sc none d
         match t with
         | .fn a .prop => pure (a, some p)
@@ -1167,7 +1258,10 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       else do
         let (xt, xty) ← Elab.term 100000 sc none x
         let .fn a .prop := xty | fail E.type
-        pure (.fn a .prop, some (.lam (.fn a .prop) .tt (.all a (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 xt) (.loc 0))))))
+        let inside : Tm := .all a (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 xt) (.loc 0)))
+        -- (`A\subsetneq X`: a subset other than `X`)
+        let body : Tm := if sub == w!"@psubsets" then .and inside (.not (.eq (.loc 0) (shift 1 0 xt))) else inside
+        pure (.fn a .prop, some (.lam (.fn a .prop) .tt body))
     | .id n => do
       -- the real numbers, and all the elements of a vocabulary's type (`\mathbb{C}`)
       if n == w!"\\mathbb{R}" then pure (.real, none) else
@@ -1886,7 +1980,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let some ts := var | fail E.type
       let some ([_], d) := Grammar.binderMath ts | fail E.type
       let x := match d with
-        | .app (.id s) [x] => if s == w!"@subsets" then x else d
+        | .app (.id s) [x] => if s == w!"@subsets" || s == w!"@psubsets" then x else d
         | _ => d
       let sc : Scope := [([], n.ty)] ++ (if outer.isEmpty then [] else [([], n.ty)]) ++ outer
       let (a, aty') ← Elab.term 100000 sc none x
@@ -7652,6 +7746,9 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   -- connected metric space)
   let s := { s with toks := Notation.dropUnconstraining (s.toks.length + 1) s.toks }
   let s := { s with toks := Notation.dropCounts s.toks }
+  -- (`{n\choose k}`, `\stackrel{(a)}{\le}`)
+  let s := { s with toks := Notation.annotatedRel (s.toks.length + 1) (Notation.chooseBinom (s.toks.length + 1) s.toks) }
+  let s := { s with toks := Notation.unbraceFont (s.toks.length + 1) s.toks }
   let s := { s with toks := Notation.adjectiveCommas st0.vocab (st0.notions.map (·.1)) s.toks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }

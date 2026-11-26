@@ -613,9 +613,20 @@ form they stand for before the sentence is read, so they are read as that form:
 | `Let $x$ be real.`, `for all real $x$` | `Let $x$ be a real number.`, `for all real numbers $x$` |
 
 In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\defeq` are
-`\coloneqq`, `\backslash` and `\smallsetminus` are `\setminus`; the sizes `\bigg`, `\Bigg`,
-`\middle` and the old font switches `\rm`, `\sf` are skipped; `\mathsf`, `\mathfrak`,
-`\mathscr`, `\mathtt`, `\boldsymbol` and `\bm` name a symbol as `\mathcal` does.
+`\coloneqq`, `\backslash` and `\smallsetminus` are `\setminus`, `\thicksim` is `\sim`,
+`\not\in` is `\notin` and `\not=` is `\neq`; the sizes `\bigg`, `\Bigg`, `\middle`, `\large`,
+`\small`, the struts and the spaces `\mkern-2mu`, `\kern1pt` are skipped, as are the old font
+switches `\rm`, `\sf`; `\smash{x}`, `\ensuremath{x}` and `\raisebox{…}{x}` are `x`, `\phantom{x}` is
+nothing. `\mathsf`, `\mathfrak`, `\mathscr`, `\mathtt`, `\boldsymbol`, `\bm`, `\EuScript`,
+`\mathpzc`, `\mathds`, `\mathbbm` and `\pmb` name a symbol as `\mathcal` and `\mathbb` do, and so do
+the old switches `{\cal G}`, `\bf x`, `\Bbb R` (`\mathcal{G}`, `\mathbf{x}`, `\mathbb{R}`). `{n
+\choose k}` is `\binom{n}{k}`. A relation with a note above it, `\stackrel{(a)}{\le}` or
+`\overset{(1)}{=}`, is the relation (the note is a reason); `\overset{\text{def}}{=}` (`def`,
+`\triangle` or `:` above `=`) is `\coloneqq`.
+
+`A\subsetneq B` (`\subsetneqq`, `\varsubsetneq`) is `A\subseteq B` and `A\neq B`, and `A\supsetneq
+B` the same the other way; `Let $A\subsetneq X$.` binds a subset of `X` other than `X`. `\subset`
+alone stays ambiguous (see the finding it gets).
 
 ### Notions that the article defines in words that are not read
 

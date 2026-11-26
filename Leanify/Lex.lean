@@ -130,7 +130,35 @@ def wDropArg : List Codes := [w!"color", w!"textcolor", w!"marginpar", w!"margin
 def wDropMath : List Codes :=
   [w!"bigl", w!"bigr", w!"Bigl", w!"Bigr", w!"biggl", w!"biggr", w!"big", w!"Big", w!"left",
    w!"right", w!"displaystyle", w!"textstyle", w!"limits", w!"nolimits", w!"notag", w!"nonumber",
-   w!"bigg", w!"Bigg", w!"bigm", w!"Bigm", w!"biggm", w!"Biggm", w!"middle", w!"rm", w!"sf", w!"protect"]
+   w!"bigg", w!"Bigg", w!"bigm", w!"Bigm", w!"biggm", w!"Biggm", w!"middle", w!"rm", w!"sf", w!"protect",
+   -- (sizes and struts in a formula are layout)
+   w!"large", w!"Large", w!"LARGE", w!"huge", w!"Huge", w!"small", w!"tiny", w!"scriptsize", w!"footnotesize",
+   w!"normalsize", w!"scriptstyle", w!"scriptscriptstyle", w!"strut", w!"mathstrut"]
+
+/-- The old font switches of a formula (`\cal M`, `{\bf x}`, `\Bbb R`) as the font commands
+they stand for (`\mathcal{M}`). -/
+def oldFont (n : Codes) : Option Codes :=
+  if n == w!"cal" then some w!"mathcal"
+  else if n == w!"bf" then some w!"mathbf"
+  else if n == w!"Bbb" then some w!"mathbb"
+  else if n == w!"frak" then some w!"mathfrak"
+  else if n == w!"scr" then some w!"mathscr"
+  else if n == w!"it" || n == w!"mit" then some w!"mathit"
+  else none
+
+/-- A TeX dimension after a spacing command (`\mkern-2mu`, `\kern 1pt`): the text after it
+and its length (`0` and the text itself when there is none). -/
+def dimen (cs : Codes) : Codes × Nat :=
+  let r := cs.dropWhile (· == 32)
+  let a := cs.length - r.length
+  let (r, b) := match r with
+    | 45 :: t => (t, 1)
+    | 43 :: t => (t, 1)
+    | _ => (r, 0)
+  let num := r.takeWhile fun c => isDigit c || c == 46
+  let r := r.drop num.length
+  let unit := (r.takeWhile isLetter).take 2
+  if num.isEmpty then (cs, 0) else (r.drop unit.length, a + b + num.length + unit.length)
 /-- Commands of formulas that are another spelling of a symbol the grammar reads:
 `\colon` is `:`, `\leqslant` is `\le`, `\lvert` is `|`, `\triangleq` is `\coloneqq`. -/
 def mathAlias (n : Codes) : Option Tok :=
@@ -143,6 +171,11 @@ def mathAlias (n : Codes) : Option Tok :=
   else if n == w!"rightarrow" || n == w!"longrightarrow" then some (.cmd w!"to")
   else if n == w!"coloneq" || n == w!"defeq" then some (.cmd w!"coloneqq")
   else if n == w!"backslash" || n == w!"smallsetminus" then some (.cmd w!"setminus")
+  -- (fonts that name a symbol as `\mathcal` and `\mathbb` do, and other spellings of a relation)
+  else if n == w!"EuScript" || n == w!"mathpzc" || n == w!"mathbcal" then some (.cmd w!"mathcal")
+  else if n == w!"mathds" || n == w!"mathbbm" || n == w!"mathbbb" then some (.cmd w!"mathbb")
+  else if n == w!"pmb" then some (.cmd w!"mathbf")
+  else if n == w!"thicksim" then some (.cmd w!"sim")
   else if n == w!"lbrace" then some (.csym 123)
   else if n == w!"rbrace" then some (.csym 125)
   else none
@@ -574,6 +607,52 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             -- `\vcentcolon=` is `:=`
             if name == w!"vcentcolon" && rest.head? == some 61 then
               emit (.cmd w!"coloneqq") (rest.drop 1) (n + 1) st
+            -- `\smash{x}`, `\smash[b]{x}`, `\ensuremath{x}`: the group
+            else if name == w!"smash" || name == w!"ensuremath" then
+              let (r1, n1) := optArg rest
+              lexAux macros f r1 (pos + n + n1) st out
+            -- `\raisebox{.15\baselineskip}{x}`: the second group
+            else if name == w!"raisebox" then
+              match rest with
+              | 123 :: r =>
+                match group 100000 0 r [] with
+                | some (_, r', k) =>
+                  let (r2, n2) := optArg r'
+                  let (r3, n3) := optArg r2
+                  lexAux macros f r3 (pos + n + 1 + k + n2 + n3) st out
+                | none => none
+              | _ => lexAux macros f rest (pos + n) st out
+            -- `\phantom{x}`, `\vphantom{x}`: nothing (space of the size of `x`)
+            else if name == w!"phantom" || name == w!"vphantom" || name == w!"hphantom" then
+              match rest with
+              | 123 :: r =>
+                match group 100000 0 r [] with
+                | some (_, r', k) => lexAux macros f r' (pos + n + 1 + k) st out
+                | none => none
+              | _ => lexAux macros f rest (pos + n) st out
+            -- `\mkern-2mu`, `\kern1pt`: a space, with its dimension
+            else if name == w!"mkern" || name == w!"kern" || name == w!"mskip" || name == w!"hskip" then
+              let (r1, k1) := dimen rest
+              lexAux macros f r1 (pos + n + k1) st out
+            -- `\cal M`, `{\cal M}`, `\bf x`, `\Bbb R`: the old font switches, as `\mathcal{M}`
+            else if (oldFont name).isSome then
+              let font := (oldFont name).getD name
+              let r := rest.dropWhile (· == 32)
+              let sp := rest.length - r.length
+              match r with
+              | c :: r' =>
+                if isLetter c then
+                  lexAux macros f r' (pos + n + sp + 1) st
+                    (⟨.rbrace, pos, math⟩ :: ⟨.mvar c, pos, math⟩ :: ⟨.lbrace, pos, math⟩ :: ⟨.cmd font, pos, math⟩ :: out)
+                else emit (.cmd font) rest n st
+              | [] => emit (.cmd font) rest n st
+            -- `\not\in`, `\not=`: `\notin`, `\neq`
+            else if name == w!"not" then
+              let r := rest.dropWhile (· == 32)
+              let sp := rest.length - r.length
+              if r.take 3 == w!"\\in" && !((r.drop 3).head?.any isLetter) then emit (.cmd w!"notin") (r.drop 3) (n + sp + 3) st
+              else if r.head? == some 61 then emit (.cmd w!"neq") (r.drop 1) (n + sp + 1) st
+              else emit (.cmd name) rest n st
             -- `\mathrel{:=}`, as many articles define `\defeq`
             else if name == w!"mathrel" && rest.take 4 == w!"{:=}" then
               emit (.cmd w!"coloneqq") (rest.drop 4) (n + 4) st
