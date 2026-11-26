@@ -236,6 +236,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| integrable | $[0,1]$ → ℝ | Lebesgue integrable on `[0,1]` (Mathlib `IntegrableOn`) |
 | uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
 | lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
 | constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
@@ -302,6 +303,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| integrable | $[0,1]$ → ℝ | Lebesgue integrable on `[0,1]` (Mathlib `IntegrableOn`) |
 | uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
 | lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
 | constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
@@ -373,6 +375,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| integrable | $[0,1]$ → ℝ | Lebesgue integrable on `[0,1]` (Mathlib `IntegrableOn`) |
 | uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
 | lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
 | constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
@@ -2243,6 +2246,7 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| integrable | $[0,1]$ → ℝ | Lebesgue integrable on `[0,1]` (Mathlib `IntegrableOn`) |
 | uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
 | lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
 | constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |

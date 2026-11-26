@@ -585,6 +585,11 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf? v).isSome then
         let k := ([w!"two", w!"three", w!"four", w!"five", w!"six", w!"seven", w!"eight", w!"nine", w!"ten"].idxOf v) + 2
         ⟨.mopen, t.pos, false⟩ :: ⟨.mnum k, t.pos, true⟩ :: ⟨.mclose, t.pos, false⟩ :: standardForms f there cond (some ⟨.mclose, t.pos, false⟩) ts
+      -- `$\sum a_n$ converges absolutely`: `… is absolutely convergent`
+      else if v == w!"converges" && afterMath && (match ts with
+          | a :: e :: _ => lw a == some w!"absolutely" && (match e.tok with | .punct _ => true | _ => false)
+          | _ => false) then
+        word w!"is" :: word w!"absolutely" :: word w!"convergent" :: standardForms f there cond (some t) (ts.drop 1)
       -- `either A or B`: `A or B`
       else if v == w!"either" && ts.any (fun p => lw p == some w!"or") then standardForms f there cond prev ts
       -- `NP can be written as a NP'`, `… can be expressed as …`: `NP is a NP'`
@@ -5022,6 +5027,11 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         if let .bigop true _ _ _ _ := s then
           if let (.guard (.and _ conv) _, _) ← subjTerm sc s then
             return (if w == w!"convergent" then conv else .not conv)
+    -- (`… converges absolutely`, `is absolutely convergent`: the series of the absolute values)
+    if names == [[w!"absolutely", w!"convergent"]] then
+      if let .bigop true v lo hi body := s then
+        if let (.guard (.and _ conv) _, _) ← subjTerm sc (.bigop true v lo hi (.abs body)) then
+          return conv
     unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
     let x ← subjTerm sc s
     -- a name the article does not define is an adjective of the vocabulary

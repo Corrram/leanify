@@ -310,6 +310,12 @@ def vocab : Vocab where
     { phrase := phrase!"continuous", prenominal := true, ty := I01 ⟶ .real,
       pred := .lam (I01 ⟶ .real) .tt (.app (.const continuous1) (.loc 0)),
       doc := "a continuous real function on `[0,1]` (Mathlib `Continuous`)" },
+    { phrase := phrase!"integrable", prenominal := true, ty := I01 ⟶ .real,
+      -- (the function of the numbers of `[0,1]`, `0` elsewhere: defined everywhere)
+      pred := fn1 (.app (.app (.prim .integrableOn) (.lam .real .tt (.cases (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))
+          (.app (.loc 1) (.app (.const point) (.loc 0))) (.num 0))))
+        (.lam .real .tt (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1))))),
+      doc := "Lebesgue integrable on `[0,1]` (Mathlib `IntegrableOn`)" },
     { phrase := phrase!"uniformly continuous", prenominal := true, ty := I01 ⟶ .real,
       pred := fn1 (.all .real (.imp (.lt (.num 0) (.loc 0)) (.ex .real (.and (.lt (.num 0) (.loc 0))
         (.all I01 (.all I01 (.imp (.lt (.abs (.sub (v1 (.loc 1)) (v1 (.loc 0)))) (.loc 2))

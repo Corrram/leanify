@@ -3966,10 +3966,26 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let bare : Option (List Chunk × List Chunk) := do
       let r1 ← kw [w!"be"] r
       if (kw [w!"a"] r1).isSome || (kw [w!"an"] r1).isSome || (kw [w!"the"] r1).isSome then none
-      let ws := r1.takeWhile (fun (c : Chunk) => match c with
-        | .w w => w != w!"with" && w != w!"such" && w != w!"and" && w != w!"given" && w != w!"defined" | .p 45 => true | _ => false)
+      -- (`and` between adjectives, `continuous and nonnegative`; not before another binder or a
+      -- hypothesis, `and let`, `and suppose`)
+      let rec words : Nat → List Chunk → List Chunk → List Chunk
+        | 0, _, acc => acc.reverse
+        | f + 1, cs, acc => match cs with
+          | .w w :: rest =>
+            if w == w!"with" || w == w!"such" || w == w!"given" || w == w!"defined" then acc.reverse
+            else if w == w!"and" then
+              match rest with
+              | .w n :: _ =>
+                if acc.isEmpty || [w!"let", w!"suppose", w!"assume", w!"that", w!"with", w!"such", w!"for"].contains n then acc.reverse
+                else words f rest (.w w :: acc)
+              | _ => acc.reverse
+            else words f rest (.w w :: acc)
+          | .p 45 :: rest => words f rest (.p 45 :: acc)
+          | _ => acc.reverse
+      let ws := words (r1.length + 1) r1 []
       if ws.isEmpty then none
-      some (ws, r1.drop ws.length)
+      -- (the adjectives before the noun, without `and`)
+      some (ws.filter (fun (c : Chunk) => match c with | .w w => w != w!"and" | _ => true), r1.drop ws.length)
     let adj := adj <|> bare
     match adj with
     | some (adjs, r2) => let post := postOf r2; some (.noun (adjs ++ [.w w!"map", .m ts] ++ post), r2.drop post.length)
