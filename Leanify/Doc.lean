@@ -1455,7 +1455,33 @@ def fnAdjectiveOn (t : Tm) (a : List Codes) (dom : Tm) : Option Tm :=
   else if a == [w!"lipschitz"] || a == [w!"lipschitz", w!"continuous"] then some (on (.fnProp .lipschitz))
   else if a == [w!"lower", w!"semicontinuous"] then some (on (.fnProp .lowerSemicont))
   else if a == [w!"upper", w!"semicontinuous"] then some (on (.fnProp .upperSemicont))
+  -- (`uniformly continuous`: for every `ε>0` a `δ>0` with `|f(x)-f(y)|<ε` at points of the
+  -- domain closer than `δ`; scope inside: `y`, `x`, `δ`, `ε`)
+  else if a == [w!"uniformly", w!"continuous"] then
+    let d (x : Tm) : Tm := .app (shift 4 0 dom) x
+    let f (x : Tm) : Tm := .app (shift 4 0 t) x
+    some (.all .real (.imp (.lt (.num 0) (.loc 0)) (.ex .real (.and (.lt (.num 0) (.loc 0))
+      (.all .real (.all .real (.imp (.and (d (.loc 1)) (.and (d (.loc 0)) (.lt (.abs (.sub (.loc 1) (.loc 0))) (.loc 2))))
+        (.lt (.abs (.sub (f (.loc 1)) (f (.loc 0)))) (.loc 3)))))))))
+  -- (`constant`: the same value at any two points of the domain)
+  else if a == [w!"constant"] then
+    some (.all .real (.all .real (.imp (.and (.app (shift 2 0 dom) (.loc 1)) (.app (shift 2 0 dom) (.loc 0)))
+      (.eq (.app (shift 2 0 t) (.loc 1)) (.app (shift 2 0 t) (.loc 0))))))
   else none
+
+/-- `fnAdjectiveOn`, and `nonX` (`non-constant`, `nonconstant`): not `X`, for the words
+that it reads other than `positive`, `negative`, `increasing` and `decreasing` (whose `non`
+words it reads itself). -/
+def fnAdjectiveOnNeg (t : Tm) (a : List Codes) (dom : Tm) : Option Tm :=
+  match fnAdjectiveOn t a dom with
+  | some p => some p
+  | none =>
+    match a.map Grammar.lower with
+    | [w] =>
+      let x := w.drop 3
+      if w.take 3 != w!"non" || [w!"positive", w!"negative", w!"increasing", w!"decreasing"].contains x then none
+      else (fnAdjectiveOn t [x] dom).map Tm.not
+    | _ => none
 
 /-- A property of a sequence `t` of real numbers (a real function whose terms are its values
 at the natural numbers), said of its terms: `increasing` (Mathlib `Monotone`), `strictly
@@ -1971,7 +1997,7 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if let some d := (← get).sigDom then
         if d != .lam .real .tt .tt then
           let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
-          if let some body := fnAdjectiveOn (.loc 0) words (shift 1 0 d) then return Tm.lam ty .tt body
+          if let some body := fnAdjectiveOnNeg (.loc 0) words (shift 1 0 d) then return Tm.lam ty .tt body
     match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (ms.map (·, [])) with
     | some (m, _) => slotPred m cs
     | none => fail E.type
@@ -4289,6 +4315,14 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
       | some (k, _) => sigCodomain sc k
       | none => pure none
     | _ => pure none
+  -- (of a real function on the domain of its signature, `$f$ is uniformly continuous` for
+  -- `f\colon[0,1]\to\mathbb{R}`: the property on that domain)
+  if x.2 == .fn .real .real then
+    if let some d := subjDom then
+      if d != .lam .real .tt .tt then
+        let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
+        if !ws.isEmpty && cs.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
+          if let some body := fnAdjectiveOnNeg x.1 ws d then return body
   -- (the noun phrase is read in the scope of the sentence, `$H$ is a subgroup of $G$`; its
   -- predicate is stated where its variable would be bound, one binder further in)
   modify fun st => { st with sigDomPreset := subjDom.map (shift 1 0), sigCodPreset := subjCod.map (shift 1 0) }

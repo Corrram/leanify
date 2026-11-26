@@ -11,7 +11,9 @@ tests/Calculus/article.tex:24:1: info: claim 6: \forall x\in \mathbb{R},\ \foral
 tests/Calculus/article.tex:28:1: info: claim 7: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}p}\tfrac{\mathrm{d}}{\mathrm{d}m}f(m,y)\big|_{m=p}\big|_{p=x})+(\tfrac{\mathrm{d}}{\mathrm{d}p}\tfrac{\mathrm{d}}{\mathrm{d}m}f(x,m)\big|_{m=p}\big|_{p=y})=2\,y
 tests/Calculus/article.tex:28:1: info: claim 8: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}a}\tfrac{\mathrm{d}}{\mathrm{d}w}f(a,w)\big|_{w=y}\big|_{a=x})=2\,x
 tests/Calculus/article.tex:32:1: info: claim 9: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (a\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}p}h(x,p,a)\big|_{p=y})(z)=x\,z
-tests/Calculus/article.tex: 3 definitions, 10 claims
+tests/Calculus/article.tex:36:78: info: claim 10: \forall x\in \mathbb{R}\to \mathbb{R},\ x\in \mathcal{D}^{2}\land (\forall s\in \mathbb{R},\ 0\le (\tfrac{\mathrm{d}}{\mathrm{d}b}\tfrac{\mathrm{d}}{\mathrm{d}w}x(w)\big|_{w=b}\big|_{b=s}))\Rightarrow \operatorname{nondecreasing}((y\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}s}x(s)\big|_{s=y}))\text{ on }\{z:\top\}
+tests/Calculus/article.tex:40:59: info: claim 11: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(y)\text{ on }\{s:\top\}\Rightarrow (z\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}t}x(t)\,y(t)\big|_{t=z})=(z\in \mathbb{R}\mapsto (\tfrac{\mathrm{d}}{\mathrm{d}b}x(b)\big|_{b=z})\,y(z)+x(z)\,(\tfrac{\mathrm{d}}{\mathrm{d}b}y(b)\big|_{b=z})))
+tests/Calculus/article.tex: 3 definitions, 12 claims
   text: 3 compiled, 0 failed, 0 prose (of 3)
-  results: 5 compiled, 0 failed, 0 prose (of 5)
-  all: 8 compiled, 0 failed, 0 prose (of 8)
+  results: 9 compiled, 0 failed, 0 prose (of 9)
+  all: 12 compiled, 0 failed, 0 prose (of 12)

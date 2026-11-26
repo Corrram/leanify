@@ -2013,6 +2013,18 @@ def moreWords (r : List Chunk) : Bool :=
   | .w w :: _ => w == w!"below" || w == w!"above"
   | _ => false
 
+/-- `v` is the index of a subscript in the formula (`a_n` for `n`). -/
+def mtIndexedBy (v : Codes) : Nat → MT → Bool
+  | 0, _ => false
+  | k + 1, m => match m with
+    | .sub b i => (match i with | .id w => w == v | _ => mtIndexedBy v k i) || mtIndexedBy v k b
+    | .sup b e => mtIndexedBy v k b || mtIndexedBy v k e
+    | .app g xs => mtIndexedBy v k g || xs.attach.any (fun ⟨x, _⟩ => mtIndexedBy v k x)
+    | .add x y | .minus x y | .mul x y | .div x y | .frac x y => mtIndexedBy v k x || mtIndexedBy v k y
+    | .neg x | .abs x => mtIndexedBy v k x
+    | .chain x rs => mtIndexedBy v k x || rs.attach.any (fun ⟨(_, y), _⟩ => mtIndexedBy v k y)
+    | _ => false
+
 /-- One clause, without its citations. Must be followed by a clause boundary. -/
 def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × List Chunk) :=
   match stmtClause cs with
@@ -2657,9 +2669,18 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           | _ => none) with
       | some res => some res
       | none =>
+      -- (a letter without a domain, `for all $x$`: a real number, or a natural number for an
+      -- index of a subscript, `a_n\ge0` for all `n`)
+      let bare (ts : List MTok) : Option (List Codes × MT) :=
+        let parts : List (List MTok) := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+        match parts.mapM (fun (p : List MTok) => match p with | [MTok.id v] => some v | _ => none) with
+        | some (v :: vs) =>
+          let nat := (v :: vs).all fun w => mtIndexedBy w 16 f
+          some (v :: vs, MT.id (if nat then w!"\\mathbb{N}" else w!"\\mathbb{R}"))
+        | _ => none
       let (vars, dom, r1) := match kw [w!"for", w!"every"] r <|> kw [w!"for", w!"all"] r with
         | some r' => match mathChunk r' with
-          | some (ts, r'') => match binderMath ts with
+          | some (ts, r'') => match binderMath ts <|> bare ts with
             | some (vs, d) => (vs, some d, r'')
             | none => ([], none, r)
           | none => ([], none, r)
@@ -3891,10 +3912,15 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     if names.length < 2 then none
     let r1 ← kw [w!"be"] r
     let ws := r1.takeWhile (fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false)
-    let _ ← match ws.getLast? with
-      | some (.w w) => if w == w!"functions" || w == w!"maps" then some () else none
-      | _ => none
-    let adjs := ws.dropLast
+    -- (or adjectives without a noun, `$f,g\colon\mathbb{R}\to\mathbb{R}$ be differentiable`)
+    let noun := match ws.getLast? with
+      | some (.w w) => w == w!"functions" || w == w!"maps"
+      | _ => false
+    let ws := if noun then ws else ws.takeWhile fun (c : Chunk) => match c with
+      | .w w => ![w!"with", w!"such", w!"and", w!"given", w!"defined", w!"a", w!"an", w!"the"].contains w
+      | _ => true
+    if ws.isEmpty then none
+    let adjs := if noun then ws.dropLast else ws
     let rec split : List MTok → List MTok → List (List MTok) → List (List MTok)
       | [], cur, acc => (cur.reverse :: acc).reverse
       | t :: rest, cur, acc => if t == .sym 44 then split rest [] (cur.reverse :: acc) else split rest (t :: cur) acc
@@ -5453,6 +5479,41 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
 
+/-- `Every bounded monotone sequence converges.`, `Every NP diverges`, `… vanishes …`, `…
+divides $n$`: as `For every NP $v$, $v$ converges.` (a verb of the third person, without a
+variable after the noun phrase: a fresh one). -/
+def everyVerbSent (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"every"] cs
+  let verbs : List Codes := [w!"converges", w!"diverges", w!"vanishes", w!"divides", w!"satisfies",
+    w!"attains", w!"admits", w!"lies", w!"belongs", w!"equals", w!"exceeds", w!"commutes"]
+  let i ← (List.range r.length).find? fun i => match (r[i]? : Option Chunk) with
+    | some (Chunk.w w) => verbs.contains w
+    | _ => false
+  let np := r.take i
+  if np.isEmpty then none
+  -- (`converges`, `diverges` as the text before reads them after a formula: `is convergent`,
+  -- `is converging to $l$`)
+  let tail : List Chunk := match r.drop i with
+    | .w v :: .w t :: rest => if v == w!"converges" && t == w!"to" then .w w!"is" :: .w w!"converging" :: .w t :: rest else r.drop i
+    | .w v :: rest =>
+      let atEnd := match rest with | [] | .p _ :: _ => true | _ => false
+      if (v == w!"converges" || v == w!"diverges") && atEnd then
+        .w w!"is" :: .w (if v == w!"converges" then w!"convergent" else w!"divergent") :: rest
+      else r.drop i
+    | _ => r.drop i
+  -- (a noun phrase of words, and possibly its variable at the end)
+  if !(np.dropLast.all fun c => match c with | .w _ | .p 45 => true | _ => false) then none
+  match np.getLast? with
+  | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ tail)
+  | some (.w _) =>
+    -- (a letter that the sentence does not use)
+    let used (c : Codes) : Bool := cs.any fun ch => match ch with
+      | .m ts => ts.contains (.id c)
+      | _ => false
+    let v ← [w!"x", w!"y", w!"z", w!"u", w!"w", w!"t", w!"s"].find? (!used ·)
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ tail)
+  | _ => none
+
 /-- `[Consequently,] [the functions] $\rho$, $\nu$, and $\eta$ are affine on $\mathcal C$.` as
 `$\rho$ is affine on $\mathcal C$ and $\nu$ is … and $\eta$ is ….`: what is said of several
 symbols is said of each. -/
@@ -5595,6 +5656,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
         | some s => some s
         | none =>
         match everyHasSent body >>= sentence0 with
+        | some s => some s
+        | none =>
+        match everyVerbSent body >>= sentence0 with
         | some s => some s
         | none =>
           match adjCommaSent cs >>= sentence0 with

@@ -119,6 +119,18 @@ def uniformly : List Codes := [w!"with", w!"respect", w!"to", w!"uniform", w!"co
 /-- A function on the square is a copula. -/
 def isCopula : Tm := .lam sq .tt (.and (.app (.const 0) (.loc 0)) (.app (.const 1) (.loc 0)))
 
+/-- A predicate of real functions on `[0,1]`, its function `loc 0` in `body`. -/
+def fn1 (body : Tm) : Tm := .lam (I01 ⟶ .real) .tt body
+
+/-- The real number of a point of `[0,1]`. -/
+def v1 (x : Tm) : Tm := .app (.const val) x
+
+/-- Monotone (`strict`: strictly; `down`: decreasing) real functions on `[0,1]`. -/
+def mono (strict down : Bool) : Tm :=
+  let hyp := if strict then Tm.lt (v1 (.loc 1)) (v1 (.loc 0)) else .le (v1 (.loc 1)) (v1 (.loc 0))
+  let (a, b) := if down then (Tm.app (.loc 2) (.loc 0), Tm.app (.loc 2) (.loc 1)) else (.app (.loc 2) (.loc 1), .app (.loc 2) (.loc 0))
+  fn1 (.all I01 (.all I01 (.imp hyp (if strict then .lt a b else .le a b))))
+
 def vocab : Vocab where
   types := [w!"[0,1]"]
   typeLean := [(w!"Leanify.UnitSquare.Interval", w!"Leanify.UnitSquare.Interval.zero")]
@@ -298,6 +310,37 @@ def vocab : Vocab where
     { phrase := phrase!"continuous", prenominal := true, ty := I01 ⟶ .real,
       pred := .lam (I01 ⟶ .real) .tt (.app (.const continuous1) (.loc 0)),
       doc := "a continuous real function on `[0,1]` (Mathlib `Continuous`)" },
+    { phrase := phrase!"uniformly continuous", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.all .real (.imp (.lt (.num 0) (.loc 0)) (.ex .real (.and (.lt (.num 0) (.loc 0))
+        (.all I01 (.all I01 (.imp (.lt (.abs (.sub (v1 (.loc 1)) (v1 (.loc 0)))) (.loc 2))
+          (.lt (.abs (.sub (.app (.loc 4) (.loc 1)) (.app (.loc 4) (.loc 0)))) (.loc 3))))))))),
+      doc := "for every `ε > 0` a `δ > 0` with `|f(x) - f(y)| < ε` where `|x - y| < δ` (Mathlib `UniformContinuous`)" },
+    { phrase := phrase!"Lipschitz", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.ex .real (.and (.le (.num 0) (.loc 0)) (.all I01 (.all I01
+        (.le (.abs (.sub (.app (.loc 3) (.loc 1)) (.app (.loc 3) (.loc 0)))) (.mul (.loc 2) (.abs (.sub (v1 (.loc 1)) (v1 (.loc 0)))))))))),
+      doc := "`|f(x) - f(y)| ≤ L|x - y|` for some `L ≥ 0` (Mathlib `LipschitzWith`)" },
+    { phrase := phrase!"constant", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.all I01 (.all I01 (.eq (.app (.loc 2) (.loc 1)) (.app (.loc 2) (.loc 0))))),
+      doc := "`f(x) = f(y)` for all `x`, `y`" },
+    { phrase := phrase!"bounded", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.ex .real (.all I01 (.le (.abs (.app (.loc 2) (.loc 0))) (.loc 1)))),
+      doc := "`|f(x)| ≤ M` for some `M` and all `x`" },
+    { phrase := phrase!"positive", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.all I01 (.lt (.num 0) (.app (.loc 1) (.loc 0)))), doc := "`f(x) > 0` for all `x`" },
+    { phrase := phrase!"nonnegative", prenominal := true, ty := I01 ⟶ .real,
+      pred := fn1 (.all I01 (.le (.num 0) (.app (.loc 1) (.loc 0)))), doc := "`f(x) ≥ 0` for all `x`" },
+    { phrase := phrase!"increasing", prenominal := true, ty := I01 ⟶ .real, pred := mono false false,
+      doc := "`f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`)" },
+    { phrase := phrase!"nondecreasing", prenominal := true, ty := I01 ⟶ .real, pred := mono false false,
+      doc := "`f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`)" },
+    { phrase := phrase!"strictly increasing", prenominal := true, ty := I01 ⟶ .real, pred := mono true false,
+      doc := "`f(x) < f(y)` for `x < y` (Mathlib `StrictMono`)" },
+    { phrase := phrase!"decreasing", prenominal := true, ty := I01 ⟶ .real, pred := mono false true,
+      doc := "`f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`)" },
+    { phrase := phrase!"nonincreasing", prenominal := true, ty := I01 ⟶ .real, pred := mono false true,
+      doc := "`f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`)" },
+    { phrase := phrase!"strictly decreasing", prenominal := true, ty := I01 ⟶ .real, pred := mono true true,
+      doc := "`f(x) > f(y)` for `x < y` (Mathlib `StrictAnti`)" },
     { phrase := phrase!"continuous", prenominal := true, ty := self,
       pred := .lam self .tt (.app (.const continuous1) (.lam I01 .tt (.app (.const val) (.app (.loc 1) (.loc 0))))),
       doc := "a continuous map of `[0,1]` to itself (Mathlib `Continuous`)" },

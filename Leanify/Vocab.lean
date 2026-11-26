@@ -618,26 +618,28 @@ def nonWords (src : List Codes) : List Codes :=
 
 /-- `V` with the adjectives `nonX` (also written `non-X`) of the words `ws`: the negation of
 each one-word modifier and adjective `X` whose negation the vocabulary does not name
-itself. `positive`, `negative`, `increasing` and `decreasing` are left out: their `non`
+itself for that type. `positive`, `negative`, `increasing` and `decreasing` are left out: their `non`
 words are no negations (`nonnegative`, `nondecreasing`), and the vocabulary has them where
 they are meant. -/
 def negations (V : Vocab) (ws : List Codes) : Vocab :=
   let kept := [w!"positive", w!"negative", w!"increasing", w!"decreasing"]
-  let ws := ws.filter fun w => !V.mods.any (·.phrase == [.w w]) && !V.adjectives.any (·.words == [w])
   if ws.isEmpty then V else
   let neg (ty : Ty) (p : Tm) : Tm := .lam ty .tt (.not (.app p (.loc 0)))
   let mods := ws.flatMap fun w =>
     let x := w.drop 3
     if kept.contains x then [] else
     V.mods.filterMap fun m =>
-      if m.phrase == [.w x] && !m.onDomain && !m.onCodomain then
+      -- (not where the vocabulary has the word for that type: `nonnegative`, `nonzero`)
+      if m.phrase == [.w x] && !m.onDomain && !m.onCodomain &&
+          !V.mods.any (fun m' => m'.phrase == [.w w] && m'.ty == m.ty) then
         some { m with phrase := [.w w], pred := neg m.ty m.pred, doc := s!"not {Codes.toString x}" }
       else none
   let adjs := ws.flatMap fun w =>
     let x := w.drop 3
     if kept.contains x then [] else
     V.adjectives.filterMap fun a =>
-      if a.words == [x] && !a.onDomain && !a.onCodomain then
+      if a.words == [x] && !a.onDomain && !a.onCodomain &&
+          !V.adjectives.any (fun a' => a'.words == [w] && a'.ty == a.ty) then
         some { a with words := [w], pred := neg a.ty a.pred }
       else none
   { V with mods := V.mods ++ mods, adjectives := V.adjectives ++ adjs }

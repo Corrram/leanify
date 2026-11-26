@@ -26,7 +26,9 @@ tests/Analysis/article.tex:61:65: info: claim 14: \forall x\in \mathbb{R}\to \ma
 tests/Analysis/article.tex:65:43: info: claim 15: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ 0\le s\land s\le 1\Rightarrow 0\le x(s)\land x(s)\le 1)\land \operatorname{continuous}(x)\text{ on }\{s:0\le s\land s\le 1\}\Rightarrow (\exists y\in \mathbb{R},\ ((0\le y\land y\le 1)\land x(y)=y)\land \top)
 tests/Analysis/article.tex:69:72: info: claim 16: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{s:0\le s\land s\le 1\}\land (\forall s\in \mathbb{R},\ 0\le s\land s\le 1\Rightarrow 0\le x(s))\Rightarrow 0\le x(1)
 tests/Analysis/article.tex:73:66: info: claim 17: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ x(z)\le 1)\Rightarrow x(0)\le 1
-tests/Analysis/article.tex: 4 definitions, 18 claims
+tests/Analysis/article.tex:77:47: info: claim 18: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{Lipschitz}(x)\text{ on }\{z:0\le z\land z\le 1\}\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (0\le s\land s\le 1)\land (0\le t\land t\le 1)\land \lvert s-t\rvert<z\Rightarrow \lvert x(s)-x(t)\rvert<y)))
+tests/Analysis/article.tex:81:90: info: claim 19: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ 0\le x(y))\Rightarrow 0\le x(1)
+tests/Analysis/article.tex: 4 definitions, 20 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 29 compiled, 0 failed, 0 prose (of 29)
-  all: 33 compiled, 0 failed, 0 prose (of 33)
+  results: 34 compiled, 0 failed, 0 prose (of 34)
+  all: 38 compiled, 0 failed, 0 prose (of 38)

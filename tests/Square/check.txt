@@ -186,9 +186,11 @@ tests/Square/article.tex:278:1: info: claim 74 is meaningful if: \forall x\in \m
 tests/Square/article.tex:280:1: info: claim 75: \forall x\in \mathbb{R}\to [0,1],\ x(1)\le 1
 tests/Square/article.tex:280:1: info: claim 75 is meaningful if: \forall x\in \mathbb{R}\to [0,1],\ 1\in \mathbb{N}
 tests/Square/article.tex:283:43: info: claim 76: \forall x\in [0,1]\to [0,1],\ \operatorname{Continuous}((z\in [0,1]\mapsto x(z)))\Rightarrow (\exists y\in [0,1],\ x(y)=y\land \top)
-tests/Square/article.tex: 35 definitions, 77 claims
+tests/Square/article.tex:287:47: info: claim 77: \forall x\in [0,1]\to \mathbb{R},\ (\exists z\in \mathbb{R},\ 0\le z\land (\forall s\in [0,1],\ \forall t\in [0,1],\ \lvert x(s)-x(t)\rvert\le z\,\lvert s-t\rvert))\Rightarrow (\forall z\in \mathbb{R},\ 0<z\Rightarrow (\exists s\in \mathbb{R},\ 0<s\land (\forall t\in [0,1],\ \forall a\in [0,1],\ \lvert t-a\rvert<s\Rightarrow \lvert x(t)-x(a)\rvert<z)))\land (\exists z\in \mathbb{R},\ \forall s\in [0,1],\ \lvert x(s)\rvert\le z)
+tests/Square/article.tex:291:61: info: claim 78: \forall x\in [0,1]\to \mathbb{R},\ \neg (\forall s\in [0,1],\ \forall t\in [0,1],\ x(s)=x(t))\Rightarrow \neg (\forall z\in [0,1],\ \forall s\in [0,1],\ x(z)=x(s))
+tests/Square/article.tex: 35 definitions, 79 claims
   text: 30 compiled, 0 failed, 32 prose (of 62)
-  results: 53 compiled, 0 failed, 0 prose (of 53)
+  results: 57 compiled, 0 failed, 0 prose (of 57)
   proofs: 3 compiled, 0 failed, 1 prose (of 4)
-  all: 86 compiled, 0 failed, 33 prose (of 119)
+  all: 90 compiled, 0 failed, 33 prose (of 123)
   complete proofs: 0 of 1 (a result is derived from a proof that is read completely)

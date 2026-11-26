@@ -236,6 +236,18 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
+| lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
+| constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
+| bounded | $[0,1]$ → ℝ | `\|f(x)\| ≤ M` for some `M` and all `x` |
+| positive | $[0,1]$ → ℝ | `f(x) > 0` for all `x` |
+| nonnegative | $[0,1]$ → ℝ | `f(x) ≥ 0` for all `x` |
+| increasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| nondecreasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| strictly increasing | $[0,1]$ → ℝ | `f(x) < f(y)` for `x < y` (Mathlib `StrictMono`) |
+| decreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| nonincreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| strictly decreasing | $[0,1]$ → ℝ | `f(x) > f(y)` for `x < y` (Mathlib `StrictAnti`) |
 | continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
@@ -290,6 +302,18 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
+| lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
+| constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
+| bounded | $[0,1]$ → ℝ | `\|f(x)\| ≤ M` for some `M` and all `x` |
+| positive | $[0,1]$ → ℝ | `f(x) > 0` for all `x` |
+| nonnegative | $[0,1]$ → ℝ | `f(x) ≥ 0` for all `x` |
+| increasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| nondecreasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| strictly increasing | $[0,1]$ → ℝ | `f(x) < f(y)` for `x < y` (Mathlib `StrictMono`) |
+| decreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| nonincreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| strictly decreasing | $[0,1]$ → ℝ | `f(x) > f(y)` for `x < y` (Mathlib `StrictAnti`) |
 | continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
@@ -349,6 +373,18 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
+| lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
+| constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
+| bounded | $[0,1]$ → ℝ | `\|f(x)\| ≤ M` for some `M` and all `x` |
+| positive | $[0,1]$ → ℝ | `f(x) > 0` for all `x` |
+| nonnegative | $[0,1]$ → ℝ | `f(x) ≥ 0` for all `x` |
+| increasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| nondecreasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| strictly increasing | $[0,1]$ → ℝ | `f(x) < f(y)` for `x < y` (Mathlib `StrictMono`) |
+| decreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| nonincreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| strictly decreasing | $[0,1]$ → ℝ | `f(x) > f(y)` for `x < y` (Mathlib `StrictAnti`) |
 | continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |
@@ -2191,6 +2227,18 @@ except a notion whose meanings take arguments of different types, which the type
 | with bounded density | $[0,1]$ → $[0,1]$ → ℝ | an absolutely continuous function on the square whose density is bounded: `C(u,v) = ∫₀ᵘ∫₀ᵛ c` for a bounded measurable `c` |
 | symmetric | $[0,1]$ → $[0,1]$ → ℝ | a function `C` on the square with `C(u,v) = C(v,u)` for all `u`, `v` (a copula that equals its transpose) |
 | continuous | $[0,1]$ → ℝ | a continuous real function on `[0,1]` (Mathlib `Continuous`) |
+| uniformly continuous | $[0,1]$ → ℝ | for every `ε > 0` a `δ > 0` with `\|f(x) - f(y)\| < ε` where `\|x - y\| < δ` (Mathlib `UniformContinuous`) |
+| lipschitz | $[0,1]$ → ℝ | `\|f(x) - f(y)\| ≤ L\|x - y\|` for some `L ≥ 0` (Mathlib `LipschitzWith`) |
+| constant | $[0,1]$ → ℝ | `f(x) = f(y)` for all `x`, `y` |
+| bounded | $[0,1]$ → ℝ | `\|f(x)\| ≤ M` for some `M` and all `x` |
+| positive | $[0,1]$ → ℝ | `f(x) > 0` for all `x` |
+| nonnegative | $[0,1]$ → ℝ | `f(x) ≥ 0` for all `x` |
+| increasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| nondecreasing | $[0,1]$ → ℝ | `f(x) ≤ f(y)` for `x ≤ y` (Mathlib `Monotone`) |
+| strictly increasing | $[0,1]$ → ℝ | `f(x) < f(y)` for `x < y` (Mathlib `StrictMono`) |
+| decreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| nonincreasing | $[0,1]$ → ℝ | `f(x) ≥ f(y)` for `x ≤ y` (Mathlib `Antitone`) |
+| strictly decreasing | $[0,1]$ → ℝ | `f(x) > f(y)` for `x < y` (Mathlib `StrictAnti`) |
 | continuous | $[0,1]$ → $[0,1]$ | a continuous map of `[0,1]` to itself (Mathlib `Continuous`) |
 | continuous | $[0,1]$ → $[0,1]$ → ℝ | a continuous real function on the square `[0,1]²` (Mathlib `Continuous` of the uncurried function) |
 | lebesgue measure preserving | $[0,1]$ → $[0,1]$ | a Borel measurable map `T` of `[0,1]` with `Leb(T⁻¹(B)) = Leb(B)` for every Borel set `B` (Mathlib `MeasurePreserving`) |

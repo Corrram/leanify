@@ -862,6 +862,16 @@ def gcdTm (a b : Tm) : Tm :=
         (.all .real (.imp (.and (dvdTm (.loc 0) (shift 2 0 a)) (dvdTm (.loc 0) (shift 2 0 b)))
           (dvdTm (.loc 0) (.loc 1))))))))
 
+/-- `\operatorname{lcm}(a,b)`: the natural number that `a` and `b` divide and that divides
+every common multiple (`\operatorname{lcm}(0,b)=0`); defined for integers. -/
+def lcmTm (a b : Tm) : Tm :=
+  let isInt (t : Tm) : Tm := .app (.prim .isInt) t
+  .guard (.and (isInt a) (isInt b))
+    (.the .real (.and (.app (.prim .isNat) (.loc 0))
+      (.and (dvdTm (shift 1 0 a) (.loc 0)) (.and (dvdTm (shift 1 0 b) (.loc 0))
+        (.all .real (.imp (.and (dvdTm (shift 2 0 a) (.loc 0)) (dvdTm (shift 2 0 b) (.loc 0)))
+          (dvdTm (.loc 1) (.loc 0))))))))
+
 /-- Standard constants and sets: `\pi`, `\emptyset`, `\mathbb{R}` and its rays. -/
 def builtinConst (n : Codes) : Option (Tm × Ty) :=
   if n == w!"\\pi" then some (.prim .pi, .real)
@@ -1626,6 +1636,14 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     | .mul x y => do
       -- `\operatorname{rank} T`, `\operatorname{tr} A` without parentheses: the method of
       -- that name, where the article defines no such symbol
+      -- (`\dim\operatorname{im}T`: the dimension of the image of `T`)
+      if let .app (.id g) [.id n] := x then
+        if (lookupLocal sc n).isNone && (← lookupGlob n).isNone && (← get).vocab.methods.any (·.op == .fn n) then
+          let st0 ← get
+          let r ← tryCatch (some <$> term f sc pf (.app (.id g) [.mul (.id n) y])) fun _ => pure none
+          match r with
+          | some v => return v
+          | none => set st0
       if let .id n := x then
         if (lookupLocal sc n).isNone && (← lookupGlob n).isNone && (← get).vocab.methods.any (·.op == .fn n) then
           let st0 ← get
@@ -2061,6 +2079,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | .id op, [x, y] =>
         if op == w!"\\gcd" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do
           pure (gcdTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
+        else
+        -- `\operatorname{lcm}(a,b)`, unless the article defines `lcm`
+        if (op == w!"lcm" || op == w!"\\lcm") && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do
+          pure (lcmTm (← asReal (← term f sc pf x)) (← asReal (← term f sc pf y)), .real)
         else
         if op == w!"\\cup" || op == w!"\\times" || op == w!"\\cap" || op == w!"\\setminus" then setOp f sc pf op x y
         -- `\psi\circ\varphi`: the composition of a vocabulary's type of maps
@@ -2775,6 +2797,14 @@ where
       if let (.id n, .id [39]) := (b, e) then
         if let some (i, .fn .real .real) := lookupLocal sc n then
           return (partialFn 1 0 (.loc i), Ty.rfun)
+      -- `f''`, `(fg)'`, `(f+g)'`: the derivative of a real function written as an expression
+      -- (of the derivative, of a sum or product of functions), defined where it exists
+      if (match e with | .id [39] => true | _ => false) && !(match b with | .id _ => true | _ => false) then
+        let st0 ← get
+        let r ← tryCatch (some <$> term f sc pf b) fun _ => pure none
+        match r with
+        | some (d, dty) => if dty == Ty.rfun then return (partialFn 1 0 d, Ty.rfun) else set st0
+        | none => set st0
       -- `e^x` is `\exp(x)`, unless the article names something `e` (a family `e_t`, which
       -- is written with its subscript, does not name the letter alone)
       let isE ← match b with
