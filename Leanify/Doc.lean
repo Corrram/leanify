@@ -1370,6 +1370,10 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
         ((ms.foldl (fun a b => MT.lor a b) m :: acc).reverse, r')
       | none =>
       match r with
+      -- (not before another binder with `be` left out, `… and $(b_n)$ a sequence with …`)
+      | .w w :: .m _ :: .w a :: _ =>
+        if w == w!"and" && (a == w!"a" || a == w!"an") then ((m :: acc).reverse, r)
+        else if w == w!"and" then condsOf f (r.drop 1) (m :: acc) else ((m :: acc).reverse, r)
       | .w w :: r' => if w == w!"and" then condsOf f r' (m :: acc) else ((m :: acc).reverse, r)
       | _ => ((m :: acc).reverse, r)
     | none => (acc.reverse, cs)
@@ -2626,12 +2630,17 @@ where
     let (vs, d) := match vs, multiIndex d with
       | [v], some (base, n) => ((List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, base)
       | _, _ => (vs, d)
-    -- (`x_1,\ldots,x_n\in\mathbb{R}` with a letter `n` that nothing defines: a number bound
-    -- with the sequence, before it)
+    -- (`x_1,\ldots,x_n\in\mathbb{R}` with a letter `n` that nothing defines, `Let $a<b$.`
+    -- with `b`: a number bound with the variables, before them)
     let st0 ← get
     let (ty, p, pre) ← tryCatch (do let (t, q) ← binderDomain vs d sc; pure (t, q, ([] : List BindInfo))) fun e => do
+      -- (also an end of an interval, `Let $a<b$.`: `b` a number bound before `a`)
       let some h := (match d with
           | .app (.id s) [_, .id h, _] => if s == w!"@seq" then some h else none
+          | .ival lo hi _ _ => match lo, hi with
+            | .id h, _ => if h == e.detail then some h else (match hi with | .id h' => some h' | _ => none)
+            | _, .id h => some h
+            | _, _ => none
           | _ => none) | throw e
       if !(e.code == E.undefined || e.code == E.free) || e.detail != h || sc.any (·.1 == h) then throw e
       set st0

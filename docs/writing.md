@@ -170,6 +170,10 @@ Further forms that the fields use (they are read for any vocabulary):
 | `$\gcd(a,b)\cdot\operatorname{lcm}(a,b)=ab$`, `$\dim\ker T+\dim\operatorname{im}T=\dim V$` | the least common multiple (a natural number, `0` if `a` or `b` is); an operator name after another applies to what follows (`\dim(\operatorname{im}(T))`) |
 | `Suppose that $f(x)\ge0$ for all $x$.`, `… for all $a_n$` | a letter without a domain after `for all`: a real number (a natural number where it is the index of a subscript) |
 | `Every bounded monotone sequence converges.`, `Every NP diverges`, `… vanishes`, `… divides $n$` | for every object of the noun phrase, the verb said of it |
+| `Let $a<b$ and let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$.` | the numbers `a`, `b` with `a<b` (a letter that only bounds the interval is bound with it), the map, then the hypothesis `Suppose that $f$ is continuous on $[a,b]$ and differentiable on $(a,b)$.` |
+| `Let $(a_n)$ be a sequence with $a_n\to s$ and $(b_n)$ a sequence with $b_n\to t$.`, `Then $a_n+b_n\to s+t$.` | two binders (`be` left out in the second); a limit of a term with a subscript, along its index |
+| `Every integer $n>1$ has a prime divisor.` | for every such `n` |
+| `$f$ has at most $n$ real roots`, `exactly`, `at least` (field `polynomials`) | the set of real roots is finite with at most `n` elements (the zero polynomial has infinitely many) |
 | `Then $n^2>n$ if $n$ is odd.`, `Then $\sqrt{n}$ is irrational if $n$ is not a perfect square.` | as `If $n$ is odd, then $n^2>n$.` (not `if and only if`, `only if`, `even if`) |
 | `Let $S$ be a finite set with $n$ elements.`, `Let $G$ be a group with $6$ elements.`, `every nonzero element of $K$ is invertible` | a finite set with `n` elements; a finite structure of order `n`; elements `a\ne0`, and with an inverse |
 | `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |

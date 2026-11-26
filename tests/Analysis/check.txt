@@ -28,7 +28,9 @@ tests/Analysis/article.tex:69:72: info: claim 16: \forall x\in \mathbb{R}\to \ma
 tests/Analysis/article.tex:73:66: info: claim 17: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ x(z)\le 1)\Rightarrow x(0)\le 1
 tests/Analysis/article.tex:77:47: info: claim 18: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{Lipschitz}(x)\text{ on }\{z:0\le z\land z\le 1\}\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ 0<z\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (0\le s\land s\le 1)\land (0\le t\land t\le 1)\land \lvert s-t\rvert<z\Rightarrow \lvert x(s)-x(t)\rvert<y)))
 tests/Analysis/article.tex:81:90: info: claim 19: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall y\in \mathbb{R},\ 0\le x(y))\Rightarrow 0\le x(1)
-tests/Analysis/article.tex: 4 definitions, 20 claims
+tests/Analysis/article.tex:85:103: info: claim 20: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\land \operatorname{differentiable}(z)\text{ on }\{s:y<s\land s<x\}\Rightarrow (\exists s\in \mathbb{R},\ (y<s\land s<x)\land (\tfrac{\mathrm{d}}{\mathrm{d}b}z(b)\big|_{b=s})=\frac{z(x)-z(y)}{x-y}))
+tests/Analysis/article.tex:85:103: info: claim 20 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ ((\forall s\in \mathbb{R},\ y\le s\land s\le x\Rightarrow y\le s\land s\le x)\land (\operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\Rightarrow (\forall s\in \mathbb{R},\ y<s\land s<x\Rightarrow y\le s\land s\le x)))\land (\operatorname{continuous}(z)\text{ on }\{s:y\le s\land s\le x\}\land \operatorname{differentiable}(z)\text{ on }\{s:y<s\land s<x\}\Rightarrow (\forall s\in \mathbb{R},\ y<s\land s<x\Rightarrow (\exists t\in \mathbb{R},\ ((a\in \mathbb{R}\mapsto z(a)))'(s)=t\text{ within }(a\in \mathbb{R}\mapsto \top)\land (\forall a\in \mathbb{R},\ ((b\in \mathbb{R}\mapsto z(b)))'(s)=a\text{ within }(b\in \mathbb{R}\mapsto \top)\Rightarrow a=t))\land \neg (x-y=0))))
+tests/Analysis/article.tex: 4 definitions, 21 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 34 compiled, 0 failed, 0 prose (of 34)
-  all: 38 compiled, 0 failed, 0 prose (of 38)
+  results: 36 compiled, 0 failed, 0 prose (of 36)
+  all: 40 compiled, 0 failed, 0 prose (of 40)

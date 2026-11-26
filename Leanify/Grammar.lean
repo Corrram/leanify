@@ -93,10 +93,15 @@ def seqLimitMT (ts : List MTok) : Option MT := do
   let j ← ts.findIdx? (· == .cmd w!"to")
   let a ← Math.parseFormula (ts.take j)
   let l ← Math.parseFormula (ts.drop (j + 1))
-  let v ← match a with
-    | .sub _ (.id n) => some n
-    | .sup (.sub _ (.id n)) _ => some n
-    | _ => none
+  let rec idx : Nat → MT → Option Codes
+    | 0, _ => none
+    | k + 1, m => match m with
+      | .sub _ (.id n) => some n
+      | .sup b e => idx k b <|> idx k e
+      | .add x y | .minus x y | .mul x y | .div x y | .frac x y => idx k x <|> idx k y
+      | .neg x | .abs x => idx k x
+      | _ => none
+  let v ← idx 12 a
   let c ← Math.parseFormula [.cmd w!"infty"]
   some (.app (.id w!"@tendsto") [.limit v c a, l])
 
@@ -4058,9 +4063,11 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _ => false
     -- (up to a comma or the end, not into the next binder `and let`)
     let upToNext (cs : List Chunk) : List Chunk :=
-      let k := (cs.zipIdx.find? fun (c, i) => match c, cs[i + 1]? with
-        | .w a, some (.w l) => a == w!"and" && l == w!"let"
-        | _, _ => false).map (·.2)
+      -- (or `and $(b_n)$ a sequence with …`: the next binder, with `be` left out)
+      let k := (cs.zipIdx.find? fun (c, i) => match c, cs[i + 1]?, cs[i + 2]? with
+        | .w a, some (.w l), _ => a == w!"and" && l == w!"let"
+        | .w a, some (.m _), some (.w d) => a == w!"and" && (d == w!"a" || d == w!"an")
+        | _, _, _ => false).map (·.2)
       (cs.take (k.getD cs.length)).takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
     let post := if tail.isEmpty && !opensPost then [] else upToNext rest
     if ws.isEmpty then none else
@@ -5475,6 +5482,12 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
   if np.isEmpty then none
   match np.getLast? with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
+  -- (a variable with a bound, `Every integer $n>1$ has …`)
+  | some (.m (.id v :: t :: _)) =>
+    if (Math.relOf t).isSome then some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
+    else
+      let v : Codes := w!"ve"
+      some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
   | _ =>
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
@@ -5955,6 +5968,32 @@ def partsOf (s : Sentence) : Option (List Sentence) := do
     let p2 := s.toks.drop (k + 1)
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := andSuppose then return ps.map fun ts => { s with toks := ts }
+  -- `Let $f\colon[a,b]\to\mathbb{R}$ be continuous on $[a,b]$ and differentiable on $(a,b)$.`:
+  -- the map, then the hypothesis `Suppose that $f$ is continuous on $[a,b]$ and …`
+  let sigOn : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    -- (the signature after a `let`, the first or a later one: `Let $a<b$ and let $f\colon…$ be …`)
+    let sigAt (j : Nat) : Bool :=
+      (s.toks[j]?.map (·.tok == .mopen)).getD false && j > 0 && (s.toks[j - 1]? >>= textWord) == some w!"let" &&
+        ((s.toks.drop (j + 1)).takeWhile (·.tok != .mclose)).any fun t => t.tok == .cmd w!"colon" || t.tok == .msym 58
+    let j ← (List.range s.toks.length).find? sigAt
+    let t1 ← s.toks[j]?
+    let body := (s.toks.drop (j + 1)).takeWhile (·.tok != .mclose)
+    let k := j + 1 + body.length
+    let ci ← body.findIdx? fun t => t.tok == .cmd w!"colon" || t.tok == .msym 58
+    let name := body.take ci
+    if name.isEmpty then none
+    if (s.toks[k + 1]? >>= textWord) != some w!"be" then none
+    let rest := s.toks.drop (k + 2)
+    let first ← rest.head? >>= textWord
+    if [w!"a", w!"an", w!"the"].contains first then none
+    if !(rest.any fun t => textWord t == some w!"on") then none
+    let pos := t1.pos
+    let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
+    let p1 := s.toks.take (k + 1) ++ [w w!"be", w w!"a", w w!"function", ⟨.punct 46, pos, false⟩]
+    let p2 := [w w!"suppose", w w!"that", t1] ++ name ++ [⟨.mclose, pos, true⟩, w w!"is"] ++ rest
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := sigOn then return ps.map fun ts => { s with toks := ts }
   -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
   -- hypothesis `Suppose that the order of $G$ is divisible by $p$.`
   let whose : Option (List (List PTok)) := do

@@ -622,6 +622,9 @@ except a notion whose meanings take arguments of different types, which the type
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
 | polynomial | ℝ → ℝ | given by a polynomial with real coefficients (Mathlib `Polynomial.eval`) |
+| with at most $x$ real roots | ℝ → ℝ | finitely many real roots, at most `n` |
+| with exactly $x$ real roots | ℝ → ℝ | exactly `n` real roots |
+| with at least $x$ real roots | ℝ → ℝ | at least `n` real roots (or infinitely many) |
 | monic | ℝ → ℝ | leading coefficient 1 (Mathlib `Polynomial.Monic`) |
 | with a real root | ℝ → ℝ | `p(x) = 0` for some real `x` |
 | without real roots | ℝ → ℝ | `p(x) ≠ 0` for every real `x` (also `has no real roots`) |

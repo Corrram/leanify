@@ -76,6 +76,16 @@ def vocab : Vocab where
   mods := [
     -- (`$f\colon\mathbb{R}\to\mathbb{R}$ be a polynomial function`: the function of the signature)
     mod phrase!"polynomial" true polyPred "given by a polynomial with real coefficients (Mathlib `Polynomial.eval`)",
+    -- (the real roots counted as a set: the zero polynomial has infinitely many)
+    mod phrase!"with at most $v$ real roots" false (close <| lamR fun n => lamT Ty.rfun (fun _ => tt) fun f =>
+        exR fun k => and (app2 (prim .cardIs) (lamR fun x => eq (app f x) (num 0)) k) (le k n))
+      "finitely many real roots, at most `n`",
+    mod phrase!"with exactly $v$ real roots" false (close <| lamR fun n => lamT Ty.rfun (fun _ => tt) fun f =>
+        app2 (prim .cardIs) (lamR fun x => eq (app f x) (num 0)) n)
+      "exactly `n` real roots",
+    mod phrase!"with at least $v$ real roots" false (close <| lamR fun n => lamT Ty.rfun (fun _ => tt) fun f =>
+        not (exR fun k => and (app2 (prim .cardIs) (lamR fun x => eq (app f x) (num 0)) k) (lt k n)))
+      "at least `n` real roots (or infinitely many)",
     mod phrase!"monic" true (withPoly monic) "leading coefficient 1 (Mathlib `Polynomial.Monic`)",
     mod phrase!"with a real root" false (close <| lamT Ty.rfun (fun _ => tt) fun f => and (poly f) (exR fun x => eq (app f x) (num 0)))
       "`p(x) = 0` for some real `x`",
