@@ -1199,9 +1199,13 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   -- (a singular noun is read where its variable is)
   if (kw [w!"a"] r).isSome || (kw [w!"an"] r).isSome then none else
   -- (`$n\times n$ matrices`, `$k$-regular graphs`: a formula before the noun)
-  let lead : List Chunk := match r with
-    | .m t :: .p 45 :: .w _ :: _ => [.m t, .p 45]
-    | .m t :: .w w :: _ => if t.contains (.cmd w!"times") || w == w!"times" then [.m t] else []
+  -- (after adjectives too: `invertible $n\times n$ matrices`)
+  let adjs := r.takeWhile fun c => match c with
+    | .w w => ![w!"with", w!"such", w!"then", w!"and", w!"of", w!"in", w!"on"].contains w
+    | _ => false
+  let lead : List Chunk := match r.drop adjs.length with
+    | .m t :: .p 45 :: .w _ :: _ => adjs ++ [.m t, .p 45]
+    | .m t :: .w w :: _ => if t.contains (.cmd w!"times") || w == w!"times" then adjs ++ [.m t] else []
     | _ => []
   let r := r.drop lead.length
   let ws := r.takeWhile fun c => match c with
