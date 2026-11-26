@@ -3533,7 +3533,7 @@ inductive Sent where
   /-- `We call a NOUN $x$ NAME [(ABBR)] if COND.`, `[A NOUN] $x$ is called NAME [(ABBR)]
   if COND.`, `$x$ is NAME (ABBR) if COND.`: a notion of the article. `subj` is the noun
   phrase with its variable, or the variable alone (the subject of the previous notion). -/
-  | defNotion (subj : List Chunk) (name : List Codes) (abbr : List Codes) (cond : NotionCond)
+  | defNotion (subj : List Chunk) (name : List Codes) (abbr : List Codes) (cond : NotionCond) (noun : Bool)
   /-- A notion whose condition the grammar does not read (`We call a copula $C$
   \emph{SI} if its Markov kernel can be chosen such that …`): prose, but its noun
   phrase is the subject of the notions that follow (`$C$ is \emph{LTD} if …`). -/
@@ -3798,7 +3798,7 @@ def notionDefWith (notionCond : List Chunk → Option NotionCond) (cs : List Chu
     let (np, r1) ← nounVar (article r)
     let (name, abbr, r2) ← nameAbbr r1
     let r3 ← kw [w!"if"] r2
-    withCond true np name abbr r3) <|>
+    withCond true false np name abbr r3) <|>
   (do
     -- (`We say that a NOUN $x$ is NAME if …`)
     let cs := (kw [w!"we", w!"say", w!"that"] cs).getD cs
@@ -3806,17 +3806,19 @@ def notionDefWith (notionCond : List Chunk → Option NotionCond) (cs : List Chu
     let (named, r2) ← ((kw [w!"is", w!"called"] r1 <|> kw [w!"is", w!"said", w!"to", w!"be"] r1).map (true, ·)) <|>
       ((kw [w!"is"] r1).map (false, ·))
     -- (`is called an involution`: the name of a kind of object)
-    let r2 := (kw [w!"a"] r2 <|> kw [w!"an"] r2).getD r2
+    let (noun, r2) := match kw [w!"a"] r2 <|> kw [w!"an"] r2 with
+      | some r => (true, r)
+      | none => (false, r2)
     let (name, abbr, r3) ← nameAbbr r2
     let r4 ← kw [w!"if"] r3
-    withCond named np name abbr r4)
+    withCond named noun np name abbr r4)
 where
   /-- The notion with its condition, or, when the condition is not read, the
   sentence is plainly a definition (`We call`, `is called`) and its subject is a
   noun phrase, the subject alone. -/
-  withCond (named : Bool) (np : List Chunk) (name abbr : List Codes) (r : List Chunk) : Option Sent :=
+  withCond (named noun : Bool) (np : List Chunk) (name abbr : List Codes) (r : List Chunk) : Option Sent :=
     match notionCond r with
-    | some cond => some (.defNotion np name abbr cond)
+    | some cond => some (.defNotion np name abbr cond noun)
     | none =>
       if named && np.length ≥ 2 && (kw [w!"and", w!"only", w!"if"] r).isNone then
         some (.notionSubject np)
@@ -5761,8 +5763,397 @@ def claimCond (r : List Chunk) : Option NotionCond := do
 def notionDefWide (cs : List Chunk) : Option Sent :=
   let (_, cs) := marker cs
   match notionDefWith (fun r => notionCond r <|> claimCond r) cs with
-  | some (.defNotion np name abbr cond) => some (.defNotion np name abbr cond)
+  | some (.defNotion np name abbr cond noun) => some (.defNotion np name abbr cond noun)
   | _ => none
+
+/-! ## The forms of a definition in words
+
+An article names a notion in many ways: `A NP $x$ is called NAME if COND.`, `We say that
+$x$ is NAME when COND.`, `If COND, then $x$ is said to be NAME.`, `A NP $x$ such that COND
+is called a NAME.`, `A NAME is a NP $x$ such that COND.`, `A NP is NAME provided COND.`
+(the subject without a variable: `it` in the condition). Each of them has a subject, a
+name and a condition: the parts of a `DefForm`, which is read as `SUBJECT is called NAME if
+COND.` A form without a verb that names (`is called`, `we say`, `is said to be`: `A NP $x$
+is NAME if COND`, `A NAME is a NP …`) is a definition only in a definition. -/
+
+/-- A definition of a notion in words, in the parts that every form of it has. -/
+structure DefForm where
+  /-- The subject: `[a] NOUN $x$` or `$x$`; of a subject without a variable (`a metric
+  space`), the noun phrase with a variable of its own. -/
+  subj : List Chunk
+  /-- The name, as the sentence writes it: words and hyphens, `(ABBR)`. -/
+  name : List Chunk
+  /-- `is called a NAME`: the name of a kind of object. -/
+  noun : Bool
+  /-- The condition, with the full stop; empty when the sentence gives none. -/
+  cond : List Chunk
+  deriving Repr, Inhabited
+
+namespace DefForm
+
+/-- `SUBJECT is called [a] NAME if COND.` -/
+def canon (f : DefForm) : List Chunk :=
+  f.subj ++ [.w w!"is", .w w!"called"] ++ (if f.noun then [.w w!"a"] else []) ++ f.name ++ [.w w!"if"] ++ f.cond
+
+/-- The verbs that name. -/
+def verbs : List (List Codes) :=
+  [[w!"is", w!"said", w!"to", w!"be"], [w!"are", w!"said", w!"to", w!"be"], [w!"will", w!"be", w!"said", w!"to", w!"be"],
+   [w!"is", w!"called"], [w!"are", w!"called"], [w!"will", w!"be", w!"called"], [w!"shall", w!"be", w!"called"],
+   [w!"is", w!"also", w!"called"], [w!"is", w!"then", w!"called"], [w!"is", w!"often", w!"called"],
+   [w!"is", w!"usually", w!"called"], [w!"is", w!"simply", w!"called"], [w!"is", w!"termed"], [w!"are", w!"termed"],
+   [w!"is", w!"known", w!"as"], [w!"are", w!"known", w!"as"], [w!"is", w!"referred", w!"to", w!"as"],
+   [w!"is", w!"defined", w!"to", w!"be"], [w!"is", w!"then", w!"said", w!"to", w!"be"]]
+
+/-- The words between the name and the condition. -/
+def conns : List (List Codes) :=
+  [[w!"if", w!"and", w!"only", w!"if"], [w!"if"], [w!"iff"], [w!"when"], [w!"whenever"], [w!"provided", w!"that"],
+   [w!"provided"], [w!"in", w!"case"], [w!"precisely", w!"when"], [w!"exactly", w!"when"], [w!"precisely", w!"if"],
+   [w!"exactly", w!"if"], [w!"as", w!"soon", w!"as"]]
+
+/-- The words that begin the condition of a relative clause. -/
+def rels : List (List Codes) :=
+  [[w!"such", w!"that"], [w!"satisfying"], [w!"with"], [w!"for", w!"which"], [w!"so", w!"that"], [w!"having"],
+   [w!"which", w!"satisfies"], [w!"that", w!"satisfies"], [w!"where"]]
+
+/-- The first place of `cs` where one of the phrases begins (the earliest phrase of the list
+there), and what follows the phrase. -/
+def firstAt (pats : List (List Codes)) (cs : List Chunk) : Option (Nat × List Chunk) :=
+  (List.range cs.length).findSome? fun i => pats.findSome? fun p => (kw p (cs.drop i)).map (i, ·)
+
+/-- `[a|an] NAME [(ABBR)]`, and nothing else: is the name of a kind of object, and the name. -/
+def nameOf (cs : List Chunk) : Option (Bool × List Chunk) :=
+  let (noun, r) := match kw [w!"a"] cs <|> kw [w!"an"] cs with
+    | some r => (true, r)
+    | none => (false, cs)
+  match nameAbbr r with
+  | some (_, _, []) => some (noun, r)
+  | _ => none
+
+/-- Words that only lead to the definition. -/
+def leads : List (List Codes) :=
+  [[w!"recall", w!"that"], [w!"here"], [w!"further"], [w!"now"], [w!"more", w!"generally"], [w!"in", w!"this", w!"case"],
+   [w!"as", w!"usual"], [w!"and"], [w!"in", w!"general"], [w!"accordingly"], [w!"henceforth"]]
+
+def stripLead : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, cs =>
+    match cs with
+    | .w v :: .r .cite _ :: r => if v == w!"following" then stripLead f (optPunct 44 r) else cs
+    | _ =>
+      match leads.findSome? (kw · cs) with
+      | some r => stripLead f (optPunct 44 r)
+      | none => cs
+
+/-- Without the citations of the sentence: `(cf. \cite{a})`, `, see \cite{a}`, `\cite{a}`. -/
+def dropCites : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | _, [] => []
+  | f + 1, c :: cs =>
+    let isCite (y : Chunk) : Bool := match y with | .r .cite _ => true | _ => false
+    match c with
+    | .p 40 =>
+      let inner := cs.takeWhile fun y => match y with | .p 41 => false | _ => true
+      if inner.length < cs.length && inner.length ≤ 8 && inner.any isCite then dropCites f (cs.drop (inner.length + 1))
+      else c :: dropCites f cs
+    | .p 44 =>
+      match cs with
+      | .w v :: y :: r => if (v == w!"see" || v == w!"cf") && isCite y then dropCites f r else c :: dropCites f cs
+      | _ => c :: dropCites f cs
+    | .w v =>
+      match cs with
+      | y :: r => if (v == w!"see" || v == w!"cf") && isCite y then dropCites f r else c :: dropCites f cs
+      | _ => c :: dropCites f cs
+    | _ => if isCite c then dropCites f cs else c :: dropCites f cs
+
+/-- The singular of a plural by rule: `classes`, `families`, `maps`. -/
+def singular (w : Codes) : Option Codes :=
+  match w.reverse with
+  | 115 :: 101 :: 105 :: r => some ((121 :: r).reverse)
+  | 115 :: 101 :: 115 :: 115 :: r => some ((115 :: 115 :: r).reverse)
+  | 115 :: 101 :: 120 :: r => some ((120 :: r).reverse)
+  | 115 :: 101 :: 104 :: r => some ((104 :: r).reverse)
+  | 115 :: 115 :: _ => none
+  | 115 :: r => if r.length < 3 then none else some r.reverse
+  | _ => none
+
+/-- A sentence without the adverbs inside its verb: `is then called`, `will also be said to
+be`. -/
+def dropAdverbs : List Chunk → List Chunk
+  | .w a :: .w b :: .w c :: r =>
+    if [w!"is", w!"are", w!"be", w!"will", w!"shall"].contains a &&
+        [w!"then", w!"also", w!"often", w!"usually", w!"simply", w!"sometimes", w!"commonly", w!"henceforth", w!"thus", w!"now"].contains b &&
+        [w!"called", w!"said", w!"termed", w!"be", w!"known", w!"referred"].contains c
+    then .w a :: dropAdverbs (.w c :: r) else .w a :: dropAdverbs (.w b :: .w c :: r)
+  | c :: r => c :: dropAdverbs r
+  | [] => []
+
+/-- A letter that the sentence does not use. -/
+def freshVar (cs : List Chunk) : Codes :=
+  let used : List Codes := cs.flatMap fun c => match c with
+    | .m ts | .d ts _ => ts.filterMap fun t => match t with | .id v => some v | _ => none
+    | _ => []
+  ([w!"X", w!"Y", w!"Z", w!"W", w!"V", w!"U", w!"T", w!"S", w!"Q", w!"P"].find? (!used.contains ·)).getD w!"X"
+
+/-- The words at which the noun phrase after `its` ends. -/
+def itsStops : List Codes :=
+  [w!"is", w!"are", w!"has", w!"have", w!"acts", w!"act", w!"satisfies", w!"satisfy", w!"coincides", w!"equals",
+   w!"contains", w!"exists", w!"converges", w!"vanishes", w!"lies", w!"belongs", w!"admits", w!"does", w!"can",
+   w!"and", w!"or", w!"if", w!"of", w!"in", w!"on", w!"with", w!"for", w!"to", w!"its", w!"it"]
+
+/-- `it` as the variable of the subject, `its WORDS` as `the WORDS of` it. -/
+def resolveIt (v : Codes) : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | _, [] => []
+  | f + 1, .w w :: cs =>
+    if w == w!"it" then .m [.id v] :: resolveIt v f cs
+    else if w == w!"its" then
+      let ws := cs.takeWhile fun c => match c with
+        | .w u => !itsStops.contains u
+        | .p 45 => true
+        | _ => false
+      if ws.isEmpty then .w w :: resolveIt v f cs
+      else [.w w!"the"] ++ ws ++ [.w w!"of", .m [.id v]] ++ resolveIt v f (cs.drop ws.length)
+    else .w w :: resolveIt v f cs
+  | f + 1, c :: cs => c :: resolveIt v f cs
+
+/-- The subject of a definition, where `cs` is nothing else: `[a|an] NOUN $x$`, `$x$`; or
+`[a|an|the|such a|this|any|every] NOUN`, without a variable (then: the variable it is given). -/
+def subjectOf (fresh : Codes) (cs : List Chunk) : Option (List Chunk × Option Codes) :=
+  let art := (kw [w!"a"] cs <|> kw [w!"an"] cs).getD cs
+  match nounVar art with
+  | some (np, []) => some (np, none)
+  | _ =>
+    let r := ([[w!"such", w!"a"], [w!"such", w!"an"], [w!"a"], [w!"an"], [w!"the"], [w!"this"], [w!"any"], [w!"every"]].findSome?
+      (kw · cs)).getD cs
+    let words := r.all fun c => match c with
+      | .w v => !notionStops.contains v
+      | .p 45 => true
+      | _ => false
+    if r.isEmpty || !words || r.length > 5 then none else some (r ++ [.m [.id fresh]], some fresh)
+
+/-- The forms of the sentence as a definition, the likeliest first. `inDef`: the sentence is
+in a definition, where `A NP $x$ is NAME if COND` and `A NAME is a NP $x$ such that COND`
+define too. -/
+def forms (inDef : Bool) (cs0 : List Chunk) : List DefForm :=
+  let (_, cs) := marker cs0
+  let cs := dropAdverbs (dropCites (cs.length + 1) (stripLead 4 cs))
+  let fresh := freshVar cs
+  let noStop (r : List Chunk) : List Chunk := match r.getLast? with
+    | some (.p 46) => r.dropLast
+    | _ => r
+  let withIt (v : Option Codes) (cond : List Chunk) : List Chunk := match v with
+    | some v => resolveIt v (cond.length + 1) cond
+    | none => cond
+  -- `We call SUBJECT NAME if COND.`
+  let weCall : Option DefForm := do
+    let r ← [[w!"we", w!"call"], [w!"we", w!"will", w!"call"], [w!"we", w!"shall", w!"call"], [w!"let", w!"us", w!"call"]].findSome? (kw · cs)
+    let (np, r1) ← nounVar ((kw [w!"a"] r <|> kw [w!"an"] r).getD r)
+    let (j, r2) ← firstAt conns r1
+    let (noun, name) ← nameOf (r1.take j)
+    some { subj := np, name, noun, cond := r2 }
+  -- the sentence after `We say that`
+  let said : Option (List Chunk) := [[w!"we", w!"say", w!"that"], [w!"we", w!"say"], [w!"we", w!"will", w!"say", w!"that"],
+    [w!"we", w!"shall", w!"say", w!"that"], [w!"one", w!"says", w!"that"]].findSome? (kw · cs)
+  let body := said.getD cs
+  -- `BEFORE is called NAME …`, with the verb that names; or, after `We say that` and in a
+  -- definition, `BEFORE is NAME …`
+  let atVerb (pats : List (List Codes)) : List DefForm :=
+    match firstAt pats body with
+    | none => []
+    | some (i, after) =>
+      let before := body.take i
+      -- `SUBJECT is called NAME if COND.`; without a condition last (the name alone)
+      let plain : List DefForm := match subjectOf fresh before with
+        | none => []
+        | some (np, v) =>
+          (match firstAt conns after with
+            | some (j, r2) => (match nameOf (after.take j) with
+              | some (noun, name) => [{ subj := np, name, noun, cond := withIt v r2 }]
+              | none => [])
+            | none => []) ++
+          (match nameOf (noStop after) with
+            | some (noun, name) => [{ subj := np, name, noun, cond := [] }]
+            | none => [])
+      -- `A NP $x$ such that COND is called [a] NAME.`
+      let relative : List DefForm := (do
+        let (np, r) ← nounVar ((kw [w!"a"] before <|> kw [w!"an"] before).getD before)
+        let r1 ← rels.findSome? (kw · (optPunct 44 r))
+        if r1.isEmpty then none
+        let (noun, name) ← nameOf (noStop after)
+        some ({ subj := np, name, noun, cond := r1 ++ [Chunk.p 46] } : DefForm)).toList
+      plain.take 1 ++ relative ++ plain.drop 1
+  -- `If COND, [then] [we say that] SUBJECT is called NAME.` (`is NAME`, after `we say that`
+  -- and in a definition)
+  let condFirst : List DefForm := (do
+    let r ← [[w!"if"], [w!"when"], [w!"whenever"]].findSome? (kw · cs)
+    -- (the clause that names, after the last comma that leaves one)
+    (List.range r.length).reverse.findSome? fun k =>
+      match (r[k]? : Option Chunk) with
+      | some (Chunk.p 44) =>
+        if k == 0 then none else
+        let s := r.drop (k + 1)
+        let s := (kw [w!"then"] s).getD s
+        let (s, weSay) := match [[w!"we", w!"say", w!"that"], [w!"we", w!"say"]].findSome? (kw · s) with
+          | some s' => (s', true)
+          | none => (s, false)
+        match firstAt verbs s <|> (if weSay || inDef then firstAt [[w!"is"]] s else none) with
+        | none => none
+        | some (i, after) =>
+          match subjectOf fresh (s.take i), nameOf (noStop after) with
+          | some (np, v), some (noun, name) =>
+            let cond := r.take k
+            -- (`If a group $G$ is abelian, then $G$ is called NAME`: the subject is the noun
+            -- phrase of the condition)
+            let (np, cond) : List Chunk × List Chunk := match np with
+              | [Chunk.m [.id x]] =>
+                ((List.range cond.length).findSome? fun i =>
+                  match kw [w!"a"] (cond.drop i) <|> kw [w!"an"] (cond.drop i) with
+                  | some r1 => match nounVar r1 with
+                    | some (np', r2) =>
+                      if np'.length ≥ 2 && (np'.getLast?.any fun c => match c with | Chunk.m [.id y] => y == x | _ => false)
+                      then some (np', cond.take i ++ [Chunk.m [.id x]] ++ r2) else none
+                    | none => none
+                  | none => none).getD (np, cond)
+              | _ => (np, cond)
+            some ({ subj := np, name, noun, cond := withIt v (cond ++ [Chunk.p 46]) } : DefForm)
+          | _, _ => none
+      | _ => none).toList
+  let named := atVerb verbs
+  let byIs := if said.isSome || inDef then atVerb [[w!"is"]] else []
+  -- `A NAME is a NP $x$ such that COND.` (`By a NAME we mean a NP …`, `We define a NAME to be
+  -- a NP …`)
+  let nounDef : Option DefForm := do
+    let (r, sure) ← ((kw [w!"by"] cs).map (·, true)) <|> ((kw [w!"we", w!"define"] cs).map (·, true)) <|> some (cs, false)
+    if !(sure || inDef) then none
+    let r ← kw [w!"a"] r <|> kw [w!"an"] r
+    let (i, after) ← firstAt (if sure then [[w!"we", w!"mean", w!"a"], [w!"we", w!"mean", w!"an"], [w!"to", w!"be", w!"a"],
+      [w!"to", w!"be", w!"an"], [w!"as", w!"a"], [w!"as", w!"an"]] else [[w!"is", w!"a"], [w!"is", w!"an"]]) r
+    let (_, name) ← nameOf (r.take i)
+    let (np, r1) ← nounVar after
+    let r2 ← rels.findSome? (kw · (optPunct 44 r1))
+    some { subj := np, name, noun := true, cond := r2 }
+  weCall.toList ++ condFirst ++ named ++ byIs ++ nounDef.toList
+
+/-- What a sentence that names a notion says of it, where its condition (or its subject) is
+not read: the words of the kind of object that it is about (`geodesic space`; none, when
+the subject is a formula alone), whether they follow an article (`A NP`, `the NP`; or are a plural),
+the name, and whether the name is of a kind of object (`is called a NAME`). -/
+structure Shape where
+  genus : List Codes
+  indefinite : Bool
+  name : List Codes
+  noun : Bool
+  deriving Repr, Inhabited
+
+/-- Words that are not part of a name. -/
+def nameStops : List Codes :=
+  notionStops ++ [w!"provided", w!"iff", w!"precisely", w!"exactly", w!"denoted", w!"written", w!"which", w!"that",
+    w!"where", w!"see", w!"cf", w!"respectively", w!"resp", w!"over", w!"between", w!"under", w!"it", w!"its", w!"this",
+    w!"these", w!"such", w!"we", w!"also", w!"simply", w!"called", w!"said", w!"has", w!"have", w!"be", w!"following",
+    w!"whose", w!"their", w!"his", w!"her", w!"our", w!"those", w!"both", w!"will", w!"shall", w!"then"]
+
+/-- The shapes of the sentence as one that names a notion (`… SUBJECT is called [a] NAME …`,
+`we call SUBJECT [a] NAME`), read more freely than `forms`: the subject after the last comma
+before the verb, `[a|an|the|any|every|such a] WORDS [$x$] [of …]`; the name, up to the
+first word that is not of a name. -/
+def shapes (cs0 : List Chunk) : List Shape :=
+  let (_, cs) := marker cs0
+  let cs := dropAdverbs (dropCites (cs.length + 1) (stripLead 4 cs))
+  let dets : List (List Codes × Bool) :=
+    [([w!"such", w!"a"], true), ([w!"such", w!"an"], true), ([w!"a"], true), ([w!"an"], true), ([w!"any"], true),
+     ([w!"every"], true), ([w!"each"], true), ([w!"the"], true), ([w!"this"], true)]
+  -- the words of the kind of object at the start of a subject, and whether they introduce one
+  let genusOf (s : List Chunk) : Option (List Codes × Bool × List Chunk) :=
+    let (s, indef) := match dets.findSome? (fun (d, i) => (kw d s).map (·, i)) with
+      | some r => r
+      | none => (s, false)
+    let ws := s.takeWhile fun c => match c with
+      | .w v => !nameStops.contains v
+      | .p 45 => true
+      | _ => false
+    let words := ws.map fun c => match c with | .w v => v | _ => w!"-"
+    if (words.filter (· != w!"-")).length > 4 || words.head? == some w!"-" || words.getLast? == some w!"-" then none
+    else some (words, indef, s.drop ws.length)
+  -- the name at the start of `r`
+  let nameAt (r : List Chunk) : Option (Bool × List Codes) :=
+    let (noun, r) := match kw [w!"a"] r <|> kw [w!"an"] r with
+      | some r' => (true, r')
+      | none => (false, r)
+    let ws := r.takeWhile fun c => match c with
+      | .w v => !nameStops.contains v
+      | .p 45 => true
+      | _ => false
+    let name := ws.map fun c => match c with | .w v => v | _ => w!"-"
+    let n := (name.filter (· != w!"-")).length
+    if n == 0 || n > 5 || name.head? == some w!"-" || name.getLast? == some w!"-" then none else
+    -- (a formula right after the words belongs to the name: `$n$-th syzygy`, not read)
+    match r.drop ws.length with
+    | .m _ :: _ => none
+    | .p 45 :: _ => none
+    | _ => some (noun, name)
+  let afterLast (before : List Chunk) : List Chunk :=
+    let k := (List.range before.length).reverse.find? fun i => match (before[i]? : Option Chunk) with
+      | some (Chunk.p 44) | some (Chunk.p 59) | some (Chunk.p 58) => true
+      | some (Chunk.w v) => v == w!"then" || v == w!"that" || v == w!"and"
+      | _ => false
+    match k with
+    | some i => before.drop (i + 1)
+    | none => before
+  -- (each verb that names: `…, and $B$ is said to be NAME' if …`)
+  let byVerb : List Shape := (List.range cs.length).filterMap fun i => do
+    let after ← verbs.findSome? fun p => kw p (cs.drop i)
+    let subj := afterLast (cs.take i)
+    let (genus, indef, rest) ← genusOf subj
+    -- (`Finite-dimensional algebras $A$ with … are called …`: the objects of the plural)
+    let plural := (kw [w!"are"] (cs.drop i)).isSome
+    let (genus, indef) : List Codes × Bool :=
+      if !plural then (genus, indef) else
+      match genus.getLast? with
+      | some w => (match singular w with
+          | some w' => (genus.dropLast ++ [w'], true)
+          | none => (genus, indef))
+      | none => (genus, indef)
+    -- (after the words: the variable, and what is said of it; no second formula alone)
+    let okRest := match rest with
+      | [] => !genus.isEmpty
+      | [.m _] => true
+      | .m _ :: .w v :: _ => [w!"of", w!"in", w!"on", w!"over", w!"with", w!"such", w!"satisfying", w!"from", w!"for",
+          w!"at", w!"whose", w!"which", w!"that"].contains v
+      | .w v :: _ => !genus.isEmpty && [w!"of", w!"in", w!"on", w!"over", w!"with", w!"such", w!"satisfying", w!"whose"].contains v
+      | _ => false
+    if !okRest then none
+    let (noun, name) ← nameAt after
+    -- (`These maps are called pullbacks`: the name of a kind of object, in the plural)
+    let (noun, name) : Bool × List Codes :=
+      if !plural || noun then (noun, name) else
+      match name.getLast? >>= singular with
+      | some w' => if (name.getLast?.any fun w => w.reverse.take 3 == [115, 117, 111] || w.reverse.take 2 == [115, 117]) then (noun, name)
+          else (true, name.dropLast ++ [w'])
+      | none => (noun, name)
+    some ({ genus, indefinite := indef, name, noun } : Shape)
+  let byCall : List Shape := (do
+    let r ← [[w!"we", w!"call"], [w!"we", w!"will", w!"call"], [w!"we", w!"shall", w!"call"]].findSome? (kw · cs)
+    let (genus, indef, rest) ← genusOf r
+    match rest with
+    | .m _ :: r1 =>
+      let (noun, name) ← nameAt r1
+      some ({ genus, indefinite := indef, name, noun } : Shape)
+    | _ => none).toList
+  byVerb ++ byCall
+
+end DefForm
+
+/-- A sentence that one of the forms of a definition reads, with its condition: the reading
+of a sentence that is otherwise not read, or whose reading does not compile. -/
+def defAlt (s : Sentence) : Option Sent := do
+  if s.ctx.kind == .proof then none
+  let cs ← chunks (s.toks.length + 1) s.toks []
+  let inDef := match s.ctx.kind with | .result e => e.take 3 == w!"def" | _ => false
+  (DefForm.forms inDef cs).findSome? fun f => if f.cond.isEmpty then none else notionDefWide f.canon
+
+/-- A sentence that one of the forms of a definition reads, with its condition. -/
+def defSentence (inDef : Bool) (cs : List Chunk) : Option Sent :=
+  (DefForm.forms inDef cs).findSome? fun f => if f.cond.isEmpty then none else notionDefWide f.canon
 
 def sentence1 (cs : List Chunk) : Option Sent :=
   -- (`Then CLAUSE if CLAUSE'.`: the condition first, before the words after `is` would take it)
@@ -5916,7 +6307,15 @@ def parseSentence (s : Sentence) : Option Sent := do
       if rest.all (fun p => match p.tok with | .word _ | .punct _ => true | _ => false) then some .organizes
       else sentence (← chunks (rest.length + 1) rest [])
     else sentence (← chunks (s.toks.length + 1) s.toks [])
-  | _ => sentence (← chunks (s.toks.length + 1) s.toks [])
+  | _ =>
+    let cs ← chunks (s.toks.length + 1) s.toks []
+    -- (the forms of a definition, where the sentence is otherwise not read; not in a proof)
+    let inDef := match s.ctx.kind with | .result e => e.take 3 == w!"def" | _ => false
+    let define (_ : Unit) : Option Sent := if s.ctx.kind == .proof then none else defSentence inDef cs
+    match sentence cs with
+    | some (.notionSubject np) => (define ()).orElse fun _ => some (.notionSubject np)
+    | none => define ()
+    | r => r
 
 
 /-! ## Sentences of several parts

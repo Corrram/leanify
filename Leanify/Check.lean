@@ -908,7 +908,7 @@ open Lean (Json toJson) in
 /-- The check as JSON, for tools: the findings, every sentence with its place, its
 text and its outcome, the definitions, the claims with their readings, and the proofs. -/
 def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : List String)
-    (cov : Coverage) : Json := Id.run do
+    (cov : Coverage) (taken : List String := []) : Json := Id.run do
   let lines := src.lines.toList
   let all := (joinLines lines).toArray
   let starts := lineStarts lines
@@ -957,7 +957,8 @@ def checkJson (V : Vocab) (path : String) (src : SourceFiles) (d : Doc) (out : L
     ("sentences", Json.arr sents), ("definitions", Json.arr defs.toArray),
     ("claims", Json.arr claims.toArray), ("proofs", Json.arr proofs.toArray),
     ("coverage", Json.mkObj (rows ++ [("proofsTotal", toJson cov.proofs), ("proofsComplete", toJson cov.complete)])),
-    ("notDefined", toJson (notDefinedHere V d)), ("nounCandidates", toJson (nounCandidates V cov 1000))]
+    ("notDefined", toJson (notDefinedHere V d)), ("takenAsGiven", toJson taken),
+    ("nounCandidates", toJson (nounCandidates V cov 1000))]
 
 /-- Compile the article at `path` natively, with the files it inputs, and print its
 diagnostics (as JSON with `json`). Returns the number of sentences that failed to
@@ -987,7 +988,9 @@ def checkArticle (V : Vocab) (path : System.FilePath) (prose claims : Bool := fa
   | some d =>
     let origin (l : Nat) : String × Nat := src.origin[l - 1]?.getD (path.toString, l)
     let (out, cov) := diagnostics V path.toString lines d prose (claims || defined) origin defined
-    if json then IO.println (checkJson V path.toString src d out cov).compress
+    if json then
+      let name (d : Declared) : String := Codes.toString ((d.words.intersperse [32]).flatten) |>.replace " - " "-"
+      IO.println (checkJson V path.toString src d out cov (own.map name)).compress
     else
       for l in out do IO.println l
       IO.println s!"{path}: {d.globs.length} definitions, {d.claims.length} claims\n{cov.render}"

@@ -11,3 +11,4 @@ tests/Notions/article.tex: 3 definitions, 6 claims
   text: 3 compiled, 0 failed, 3 prose (of 6)
   results: 7 compiled, 0 failed, 0 prose (of 7)
   all: 10 compiled, 0 failed, 3 prose (of 13)
+tests/Notions/article.tex: defined here in sentences that are not read, and taken as given (what is stated about them is read, and holds whatever they mean): stochastically increasing copula

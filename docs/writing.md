@@ -483,6 +483,7 @@ abbreviation after a `where`. Leanify reads these where they stand.
 | a notion of an object | `We call a NOUN $F$ \emph{dominating} (\emph{DOM}) if $F(u,v)\ge uv$ for all $u,v\in[0,1]$.` (the abbreviation in parentheses is optional, and the notion may then be used by either name) |
 | a notion by a monotone map | `A NOUN $F$ is called \emph{ray-monotone} (\emph{RM}) if, for every $v\in[0,1]$, the map \begin{equation}u\longmapsto\frac{F(u,v)}{u},\qquad u\in(0,1],\end{equation} is non-increasing.` (`the map` may be left out: `$F$ is \emph{RM} if, for every $v\in(0,1)$, DISPLAY is non-increasing.`) |
 | a notion by a clause | `A group $G$ is called \emph{nice} if $G$ is abelian.`, `We say that a group $G$ is \emph{boolean} if $g^2=1$ for all $g\in G$.`, `Let $G$ be a group. An element $g\in G$ is called an \emph{involution} if …` (a notion of objects of the result's variables, `G`: an object is an involution if it is one for some group `G` it belongs to; `let $g\in G$ be an involution` uses it; the condition is any clause about the subject, or several joined by `and`; the binders after it may use it, and `for all distinct $x,y\in X$` asks `x\neq y`) |
+| the forms of such a definition | The same notion, however the sentence is built: `A group $G$ is called \emph{agreeable} when $G$ is abelian.` (`when`, `whenever`, `provided [that]`, `if and only if`, `iff`, `in case`); `We say that a group $G$ is \emph{good} provided that …` (`we call`, `is said to be`, `is termed`, `is known as`, `will be called`, with `then`, `also`, `often` inside the verb); `If a group $G$ is abelian, then we say that $G$ is \emph{fine}.` (the condition first); `A group $G$ such that $G$ is abelian is called a \emph{calm group}.` (`such that`, `satisfying`, `with`, `for which`); `A \emph{quiet group} is a group $G$ such that …`, `By a \emph{tiny number} we mean a real number $x$ such that $x<0$.` (the name first: a kind of object, `let $G$ be a quiet group`, `every quiet group`); `A group is said to be \emph{mild} if it is abelian.` (the subject without a variable: `it`, and `its NOUN` for `the NOUN of` it); `Let $G$ be a group and let $H$ be a subgroup of $G$. Then $H$ is called \emph{wide} if $[G:H]=2$.` (a notion of a variable of the result: an object is wide if it is, for some values of the other variables). Words that only lead to it are skipped (`Recall that`, `Here,`, `Following \cite{a},`), and so are its citations (`(cf. \cite{b})`) and `\index{…}`. Without a verb that names (`A group $G$ is \emph{nice} if …`, `A \emph{NAME} is a NP …`) the sentence is a definition only in a definition |
 | the same subject again | `Similarly, $F$ is called \emph{NAME} (\emph{ABBR}) if …` (`$F$` is the NOUN of the previous notion) |
 | using a notion | `Every RM NOUN is DOM.`, `Let $F$ be an RM NOUN, and let $u,v\in[0,1]$.`, `For every RM NOUN $F$, …`, `If $F$ is an RM NOUN, then …`, `Every RM NOUN $F$ satisfies $F(u,v)\ge uv$ for all $u,v\in[0,1]$.`, `$F$ is RM`, `both RM and DOM` |
 | symbols inside a result | `Let $a,b\in(0,\infty)$, and let $A\coloneqq\frac{a+b}{2}$, $G\coloneqq\sqrt{ab}$ and $H\coloneqq\frac{2ab}{a+b}$. Then $H\le G\le A$.` (the symbols belong to the result and its proof, and depend on `a` and `b`) |
@@ -613,22 +614,31 @@ In formulas, `\rightarrow` and `\longrightarrow` are `\to`, `\coloneq` and `\def
 
 ### Notions that the article defines in words that are not read
 
-A definition whose condition Leanify does not read still introduces its notion. The
-emphasized name (`\emph`, `\textit`, `\textbf`, `\term`, `{\em …}`) in a definition, or in a
-sentence of the text, that is not read becomes a notion of the article, as if the preamble
-had declared it (below), and the statements about it are read:
+A definition whose condition Leanify does not read still introduces its notion. A sentence
+of a definition, or of the text, that is not read and names a notion makes it a notion of
+the article, as if the preamble had declared it (below), and the statements about it are
+read. What it names is found from the sentence itself: one of the forms of a definition
+above; or a verb that names with a subject before it and a name after it (`… SUBJECT is
+called [a] NAME …`, the subject after the last comma: `[a|the|such a|any] WORDS [$x$] [of
+…]`), once for each such verb of the sentence; or else an emphasized name (`\emph`,
+`\textit`, `\textbf`, `\term`, `{\em …}`) after `is`, `is called` or `a`/`an`. In the
+running text, an emphasized phrase counts only with a verb that names, or as `… is
+\emph{NAME} if …` and `A \emph{NAME} is …`.
 
 | Write | Reading |
 | --- | --- |
-| `A metric space is \emph{homogeneous} if its isometry group acts transitively on points.`, `A subgroup $H$ of a group $G$ is called \textbf{malnormal} if …` | after `is`, `is called`, `is said to be`: an adjective of the first noun of the sentence (`a homogeneous metric space`, `$X$ is homogeneous`, `a malnormal subgroup of $G$`), a property of which nothing is known |
-| `A group $G$ is called a \emph{Tarski monster} if …`, `A \emph{code} is a subset of …` | after `a`/`an`: a noun, of the objects of the noun that the sentence names (a Tarski monster is a group with a property of which nothing is known) |
+| `A metric space is \emph{homogeneous} if its isometry group acts transitively on points.`, `A subgroup $H$ of a group $G$ is called \textbf{malnormal} if …` | an adjective of the noun of the subject (`a homogeneous metric space`, `$X$ is homogeneous`, `a malnormal subgroup of $G$`), a property of which nothing is known |
+| `A group $G$ is called a \emph{Tarski monster} if …`, `Such a group is called a \emph{monster}.`, `A \emph{code} is a subset of …` | after `a`/`an`: a noun, of the objects of the noun of the subject (a Tarski monster is a group with a property of which nothing is known) |
 | `A \emph{Kripke frame} is an ordered pair $(W,R)$ where …` | with no noun of the vocabulary in the sentence: a kind of object of its own (`\mathrm{KripkeFrame}`) |
+| `A loop $L$ is said to be \emph{Moufang} if …, and a Moufang loop $L$ is called a \emph{code loop} if …`, `… then the cone is said to be \emph{simplicial}.`, `Finite-dimensional algebras $A$ with this property are called \emph{weakly Gorenstein} algebras.` | a subject whose noun no field knows: its last word is a kind of object of its own (`loop`, `cone`, `algebra`), the words before it an adjective of it (`finite-dimensional algebra`), and the name an adjective of it or a noun of its objects (`Moufang loop`, `code loop`, `simplicial cone`, `weakly Gorenstein algebra`). Not for words that name what a sentence speaks of (`theorem`, `case`, `property`, …), nor for a noun of a field that takes a complement (`subset of $A$`) |
 
-The check lists them as *defined here in sentences that are not read, and taken as given*.
-A definition that is read defines its notion with its meaning: the condition after `if`
-may be a formula or any statement that is read as a claim (`We call a metric space $X$
-\emph{homogeneous} if for all $x,y\in X$ there is an isometry $f\colon X\to X$ with $f(x)=y$.`). As for a declared notion, what is proved about such a notion
-is proved for whatever it means: in Lean it is an `opaque` constant.
+The check lists them as *defined here in sentences that are not read, and taken as given*
+(`takenAsGiven` in its JSON). A definition that is read defines its notion with its
+meaning: the condition after `if` may be a formula or any statement that is read as a
+claim (`We call a metric space $X$ \emph{homogeneous} if for all $x,y\in X$ there is an
+isometry $f\colon X\to X$ with $f(x)=y$.`). As for a declared notion, what is proved about
+a notion that is taken as given is proved for whatever it means: in Lean it is an `opaque`
+constant.
 
 ### Notions that the article does not define
 

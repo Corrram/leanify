@@ -509,6 +509,14 @@ def entriesOf (preamble : List Codes) (key : Codes := w!"notions") : List Codes 
         | _ => v
       ((splitTop 0 v [] []).map trim).filter (!·.isEmpty)
 
+/-- The words of a name as it is printed: `left\ -\ tail` is `left-tail`. -/
+def shown (ws : List Codes) : Codes :=
+  let rec go : List Codes → Codes
+    | [] => []
+    | [w] => w
+    | w :: v :: r => if v == [45] then w ++ [45] ++ go r else w ++ [92, 32] ++ go (v :: r)
+  go ws
+
 /-- An entry `words` or `words (plural words)`. -/
 def ofEntry (e : Codes) : Option Declared := do
   let e := trim e
@@ -576,7 +584,7 @@ def declareOne (V : Vocab) (d : Declared) : Vocab :=
     let pad (xs : List Codes) : List Codes := xs ++ List.replicate (c - xs.length) []
     { V with
       consts := V.consts ++ [.fn n.ty .prop]
-      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ (d.words.intersperse [92, 32]).flatten ++ w!"}(#)"]
+      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ Declared.shown d.words ++ w!"}(#)"]
       constLean := pad V.constLean ++ [[64] ++ Declared.ident d.words]
       nouns := V.nouns ++ [{
         sing := ph d.words, plural := ph d.pluralOf, ty := n.ty, arg := n.arg,
@@ -597,7 +605,7 @@ def declareOne (V : Vocab) (d : Declared) : Vocab :=
     let nounName := (n.sing.filterMap fun p => match p with | .w w => some w | _ => none)
     { V with
       consts := V.consts ++ [.fn n.ty .prop]
-      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ (adj.intersperse [92, 32]).flatten ++ w!"}(#)"]
+      constNames := pad V.constNames ++ [w!"\\operatorname{" ++ Declared.shown adj ++ w!"}(#)"]
       constLean := pad V.constLean ++ [[64] ++ Declared.ident (adj ++ nounName)]
       mods := V.mods ++ [{
         phrase := ph adj, prenominal := true, ty := n.ty, pred := Tm.const c,

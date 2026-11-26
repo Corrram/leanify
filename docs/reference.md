@@ -363,6 +363,8 @@ not read: its reading may lack a hypothesis of one of them, or keep one that it
 ends.
 `notDefined` lists what the article uses without defining it
 ([Writing for Leanify](writing.md#notions-that-the-article-does-not-define)),
+`takenAsGiven` the notions that it defines in sentences that are not read
+([Writing for Leanify](writing.md#notions-that-the-article-defines-in-words-that-are-not-read)),
 and a definition that is such a quantity has `undefined`. `axioms` are the standard
 three and the quoted claims. A claim of status `text` has a `step`,
 `standard` or `argument`, and a claim with hypotheses has `hypotheses`,

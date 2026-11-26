@@ -8,8 +8,15 @@ tests/Defined/article.tex:25:28: info: claim 2: \forall x\in \mathrm{KripkeFrame
 tests/Defined/article.tex:28:64: info: claim 3: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\le x\land \operatorname{malnormal}(y)\Rightarrow \operatorname{Group}(y)\land y\le x)
 tests/Defined/article.tex:31:1: info: claim 4: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{tarski\ monster}(x)\Rightarrow \operatorname{Group}(x)
 tests/Defined/article.tex:31:63: info: claim 5: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{tarski\ monster}(x)\Rightarrow \neg (\lvert x\rvert=1)
-tests/Defined/article.tex: 0 definitions, 6 claims
-  results: 11 compiled, 0 failed, 4 prose (of 15)
-  all: 11 compiled, 0 failed, 4 prose (of 15)
-tests/Defined/article.tex: defined here in sentences that are not read, and taken as given (what is stated about them is read, and holds whatever they mean): homogeneous metric space, kripke frame, malnormal subgroup, tarski monster
+tests/Defined/article.tex:34:1: warning: Definition "A loop $L$ is said to be \emph{M…" is not checked: Leanify cannot read its statement; docs/writing.md lists the forms it reads
+tests/Defined/article.tex:37:1: warning: Definition "If the generating set of a cone …" is not checked: Leanify cannot read any of its 3 sentences; docs/writing.md lists the forms it reads
+tests/Defined/article.tex:40:55: info: claim 6: \forall x\in \mathrm{Loop},\ \operatorname{moufang}(x)\Rightarrow x=x
+tests/Defined/article.tex:40:55: info: claim 7: \forall x\in \mathrm{Loop},\ \operatorname{code}(x)\Rightarrow x=x
+tests/Defined/article.tex:43:23: info: claim 8: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{monster}(x)\Rightarrow \operatorname{Group}(x)
+tests/Defined/article.tex:46:31: info: claim 9: \forall x\in \mathrm{Cone},\ \operatorname{simplicial}(x)\Rightarrow x=x
+tests/Defined/article.tex:46:84: info: claim 10: \forall x\in \mathrm{Algebra},\ \operatorname{finite-dimensional}(x)\Rightarrow \operatorname{weakly\ gorenstein}(x)\Rightarrow x=x
+tests/Defined/article.tex: 0 definitions, 11 claims
+  results: 19 compiled, 0 failed, 8 prose (of 27)
+  all: 19 compiled, 0 failed, 8 prose (of 27)
+tests/Defined/article.tex: defined here in sentences that are not read, and taken as given (what is stated about them is read, and holds whatever they mean): homogeneous metric space, kripke frame, malnormal subgroup, tarski monster, loop, moufang loop, code loop, cone, simplicial cone, monster, algebra, finite-dimensional algebra, weakly gorenstein algebra
 tests/Defined/article.tex: nouns without a reading: ordered pair, relation (to use a noun without defining it: \usepackage[notions={…}]{leanify}, docs/writing.md)

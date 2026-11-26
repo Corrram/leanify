@@ -1849,7 +1849,8 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- (the article's own classes take precedence over the vocabulary's nouns)
   -- (`implicit`: adjectives of numbers came before, so a variable alone is a real number)
   let headOf (r00 : List Chunk) (implicit : Bool) : M ((Ty × List Tm × Option (List MTok) × List Chunk) × List Nat) := do
-    let (nms, r0) := preN 4 r00 []
+    -- (a noun of the article, `calm group`, is no notion before a noun)
+    let (nms, r0) := if (matchWords st.nouns r00).isSome then ([], r00) else preN 4 r00 []
     let h : Ty × List Tm × Option (List MTok) × List Chunk ← do
       match matchWords st.nouns r0 with
       | some (i, r) => do
@@ -4284,7 +4285,11 @@ def notionBody (sc : Scope) (cond : NotionCond) : M Tm := do
 /-- `We call a copula $C$ NAME (ABBR) if COND.`: the notion `λ C, COND`, named by
 `NAME` and `ABBR`. -/
 def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond)
-    (clauseBody : Option (Scope → M Tm) := none) : M (List Nat × List Nat) := do
+    (clauseBody : Option (Scope → M Tm) := none) (noun : Bool := false) : M (List Nat × List Nat) := do
+  -- (`is called a NAME`: the name of a kind of object, `Let $G$ be a NAME`, `every NAME`)
+  let asNoun (i : Nat) : List (List Codes × Nat) :=
+    if !noun || name.contains w!"-" then [] else
+    [(name, i), (name.dropLast ++ (name.getLast?.map (· ++ [115])).toList, i)]
   let st0 ← get
   -- `Let $G$ be a group. An element $g\in G$ is called NAME if …`: a notion of the objects
   -- of the result's variables (`G`): an object is NAME if it is, for some values of them
@@ -4316,6 +4321,25 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond)
     let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
     modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
     return ([i], [])
+  -- `Let $G$ be a group. We say that $G$ is NAME if …`: a notion of the objects of that
+  -- variable of the result: an object is NAME if it is, for some values of the others
+  let envSubj : Option Nat := match subj with
+    | [.m [.id v]] => if st0.notionSubject.any (·.name == v) then none else env.findIdx? (·.name == v)
+    | _ => none
+  if let some k := envSubj then
+    let some b := env[k]? | fail E.unsupported
+    let body ← match cond, clauseBody with
+      | .clause _, some cb => cb (scopeOf env)
+      | _, _ => notionBody (scopeOf env) cond
+    let chain := ((List.range env.length).zip env).foldr (fun (jb : Nat × BindInfo) acc =>
+        let inner := match jb.2.pred with
+          | some q => Tm.and (.app q (.loc 0)) acc
+          | none => acc
+        if jb.1 == k then Tm.app (.lam jb.2.ty .tt inner) (.loc k) else Tm.ex jb.2.ty inner) body
+    let i ← addGlob ⟨[], .fn b.ty .prop, [none], false, 1⟩ (.lam b.ty .tt chain)
+    let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
+    modify fun st => { st with notions := st.notions ++ names.map (·, i) }
+    return ([i], [])
   let s ← match subj with
     | [.m [.id v]] => match (← get).notionSubject with
       | some b => if b.name == v then pure b else fail E.free v
@@ -4327,7 +4351,7 @@ def defNotion (subj : List Chunk) (name abbr : List Codes) (cond : NotionCond)
     | _, _ => notionBody (scopeOf [s]) cond
   let i ← addGlob ⟨[], .fn s.ty .prop, [s.pred], false, 1⟩ (.lam s.ty (holdsAt s.pred (.loc 0)) body)
   let names := [name] ++ (if abbr.isEmpty then [] else [abbr])
-  modify fun st => { st with notions := st.notions ++ names.map (·, i), notionSubject := some s }
+  modify fun st => { st with notions := st.notions ++ names.map (·, i), nouns := st.nouns ++ asNoun i, notionSubject := some s }
   pure ([i], [])
 
 /-- `A NP $f$ belongs to $\mathcal M_\alpha$ if $φ$ for every B`: the class `\mathcal M_\alpha`
@@ -6324,12 +6348,12 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
     let [bi] ← binderInfos b | fail E.unsupported
     modify fun st => { st with fixed := (c.ctx.sec, bi) :: st.fixed.filter (·.2.name != bi.name) }
     if defs.isEmpty then pure ([], []) else constDefs c (some bi) defs labels
-  | .defNotion subj name abbr cond =>
+  | .defNotion subj name abbr cond noun =>
     -- (a clause about the subject: read as the clause of a claim about it)
     let cb : Option (Scope → M Tm) := match cond with
       | .clause cl => some fun sc => clauseTm c sc none none cl
       | _ => none
-    defNotion subj name abbr cond cb
+    defNotion subj name abbr cond cb noun
   | .defMember subj cls cond binds => defMember subj cls cond binds
   | .notionSubject subj => do
     -- only the running text introduces the subject of later notions
@@ -7508,6 +7532,12 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
   let stdToks := Notation.rewriteWords Notation.standardWords (s.toks.length + 1) none s.toks
   let stdToks := Notation.seqRanges (stdToks.length + 1) stdToks
   let stdToks := Notation.satisfiesForm (stdToks.length + 1) stdToks
+  -- (`is called NAME whenever COND`: the condition of a definition, not a range)
+  let stdToks :=
+    let lw (p : PTok) : Option Codes := if p.math then none else match p.tok with | .word w => some (Grammar.lower w) | _ => none
+    if stdToks.any (fun p => [some w!"call", some w!"called", some w!"say", some w!"said"].contains (lw p)) then
+      stdToks.map fun p => if lw p == some w!"whenever" then { p with tok := .word w!"if" } else p
+    else stdToks
   let s := { s with toks := Notation.standardForms (stdToks.length + 1) false false none stdToks }
   let s := if st0.wordAliases.isEmpty then s
     else { s with toks := Notation.rewriteWords st0.wordAliases (s.toks.length + 1) none s.toks }
@@ -7631,7 +7661,7 @@ def compileOne (envs : List (Codes × Nat)) (c : CState) (s : Sentence) : CState
       | [] => tryFlex ⟨E.prose, []⟩
       | [(_, sn)] => do
         let st ← get
-        tryCatch (one s sn toks0 (undefinedAlt.orElse fun _ => Grammar.thatIsSentence s)) fun e =>
+        tryCatch (one s sn toks0 ((undefinedAlt.orElse fun _ => Grammar.thatIsSentence s).orElse fun _ => Grammar.defAlt s)) fun e =>
           match partsOf () with
           | some ps@(_ :: _ :: _) => do
             set st
@@ -7869,6 +7899,23 @@ def emphasized : Nat → Codes → Codes → List (Codes × Codes × Codes) → 
       emphasized f rest (inner.reverse ++ before) ((inner, before.reverse, rest) :: acc)
     | none => emphasized f cs (c :: before) acc
 
+/-- The text without its `\index[…]{…}` entries. -/
+def dropIndex : Nat → Codes → Codes
+  | 0, cs => cs
+  | _, [] => []
+  | f + 1, c :: cs =>
+    if c == 92 && cs.take 5 == w!"index" && !((cs.drop 5).head?.any letterC) then
+      let r := cs.drop 5
+      let r := match r with
+        | 91 :: r' => (r'.dropWhile (· != 93)).drop 1
+        | _ => r
+      match r with
+      | 123 :: r' => match group (r'.length + 1) 0 r' [] with
+        | some (_, rest) => dropIndex f rest
+        | none => c :: dropIndex f cs
+      | _ => c :: dropIndex f cs
+    else c :: dropIndex f cs
+
 /-- The words of a name: letters, with hyphens between them; at most five words. -/
 def nameWords (t : Codes) : Option (List Codes) :=
   if t.any (fun c => !(letterC c || c == 32 || c == 45 || c == 10)) then none else
@@ -7894,8 +7941,12 @@ def singWords (n : Noun) : List Codes := n.sing.filterMap fun it => match it wit
 `… NOUN … is [called|said to be] \emph{ADJ}`: an adjective of the noun; `a|an \emph{NAME}`:
 a noun, of the objects of the noun that the sentence says it is (`is a|an … NOUN`, or the
 noun before `is called a`), or else of objects of its own. -/
-def declaredBy (V : Vocab) (before name after : Codes) : Option Declared := do
+def declaredBy (V : Vocab) (before name after : Codes) (sure : Bool := true) : Option Declared := do
   let ws ← nameWords name
+  -- (in the running text, without a verb that names: only `… is \emph{NAME} if …` and `A
+  -- \emph{NAME} is …`)
+  let aw0 := wordsOfText (after.length + 1) after []
+  if !sure && !(aw0.head?.any fun w => [w!"if", w!"when", w!"whenever", w!"provided", w!"iff", w!"is", w!"consists"].contains w) then none
   -- (a name, not a phrase that goes on: `bisimulation between`)
   if (ws.getLast?.any fun w => [w!"between", w!"of", w!"in", w!"on", w!"for", w!"to", w!"with", w!"and", w!"or", w!"the", w!"a", w!"an", w!"is", w!"if", w!"arbitrary"].contains w) then none
   let bw := wordsOfText (before.length + 1) before []
@@ -7916,7 +7967,13 @@ def declaredBy (V : Vocab) (before name after : Codes) : Option Declared := do
     if endsNoun then some { words := ws }
     else match base with
       | some n => some { words := ws, base := singWords n }
-      | none => some { words := ws }
+      | none =>
+        -- (a kind of object of its own: where the sentence names it, `is called a NAME`, or
+        -- says what it is, `A NAME is …`)
+        let says := match aw with
+          | i :: _ => i == w!"is" || i == w!"consists" || i == w!"means"
+          | [] => false
+        if called || says then some { words := ws } else none
   else if ends [w!"is"] || ends [w!"is", w!"called"] || ends [w!"said", w!"to", w!"be"] || ends [w!"are"] ||
       ends [w!"are", w!"called"] || ends [w!"be"] ||
       -- (`We call a metric space $X$ \emph{homogeneous} if …`)
@@ -7929,29 +7986,165 @@ def declaredBy (V : Vocab) (before name after : Codes) : Option Declared := do
 
 end DefinedTerms
 
+/-- The sentences of an article. -/
+def sentencesOf (src : Source) : Option (List Sentence) := do
+  let k ← src.findIdx? isBeginDocument
+  let ms ← macrosOf (joinLines (src.take k))
+  let bs := blocksOf (src.drop (k + 1)) (linesOffset (src.take (k + 1))) none []
+  let (ss, _, s) ← lexSeg ms bs [] {}
+  some (ss ++ segFinish s)
+
+namespace DefinedTerms
+
+/-- The noun of the vocabulary that the words end with (the longest), or else the first
+among them. -/
+def headNoun (V : Vocab) (ws : List Codes) : Option Noun :=
+  let nouns := V.nouns.filter fun n => !n.sing.isEmpty && n.sing.all fun i => match i with | .w _ => true | _ => false
+  let fits (p : Phrase) : Bool :=
+    let pw := p.filterMap fun it => match it with | .w w => some w | _ => none
+    !pw.isEmpty && pw.length ≤ ws.length && ws.drop (ws.length - pw.length) == pw
+  let ending := nouns.filter fun n => fits n.sing || fits n.plural
+  match ending.foldl (fun (best : Option Noun) n => match best with
+      | some b => if n.sing.length > b.sing.length then some n else some b
+      | none => some n) none with
+  | some n => some n
+  | none => firstNoun V ws
+
+/-- The name of an adjective without the noun it is of, where the sentence repeats it (`are
+called left weakly Gorenstein algebras`). -/
+def withoutNoun (name noun : List Codes) : List Codes :=
+  let k := noun.length
+  if k == 0 || name.length ≤ k then name else
+  let tail := name.drop (name.length - k)
+  let plural := noun.dropLast ++ (noun.getLast?.map (· ++ [115])).toList
+  if tail == noun || tail == plural then name.take (name.length - k) else name
+
+/-- The noun of the vocabulary that the words end with (the longest). -/
+def headNounEnd (V : Vocab) (ws : List Codes) : Option Noun :=
+  let nouns := V.nouns.filter fun n => !n.sing.isEmpty && n.sing.all fun i => match i with | .w _ => true | _ => false
+  let fits (p : Phrase) : Bool :=
+    let pw := p.filterMap fun it => match it with | .w w => some w | _ => none
+    !pw.isEmpty && pw.length ≤ ws.length && ws.drop (ws.length - pw.length) == pw
+  (nouns.filter fun n => fits n.sing || fits n.plural).foldl (fun (best : Option Noun) n => match best with
+      | some b => if n.sing.length > b.sing.length then some n else some b
+      | none => some n) none
+
+/-- What a sentence in one of the forms of a definition declares (`Grammar.DefForm`): an
+adjective of the noun of its subject, or a noun, of the objects of that noun or (after a
+verb that names) of objects of its own. -/
+def declaredByForm (V : Vocab) (named : Bool) (f : Grammar.DefForm) : Option Declared := do
+  let (name, _, rest) ← Grammar.nameAbbr f.name
+  if !rest.isEmpty then none
+  let n := (name.filter (· != w!"-")).length
+  if n == 0 || n > 5 || name.head? == some w!"-" || name.getLast? == some w!"-" then none
+  if name.any (fun w => w.length < 2 && w != w!"-") then none
+  let ph (xs : List Codes) : Phrase := xs.map PItem.w
+  let sw := f.subj.filterMap fun c => match c with | Chunk.w w => some w | _ => none
+  let genus := headNoun V sw
+  if f.noun then
+    if V.nouns.any (fun k => k.sing == ph name) then none else
+    let endsNoun := (List.range name.length).drop 1 |>.any fun p => V.nouns.any fun k => k.sing == ph (name.drop p)
+    if endsNoun then some { words := name }
+    else match genus with
+      | some g => some { words := name, base := singWords g }
+      | none => if named then some { words := name } else none
+  else
+    let g ← genus
+    let name := withoutNoun name (singWords g)
+    if name.isEmpty || V.mods.any (fun m => m.phrase == ph name && m.ty == g.ty) then none
+    else some { words := name ++ singWords g }
+
+/-- What a sentence that names a notion declares (`Grammar.DefForm.Shape`): the notion, as
+an adjective of the noun of its subject or as a noun; and, where the subject introduces an
+object of a kind that no field knows (`A geodesic space $X$ is called …`), that kind: its
+last word as a noun, the words before it as an adjective of it. -/
+def declaredByShape (V : Vocab) (sh : Grammar.DefForm.Shape) : List Declared :=
+  let ph (xs : List Codes) : Phrase := xs.map PItem.w
+  if sh.name.any (fun w => w.length < 2 && w != w!"-") then [] else
+  let genusW := sh.genus.filter (· != w!"-")
+  let known : Option Noun := if genusW.isEmpty then none else headNounEnd V genusW
+  let isNoun (ws : List Codes) : Bool := V.nouns.any fun k => k.sing == ph ws
+  let endsNoun (ws : List Codes) : Bool := (List.range ws.length).drop 1 |>.any fun p => isNoun (ws.drop p)
+  match known with
+  | some g =>
+    if sh.noun then
+      if isNoun sh.name then [] else
+      if endsNoun sh.name then [{ words := sh.name }] else [{ words := sh.name, base := singWords g }]
+    else
+      let name := withoutNoun sh.name (singWords g)
+      if name.isEmpty || V.mods.any (fun m => m.phrase == ph name && m.ty == g.ty) then []
+      else [{ words := name ++ singWords g }]
+  | none =>
+    -- a kind of object of the article's own: only where the sentence introduces one, in
+    -- plain words
+    let plain := genusW.all fun w => w.length ≥ 3 && w.all fun c => 97 ≤ c && c ≤ 122
+    -- (not a noun of a field that takes a complement, `subset of $A$`)
+    let taken := V.nouns.any fun k => k.sing.head? == (genusW.getLast?.map PItem.w) && k.sing.any fun i => match i with | .w _ => false | _ => true
+    -- (words for what a sentence speaks of, not for a kind of object)
+    let noKind := [w!"theorem", w!"lemma", w!"result", w!"case", w!"condition", w!"property", w!"notion", w!"definition",
+      w!"latter", w!"former", w!"above", w!"number", w!"following", w!"object", w!"thing", w!"one", w!"example",
+      w!"statement", w!"fact", w!"problem", w!"question", w!"paper", w!"section", w!"proof"].contains (genusW.getLast?.getD [])
+    if genusW.isEmpty || !sh.indefinite || !plain || genusW.length > 3 || taken || noKind then
+      -- (without a kind: the name of a kind of object of its own)
+      if sh.noun && !isNoun sh.name && sh.genus.isEmpty then [{ words := sh.name }] else []
+    else
+      let head := genusW.getLast?.getD []
+      let kind : List Declared := [{ words := [head] }] ++ (if genusW.length > 1 then [{ words := sh.genus }] else [])
+      if sh.noun then
+        if sh.name.getLast? == some head then kind ++ [{ words := sh.name }]
+        else kind ++ [{ words := sh.name, base := [head] }]
+      else
+        let name := withoutNoun sh.name [head]
+        if name.isEmpty then kind else kind ++ [{ words := name ++ [head] }]
+
+end DefinedTerms
+
 /-- The notions that the article defines in sentences that are not read (definitions, and
 sentences of the text), with the vocabulary `V`: to be declared (`Vocab.declare`), so that
-the article is read with them. -/
+the article is read with them. A sentence in one of the forms of a definition declares the
+notion it names; any other, the phrases it emphasizes. -/
 def definedTerms (V : Vocab) (src : Source) : List Declared :=
-  match compileArticle V src with
+  match sentencesOf src with
   | none => []
-  | some d =>
+  | some ss =>
+    let d := assemble V ss
     let all := joinLines src
-    let unread := (d.sentences.zip d.outcomes).filter fun ((ctx, _, _), o) =>
+    let unread := (ss.zip d.outcomes).filter fun (s, o) =>
       (match o with | .compiled _ _ => false | _ => true) &&
-      (match ctx.kind with
+      (match s.ctx.kind with
         | .result e => e.take 3 == w!"def"
         | .text => true
         | .proof => false)
     -- (declared one after another: a later name may end with an earlier noun)
-    let (_, ds) := unread.foldl (fun (acc : Vocab × List Declared) ((_, a, b), _) =>
-      let text := (all.drop a).take (b + 1 - a)
-      (DefinedTerms.emphasized (text.length + 1) text [] []).foldl (fun (acc : Vocab × List Declared) (name, before, after) =>
-        match DefinedTerms.declaredBy acc.1 before name after with
-        | some dcl =>
-          let W := acc.1.declareOne dcl
-          if W == acc.1 then acc else (W, acc.2 ++ [dcl])
-        | none => acc) acc) (V, [])
+    let add (acc : Vocab × List Declared) (dcl : Declared) : Vocab × List Declared :=
+      let W := acc.1.declareOne dcl
+      if W == acc.1 then acc else (W, acc.2 ++ [dcl])
+    let (_, ds) := unread.foldl (fun (acc : Vocab × List Declared) (s, _) =>
+      let inDef := match s.ctx.kind with | .result e => e.take 3 == w!"def" | _ => false
+      let forms : List Grammar.DefForm := match Grammar.chunks (s.toks.length + 1) s.toks [] with
+        | some cs => Grammar.DefForm.forms inDef cs
+        | none => []
+      -- (a verb that names: `is called`, `we say`, `we call`, `is said to be`, `we mean`)
+      let named : Bool := s.toks.any fun p => !p.math && (match p.tok with
+        | .word w => [w!"called", w!"call", w!"say", w!"said", w!"termed", w!"mean", w!"define"].contains (Grammar.lower w)
+        | _ => false)
+      let acc1 := match forms.findSome? (fun f => DefinedTerms.declaredByForm acc.1 named f) with
+        | some dcl => add acc dcl
+        | none => acc
+      (
+        let shapes : List Grammar.DefForm.Shape := match Grammar.chunks (s.toks.length + 1) s.toks [] with
+          | some cs => Grammar.DefForm.shapes cs
+          | none => []
+        let acc' := shapes.foldl (fun (a : Vocab × List Declared) sh => (DefinedTerms.declaredByShape a.1 sh).foldl add a) acc1
+        -- (a sentence that names in one of these shapes: its emphasized phrases say no more)
+        if acc'.2.length != acc.2.length || shapes.any (!·.genus.isEmpty) then acc' else
+          -- (the phrases that it emphasizes)
+          let text := (all.drop s.start).take (s.stop + 1 - s.start)
+          let text := DefinedTerms.dropIndex (text.length + 1) text
+          (DefinedTerms.emphasized (text.length + 1) text [] []).foldl (fun (acc : Vocab × List Declared) (name, before, after) =>
+            match DefinedTerms.declaredBy acc.1 before name after (inDef || named) with
+            | some dcl => add acc dcl
+            | none => acc) acc)) (V, [])
     ds
 
 /-- The vocabulary an article is read with: `V`, the notions of its preamble (`extra`: and
