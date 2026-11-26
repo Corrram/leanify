@@ -38,7 +38,13 @@ tests/Matrices/article.tex:65:1: info: claim 18: \forall x\in \mathrm{Mat},\ \op
 tests/Matrices/article.tex:65:61: info: claim 19: \forall x\in \mathrm{Mat},\ \operatorname{Diagonalizable}(x)\Rightarrow \operatorname{Square}(x)
 tests/Matrices/article.tex:65:168: info: claim 20: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow y\sim x\Rightarrow \det(x)=\det(y))
 tests/Matrices/article.tex:65:168: info: claim 20 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow y\sim x\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y))
-tests/Matrices/article.tex: 4 definitions, 21 claims
+tests/Matrices/article.tex:69:1: info: claim 21: \forall x\in \mathrm{Mat},\ \forall y\in \mathrm{Mat},\ y\sim x\Rightarrow \chi_{x}=\chi_{y}
+tests/Matrices/article.tex:69:1: info: claim 21 is meaningful if: \forall x\in \mathrm{Mat},\ \forall y\in \mathrm{Mat},\ y\sim x\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y)
+tests/Matrices/article.tex:69:96: info: claim 22: \forall x\in \mathrm{Mat},\ \forall y\in \mathrm{Mat},\ y\sim x\Rightarrow \det(x)=\det(y)
+tests/Matrices/article.tex:69:96: info: claim 22 is meaningful if: \forall x\in \mathrm{Mat},\ \forall y\in \mathrm{Mat},\ y\sim x\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y)
+tests/Matrices/article.tex:69:154: info: claim 23: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow x\sim y\Rightarrow \operatorname{tr}(x)=\operatorname{tr}(y))
+tests/Matrices/article.tex:69:154: info: claim 23 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow x\sim y\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y))
+tests/Matrices/article.tex: 4 definitions, 24 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 24 compiled, 0 failed, 0 prose (of 24)
-  all: 28 compiled, 0 failed, 0 prose (of 28)
+  results: 29 compiled, 0 failed, 0 prose (of 29)
+  all: 33 compiled, 0 failed, 0 prose (of 33)

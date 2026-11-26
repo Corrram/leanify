@@ -731,9 +731,13 @@ except a notion whose meanings take arguments of different types, which the type
 | with $x$ leaves | $\mathrm{Graph}$ | `k` vertices of degree `1` |
 | on $x$ vertices with $a$ edges | $\mathrm{Graph}$ | with `n` vertices and `m` edges |
 | with an odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
+| with a cycle of odd length | $\mathrm{Graph}$ | a cycle of odd length |
 | without odd cycles | $\mathrm{Graph}$ | a cycle of odd length |
 | without an odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
 | without odd cycle | $\mathrm{Graph}$ | a cycle of odd length |
+| without cycles of odd length | $\mathrm{Graph}$ | a cycle of odd length |
+| without a cycle of odd length | $\mathrm{Graph}$ | a cycle of odd length |
+| without cycle of odd length | $\mathrm{Graph}$ | a cycle of odd length |
 | with a cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
 | without cycles | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
 | without a cycle | $\mathrm{Graph}$ | (Mathlib `SimpleGraph.IsAcyclic`) |
@@ -769,6 +773,8 @@ except a notion whose meanings take arguments of different types, which the type
 | without isolated vertex | $\mathrm{Graph}$ | a vertex of degree `0` |
 | of odd degree in $x$ | ℝ | a vertex with an odd number of neighbours |
 | of even degree in $x$ | ℝ | a vertex with an even number of neighbours |
+| with odd degree in $x$ | ℝ | a vertex with an odd number of neighbours (`$v$ has odd degree`) |
+| with even degree in $x$ | ℝ | a vertex with an even number of neighbours (`$v$ has even degree`) |
 | of degree $x$ in $a$ | ℝ | a vertex with `k` neighbours |
 | adjacent to $x$ in $a$ | ℝ | (Mathlib `SimpleGraph.Adj`) |
 
@@ -800,6 +806,10 @@ except a notion whose meanings take arguments of different types, which the type
 | complete bipartite graph $K_{a,b}$ | ℝ → ℝ → $\mathrm{Graph}$ | parts `{1, …, m}` and `{m+1, …, m+n}` |
 | number of vertices of odd degree in $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
 | number of vertices of odd degree of $a$ | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
+| number of vertices of $a$ of odd degree | $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
+| sum of the degrees of the vertices of $a$ | $\mathrm{Graph}$ → ℝ | `∑_v deg(v)` (Mathlib `SimpleGraph.degree`) |
+| sum of the degrees of $a$ | $\mathrm{Graph}$ → ℝ | `∑_v deg(v)` |
+| sum of the vertex degrees of $a$ | $\mathrm{Graph}$ → ℝ | `∑_v deg(v)` |
 | number of leaves of $a$ | $\mathrm{Graph}$ → ℝ | vertices of degree `1` |
 | number of vertices of degree $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ | (Mathlib `SimpleGraph.degree`) |
 | complement of $a$ | $\mathrm{Graph}$ → $\mathrm{Graph}$ | the same vertices, the other pairs adjacent (Mathlib `Gᶜ`) |
@@ -1435,6 +1445,9 @@ except a notion whose meanings take arguments of different types, which the type
 | of positive characteristic | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of positive characteristic $x$ | $\mathrm{El}$ → Prop | (Mathlib `ringChar`) |
 | of characteristic zero | $\mathrm{El}$ → Prop | (Mathlib `CharZero`) |
+| homeomorphic to $x$ | $\mathrm{El}$ → Prop | there is a homeomorphism onto it (Mathlib `Homeomorph`) |
+| isometric to $x$ | $\mathrm{El}$ → Prop | there is an isometry onto it (Mathlib `IsometryEquiv`) |
+| quasi-isometric to $x$ | $\mathrm{El}$ → Prop | there is a quasi-isometry to it |
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
 | $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |
 | $x$ - | $\mathrm{El}$ → Prop | `a $p$-group`, `a finite $p$-group`: a group whose elements have orders powers of `p` (Mathlib `IsPGroup`) |

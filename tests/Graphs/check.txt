@@ -37,7 +37,12 @@ tests/Graphs/article.tex:81:49: info: claim 19: \forall x\in \mathrm{Graph},\ \o
 tests/Graphs/article.tex:85:1: info: claim 20: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\land 2\le \lvert V(x)\rvert\Rightarrow 2\le \lvert\{v:\deg(v)=1\}\rvert
 tests/Graphs/article.tex:89:69: info: claim 21: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \operatorname{SpanningSub}(x)(y)\Rightarrow \operatorname{Tree}(y))
 tests/Graphs/article.tex:89:128: info: claim 22: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \operatorname{SpanningSub}(x)(y)\Rightarrow (\forall z\in \mathrm{Graph},\ \operatorname{SpanningSub}(x)(z)\Rightarrow \top))
-tests/Graphs/article.tex: 8 definitions, 23 claims
+tests/Graphs/article.tex:93:36: info: claim 23: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow \sum_{v\in V(y)}\deg(v)=2\,x
+tests/Graphs/article.tex:93:96: info: claim 24: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow \lvert V_{\mathrm{odd}}(y)\rvert\le 2\,x
+tests/Graphs/article.tex:93:162: info: claim 25: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow (\operatorname{Bipartite}(y)\Leftrightarrow \neg \operatorname{OddCycle}(y))
+tests/Graphs/article.tex:93:259: info: claim 26: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow (\forall z\in \mathbb{R},\ z\in V(y)\Rightarrow z\in V(y)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \deg_{y}(z)=2\,s)\lor z\in V(y)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \deg_{y}(z)=2\,s+1))
+tests/Graphs/article.tex:97:31: info: claim 27: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\operatorname{Eulerian}(x)\Leftrightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z)))
+tests/Graphs/article.tex: 8 definitions, 28 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 29 compiled, 0 failed, 0 prose (of 29)
-  all: 37 compiled, 0 failed, 0 prose (of 37)
+  results: 37 compiled, 0 failed, 0 prose (of 37)
+  all: 45 compiled, 0 failed, 0 prose (of 45)

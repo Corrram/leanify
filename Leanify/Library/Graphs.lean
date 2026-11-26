@@ -65,6 +65,7 @@ def oddCycle : Nat := 32
 def numOddDeg : Nat := 33
 def numOfDeg : Nat := 34
 def spanningSub : Nat := 35
+def sumDegrees : Nat := 36
 end Const
 open Const
 
@@ -133,7 +134,8 @@ def vocab : Vocab where
     .real ⟶ .real ⟶ G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real, G ⟶ .real,
     G ⟶ .real, G ⟶ .real, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop,
     .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ G, .real ⟶ .real ⟶ G, G ⟶ G, .real ⟶ .real ⟶ G ⟶ .prop,
-    .real ⟶ G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .real, .real ⟶ G ⟶ .real, G ⟶ G ⟶ .prop]
+    .real ⟶ G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .prop, G ⟶ .real, .real ⟶ G ⟶ .real, G ⟶ G ⟶ .prop,
+    G ⟶ .real]
   constNames := [w!"#2\\in V(#1)", w!"\\lvert V(#)\\rvert", w!"\\lvert E(#)\\rvert", w!"\\deg_{#2}(#1)",
     w!"\\operatorname{Adj}", w!"\\operatorname{dist}", w!"\\delta", w!"\\Delta", w!"\\chi", w!"\\omega",
     w!"\\alpha", w!"\\operatorname{c}", w!"\\operatorname{diam}", w!"\\operatorname{girth}",
@@ -143,7 +145,7 @@ def vocab : Vocab where
     w!"\\overline{#}", w!"\\operatorname{Reachable}", w!"\\operatorname{Colorable}", w!"\\operatorname{Eulerian}",
     w!"\\operatorname{EulerTrail}", w!"\\operatorname{HamiltonianPath}", w!"\\operatorname{OddCycle}",
     w!"\\lvert V_{\\mathrm{odd}}(#)\\rvert", w!"\\lvert\\{v:\\deg(v)=#1\\}\\rvert",
-    w!"\\operatorname{SpanningSub}"]
+    w!"\\operatorname{SpanningSub}", w!"\\sum_{v\\in V(#)}\\deg(v)"]
   constLean := [w!"Leanify.Graphs.IsVertex", w!"Leanify.Graphs.numVertices", w!"Leanify.Graphs.numEdges",
     w!"Leanify.Graphs.degree", w!"Leanify.Graphs.Adjacent", w!"Leanify.Graphs.dist", w!"Leanify.Graphs.minDegree",
     w!"Leanify.Graphs.maxDegree", w!"Leanify.Graphs.chromaticNumber", w!"Leanify.Graphs.cliqueNumber",
@@ -154,7 +156,8 @@ def vocab : Vocab where
     w!"Leanify.Graphs.pathGraph", w!"Leanify.Graphs.emptyGraph", w!"Leanify.Graphs.completeBipartite",
     w!"Leanify.Graphs.complement", w!"Leanify.Graphs.Reachable", w!"Leanify.Graphs.Colorable", w!"Leanify.Graphs.Eulerian",
     w!"Leanify.Graphs.EulerTrail", w!"Leanify.Graphs.HamiltonianPath", w!"Leanify.Graphs.OddCycle",
-    w!"Leanify.Graphs.numOddDegree", w!"Leanify.Graphs.numOfDegree", w!"Leanify.Graphs.SpanningSub"]
+    w!"Leanify.Graphs.numOddDegree", w!"Leanify.Graphs.numOfDegree", w!"Leanify.Graphs.SpanningSub",
+    w!"Leanify.Graphs.sumDegrees"]
   typeLean := [(w!"Leanify.Graphs.Graph", w!"Leanify.Graphs.Graph.empty")]
   modules := [w!"Leanify.Library.GraphsModel"]
   nouns := [
@@ -222,7 +225,9 @@ def vocab : Vocab where
     mod phrase!"on $v$ vertices with $v$ edges" false (close <| lamR fun n => lamR fun m => lamT G (fun _ => tt) fun g =>
         and (eq (nv g) n) (eq (app (const numEdges) g) m))
       "with `n` vertices and `m` edges"] ++
-    hasMods [phrase!"with an odd cycle"] [phrase!"without odd cycles", phrase!"without an odd cycle", phrase!"without odd cycle"]
+    hasMods [phrase!"with an odd cycle", phrase!"with a cycle of odd length"]
+      [phrase!"without odd cycles", phrase!"without an odd cycle", phrase!"without odd cycle", phrase!"without cycles of odd length",
+        phrase!"without a cycle of odd length", phrase!"without cycle of odd length"]
       (fun g => app (const oddCycle) g) "a cycle of odd length" ++
     hasMods [phrase!"with a cycle"] [phrase!"without cycles", phrase!"without a cycle", phrase!"without cycle"]
       (fun g => not (app (const acyclic) g)) "(Mathlib `SimpleGraph.IsAcyclic`)" ++
@@ -244,6 +249,10 @@ def vocab : Vocab where
         "a vertex with an odd number of neighbours",
       vertexMod phrase!"of even degree in $v$" (fun v g => exInt fun k => eq (app2 (const degree) v g) (mul (num 2) k))
         "a vertex with an even number of neighbours",
+      vertexMod phrase!"with odd degree in $v$" (fun v g => exInt fun k => eq (app2 (const degree) v g) (add (mul (num 2) k) (num 1)))
+        "a vertex with an odd number of neighbours (`$v$ has odd degree`)",
+      vertexMod phrase!"with even degree in $v$" (fun v g => exInt fun k => eq (app2 (const degree) v g) (mul (num 2) k))
+        "a vertex with an even number of neighbours (`$v$ has even degree`)",
       { phrase := phrase!"of degree $v$ in $v$", prenominal := false, ty := .real, doc := "a vertex with `k` neighbours",
         pred := close <| lamR fun k => lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (eq (app2 (const degree) v g) k) },
       { phrase := phrase!"adjacent to $v$ in $v$", prenominal := false, ty := .real, doc := "(Mathlib `SimpleGraph.Adj`)",
@@ -288,6 +297,10 @@ def vocab : Vocab where
       doms := [natDom, natDom], doc := "parts `{1, …, m}` and `{m+1, …, m+n}`" },
     ofG phrase!"number of vertices of odd degree in $v$" numOddDeg "(Mathlib `SimpleGraph.degree`)",
     ofG phrase!"number of vertices of odd degree of $v$" numOddDeg "(Mathlib `SimpleGraph.degree`)",
+    ofG phrase!"number of vertices of $v$ of odd degree" numOddDeg "(Mathlib `SimpleGraph.degree`)",
+    ofG phrase!"sum of the degrees of the vertices of $v$" sumDegrees "`∑_v deg(v)` (Mathlib `SimpleGraph.degree`)",
+    ofG phrase!"sum of the degrees of $v$" sumDegrees "`∑_v deg(v)`",
+    ofG phrase!"sum of the vertex degrees of $v$" sumDegrees "`∑_v deg(v)`",
     { name := phrase!"number of leaves of $v$", value := close (lamT G (fun _ => tt) fun g => app2 (const numOfDeg) (num 1) g),
       ty := G ⟶ .real, doc := "vertices of degree `1`" },
     { name := phrase!"number of vertices of degree $v$ in $v$", value := .const numOfDeg, ty := .real ⟶ G ⟶ .real,

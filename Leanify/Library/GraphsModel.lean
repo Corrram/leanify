@@ -93,6 +93,10 @@ def numOddDegree (G : Graph) : ℝ := Nat.card {i : Fin G.1 // ∃ k : ℕ, degr
 /-- The number of vertices of degree `k`. -/
 def numOfDegree (k : ℝ) (G : Graph) : ℝ := Nat.card {i : Fin G.1 // degree ((i : ℝ) + 1) G = k}
 
+/-- The sum of the degrees of the vertices (twice the number of edges, Mathlib
+`SimpleGraph.sum_degrees_eq_twice_card_edges`). -/
+def sumDegrees (G : Graph) : ℝ := ∑ i : Fin G.1, degree ((i : ℝ) + 1) G
+
 /-- `H` is a spanning subgraph of `G`: the same vertices, and every edge of `H` is an edge of
 `G` (Mathlib `SimpleGraph` `≤`). -/
 def SpanningSub (G H : Graph) : Prop :=

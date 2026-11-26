@@ -2571,7 +2571,34 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | .p 45 => true
         | _ => false
       if ws.isEmpty then none
+      -- (`no cycle of odd length`: `of` and words, not an object)
+      let ofWords := match r1.drop ws.length with
+        | .w o :: rest@(.w _ :: _) =>
+          if o != w!"of" then [] else
+          .w o :: rest.takeWhile fun (c : Chunk) => match c with
+            | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"of", w!"in", w!"with", w!"or", w!"iff"].contains w
+            | _ => false
+        | _ => []
+      let ws := ws ++ ofWords
       some (Clause.isA s ([Chunk.w w!"without"] ++ ws) false, r1.drop ws.length) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$v$ has even degree`: a modifier `with even degree` (words only, without an article)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has"] r <|> kw [w!"have"] r
+      let first ← match r1 with | .w w :: _ => some w | _ => none
+      if [w!"a", w!"an", w!"no", w!"the", w!"exactly", w!"at", w!"one", w!"two", w!"some", w!"infinitely",
+          w!"finitely", w!"only", w!"been", w!"to", w!"order", w!"index", w!"length"].contains first then none
+      let ws := r1.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"of", w!"in", w!"with", w!"or", w!"iff", w!"that"].contains w
+        | .p 45 => true
+        | _ => false
+      if ws.length < 2 then none
+      let rest := r1.drop ws.length
+      if (match rest with | .m _ :: _ => true | _ => false) then none
+      some (Clause.isA s ([Chunk.w w!"with"] ++ ws) false, rest) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ contains a Hamiltonian cycle`: as `has` (words only, a modifier `with a …`)
@@ -2788,6 +2815,8 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     -- (a clause that stops before the connective, or a noun phrase that has swallowed it)
     let swallowed := match c with
       | .isA _ np _ => hasWord np w!"or" || (hasWord np w!"only" && hasWord np w!"if")
+      -- (`$G$ is Eulerian if and only if every vertex of $G$ …` read as `is WORDS of $G$`)
+      | .pred _ ws _ => ws.contains w!"or" || (ws.contains w!"only" && ws.contains w!"if")
       | _ => false
     if (kw iffW r).isSome || (kw [w!"or"] r).isSome || swallowed then split <|> some (c, r) else some (c, r)
   | none => split
@@ -7108,7 +7137,88 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let x := nestVar avoid cs 0
     let .claims tp bs cls ← sentence (lead ++ .m [.id x] :: rest.drop i) | none
     some (.claims tp (.noun ([.w w!"@the", .w st, .w o] ++ members ++ [.m [.id x]]) :: bs) cls)
-  return out ++ theSet.toList
+  -- `$X$ and $Y$ are isomorphic`: `$X$ is isomorphic to $Y$` (also `with`, `from`), the
+  -- relation of the two said of one of them about the other
+  let single (ts : List MTok) : Bool := match Math.parseFormula ts with | some (.id _) => true | _ => false
+  let stops := [w!"then", w!"and", w!"or", w!"if", w!"iff", w!"for", w!"since", w!"so", w!"but", w!"to", w!"with",
+    w!"from", w!"in", w!"of", w!"on", w!"as", w!"than", w!"by", w!"at", w!"distinct", w!"equal", w!"disjoint",
+    w!"orthogonal", w!"coprime", w!"independent", w!"pairwise", w!"mutually", w!"both", w!"not"]
+  let rec pairForm (prep : Codes) : Nat → List Chunk → Option (List Chunk)
+    | 0, _ => none
+    | f + 1, cs =>
+      match cs with
+      | .m x :: .w a :: .m y :: .w are :: rest =>
+        let ws := rest.takeWhile fun c => match c with
+          | .w w => !stops.contains w
+          | .p 45 => true
+          | _ => false
+        let after := rest.drop ws.length
+        let ends := match after with
+          | [] | .p _ :: _ => true
+          | .w w :: _ => [w!"then", w!"and", w!"or", w!"if", w!"iff", w!"since", w!"so", w!"but"].contains w
+          | _ => false
+        if a == w!"and" && are == w!"are" && single x && single y && !ws.isEmpty && ends then
+          some ([.m x, .w w!"is"] ++ ws ++ [.w prep, .m y] ++ ((pairForm prep f after).getD after))
+        else (pairForm prep f (.w a :: .m y :: .w are :: rest)).map (.m x :: ·)
+      | c :: rest => (pairForm prep f rest).map (c :: ·)
+      | [] => none
+  let pairs : List Sent := [w!"to", w!"with", w!"from"].filterMap fun prep => do
+    let cs' ← pairForm prep (cs.length + 1) cs
+    sentence (lead ++ cs')
+  -- `$A$ and $B$ have the same characteristic polynomial`: `the characteristic polynomial of
+  -- $A$ equals the characteristic polynomial of $B$`
+  let rec sameForm : Nat → List Chunk → Option (List Chunk)
+    | 0, _ => none
+    | f + 1, cs =>
+      match cs with
+      | .m x :: .w a :: .m y :: .w h :: .w t :: .w sm :: rest =>
+        let ws := rest.takeWhile fun c => match c with
+          | .w w => !stops.contains w
+          | .p 45 => true
+          | _ => false
+        let after := rest.drop ws.length
+        if a == w!"and" && h == w!"have" && t == w!"the" && sm == w!"same" && single x && single y && !ws.isEmpty then
+          some ([.w w!"the"] ++ ws ++ [.w w!"of", .m x, .w w!"equals", .w w!"the"] ++ ws ++ [.w w!"of", .m y] ++ after)
+        else (sameForm f (.w a :: .m y :: .w h :: .w t :: .w sm :: rest)).map (.m x :: ·)
+      | c :: rest => (sameForm f rest).map (c :: ·)
+      | [] => none
+  -- (alone, and after the pairs of the same sentence: `if $A$ and $B$ are similar, then $A$ and
+  -- $B$ have the same …`)
+  let same : List Sent := ((cs :: [w!"to", w!"with", w!"from"].filterMap fun prep => pairForm prep (cs.length + 1) cs).filterMap fun c =>
+    (sameForm (c.length + 1) c).bind fun cs' => sentence (lead ++ cs'))
+  -- `Let $A$ and $B$ be similar matrices`: the matrix `A`, and a matrix `B` similar to `A` (also
+  -- `with`, `from`)
+  let letPair : List Sent := match cs with
+    | .w l :: .m x :: .w a :: .m y :: .w be :: .w adj :: rest@(.w _ :: _) =>
+      if lower l != w!"let" || a != w!"and" || be != w!"be" || !single x || !single y || stops.contains adj then [] else
+      let np := rest.takeWhile fun c => match c with | .w w => !stops.contains w | .p 45 => true | _ => false
+      let after := rest.drop np.length
+      if np.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then [] else
+      -- (the first object, then the second with the relation to it: `matrices $B$ similar to $A$`)
+      [w!"to", w!"with", w!"from"].map fun prep =>
+        Sent.assumeAll [.noun (np ++ [.m x]), .noun (np ++ [.m y, .w adj, .w prep, .m x])] []
+    | _ => []
+  -- `Similar matrices have the same characteristic polynomial.`: for every matrix `X` and every
+  -- matrix `Y` similar to `X`, the characteristic polynomial of `X` equals that of `Y`
+  let genericSame : List Sent := match cs with
+    | .w adj :: rest =>
+      if !generic || stops.contains (lower adj) then [] else
+      let np := rest.takeWhile fun c => match c with | .w w => w != w!"have" && !stops.contains w | .p 45 => true | _ => false
+      match rest.drop np.length with
+      | .w h :: .w t :: .w sm :: rest2 =>
+        if np.isEmpty || h != w!"have" || t != w!"the" || sm != w!"same" then [] else
+        let ws := rest2.takeWhile fun c => match c with | .w w => !stops.contains w | .p 45 => true | _ => false
+        let after := rest2.drop ws.length
+        if ws.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then [] else
+        let x := nestVar avoid cs 0
+        let y := nestVar avoid cs 1
+        let claim := [.w w!"the"] ++ ws ++ [.w w!"of", .m [.id x], .w w!"equals", .w w!"the"] ++ ws ++ [.w w!"of", .m [.id y]] ++ after
+        [w!"to", w!"with", w!"from"].filterMap fun prep => do
+          let .claims tp bs cls ← sentence claim | none
+          some (.claims tp ([.noun (np ++ [.m [.id x]]), .noun (np ++ [.m [.id y], .w (lower adj), .w prep, .m [.id x]])] ++ bs) cls)
+      | _ => []
+    | _ => []
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

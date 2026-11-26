@@ -5570,9 +5570,11 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       if unique || cl.isSome then none else
       let head := np.takeWhile fun ch => match ch with | .w w => w != w!"of" | .p 45 => true | _ => false
       match np.drop head.length with
-      | [.w o, .m ts] =>
-        if o != w!"of" || head.isEmpty then none else
-        (Math.parseFormula ts).map fun s => (s, head)
+      | .w o :: .m ts :: tail =>
+        -- (`$G$ has a cycle of odd length`: the words after the subject go with the noun,
+        -- `with a cycle of odd length`)
+        if o != w!"of" || head.isEmpty || !(tail.all fun ch => match ch with | .w _ | .p 45 => true | _ => false) then none else
+        (Math.parseFormula ts).map fun s => (s, head ++ tail)
       | _ => none
     -- (`there is a unique $y\in C$`: the variable with its domain)
     let mathVar : Option (Codes × MT) := match np with

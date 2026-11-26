@@ -937,6 +937,14 @@ def QuasiIsometryM (φ : Map) : Prop :=
   QuasiIsoEmbM φ ∧ ∃ D : ℝ, 0 ≤ D ∧ ∀ b, φ.cod b → ∃ a, φ.dom a ∧ dist (apply φ a) b ≤ D
 
 
+/-- `X` and `Y` are homeomorphic: there is a homeomorphism of `X` onto `Y` (Mathlib
+`Homeomorph`). -/
+def HomeomorphicS (X Y : El → Prop) : Prop := ∃ φ : Map, MapSig X Y φ ∧ HomeoM φ
+/-- `X` and `Y` are isometric: there is an isometry of `X` onto `Y` (Mathlib `IsometryEquiv`). -/
+def IsometricS (X Y : El → Prop) : Prop := ∃ φ : Map, MapSig X Y φ ∧ IsometryM φ ∧ SurjectiveM φ
+/-- `X` and `Y` are quasi-isometric: there is a quasi-isometry of `X` to `Y`. -/
+def QuasiIsometricS (X Y : El → Prop) : Prop := ∃ φ : Map, MapSig X Y φ ∧ QuasiIsometryM φ
+
 /-! ### More classical notions -/
 
 /-- A Euclidean domain: an integral domain with a norm `N` into the natural numbers that
