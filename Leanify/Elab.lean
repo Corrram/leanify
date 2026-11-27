@@ -1434,6 +1434,9 @@ def seqTermIndex (isSeq : Codes → Bool) : Nat → MT → Option (Option Codes)
     | .sup b e => both b e
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => both x y
     | .neg x | .abs x => seqTermIndex isSeq f x
+    -- (`\bigcap_n U_n` binds its index: a set, not a sequence written by its terms)
+    | .app (.id op) [.id _, _, _, _] =>
+      if op == w!"@bigcap" || op == w!"@bigcup" then some none else none
     | .app (.id _) args => args.foldlM (fun acc a => do
         let r ← seqTermIndex isSeq f a
         match acc, r with
@@ -2137,6 +2140,24 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             if let some r ← inComplement then return r
             fail E.noun words.flatten
           | _ => fail E.ambiguous (words.flatten ++ w!" has several meanings")
+      -- `\bigcap_n U_n`, `\bigcup_{n=1}^{\infty} A_n`: the elements in every (some) term of the
+      -- sequence of sets at the integers `n` from the lower to the upper bound (the natural
+      -- numbers for `\bigcap_n`)
+      if let (.id op, [.id v, lo, hi, body]) := (hd, args) then
+        if op == w!"@bigcap" || op == w!"@bigcup" then
+          if (lookupLocal sc v).isSome then fail E.shadow v
+          let l ← asReal (← term f sc none lo)
+          let hiInf := match hi with | .id h => h == w!"\\infty" | _ => false
+          let h ← if hiInf then pure none else some <$> asReal (← term f sc none hi)
+          let (bt, bty) ← term f ((v, .real) :: sc) none body
+          let .fn x .prop := bty | fail E.type
+          let lower : Tm := .and (.app (.prim .isInt) (.loc 0)) (.le (shift 1 0 l) (.loc 0))
+          let idx : Tm := match h with
+            | some h => .and lower (.le (.loc 0) (shift 1 0 h))
+            | none => lower
+          let inner := Tm.app (shift 1 1 bt) (.loc 1)
+          let cond := shift 1 1 idx
+          return (.lam x .tt (if op == w!"@bigcap" then .all .real (.imp cond inner) else .ex .real (.and cond inner)), .fn x .prop)
       match hd, args with
       -- `\limsup_{n\to\infty} a_n`, `\liminf_{x\to\infty} f(x)`: the number `L` such that, for
       -- every `ε>0`, the values beyond every `N` exceed `L-ε` somewhere and eventually stay

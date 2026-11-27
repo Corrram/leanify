@@ -2707,6 +2707,31 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       some (Clause.existsNP (ws ++ [Chunk.w w!"of", Chunk.m ts]) false none, rest) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
+  -- `$G$ has an even number of vertices of odd degree`: the number of those objects of the
+  -- subject (the notion `number of … of $G$`) is even (odd)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has", w!"an"] r
+      let (parity, r2) ← (kw [w!"even", w!"number", w!"of"] r1).map (w!"even", ·) <|>
+        (kw [w!"odd", w!"number", w!"of"] r1).map (w!"odd", ·)
+      let ws := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"iff"].contains w
+        | .p 45 => true
+        | _ => false
+      if ws.isEmpty then none
+      let items := ws.filterMap fun (c : Chunk) => match c with
+        | .w w => some (MT.text (lower w))
+        | _ => none
+      -- (`2k` or `2k+1` for an integer `k`, whatever the vocabulary says of `even`)
+      let n := MT.app (.id w!"@the") ([MT.text w!"number", .text w!"of"] ++ items ++ [.text w!"of", s])
+      let k : Codes := w!"@k"
+      let twoK := MT.mul (.num 2) (.id k)
+      let rhs := if parity == w!"even" then twoK else MT.add twoK (.num 1)
+      some (Clause.fact (.quant false [k] (.id w!"\\mathbb{Z}") (.chain n [(.eq, rhs)])), r2.drop ws.length) :
+      Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
   -- `$f$ has a [unique] fixed point`, `$G$ has an element of order $2$`: there is such an
   -- object of the subject (the noun's complement `of $f$`, after the noun's words)
   match (do
@@ -2752,6 +2777,19 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
     | none =>
     match kw [w!"is"] r with
     | some r1 =>
+      -- `the sum of the degrees of the vertices of $G$ is twice the number of edges of $G$`:
+      -- twice (three times) a notion or a formula
+      let multiple : Option (Clause × List Chunk) := match s, r1 with
+        | .math lhs, .w tw :: r2 => do
+          let k ← if tw == w!"twice" then some 2 else if tw == w!"thrice" then some 3 else none
+          let (m, r3) ← (match r2 with
+            | .w _ :: _ => notionSubj r2 true
+            | _ => formula r2)
+          some (.fact (.chain lhs [(.eq, .mul (.num k) m)]), r3)
+        | _, _ => none
+      match multiple with
+      | some res => some res
+      | none =>
       -- `the order of $G$ is $6$`: a notion subject equal to a term
       let isTerm : Option (Clause × List Chunk) := match s, r1 with
         | .math (.app (.id t) items), .m ts :: r2 =>

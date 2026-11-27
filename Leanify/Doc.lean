@@ -2569,6 +2569,34 @@ def setOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk) := do
     | none => some c) none
   some (rest.take i ++ n.sing.filterMap (fun it => match it with | .w w => some (Chunk.w w) | _ => none) ++ rest.drop words.length)
 
+/-- `sequence of dense open subsets of $X$ $(U_n)$`: the noun phrase of each term, in the singular
+and without a variable (`dense open subset of $X$`), and the sequence's variable. -/
+def seqOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk × List MTok × List Chunk) := do
+  let rest ← Grammar.kw [w!"sequence", w!"of"] np
+  -- (the conditions, after `with` or `such that`)
+  let ci := rest.findIdx? fun c => match c with | .w w => w == w!"with" || w == w!"such" | _ => false
+  let (rest, conds) := match ci with
+    | some i => (rest.take i, ((Grammar.kw [w!"with"] (rest.drop i) <|> Grammar.kw [w!"such", w!"that"] (rest.drop i))).getD [])
+    | none => (rest, [])
+  if ci.isSome && conds.isEmpty then none
+  let words := rest.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+  -- (the variable after the words, before a complement, or at the end)
+  let (vts, rest) ← match rest.drop words.length with
+    | .m vts :: after => some (vts, words ++ after)
+    | _ => match rest.getLast? with
+      | some (.m vts) => some (vts, rest.dropLast)
+      | _ => none
+  let cands := V.nouns.filterMap fun n =>
+    if n.plural == n.sing || n.plural.isEmpty || !(n.plural.all fun i => match i with | .w _ => true | _ => false) then none else
+    (List.range words.length).reverse.findSome? fun i =>
+      match matchPhrase n.plural (words.drop i) with
+      | some (none, []) => some (i, n)
+      | _ => none
+  let (i, n) ← cands.foldl (fun (best : Option (Nat × Noun)) c => match best with
+    | some b => if c.1 < b.1 then some c else some b
+    | none => some c) none
+  some (rest.take i ++ n.sing.filterMap (fun it => match it with | .w w => some (Chunk.w w) | _ => none) ++ rest.drop words.length, vts, conds)
+
 /-- `nounPhrase1Core`; and where words stand between the noun and its variable that are a
 modifier of the noun (`an integer coprime $a$ to $n$`, as `Let $a$ be an integer coprime to
 $n$` is read: the variable is put before the last preposition), the phrase with the
@@ -2699,7 +2727,7 @@ def nounPhraseCore (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     pure b
 
 /-- `nounPhraseCore`, and an adjective that the vocabulary has relative to a structure only. -/
-def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+def nounPhrase0 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st00 ← get
   tryCatch (nounPhraseCore np outer) fun e00 => do
   set st00
@@ -2731,6 +2759,35 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             pure (Tm.lam b.ty .tt (Notation.betaApply m.pred [a, .loc 0]))
           pure (some { b with pred := conjPreds b.ty (b.pred.toList ++ ps) })) fun _ => do set st0; pure none
       if let some b := r then return b
+  throw e00
+
+/-- `nounPhrase0`, and `a sequence of dense open subsets of $X$ $(U_n)$`: a function of the
+natural numbers whose terms `U_n` are each as the noun phrase says (its values elsewhere are not
+used). -/
+def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
+  let st00 ← get
+  tryCatch (nounPhrase0 np outer) fun e00 => do
+  set st00
+  if let some (np', vts, condCs) := seqOfElems (← get).vocab np then
+    if let some v := varName vts then
+      if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then
+        if b.name.isEmpty then
+          let each : Tm := match b.pred with
+            | some p => .app (shift 2 0 p) (.app (.loc 1) (.loc 0))
+            | none => .tt
+          modify fun st => { st with infSeqs := (st.curEnv, v) :: st.infSeqs.filter (·.2 != v), pendingSeq := false }
+          let sty : Ty := .fn .real b.ty
+          -- (`with $A_{n+1}\subseteq A_n$ for all $n$`: conditions on the terms, stated where
+          -- the sequence is bound)
+          let (ms, left) := condsOf 4 condCs []
+          if !left.isEmpty then throw e00
+          let cs ← ms.mapM fun m => do
+            let (p, pty) ← Elab.term 100000 ((v, sty) :: outer) none m
+            if pty != .prop then fail E.type
+            pure p
+          let terms : List Tm := if each == .tt then [] else [Tm.all .real (.imp (.app (.prim .isNat) (.loc 0)) each)]
+          return ⟨v, sty, some (.lam sty .tt (Elab.conjAll (terms ++ cs)))⟩
+    set st00
   throw e00
 
 /-- The subformulas of a formula. -/
@@ -2855,6 +2912,10 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .app (.id op) [x, y] =>
       (if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\times" || op == w!"\\setminus" then []
         else freeIds f bound (.id op)) ++ freeIds f bound x ++ freeIds f bound y
+    -- (`\bigcap_n U_n`: the index is bound)
+    | .app (.id op) [.id v, lo, hi, b] =>
+      if op == w!"@bigcap" || op == w!"@bigcup" then freeIds f bound lo ++ freeIds f bound hi ++ freeIds f (v :: bound) b
+      else freeIds f bound (.id op) ++ ([MT.id v, lo, hi, b].flatMap (freeIds f bound))
     | .app h as => freeIds f bound h ++ (as.flatMap (freeIds f bound))
     | .add x y | .minus x y | .mul x y | .div x y | .frac x y => freeIds f bound x ++ freeIds f bound y
     | .minm xs | .maxm xs | .tuple xs | .conj xs => xs.flatMap (freeIds f bound)
@@ -2897,6 +2958,8 @@ def boundIds : Nat → MT → List Codes
     | .sub x y | .sup x y | .add x y | .minus x y | .mul x y | .div x y | .frac x y
     | .interval x y | .ival x y _ _ | .equiv x y | .land x y | .lor x y | .limp x y | .liff x y => all [x, y]
     | .hat x | .neg x | .abs x | .lnot x | .extr _ x | .bound _ x => boundIds f x
+    | .app (.id op) [.id v, lo, hi, b] =>
+      (if op == w!"@bigcap" || op == w!"@bigcup" then [v] else []) ++ all [lo, hi, b]
     | .app h as => all (h :: as)
     | .minm xs | .maxm xs | .tuple xs | .conj xs | .finset xs => all xs
     | .int lo hi b v => v :: all [lo, hi, b]

@@ -42,7 +42,9 @@ tests/Graphs/article.tex:93:96: info: claim 24: \forall x\in \mathbb{R},\ \foral
 tests/Graphs/article.tex:93:162: info: claim 25: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow (\operatorname{Bipartite}(y)\Leftrightarrow \neg \operatorname{OddCycle}(y))
 tests/Graphs/article.tex:93:259: info: claim 26: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert E(y)\rvert=x\Rightarrow (\forall z\in \mathbb{R},\ z\in V(y)\Rightarrow z\in V(y)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \deg_{y}(z)=2\,s)\lor z\in V(y)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \deg_{y}(z)=2\,s+1))
 tests/Graphs/article.tex:97:31: info: claim 27: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\operatorname{Eulerian}(x)\Leftrightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z)))
-tests/Graphs/article.tex: 8 definitions, 28 claims
+tests/Graphs/article.tex:101:1: info: claim 28: \forall x\in \mathrm{Graph},\ \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land \lvert V_{\mathrm{odd}}(x)\rvert=2\,y
+tests/Graphs/article.tex:101:79: info: claim 29: \forall x\in \mathrm{Graph},\ \sum_{v\in V(x)}\deg(v)=2\,\lvert E(x)\rvert
+tests/Graphs/article.tex: 8 definitions, 30 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 37 compiled, 0 failed, 0 prose (of 37)
-  all: 45 compiled, 0 failed, 0 prose (of 45)
+  results: 40 compiled, 0 failed, 0 prose (of 40)
+  all: 48 compiled, 0 failed, 0 prose (of 48)

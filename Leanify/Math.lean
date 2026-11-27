@@ -450,6 +450,7 @@ def startsFactor : MTok → Bool
   | .cmd n => n == w!"frac" || n == w!"int" || n == w!"min" || n == w!"max" || n == w!"sup" ||
       n == w!"limsup" || n == w!"liminf" || n == w!"lVert" ||
       n == w!"inf" || n == w!"sum" || n == w!"prod" || n == w!"lim" || n == w!"binom" ||
+      n == w!"bigcap" || n == w!"bigcup" ||
       n == w!"tbinom" || n == w!"dbinom" || n == w!"widehat"
       || n == w!"hat" || (!(relOf (.cmd n)).isSome && n != w!"mapsto" && n != w!"to" &&
         n != w!"cdot" && n != w!"qquad" && n != w!"quad" && n != w!"times" && n != w!"top" && n != w!"perp" &&
@@ -727,6 +728,23 @@ def run : Nat → Mode → List MTok → R
         if n != w!"sum" then none
         let (body, r2) ← run f (.product false) r1
         some (.app (.id w!"@sumsub") [dom, .mapsto (.id v) body], r2))
+      else if n == w!"bigcap" || n == w!"bigcup" then
+        -- `\bigcap_n U_n`, `\bigcup_{n=1}^{\infty} A_n`, `\bigcap_{n=1}^{N} U_n`: the
+        -- intersection (union) of the terms of a sequence over its indices
+        let op := if n == w!"bigcap" then w!"@bigcap" else w!"@bigcup"
+        match rest with
+        | .sym 95 :: r => do
+          let (b, r1) ← run f .group r
+          match b, r1 with
+          | .id v, _ =>
+            let (body, r2) ← run f (.product false) r1
+            some (.app (.id op) [.id v, .num 0, .id w!"\\infty", body], r2)
+          | .chain (.id v) [(.eq, lo)], .sym 94 :: r2 => do
+            let (hi, r3) ← run f .group r2
+            let (body, r4) ← run f (.product false) r3
+            some (.app (.id op) [.id v, lo, hi, body], r4)
+          | _, _ => none
+        | _ => none
       else if n == w!"sup" || n == w!"inf" then
         let isSup := n == w!"sup"
         match rest with
