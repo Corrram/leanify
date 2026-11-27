@@ -44,7 +44,9 @@ tests/Matrices/article.tex:69:96: info: claim 22: \forall x\in \mathrm{Mat},\ \f
 tests/Matrices/article.tex:69:96: info: claim 22 is meaningful if: \forall x\in \mathrm{Mat},\ \forall y\in \mathrm{Mat},\ y\sim x\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y)
 tests/Matrices/article.tex:69:154: info: claim 23: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow x\sim y\Rightarrow \operatorname{tr}(x)=\operatorname{tr}(y))
 tests/Matrices/article.tex:69:154: info: claim 23 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow x\sim y\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y))
-tests/Matrices/article.tex: 4 definitions, 24 claims
+tests/Matrices/article.tex:73:65: info: claim 24: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ (\operatorname{rows}(y)=x\land \operatorname{cols}(y)=x)\land \operatorname{Square}(y)\land \operatorname{card}((t\in \mathbb{R}\mapsto \operatorname{Eigenvalue}(y)(t)))(x)\Rightarrow \operatorname{Diagonalizable}(y)
+tests/Matrices/article.tex:73:114: info: claim 25: \forall x\in \mathrm{Mat},\ \operatorname{rank}(x^{\top})=\operatorname{rank}(x)
+tests/Matrices/article.tex: 4 definitions, 26 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 29 compiled, 0 failed, 0 prose (of 29)
-  all: 33 compiled, 0 failed, 0 prose (of 33)
+  results: 33 compiled, 0 failed, 0 prose (of 33)
+  all: 37 compiled, 0 failed, 0 prose (of 37)

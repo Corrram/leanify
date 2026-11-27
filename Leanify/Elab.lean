@@ -1467,6 +1467,14 @@ def atOmega (rvs seqs : List Codes) : Nat → MT → MT
   | f + 1, m =>
     let go := atOmega rvs seqs f
     let at_ (x : MT) : MT := .app (.id w!"@at") [x, .id w!"@omega"]
+    -- (an expectation, a variance or a probability inside is a number: `|X-\mathbb{E}X|`)
+    let whole := [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}", w!"@expect", w!"P", w!"\\mathbb{P}",
+      w!"\\Pr", w!"\\operatorname{P}", w!"\\mathrm{P}", w!"@prob", w!"Var", w!"var", w!"\\mathbb{V}", w!"\\operatorname{Var}",
+      w!"\\mathrm{Var}", w!"Cov", w!"cov", w!"\\operatorname{Cov}", w!"\\mathrm{Cov}", w!"@rexp"]
+    let kept : Bool := match m with
+      | .app (.id n) _ | .mul (.id n) _ => whole.contains n
+      | _ => false
+    if kept then m else
     match m with
     | .id n => if rvs.contains n then at_ m else m
     | .sub (.id n) i => if seqs.contains n then at_ m else .sub (.id n) (go i)
@@ -3765,6 +3773,8 @@ where
       | .mul (.id n) x =>
         -- `\mathbb{E}X`
         if (← isName expNames n) && n.head? != some 64 then return some (expect (← pw x), .real)
+        -- `\operatorname{Var}X`: as `\operatorname{Var}(X)`
+        if (← isName varNames n) && n.head? != some 64 then return ← probTerm g sc pf (.app (.id n) [x])
         return none
       | _ => return none
   propOf : Nat → Scope → PF → MT → M Tm

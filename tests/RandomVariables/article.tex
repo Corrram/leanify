@@ -92,4 +92,8 @@ Let $X$ be a Poisson random variable with parameter $\lambda>0$. Then $\operator
 Let $X$ be a binomial random variable with parameters $n$ and $p$. Then $\mathbb{E}[X]=np$.
 \end{lemma}
 
+\begin{lemma}\label{chebyshev}
+Let $X$ be a random variable with finite variance and let $t>0$. Then $P(|X-\mathbb{E}X|\ge t)\le\frac{\operatorname{Var}X}{t^2}$ and $P(|X-\mathbb{E}[X]|\ge t)\le\frac{\operatorname{Var}(X)}{t^2}$. Let $Y$ and $Z$ be independent random variables with finite variance. Then $\operatorname{Var}(Y+Z)=\operatorname{Var}Y+\operatorname{Var}Z$.
+\end{lemma}
+
 \end{document}

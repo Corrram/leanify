@@ -890,6 +890,8 @@ except a notion whose meanings take arguments of different types, which the type
 | idempotent | $\mathrm{Mat}$ | square, `A² = A` |
 | stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
 | diagonalizable | $\mathrm{Mat}$ | `P⁻¹AP` diagonal for an invertible real `P` |
+| with $x$ distinct eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`) |
+| with $x$ distinct real eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues |
 | orthogonally diagonalizable | $\mathrm{Mat}$ | `QᵀAQ` diagonal for an orthogonal `Q` |
 | similar to $x$ | $\mathrm{Mat}$ | `B = P⁻¹AP` for an invertible `P` |
 | $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
@@ -905,6 +907,8 @@ except a notion whose meanings take arguments of different types, which the type
 | determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
 | trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
+| row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
@@ -2239,6 +2243,8 @@ except a notion whose meanings take arguments of different types, which the type
 | idempotent | $\mathrm{Mat}$ | square, `A² = A` |
 | stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
 | diagonalizable | $\mathrm{Mat}$ | `P⁻¹AP` diagonal for an invertible real `P` |
+| with $x$ distinct eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`) |
+| with $x$ distinct real eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues |
 | orthogonally diagonalizable | $\mathrm{Mat}$ | `QᵀAQ` diagonal for an orthogonal `Q` |
 | similar to $x$ | $\mathrm{Mat}$ | `B = P⁻¹AP` for an invertible `P` |
 | $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
@@ -2260,6 +2266,8 @@ except a notion whose meanings take arguments of different types, which the type
 | determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
 | trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
+| row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
@@ -2644,6 +2652,8 @@ except a notion whose meanings take arguments of different types, which the type
 | idempotent | $\mathrm{Mat}$ | square, `A² = A` |
 | stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
 | diagonalizable | $\mathrm{Mat}$ | `P⁻¹AP` diagonal for an invertible real `P` |
+| with $x$ distinct eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`) |
+| with $x$ distinct real eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues |
 | orthogonally diagonalizable | $\mathrm{Mat}$ | `QᵀAQ` diagonal for an orthogonal `Q` |
 | similar to $x$ | $\mathrm{Mat}$ | `B = P⁻¹AP` for an invertible `P` |
 | $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
@@ -2672,6 +2682,8 @@ except a notion whose meanings take arguments of different types, which the type
 | determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
 | trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
+| row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |

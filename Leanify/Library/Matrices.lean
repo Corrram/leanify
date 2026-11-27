@@ -14,7 +14,8 @@ is the `1 × 1` matrix: the product of such a matrix with another is the scalar 
 * adjectives: `square`, `symmetric`, `skew-symmetric`, `orthogonal`, `invertible`,
   `singular`, `nonsingular`, `positive definite`, `positive semidefinite`, `diagonal`,
   `upper triangular`, `lower triangular`, `nilpotent`, `idempotent`, `stochastic`,
-  `diagonalizable`, `orthogonally diagonalizable`, `similar to $B$`, `$m\times n$`, `of size
+  `diagonalizable`, `orthogonally diagonalizable`, `similar to $B$`, `with $n$ distinct
+  eigenvalues`, `$m\times n$`, `of size
   $m\times n$`, `of rank $r$`;
 * notions: the numbers of rows and columns, the entry in row `i` and column `j`, the
   determinant, trace, rank, transpose and inverse, the identity and zero matrices, the
@@ -151,6 +152,12 @@ def vocab : Vocab where
     mod phrase!"idempotent" true (.const idempotent) "square, `A² = A`",
     mod phrase!"stochastic" true (.const stochastic) "square, nonnegative entries, rows summing to `1`",
     mod phrase!"diagonalizable" true (.const diagonalizable) "`P⁻¹AP` diagonal for an invertible real `P`",
+    mod phrase!"with $v$ distinct eigenvalues" false (close <| lamR fun k => lamT M (fun _ => tt) fun a =>
+        and (app (const square) a) (app2 (prim .cardIs) (lamR fun t => app2 (const eigenvalue) a t) k))
+      "square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`)",
+    mod phrase!"with $v$ distinct real eigenvalues" false (close <| lamR fun k => lamT M (fun _ => tt) fun a =>
+        and (app (const square) a) (app2 (prim .cardIs) (lamR fun t => app2 (const eigenvalue) a t) k))
+      "square, with exactly `k` real eigenvalues",
     mod phrase!"orthogonally diagonalizable" true (.const orthDiagonalizable) "`QᵀAQ` diagonal for an orthogonal `Q`",
     mod phrase!"similar to $v$" false (close <| lamT M (fun _ => tt) fun a => lamT M (fun _ => tt) fun b => app2 (const similar) a b)
       "`B = P⁻¹AP` for an invertible `P`",
@@ -167,6 +174,9 @@ def vocab : Vocab where
     ofM phrase!"determinant of $v$" (.const det) sqDom (M ⟶ .real) "of a square matrix (Mathlib `Matrix.det`)",
     ofM phrase!"trace of $v$" (.const trace) sqDom (M ⟶ .real) "of a square matrix (Mathlib `Matrix.trace`)",
     ofM phrase!"rank of $v$" (.const rank) none (M ⟶ .real) "(Mathlib `Matrix.rank`)",
+    ofM phrase!"column rank of $v$" (.const rank) none (M ⟶ .real) "the dimension of the column space (Mathlib `Matrix.rank`)",
+    ofM phrase!"row rank of $v$" (close <| lamT M (fun _ => tt) fun a => app (const rank) (app (const transpose) a)) none (M ⟶ .real)
+      "the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`)",
     ofM phrase!"transpose of $v$" (.const transpose) none (M ⟶ M) "`Aᵀ`",
     ofM phrase!"inverse of $v$" (.const inverse) (some (.const invertible)) (M ⟶ M)
       "of an invertible matrix (Mathlib `Matrix.inv`)",
