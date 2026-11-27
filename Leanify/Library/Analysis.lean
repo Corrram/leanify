@@ -84,7 +84,15 @@ def vocab : Vocab where
     { sing := phrase!"fixed point", plural := phrase!"fixed points", ty := .real, pred := close (lamR fun _ => tt),
       arg := some ([w!"of"], Ty.rfun, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun d => lamT Ty.rfun (fun _ => tt) fun f =>
         lamR fun x => and (app d x) (eq (app f x) x)), argOnDomain := true,
-      doc := "a point `x` of the domain with `f(x) = x` (Mathlib `Function.IsFixedPt`)" }]
+      doc := "a point `x` of the domain with `f(x) = x` (Mathlib `Function.IsFixedPt`)" },
+    { sing := phrase!"zero", plural := phrase!"zeros", ty := .real, pred := close (lamR fun _ => tt),
+      arg := some ([w!"of"], Ty.rfun, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun d => lamT Ty.rfun (fun _ => tt) fun f =>
+        lamR fun x => and (app d x) (eq (app f x) (num 0))), argOnDomain := true,
+      doc := "a point `x` of the domain with `f(x) = 0`" },
+    { sing := phrase!"root", plural := phrase!"roots", ty := .real, pred := close (lamR fun _ => tt),
+      arg := some ([w!"of"], Ty.rfun, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun d => lamT Ty.rfun (fun _ => tt) fun f =>
+        lamR fun x => and (app d x) (eq (app f x) (num 0))), argOnDomain := true,
+      doc := "a zero: a point `x` of the domain with `f(x) = 0`" }]
   mods := [
     mod phrase!"continuous" true (onLine .continuousOn) "(Mathlib `Continuous`)",
     mod phrase!"uniformly continuous" true (.const 0) "(Mathlib `UniformContinuous`)",

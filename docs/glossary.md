@@ -221,6 +221,7 @@ except a notion whose meanings take arguments of different types, which the type
 | larger than $x$ | ℝ | `x > c` |
 | less than $x$ | ℝ | `x < c` |
 | smaller than $x$ | ℝ | `x < c` |
+| in $x$ | ℝ | `x ∈ S`, of a set `S` of real numbers (`a real number in $(0,1)$`) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
@@ -1063,6 +1064,8 @@ except a notion whose meanings take arguments of different types, which the type
 | real function | ℝ → ℝ | `ℝ → ℝ` |
 | bijection | ℝ → ℝ | of the line (Mathlib `Function.Bijective`) |
 | fixed point | ℝ | a point `x` of the domain with `f(x) = x` (Mathlib `Function.IsFixedPt`) |
+| zero | ℝ | a point `x` of the domain with `f(x) = 0` |
+| root | ℝ | a zero: a point `x` of the domain with `f(x) = 0` |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |

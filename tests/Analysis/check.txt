@@ -62,7 +62,9 @@ tests/Analysis/article.tex:147:60: info: claim 43: \forall x\in \mathbb{R}\to \m
 tests/Analysis/article.tex:151:1: info: claim 44: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall z\in \mathbb{R},\ x'(z)=0)\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s))
 tests/Analysis/article.tex:151:132: info: claim 45: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall z\in \mathbb{R},\ (y\in \mathbb{R}\mapsto \tfrac{\mathrm{d}}{\mathrm{d}s}x(s)\big|_{s=y})(z)=0)\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s))
 tests/Analysis/article.tex:151:132: info: claim 45 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R},\ \exists z\in \mathbb{R},\ ((s\in \mathbb{R}\mapsto x(s)))'(y)=z\text{ within }(s\in \mathbb{R}\mapsto \top)\land (\forall s\in \mathbb{R},\ ((t\in \mathbb{R}\mapsto x(t)))'(y)=s\text{ within }(t\in \mathbb{R}\mapsto \top)\Rightarrow s=z))
-tests/Analysis/article.tex: 5 definitions, 46 claims
+tests/Analysis/article.tex:155:81: info: claim 46: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{a:y\le a\land a\le x\}\land z(y)<0\land 0<z(x)\Rightarrow (\exists s\in \mathbb{R},\ (((y\le s\land s\le x)\land z(s)=0)\land y<s\land s<x)\land \top))
+tests/Analysis/article.tex:155:150: info: claim 47: \forall x\in \mathbb{R},\ 0<x\land x<1\Rightarrow {x}^{2}<x
+tests/Analysis/article.tex: 5 definitions, 48 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 75 compiled, 0 failed, 0 prose (of 75)
-  all: 79 compiled, 0 failed, 0 prose (of 79)
+  results: 79 compiled, 0 failed, 0 prose (of 79)
+  all: 83 compiled, 0 failed, 0 prose (of 83)

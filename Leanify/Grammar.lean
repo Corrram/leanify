@@ -8067,6 +8067,23 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let built := [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w w!"if", .w e] ++ noun ++ [.w w!"of", .m [.id x]] ++
       crest.drop v ++ [.p 44, .w w!"then", .m [.id x]] ++ main
     (sentence built <|> sentence (chunkForms (built.length + 1) built)).toList
+  -- `Every graph with $n$ vertices and at least $n$ edges contains a cycle.`: `For every graph
+  -- $X$ with $n$ vertices and at least $n$ edges, $X$ contains a cycle.` (the letter after the
+  -- noun's words, before its complements)
+  let everyNoVarOf (cs : List Chunk) : Option (List Chunk) := do
+    if !generic then none
+    let .w q :: rest := cs | none
+    if ![w!"every", w!"each", w!"any"].contains (lower q) then none
+    let verbs := [w!"is", w!"are", w!"has", w!"have", w!"contains", w!"divides", w!"equals", w!"lies", w!"converges",
+      w!"attains", w!"admits", w!"satisfies"]
+    let j ← rest.findIdx? (fun c => match c with | .w x => verbs.contains x | _ => false)
+    let np := rest.take j
+    let head := np.takeWhile fun c => match c with | .w x => ![w!"with", w!"of", w!"on", w!"in", w!"over"].contains x | .p 45 => true | _ => false
+    if head.isEmpty || !plainWords head || head.length == np.length then none
+    if !(np.drop head.length).any (fun c => match c with | .w x => x == w!"and" | _ => false) then none
+    let x := nestVar avoid cs 0
+    some ([.w w!"for", .w w!"every"] ++ head ++ [.m [.id x]] ++ np.drop head.length ++ [.p 44, .m [.id x]] ++ rest.drop j)
+  let everyNoVar : List Sent := ((everyNoVarOf cs).bind fun c => sentence (lead ++ c)).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -8102,7 +8119,8 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     if !(lower a == w!"a" || lower a == w!"an") then return []
     let ev := .w w!"every" :: rest
     let mut acc := (sentence (lead ++ ev)).toList ++
-      ((everyVar ev).bind fun cs' => sentence (lead ++ cs')).toList
+      ((everyVar ev).bind fun cs' => sentence (lead ++ cs')).toList ++
+      ((everyNoVarOf ev).bind fun cs' => sentence (lead ++ cs')).toList
     -- (and its nested indefinites: `A compact subset of a Hausdorff space is closed.`)
     -- (`A continuous image of a connected space is connected.`: the image of every such map,
     -- as `The continuous image of …`)
@@ -8117,7 +8135,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
               ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

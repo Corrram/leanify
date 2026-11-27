@@ -47,7 +47,9 @@ tests/Graphs/article.tex:101:79: info: claim 29: \forall x\in \mathrm{Graph},\ \
 tests/Graphs/article.tex:105:1: info: claim 30: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z))\Rightarrow \operatorname{Eulerian}(x)
 tests/Graphs/article.tex:109:65: info: claim 31: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\land \lfloor x-1\rfloor+1\le \lvert E(y)\rvert\Rightarrow \neg \operatorname{Acyclic}(y)
 tests/Graphs/article.tex:109:92: info: claim 32: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \operatorname{Tree}(y)\land \lvert V(y)\rvert=x\Rightarrow \lvert E(y)\rvert=x-1
-tests/Graphs/article.tex: 8 definitions, 33 claims
+tests/Graphs/article.tex:113:1: info: claim 33: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\land x\le \lvert E(y)\rvert\Rightarrow \neg \operatorname{Acyclic}(y)
+tests/Graphs/article.tex:113:72: info: claim 34: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\land \lfloor x-1\rfloor+1\le \lvert E(y)\rvert\Rightarrow \neg \operatorname{Acyclic}(y)
+tests/Graphs/article.tex: 8 definitions, 35 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 44 compiled, 0 failed, 0 prose (of 44)
-  all: 52 compiled, 0 failed, 0 prose (of 52)
+  results: 46 compiled, 0 failed, 0 prose (of 46)
+  all: 54 compiled, 0 failed, 0 prose (of 54)

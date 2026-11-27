@@ -5,7 +5,8 @@ import Leanify.Library.Build
 The words that every article may use, whatever its fields: real numbers and integers,
 rational and irrational numbers, the signs of a real number (`positive`,
 `nonnegative`, `nonzero`), a bound after the noun (`greater than $1$`), the square root,
-absolute value, square, cube and reciprocal of a number, and a square root of a number (a noun). Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
+absolute value, square, cube and reciprocal of a number, a square root of a number (a noun), and a
+set after `in` (`a real number in $(0,1)$`). Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
 Every meaning is a term of the core language, so the core has no constants and no model.
 
 *Natural number* has two meanings (with and without 0), so Leanify does not read it
@@ -70,7 +71,10 @@ def numbers : Vocab where
     post phrase!"greater than $v$" (fun c x => lt c x) "`x > c`",
     post phrase!"larger than $v$" (fun c x => lt c x) "`x > c`",
     post phrase!"less than $v$" (fun c x => lt x c) "`x < c`",
-    post phrase!"smaller than $v$" (fun c x => lt x c) "`x < c`"]
+    post phrase!"smaller than $v$" (fun c x => lt x c) "`x < c`",
+    { phrase := phrase!"in $v$", prenominal := false, ty := .real,
+      pred := close <| lamT (.real ⟶ .prop) (fun _ => tt) fun s => lamR fun x => app s x,
+      doc := "`x ∈ S`, of a set `S` of real numbers (`a real number in $(0,1)$`)" }]
   notions := [
     { name := phrase!"square root of $v$", value := close <| lamR fun x => app2 (prim .rpow) x (div (num 1) (num 2)),
       ty := .real ⟶ .real, doms := [some (predR fun x => le (num 0) x)],
