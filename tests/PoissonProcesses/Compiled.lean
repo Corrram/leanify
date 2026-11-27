@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def PoissonProcesses.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["poissonprocesses"]
 
-#leanify_article PoissonProcesses "article.tex" "fnv1a64:bce71f432c320cff" with PoissonProcesses.vocabulary
+#leanify_article PoissonProcesses "article.tex" "fnv1a64:9df58badef579c08" with PoissonProcesses.vocabulary

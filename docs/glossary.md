@@ -3912,13 +3912,13 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| probability of $a$ arrivals by time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | `e^{-λt}(λt)^k/k!` |
-| probability of an arrival by time $a$ at rate $b$ | ℝ → ℝ → ℝ | `1 - e^{-λt}` |
-| expected waiting time for the $a$ th arrival at rate $b$ | ℝ → ℝ → ℝ | `k/λ` (Erlang) |
-| probability that the $a$ th arrival comes after time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | `∑_{j=0}^{k-1} e^{-λt}(λt)^j/j!` |
-| rate of the process with rate $a$ thinned with probability $b$ | ℝ → ℝ → ℝ | `pλ`: each arrival kept with probability `p` |
-| mean of the compound poisson sum at time $a$ with rate $b$ and jump mean $c$ | ℝ → ℝ → ℝ → ℝ | `λtμ` |
-| variance of the compound poisson sum at time $a$ with rate $b$, jump mean $c$ and jump variance $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `λt(σ² + μ²)` |
+| probability of $a$ arrivals by time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | the probability that `N_t = k` (`e^{-λt}(λt)^k/k!`) |
+| probability of an arrival by time $a$ at rate $b$ | ℝ → ℝ → ℝ | the probability that `N_t ≥ 1` (`1 - e^{-λt}`) |
+| expected waiting time for the $a$ th arrival at rate $b$ | ℝ → ℝ → ℝ | the expectation of the `k`th arrival time (`k/λ`, Erlang) |
+| probability that the $a$ th arrival comes after time $b$ at rate $c$ | ℝ → ℝ → ℝ → ℝ | (`∑_{j=0}^{k-1} e^{-λt}(λt)^j/j!`) |
+| rate of the process with rate $a$ thinned with probability $b$ | ℝ → ℝ → ℝ | the mean number of kept arrivals by time `1`, each arrival kept with probability `p` (`pλ`) |
+| mean of the compound poisson sum at time $a$ with rate $b$ and jump mean $c$ | ℝ → ℝ → ℝ → ℝ | the expectation of the sum of independent jumps with mean `μ` at the arrivals by `t` (`λtμ`) |
+| variance of the compound poisson sum at time $a$ with rate $b$, jump mean $c$ and jump variance $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | for every law of the jumps with mean `μ` and variance `σ²` (`λt(σ² + μ²)`) |
 
 ## `surveysampling`
 

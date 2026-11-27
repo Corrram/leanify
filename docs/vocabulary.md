@@ -421,7 +421,8 @@ Further fields cover other branches of mathematics:
 * `music`: pitch, intervals and tunings;
 * `fixedincome`: bonds, durations, perpetuities, loans;
 * `options`: payoffs, parity and the binomial model;
-* `poissonprocesses`: arrivals and compound sums;
+* `poissonprocesses`: arrivals and compound sums (of the process of independent exponential
+  interarrival times, so that the Poisson and Erlang formulas are claims);
 * `surveysampling`: sample sizes and design effects;
 * `convergence`: iteration counts and extrapolation;
 * `finitefields`: linear algebra over finite fields (counts over Mathlib's `GaloisField`: the

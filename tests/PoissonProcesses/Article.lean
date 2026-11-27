@@ -1,5 +1,6 @@
 import PoissonProcesses.Compiled
 import Leanify.Readable
+import Leanify.Library.PoissonProcessesModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 
