@@ -4579,7 +4579,12 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
     | some r =>
       -- (`Let $R$ be a ring and $I$ an ideal of $R$`: `be` left out)
       let elided : Option (Bind × List Chunk) := match r with
-        | .m v :: .w a :: rest => if a == w!"a" || a == w!"an" then letBinder (.m v :: .w w!"be" :: .w a :: rest) else none
+        | .m v :: .w a :: rest =>
+          if a == w!"a" || a == w!"an" then letBinder (.m v :: .w w!"be" :: .w a :: rest)
+          -- (`and $a\in K$ nonzero`: an element of the domain with adjectives)
+          else if v.contains (.cmd w!"in") && ![w!"be", w!"with", w!"such", w!"and", w!"satisfying", w!"where", w!"for",
+              w!"then", w!"is", w!"are", w!"if"].contains a then letBinder (.m v :: .w w!"be" :: .w a :: rest)
+          else none
         | _ => none
       -- (the elided `be` first: `and $T\colon V\to V$ a linear map` is no signature binder
       -- followed by words)
@@ -8010,6 +8015,19 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let x := nestVar avoid cs 0
     (sentence ([.w w!"for", .w w!"every"] ++ head ++ [.m [.id x]] ++ np.drop head.length ++ [.p 44, .w w!"the"] ++ words ++
       [.w w!"of", .m [.id x]] ++ after.drop j)).toList
+  -- `If $ab=0$ for $a,b\in R$, then $a=0$ or $b=0$.`: `For all $a,b\in R$, if $ab=0$, then …`
+  let ifFor : List Sent := Id.run do
+    let .w i :: rest := cs | return []
+    if i != w!"if" then return []
+    let some k := (List.range rest.length).find? fun j => match (rest[j]? : Option Chunk), (rest[j + 1]? : Option Chunk),
+          (rest[j + 2]? : Option Chunk), (rest[j + 3]? : Option Chunk) with
+        | some (.w f), some (.m ts), some (.p 44), some (.w t) => f == w!"for" && t == w!"then" && (binderMath ts).isSome
+        | _, _, _, _ => false
+      | return []
+    let cond := rest.take k
+    let .m ts := rest[k + 1]! | return []
+    if cond.isEmpty then return []
+    (sentence (lead ++ [.w w!"for", .w w!"all", .m ts, .p 44, .w w!"if"] ++ cond ++ rest.drop (k + 2))).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -8060,7 +8078,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
               ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

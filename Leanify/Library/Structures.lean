@@ -39,7 +39,7 @@ are bound by their signatures.
   `orthonormal` (of subsets also `orthogonal`);
 * adjectives of structures: `abelian`, `commutative`, `cyclic`, `simple`, `solvable`,
   `nilpotent`, `finite`, `infinite`, `countable`, `trivial`, `nontrivial`, `Noetherian`,
-  `reduced`, `algebraically closed`, `perfect`, `Hausdorff`, `compact`, `connected`,
+  `reduced`, `nonzero` (of an ideal or a submodule), `algebraically closed`, `perfect`, `Hausdorff`, `compact`, `connected`,
   `path-connected`, `locally compact`, `sequentially compact`, `second countable`, `separable`, `metrizable`,
   `discrete`, `regular`, `normal`, `complete`, `totally bounded`, `bounded`, `open`, `Polish`,
   `convex` (of a real vector space), `nonempty`, `$p$-` before `group` (`a finite $p$-group`),
@@ -647,6 +647,8 @@ def vocab : Vocab where
     adjS phrase!"infinite" (sP fun g => not (app (const 21) g)) "(Mathlib `Infinite`)",
     adjS phrase!"countable" (c 22) "(Mathlib `Countable`)",
     adjS phrase!"trivial" (sP fun g => eq (cardOf g) (num 1)) "with one element",
+    adjS phrase!"nonzero" (sP fun g => exT E fun a => and (app g a) (not (app2 (const 7) a (app (const 29) g))))
+      "with an element other than its zero (`I ≠ 0` of an ideal, a submodule)",
     adjS phrase!"nontrivial" (sP fun g => not (eq (cardOf g) (num 1))) "with more than one element",
     adjS phrase!"cancellative" (sP fun s => and (leftCancel s) (rightCancel s)) "`ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`)",
     adjS phrase!"left cancellative" (sP leftCancel) "`ab = ac` implies `b = c` (Mathlib `IsLeftCancelMul`)",

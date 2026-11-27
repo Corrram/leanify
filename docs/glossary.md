@@ -1418,6 +1418,7 @@ except a notion whose meanings take arguments of different types, which the type
 | infinite | $\mathrm{El}$ → Prop | (Mathlib `Infinite`) |
 | countable | $\mathrm{El}$ → Prop | (Mathlib `Countable`) |
 | trivial | $\mathrm{El}$ → Prop | with one element |
+| nonzero | $\mathrm{El}$ → Prop | with an element other than its zero (`I ≠ 0` of an ideal, a submodule) |
 | nontrivial | $\mathrm{El}$ → Prop | with more than one element |
 | cancellative | $\mathrm{El}$ → Prop | `ab = ac` or `ba = ca` implies `b = c` (Mathlib `IsCancelMul`) |
 | left cancellative | $\mathrm{El}$ → Prop | `ab = ac` implies `b = c` (Mathlib `IsLeftCancelMul`) |

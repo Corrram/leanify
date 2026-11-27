@@ -307,6 +307,9 @@ tests/Structures/article.tex:710:78: info: claim 247: \forall x\in \mathrm{El}\t
 tests/Structures/article.tex:710:143: info: claim 248: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{Finite}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land \operatorname{Finite}(y)\Rightarrow (\forall z\in \mathrm{El},\ y(z)\Rightarrow (\forall s\in \mathrm{El},\ x(s)\Rightarrow (\forall t\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(t)\land t\le x\Rightarrow \lvert t\rvert\in \mathbb{Z}\land \lvert x\rvert\in \mathbb{Z}\land (\exists a\in \mathbb{R},\ a\in \mathbb{Z}\land \lvert x\rvert=\lvert t\rvert\,a)))))
 tests/Structures/article.tex:714:1: info: claim 249: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Complete}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{El},\ (\forall t\in \mathbb{R},\ t\in \mathbb{N}\Rightarrow x(y(t)))\land \operatorname{Cauchy}(y)\Rightarrow (\exists s\in \mathrm{El},\ y\to s))
 tests/Structures/article.tex:714:61: info: claim 250: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{T_2}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ y\le x\Rightarrow \operatorname{T_2}(y))
-tests/Structures/article.tex: 13 definitions, 251 claims
-  results: 468 compiled, 0 failed, 0 prose (of 468)
-  all: 468 compiled, 0 failed, 0 prose (of 468)
+tests/Structures/article.tex:718:1: info: claim 251: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PID}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PrimeIdeal}(x)(y)\land (\exists t\in \mathrm{El},\ y(t)\land \neg t=0_{y})\Rightarrow \operatorname{MaximalIdeal}(x)(y))
+tests/Structures/article.tex:722:42: info: claim 252: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg y=0\Rightarrow y\in x^\times)
+tests/Structures/article.tex:726:32: info: claim 253: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Domain}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow y\,z=0\Rightarrow y=0\lor z=0))
+tests/Structures/article.tex: 13 definitions, 254 claims
+  results: 473 compiled, 0 failed, 0 prose (of 473)
+  all: 473 compiled, 0 failed, 0 prose (of 473)
