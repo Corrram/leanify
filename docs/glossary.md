@@ -1498,6 +1498,10 @@ except a notion whose meanings take arguments of different types, which the type
 | finite-dimensional over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | of dimension $x$ over $a$ | $\mathrm{El}$ → Prop | (Mathlib `Module.finrank`) |
 | of dimension $x$ | $\mathrm{El}$ → Prop | finite-dimensional over its scalars, with `n` vectors in a basis (Mathlib `Module.finrank`) |
+| of dimension at most $x$ | $\mathrm{El}$ → Prop | finite-dimensional, of dimension `≤ n` (Mathlib `Module.finrank`) |
+| of dimension at least $x$ | $\mathrm{El}$ → Prop | infinite-dimensional, or of dimension `≥ n` (Mathlib `Module.rank`) |
+| of order at most $x$ | $\mathrm{El}$ → Prop | finite, with at most `n` elements (Mathlib `Nat.card`) |
+| of order at least $x$ | $\mathrm{El}$ → Prop | infinite, or with at least `n` elements |
 | of finite dimension | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | injective | $\mathrm{Map}$ | (Mathlib `Function.Injective`) |
 | open | $\mathrm{Map}$ | the image of an open set is open (Mathlib `IsOpenMap`) |

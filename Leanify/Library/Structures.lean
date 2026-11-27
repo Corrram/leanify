@@ -802,6 +802,14 @@ def vocab : Vocab where
       and (app2 (const 65) k v) (eq (app2 (const 64) k v) n)) "(Mathlib `Module.finrank`)",
     postS phrase!"of dimension $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun v =>
       and (app (const 120) v) (eq (app (const 119) v) n)) "finite-dimensional over its scalars, with `n` vectors in a basis (Mathlib `Module.finrank`)",
+    postS phrase!"of dimension at most $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun v =>
+      and (app (const 120) v) (le (app (const 119) v) n)) "finite-dimensional, of dimension `≤ n` (Mathlib `Module.finrank`)",
+    postS phrase!"of dimension at least $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun v =>
+      or (not (app (const 120) v)) (le n (app (const 119) v))) "infinite-dimensional, or of dimension `≥ n` (Mathlib `Module.rank`)",
+    postS phrase!"of order at most $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun g =>
+      and (app (const 21) g) (le (cardOf g) n)) "finite, with at most `n` elements (Mathlib `Nat.card`)",
+    postS phrase!"of order at least $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun g =>
+      or (not (app (const 21) g)) (le n (cardOf g))) "infinite, or with at least `n` elements",
     postS phrase!"of finite dimension" (c 120) "(Mathlib `FiniteDimensional`)",
     mapM phrase!"injective" 155 "(Mathlib `Function.Injective`)",
     mapM phrase!"open" 200 "the image of an open set is open (Mathlib `IsOpenMap`)",

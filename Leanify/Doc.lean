@@ -749,6 +749,10 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
               | some x => [w!"order", w!"characteristic", w!"dimension", w!"index", w!"degree"].contains x
               | none => false
             (quantity (lw n) && m.tok == .mopen) ||
+              -- (`has dimension at most $3$`)
+              (quantity (lw n) && (lw m == some w!"at") && (match ts.drop 2 with
+                | q :: k :: _ => (lw q == some w!"most" || lw q == some w!"least") && k.tok == .mopen
+                | _ => false)) ||
               (((lw n).map fun x => [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains x).getD false &&
                 quantity (lw m))
           | _ => false) then

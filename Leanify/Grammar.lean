@@ -7076,10 +7076,25 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     -- (several variables: a plural noun phrase without an article)
     let (det?, r3) : List Chunk × List Chunk := if indef then ([.w det], r3) else ([], .w det :: r3)
     if vars.length > 1 && indef then none
-    let (front, prep, np, v?, after) ← nestSplit r3
     let one : Option (List MTok) := match vars with
       | [.m ts] => some ts
       | _ => none
+    -- `Let $T\colon V\to W$ be a linear map between finite-dimensional vector spaces`: both
+    -- letters of the signature objects of the noun (in the singular), then the map
+    let between : Option (List Chunk) := do
+      let .sig _ (.id d) (.id c) ← one.bind Math.parseSig | none
+      if d == c then none
+      let i ← r3.findIdx? fun ch => match ch with | .w w => w == w!"between" | _ => false
+      let front := r3.take i
+      let np := (r3.drop (i + 1)).takeWhile fun ch => match ch with | .w w => w != w!"and" && w != w!"with" | .p 45 => true | _ => false
+      let after := (r3.drop (i + 1)).drop np.length
+      let .w last ← np.getLast? | none
+      if !(last.length > 1 && last.getLast? == some 115) then none
+      let sing := np.dropLast ++ [.w last.dropLast]
+      some ([.w w!"let", .m [.id d], .w w!"be", .w w!"a"] ++ sing ++ [.p 44, .w w!"let", .m [.id c], .w w!"be", .w w!"a"] ++ sing ++
+        [.w w!"and", .w w!"let", .m (one.getD []), .w w!"be"] ++ det? ++ front ++ after)
+    if let some r := between then return r
+    let (front, prep, np, v?, after) ← nestSplit r3
     match one.bind Math.parseSig with
     | some (.sig _ (.id d) (.id c)) =>
       let vts := one.getD []
@@ -7532,6 +7547,39 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           (sings.map fun n => mk (atVar n x) (atVar n y)) ++ [mk (withVar x) (withVar y)]
         | _ => []
     | _ => []
+  -- `$U\cap W$ and $U+W$ are subspaces of $V$`, `$a^2$ and $b^2$ are nonnegative`: each of the
+  -- two is (a) … (not a relation of the two: `distinct`, `isomorphic`, …)
+  let bothIs : List Sent := match cs with
+    | .m x :: .w a :: .m y :: .w are :: rest =>
+      if a != w!"and" || are != w!"are" then [] else
+      let pred := match rest.getLast? with | some (.p 46) => rest.dropLast | _ => rest
+      let relational := [w!"isomorphic", w!"homeomorphic", w!"conjugate", w!"similar", w!"congruent", w!"equivalent",
+        w!"parallel", w!"perpendicular", w!"adjacent", w!"comparable", w!"equinumerous", w!"related", w!"orthogonal",
+        w!"distinct", w!"equal", w!"disjoint", w!"coprime", w!"independent", w!"pairwise", w!"mutually", w!"both",
+        w!"different", w!"identical", w!"opposite", w!"complementary", w!"dual", w!"inverse", w!"inverses", w!"permutable"]
+      if pred.isEmpty || pred.any (fun c => match c with | .w w => relational.contains (lower w) | .p p => p != 45 | _ => false) then [] else
+      let mk (p : List Chunk) : List Chunk := [.m x, .w w!"is"] ++ p ++ [.w w!"and", .m y, .w w!"is"] ++ p ++ [.p 46]
+      -- (a plural noun: its head word in the singular, after an article)
+      let head := (pred.findIdx? fun c => match c with | .w w => w == w!"of" || w == w!"in" || w == w!"with" | .m _ => true | _ => false).getD pred.length
+      let nouns : List (List Chunk) := match (pred[head - 1]? : Option Chunk) with
+        | some (Chunk.w w) =>
+          let ends (e : Codes) : Bool := w.length > e.length && w.drop (w.length - e.length) == e
+          let stem (k : Nat) : Codes := w.take (w.length - k)
+          let cands : List Codes :=
+            (if ends w!"ices" then [stem 4 ++ w!"ex", stem 4 ++ w!"ix"] else []) ++
+            (if ends w!"ses" then [stem 3 ++ w!"sis"] else []) ++
+            (if ends w!"ies" then [stem 3 ++ w!"y"] else []) ++
+            (if ends w!"es" then [stem 2] else []) ++
+            (if ends w!"s" then [stem 1] else [])
+          cands.map fun sg =>
+            let p := pred.take (head - 1) ++ [Chunk.w sg] ++ pred.drop head
+            let art := match p.head? with
+              | some (.w f) => if (f.head?.map fun ch => [97, 101, 105, 111, 117].contains ch).getD false then w!"an" else w!"a"
+              | _ => w!"a"
+            Chunk.w art :: p
+        | _ => []
+      (pred :: nouns).filterMap fun p => sentence (lead ++ mk p)
+    | _ => []
   -- (also after the binder of an indefinite object, `Any two bases of a finite-dimensional vector
   -- space …`: `for every finite-dimensional vector space $X$, any two bases of $X$ …`)
   let anyTwo : List Sent := anyTwoAt lead cs ++ nested.flatMap fun cs' =>
@@ -7564,7 +7612,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
   let contains : List Sent := [false, true].filterMap fun asMember => do
     let cs' ← containsForm asMember (cs.length + 1) cs
     sentence (lead ++ cs')
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ contains
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

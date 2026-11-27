@@ -205,6 +205,9 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $K\subseteq L\subseteq M$ be fields.`, `Let $A\subseteq B$ be finite sets.` | new variables, each an object of the plural noun, with the chain of inclusions as a condition (`$A\subseteq X$ be finite`, of a bound `X`, is a subset of it) |
 | `Let $K\subseteq L$ be fields with $[L:K]=2$.` | the condition after `with` comes after the inclusions (which it may need) |
 | `every closed and bounded subset of $X$` | adjectives joined by `and`, one of them relative to the complement (`closed in $X$`) |
+| `Let $T\colon V\to W$ be a linear map between finite-dimensional vector spaces.` | both letters of the signature are objects of the noun after `between` (in the singular), then the map |
+| `$U\cap W$ and $U+W$ are subspaces of $V$`, `$a^2$ and $b^2$ are nonnegative` | each of the two formulas is as the words say (a plural noun in the singular); not for a relation of the two (`isomorphic`, `distinct`, …) |
+| `every subspace of $V$ has dimension at most $3$`, `has order at most $6$` (`at least`) | finite-dimensional of dimension `\le 3`; finite with at most `6` elements (at least: or infinite) |
 | `Let $G$ be a group of order $p^n$, where $p$ is a prime and $n\ge1$.`, `Let $H$ be a subgroup of $G$, where $G$ is a finite group and $|G|=6$.` | the letters after `where` first, each as its part says (`$v$ is a NP`, a condition `$n\ge1$`; a condition on the letter of the part before is said `with` it), then the object |
 | `$[M:K]=[M:L][L:K]$` | a degree or an index after another is a factor |
 | `$N$ contains $H$`, `$N$ contains the commutator subgroup of $G$`, `$A$ contains $x$` | `H\subseteq N` of a set, `x\in A` of an element |
