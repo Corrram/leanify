@@ -3588,13 +3588,13 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| replication number of a design with $a$ points, block size $b$ and index $c$ | ℝ → ℝ → ℝ → ℝ | `λ(v-1)/(k-1)`: the blocks through a point of a 2-`(v,k,λ)` design |
-| number of blocks of a design with $a$ points, block size $b$ and index $c$ | ℝ → ℝ → ℝ → ℝ | `λv(v-1)/(k(k-1))` |
-| number of triples of a steiner triple system of order $a$ | ℝ → ℝ | `v(v-1)/6` |
-| number of points of a projective plane of order $a$ | ℝ → ℝ | `n² + n + 1` |
-| number of lines of a projective plane of order $a$ | ℝ → ℝ | `n² + n + 1` |
-| number of points of an affine plane of order $a$ | ℝ → ℝ | `n²` |
-| number of lines of an affine plane of order $a$ | ℝ → ℝ | `n² + n` |
+| replication number of a design with $a$ points, block size $b$ and index $c$ | ℝ → ℝ → ℝ → ℝ | the blocks through a point of a 2-`(v,k,λ)` design (`λ(v-1)/(k-1)`) |
+| number of blocks of a design with $a$ points, block size $b$ and index $c$ | ℝ → ℝ → ℝ → ℝ | the blocks of a 2-`(v,k,λ)` design (`λv(v-1)/(k(k-1))`) |
+| number of triples of a steiner triple system of order $a$ | ℝ → ℝ | the blocks of a 2-`(v,3,1)` design, where there is one (`v(v-1)/6`) |
+| number of points of a projective plane of order $a$ | ℝ → ℝ | of Mathlib's `Configuration.ProjectivePlane` of that order, where there is one (`n² + n + 1`) |
+| number of lines of a projective plane of order $a$ | ℝ → ℝ | (`n² + n + 1`) |
+| number of points of an affine plane of order $a$ | ℝ → ℝ | (`n²`) |
+| number of lines of an affine plane of order $a$ | ℝ → ℝ | (`n² + n`) |
 
 ## `diagnostictests`
 

@@ -386,7 +386,9 @@ Further fields cover other branches of mathematics:
 * `kinetics`: reaction orders, half-lives, rates and pH;
 * `fluids`: dimensionless numbers, pipe flow, drag;
 * `quantum`: energy levels and wavelengths of the solvable systems;
-* `designs`: block designs, Steiner triple systems, finite planes;
+* `designs`: block designs, Steiner triple systems, finite planes (their counts are those of
+  every such structure, a projective plane Mathlib's `Configuration.ProjectivePlane`, where there
+  is one, so that the formulas are claims);
 * `diagnostictests`: predictive values, likelihood ratios, 2×2 tables;
 * `signals`: pulses, sampling, decibels, filters;
 * `voting`: quotas and divisors of electoral systems;

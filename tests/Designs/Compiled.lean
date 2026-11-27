@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Designs.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["designs"]
 
-#leanify_article Designs "article.tex" "fnv1a64:855f3fcd488f9593" with Designs.vocabulary
+#leanify_article Designs "article.tex" "fnv1a64:654a1917dcd35247" with Designs.vocabulary
