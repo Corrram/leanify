@@ -3118,13 +3118,13 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| ruin probability from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability of reaching `0` before `N` from `k` (`1 - k/N` for `p = 1/2`) |
+| ruin probability from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability of reaching `0` before `N` from `k` (`((q/p)^k - (q/p)^N)/(1 - (q/p)^N)`, `1 - k/N` for `p = 1/2`) |
 | probability of reaching the target from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability of reaching `N` before `0` from `k` |
 | expected duration from $a$ with target $b$ and up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the expected number of steps until `0` or `N` is reached (`k(N-k)` for `p = 1/2`) |
-| probability of being at $a$ after $b$ steps with up-probability $c$ | ℝ → ℝ → ℝ → ℝ | `\binom{n}{(n+x)/2} p^{(n+x)/2} (1-p)^{(n-x)/2}` where `n + x` is even and `\|x\| ≤ n`, `0` otherwise |
-| probability that brownian motion with drift $a$ and variance $b$ hits $c$ before $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | for `a > 0 > -b`: `(1 - e^{2μb/σ²})/(e^{-2μa/σ²} - e^{2μb/σ²})`, `b/(a+b)` for `μ = 0` |
-| expected exit time of brownian motion with variance $a$ from $(b,c)$ | ℝ → ℝ → ℝ → ℝ | `ab/σ²` for the interval `(-b, a)`, started at `0`, without drift |
-| transition density of brownian motion with drift $a$ and variance $b$ at time $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | `x ↦ e^{-(x-μt)²/(2σ²t)}/√(2πσ²t)` |
+| probability of being at $a$ after $b$ steps with up-probability $c$ | ℝ → ℝ → ℝ → ℝ | the probability that the walk from `0` is at `x` after `n` steps (`\binom{n}{(n+x)/2} p^{(n+x)/2} (1-p)^{(n-x)/2}` where `n + x` is even and `\|x\| ≤ n`, `0` otherwise) |
+| probability that brownian motion with drift $a$ and variance $b$ hits $c$ before $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | of `μt + σB_t` reaching `a > 0` before `c < 0` (`(1 - e^{2μb/σ²})/(e^{-2μa/σ²} - e^{2μb/σ²})` for `c = -b`, `b/(a+b)` for `μ = 0`) |
+| expected exit time of brownian motion with variance $a$ from $(b,c)$ | ℝ → ℝ → ℝ → ℝ | of `σB_t` from the interval `(c, a)`, started at `0` (`ab/σ²` for `c = -b`) |
+| transition density of brownian motion with drift $a$ and variance $b$ at time $c$ | ℝ → ℝ → ℝ → ℝ → ℝ | the Gaussian density of `N(μt, σ²t)`, the law of `μt + σB_t` (Mathlib `gaussianPDFReal`; `x ↦ e^{-(x-μt)²/(2σ²t)}/√(2πσ²t)`) |
 
 ## `functionsequences`
 

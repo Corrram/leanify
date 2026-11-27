@@ -1,5 +1,6 @@
 import RandomWalks.Compiled
 import Leanify.Readable
+import Leanify.Library.RandomWalksModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

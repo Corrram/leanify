@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def RandomWalks.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["randomwalks"]
 
-#leanify_article RandomWalks "article.tex" "fnv1a64:03a4da31cec4cc6e" with RandomWalks.vocabulary
+#leanify_article RandomWalks "article.tex" "fnv1a64:99a5207e78c96666" with RandomWalks.vocabulary

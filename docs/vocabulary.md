@@ -342,7 +342,8 @@ Further fields cover other branches of mathematics:
 * `majorization` (loads `vectors`): majorization of vectors, the `k`th largest coordinate;
 * `odes`: classical first- and second-order equations by their coefficients, the Wronskian;
 * `randomwalks`: gambler's ruin, the simple random walk, Brownian hitting probabilities and
-  exit times;
+  exit times (as probabilities of the walk of independent steps and of Mathlib's Brownian
+  motion, so that their formulas are claims);
 * `functionsequences`: pointwise and uniform convergence, equicontinuity of sequences of
   functions.
 * `concentration`: the classical tail bounds, sample sizes and sample complexities;

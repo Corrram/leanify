@@ -38,6 +38,7 @@ import Leanify.Library.LatticePointsModel
 import Leanify.Library.DesignsModel
 import Leanify.Library.ClassicalProbabilityModel
 import Leanify.Library.FractalsModel
+import Leanify.Library.RandomWalksModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 
