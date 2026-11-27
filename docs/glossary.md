@@ -3525,9 +3525,9 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | number of lattice points in the disk of radius $a$ | ℝ → ℝ | the number of `(a,b) ∈ ℤ²` with `a² + b² ≤ r²` (Gauss's circle problem) |
 | number of lattice points in the ball of radius $a$ | ℝ → ℝ | the number of `(a,b,c) ∈ ℤ³` with `a² + b² + c² ≤ r²` |
-| number of lattice points on the segment from the origin to the point with coordinates $a$ and $b$ | ℝ → ℝ → ℝ | `gcd(a,b) + 1`, with both endpoints |
-| number of visible lattice points in the square of side $a$ | ℝ → ℝ | the number of `(a,b)` with `1 ≤ a, b ≤ n` and `gcd(a,b) = 1` |
-| area of a lattice polygon with $a$ interior points and $b$ boundary points | ℝ → ℝ → ℝ | `I + B/2 - 1` (Pick's theorem), for a simple polygon with lattice vertices |
+| number of lattice points on the segment from the origin to the point with coordinates $a$ and $b$ | ℝ → ℝ → ℝ | the points of `ℤ²` on the segment, its ends included (`gcd(a,b) + 1`) |
+| number of visible lattice points in the square of side $a$ | ℝ → ℝ | the `(a,b)` with `1 ≤ a, b ≤ n` with no lattice point strictly between them and the origin (`gcd(a,b) = 1`) |
+| area of a lattice polygon with $a$ interior points and $b$ boundary points | ℝ → ℝ → ℝ | the Lebesgue measure of the region of a simple lattice polygon with these points, where there is one (`I + B/2 - 1`, Pick) |
 
 ## `combinatorialgames`
 

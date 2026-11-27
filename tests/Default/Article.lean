@@ -34,6 +34,7 @@ import Leanify.Library.SolidsModel
 import Leanify.Library.TrianglesModel
 import Leanify.Library.SphericalGeometryModel
 import Leanify.Library.PolyhedraModel
+import Leanify.Library.LatticePointsModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 

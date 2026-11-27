@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def LatticePoints.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["latticepoints"]
 
-#leanify_article LatticePoints "article.tex" "fnv1a64:756e3a77a435cfbc" with LatticePoints.vocabulary
+#leanify_article LatticePoints "article.tex" "fnv1a64:dbb1d6a06ccd981e" with LatticePoints.vocabulary

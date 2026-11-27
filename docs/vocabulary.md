@@ -380,7 +380,8 @@ Further fields cover other branches of mathematics:
   `EuclideanSpace ℝ (Fin 3)`, the angle between points as vectors, the Euclidean Hausdorff measure
   `μHE[2]`, so that the spherical law of cosines and Girard's theorem are claims);
 * `floatingpoint`: floating-point systems, errors and rounding;
-* `latticepoints`: counting lattice points, Pick's theorem;
+* `latticepoints`: counting lattice points (as elements of `ℤ²`, `ℤ³`), the area of a lattice
+  polygon (of the region of a simple closed polygonal curve, so that Pick's theorem is a claim);
 * `combinatorialgames`: Nim, Grundy values, Wythoff's game;
 * `kinetics`: reaction orders, half-lives, rates and pH;
 * `fluids`: dimensionless numbers, pipe flow, drag;

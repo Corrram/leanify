@@ -1,5 +1,6 @@
 import LatticePoints.Compiled
 import Leanify.Readable
+import Leanify.Library.LatticePointsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 
