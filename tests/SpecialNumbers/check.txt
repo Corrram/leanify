@@ -34,7 +34,8 @@ tests/SpecialNumbers/article.tex:38:1: info: claim 16 is meaningful if: 3\in \ma
 tests/SpecialNumbers/article.tex:38:1: info: claim 17: \@n4(3)=10
 tests/SpecialNumbers/article.tex:38:1: info: claim 17 is meaningful if: 3\in \mathbb{Z}\land 0\le 3
 tests/SpecialNumbers/article.tex:38:35: info: claim 18: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow 0\le \@n3(x)
-tests/SpecialNumbers/article.tex: 5 definitions, 19 claims
+tests/SpecialNumbers/article.tex:42:1: info: claim 19: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land x\in \mathbb{Z}\land 1\in \mathbb{Z}\land 4\in \mathbb{Z}\land x-1\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x-1=4\,z)\Rightarrow x\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=z\,z+s\,s))
+tests/SpecialNumbers/article.tex: 5 definitions, 20 claims
   text: 5 compiled, 0 failed, 0 prose (of 5)
-  results: 10 compiled, 0 failed, 0 prose (of 10)
-  all: 15 compiled, 0 failed, 0 prose (of 15)
+  results: 11 compiled, 0 failed, 0 prose (of 11)
+  all: 16 compiled, 0 failed, 0 prose (of 16)

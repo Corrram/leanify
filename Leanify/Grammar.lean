@@ -1152,6 +1152,9 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
         -- `every copula $C$ with maximal correlation $R=R(C)$`
         match Math.parseFormula ts with
         | some (.chain (.id x) [(.eq, .app (.id y) _)]) => if x == y then some (.noun np, r') else none
+        -- `every prime $p\equiv1\pmod4$`: the variable, and its congruence
+        | some (m@(.chain (.id x) [(.equiv, _)])) =>
+          some (.many [.noun (np.dropLast ++ [.m [.id x]]), .ifCond m], r')
         | _ =>
           -- `every copula $C$ with $C^\top=C$`: a condition on the variable
           let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false
@@ -1250,7 +1253,7 @@ def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
 /-- `positive integers` after the variables `ts` of `$a,b$ are` (`be`), possibly with
 conditions (`with $a<b$`): a binder for each variable (a sequence `x_1,\ldots,x_n` is one),
 then the conditions. -/
-def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) := do
+def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) := do
   let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
   let r := normIID r
   -- (a singular noun is read where its variable is)
@@ -1320,6 +1323,21 @@ def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :
   | some (c, r2) => some (.many (nouns ++ together ++ [.ifCond c]), r2)
   | none => some (.many (nouns ++ together), r1)
 
+
+/-- `positive integers` after the variables of `$a,b$ are` (`pluralNoun0`); and after a chain
+of inclusions, `Let $K\subseteq L\subseteq M$ be fields`: a binder for each variable, then the
+chain as a condition on them. -/
+def pluralNoun (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) :=
+  pluralNoun0 ts r <|> (do
+    let m ← Math.parseFormula ts
+    let .chain (.id a) rels := m | none
+    if rels.isEmpty || !(rels.all fun (rel, _) => rel == .subset) then none
+    let names ← rels.mapM fun (_, y) => match y with | .id b => some b | _ => none
+    let vs := a :: names
+    let joined : List MTok := (vs.map fun v => [MTok.id v]).intersperse [MTok.sym 44] |>.flatten
+    let (b, r') ← pluralNoun0 joined r
+    let bs := match b with | .many bs => bs | b => [b]
+    some (.many (bs ++ [.ifCond m]), r'))
 /-- Does a further formula follow (`, $ψ$`, `, and $χ$`, `and $χ$`)? -/
 def moreFormulas (r : List Chunk) : Bool :=
   let r := (punct 44 r).getD r
@@ -3971,6 +3989,19 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
 
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+  -- `$K\subseteq L\subseteq M$ be fields`: new variables, each an object of the plural noun,
+  -- in a chain of inclusions
+  (do
+    let (ts, r) ← mathChunk cs
+    let .chain (.id _) rels ← Math.parseFormula ts | none
+    if rels.isEmpty || !(rels.all fun (rel, y) => rel == .subset && (match y with | .id _ => true | _ => false)) then none
+    let r1 ← kw [w!"be"] r
+    let ws := r1.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+    let plural := match ws.getLast? with
+      | some (.w w) => w.getLast? == some 115
+      | _ => false
+    if !plural then none
+    pluralNoun ts r1) <|>
   (do
     let (ts, r) ← mathChunk cs
     let (vs, d) ← binderMath ts
@@ -5684,7 +5715,11 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
   | some (.m ts) =>
     match Math.parseFormula ts with
     | some (.chain (.id v) (_ :: _)) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
-    | _ => none
+    | _ =>
+      -- (`every prime $p\equiv1\pmod4$ is …`: the variable of the congruence)
+      match ts with
+      | .id v :: .cmd e :: _ => if e == w!"equiv" then some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1) else none
+      | _ => none
   | some _ => none
   | none =>
     -- `Every Harshad number is a positive integer.`: a noun after `is a`, of an object
@@ -7260,7 +7295,33 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           some (.claims tp ([.noun (np ++ [.m [.id x]]), .noun (np ++ [.m [.id y], .w (lower adj), .w prep, .m [.id x]])] ++ bs) cls)
       | _ => []
     | _ => []
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame
+  -- `$N$ contains $H$`, `$N$ contains the commutator subgroup of $G$`: `… is a subset of $N$`;
+  -- `$A$ contains $x$`: `$x\in A$`
+  let rec containsForm (asMember : Bool) : Nat → List Chunk → Option (List Chunk)
+    | 0, _ => none
+    | f + 1, cs =>
+      match cs with
+      | .m x :: .w c :: rest =>
+        if c != w!"contains" || !single x then (containsForm asMember f (.w c :: rest)).map (.m x :: ·) else
+        let obj := rest.takeWhile fun ch => match ch with
+          | .w w => ![w!"and", w!"or", w!"if", w!"iff", w!"then", w!"since", w!"so", w!"but", w!"for", w!"whenever"].contains w
+          | .m _ | .p 45 => true
+          | _ => false
+        let after := rest.drop obj.length
+        match obj with
+        | [.m y] =>
+          if asMember then some ([.m (y ++ [.cmd w!"in"] ++ x)] ++ after)
+          else some ([.m (y ++ [.cmd w!"subseteq"] ++ x)] ++ after)
+        | .w t :: _ =>
+          if asMember || t != w!"the" then none else
+          some (obj ++ [.w w!"is", .w w!"a", .w w!"subset", .w w!"of", .m x] ++ after)
+        | _ => none
+      | c :: rest => (containsForm asMember f rest).map (c :: ·)
+      | [] => none
+  let contains : List Sent := [false, true].filterMap fun asMember => do
+    let cs' ← containsForm asMember (cs.length + 1) cs
+    sentence (lead ++ cs')
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ contains
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

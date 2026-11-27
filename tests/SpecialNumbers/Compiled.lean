@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def SpecialNumbers.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["numbers", "specialnumbers"]
 
-#leanify_article SpecialNumbers "article.tex" "fnv1a64:0ccbc2db123fbca9" with SpecialNumbers.vocabulary
+#leanify_article SpecialNumbers "article.tex" "fnv1a64:eba2bd366dc48108" with SpecialNumbers.vocabulary

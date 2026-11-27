@@ -948,6 +948,14 @@ def ChainsBoundedS (P : El → Prop) : Prop :=
   ∀ C : El → Prop, (∀ a, C a → P a) → (∀ a b, C a → C b → le a b ∨ le b a) →
     ∃ u, P u ∧ UpperBound C u
 
+/-- Of prime power order: `|S| = p^k` for a prime `p` and `k ≥ 1` (Mathlib `IsPrimePow`). -/
+def PrimePowerOrder (S : El → Prop) : Prop := ∃ p k : ℕ, p.Prime ∧ 1 ≤ k ∧ card S = ((p ^ k : ℕ) : ℝ)
+
+/-- The commutator subgroup of `G`: the smallest subgroup of `G` that contains every
+commutator `aba⁻¹b⁻¹` (Mathlib `commutator`). -/
+def commutatorSub (G : El → Prop) : El → Prop :=
+  fun a => G a ∧ ∀ H, SubgroupOf G H → (∀ x y, G x → G y → H (mul (mul (mul x y) (inv x)) (inv y))) → H a
+
 /-- `X` and `Y` are homeomorphic: there is a homeomorphism of `X` onto `Y` (Mathlib
 `Homeomorph`). -/
 def HomeomorphicS (X Y : El → Prop) : Prop := ∃ φ : Map, MapSig X Y φ ∧ HomeoM φ

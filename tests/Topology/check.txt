@@ -44,7 +44,10 @@ tests/Topology/article.tex:92:222: info: claim 28: \forall x\in \mathbb{R}\to \m
 tests/Topology/article.tex:92:294: info: claim 29: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(x)\Rightarrow \operatorname{Null}(x)
 tests/Topology/article.tex:92:388: info: claim 30: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(x)\Rightarrow \lambda(x)=0
 tests/Topology/article.tex:92:388: info: claim 30 is meaningful if: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(x)\Rightarrow \operatorname{Measurable}(x)\land \operatorname{FiniteMeasure}(x)
-tests/Topology/article.tex: 7 definitions, 31 claims
+tests/Topology/article.tex:96:36: info: claim 31: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(y)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow y(s))\Rightarrow (\#x)\le (\#y))
+tests/Topology/article.tex:96:36: info: claim 31 is meaningful if: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Finite}(y)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow y(s))\Rightarrow (\exists z\in \mathbb{R},\ \operatorname{card}(x)(z)\land (\forall s\in \mathbb{R},\ \operatorname{card}(x)(s)\Rightarrow s=z))\land (\exists z\in \mathbb{R},\ \operatorname{card}(y)(z)\land (\forall s\in \mathbb{R},\ \operatorname{card}(y)(s)\Rightarrow s=z)))
+tests/Topology/article.tex:96:101: info: claim 32: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \forall y\in \mathbb{R},\ x(y)\Rightarrow (\exists s\in \mathbb{R},\ x(s))
+tests/Topology/article.tex: 7 definitions, 33 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 45 compiled, 0 failed, 0 prose (of 45)
-  all: 52 compiled, 0 failed, 0 prose (of 52)
+  results: 49 compiled, 0 failed, 0 prose (of 49)
+  all: 56 compiled, 0 failed, 0 prose (of 56)

@@ -1035,7 +1035,11 @@ where
         let (y, rest') ← run g (.factor bar) rest
         mulRest g bar (.app (.id w!"\\circ") [x, y]) rest'
       | t :: _ =>
-        if startsFactor t || (t == .sym 124 && !bar) then
+        -- (`[M:L][L:K]`: an index or degree after another is a factor)
+        let bracketIndex : Bool := match ts with
+          | .sym 91 :: .id _ :: .sym 58 :: .id _ :: .sym 93 :: _ => true
+          | _ => false
+        if startsFactor t || (t == .sym 124 && !bar) || bracketIndex then
           match run g (.atom bar) ts with
           | some (y0, rest') => do
             let (y, rest'') ← run g (.postfix bar y0) rest'
