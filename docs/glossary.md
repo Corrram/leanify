@@ -3984,12 +3984,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| number of words of length $a$ over $b$ letters | ℝ → ℝ → ℝ | `k^n` |
-| number of palindromes of length $a$ over $b$ letters | ℝ → ℝ → ℝ | `k^{⌈n/2⌉}` |
-| number of words of length $a$ over $b$ letters with no two equal adjacent letters | ℝ → ℝ → ℝ | `k(k-1)^{n-1}` |
-| number of binary words of length $a$ without two consecutive ones | ℝ → ℝ | `F_{n+2} = ∑_{j=0}^{n} \binom{n+1-j}{j}` |
-| number of necklaces of length $a$ over $b$ colours | ℝ → ℝ → ℝ | `(1/n)∑_{i=1}^{n} k^{gcd(i,n)}`: words up to rotation |
-| number of de bruijn sequences of order $a$ over $b$ letters | ℝ → ℝ → ℝ | `(k!)^{k^{n-1}}/k^n`, as cyclic sequences |
+| number of words of length $a$ over $b$ letters | ℝ → ℝ → ℝ | the words `Fin n → Fin k` (`k^n`) |
+| number of palindromes of length $a$ over $b$ letters | ℝ → ℝ → ℝ | the words of length `n` that read the same backwards (`k^{⌈n/2⌉}`) |
+| number of words of length $a$ over $b$ letters with no two equal adjacent letters | ℝ → ℝ → ℝ | the words of length `n` whose adjacent letters differ (`k(k-1)^{n-1}`) |
+| number of binary words of length $a$ without two consecutive ones | ℝ → ℝ | the words `Fin n → Bool` without two adjacent `true` (`F_{n+2}`) |
+| number of necklaces of length $a$ over $b$ colours | ℝ → ℝ → ℝ | the classes of the cyclic words `ZMod n → Fin k` under rotation (`(1/n)∑_{i=1}^{n} k^{gcd(i,n)}`, Burnside) |
+| number of de bruijn sequences of order $a$ over $b$ letters | ℝ → ℝ → ℝ | the cyclic words of length `k^n` in which every word of length `n` occurs exactly once, up to rotation (`(k!)^{k^{n-1}}/k^n`, BEST) |
 
 ## `orbits`
 

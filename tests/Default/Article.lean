@@ -27,6 +27,7 @@ import Leanify.Library.CountingModel
 import Leanify.Library.PermutationsModel
 import Leanify.Library.GraphsModel
 import Leanify.Library.GraphCountsModel
+import Leanify.Library.WordsModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 
