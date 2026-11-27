@@ -2,66 +2,98 @@ import Leanify.Library.Core
 
 /-! # Vocabulary: counting
 
-The standard counts of enumerative combinatorics, as closed formulas in factorials and
-binomial coefficients (`the number of $k$-element subsets of a set of $n$ elements`).
+The standard counts of enumerative combinatorics (`the number of $k$-element subsets of a set
+of $n$ elements`), each the number of elements of a finite type of Mathlib: the subsets,
+arrangements, maps, compositions and lattice paths themselves, over `Fin n` for a set of `n`
+elements.
 
 * subsets and arrangements: the number of `k`-element subsets of a set of `n` elements
-  (`\binom{n}{k}`), of subsets of a set of `n` elements (`2^n`), of `k`-permutations of `n`
-  elements (`n!/(n-k)!`), of permutations of `n` elements (`n!`), of `k`-element multisets
-  from `n` elements (`\binom{n+k-1}{k}`);
-* maps: the number of maps from a set of `k` elements to a set of `n` elements (`n^k`), of
-  injective maps (`n!/(n-k)!`), of surjective maps (`∑_j (-1)^j \binom{n}{j}(n-j)^k`);
-* compositions and paths: the number of compositions of `n` into `k` positive parts
-  (`\binom{n-1}{k-1}`), into `k` nonnegative parts (`\binom{n+k-1}{k-1}`), and of lattice
-  paths from `(0,0)` to `(m,n)` with unit steps right and up (`\binom{m+n}{m}`);
-* the multinomial coefficient of `n` over `a` and `b` and `c` (`n!/(a!b!c!)`, `a+b+c = n`).
+  (`{s : Finset (Fin n) // s.card = k}`), of subsets of a set of `n` elements
+  (`Finset (Fin n)`), of `k`-permutations of `n` elements (`Fin k ↪ Fin n`), of permutations
+  of `n` elements (`Equiv.Perm (Fin n)`), of `k`-element multisets of `n` elements
+  (`Sym (Fin n) k`);
+* maps: the number of maps from a set of `k` elements to a set of `n` elements
+  (`Fin k → Fin n`), of injective maps, of surjective maps (`Function.Injective`,
+  `Function.Surjective`);
+* compositions and paths: the number of compositions of `n` into `k` positive parts, into `k`
+  nonnegative parts (the sequences of `k` such numbers with sum `n`), and of lattice paths from
+  `(0,0)` to `(m,n)` with unit steps right and up (the sequences of `m + n` steps of which `m`
+  go right);
+* the multinomial coefficient of `n` over `a` and `b` and `c` (Mathlib `Nat.multinomial`,
+  `a + b + c = n`).
 
-Every meaning is a term of the core language, for nonnegative integers. -/
+The counts are constants, interpreted by the declarations of
+`Leanify/Library/CountingModel.lean`; their arguments are nonnegative integers. -/
 
 namespace Leanify.Counting
 open Build Core
 
-def natP (n : B) : B := and (isInt n) (le (num 0) n)
-def zpow (x k : B) : B := app2 (prim .zpow) x k
-def binom (n k : B) : B := app2 (prim .binom) n k
-def fact (n : B) : B := app (prim .factorial) n
-def finSum (a b : B) (body : B → B) : B := app (app (app (prim .finSum) a) b) (lamR body)
-def falling (n k : B) : B := div (fact n) (fact (sub n k))
-def kLeN (k n : B) : B := and (natP n) (le k n)
+/-! The indices of the constants (apart from the names of their meanings). -/
+namespace Const
+def kSubsets : Nat := 0
+def subsets : Nat := 1
+def kPermutations : Nat := 2
+def permutations : Nat := 3
+def kMultisets : Nat := 4
+def maps : Nat := 5
+def injectiveMaps : Nat := 6
+def surjectiveMaps : Nat := 7
+def compositionsPos : Nat := 8
+def compositionsNonneg : Nat := 9
+def latticePaths : Nat := 10
+def multinomial : Nat := 11
+end Const
 
-/-- A count of `n` with `k` (the arguments in the order of the phrase: `first`, `second`),
-both nonnegative integers. -/
-def count2 (name : Phrase) (d : B → B → B) (body : B → B → B) (doc : String) : Notion :=
-  { name, ty := .real ⟶ .real ⟶ .real, doms := [dom1 .real natP, dom2 .real fun a b => and (natP b) (d a b)], doc,
-    value := close <| lamT .real natP fun a => lamT .real (fun b => and (natP b) (d a b)) fun b => body a b }
-def count1 (name : Phrase) (body : B → B) (doc : String) : Notion :=
-  { name, ty := .real ⟶ .real, doms := [dom1 .real natP], doc, value := close <| lamT .real natP body }
+def natP (n : B) : B := and (isInt n) (le (num 0) n)
+
+/-- A count of two nonnegative integers (the arguments in the order of the phrase). -/
+def count2 (name : Phrase) (c : Nat) (doc : String) : Notion :=
+  { name, ty := .real ⟶ .real ⟶ .real, doms := [dom1 .real natP, dom2 .real fun _ b => natP b], doc,
+    value := .const c }
+
+/-- A count of one nonnegative integer. -/
+def count1 (name : Phrase) (c : Nat) (doc : String) : Notion :=
+  { name, ty := .real ⟶ .real, doms := [dom1 .real natP], doc, value := .const c }
 
 def vocab : Vocab where
+  consts := [.real ⟶ .real ⟶ .real, .real ⟶ .real, .real ⟶ .real ⟶ .real, .real ⟶ .real,
+    .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real,
+    .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real, .real ⟶ .real ⟶ .real ⟶ .real]
+  constNames := [w!"\\operatorname{Sub}(#1,#2)", w!"\\operatorname{Sub}", w!"\\operatorname{Perm}(#1,#2)",
+    w!"\\operatorname{Perm}", w!"\\operatorname{Mult}(#1,#2)", w!"\\operatorname{Map}(#1,#2)",
+    w!"\\operatorname{Inj}(#1,#2)", w!"\\operatorname{Surj}(#1,#2)", w!"\\operatorname{Comp}^{+}(#1,#2)",
+    w!"\\operatorname{Comp}(#1,#2)", w!"\\operatorname{Path}(#1,#2)", w!"\\binom{#1+#2+#3}{#1,#2,#3}"]
+  constLean := [w!"Leanify.Counting.kSubsets", w!"Leanify.Counting.subsets", w!"Leanify.Counting.kPermutations",
+    w!"Leanify.Counting.permutations", w!"Leanify.Counting.kMultisets", w!"Leanify.Counting.maps",
+    w!"Leanify.Counting.injectiveMaps", w!"Leanify.Counting.surjectiveMaps", w!"Leanify.Counting.compositionsPos",
+    w!"Leanify.Counting.compositionsNonneg", w!"Leanify.Counting.latticePaths", w!"Leanify.Counting.multinomial"]
+  modules := [w!"Leanify.Library.CountingModel"]
   notions := [
-    count2 phrase!"number of $v$-element subsets of a set of $v$ elements" (fun _ _ => tt) (fun k n => binom n k) "`\\\\binom{n}{k}`",
-    count1 phrase!"number of subsets of a set of $v$ elements" (fun n => zpow (num 2) n) "`2^n`",
-    count2 phrase!"number of $v$-permutations of $v$ elements" (fun k n => le k n) (fun k n => falling n k) "`n!/(n-k)!`, `k ≤ n`",
-    count1 phrase!"number of permutations of $v$ elements" fact "`n!`",
-    count2 phrase!"number of $v$-element multisets of $v$ elements" (fun _ _ => tt) (fun k n => binom (sub (add n k) (num 1)) k)
-      "`\\\\binom{n+k-1}{k}`",
-    count2 phrase!"number of maps from a set of $v$ elements to a set of $v$ elements" (fun _ _ => tt) (fun k n => zpow n k) "`n^k`",
-    count2 phrase!"number of injective maps from a set of $v$ elements to a set of $v$ elements" (fun _ _ => tt)
-      (fun k n => cases (le k n) (falling n k) (num 0)) "`n!/(n-k)!` for `k ≤ n`, `0` else",
-    count2 phrase!"number of surjective maps from a set of $v$ elements to a set of $v$ elements" (fun _ _ => tt)
-      (fun k n => finSum (num 0) n fun j => mul (mul (zpow (neg (num 1)) j) (binom n j)) (zpow (sub n j) k))
-      "`∑_{j=0}^{n} (-1)^j \\\\binom{n}{j} (n-j)^k` (inclusion–exclusion)",
-    count2 phrase!"number of compositions of $v$ into $v$ positive parts" (fun _ _ => tt)
-      (fun n k => cases (and (le (num 1) k) (le k n)) (binom (sub n (num 1)) (sub k (num 1))) (num 0))
-      "`\\\\binom{n-1}{k-1}` for `1 ≤ k ≤ n`, `0` else",
-    count2 phrase!"number of compositions of $v$ into $v$ nonnegative parts" (fun _ k => le (num 1) k)
-      (fun n k => binom (sub (add n k) (num 1)) (sub k (num 1))) "`\\\\binom{n+k-1}{k-1}`, `k ≥ 1`",
-    count2 phrase!"number of lattice paths from $(0,0)$ to $(v,v)$" (fun _ _ => tt) (fun m n => binom (add m n) m)
-      "`\\\\binom{m+n}{m}`, with unit steps right and up",
+    count2 phrase!"number of $v$-element subsets of a set of $v$ elements" Const.kSubsets
+      "the `k`-element subsets of `Fin n` (Mathlib `Finset`; `\\\\binom{n}{k}`)",
+    count1 phrase!"number of subsets of a set of $v$ elements" Const.subsets
+      "the subsets of `Fin n` (Mathlib `Finset`; `2^n`)",
+    count2 phrase!"number of $v$-permutations of $v$ elements" Const.kPermutations
+      "the arrangements of `k` distinct elements of `Fin n` in order (Mathlib `Fin k ↪ Fin n`; `n!/(n-k)!` for `k ≤ n`)",
+    count1 phrase!"number of permutations of $v$ elements" Const.permutations
+      "the permutations of `Fin n` (Mathlib `Equiv.Perm`; `n!`)",
+    count2 phrase!"number of $v$-element multisets of $v$ elements" Const.kMultisets
+      "the `k`-element multisets of `Fin n` (Mathlib `Sym`; `\\\\binom{n+k-1}{k}`)",
+    count2 phrase!"number of maps from a set of $v$ elements to a set of $v$ elements" Const.maps
+      "the maps `Fin k → Fin n` (`n^k`)",
+    count2 phrase!"number of injective maps from a set of $v$ elements to a set of $v$ elements" Const.injectiveMaps
+      "the injective maps `Fin k → Fin n` (Mathlib `Function.Injective`)",
+    count2 phrase!"number of surjective maps from a set of $v$ elements to a set of $v$ elements" Const.surjectiveMaps
+      "the surjective maps `Fin k → Fin n` (Mathlib `Function.Surjective`)",
+    count2 phrase!"number of compositions of $v$ into $v$ positive parts" Const.compositionsPos
+      "the sequences of `k` positive integers with sum `n` (`\\\\binom{n-1}{k-1}` for `1 ≤ k ≤ n`)",
+    count2 phrase!"number of compositions of $v$ into $v$ nonnegative parts" Const.compositionsNonneg
+      "the sequences of `k` nonnegative integers with sum `n` (`\\\\binom{n+k-1}{k-1}` for `k ≥ 1`)",
+    count2 phrase!"number of lattice paths from $(0,0)$ to $(v,v)$" Const.latticePaths
+      "the paths with unit steps right and up: the sequences of `m + n` steps of which `m` go right (`\\\\binom{m+n}{m}`)",
     { name := phrase!"multinomial coefficient of $v$ over $v$, $v$ and $v$", ty := .real ⟶ .real ⟶ .real ⟶ .real ⟶ .real,
       doms := [dom1 .real natP, dom1 .real natP, dom1 .real natP, dom4 .real fun n a b c => and (natP c) (eq (add (add a b) c) n)],
-      doc := "`n!/(a! b! c!)`, `a + b + c = n`",
-      value := close <| lamT .real natP fun n => lamT .real natP fun a => lamT .real natP fun b =>
-        lamT .real (fun c => and (natP c) (eq (add (add a b) c) n)) fun c => div (fact n) (mul (mul (fact a) (fact b)) (fact c)) }]
+      doc := "Mathlib `Nat.multinomial` of `a`, `b`, `c` (`n!/(a! b! c!)`), `a + b + c = n`",
+      value := close <| lamR fun _ => lamR fun a => lamR fun b => lamR fun c => app (app2 (const Const.multinomial) a b) c }]
 
 end Leanify.Counting

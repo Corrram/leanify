@@ -23,6 +23,7 @@ import Leanify.Library.UnitSquareModel
 import Leanify.Library.HilbertModel
 import Leanify.Library.MarkovModel
 import Leanify.Library.CombinatoricsModel
+import Leanify.Library.CountingModel
 import Leanify.Library.PermutationsModel
 import Leanify.Library.GraphsModel
 import Leanify.Library.ArithmeticModel

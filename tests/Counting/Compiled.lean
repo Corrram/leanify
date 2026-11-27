@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Counting.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["counting"]
 
-#leanify_article Counting "article.tex" "fnv1a64:a1a63e932a440190" with Counting.vocabulary
+#leanify_article Counting "article.tex" "fnv1a64:e887280a39ddce27" with Counting.vocabulary

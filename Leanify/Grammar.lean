@@ -1627,10 +1627,23 @@ def notionSubj (cs : List Chunk) (obj : Bool := false) : Option (MT × List Chun
   let r ← kw [w!"the"] cs
   let verbs : List Codes := [w!"is", w!"are", w!"divides", w!"equals", w!"satisfies", w!"has", w!"lies",
     w!"belongs", w!"contains", w!"coincides", w!"does", w!"can", w!"exceeds", w!"agrees", w!"holds"]
-  let body := r.takeWhile fun (c : Chunk) => match c with
-    | .w w => !verbs.contains w
-    | .m _ => true
-    | _ => false
+  -- (a hyphen before a word, `the number of $k$-element subsets of …`, and the commas of a list
+  -- of formulas ending in `and`, `the multinomial coefficient of $n$ over $a$, $b$ and $c$`,
+  -- are words of the notion)
+  let rec listOf : Nat → List Chunk → Bool
+    | 0, _ => false
+    | _ + 1, .m _ :: .p 44 :: r => listOf 9 r
+    | _ + 1, .m _ :: .w a :: .m _ :: _ => a == w!"and"
+    | _, _ => false
+  let rec bodyOf : Nat → List Chunk → List Chunk
+    | 0, _ => []
+    | f + 1, .w w :: r => if verbs.contains w then [] else .w w :: bodyOf f r
+    | f + 1, .m t :: r => .m t :: bodyOf f r
+    | f + 1, .p 45 :: r@(.w v :: _) =>
+      if v == w!"th" || v == w!"st" || v == w!"nd" || v == w!"rd" then [] else .p 45 :: bodyOf f r
+    | f + 1, .p 44 :: r => if listOf 9 r then .p 44 :: bodyOf f r else []
+    | _, _ => []
+  let body := bodyOf (r.length + 1) r
   let rest := r.drop body.length
   -- (an object, `… divides the order of $G$`, ends the sentence or a clause)
   match rest with
@@ -1640,6 +1653,7 @@ def notionSubj (cs : List Chunk) (obj : Bool := false) : Option (MT × List Chun
   let items ← body.mapM fun (c : Chunk) => match c with
     | .w w => some (MT.text (lower w))
     | .m ts => Math.parseFormula ts
+    | .p p => some (MT.text [p])
     | _ => none
   -- (at least one word before the first argument, and an argument)
   if !(items.any fun m => match m with | .text _ => false | _ => true) then none
@@ -3651,6 +3665,8 @@ def defItem (cs : List Chunk) : Option (DefItem × List Chunk) := do
       | .m _ => nameWords g rest acc
       | _ => none
   let (name, r1) ← nameWords 16 r []
+  -- (`we have that …`, `one has …`, `it holds that …`: a claim, no name)
+  if (match name.head? with | some w => [w!"we", w!"one", w!"it"].contains (lower w) | none => true) then none
   match display r1 with
   | some (m, ls, r2) => some (⟨name, m, ls⟩, r2)
   | none => do
@@ -7612,7 +7628,17 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
   let contains : List Sent := [false, true].filterMap fun asMember => do
     let cs' ← containsForm asMember (cs.length + 1) cs
     sentence (lead ++ cs')
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains
+  -- `For all $n\in\mathbb{N}$, the number of subsets of a set of $n$ elements is $2^n$`, in a
+  -- result: the claim about the notion of the binder's variables (`For …, we have that …`), when
+  -- it is no definition of the words
+  let binderClaim : List Sent := Id.run do
+    let .w f :: _ := cs | return []
+    if !generic || lower f != w!"for" then return []
+    let some k := cs.findIdx? (fun c => match c with | .p 44 => true | _ => false) | return []
+    let .w t :: _ := cs.drop (k + 1) | return []
+    if lower t != w!"the" then return []
+    (sentence (lead ++ cs.take (k + 1) ++ [.w w!"we", .w w!"have", .w w!"that"] ++ cs.drop (k + 1))).toList
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

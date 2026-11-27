@@ -2516,18 +2516,18 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| number of $a$-element subsets of a set of $b$ elements | ℝ → ℝ → ℝ | `\\binom{n}{k}` |
-| number of subsets of a set of $a$ elements | ℝ → ℝ | `2^n` |
-| number of $a$-permutations of $b$ elements | ℝ → ℝ → ℝ | `n!/(n-k)!`, `k ≤ n` |
-| number of permutations of $a$ elements | ℝ → ℝ | `n!` |
-| number of $a$-element multisets of $b$ elements | ℝ → ℝ → ℝ | `\\binom{n+k-1}{k}` |
-| number of maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `n^k` |
-| number of injective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `n!/(n-k)!` for `k ≤ n`, `0` else |
-| number of surjective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | `∑_{j=0}^{n} (-1)^j \\binom{n}{j} (n-j)^k` (inclusion–exclusion) |
-| number of compositions of $a$ into $b$ positive parts | ℝ → ℝ → ℝ | `\\binom{n-1}{k-1}` for `1 ≤ k ≤ n`, `0` else |
-| number of compositions of $a$ into $b$ nonnegative parts | ℝ → ℝ → ℝ | `\\binom{n+k-1}{k-1}`, `k ≥ 1` |
-| number of lattice paths from $(0,0)$ to $(a,b)$ | ℝ → ℝ → ℝ | `\\binom{m+n}{m}`, with unit steps right and up |
-| multinomial coefficient of $a$ over $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `n!/(a! b! c!)`, `a + b + c = n` |
+| number of $a$-element subsets of a set of $b$ elements | ℝ → ℝ → ℝ | the `k`-element subsets of `Fin n` (Mathlib `Finset`; `\\binom{n}{k}`) |
+| number of subsets of a set of $a$ elements | ℝ → ℝ | the subsets of `Fin n` (Mathlib `Finset`; `2^n`) |
+| number of $a$-permutations of $b$ elements | ℝ → ℝ → ℝ | the arrangements of `k` distinct elements of `Fin n` in order (Mathlib `Fin k ↪ Fin n`; `n!/(n-k)!` for `k ≤ n`) |
+| number of permutations of $a$ elements | ℝ → ℝ | the permutations of `Fin n` (Mathlib `Equiv.Perm`; `n!`) |
+| number of $a$-element multisets of $b$ elements | ℝ → ℝ → ℝ | the `k`-element multisets of `Fin n` (Mathlib `Sym`; `\\binom{n+k-1}{k}`) |
+| number of maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | the maps `Fin k → Fin n` (`n^k`) |
+| number of injective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | the injective maps `Fin k → Fin n` (Mathlib `Function.Injective`) |
+| number of surjective maps from a set of $a$ elements to a set of $b$ elements | ℝ → ℝ → ℝ | the surjective maps `Fin k → Fin n` (Mathlib `Function.Surjective`) |
+| number of compositions of $a$ into $b$ positive parts | ℝ → ℝ → ℝ | the sequences of `k` positive integers with sum `n` (`\\binom{n-1}{k-1}` for `1 ≤ k ≤ n`) |
+| number of compositions of $a$ into $b$ nonnegative parts | ℝ → ℝ → ℝ | the sequences of `k` nonnegative integers with sum `n` (`\\binom{n+k-1}{k-1}` for `k ≥ 1`) |
+| number of lattice paths from $(0,0)$ to $(a,b)$ | ℝ → ℝ → ℝ | the paths with unit steps right and up: the sequences of `m + n` steps of which `m` go right (`\\binom{m+n}{m}`) |
+| multinomial coefficient of $a$ over $b$, $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | Mathlib `Nat.multinomial` of `a`, `b`, `c` (`n!/(a! b! c!)`), `a + b + c = n` |
 
 ## `samples`
 

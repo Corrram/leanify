@@ -275,7 +275,9 @@ Further fields cover other branches of mathematics:
 * `orthogonalpolynomials`: the Legendre, Hermite, Laguerre and Chebyshev polynomials of
   degree `n`;
 * `counting`: subsets, permutations, multisets, maps, surjections, compositions and lattice
-  paths, multinomial coefficients;
+  paths (each the number of elements of the finite type of Mathlib of these objects, over
+  `Fin n`: `Finset`, `Fin k ↪ Fin n`, `Equiv.Perm`, `Sym`, maps with `Function.Injective`,
+  `Function.Surjective`), multinomial coefficients (`Nat.multinomial`);
 * `samples`: descriptive statistics of the first `n` terms of a sequence (sample mean and
   variance, order statistics, median, correlation, least-squares line).
 * `timeseries`: the sample autocovariance and autocorrelation at a lag, moving averages,

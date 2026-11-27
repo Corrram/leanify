@@ -1,5 +1,6 @@
 import Counting.Compiled
 import Leanify.Readable
+import Leanify.Library.CountingModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

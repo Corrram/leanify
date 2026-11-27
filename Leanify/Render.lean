@@ -53,6 +53,24 @@ def Prim.tex : Prim → String
   | .cardIs => "\\operatorname{card}"
   | .finiteN _ => "\\operatorname{finite}"
 
+/-- The body of a function applied argument by argument through the guards of its domains,
+after the arguments (`(b\mapsto x(b)-x(b-1))(s)` is read as `x(s)-x(s-1)`). -/
+def Tm.bodyAtArgs (t : Tm) : Option Tm :=
+  let rec spine : Nat → Tm → Nat → Option (Tm × Nat)
+    | 0, _, _ => none
+    | k + 1, .app g _, n => spine k g (n + 1)
+    | k + 1, .guard _ e, n => spine k e n
+    | _ + 1, l@(.lam ..), n => some (l, n)
+    | _ + 1, _, _ => none
+  let rec peel : Nat → Tm → Tm
+    | k + 1, .lam _ _ b => peel k b
+    | _, b => b
+  match t with
+  | .app (.app f _) _ =>
+    let viaGuards := match f with | .guard .. | .app (.guard ..) _ => true | _ => false
+    if !viaGuards then none else (spine 16 t 0).map fun (l, n) => peel n l
+  | _ => none
+
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/
 def Tm.prec : Tm → Nat
@@ -65,7 +83,11 @@ def Tm.prec : Tm → Nat
   | .add .. | .sub .. => 6
   | .mul .. | .div .. => 7
   | .neg .. => 8
-  | _ => 9
+  | t => match t.bodyAtArgs with
+    | some b => match b with
+      | .iff .. => 1 | .imp .. => 2 | .or .. => 3 | .and .. => 4 | .all .. | .ex .. | .the .. => 0
+      | .eq .. | .lt .. | .le .. => 5 | .add .. | .sub .. => 6 | .mul .. | .div .. => 7 | .neg .. => 8 | _ => 9
+    | none => 9
 
 /-- A numeral or a quotient of numerals (displayed without its coercion to an interval
 type, `[0,1]`). -/
@@ -230,6 +252,24 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   -- a function of several variables: `f(x,y)` (definedness guards are not shown)
   -- a partial derivative of multi-index order at a point: `\partial^{(i,j)}f(x,y)`
   | .app (.app f x) y =>
+    -- a function of the vocabulary applied argument by argument through the guards of its
+    -- domains (`the multinomial coefficient of $4$ over $1$, $2$ and $1$`): its body at the
+    -- arguments
+    let rec lamSpine : Nat → Tm → List Tm → Option (Tm × List Tm)
+      | 0, _, _ => none
+      | k + 1, .app g a, acc => lamSpine k g (a :: acc)
+      | k + 1, .guard _ e, acc => lamSpine k e acc
+      | _ + 1, t@(.lam ..), acc => some (t, acc)
+      | _ + 1, _, _ => none
+    let rec atArgs : Nat → Tm → List Tm → List String → String
+      | k + 1, .lam _ _ b, a :: rest, ls' =>
+        let t := a.tex cs gs ls
+        atArgs k b rest ((if a.prec < 9 then "(" ++ t ++ ")" else t) :: ls')
+      | _, b, rest, ls' => b.tex cs gs ls' ++ String.join (rest.map fun a => "(" ++ a.tex cs gs ls ++ ")")
+    let viaGuards := match f with | .guard .. | .app (.guard ..) _ => true | _ => false
+    match (if viaGuards then lamSpine 16 f [x, y] else none) with
+    | some (lm, args) => atArgs (args.length + 1) lm args ls
+    | none =>
     -- a constant of three arguments whose name places them (`#1_{#2,#3}`)
     let three : Option String := match f with
       | .app (.const i) w =>
