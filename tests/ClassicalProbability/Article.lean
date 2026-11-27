@@ -1,5 +1,6 @@
 import ClassicalProbability.Compiled
 import Leanify.Readable
+import Leanify.Library.ClassicalProbabilityModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

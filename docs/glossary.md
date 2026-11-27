@@ -3301,14 +3301,14 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| probability of a shared birthday among $a$ people with $b$ days | ℝ → ℝ → ℝ | `1 - ∏_{i=0}^{n-1} (d-i)/d`, which is `1` for `n > d` |
-| expected number of draws to collect $a$ coupons | ℝ → ℝ | `n H_n = n ∑_{k=1}^{n} 1/k` |
-| ballot probability for $a$ and $b$ votes | ℝ → ℝ → ℝ | `(a-b)/(a+b)`: the winner with `a` votes is ahead throughout the count |
-| probability of a derangement of $a$ elements | ℝ → ℝ | `∑_{k=0}^{n} (-1)^k/k!`: no fixed point in a uniformly random permutation |
-| probability that buffon's needle of length $a$ crosses a line with spacing $b$ | ℝ → ℝ → ℝ | `2ℓ/(π d)` for `ℓ ≤ d` |
-| optimal cutoff of the secretary problem with $a$ candidates | ℝ → ℝ | `⌊n/e⌋`, asymptotically optimal |
-| success probability of the secretary problem with $a$ candidates and cutoff $b$ | ℝ → ℝ → ℝ | `(r/n) ∑_{k=r+1}^{n} 1/(k-1)`, rejecting the first `r` candidates |
-| expected number of runs of heads in $a$ fair tosses | ℝ → ℝ | `(n+1)/4` |
+| probability of a shared birthday among $a$ people with $b$ days | ℝ → ℝ → ℝ | the share of the assignments `Fin n → Fin d` that are not injective (`1 - ∏_{i=0}^{n-1} (d-i)/d`) |
+| expected number of draws to collect $a$ coupons | ℝ → ℝ | the expectation of the first time every coupon has been drawn, for independent uniform draws (`n H_n`) |
+| ballot probability for $a$ and $b$ votes | ℝ → ℝ → ℝ | the share of the orders of the count in which the winner with `a` votes is ahead throughout (`(a-b)/(a+b)`) |
+| probability of a derangement of $a$ elements | ℝ → ℝ | the share of the permutations without a fixed point (Mathlib `derangements`; `∑_{k=0}^{n} (-1)^k/k!`) |
+| probability that buffon's needle of length $a$ crosses a line with spacing $b$ | ℝ → ℝ → ℝ | for a uniform distance of the centre to the nearest line and a uniform angle (`2ℓ/(π d)` for `ℓ ≤ d`) |
+| optimal cutoff of the secretary problem with $a$ candidates | ℝ → ℝ | the least cutoff `r < n` with the greatest success probability (about `n/e`) |
+| success probability of the secretary problem with $a$ candidates and cutoff $b$ | ℝ → ℝ → ℝ | the share of the orders of the candidates in which rejecting the first `r` and taking the first better one takes the best (`(r/n) ∑_{k=r+1}^{n} 1/(k-1)`) |
+| expected number of runs of heads in $a$ fair tosses | ℝ → ℝ | the mean number of maximal blocks of heads over the `2^n` sequences (`(n+1)/4`) |
 
 ## `cryptography`
 

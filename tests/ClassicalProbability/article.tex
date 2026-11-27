@@ -11,6 +11,7 @@ We write $T_n$ for the expected number of draws to collect $n$ coupons.
 We write $B(a,b)$ for the ballot probability for $a$ and $b$ votes.
 We write $q_n$ for the probability of a derangement of $n$ elements.
 We write $P(\ell,d)$ for the probability that Buffon's needle of length $\ell$ crosses a line with spacing $d$.
+We write $r^*(n)$ for the optimal cutoff of the secretary problem with $n$ candidates.
 We write $S(n,r)$ for the success probability of the secretary problem with $n$ candidates and cutoff $r$.
 
 \section{Values}
@@ -25,6 +26,16 @@ $T_2=3$, $B(3,1)=\frac12$ and $q_3=\frac13$.
 
 \begin{lemma}\label{buffon}
 $P(1,1)=\frac{2}{\pi}$ and $S(3,1)=\frac12$.
+\end{lemma}
+
+\section{Closed forms}
+
+\begin{lemma}\label{closed}
+For every positive integer $n$, $T_n=n\sum_{k=1}^{n}\frac1k$. Let $a>b$ be positive integers. Then $B(a,b)=\frac{a-b}{a+b}$.
+\end{lemma}
+
+\begin{lemma}\label{secretary}
+$r^*(3)=1$, $r^*(5)=2$ and $S(5,2)=\frac{13}{30}$.
 \end{lemma}
 
 \end{document}

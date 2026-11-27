@@ -363,7 +363,9 @@ Further fields cover other branches of mathematics:
 * `quadratics`: quadratics and cubics by their coefficients (discriminants; the roots, the
   vertex and the extreme value by what they are, the sum and the product of the complex roots
   by Mathlib's `Polynomial.roots`, so that the quadratic formula and Vieta's formulas are claims);
-* `classicalprobability`: the classical problems (birthday, coupons, ballot, Buffon, secretary);
+* `classicalprobability`: the classical problems (birthday, coupons, ballot, Buffon, secretary),
+  as probabilities and expectations in their probability spaces, so that their closed forms
+  are claims;
 * `cryptography`: RSA, discrete logarithms, Diffie–Hellman;
 * `fractals`: similarity dimensions and the classical self-similar sets;
 * `diophantine`: Frobenius numbers, sums of two squares, Pythagorean triples, congruent numbers;

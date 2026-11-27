@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def ClassicalProbability.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["classicalprobability"]
 
-#leanify_article ClassicalProbability "article.tex" "fnv1a64:6f59e8e195c72b39" with ClassicalProbability.vocabulary
+#leanify_article ClassicalProbability "article.tex" "fnv1a64:07c22aa04d66d995" with ClassicalProbability.vocabulary
