@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Polyhedra.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["polyhedra"]
 
-#leanify_article Polyhedra "article.tex" "fnv1a64:d0f5df1f7cd1de4c" with Polyhedra.vocabulary
+#leanify_article Polyhedra "article.tex" "fnv1a64:c76ab4afc300d1e9" with Polyhedra.vocabulary

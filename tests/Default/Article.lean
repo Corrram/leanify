@@ -33,6 +33,7 @@ import Leanify.Library.QuadraticsModel
 import Leanify.Library.SolidsModel
 import Leanify.Library.TrianglesModel
 import Leanify.Library.SphericalGeometryModel
+import Leanify.Library.PolyhedraModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 

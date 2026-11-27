@@ -392,7 +392,9 @@ Further fields cover other branches of mathematics:
 * `materials`: stresses, moduli, beams and columns;
 * `astronomy`: distances, magnitudes, Hubble's law, stellar radiation;
 * `electromagnetism`: charges, fields, capacitors, wires, cyclotrons;
-* `polyhedra`: Euler's formula and the Platonic solids;
+* `polyhedra`: Euler's formula and the Platonic solids (convex polyhedra of
+  `EuclideanSpace ℝ (Fin 3)` with regular faces, their faces the exposed subsets of Mathlib, so
+  that their counts and dihedral angles are claims);
 * `betting`: odds, the Kelly criterion, margins;
 * `surfaces`: Euler characteristic, genus, curvature;
 * `graphcounts`: counting edges, spanning trees and colourings of standard graphs (the graphs

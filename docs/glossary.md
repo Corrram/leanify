@@ -3686,10 +3686,10 @@ except a notion whose meanings take arguments of different types, which the type
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | euler characteristic of a polyhedron with $a$ vertices, $b$ edges and $c$ faces | ℝ → ℝ → ℝ → ℝ | `V - E + F`, which is `2` for a convex polyhedron |
-| number of vertices of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | `4p/(4 - (p-2)(q-2))` |
-| number of edges of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | `2pq/(4 - (p-2)(q-2))` |
-| number of faces of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | `4q/(4 - (p-2)(q-2))` |
-| dihedral angle of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | the `θ ∈ (0, π)` with `sin(θ/2) = cos(π/q)/sin(π/p)` |
+| number of vertices of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | its faces of dimension `0` (`4p/(4 - (p-2)(q-2))`) |
+| number of edges of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | its faces of dimension `1` (`2pq/(4 - (p-2)(q-2))`) |
+| number of faces of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | its faces of dimension `2` (`4q/(4 - (p-2)(q-2))`) |
+| dihedral angle of the platonic solid with faces of $a$ sides and $b$ faces at each vertex | ℝ → ℝ → ℝ | the angle between two faces with a common edge (`sin(θ/2) = cos(π/q)/sin(π/p)`) |
 | angle defect of a vertex with face angles summing to $a$ | ℝ → ℝ | `2π - s` |
 
 ## `betting`

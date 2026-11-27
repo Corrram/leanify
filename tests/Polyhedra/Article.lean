@@ -1,5 +1,6 @@
 import Polyhedra.Compiled
 import Leanify.Readable
+import Leanify.Library.PolyhedraModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 
