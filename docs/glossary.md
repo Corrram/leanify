@@ -225,6 +225,9 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | square root of $a$ | ℝ → ℝ | `√x` of a number `x ≥ 0` (Mathlib `Real.sqrt`) |
 | absolute value of $a$ | ℝ → ℝ | `\|x\|` |
+| reciprocal of $a$ | ℝ → ℝ | `1/x` of a number `x ≠ 0` |
+| square of $a$ | ℝ → ℝ | `x²` |
+| cube of $a$ | ℝ → ℝ | `x³` |
 
 ## `unitsquare`
 

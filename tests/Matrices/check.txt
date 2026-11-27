@@ -46,7 +46,13 @@ tests/Matrices/article.tex:69:154: info: claim 23: \forall x\in \mathrm{Mat},\ \
 tests/Matrices/article.tex:69:154: info: claim 23 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\Rightarrow (\forall y\in \mathrm{Mat},\ \operatorname{Square}(y)\Rightarrow x\sim y\Rightarrow \operatorname{Square}(x)\land \operatorname{Square}(y))
 tests/Matrices/article.tex:73:65: info: claim 24: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ (\operatorname{rows}(y)=x\land \operatorname{cols}(y)=x)\land \operatorname{Square}(y)\land \operatorname{card}((t\in \mathbb{R}\mapsto \operatorname{Eigenvalue}(y)(t)))(x)\Rightarrow \operatorname{Diagonalizable}(y)
 tests/Matrices/article.tex:73:114: info: claim 25: \forall x\in \mathrm{Mat},\ \operatorname{rank}(x^{\top})=\operatorname{rank}(x)
-tests/Matrices/article.tex: 4 definitions, 26 claims
+tests/Matrices/article.tex:77:22: info: claim 26: \forall x\in \mathrm{Mat},\ \operatorname{rank}(x)=\operatorname{rank}(x^{\top})
+tests/Matrices/article.tex:77:84: info: claim 27: \forall x\in \mathrm{Mat},\ \operatorname{rank}(x)=\operatorname{rank}(x^{\top})
+tests/Matrices/article.tex:77:172: info: claim 28: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow (x^{\top})^{-1}=(x^{-1})^{\top}
+tests/Matrices/article.tex:77:172: info: claim 28 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow \operatorname{Invertible}(x^{\top})\land \operatorname{Invertible}(x)
+tests/Matrices/article.tex:77:257: info: claim 29: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow \det(x^{-1})=\frac{1}{\det(x)}
+tests/Matrices/article.tex:77:257: info: claim 29 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow (\operatorname{Invertible}(x)\land \operatorname{Square}(x^{-1}))\land \operatorname{Square}(x)\land \neg (\det(x)=0)\land \operatorname{Square}(x)\land \neg (\det(x)=0)
+tests/Matrices/article.tex: 4 definitions, 30 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 33 compiled, 0 failed, 0 prose (of 33)
-  all: 37 compiled, 0 failed, 0 prose (of 37)
+  results: 39 compiled, 0 failed, 0 prose (of 39)
+  all: 43 compiled, 0 failed, 0 prose (of 43)

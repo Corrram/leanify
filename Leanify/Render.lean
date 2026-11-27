@@ -242,6 +242,12 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     -- (a numeral as an element of a type is written alone)
     else if n.startsWith "\\langle #\\rangle" && x.isNumeral then x.tex cs gs ls
     else if n == "-" then "-" ++ cwrap 8 x ls
+    -- (a superscript after the argument, `#^{-1}`: an argument with a superscript or an operation
+    -- of its own in parentheses, `(A^{\top})^{-1}`)
+    else if n.startsWith "#^" || n.startsWith "#_" then
+      let t := x.tex cs gs ls
+      let t := if x.prec < 9 || t.contains '^' then "(" ++ t ++ ")" else t
+      "".intercalate (n.splitOn "#" |>.intersperse t)
     else if (n.splitOn "#").length > 1 then "".intercalate (n.splitOn "#" |>.intersperse (x.tex cs gs ls))
     else n ++ "(" ++ x.tex cs gs ls ++ ")"
   -- a domain predicate applied to an argument: read it about the argument

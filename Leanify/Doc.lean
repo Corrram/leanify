@@ -5602,7 +5602,22 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.all ty (.imp (holdsAt p (.loc 0)) (.eq lhs rhs)))
   | .pred s ph o => do
     let st ← subjectTm sc s
-    predicate sc st ph o
+    let st0 ← get
+    tryCatch (predicate sc st ph o) fun e => do
+      -- (`… is the reciprocal of $x$`, `… is the reciprocal of the determinant of $A$`: the value
+      -- of a notion, also of a notion's value)
+      let .w t :: _ := ph.map Chunk.w | throw e
+      let arg ← match o with
+        | .named name (some m) => pure (MT.app (.id w!"@the") (name.map (MT.text ∘ Grammar.lower) ++ [m]))
+        | .math m => pure m
+        | _ => throw e
+      if Grammar.lower t != w!"the" || ph.length < 2 || !(e.code == E.noun || e.code == E.prose || e.code == E.unsupported) then throw e
+      set st0
+      let outer := MT.app (.id w!"@the") ((ph.drop 1).map (MT.text ∘ Grammar.lower) ++ [.text w!"of", arg])
+      let r ← tryCatch (some <$> term F sc none outer) fun _ => pure none
+      let some (v, vty) := r | do set st0; throw e
+      if vty != st.2 || !(vty == .real || Elab.isBase vty) then do set st0; throw e
+      pure (Tm.eq st.1 v)
   | .onlyWith s noun conds var => do
     let some ni := lookupWords (← get).nouns noun | fail E.noun ((noun.intersperse [32]).flatten)
     let (st, sty) ← subjectTm sc s

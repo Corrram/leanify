@@ -654,8 +654,10 @@ without a preposition: `the arithmetic mean $\frac{a+b}{2}$ is at least …` com
 mean. With a preposition, the words and formulas are a notion of the vocabulary with its
 arguments, the subject of the claim as a formula would be: `The kernel of $\varphi$ is a
 normal subgroup of $G$.`, `The order of $G$ is $6$.`, `The distance between $P$ and $Q$ is
-at least $0$.`; words that are no notion (`the probability of an exit at $-1$ is at least
-…`) are prose.
+at least $0$.`. A notion may be the argument of another, after `the`: `the rank of the
+transpose of $A$`, `the order of the center of $G$`, `$\det(A^{-1})$ is the reciprocal of the
+determinant of $A$` (where no notion has all these words). Words that are no notion (`the
+probability of an exit at $-1$ is at least …`) are prose.
 
 ### Other wordings of the same forms
 
@@ -725,6 +727,7 @@ object that is not in use:
 | in a result, `A subset of $\mathbb{R}$ is compact if and only if it is closed and bounded.`, `Every subset of $\mathbb{R}$ is …` with `it` | `For every subset $X$ of $\mathbb{R}$, $X$ is compact if and only if $X$ is closed and bounded.` |
 | in a result, `A finite abelian group is cyclic if its order is squarefree.`, `Then $n^2$ is even if $n$ is even.` | `If $n$ is even, then $n^2$ is even.`: a condition after the claim (not `only if`, `if and only if`, `, even if`) |
 | in a result, `There is no largest prime.` (`greatest`; `smallest`, `least`) | `For every prime $X$ there is a prime $Y$ with $Y>X$.` |
+| in a result, `The rank of a matrix equals the rank of its transpose.` | `For every matrix $X$, the rank of $X$ equals the rank of the transpose of $X$.` (`its` after the nested indefinite is its object's) |
 | in a result, `Between any two real numbers there is a rational number.` (`any two distinct`) | `For all real numbers $X,Y$ with $X\neq Y$, there is a rational number $Z$ with $\min(X,Y)<Z<\max(X,Y)$.` (two numbers are distinct) |
 | in a result, `A compact subset of a Hausdorff space is closed.`, `A finite integral domain is a field.`, `An integer is even or odd.` | `Every compact subset of a Hausdorff space is closed.` (an indefinite subject of a result is generic), then the indefinites inside it as above |
 | `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |

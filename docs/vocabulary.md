@@ -96,7 +96,8 @@ number*, *integer*, *positive*, *negative* and *nonnegative integer*, *rational*
 *irrational number*, and the adjectives *positive*, *negative*, *nonnegative*,
 *nonpositive*, *nonzero*, *rational*, *irrational* of a real number, and after the noun
 *greater than*, *less than* (*larger*, *smaller*; *or equal to*) a bound; *the square root of $x$*
-(of `x ≥ 0`) and *the absolute value of $x$*. So
+(of `x ≥ 0`), *the absolute value*, *the square*, *the cube* and *the reciprocal of $x$* (of
+`x ≠ 0`). So
 `Let $x$ and $y$ be positive real numbers.` needs no field. The words of number
 theory (*prime*, *even*, *squarefree*, the greatest common divisor) are the field
 `numbers`. A symbol or noun that a field would read is reported with the field's

@@ -4,8 +4,8 @@ import Leanify.Library.Build
 
 The words that every article may use, whatever its fields: real numbers and integers,
 rational and irrational numbers, the signs of a real number (`positive`,
-`nonnegative`, `nonzero`), a bound after the noun (`greater than $1$`), and the square root
-and the absolute value of a number. Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
+`nonnegative`, `nonzero`), a bound after the noun (`greater than $1$`), and the square root,
+absolute value, square, cube and reciprocal of a number. Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
 Every meaning is a term of the core language, so the core has no constants and no model.
 
 *Natural number* has two meanings (with and without 0), so Leanify does not read it
@@ -74,7 +74,13 @@ def numbers : Vocab where
       ty := .real ⟶ .real, doms := [some (predR fun x => le (num 0) x)],
       doc := "`√x` of a number `x ≥ 0` (Mathlib `Real.sqrt`)" },
     { name := phrase!"absolute value of $v$", value := close <| lamR fun x => abs x, ty := .real ⟶ .real,
-      doc := "`|x|`" }]
+      doc := "`|x|`" },
+    { name := phrase!"reciprocal of $v$", value := close <| lamR fun x => div (num 1) x, ty := .real ⟶ .real,
+      doms := [some (predR fun x => not (eq x (num 0)))], doc := "`1/x` of a number `x ≠ 0`" },
+    { name := phrase!"square of $v$", value := close <| lamR fun x => mul x x, ty := .real ⟶ .real,
+      doc := "`x²`" },
+    { name := phrase!"cube of $v$", value := close <| lamR fun x => mul x (mul x x), ty := .real ⟶ .real,
+      doc := "`x³`" }]
 
 end Leanify.Core
 

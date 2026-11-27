@@ -7159,6 +7159,8 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     if [[w!"set"], [w!"class"], [w!"number"], [w!"continuous", w!"image"]].contains (plain front) then none
     let x := v?.getD (fresh 0)
     let (chain, after) := nestChain 4 after
+    -- (`its` after it is the object's: `the rank of a matrix equals the rank of its transpose`)
+    let after := DefForm.resolveIt x (after.length + 1) after
     -- (`the square of an odd integer`: `$X^2$`, `the cube`: `$X^3$`)
     let power : Option Nat := match plain front with
       | [f] => if f == w!"square" then some 2 else if f == w!"cube" then some 3 else none

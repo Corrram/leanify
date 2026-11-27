@@ -2157,6 +2157,22 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
               | some r => return some r
               | none => set st1
             return none
+          -- (`the rank of the transpose of $A$`, where no notion has all these words: the inner
+          -- notion, after `the` after a preposition, an argument of the outer one)
+          if cands.isEmpty then
+            let preps := [w!"of", w!"between", w!"from", w!"in", w!"on", w!"at", w!"over", w!"to", w!"with", w!"by"]
+            let i? := (List.range args.length).find? fun i => i > 0 && (match (args[i]? : Option MT), (args[i - 1]? : Option MT) with
+              | some (.text t), some (.text p) => t == w!"the" && preps.contains p
+              | _, _ => false)
+            if let some i := i? then
+              let inner := args.drop (i + 1)
+              if (inner.head?.map fun m => match m with | .text _ => true | _ => false).getD false &&
+                  inner.any (fun m => match m with | .text _ => false | _ => true) then
+                let st1 ← get
+                if let some r ← tryCatch (some <$> term f sc pf (.app (.id w!"@the") (args.take i ++ [.app (.id w!"@the") inner])))
+                    (fun _ => pure none) then
+                  return r
+                set st1
           -- (words that are no notion of the vocabulary: prose)
           if cands.isEmpty then
             if let some r ← inComplement then return r
