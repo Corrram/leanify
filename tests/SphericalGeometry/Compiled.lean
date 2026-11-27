@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def SphericalGeometry.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["sphericalgeometry"]
 
-#leanify_article SphericalGeometry "article.tex" "fnv1a64:03d68a1080a900f5" with SphericalGeometry.vocabulary
+#leanify_article SphericalGeometry "article.tex" "fnv1a64:39c0f5563ffcfa5e" with SphericalGeometry.vocabulary

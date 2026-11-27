@@ -2043,6 +2043,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- `xz(x+z)`: a number before parentheses is a factor, not a function
     | .app (.id n) [a] =>
       if n == w!"@norm" then normTm f sc pf a none else
+      -- `\pi(1-\cos t)`: the number `π` before parentheses is a factor (no function is
+      -- named `\pi`)
+      if n == w!"\\pi" && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then term f sc pf (.mul (.id n) a) else
       -- `\mathbf 1\{φ\}`: the indicator of a condition, `1` where it holds and `0` elsewhere
       if n == w!"@ind" then do
         let c ← propOf f sc pf a

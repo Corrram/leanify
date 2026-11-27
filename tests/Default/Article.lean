@@ -32,6 +32,7 @@ import Leanify.Library.FiniteFieldsModel
 import Leanify.Library.QuadraticsModel
 import Leanify.Library.SolidsModel
 import Leanify.Library.TrianglesModel
+import Leanify.Library.SphericalGeometryModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 

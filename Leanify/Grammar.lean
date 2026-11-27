@@ -4108,8 +4108,42 @@ def prenominalWords (cs : List Chunk) : List Chunk :=
       | _, _ => acc.reverse
   go (cs.length + 1) cs []
 
+/-- `$R>0$ and $h$`, `$a$, $b>1$ and $c$`: names joined by commas and `and`, some of them with
+a condition (`$R>0$`: the name, then a comparison), at least one. -/
+def condVars (cs : List Chunk) : Option (List (MTok × Option MT) × List Chunk) := do
+  let one (ts : List MTok) : Option (MTok × Option MT) :=
+    match ts with
+    | [t@(.id _)] => some (t, none)
+    | [t@(.cmd c)] => if Math.greekNames.contains c then some (t, none) else none
+    | _ => do
+      let m ← Math.parseFormula ts
+      let .chain (.id x) [_] := m | none
+      if !isCondition m then none
+      some (.id x, some m)
+  let (ts, r) ← mathChunk cs
+  let first ← one ts
+  let rec go : Nat → List (MTok × Option MT) → List Chunk → Option (List (MTok × Option MT) × List Chunk)
+    | 0, acc, r => some (acc, r)
+    | f + 1, acc, r =>
+      match (punct 44 r >>= kw [w!"and"]) <|> kw [w!"and"] r <|> punct 44 r with
+      | some (.m b :: r2) => do let it ← one b; go f (acc ++ [it]) r2
+      | _ => some (acc, r)
+  let (items, r') ← go 8 [first] r
+  if items.length < 2 || items.all (·.2.isNone) then none
+  some (items, r')
+
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+  -- `$R>0$ and $h$ be real numbers`: the names, each of the noun, and their conditions
+  (do
+    let (items, r) ← condVars cs
+    let r1 ← kw [w!"be"] r
+    let joined : List MTok := (items.map fun (t, _) => [t]).intersperse [MTok.sym 44] |>.flatten
+    let (b, r2) ← pluralNoun joined r1
+    let conds := items.filterMap fun (_, c) => c.map Bind.ifCond
+    match b with
+    | .many bs => some (.many (bs ++ conds), r2)
+    | b => some (.many (b :: conds), r2)) <|>
   -- `$K\subseteq L\subseteq M$ be fields`: new variables, each an object of the plural noun,
   -- in a chain of inclusions
   (do

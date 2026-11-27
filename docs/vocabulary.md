@@ -376,7 +376,9 @@ Further fields cover other branches of mathematics:
 * `populationdynamics`: logistic growth, harvesting, Ricker and Beverton–Holt maps, Lotka–Volterra;
 * `circuits`: resistors, capacitors and inductors;
 * `thermodynamics`: heat engines, ideal gases, Boltzmann factors;
-* `sphericalgeometry`: distances and areas on the sphere;
+* `sphericalgeometry`: distances and areas on the sphere (the sphere of
+  `EuclideanSpace ℝ (Fin 3)`, the angle between points as vectors, the Euclidean Hausdorff measure
+  `μHE[2]`, so that the spherical law of cosines and Girard's theorem are claims);
 * `floatingpoint`: floating-point systems, errors and rounding;
 * `latticepoints`: counting lattice points, Pick's theorem;
 * `combinatorialgames`: Nim, Grundy values, Wythoff's game;

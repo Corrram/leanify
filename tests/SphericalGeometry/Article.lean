@@ -1,5 +1,6 @@
 import SphericalGeometry.Compiled
 import Leanify.Readable
+import Leanify.Library.SphericalGeometryModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

@@ -3493,13 +3493,13 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| central angle between the points with latitudes $a$ and $b$ and longitudes $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `arccos(sin φ₁ sin φ₂ + cos φ₁ cos φ₂ cos(λ₁ - λ₂))`: the `θ ∈ [0, π]` with that cosine, the great-circle distance on the unit sphere |
-| chord for the central angle $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `2R sin(θ/2)` |
+| central angle between the points with latitudes $a$ and $b$ and longitudes $c$ and $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | the angle between the points `(cos φ cos λ, cos φ sin λ, sin φ)` of the unit sphere as vectors, the great-circle distance (`arccos(sin φ₁ sin φ₂ + cos φ₁ cos φ₂ cos(λ₁ - λ₂))`) |
+| chord for the central angle $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | the distance between two points of the sphere at that central angle (`2R sin(θ/2)`) |
 | spherical excess of the triangle with angles $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `α + β + γ - π`, for angles in `(0, π)` with `α + β + γ > π` |
-| area of the spherical triangle with angles $a$, $b$ and $c$ on a sphere of radius $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | `R²(α + β + γ - π)` (Girard's theorem) |
-| area of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `2πRh`, for `0 ≤ h ≤ 2R` |
-| volume of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | `πh²(3R - h)/3` |
-| solid angle of a cone with half-angle $a$ | ℝ → ℝ | `2π(1 - cos θ)` |
+| area of the spherical triangle with angles $a$, $b$ and $c$ on a sphere of radius $d$ | ℝ → ℝ → ℝ → ℝ → ℝ | the Euclidean Hausdorff measure of a spherical triangle with these angles, where there is one (`R²(α + β + γ - π)`, Girard) |
+| area of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | the area of the points of the sphere at height at least `R - h` (`2πRh`), for `0 ≤ h ≤ 2R` |
+| volume of the spherical cap of height $a$ on a sphere of radius $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of the points of the ball at height at least `R - h` (`πh²(3R - h)/3`) |
+| solid angle of a cone with half-angle $a$ | ℝ → ℝ | the area of the part of the unit sphere inside the cone (`2π(1 - cos θ)`) |
 
 ## `floatingpoint`
 
