@@ -1234,6 +1234,7 @@ except a notion whose meanings take arguments of different types, which the type
 | element | $\mathrm{El}$ | an element of a structure: `g ∈ G` |
 | unit | $\mathrm{El}$ | an invertible element of a ring (Mathlib `IsUnit`) |
 | zero divisor | $\mathrm{El}$ | `ab = 0` for some `b ≠ 0` |
+| polynomial | $\mathrm{El}$ | `polynomial over $R$`: an element of the ring `R[x]` of polynomials over a ring `R` (Mathlib `Polynomial R`); `Let $f\in K[x]$ be a polynomial` is over `K` |
 | irreducible element | $\mathrm{El}$ | not a unit, and a product only of a unit (Mathlib `Irreducible`) |
 | prime element | $\mathrm{El}$ | nonzero, not a unit, dividing a factor of every product it divides (Mathlib `Prime`) |
 | nilpotent element | $\mathrm{El}$ | `aⁿ = 0` for some `n` (Mathlib `IsNilpotent`) |
@@ -1483,6 +1484,13 @@ except a notion whose meanings take arguments of different types, which the type
 | maximal in $x$ | $\mathrm{El}$ → Prop | a maximal ideal of `R`; `$I$ is maximal` (Mathlib `Ideal.IsMaximal`) |
 | principal in $x$ | $\mathrm{El}$ → Prop | a principal ideal of `R`; `$I$ is principal` (Mathlib `Submodule.IsPrincipal`) |
 | proper in $x$ | $\mathrm{El}$ → Prop | an ideal of `R` other than `R`; `$I$ is proper` |
+| of degree $x$ | $\mathrm{El}$ | a nonzero polynomial whose highest coefficient is that of `x^n` (Mathlib `Polynomial.natDegree`) |
+| with at most $x$ roots in $a$ | $\mathrm{El}$ | a polynomial with finitely many roots in `R`, at most `n` (Mathlib `Polynomial.roots`) |
+| with a root in $x$ | $\mathrm{El}$ | `f(a) = 0` for an element `a` of `R` (Mathlib `Polynomial.IsRoot`); also `has a root in $R$` |
+| without a root in $x$ | $\mathrm{El}$ | `f(a) ≠ 0` for every element `a` of `R`; also `has no root in $R$` |
+| without root in $x$ | $\mathrm{El}$ | `f(a) ≠ 0` for every element `a` of `R` (`has no root in $R$`) |
+| without roots in $x$ | $\mathrm{El}$ | `f(a) ≠ 0` for every element `a` of `R` |
+| irreducible over $x$ | $\mathrm{El}$ | an irreducible element of `K[x]` (Mathlib `Irreducible`) |
 | irreducible in $x$ | $\mathrm{El}$ | an irreducible element of `R`; `$a$ is irreducible` of an element `a` of `R` (Mathlib `Irreducible`) |
 | prime in $x$ | $\mathrm{El}$ | a prime element of `R`; `$a$ is prime` of an element `a` of `R` (Mathlib `Prime`) |
 | finite-dimensional over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
@@ -1527,6 +1535,7 @@ except a notion whose meanings take arguments of different types, which the type
 | order of $a$ | ($\mathrm{El}$ → Prop) → ℝ | the number of elements (Mathlib `Nat.card`) |
 | order of $a$ | $\mathrm{El}$ → ℝ | of an element (Mathlib `orderOf`) |
 | cardinality of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Nat.card`) |
+| number of elements of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Nat.card`) |
 | index of $a$ in $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Subgroup.index`) |
 | centre of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.center`) |
 | center of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.center`) |
@@ -1553,6 +1562,7 @@ except a notion whose meanings take arguments of different types, which the type
 | dihedral group of order $a$ | ℝ → $\mathrm{El}$ → Prop | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
 | klein four-group | $\mathrm{El}$ → Prop | `C_2 × C_2` |
 | direct product of $a$ and $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `G × H` (Mathlib `Prod`) |
+| degree of $a$ | $\mathrm{El}$ → ℝ | of a nonzero polynomial: the highest power of `x` with a nonzero coefficient (Mathlib `Polynomial.natDegree`) |
 | polynomial ring over $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `R[x]`, of a ring `R` (Mathlib `Polynomial R`) |
 | ring of polynomials over $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `R[x]` (Mathlib `Polynomial R`) |
 | diagonal of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | the pairs `(x, x)` of `X\times X` (Mathlib `Set.diagonal`) |
@@ -1614,6 +1624,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $+$ | $\mathrm{El}$ → Prop | `U + W`, the sum of two subspaces of one module: the sums `u + w` (Mathlib `U ⊔ W`) |
 | $/$ | $\mathrm{El}$ → Prop | `G/N`, `R/I`, `V/W`: the quotient of a group by a normal subgroup, of a ring by an ideal, of a module by a subspace (Mathlib `G ⧸ N`), one element for each class |
 | $\oplus$ | $\mathrm{El}$ → Prop | `U \oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \oplus W` says that the sum is direct |
+| $\deg$ | $\mathrm{El}$ | `\deg f`, the degree of a nonzero polynomial (Mathlib `Polynomial.natDegree`) |
 | $\operatorname{@polyring}$ | $\mathrm{El}$ → Prop | `R[x]`, the ring of polynomials in one variable over a ring `R` (Mathlib `Polynomial R`): the lists of coefficients, with the sum and the product of polynomials |
 | $\times$ | $\mathrm{El}$ → Prop | `G\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |

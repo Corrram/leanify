@@ -2980,7 +2980,16 @@ where
           return (partialFn 1 0 (.loc i), Ty.rfun)
       -- `f''`, `(fg)'`, `(f+g)'`: the derivative of a real function written as an expression
       -- (of the derivative, of a sum or product of functions), defined where it exists
-      if (match e with | .id [39] => true | _ => false) && !(match b with | .id _ => true | _ => false) then
+      -- (also of a function that the article defines, `F(x)=\int_a^x f(t)\,dt`, where it defines
+      -- no `F'` of its own)
+      let globFn : Bool ← match b with
+        | .id n => do
+          if (lookupLocal sc n).isSome then pure false else
+          match symKey (.sup b e) with
+          | some k => pure (← lookupGlob k).isNone
+          | none => pure true
+        | _ => pure false
+      if (match e with | .id [39] => true | _ => false) && (!(match b with | .id _ => true | _ => false) || globFn) then
         let st0 ← get
         let r ← tryCatch (some <$> term f sc pf b) fun _ => pure none
         match r with

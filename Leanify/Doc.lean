@@ -876,7 +876,9 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
       else if v == w!"real" && prevWord == some w!"be" && beforeEnd then
         word w!"a" :: t :: word w!"number" :: standardForms f there cond (some t) ts
       -- `Any real number $x$ satisfies`, `for any $x$`: every one, outside a condition
-      else if v == w!"any" && !cond && (prev.isNone || prevWord == some w!"for") then
+      -- (not `any two`, which says something of every two of them)
+      else if v == w!"any" && !cond && (prev.isNone || prevWord == some w!"for") &&
+          !(match ts with | n :: _ => lw n == some w!"two" | [] => false) then
         word w!"every" :: standardForms f there cond (some t) ts
       -- `Given $x>0$, we have`
       else if v == w!"given" && prev.isNone && beforeMath then
@@ -2766,6 +2768,19 @@ natural numbers whose terms `U_n` are each as the noun phrase says (its values e
 used). -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st00 ← get
+  -- `Let $f\in K[x]$ be a nonzero polynomial of degree $n$`: a polynomial over the ring of the
+  -- coefficients of its domain (not over its domain), read first
+  let polyOver : Option (List Chunk) := do
+    let k ← np.findSome? fun c => match c with
+      | .m [.id _, .cmd i, .id r, .sym 91, .id _, .sym 93] => if i == w!"in" then some r else none
+      | _ => none
+    let j ← np.findIdx? fun c => match c with | .w w => w == w!"polynomial" || w == w!"polynomials" | _ => false
+    if (match np[j + 1]? with | some (.w o) => o == w!"over" | _ => false) then none
+    let at_ := if (match np[j + 1]? with | some (.m _) => true | _ => false) then j + 2 else j + 1
+    some (np.take at_ ++ [.w w!"over", .m [.id k]] ++ np.drop at_)
+  if let some np' := polyOver then
+    if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
+    set st00
   tryCatch (nounPhrase0 np outer) fun e00 => do
   set st00
   if let some (np', vts, condCs) := seqOfElems (← get).vocab np then
@@ -3174,7 +3189,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
     -- bound again
     let st ← get
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n) && !st.vocab.methods.any (·.op == .fn n)).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     -- (not a variable that the result or the sentence has bound: `Let $T$ be …. If
@@ -3321,7 +3336,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
   -- $b\ge0$ and $|b|<1$` does not bind `b` again)
   let restates (out : List BindInfo) (φ : MT) : Bool :=
     let fr := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n =>
-      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
+      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n) && !st.vocab.methods.any (·.op == .fn n)).eraseDups
     -- (it may also use the variables bound before: `Let $c>0$. Let $v$ be a real number
     -- with … and $|v|<c$.`)
     fr.any (fun n => out.any (·.name == n)) && fr.all fun n => out.any (·.name == n) || before.any (·.name == n)
@@ -4650,7 +4665,7 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
     | some (x, _, _, _) => [x]
     | none => npVars [.m ts]
   | .ifCond φ =>
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n) && !st.vocab.methods.any (·.op == .fn n)).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
   | .hyp b => bindNames1 st env b
   | _ => []
@@ -6250,7 +6265,7 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
     | .ifCond φ =>
       -- (a variable bound by the result or the sentence hides a definition of the article
       -- with its name)
-      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => (known.contains n || !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i)) && !constName n && !st0.vocab.symbols.any (·.sym == n)).eraseDups
+      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => (known.contains n || !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i)) && !constName n && !st0.vocab.symbols.any (·.sym == n) && !st0.vocab.methods.any (·.op == .fn n)).eraseDups
       let fr := seqFree st0 [] φ fr
       -- (`U_1` of a known `U` is a term of that sequence)
       let fr := fr.map fun n =>

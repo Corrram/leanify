@@ -851,6 +851,35 @@ def polyOps (R : El → Prop) : Ops :=
 /-- The polynomial ring `R[x]` in one variable over a ring `R` (Mathlib `Polynomial R`). -/
 def polyRing (R : El → Prop) : El → Prop := fun a => ∃ p ∈ polyCarrier R, a = .el (polyOps R) p
 
+/-- The coefficients of a polynomial (an element of a ring `R[x]`), from the constant one. -/
+def coeffsEl : El → List Pt
+  | .el _ p => decList p
+  | .num _ => []
+
+/-- `f` is a polynomial: an element of `R[x]` for a ring `R`. -/
+def IsPoly (f : El) : Prop := ∃ R, IsRing R ∧ polyRing R f
+
+/-- The degree of a nonzero polynomial (Mathlib `Polynomial.natDegree`): the number of its
+coefficients less one. -/
+def degEl (f : El) : ℝ := ((coeffsEl f).length : ℝ) - 1
+
+/-- The value of a polynomial at an element `a` of its ring (Mathlib `Polynomial.eval`):
+`∑ cᵢ aⁱ`, by Horner's rule with the coefficients on the left. -/
+def evalEl (f a : El) : El :=
+  match a with
+  | .el o x => .el o ((coeffsEl f).foldr (fun c acc => o.add c (o.mul acc x)) o.zero)
+  | .num r => .num r
+
+/-- The roots of `f` in `R`: the elements of `R` where its value is zero. -/
+def rootsIn (R : El → Prop) (f : El) : Set El := {a | R a ∧ eqv (evalEl f a) (.num 0)}
+
+/-- `f` has finitely many roots in `R`, at most `n` (Mathlib `Polynomial.roots`, as a set). -/
+def AtMostRootsIn (n : ℝ) (R : El → Prop) (f : El) : Prop :=
+  (rootsIn R f).Finite ∧ ((rootsIn R f).ncard : ℝ) ≤ n
+
+/-- `f` has a root in `R` (Mathlib `Polynomial.IsRoot`). -/
+def HasRootIn (R : El → Prop) (f : El) : Prop := (rootsIn R f).Nonempty
+
 /-- The diagonal of `X`: the pairs `(x, x)` of `X × X` (Mathlib `Set.diagonal`). -/
 def diagonalS (X : El → Prop) : El → Prop :=
   fun a => ∃ x, X (.el (opsOf X) x) ∧ a = .el (prodOps (opsOf X) (opsOf X)) (pair x x)

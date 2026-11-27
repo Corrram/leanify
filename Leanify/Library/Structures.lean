@@ -55,7 +55,8 @@ are bound by their signatures.
   factors, the product topology and the maximum of the distances;
 * the sum `U+W` of two subspaces of one module and the direct sum `U\oplus W` (`V=U\oplus W`:
   the sum is direct and is `V`); the polynomial ring `R[x]` in one variable over a ring (`the
-  polynomial ring over $R$`); the diagonal of `X` in `X\times X`; the orthogonal complement `U^{\perp}` of a subset of an inner
+  polynomial ring over $R$`), its elements (`polynomial over $K$`, `of degree $n$`, `with at most $n$ roots
+  in $K$`, `with a root in $K$`, `irreducible over $K$`, `the degree of $f$`, `\deg f`); the diagonal of `X` in `X\times X`; the orthogonal complement `U^{\perp}` of a subset of an inner
   product space (`the orthogonal complement of $U$ [in $V$]`);
 * quotients `G/N`, `R/I`, `V/W` (`the quotient of $G$ by $N$`): of a group by a normal subgroup,
   of a ring by an ideal, of a module by a subspace, with the operations on the classes;
@@ -310,7 +311,11 @@ def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ S, w!"[#,#]", w!"Leanify.Structures.commutatorSub"),                                     -- 225
   (S ⟶ S ⟶ S, w!"{#1}^{\\perp}", w!"Leanify.Structures.orthCompIn"),                             -- 226
   (S ⟶ S, w!"\\Delta_{#}", w!"Leanify.Structures.diagonalS"),                                     -- 227
-  (S ⟶ S, w!"#[X]", w!"Leanify.Structures.polyRing")]                                                -- 228
+  (S ⟶ S, w!"#[X]", w!"Leanify.Structures.polyRing"),                                                -- 228
+  (E ⟶ .prop, w!"\\operatorname{Polynomial}", w!"Leanify.Structures.IsPoly"),                         -- 229
+  (E ⟶ .real, w!"\\deg #", w!"Leanify.Structures.degEl"),                                            -- 230
+  (.real ⟶ S ⟶ E ⟶ .prop, w!"\\#\\operatorname{roots}_{#2}(#3)\\le #1", w!"Leanify.Structures.AtMostRootsIn"), -- 231
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{HasRoot}_{#1}(#2)", w!"Leanify.Structures.HasRootIn")]                -- 232
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -410,6 +415,9 @@ def vocab : Vocab where
       arg := some ([w!"of", w!"in"], S, rel S E fun r a => app2 (const 55) r a), doc := "an invertible element of a ring (Mathlib `IsUnit`)" },
     { sing := phrase!"zero divisor", plural := phrase!"zero divisors", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of", w!"in"], S, rel S E fun r a => app2 (const 56) r a), doc := "`ab = 0` for some `b ≠ 0`" },
+    { sing := phrase!"polynomial", plural := phrase!"polynomials", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"over"], S, rel S E fun r f => and (app (const 37) r) (app (app (const 228) r) f)), needsArg := true,
+      doc := "`polynomial over $R$`: an element of the ring `R[x]` of polynomials over a ring `R` (Mathlib `Polynomial R`); `Let $f\\in K[x]$ be a polynomial` is over `K`" },
     { sing := phrase!"irreducible element", plural := phrase!"irreducible elements", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of", w!"in"], S, rel S E fun r a => app2 (const 208) r a), doc := "not a unit, and a product only of a unit (Mathlib `Irreducible`)" },
     { sing := phrase!"prime element", plural := phrase!"prime elements", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
@@ -748,6 +756,29 @@ def vocab : Vocab where
     postS phrase!"maximal in $v$" (relC 53) "a maximal ideal of `R`; `$I$ is maximal` (Mathlib `Ideal.IsMaximal`)",
     postS phrase!"principal in $v$" (relC 54) "a principal ideal of `R`; `$I$ is principal` (Mathlib `Submodule.IsPrincipal`)",
     postS phrase!"proper in $v$" (relC 51) "an ideal of `R` other than `R`; `$I$ is proper`",
+    { phrase := phrase!"of degree $v$", prenominal := false, ty := E,
+      pred := close (lamR fun n => lamT E (fun _ => tt) fun f =>
+        and (app (const 229) f) (and (not (app2 (const 7) f (app (const 0) (num 0)))) (eq (app (const 230) f) n))),
+      doc := "a nonzero polynomial whose highest coefficient is that of `x^n` (Mathlib `Polynomial.natDegree`)" },
+    { phrase := phrase!"with at most $v$ roots in $v$", prenominal := false, ty := E,
+      pred := close (lamR fun n => lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun f =>
+        and (app (const 229) f) (app (app2 (const 231) n r) f)),
+      doc := "a polynomial with finitely many roots in `R`, at most `n` (Mathlib `Polynomial.roots`)" },
+    { phrase := phrase!"with a root in $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun f => app2 (const 232) r f),
+      doc := "`f(a) = 0` for an element `a` of `R` (Mathlib `Polynomial.IsRoot`); also `has a root in $R$`" },
+    { phrase := phrase!"without a root in $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun f => not (app2 (const 232) r f)),
+      doc := "`f(a) ≠ 0` for every element `a` of `R`; also `has no root in $R$`" },
+    { phrase := phrase!"without root in $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun f => not (app2 (const 232) r f)),
+      doc := "`f(a) ≠ 0` for every element `a` of `R` (`has no root in $R$`)" },
+    { phrase := phrase!"without roots in $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun f => not (app2 (const 232) r f)),
+      doc := "`f(a) ≠ 0` for every element `a` of `R`" },
+    { phrase := phrase!"irreducible over $v$", prenominal := false, ty := E,
+      pred := close (lamT S (fun _ => tt) fun k => lamT E (fun _ => tt) fun f => app2 (const 208) (app (const 228) k) f),
+      doc := "an irreducible element of `K[x]` (Mathlib `Irreducible`)" },
     { phrase := phrase!"irreducible in $v$", prenominal := false, ty := E,
       pred := close (lamT S (fun _ => tt) fun r => lamT E (fun _ => tt) fun a => app2 (const 208) r a),
       doc := "an irreducible element of `R`; `$a$ is irreducible` of an element `a` of `R` (Mathlib `Irreducible`)" },
@@ -809,6 +840,7 @@ def vocab : Vocab where
     { name := phrase!"order of $v$", value := .const 20, ty := S ⟶ .real, doc := "the number of elements (Mathlib `Nat.card`)" },
     { name := phrase!"order of $v$", value := .const 23, ty := E ⟶ .real, doc := "of an element (Mathlib `orderOf`)" },
     { name := phrase!"cardinality of $v$", value := .const 20, ty := S ⟶ .real, doc := "(Mathlib `Nat.card`)" },
+    { name := phrase!"number of elements of $v$", value := .const 20, ty := S ⟶ .real, doc := "(Mathlib `Nat.card`)" },
     { name := phrase!"index of $v$ in $v$", value := close (lamT S (fun _ => tt) fun h => lamT S (fun _ => tt) fun g => app2 (const 24) g h),
       ty := S ⟶ S ⟶ .real, doc := "(Mathlib `Subgroup.index`)" },
     { name := phrase!"centre of $v$", value := .const 25, ty := S ⟶ S, doc := "(Mathlib `Subgroup.center`)" },
@@ -844,6 +876,9 @@ def vocab : Vocab where
       doc := "of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`)" },
     { name := phrase!"Klein four-group", value := .const 114, ty := S, doc := "`C_2 × C_2`" },
     { name := phrase!"direct product of $v$ and $v$", value := .const 115, ty := S ⟶ S ⟶ S, doc := "`G × H` (Mathlib `Prod`)" },
+    { name := phrase!"degree of $v$", value := .const 230, ty := E ⟶ .real,
+      doms := [some (close <| lamT E (fun _ => tt) fun f => and (app (const 229) f) (not (app2 (const 7) f (app (const 0) (num 0)))))],
+      doc := "of a nonzero polynomial: the highest power of `x` with a nonzero coefficient (Mathlib `Polynomial.natDegree`)" },
     { name := phrase!"polynomial ring over $v$", value := .const 228, ty := S ⟶ S, doms := [some (.const 37)],
       doc := "`R[x]`, of a ring `R` (Mathlib `Polynomial R`)" },
     { name := phrase!"ring of polynomials over $v$", value := .const 228, ty := S ⟶ S, doms := [some (.const 37)],
@@ -919,6 +954,8 @@ def vocab : Vocab where
       some (c 217)⟩,
     ⟨S, .fn w!"\\oplus", 215, "`U \\oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \\oplus W` says that the sum is direct",
       some (c 214)⟩,
+    ⟨E, .fn w!"\\deg", 230, "`\\deg f`, the degree of a nonzero polynomial (Mathlib `Polynomial.natDegree`)",
+      some (close <| lamT E (fun _ => tt) fun f => and (app (const 229) f) (not (app2 (const 7) f (app (const 0) (num 0)))))⟩,
     ⟨S, .fn w!"@polyring", 228, "`R[x]`, the ring of polynomials in one variable over a ring `R` (Mathlib `Polynomial R`): the lists of coefficients, with the sum and the product of polynomials",
       some (.const 37)⟩,
     ⟨S, .fn w!"\\times", 115, "`G\\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric", none⟩,

@@ -2622,6 +2622,10 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
         | _ => false
       if ws.isEmpty then none
+      -- (`at most $n$ roots in $K$`: the object of the last preposition)
+      let ws := match ws.getLast?, r2.drop ws.length with
+        | some (.w p), (.m x :: _) => if [w!"in", w!"over", w!"of", w!"on"].contains p then ws ++ [.m x] else ws
+        | _, _ => ws
       some (Clause.isA s ([Chunk.w w!"with"] ++ q ++ [Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
@@ -2670,6 +2674,10 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
             | _ => false
         | _ => []
       let ws := ws ++ ofWords
+      -- (`no root in $K$`: with the object of `in`)
+      let ws := match r1.drop ws.length with
+        | .w p :: .m x :: _ => if p == w!"in" || p == w!"over" then ws ++ [.w p, .m x] else ws
+        | _ => ws
       some (Clause.isA s ([Chunk.w w!"without"] ++ ws) false, r1.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
@@ -7317,10 +7325,12 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     | _ => ([], cs)
   let mut cur := cs
   let mut out : List Sent := []
+  let mut nested : List (List Chunk) := []
   for _ in [0:5] do
     match nestedIndef avoid generic cur with
     | some cs' =>
       cur := cs'
+      nested := nested ++ [cs']
       if let some sn := sentence (lead ++ cs') then out := sn :: out
     | none => break
   -- `The set of nilpotent elements of $R$ is an ideal of $R$.`: the set, bound as `Let $X$ be the
@@ -7415,6 +7425,78 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           some (.claims tp ([.noun (np ++ [.m [.id x]]), .noun (np ++ [.m [.id y], .w (lower adj), .w prep, .m [.id x]])] ++ bs) cls)
       | _ => []
     | _ => []
+  -- `Any two bases of $V$ have the same number of elements.`: for every two objects of the
+  -- noun, the notion of one equals that of the other
+  let anyTwoAt (lead cs : List Chunk) : List Sent := match cs with
+    | .w a :: .w t :: rest =>
+      if lower a != w!"any" || t != w!"two" then [] else
+      let np0 := rest.takeWhile fun c => match c with | .w w => w != w!"have" && w != w!"are" | .m _ => true | .p 45 => true | _ => false
+      let x := nestVar avoid cs 0
+      let y := nestVar avoid cs 1
+      -- the claims about `x` and `y`: `the WORDS of $x$ equals the WORDS of $y$`, or `$x$ is WORDS
+      -- to (with, from) $y$`
+      let claims : List (List Chunk) := match rest.drop np0.length with
+        | .w h :: .w th :: .w sm :: rest2 =>
+          if h != w!"have" || th != w!"the" || sm != w!"same" then [] else
+          -- (`the same number of elements`: words, `of` included)
+          let ws := rest2.takeWhile fun c => match c with | .w w => w == w!"of" || !stops.contains w | .p 45 => true | _ => false
+          let after := rest2.drop ws.length
+          if ws.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then [] else
+          [[.w w!"the"] ++ ws ++ [.w w!"of", .m [.id x], .w w!"equals", .w w!"the"] ++ ws ++ [.w w!"of", .m [.id y]] ++ after]
+        | .w are :: rest2 =>
+          if are != w!"are" then [] else
+          let ws := rest2.takeWhile fun c => match c with | .w w => !stops.contains w | .p 45 => true | _ => false
+          let after := rest2.drop ws.length
+          if ws.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then [] else
+          [w!"to", w!"with", w!"from"].map fun prep => [.m [.id x], .w w!"is"] ++ ws ++ [.w prep, .m [.id y]] ++ after
+        | _ => []
+      if np0.isEmpty then [] else
+      -- (`of a finite-dimensional vector space`: one space for both, bound before them)
+      let art := np0.findIdx? fun c => match c with | .w w => w == w!"a" || w == w!"an" | _ => false
+      let (pre, np) : List Chunk × List Chunk := match art with
+        | some k =>
+          if k == 0 || (match np0[k - 1]? with | some (.w o) => o != w!"of" | _ => true) then ([], []) else
+          let z := nestVar avoid cs 2
+          ([.w w!"for", .w w!"every"] ++ np0.drop (k + 1) ++ [.m [.id z], .p 44], np0.take k ++ [.m [.id z]])
+        | none => ([], np0)
+      if np.isEmpty then [] else
+      -- (the variable after the noun phrase, as `Let $B$ be bases of $V$` has it)
+      let withVar (v : Codes) : List Chunk := np ++ [.m [.id v]]
+      -- (also each object of the noun in the singular, `every basis $X$ of $Z$`: the
+      -- plural's last word, by the rules of English plurals)
+      let head := (np.findIdx? fun c => match c with | .w w => w == w!"of" | _ => false).getD np.length
+      let sings : List (List Chunk) := match np[head - 1]? with
+        | some (.w w) =>
+          let ends (e : Codes) : Bool := w.length > e.length && w.drop (w.length - e.length) == e
+          let stem (k : Nat) : Codes := w.take (w.length - k)
+          let cands : List Codes :=
+            (if ends w!"ices" then [stem 4 ++ w!"ex", stem 4 ++ w!"ix"] else []) ++
+            (if ends w!"ses" then [stem 3 ++ w!"sis"] else []) ++
+            (if ends w!"ies" then [stem 3 ++ w!"y"] else []) ++
+            (if ends w!"es" then [stem 2] else []) ++
+            (if ends w!"s" then [stem 1] else [])
+          cands.map fun sg => (np.take (head - 1) ++ [.w sg]) ++ np.drop head
+        | _ => []
+      let atVar (n : List Chunk) (v : Codes) : List Chunk :=
+        let ws0 := n.takeWhile fun c => match c with | .w w => w != w!"of" | .p 45 => true | .m _ => true | _ => false
+        ws0 ++ [.m [.id v]] ++ n.drop ws0.length
+      claims.flatMap fun claim =>
+        match sentence (lead ++ pre ++ claim) with
+        | some (.claims tp bs cls) =>
+          -- (one binder list, each object after the ones it refers to)
+          let flat := bs.flatMap fun b => match b with | .many bs' => bs' | b => [b]
+          let mk (x' y' : List Chunk) : Sent :=
+            let nouns := [Bind.noun x', Bind.noun y']
+            .claims tp (if flat.isEmpty then nouns else [.many (flat ++ nouns)]) cls
+          (sings.map fun n => mk (atVar n x) (atVar n y)) ++ [mk (withVar x) (withVar y)]
+        | _ => []
+    | _ => []
+  -- (also after the binder of an indefinite object, `Any two bases of a finite-dimensional vector
+  -- space …`: `for every finite-dimensional vector space $X$, any two bases of $X$ …`)
+  let anyTwo : List Sent := anyTwoAt lead cs ++ nested.flatMap fun cs' =>
+    match cs'.findIdx? (fun c => match c with | .p 44 => true | _ => false) with
+    | some k => if (match cs' with | .w f :: _ => f == w!"for" | _ => false) then anyTwoAt (lead ++ cs'.take (k + 1)) (cs'.drop (k + 1)) else []
+    | none => []
   -- `$N$ contains $H$`, `$N$ contains the commutator subgroup of $G$`: `… is a subset of $N$`;
   -- `$A$ contains $x$`: `$x\in A$`
   let rec containsForm (asMember : Bool) : Nat → List Chunk → Option (List Chunk)
@@ -7441,7 +7523,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
   let contains : List Sent := [false, true].filterMap fun asMember => do
     let cs' ← containsForm asMember (cs.length + 1) cs
     sentence (lead ++ cs')
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ contains
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ contains
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/
