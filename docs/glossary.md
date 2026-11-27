@@ -1297,7 +1297,7 @@ except a notion whose meanings take arguments of different types, which the type
 | module | $\mathrm{El}$ → Prop | over its scalars, some ring: `module` without `over $R$` (Mathlib `Module R M`) |
 | vector space over $\mathbb{R}$ | $\mathrm{El}$ → Prop | a real vector space: its scalars are the real numbers (Mathlib `Module ℝ`) |
 | real vector space | $\mathrm{El}$ → Prop | (Mathlib `Module ℝ`) |
-| subspace | $\mathrm{El}$ → Prop | a linear subspace (Mathlib `Submodule`) |
+| subspace | $\mathrm{El}$ → Prop | a linear subspace (Mathlib `Submodule`); of a topological or metric space that is no module, a subset with the subspace topology |
 | linear subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
 | vector subspace | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |
 | submodule | $\mathrm{El}$ → Prop | (Mathlib `Submodule`) |

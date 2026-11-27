@@ -450,7 +450,6 @@ its operations. -/
 def Subspace (W : El → Prop) : Prop :=
   Uniform W ∧ (∃ a, W a) ∧ (∀ a b, W a → W b → W (add a b)) ∧
   ∀ c ∈ (opsOf W).scalars, ∀ a, W a → W (.el (opsOf W) ((opsOf W).smul c (match a with | .el _ x => x | .num _ => ∅)))
-def SubspaceOf (V W : El → Prop) : Prop := Subspace W ∧ ∀ a, W a → V a
 
 /-- The dimension of `V` over `K` (Mathlib `Module.finrank`; `0` if infinite). -/
 def dim (K V : El → Prop) : ℝ :=
@@ -478,6 +477,12 @@ def LinearOn (V : El → Prop) (f : El → El) : Prop :=
 /-- The ring of scalars of a module, as a structure: its points, with its ring operations. -/
 def scal (V : El → Prop) : El → Prop :=
   fun a => ∃ x ∈ (opsOf V).scalars, a = .el (opsOf V).sops.lift x
+
+/-- `W` is a subspace of `V`: a subset, and a linear subspace where `V` is a module (of a
+topological or metric space that is no module: a subset, with the subspace topology). -/
+def SubspaceOf (V W : El → Prop) : Prop := (ModuleOver (scal V) V → Subspace W) ∧ ∀ a, W a → V a
+/-- A linear subspace of `V`. -/
+def LinearSubspaceOf (V W : El → Prop) : Prop := Subspace W ∧ ∀ a, W a → V a
 
 /-- The dimension of `V` over its own scalars (Mathlib `Module.finrank`). -/
 def dimS (V : El → Prop) : ℝ := dim (scal V) V

@@ -197,7 +197,8 @@ Further fields cover other branches of mathematics:
   spaces and ordered sets, with their elements (`Let $G$ be a group and $g,h\in G$.`,
   `gh`, `g^{-1}`, `x+y`, `cv`, `1` and `0` of the structure they meet); substructures named
   by a complement (`subgroup of $G$`, `prime ideal of $R$`, `vector space over $K$`,
-  `closed subset of $X$`); maps bound by a signature (`$\varphi\colon G\to H$` a
+  `closed subset of $X$`; `subspace of $X$`: a linear subspace of a module, a subset of a
+  topological or metric space that is no module); maps bound by a signature (`$\varphi\colon G\to H$` a
   homomorphism, an isomorphism, a linear or continuous map); bases, span and dimension;
   real normed, Banach, inner product and Hilbert spaces (`\|x\|`, `\langle x,y\rangle`); abelian, cyclic, simple, solvable, nilpotent,
   finite, Noetherian, algebraically closed, Hausdorff, compact, connected, complete; the

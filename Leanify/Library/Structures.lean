@@ -20,7 +20,8 @@ are bound by their signatures.
   `Sylow $p$-subgroup of $G$` (for a prime `p`),
   `subfield of $L$`, `field extension of $K$`, `ideal of $R$` (also `prime`, `maximal`,
   `principal`, `proper`; `$I$ is prime` of an ideal of `R`), `module over $R$`, `vector space
-  over $K$` (`module` and `vector space` alone: over their scalars), `subspace of $V$`,
+  over $K$` (`module` and `vector space` alone: over their scalars), `subspace of $V$` (of a
+  topological or metric space that is no module: a subset),
   `topological space` (`space` alone),
   `metric space`, `Polish space`, `geodesic metric space`, `unital ring`,
   `open subset of $X$`, `closed subset of $X$`, `dense subset of $X$`, `locally closed subset
@@ -315,7 +316,8 @@ def table2 : List (Ty × Codes × Codes) := [
   (E ⟶ .prop, w!"\\operatorname{Polynomial}", w!"Leanify.Structures.IsPoly"),                         -- 229
   (E ⟶ .real, w!"\\deg #", w!"Leanify.Structures.degEl"),                                            -- 230
   (.real ⟶ S ⟶ E ⟶ .prop, w!"\\#\\operatorname{roots}_{#2}(#3)\\le #1", w!"Leanify.Structures.AtMostRootsIn"), -- 231
-  (S ⟶ E ⟶ .prop, w!"\\operatorname{HasRoot}_{#1}(#2)", w!"Leanify.Structures.HasRootIn")]                -- 232
+  (S ⟶ E ⟶ .prop, w!"\\operatorname{HasRoot}_{#1}(#2)", w!"Leanify.Structures.HasRootIn"),                -- 232
+  (S ⟶ S ⟶ .prop, w!"#2\\le_{\\mathrm{lin}} #1", w!"Leanify.Structures.LinearSubspaceOf")]               -- 233
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -485,9 +487,10 @@ def vocab : Vocab where
     noun phrase!"vector space over $\\mathbb{R}$" phrase!"vector spaces over $\\mathbb{R}$" (c 193)
       "a real vector space: its scalars are the real numbers (Mathlib `Module ℝ`)",
     noun phrase!"real vector space" phrase!"real vector spaces" (c 193) "(Mathlib `Module ℝ`)",
-    nounOf phrase!"subspace" phrase!"subspaces" [w!"of"] (c 62) (relC 63) "a linear subspace (Mathlib `Submodule`)",
-    nounOf phrase!"linear subspace" phrase!"linear subspaces" [w!"of"] (c 62) (relC 63) "(Mathlib `Submodule`)",
-    nounOf phrase!"vector subspace" phrase!"vector subspaces" [w!"of"] (c 62) (relC 63) "(Mathlib `Submodule`)",
+    nounOf phrase!"subspace" phrase!"subspaces" [w!"of"] (sP fun _ => tt) (relC 63)
+      "a linear subspace (Mathlib `Submodule`); of a topological or metric space that is no module, a subset with the subspace topology",
+    nounOf phrase!"linear subspace" phrase!"linear subspaces" [w!"of"] (c 62) (relC 233) "(Mathlib `Submodule`)",
+    nounOf phrase!"vector subspace" phrase!"vector subspaces" [w!"of"] (c 62) (relC 233) "(Mathlib `Submodule`)",
     nounOf phrase!"submodule" phrase!"submodules" [w!"of"] (c 62) (relC 63) "(Mathlib `Submodule`)",
     -- spaces
     noun phrase!"topological space" phrase!"topological spaces" (c 67) "(Mathlib `TopologicalSpace`)",

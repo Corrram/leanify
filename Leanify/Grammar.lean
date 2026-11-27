@@ -6977,6 +6977,18 @@ hyphen, `$p$-group`), up to a stop; and the chunks after it. -/
 def nestNP : Nat → List Chunk → List Chunk → List Chunk × List Chunk
   | 0, acc, cs => (acc.reverse, cs)
   | f + 1, acc, cs =>
+    -- (`of real numbers`, `of integers` after `sequence`: part of the noun phrase)
+    let numbers : List (List Codes) := [[w!"real", w!"numbers"], [w!"integers"], [w!"positive", w!"integers"],
+      [w!"nonnegative", w!"integers"], [w!"rational", w!"numbers"], [w!"complex", w!"numbers"], [w!"reals"]]
+    let ofNumbers : Option (List Codes) := match cs with
+      | .w o :: r =>
+        if o != w!"of" then none else
+        numbers.find? fun ph => (r.take ph.length).map (fun c => match c with | .w w => w | _ => []) == ph &&
+          (match r[ph.length]? with | some (.w w) => nestStops.contains w | some (.m _) => true | _ => true)
+      | _ => none
+    match ofNumbers with
+    | some ph => nestNP f ((ph.reverse.map Chunk.w) ++ [.w w!"of"] ++ acc) (cs.drop (ph.length + 1))
+    | none =>
     match cs with
     | .w w :: r => if nestStops.contains w then (acc.reverse, cs) else nestNP f (.w w :: acc) r
     | .p 45 :: r => nestNP f (.p 45 :: acc) r
@@ -7581,6 +7593,21 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
   image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> whereMid <|> dividing <|> attains <|> inA <|>
     between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr
 
+/-- The wordings that the lexer replaces, in a sentence made from another (whose words were
+replaced before it was made): `$Y$ converges.` is `$Y$ is convergent.` -/
+def chunkForms : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, .m x :: .w v :: rest =>
+    let ends := match rest with
+      | [] | .p _ :: _ => true
+      | .w w :: _ => w == w!"and" || w == w!"or"
+      | _ => false
+    if (v == w!"converges" || v == w!"diverges") && ends then
+      .m x :: .w w!"is" :: .w (if v == w!"converges" then w!"convergent" else w!"divergent") :: chunkForms f rest
+    else .m x :: chunkForms f (.w v :: rest)
+  | f + 1, c :: rest => c :: chunkForms f rest
+  | _, [] => []
+
 /-- `$X$ is cyclic if the order of $X$ is squarefree.` (in a result): `If the order of $X$ is
 squarefree, then $X$ is cyclic.`, after the binders of `For every NP $X$, …`. Not with `only
 if`, `even if`, `if and only if` or a `then` of its own. -/
@@ -7634,7 +7661,8 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     | some cs' =>
       cur := cs'
       nested := nested ++ [cs']
-      if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then out := sn :: out
+      if let some sn := sentence (lead ++ cs') <|> sentence (lead ++ chunkForms (cs'.length + 1) cs') <|>
+          ((postIf cs').bind fun c => sentence (lead ++ c)) then out := sn :: out
     | none => break
   -- `The set of nilpotent elements of $R$ is an ideal of $R$.`: the set, bound as `Let $X$ be the
   -- set of …` binds it, and the claim about it
@@ -8028,7 +8056,8 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
         match nestedIndef avoid generic cur with
         | some cs' =>
           cur := cs'
-          if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
+          if let some sn := sentence (lead ++ cs') <|> sentence (lead ++ chunkForms (cs'.length + 1) cs') <|>
+              ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
   return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ generic' ++

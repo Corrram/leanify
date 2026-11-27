@@ -737,6 +737,7 @@ object that is not in use:
 | `Let $T$ be a linear operator between normed spaces.` | `Let $X$ be a normed space, let $Y$ be a normed space and let $T\colon X\to Y$ be a linear operator.` |
 | `For all vectors $x$ and $y$ in an inner product space, …` | `For every inner product space $X$ and every vector $x$ in $X$ and every vector $y$ in $X$, …` |
 | `Every subgroup of index $2$ is normal.` | `For every group $X$ and every subgroup $Y$ of $X$ of index $2$ in $X$, $Y$ is normal.` |
+| `Every subsequence of a convergent sequence of real numbers converges.`, `Every Cauchy sequence in a complete metric space converges.` | `For every convergent sequence of real numbers $X$ and every subsequence $Y$ of $X$, $Y$ converges.` (`of real numbers`, `of integers` stay with the noun) |
 | `Every group of order $p$, where $p$ is a prime, is cyclic.` | `For every prime $p$, every group of order $p$ is cyclic.` |
 | in a result, `A differentiable function whose derivative is zero everywhere is constant.`, `An integer whose square is even is even.` | `For every differentiable function $X$, if the derivative of $X$ is zero everywhere, then $X$ is constant.` (the clause ends before the last verb) |
 | `There is no rational number whose square is $2$.` (`there is a`) | `There is no rational number $X$ such that the square of $X$ is $2$.` |
