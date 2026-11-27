@@ -54,7 +54,8 @@ are bound by their signatures.
 * the direct product `G\times H` (`the product of $X$ and $Y$`), with the operations of the
   factors, the product topology and the maximum of the distances;
 * the sum `U+W` of two subspaces of one module and the direct sum `U\oplus W` (`V=U\oplus W`:
-  the sum is direct and is `V`); the orthogonal complement `U^{\perp}` of a subset of an inner
+  the sum is direct and is `V`); the polynomial ring `R[x]` in one variable over a ring (`the
+  polynomial ring over $R$`); the diagonal of `X` in `X\times X`; the orthogonal complement `U^{\perp}` of a subset of an inner
   product space (`the orthogonal complement of $U$ [in $V$]`);
 * quotients `G/N`, `R/I`, `V/W` (`the quotient of $G$ by $N$`): of a group by a normal subgroup,
   of a ring by an ideal, of a module by a subspace, with the operations on the classes;
@@ -307,7 +308,9 @@ def table2 : List (Ty × Codes × Codes) := [
   (S ⟶ .prop, w!"\\operatorname{ChainsBounded}", w!"Leanify.Structures.ChainsBoundedS"),       -- 223
   (S ⟶ .prop, w!"\\operatorname{PrimePowerOrder}", w!"Leanify.Structures.PrimePowerOrder"),    -- 224
   (S ⟶ S, w!"[#,#]", w!"Leanify.Structures.commutatorSub"),                                     -- 225
-  (S ⟶ S ⟶ S, w!"{#1}^{\\perp}", w!"Leanify.Structures.orthCompIn")]                             -- 226
+  (S ⟶ S ⟶ S, w!"{#1}^{\\perp}", w!"Leanify.Structures.orthCompIn"),                             -- 226
+  (S ⟶ S, w!"\\Delta_{#}", w!"Leanify.Structures.diagonalS"),                                     -- 227
+  (S ⟶ S, w!"#[X]", w!"Leanify.Structures.polyRing")]                                                -- 228
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -841,6 +844,12 @@ def vocab : Vocab where
       doc := "of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`)" },
     { name := phrase!"Klein four-group", value := .const 114, ty := S, doc := "`C_2 × C_2`" },
     { name := phrase!"direct product of $v$ and $v$", value := .const 115, ty := S ⟶ S ⟶ S, doc := "`G × H` (Mathlib `Prod`)" },
+    { name := phrase!"polynomial ring over $v$", value := .const 228, ty := S ⟶ S, doms := [some (.const 37)],
+      doc := "`R[x]`, of a ring `R` (Mathlib `Polynomial R`)" },
+    { name := phrase!"ring of polynomials over $v$", value := .const 228, ty := S ⟶ S, doms := [some (.const 37)],
+      doc := "`R[x]` (Mathlib `Polynomial R`)" },
+    { name := phrase!"diagonal of $v$", value := .const 227, ty := S ⟶ S,
+      doc := "the pairs `(x, x)` of `X\\times X` (Mathlib `Set.diagonal`)" },
     { name := [.w w!"closure", .w w!"of", .v, .w w!"@in", .v], value := .const 180, ty := S ⟶ S ⟶ S,
       doc := "`the closure of $A$` of a subset `A` of `X`: the points of `X` whose every open neighbourhood meets `A` (Mathlib `closure`)" },
     { name := [.w w!"interior", .w w!"of", .v, .w w!"@in", .v], value := .const 181, ty := S ⟶ S ⟶ S,
@@ -910,6 +919,8 @@ def vocab : Vocab where
       some (c 217)⟩,
     ⟨S, .fn w!"\\oplus", 215, "`U \\oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \\oplus W` says that the sum is direct",
       some (c 214)⟩,
+    ⟨S, .fn w!"@polyring", 228, "`R[x]`, the ring of polynomials in one variable over a ring `R` (Mathlib `Polynomial R`): the lists of coefficients, with the sum and the product of polynomials",
+      some (.const 37)⟩,
     ⟨S, .fn w!"\\times", 115, "`G\\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric", none⟩,
     ⟨M, .fn w!"@image", 194, "`φ(K)`: the image of a set `K` of the domain", none⟩,
     ⟨M, .fn w!"\\ker", 163, "`\\ker φ`, the kernel", none⟩,

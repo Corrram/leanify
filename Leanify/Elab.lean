@@ -2084,6 +2084,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let xs ← args.mapM (term f sc pf)
         applyAll h hty doms xs
     | .app hd args => do
+      -- `K[x]`: the vocabulary's ring of polynomials over `K` (the letter names no object)
+      if let (.id op, [k, .id _]) := (hd, args) then
+        if op == w!"@polyring" then
+          let (kt, kty) ← term f sc none k
+          return (← callMethod kty (.fn w!"@polyring") [kt])
       -- `d(x,y)` of two elements of a vocabulary's type, where the article defines no `d`:
       -- the type's method of that name (the distance of a metric space)
       if let (.id n, [a1, a2]) := (hd, args) then

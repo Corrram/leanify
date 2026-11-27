@@ -804,6 +804,57 @@ def prodOps (o p : Ops) : Ops :=
 def prod (G H : El → Prop) : El → Prop :=
   fun a => ∃ x y, G (.el (opsOf G) x) ∧ H (.el (opsOf H) y) ∧ a = .el (prodOps (opsOf G) (opsOf H)) (pair x y)
 
+/-! ### Polynomial rings -/
+
+/-- A list of points as a point: `{0}` for the empty list and `pair a l` otherwise (`pair` is
+injective and its sets do not contain `0`, so that this is injective). -/
+def encList : List Pt → Pt
+  | [] => {0}
+  | a :: l => pair a (encList l)
+
+/-- The list of points of a point of `encList` (the empty list for any other point). -/
+def decList (x : Pt) : List Pt := if h : ∃ l, encList l = x then Classical.choose h else []
+
+/-- Coefficients `[a₀, …, aₙ]` without the zeros at the end. -/
+def trimZ (z : Pt) (l : List Pt) : List Pt := (l.reverse.dropWhile (fun a => decide (a = z))).reverse
+
+/-- The sum of two lists of coefficients. -/
+def addL (o : Ops) : List Pt → List Pt → List Pt
+  | [], m => m
+  | l, [] => l
+  | a :: l, b :: m => o.add a b :: addL o l m
+
+/-- The product of two lists of coefficients (`∑_{i+j=k} a_i b_j`). -/
+def mulL (o : Ops) : List Pt → List Pt → List Pt
+  | [], _ => []
+  | a :: l, m => addL o (m.map (o.mul a)) (o.zero :: mulL o l m)
+
+/-- The polynomials over `R`: the lists of coefficients of `R` without zeros at the end. -/
+def polyCarrier (R : El → Prop) : Set Pt :=
+  {p | ∃ l : List Pt, (∀ a ∈ l, a ∈ carrier R) ∧ trimZ (opsOf R).zero l = l ∧ p = encList l}
+
+/-- The ring operations of `R[x]`: of the coefficient lists, the product as a convolution; the
+inverse of a polynomial that has one. -/
+def polyROps (R : El → Prop) : ROps :=
+  let o := opsOf R
+  let enc := fun l => encList (trimZ o.zero l)
+  let mul := fun p q => enc (mulL o (decList p) (decList q))
+  let one := enc [o.one]
+  ⟨fun p q => enc (addL o (decList p) (decList q)), encList [], fun p => enc ((decList p).map o.neg), mul, one,
+    fun p => if h : ∃ q ∈ polyCarrier R, mul p q = one then Classical.choose h else encList [], none⟩
+
+/-- The operations of `R[x]`: a ring, its own scalars. -/
+def polyOps (R : El → Prop) : Ops :=
+  let q := polyROps R
+  { q.lift with scalars := polyCarrier R, sops := q, smul := q.mul }
+
+/-- The polynomial ring `R[x]` in one variable over a ring `R` (Mathlib `Polynomial R`). -/
+def polyRing (R : El → Prop) : El → Prop := fun a => ∃ p ∈ polyCarrier R, a = .el (polyOps R) p
+
+/-- The diagonal of `X`: the pairs `(x, x)` of `X × X` (Mathlib `Set.diagonal`). -/
+def diagonalS (X : El → Prop) : El → Prop :=
+  fun a => ∃ x, X (.el (opsOf X) x) ∧ a = .el (prodOps (opsOf X) (opsOf X)) (pair x x)
+
 /-! ### Orders -/
 
 def PosetOn (S : El → Prop) (P : PartialOrder (carrier S)) : Prop :=

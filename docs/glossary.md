@@ -1553,6 +1553,9 @@ except a notion whose meanings take arguments of different types, which the type
 | dihedral group of order $a$ | ℝ → $\mathrm{El}$ → Prop | of even order `2n`: the symmetries of the regular `n`-gon (Mathlib `DihedralGroup n`) |
 | klein four-group | $\mathrm{El}$ → Prop | `C_2 × C_2` |
 | direct product of $a$ and $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `G × H` (Mathlib `Prod`) |
+| polynomial ring over $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `R[x]`, of a ring `R` (Mathlib `Polynomial R`) |
+| ring of polynomials over $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `R[x]` (Mathlib `Polynomial R`) |
+| diagonal of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | the pairs `(x, x)` of `X\times X` (Mathlib `Set.diagonal`) |
 | closure of $a$ @in $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `the closure of $A$` of a subset `A` of `X`: the points of `X` whose every open neighbourhood meets `A` (Mathlib `closure`) |
 | interior of $a$ @in $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `the interior of $A$` of a subset `A` of `X`: the points of `A` with an open neighbourhood in `A` (Mathlib `interior`) |
 | orthogonal complement of $a$ @in $b$ | ($\mathrm{El}$ → Prop) → ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | `the orthogonal complement of $U$`, `U^{\perp}` of a subset `U` of an inner product space `V`: the elements of `V` orthogonal to every element of `U` (Mathlib `Submodule.orthogonal`) |
@@ -1611,6 +1614,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $+$ | $\mathrm{El}$ → Prop | `U + W`, the sum of two subspaces of one module: the sums `u + w` (Mathlib `U ⊔ W`) |
 | $/$ | $\mathrm{El}$ → Prop | `G/N`, `R/I`, `V/W`: the quotient of a group by a normal subgroup, of a ring by an ideal, of a module by a subspace (Mathlib `G ⧸ N`), one element for each class |
 | $\oplus$ | $\mathrm{El}$ → Prop | `U \oplus W`, the sum of two subspaces of one module whose only common element is `0` (an internal direct sum); where they have another, it has no element, so that `V = U \oplus W` says that the sum is direct |
+| $\operatorname{@polyring}$ | $\mathrm{El}$ → Prop | `R[x]`, the ring of polynomials in one variable over a ring `R` (Mathlib `Polynomial R`): the lists of coefficients, with the sum and the product of polynomials |
 | $\times$ | $\mathrm{El}$ → Prop | `G\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |

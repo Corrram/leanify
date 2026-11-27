@@ -2910,6 +2910,8 @@ def freeIds : Nat → List Codes → MT → List Codes
     | .hat x | .neg x | .abs x => freeIds f bound x
     -- (the operations on sets are no identifiers: `A\cup(N\times[0,1])`)
     | .app (.id op) [x, y] =>
+      -- (`K[x]`: the letter of the polynomials is no variable)
+      if op == w!"@polyring" then freeIds f bound x else
       (if op == w!"\\cup" || op == w!"\\cap" || op == w!"\\times" || op == w!"\\setminus" then []
         else freeIds f bound (.id op)) ++ freeIds f bound x ++ freeIds f bound y
     -- (`\bigcap_n U_n`: the index is bound)

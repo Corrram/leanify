@@ -6676,9 +6676,36 @@ def chainForms : Nat → List Chunk → List Chunk
     | c :: rest => c :: chainForms f rest
     | [] => []
 
+/-- `the symmetric group $S_n$`, `the alternating group $A_n$`, `the cyclic group $C_n$`: the
+group with its standard name, as `the symmetric group of degree $n$` (`of order $n$` for the
+cyclic group). Only the letter of that group's name is read so. -/
+def namedGroupForms : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, cs =>
+    match cs with
+    | .w a :: .w g :: .m ts :: rest =>
+      let idx : Option (Codes × List MTok) := match ts with
+        | .id k :: .sym 95 :: .lb :: r => if r.getLast? == some .rb then some (k, r.dropLast) else none
+        | [.id k, .sym 95, t] => some (k, [t])
+        | _ => none
+      let named : Option (List Chunk) := do
+        let (k, x) ← idx
+        if g != w!"group" || x.isEmpty then none
+        if a == w!"symmetric" && k == [83] then some [.w a, .w g, .w w!"of", .w w!"degree", .m x]
+        else if a == w!"alternating" && k == [65] then some [.w a, .w g, .w w!"of", .w w!"degree", .m x]
+        else if a == w!"cyclic" && k == [67] then some [.w a, .w g, .w w!"of", .w w!"order", .m x]
+        else none
+      match named with
+      | some n => n ++ namedGroupForms f rest
+      | none => .w a :: namedGroupForms f (.w g :: .m ts :: rest)
+    | c :: rest => c :: namedGroupForms f rest
+    | [] => []
+
 /-- A sentence; or, of `INFORMAL, that is, FORMAL`, the formal restatement read with the
 forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies …`). -/
 def sentence (cs : List Chunk) : Option Sent :=
+  let cs := if cs.any (fun c => match c with | .w s => s == w!"group" | _ => false) then
+    namedGroupForms (cs.length + 1) cs else cs
   let cs := if cs.any (fun c => match c with | .w s => lower s == w!"sylow" | _ => false) then
     sylowForms (cs.length + 1) [] cs else cs
   let cs := if cs.any (fun c => match c with | .w s => s == w!"chain" | _ => false) then

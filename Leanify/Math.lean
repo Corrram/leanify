@@ -567,6 +567,15 @@ def run : Nat → Mode → List MTok → R
         | .hat b => MT.hat (.sub b i)
         | _ => .sub x i
       run f (.postfix bar x') rest'
+    -- `K[x]`, `R[t]`: the ring of polynomials over `K` in a letter (of a capital letter, the
+    -- name of a ring)
+    | .sym 91 :: .id v :: .sym 93 :: rest =>
+      match x with
+      | .id k =>
+        if k.length == 1 && (k.head?.all fun c => 65 ≤ c && c ≤ 90) && v.length == 1 && (v.head?.all fun c => 97 ≤ c && c ≤ 122) then
+          run f (.postfix bar (.app (.id w!"@polyring") [x, .id v])) rest
+        else some (x, ts)
+      | _ => some (x, ts)
     | .sym 40 :: rest =>
       if !appHead x then some (x, ts) else do
         let (m, rest') ← run f (.list 41 []) rest
