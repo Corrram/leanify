@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def FiniteFields.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["finitefields"]
 
-#leanify_article FiniteFields "article.tex" "fnv1a64:2b3ea8b7ec268733" with FiniteFields.vocabulary
+#leanify_article FiniteFields "article.tex" "fnv1a64:2aad346ffef8da91" with FiniteFields.vocabulary

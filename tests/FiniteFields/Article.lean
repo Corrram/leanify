@@ -1,5 +1,6 @@
 import FiniteFields.Compiled
 import Leanify.Readable
+import Leanify.Library.FiniteFieldsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

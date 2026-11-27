@@ -3956,12 +3956,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| order of the general linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `∏_{k=0}^{n-1}(q^n - q^k)` |
-| order of the special linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `\|GL_n(F_q)\|/(q-1)` |
-| number of square matrices of order $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `q^{n²}` |
-| number of $a$-dimensional subspaces of a space of dimension $b$ over the field with $c$ elements | ℝ → ℝ → ℝ → ℝ | the Gaussian binomial coefficient `∏_{i=0}^{k-1}(q^{n-i} - 1)/(q^{i+1} - 1)` |
-| number of points of the projective space of dimension $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | `(q^{n+1} - 1)/(q - 1)` |
-| number of primitive elements of the field with $a$ elements | ℝ → ℝ | `φ(q - 1)`: the generators of the multiplicative group |
+| order of the general linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | the invertible matrices of order `n` over Mathlib `GaloisField p k`, `q = p^k` (`∏_{k=0}^{n-1}(q^n - q^k)`) |
+| order of the special linear group of degree $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | the matrices of determinant `1` (Mathlib `Matrix.SpecialLinearGroup`; `\|GL_n(F_q)\|/(q-1)`) |
+| number of square matrices of order $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | the matrices `Fin n × Fin n` over `F_q` (`q^{n²}`) |
+| number of $a$-dimensional subspaces of a space of dimension $b$ over the field with $c$ elements | ℝ → ℝ → ℝ → ℝ | the subspaces of `Fin n → F_q` of dimension `k` (the Gaussian binomial coefficient `∏_{i=0}^{k-1}(q^{n-i} - 1)/(q^{i+1} - 1)` for `k ≤ n`) |
+| number of points of the projective space of dimension $a$ over the field with $b$ elements | ℝ → ℝ → ℝ | the lines of `Fin (n+1) → F_q` (Mathlib `Projectivization`; `(q^{n+1} - 1)/(q - 1)`) |
+| number of primitive elements of the field with $a$ elements | ℝ → ℝ | the generators of the multiplicative group of `F_q` (`φ(q - 1)`) |
 
 ## `liealgebras`
 

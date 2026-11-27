@@ -406,7 +406,8 @@ Further fields cover other branches of mathematics:
 * `poissonprocesses`: arrivals and compound sums;
 * `surveysampling`: sample sizes and design effects;
 * `convergence`: iteration counts and extrapolation;
-* `finitefields`: linear algebra over finite fields;
+* `finitefields`: linear algebra over finite fields (counts over Mathlib's `GaloisField`: the
+  general and special linear groups, matrices, subspaces, projective spaces, primitive elements);
 * `liealgebras`: the classical simple Lie algebras;
 * `words`: words, necklaces and de Bruijn sequences (the number of elements of the type of
   the words counted, the cyclic ones up to rotation);
