@@ -12,7 +12,7 @@ continuous function.` or `every bounded increasing function $f$`.
   `increasing` and `nondecreasing`, `decreasing` and `nonincreasing`, `strictly
   increasing`, `strictly decreasing`, `monotone`, `convex`, `concave`, `strictly convex`,
   `even`, `odd`, `periodic`, `$T$-periodic`, `injective`, `surjective`, `bijective`,
-  `constant`, `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
+  `constant`, `identically zero` (`zero everywhere`), `nowhere zero`, `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
   integrable on $[a,b]$` (and `Riemann integrable` of a function on a domain `[a,b]`),
   `Hölder continuous with exponent $\alpha$`;
 * notions: the derivative, the supremum norm, the Lipschitz constant, the total variation
@@ -122,6 +122,9 @@ def vocab : Vocab where
     mod phrase!"surjective" true (fPred fun f => surjective f) "onto `ℝ` (Mathlib `Function.Surjective`)",
     mod phrase!"bijective" true (fPred fun f => and (injective f) (surjective f)) "(Mathlib `Function.Bijective`)",
     mod phrase!"constant" true (fPred fun f => allR fun x => allR fun y => eq (app f x) (app f y)) "`f(x) = f(y)`",
+    mod phrase!"identically zero" true (fPred fun f => allR fun x => eq (app f x) (num 0)) "`f(x) = 0` for every `x`",
+    mod phrase!"zero everywhere" true (fPred fun f => allR fun x => eq (app f x) (num 0)) "`f(x) = 0` for every `x`",
+    mod phrase!"nowhere zero" true (fPred fun f => allR fun x => not (eq (app f x) (num 0))) "`f(x) ≠ 0` for every `x`",
     mod phrase!"continuous at $v$" false (close <| lamR fun c => lamT F (fun _ => tt) fun f => continuousAt f c)
       "`f(x) → f(c)` as `x → c` (Mathlib `ContinuousAt`)",
     mod phrase!"discontinuous at $v$" false (close <| lamR fun c => lamT F (fun _ => tt) fun f => not (continuousAt f c))

@@ -5821,7 +5821,7 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some (.w w) => (Grammar.DefForm.singular w).map fun w' => head.dropLast ++ [Chunk.w w'] ++ np.drop head.length
       | _ => none
     let bySet := (setOfElems V ([Chunk.w w!"set", Chunk.w w!"of"] ++ head)).map (· ++ np.drop head.length)
-    let cands := if k == 1 then [np] else byRule.toList ++ bySet.toList
+    let cands := if k ≤ 1 then [np] else byRule.toList ++ bySet.toList
     let st0 ← get
     let rec firstNP : List (List Chunk) → M BindInfo
       | [] => fail E.noun
@@ -5858,6 +5858,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     match mode with
     | 1 => pure (atLeast k .tt)
     | 2 =>
+      -- (none: `$x$ has no square root`)
+      if k == 0 then return .not (exs 1 (pAt 1 0))
       -- at most `k`: among any `k+1` of them, two are the same
       let n := k + 1
       pure (alls n (.imp (conj ((List.range n).map (pAt n))) (disj ((pairs n).map fun (i, j) => Tm.eq (.loc i) (.loc j)))))

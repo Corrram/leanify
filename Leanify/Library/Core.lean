@@ -4,8 +4,8 @@ import Leanify.Library.Build
 
 The words that every article may use, whatever its fields: real numbers and integers,
 rational and irrational numbers, the signs of a real number (`positive`,
-`nonnegative`, `nonzero`), a bound after the noun (`greater than $1$`), and the square root,
-absolute value, square, cube and reciprocal of a number. Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
+`nonnegative`, `nonzero`), a bound after the noun (`greater than $1$`), the square root,
+absolute value, square, cube and reciprocal of a number, and a square root of a number (a noun). Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
 Every meaning is a term of the core language, so the core has no constants and no model.
 
 *Natural number* has two meanings (with and without 0), so Leanify does not read it
@@ -53,7 +53,9 @@ def numbers : Vocab where
     { noun phrase!"natural number" phrase!"natural numbers" posInt "without 0 (`ℕ+`)" with
       field := w!"core (without 0)" },
     noun phrase!"rational number" phrase!"rational numbers" rational "`x ∈ ℚ` (Mathlib `Set.range ((↑) : ℚ → ℝ)`)",
-    noun phrase!"irrational number" phrase!"irrational numbers" irrational "`x ∉ ℚ` (Mathlib `Irrational`)"]
+    noun phrase!"irrational number" phrase!"irrational numbers" irrational "`x ∉ ℚ` (Mathlib `Irrational`)",
+    { noun phrase!"square root" phrase!"square roots" (predR fun _ => tt) "a number `y` with `y² = x`" with
+      arg := some ([w!"of"], .real, close <| lamR fun x => lamR fun y => eq (mul y y) x) }]
   mods := [
     adj phrase!"rational" rational "`x ∈ ℚ`",
     adj phrase!"irrational" irrational "`x ∉ ℚ` (Mathlib `Irrational`)",

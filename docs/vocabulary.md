@@ -97,7 +97,7 @@ number*, *integer*, *positive*, *negative* and *nonnegative integer*, *rational*
 *nonpositive*, *nonzero*, *rational*, *irrational* of a real number, and after the noun
 *greater than*, *less than* (*larger*, *smaller*; *or equal to*) a bound; *the square root of $x$*
 (of `x ≥ 0`), *the absolute value*, *the square*, *the cube* and *the reciprocal of $x$* (of
-`x ≠ 0`). So
+`x ≠ 0`), and *a square root of $x$* (any `y` with `y² = x`). So
 `Let $x$ and $y$ be positive real numbers.` needs no field. The words of number
 theory (*prime*, *even*, *squarefree*, the greatest common divisor) are the field
 `numbers`. A symbol or noun that a field would read is reported with the field's
@@ -182,7 +182,8 @@ Further fields cover other branches of mathematics:
   bounds, least upper and greatest lower bounds of a set;
 * `realfunctions` (formerly `analysis`): real functions by a noun (`a continuous periodic function $f$`): uniformly
   continuous, Lipschitz, differentiable, smooth, analytic, monotone, convex, even, odd,
-  periodic, injective, surjective, measurable and integrable functions; the derivative,
+  periodic, injective, surjective, identically zero, nowhere zero, measurable and integrable
+  functions; the derivative,
   the supremum norm, the Lipschitz constant, the total variation, the range and the zeros;
 * `vectors`: real vectors of some dimension, a type of its own: `x+y`, `cx`,
   `\lVert x\rVert`, `\langle x,y\rangle`, coordinates, the cross product, angles;

@@ -204,6 +204,7 @@ except a notion whose meanings take arguments of different types, which the type
 | natural number | ℝ | without 0 (`ℕ+`) |
 | rational number | ℝ | `x ∈ ℚ` (Mathlib `Set.range ((↑) : ℚ → ℝ)`) |
 | irrational number | ℝ | `x ∉ ℚ` (Mathlib `Irrational`) |
+| square root | ℝ | a number `y` with `y² = x` |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -1096,6 +1097,9 @@ except a notion whose meanings take arguments of different types, which the type
 | surjective | ℝ → ℝ | onto `ℝ` (Mathlib `Function.Surjective`) |
 | bijective | ℝ → ℝ | (Mathlib `Function.Bijective`) |
 | constant | ℝ → ℝ | `f(x) = f(y)` |
+| identically zero | ℝ → ℝ | `f(x) = 0` for every `x` |
+| zero everywhere | ℝ → ℝ | `f(x) = 0` for every `x` |
+| nowhere zero | ℝ → ℝ | `f(x) ≠ 0` for every `x` |
 | continuous at $x$ | ℝ → ℝ | `f(x) → f(c)` as `x → c` (Mathlib `ContinuousAt`) |
 | discontinuous at $x$ | ℝ → ℝ | not continuous at `c` |
 | differentiable at $x$ | ℝ → ℝ | the difference quotients at `c` converge (Mathlib `DifferentiableAt`) |

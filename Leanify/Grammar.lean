@@ -2729,7 +2729,15 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let ws := match r1.drop ws.length with
         | .w p :: .m x :: _ => if p == w!"in" || p == w!"over" then ws ++ [.w p, .m x] else ws
         | _ => ws
-      some (Clause.isA s ([Chunk.w w!"without"] ++ ws) false, r1.drop ws.length) : Option (Clause × List Chunk)) with
+      let isA := Clause.isA s ([Chunk.w w!"without"] ++ ws) false
+      -- (else no such object of the subject: `$x$ has no square root`)
+      let head := ws.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"of", w!"in", w!"over", w!"with", w!"on"].contains w
+        | .p 45 => true
+        | _ => false
+      let none' := if head.isEmpty then isA else
+        Clause.countNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ ws.drop head.length) 2 0 (some isA)
+      some (none', r1.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$v$ has even degree`: a modifier `with even degree` (words only, without an article)
@@ -7890,6 +7898,44 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let (x, y) := (nestVar avoid cs 0, nestVar avoid cs 1)
     (sentence ([.w w!"for", .w w!"every"] ++ noun ++ [.m [.id x], .w w!"there", .w w!"is", .w w!"a"] ++ noun ++
       [.m [.id y], .w w!"with", .m [.id y, .sym (if large then 62 else 60), .id x], .p 46])).toList
+  -- `A differentiable function whose derivative is zero everywhere is constant.`: `For every
+  -- differentiable function $X$, if the derivative of $X$ is zero everywhere, then $X$ is
+  -- constant.` (the clause ends before the last verb)
+  let whoseAlt : List Sent := Id.run do
+    if !generic then return []
+    let .w q :: rest := cs | return []
+    if ![w!"every", w!"each", w!"any", w!"a", w!"an"].contains (lower q) then return []
+    let some w := rest.findIdx? (fun c => match c with | .w x => x == w!"whose" | _ => false) | return []
+    let np := rest.take w
+    if np.isEmpty || !plainWords np then return []
+    let after := rest.drop (w + 1)
+    let some j1 := after.findIdx? (fun c => match c with | .w x => x == w!"is" || x == w!"are" | _ => false) | return []
+    let words := after.take j1
+    if words.isEmpty || !plainWords words then return []
+    let verbs := [w!"is", w!"are", w!"has", w!"have", w!"converges", w!"contains", w!"divides", w!"equals", w!"lies", w!"attains"]
+    let some (_, j2) := ((after.drop (j1 + 1)).zipIdx.filter fun (c, _) => match c with | .w x => verbs.contains x | _ => false).getLast?
+      | return []
+    let rel := (after.drop (j1 + 1)).take j2
+    if rel.isEmpty then return []
+    let main := (after.drop (j1 + 1)).drop j2
+    let x := nestVar avoid cs 0
+    (sentence ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w w!"if", .w w!"the"] ++ words ++ [.w w!"of", .m [.id x]] ++
+      [after[j1]!] ++ rel ++ [.p 44, .w w!"then", .m [.id x]] ++ main)).toList
+  -- `There is no rational number whose square is $2$.`: `There is no rational number $X$ such
+  -- that the square of $X$ is $2$.`
+  let thereWhose : List Sent := Id.run do
+    let .w t :: .w i :: .w d :: rest := cs | return []
+    if t != w!"there" || !(i == w!"is" || i == w!"exists") || ![w!"no", w!"a", w!"an"].contains d then return []
+    let some w := rest.findIdx? (fun c => match c with | .w x => x == w!"whose" | _ => false) | return []
+    let np := rest.take w
+    if np.isEmpty || !plainWords np then return []
+    let after := rest.drop (w + 1)
+    let some j := after.findIdx? (fun c => match c with | .w x => x == w!"is" || x == w!"are" | _ => false) | return []
+    let words := after.take j
+    if words.isEmpty || !plainWords words then return []
+    let x := nestVar avoid cs 0
+    (sentence ([.w t, .w i, .w d] ++ np ++ [.m [.id x], .w w!"such", .w w!"that", .w w!"the"] ++ words ++
+      [.w w!"of", .m [.id x]] ++ after.drop j)).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -7939,7 +7985,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
