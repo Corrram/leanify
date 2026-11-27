@@ -42,6 +42,7 @@ import Leanify.Library.RandomWalksModel
 import Leanify.Library.CodesModel
 import Leanify.Library.PoissonProcessesModel
 import Leanify.Library.AlgorithmsModel
+import Leanify.Library.CombinatorialGamesModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 

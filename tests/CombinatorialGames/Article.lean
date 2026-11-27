@@ -1,5 +1,6 @@
 import CombinatorialGames.Compiled
 import Leanify.Readable
+import Leanify.Library.CombinatorialGamesModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

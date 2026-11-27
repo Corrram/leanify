@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def CombinatorialGames.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["combinatorialgames"]
 
-#leanify_article CombinatorialGames "article.tex" "fnv1a64:30bcadb83608fb8c" with CombinatorialGames.vocabulary
+#leanify_article CombinatorialGames "article.tex" "fnv1a64:23edc86872b6bd72" with CombinatorialGames.vocabulary

@@ -3535,8 +3535,8 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | nim-sum of $a$ and $b$ | ℝ → ℝ → ℝ | `a ⊕ b`: the bitwise exclusive or |
 | nim-sum of $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `a ⊕ b ⊕ c`: `0` exactly for the losing positions of Nim (Bouton) |
-| number of winning moves in the nim position with heaps $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the number of heaps `h` with `h ⊕ s < h`, `s = a ⊕ b ⊕ c`: the moves to a losing position |
-| grundy value of a heap of $a$ in the subtraction game with moves up to $b$ | ℝ → ℝ → ℝ | `n mod (k+1)`: a move takes `1` to `k` tokens |
+| number of winning moves in the nim position with heaps $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the moves to a losing position (the heaps `h` with `h ⊕ s < h`, `s = a ⊕ b ⊕ c`, Bouton) |
+| grundy value of a heap of $a$ in the subtraction game with moves up to $b$ | ℝ → ℝ → ℝ | the minimal excludant of the Grundy values after a move taking `1` to `k` tokens (`n mod (k+1)`) |
 | first coordinate of the $a$ th wythoff pair | ℝ → ℝ | `⌊nφ⌋`, `φ = (1 + √5)/2`: the `n`th losing position of Wythoff's game is `(⌊nφ⌋, ⌊nφ²⌋)` |
 | second coordinate of the $a$ th wythoff pair | ℝ → ℝ | `⌊nφ²⌋` |
 

@@ -389,7 +389,8 @@ Further fields cover other branches of mathematics:
 * `floatingpoint`: floating-point systems, errors and rounding;
 * `latticepoints`: counting lattice points (as elements of `ℤ²`, `ℤ³`), the area of a lattice
   polygon (of the region of a simple closed polygonal curve, so that Pick's theorem is a claim);
-* `combinatorialgames`: Nim, Grundy values, Wythoff's game;
+* `combinatorialgames`: Nim, Grundy values, Wythoff's game (winning moves and Grundy values by
+  the moves of the games, so that Bouton's criterion is a claim);
 * `kinetics`: reaction orders, half-lives, rates and pH;
 * `fluids`: dimensionless numbers, pipe flow, drag;
 * `quantum`: energy levels and wavelengths of the solvable systems;
