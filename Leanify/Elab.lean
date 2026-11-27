@@ -1701,6 +1701,25 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if (← ownTy a.2) || (← ownTy b.2) then arith .sub a b
       else pure (.sub (← asReal a) (← asReal b), .real)
     | .mul x y => do
+      -- `\mathbb{E}X\,\mathbb{E}Y`: each expectation of the factor after it, the product of the
+      -- two (the product as written groups `(\mathbb{E}X\,\mathbb{E})Y`)
+      let expOps := [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}"]
+      let rec factors : Nat → MT → List MT
+        | 0, m => [m]
+        | k + 1, m => match m with
+          | .mul a b => factors k a ++ factors k b
+          | m => [m]
+      let fs := factors 32 (.mul x y)
+      let isE (m : MT) : Bool := match m with | .id n => expOps.contains n && (lookupLocal sc n).isNone | _ => false
+      if (fs.dropLast.drop 1).any isE then
+        let rec group : Nat → List MT → List MT
+          | 0, ms => ms
+          | _ + 1, [] => []
+          | k + 1, a :: b :: rest => if isE a then MT.app a [b] :: group k rest else a :: group k (b :: rest)
+          | _ + 1, [a] => [a]
+        match group 32 fs with
+        | g0 :: gs => if gs.length + 1 < fs.length then return ← term f sc pf (gs.foldl MT.mul g0)
+        | [] => pure ()
       -- `\operatorname{rank} T`, `\operatorname{tr} A` without parentheses: the method of
       -- that name, where the article defines no such symbol
       -- (`\dim\operatorname{im}T`: the dimension of the image of `T`)

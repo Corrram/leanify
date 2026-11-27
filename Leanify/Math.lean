@@ -726,7 +726,13 @@ def run : Nat → Mode → List MTok → R
           match b with
           | .chain (.id v) [(.eq, lo)] => do
             let (body, r4) ← run f (.product false) r3
-            some (.bigop (n == w!"sum") v lo hi body, r4)
+            -- (`\sum_{i=1}^n x_i^2\sum_{i=1}^n y_i^2`: a second sum over the same index ends the
+            -- first, a product of two sums)
+            match body with
+            | .mul a b@(.bigop _ v' _ _ _) =>
+              if v' == v then some (.mul (.bigop (n == w!"sum") v lo hi a) b, r4)
+              else some (.bigop (n == w!"sum") v lo hi body, r4)
+            | _ => some (.bigop (n == w!"sum") v lo hi body, r4)
           | _ => none
         | _ => none)
       <|> (do

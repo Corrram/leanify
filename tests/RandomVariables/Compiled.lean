@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def RandomVariables.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["randomvariables"]
 
-#leanify_article RandomVariables "article.tex" "fnv1a64:d8c4dfc515e7ecde" with RandomVariables.vocabulary
+#leanify_article RandomVariables "article.tex" "fnv1a64:7201f688bc90ff78" with RandomVariables.vocabulary

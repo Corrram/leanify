@@ -36,6 +36,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `x_1+\cdots+x_n`, `\frac1{1}+\dots+\frac1{N}`, `x_0\cdot\cdots\cdot x_{N-1}` | the sum (product) over the integers `i` from the index of the first term to that of the last, of the term both are instances of; the terms may differ in one place only, the index (`1+2+\cdots+n` is `1+\sum_{i=2}^{n} i`) |
 | `a_1<\cdots<a_m`, `2\le n_1<\dots<n_k` | each term is in the relation to the next, for every integer index from the first to the last but one (and the rest of the chain as written) |
 | `\sum_{k=a}^{\infty} e` | the limit of the partial sums, defined only when it exists (so conditionally convergent series such as `\sum_{k=1}^{\infty}\frac{(-1)^{k+1}}{k}` are read) |
+| `\sum_{i=1}^n x_i^2\sum_{i=1}^n y_i^2` | a sum over the same index after the terms of a sum ends it: the product of the two sums |
 | `\lim_{x\to a} e`, `\lim_{x\to\infty} e` | the limit within the points where `e` is defined (`x\ne a`), defined only when it exists and the points accumulate at `a` |
 | `\limsup_{n\to\infty} a_n`, `\liminf_{x\to\infty} f(x)` | the number `L` such that for every `ε>0` the values exceed `L-ε` beyond every bound and eventually stay below `L+ε` (`\liminf`: the reverse); defined only when it is finite. An index runs through the natural numbers |
 | `$a_n\to L$ as $n\to\infty$`, `$f(x)\sim g(x)$ as $x\to\infty$`, `$f(x)=o(g(x))$ as $x\to c$` | `\lim a_n=L`, `\lim\frac{f}{g}=1`, `\lim\frac{f}{g}=0`, as limits are read |
@@ -199,6 +200,7 @@ Further forms that the fields use (they are read for any vocabulary):
 | `For all real numbers $a$, $b$ and $c$, …`, `For all sets $A$, $B$ and $C$, …` | a binder for each name, the last after `and` |
 | `Every nonempty set of natural numbers has a least element.`, `a set of integers that is bounded above` (field `realsets`) | sets of natural numbers, of integers and of positive integers; `with a least element` (`has a least element`), `with a greatest element` |
 | `$P(|X-\mathbb{E}X|\ge t)\le\frac{\operatorname{Var}X}{t^2}$`, `\operatorname{Var}(X+Y)=\operatorname{Var}X+\operatorname{Var}Y` (field `randomvariables`) | an expectation or a variance inside a probability is a number, not a function of the outcome; `\operatorname{Var}X` is `\operatorname{Var}(X)` |
+| `$\mathbb{E}[XY]=\mathbb{E}X\,\mathbb{E}Y$` | in a product, an expectation without parentheses is of the factor right after it |
 | `Let $A$ be an $n\times n$ matrix with $n$ distinct eigenvalues.`, `the row rank of $A$`, `the column rank of $A$` (field `matrices`) | a square matrix with exactly `n` real eigenvalues; the ranks of `Aᵀ` and of `A` |
 | `Let $K\subseteq L\subseteq M$ be fields.`, `Let $A\subseteq B$ be finite sets.` | new variables, each an object of the plural noun, with the chain of inclusions as a condition (`$A\subseteq X$ be finite`, of a bound `X`, is a subset of it) |
 | `$[M:K]=[M:L][L:K]$` | a degree or an index after another is a factor |
@@ -285,6 +287,7 @@ each form):
 | `Let $f\colon\mathbb{R}\to\mathbb{R}$ be a polynomial function.` | with the field `polynomials`, `polynomial` is an adjective of the function of the signature |
 | `Every Harshad number is a positive integer.`, `Every Liouville number is irrational.` | every object of the first noun is one of the second (or has the adjective); the sentence needs no variable |
 | `Every integer $n\ge2$ is a product of primes.` | the same, for the variable of the condition |
+| `Every prime $p$ with $p\equiv1\pmod 4$ is a sum of two squares.`, `a sum of three squares`, `a sum of four squares`, `a sum of two primes` | `a^2+b^2` (`a^2+b^2+c^2`, …) for integers; `p+q` for primes |
 | `$z$ and $o$ are binary words of length $3$.`, `If $f$ and $g$ are P-functions, then …` | a plural after `are`: the phrase of the vocabulary in the singular (`a binary word of length $3$`), said of each |
 | `the mean number of customers in the M/M/1 queue with arrival rate $\lambda$ and service rate $\mu$` | a slash in a phrase of the vocabulary (`M/M/1`) is read as written |
 | `$c$ is a solution of the Fredholm integral equation with kernel $K$, right-hand side $o$ and parameter $\frac12$ on $[0,1]$.` | a phrase of the vocabulary goes on after an object: with `and` and a word, a preposition (`from $0$`), or a list of arguments after a comma |

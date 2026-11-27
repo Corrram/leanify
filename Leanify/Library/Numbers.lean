@@ -33,6 +33,11 @@ def productOfPrimes : Tm := predR fun n => exR fun k => and (and (isNat k) (le (
 /-- `a² + b² + c² + d²` for integers `a`, `b`, `c`, `d` (Mathlib `Nat.sum_four_squares`). -/
 def sumOfFourSquares : Tm := predR fun n => exInt fun a => exInt fun b => exInt fun c => exInt fun d =>
   eq n (add (add (mul a a) (mul b b)) (add (mul c c) (mul d d)))
+/-- `a² + b²` for integers `a`, `b` (Mathlib `Nat.sum_two_squares`). -/
+def sumOfTwoSquares : Tm := predR fun n => exInt fun a => exInt fun b => eq n (add (mul a a) (mul b b))
+/-- `a² + b² + c²` for integers `a`, `b`, `c`. -/
+def sumOfThreeSquares : Tm := predR fun n => exInt fun a => exInt fun b => exInt fun c =>
+  eq n (add (add (mul a a) (mul b b)) (mul c c))
 /-- `p + q` for primes `p`, `q`. -/
 def sumOfTwoPrimes : Tm := predR fun n => exR fun p => exR fun q => and (and (isPrime p) (isPrime q)) (eq n (add p q))
 /-- `a² - b²` for integers `a`, `b`. -/
@@ -72,6 +77,8 @@ def vocab : Vocab where
     noun phrase!"composite number" phrase!"composite numbers" composite "an integer `≥ 2` that is not prime",
     noun phrase!"product of primes" phrase!"products of primes" productOfPrimes "`p_1⋯p_k` for primes `p_i`, `k ≥ 1` (Mathlib `Nat.primeFactorsList`)",
     noun phrase!"product of prime numbers" phrase!"products of prime numbers" productOfPrimes "`p_1⋯p_k` for primes `p_i`, `k ≥ 1`",
+    noun phrase!"sum of two squares" phrase!"sums of two squares" sumOfTwoSquares "`a² + b²` for integers `a`, `b`",
+    noun phrase!"sum of three squares" phrase!"sums of three squares" sumOfThreeSquares "`a² + b² + c²` for integers",
     noun phrase!"sum of four squares" phrase!"sums of four squares" sumOfFourSquares "`a² + b² + c² + d²` for integers",
     noun phrase!"sum of two primes" phrase!"sums of two primes" sumOfTwoPrimes "`p + q` for primes `p`, `q`",
     noun phrase!"difference of two squares" phrase!"differences of two squares" differenceOfTwoSquares "`a² - b²` for integers `a`, `b`",

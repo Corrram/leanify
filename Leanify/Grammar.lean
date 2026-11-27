@@ -1154,7 +1154,11 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
         | some (.chain (.id x) [(.eq, .app (.id y) _)]) => if x == y then some (.noun np, r') else none
         -- `every prime $p\equiv1\pmod4$`: the variable, and its congruence
         | some (m@(.chain (.id x) [(.equiv, _)])) =>
-          some (.many [.noun (np.dropLast ++ [.m [.id x]]), .ifCond m], r')
+          -- (`every prime $p$ with $p\equiv1\pmod4$`: the noun phrase before `with`)
+          let base := match np.dropLast.reverse with
+            | .w w :: rest => if w == w!"with" then rest.reverse else np.dropLast ++ [.m [.id x]]
+            | _ => np.dropLast ++ [.m [.id x]]
+          some (.many [.noun base, .ifCond m], r')
         | _ =>
           -- `every copula $C$ with $C^\top=C$`: a condition on the variable
           let withAt := np.findIdx? fun c => match c with | .w v => v == w!"with" | _ => false
