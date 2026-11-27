@@ -2389,11 +2389,11 @@ except a notion whose meanings take arguments of different types, which the type
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | $a$ th term of the arithmetic progression with first term $b$ and difference $c$ | ℝ → ℝ → ℝ → ℝ | `a + nd` |
-| sum of the first $a$ terms of the arithmetic progression with first term $b$ and difference $c$ | ℝ → ℝ → ℝ → ℝ | `n a + n(n-1)d/2` |
+| sum of the first $a$ terms of the arithmetic progression with first term $b$ and difference $c$ | ℝ → ℝ → ℝ → ℝ | `∑_{k=0}^{n-1} (a + kd)` (`n a + n(n-1)d/2`) |
 | $a$ th term of the geometric progression with first term $b$ and ratio $c$ | ℝ → ℝ → ℝ → ℝ | `a qⁿ` |
-| sum of the first $a$ terms of the geometric progression with first term $b$ and ratio $c$ | ℝ → ℝ → ℝ → ℝ | `a(1 - qⁿ)/(1 - q)`, `q ≠ 1` |
-| larger characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `(p + √(p² + 4q))/2`, where `p² + 4q ≥ 0` |
-| smaller characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `(p - √(p² + 4q))/2`, where `p² + 4q ≥ 0` |
+| sum of the first $a$ terms of the geometric progression with first term $b$ and ratio $c$ | ℝ → ℝ → ℝ → ℝ | `∑_{k=0}^{n-1} a q^k` (`a(1 - qⁿ)/(1 - q)` for `q ≠ 1`) |
+| larger characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | the greatest real root of `x² - px - q`, where it has one (`(p + √(p² + 4q))/2`) |
+| smaller characteristic root of the recurrence with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | the least real root of `x² - px - q`, where it has one (`(p - √(p² + 4q))/2`) |
 
 ## `copulas`
 
@@ -2882,7 +2882,7 @@ except a notion whose meanings take arguments of different types, which the type
 | --- | --- | --- |
 | hamming weight of the first $a$ terms of $b$ | ℝ → (ℝ → ℝ) → ℝ | `#{1 ≤ i ≤ n : x_i ≠ 0}` |
 | hamming distance between the first $a$ terms of $b$ and $c$ | ℝ → (ℝ → ℝ) → (ℝ → ℝ) → ℝ | `#{1 ≤ i ≤ n : x_i ≠ y_i}` |
-| volume of the hamming ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `∑_{i=0}^{r} \binom{n}{i}`, binary words within distance `r` of one |
+| volume of the hamming ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | the binary words of length `n` within Hamming distance `r` of one (Mathlib `hammingDist`; `∑_{i=0}^{r} \binom{n}{i}`) |
 | sphere-packing bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `⌊2^n / V(n, ⌊(d-1)/2⌋)⌋` (Hamming bound): no binary code is larger |
 | singleton bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `2^{n-d+1}`: no binary code is larger |
 | gilbert-varshamov bound for length $a$ and minimum distance $b$ | ℝ → ℝ → ℝ | `⌈2^n / V(n, d-1)⌉`: some binary code is at least as large |

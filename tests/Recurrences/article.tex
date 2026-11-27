@@ -9,6 +9,7 @@
 We write $A_n(a,d)$ for the $n$th term of the arithmetic progression with first term $a$ and difference $d$.
 We write $S_n(a,d)$ for the sum of the first $n$ terms of the arithmetic progression with first term $a$ and difference $d$.
 We write $G_n(a,q)$ for the $n$th term of the geometric progression with first term $a$ and ratio $q$.
+We write $T_n(a,q)$ for the sum of the first $n$ terms of the geometric progression with first term $a$ and ratio $q$.
 We write $\lambda(p,q)$ for the larger characteristic root of the recurrence with coefficients $p$ and $q$.
 For every real number $n$, let $u(n)\coloneqq 3n+1$.
 
@@ -34,6 +35,12 @@ Let $a:\mathbb{R}\to\mathbb{R}$ be a function. If $a$ is a solution of the Fibon
 
 \begin{lemma}\label{root}
 $\lambda(1,1)=\frac{1+\sqrt5}{2}$, and $\lambda(1,1)^2=\lambda(1,1)+1$.
+\end{lemma}
+
+\section{Closed forms}
+
+\begin{lemma}\label{closed}
+Let $n$ be a nonnegative integer and let $a$, $d$ and $q$ be real numbers with $q\neq1$. Then $S_n(a,d)=na+\frac{n(n-1)d}{2}$ and $T_n(a,q)=\frac{a(1-q^n)}{1-q}$.
 \end{lemma}
 
 \end{document}

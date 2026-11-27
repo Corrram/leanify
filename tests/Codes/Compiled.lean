@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Codes.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["codes"]
 
-#leanify_article Codes "article.tex" "fnv1a64:e65a367a8abe61c4" with Codes.vocabulary
+#leanify_article Codes "article.tex" "fnv1a64:ca8297dab53b1303" with Codes.vocabulary

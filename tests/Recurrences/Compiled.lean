@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Recurrences.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["recurrences"]
 
-#leanify_article Recurrences "article.tex" "fnv1a64:49b3d08477e8fa67" with Recurrences.vocabulary
+#leanify_article Recurrences "article.tex" "fnv1a64:e529596ab8d84226" with Recurrences.vocabulary

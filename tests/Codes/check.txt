@@ -2,10 +2,10 @@ tests/Codes/article.tex:9:1: info: defines \mathrm{wt} (mathrmwt)
 tests/Codes/article.tex:10:1: info: defines \@n1 (n1)
 tests/Codes/article.tex:11:1: info: defines \@n2 (n2)
 tests/Codes/article.tex:12:1: info: defines \@n3 (n3)
-tests/Codes/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 1\le y)\land y\le x\Rightarrow \neg (2=0)\land \neg (\sum_{z=0}^{\lfloor \frac{y-1}{2}\rfloor}\binom{x}{z}=0))
+tests/Codes/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 1\le y)\land y\le x\Rightarrow \neg (2=0)\land \neg (V(x,\lfloor \frac{y-1}{2}\rfloor)=0))
 tests/Codes/article.tex:13:1: info: defines \@n4 (n4)
 tests/Codes/article.tex:14:1: info: defines \@n5 (n5)
-tests/Codes/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 1\le y)\land y\le x\Rightarrow \neg (\sum_{z=0}^{y-1}\binom{x}{z}=0))
+tests/Codes/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow (\forall y\in \mathbb{R},\ (y\in \mathbb{Z}\land 1\le y)\land y\le x\Rightarrow \neg (V(x,y-1)=0))
 tests/Codes/article.tex:15:1: info: defines z (z)
 tests/Codes/article.tex:16:1: info: defines o (o)
 tests/Codes/article.tex:21:1: info: claim 0: (3\in \mathbb{Z}\land 0\le 3)\land (\forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\land x\le 3\Rightarrow z(x)=0\lor z(x)=1)
@@ -24,7 +24,9 @@ tests/Codes/article.tex:31:1: info: claim 7: \@n4(7,3)=32
 tests/Codes/article.tex:31:1: info: claim 7 is meaningful if: ((7\in \mathbb{Z}\land 1\le 7)\land 7\le 3)\land 7\in \mathbb{Z}\land 1\le 7
 tests/Codes/article.tex:31:1: info: claim 8: \@n5(7,3)=5
 tests/Codes/article.tex:31:1: info: claim 8 is meaningful if: ((7\in \mathbb{Z}\land 1\le 7)\land 7\le 3)\land 7\in \mathbb{Z}\land 1\le 7
-tests/Codes/article.tex: 8 definitions, 9 claims
+tests/Codes/article.tex:35:1: info: claim 9: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0\le y\Rightarrow \@n2(x,y)=\sum_{z=0}^{x}\binom{y}{z})
+tests/Codes/article.tex:35:1: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 0\le y\Rightarrow ((y\in \mathbb{Z}\land 0\le y)\land x\in \mathbb{Z}\land 0\le x)\land (0\in \mathbb{Z}\land x\in \mathbb{Z})\land (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land 0\le z\land z\le x\Rightarrow z\in \mathbb{N}\land y\in \mathbb{N}))
+tests/Codes/article.tex: 8 definitions, 10 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 5 compiled, 0 failed, 0 prose (of 5)
-  all: 13 compiled, 0 failed, 0 prose (of 13)
+  results: 6 compiled, 0 failed, 0 prose (of 6)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

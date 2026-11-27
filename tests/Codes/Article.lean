@@ -1,5 +1,6 @@
 import Codes.Compiled
 import Leanify.Readable
+import Leanify.Library.CodesModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

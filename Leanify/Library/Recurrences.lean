@@ -14,8 +14,10 @@ closed forms of the progressions.
   the linear recurrence with coefficients $p$ and $q$` (`a(n+2) = p a(n+1) + q a(n)`);
 * notions: the `n`th term and the sum of the first `n` terms of the arithmetic progression
   with first term `a` and difference `d`, and of the geometric progression with first term
-  `a` and ratio `q` (`q ≠ 1`); the roots of the characteristic polynomial `x² - px - q`
-  (where `p² + 4q ≥ 0`).
+  `a` and ratio `q` (the sums `∑_{k=0}^{n-1}` of the terms); the larger and the smaller real
+  root of the characteristic polynomial `x² - px - q` (where it has one). The closed forms of
+  the sums (`n a + n(n-1)d/2`, `a(1 - qⁿ)/(1 - q)` for `q ≠ 1`) and of the roots
+  (`(p ± √(p² + 4q))/2`) are theorems, not definitions.
 
 Every meaning is a term of the core language. -/
 
@@ -34,6 +36,10 @@ def at2 (a n : B) : B := app a (add n (num 2))
 def arith (d a : B) : B := forNat fun n => eq (at1 a n) (add (app a n) d)
 def geom (q a : B) : B := forNat fun n => eq (at1 a n) (mul q (app a n))
 def disc (p q : B) : B := add (mul p p) (mul (num 4) q)
+def finSum (a b : B) (body : B → B) : B := app (app (app (prim .finSum) a) b) (lamR body)
+/-- `x` is a root of the characteristic polynomial `x² - px - q`. -/
+def charRoot (p q x : B) : B := eq (mul x x) (add (mul p x) q)
+def hasCharRoot (p q : B) : B := exR fun x => charRoot p q x
 
 /-- A property of a sequence with an argument (`P v a`). -/
 def withArg (p : Phrase) (body : B → B → B) (doc : String) : Modifier :=
@@ -60,24 +66,26 @@ def vocab : Vocab where
       ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat], doc := "`a + nd`",
       value := close <| lamT .real nat fun n => lamR fun a => lamR fun d => add a (mul n d) },
     { name := phrase!"sum of the first $v$ terms of the arithmetic progression with first term $v$ and difference $v$",
-      ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat], doc := "`n a + n(n-1)d/2`",
+      ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat], doc := "`∑_{k=0}^{n-1} (a + kd)` (`n a + n(n-1)d/2`)",
       value := close <| lamT .real nat fun n => lamR fun a => lamR fun d =>
-        add (mul n a) (div (mul (mul n (sub n (num 1))) d) (num 2)) },
+        finSum (num 0) (sub n (num 1)) fun k => add a (mul k d) },
     { name := phrase!"$v$th term of the geometric progression with first term $v$ and ratio $v$",
       ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat], doc := "`a qⁿ`",
       value := close <| lamT .real nat fun n => lamR fun a => lamR fun q => mul a (zpow q n) },
     { name := phrase!"sum of the first $v$ terms of the geometric progression with first term $v$ and ratio $v$",
-      ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat, none, dom1 .real fun q => ne q (num 1)],
-      doc := "`a(1 - qⁿ)/(1 - q)`, `q ≠ 1`",
-      value := close <| lamT .real nat fun n => lamR fun a => lamT .real (fun q => ne q (num 1)) fun q =>
-        div (mul a (sub (num 1) (zpow q n))) (sub (num 1) q) },
+      ty := .real ⟶ .real ⟶ .real ⟶ .real, doms := [dom1 .real nat],
+      doc := "`∑_{k=0}^{n-1} a q^k` (`a(1 - qⁿ)/(1 - q)` for `q ≠ 1`)",
+      value := close <| lamT .real nat fun n => lamR fun a => lamR fun q =>
+        finSum (num 0) (sub n (num 1)) fun k => mul a (zpow q k) },
     { name := phrase!"larger characteristic root of the recurrence with coefficients $v$ and $v$",
-      ty := .real ⟶ .real ⟶ .real, doms := [none, dom2 .real fun p q => le (num 0) (disc p q)],
-      doc := "`(p + √(p² + 4q))/2`, where `p² + 4q ≥ 0`",
-      value := close <| lamR fun p => lamT .real (fun q => le (num 0) (disc p q)) fun q => div (add p (sqrt (disc p q))) (num 2) },
+      ty := .real ⟶ .real ⟶ .real, doms := [none, dom2 .real fun p q => hasCharRoot p q],
+      doc := "the greatest real root of `x² - px - q`, where it has one (`(p + √(p² + 4q))/2`)",
+      value := close <| lamR fun p => lamT .real (fun q => hasCharRoot p q) fun q =>
+        theR fun x => and (charRoot p q x) (allR fun y => imp (charRoot p q y) (le y x)) },
     { name := phrase!"smaller characteristic root of the recurrence with coefficients $v$ and $v$",
-      ty := .real ⟶ .real ⟶ .real, doms := [none, dom2 .real fun p q => le (num 0) (disc p q)],
-      doc := "`(p - √(p² + 4q))/2`, where `p² + 4q ≥ 0`",
-      value := close <| lamR fun p => lamT .real (fun q => le (num 0) (disc p q)) fun q => div (sub p (sqrt (disc p q))) (num 2) }]
+      ty := .real ⟶ .real ⟶ .real, doms := [none, dom2 .real fun p q => hasCharRoot p q],
+      doc := "the least real root of `x² - px - q`, where it has one (`(p - √(p² + 4q))/2`)",
+      value := close <| lamR fun p => lamT .real (fun q => hasCharRoot p q) fun q =>
+        theR fun x => and (charRoot p q x) (allR fun y => imp (charRoot p q y) (le x y)) }]
 
 end Leanify.Recurrences
