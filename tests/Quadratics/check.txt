@@ -1,30 +1,38 @@
 tests/Quadratics/article.tex:9:1: info: defines \@n0 (n0)
 tests/Quadratics/article.tex:10:1: info: defines \@n1 (n1)
-tests/Quadratics/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<x\land 0\le y\,y-4\,(x\,z)\Rightarrow \neg (2=0)\land \neg (2\,x=0))
+tests/Quadratics/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (\exists s\in \mathbb{R},\ x\,(s\,s)+y\,s+z=0)\Rightarrow (\exists s\in \mathbb{R},\ (x\,(s\,s)+y\,s+z=0\land (\forall t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0\Rightarrow t\le s))\land (\forall t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0\land (\forall a\in \mathbb{R},\ x\,(a\,a)+y\,a+z=0\Rightarrow a\le t)\Rightarrow t=s)))
 tests/Quadratics/article.tex:11:1: info: defines \@n2 (n2)
-tests/Quadratics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<x\land 0\le y\,y-4\,(x\,z)\Rightarrow \neg (2=0)\land \neg (2\,x=0))
+tests/Quadratics/article.tex:11:1: info: \@n2 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (\exists s\in \mathbb{R},\ x\,(s\,s)+y\,s+z=0)\Rightarrow (\exists s\in \mathbb{R},\ (x\,(s\,s)+y\,s+z=0\land (\forall t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0\Rightarrow s\le t))\land (\forall t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0\land (\forall a\in \mathbb{R},\ x\,(a\,a)+y\,a+z=0\Rightarrow t\le a)\Rightarrow t=s)))
 tests/Quadratics/article.tex:12:1: info: defines \@n3 (n3)
-tests/Quadratics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \neg (2\,x=0))
+tests/Quadratics/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ ((\forall t\in \mathbb{R},\ x\,(s\,s)+y\,s+z\le x\,(t\,t)+y\,t+z)\lor (\forall t\in \mathbb{R},\ x\,(t\,t)+y\,t+z\le x\,(s\,s)+y\,s+z))\land (\forall t\in \mathbb{R},\ (\forall a\in \mathbb{R},\ x\,(t\,t)+y\,t+z\le x\,(a\,a)+y\,a+z)\lor (\forall a\in \mathbb{R},\ x\,(a\,a)+y\,a+z\le x\,(t\,t)+y\,t+z)\Rightarrow t=s))
 tests/Quadratics/article.tex:13:1: info: defines \@n4 (n4)
-tests/Quadratics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0<y\,y-4\,(x\,z)\Rightarrow y\,y-4\,(x\,z)=0\Rightarrow 1=2)
+tests/Quadratics/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ \operatorname{card}((t\in \mathbb{R}\mapsto x\,(t\,t)+y\,t+z=0))(s)\land (\forall t\in \mathbb{R},\ \operatorname{card}((a\in \mathbb{R}\mapsto x\,(a\,a)+y\,a+z=0))(t)\Rightarrow t=s))
 tests/Quadratics/article.tex:14:1: info: defines \Delta (Delta)
 tests/Quadratics/article.tex:15:1: info: defines \@n6 (n6)
 tests/Quadratics/article.tex:15:1: info: \@n6 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0\le \frac{y\,y}{4}+\frac{x\,(x\,x)}{27}\Rightarrow ((\neg (2=0)\land (\neg (4=0)\land \neg (27=0))\land \neg (2=0))\land (\neg (2=0)\land (\neg (4=0)\land \neg (27=0))\land \neg (2=0))\land \neg (3=0))\land (\neg (2=0)\land (\neg (4=0)\land \neg (27=0))\land \neg (2=0))\land (\neg (2=0)\land (\neg (4=0)\land \neg (27=0))\land \neg (2=0))\land \neg (3=0)
 tests/Quadratics/article.tex:20:1: info: claim 0: \@n0(1,-3,2)=1
 tests/Quadratics/article.tex:20:1: info: claim 1: \@n1(1,-3,2)=2
-tests/Quadratics/article.tex:20:1: info: claim 1 is meaningful if: (0<1\land 0\le -3\,(-3)-4\,(1\,2))\land \neg (1=0)
+tests/Quadratics/article.tex:20:1: info: claim 1 is meaningful if: (\exists y\in \mathbb{R},\ 1\,(y\,y)+-3\,y+2=0)\land \neg (1=0)
 tests/Quadratics/article.tex:20:1: info: claim 2: \@n2(1,-3,2)=1
-tests/Quadratics/article.tex:20:1: info: claim 2 is meaningful if: (0<1\land 0\le -3\,(-3)-4\,(1\,2))\land \neg (1=0)
+tests/Quadratics/article.tex:20:1: info: claim 2 is meaningful if: (\exists y\in \mathbb{R},\ 1\,(y\,y)+-3\,y+2=0)\land \neg (1=0)
 tests/Quadratics/article.tex:20:1: info: claim 3: \@n3(1,-3,2)=\frac{3}{2}
 tests/Quadratics/article.tex:20:1: info: claim 3 is meaningful if: (\top\land \neg (1=0))\land \neg (2=0)
 tests/Quadratics/article.tex:20:1: info: claim 4: \@n4(1,-3,2)=2
 tests/Quadratics/article.tex:20:1: info: claim 4 is meaningful if: \top\land \neg (1=0)
 tests/Quadratics/article.tex:24:58: info: claim 5: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 4\,x\,z\le {y}^{2}\Rightarrow \@n1(x,y,z)+\@n2(x,y,z)=-(\frac{y}{x}))
-tests/Quadratics/article.tex:24:58: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 4\,x\,z\le {y}^{2}\Rightarrow (((0<x\land 0\le y\,y-4\,(x\,z))\land \neg (x=0))\land (0<x\land 0\le y\,y-4\,(x\,z))\land \neg (x=0))\land \neg (x=0))
-tests/Quadratics/article.tex:30:1: info: claim 6: \Delta(-3,2)=0
-tests/Quadratics/article.tex:30:1: info: claim 7: \@n6(0,-8)=2
-tests/Quadratics/article.tex:30:1: info: claim 7 is meaningful if: (\neg (4=0)\land \neg (27=0))\land 0\le \frac{-8\,-8}{4}+\frac{0\,(0\,0)}{27}
-tests/Quadratics/article.tex: 7 definitions, 8 claims
+tests/Quadratics/article.tex:24:58: info: claim 5 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 4\,x\,z\le {y}^{2}\Rightarrow (((\exists t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0)\land \neg (x=0))\land (\exists t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=0)\land \neg (x=0))\land \neg (x=0))
+tests/Quadratics/article.tex:28:53: info: claim 6: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \Sigma_{x,y,z}=-(\frac{y}{x}))
+tests/Quadratics/article.tex:28:53: info: claim 6 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (\Sigma_{x,y,z}\in\mathbb{R}\land \neg (x=0))\land \neg (x=0))
+tests/Quadratics/article.tex:28:53: info: claim 7: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \Pi_{x,y,z}=\frac{z}{x})
+tests/Quadratics/article.tex:28:53: info: claim 7 is meaningful if: \forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (\Pi_{x,y,z}\in\mathbb{R}\land \neg (x=0))\land \neg (x=0))
+tests/Quadratics/article.tex:32:1: info: claim 8: \iota s\in \mathbb{R}.\ \exists t\in \mathbb{R},\ 1\,(t\,t)+(-2)\,t+3=s\land ((\forall a\in \mathbb{R},\ 1\,(t\,t)+(-2)\,t+3\le 1\,(a\,a)+(-2)\,a+3)\lor (\forall a\in \mathbb{R},\ 1\,(a\,a)+(-2)\,a+3\le 1\,(t\,t)+(-2)\,t+3))=2
+tests/Quadratics/article.tex:32:1: info: claim 8 is meaningful if: \top\land \neg (1=0)\land (\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ (\exists t\in \mathbb{R},\ x\,(t\,t)+y\,t+z=s\land ((\forall a\in \mathbb{R},\ x\,(t\,t)+y\,t+z\le x\,(a\,a)+y\,a+z)\lor (\forall a\in \mathbb{R},\ x\,(a\,a)+y\,a+z\le x\,(t\,t)+y\,t+z)))\land (\forall t\in \mathbb{R},\ (\exists a\in \mathbb{R},\ x\,(a\,a)+y\,a+z=t\land ((\forall b\in \mathbb{R},\ x\,(a\,a)+y\,a+z\le x\,(b\,b)+y\,b+z)\lor (\forall b\in \mathbb{R},\ x\,(b\,b)+y\,b+z\le x\,(a\,a)+y\,a+z)))\Rightarrow t=s)))
+tests/Quadratics/article.tex:32:1: info: claim 9: \#\{t : 1\,(t\,t)+0\,t+1=0\}=0
+tests/Quadratics/article.tex:32:1: info: claim 9 is meaningful if: \top\land \neg (1=0)\land (\forall x\in \mathbb{R},\ \neg (x=0)\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ \operatorname{card}((t\in \mathbb{R}\mapsto x\,(t\,t)+y\,t+z=0))(s)\land (\forall t\in \mathbb{R},\ \operatorname{card}((a\in \mathbb{R}\mapsto x\,(a\,a)+y\,a+z=0))(t)\Rightarrow t=s)))
+tests/Quadratics/article.tex:38:1: info: claim 10: \Delta(-3,2)=0
+tests/Quadratics/article.tex:38:1: info: claim 11: \@n6(0,-8)=2
+tests/Quadratics/article.tex:38:1: info: claim 11 is meaningful if: (\neg (4=0)\land \neg (27=0))\land 0\le \frac{-8\,-8}{4}+\frac{0\,(0\,0)}{27}
+tests/Quadratics/article.tex: 7 definitions, 12 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 4 compiled, 0 failed, 0 prose (of 4)
-  all: 11 compiled, 0 failed, 0 prose (of 11)
+  results: 7 compiled, 0 failed, 0 prose (of 7)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

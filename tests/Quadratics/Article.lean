@@ -1,5 +1,6 @@
 import Quadratics.Compiled
 import Leanify.Readable
+import Leanify.Library.QuadraticsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

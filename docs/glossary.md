@@ -3287,13 +3287,13 @@ except a notion whose meanings take arguments of different types, which the type
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | discriminant of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `b² - 4ac` |
-| larger root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `(-b + √(b² - 4ac))/(2a)`, for `a > 0` and `b² ≥ 4ac` |
-| smaller root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `(-b - √(b² - 4ac))/(2a)`, for `a > 0` and `b² ≥ 4ac` |
-| sum of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `-b/a` (Vieta) |
-| product of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `c/a` (Vieta) |
-| vertex of the parabola with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `-b/(2a)` |
-| extreme value of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `c - b²/(4a)`, the minimum for `a > 0`, the maximum for `a < 0` |
-| number of real roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `2`, `1` or `0` by the sign of `b² - 4ac` |
+| larger root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the greatest real `x` with `ax² + bx + c = 0`, where there is one (`(-b + √(b² - 4ac))/(2a)` for `a > 0`) |
+| smaller root of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the least real `x` with `ax² + bx + c = 0`, where there is one (`(-b - √(b² - 4ac))/(2a)` for `a > 0`) |
+| sum of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the sum of the complex roots with multiplicity, a real number (`-b/a`, Vieta) |
+| product of the roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the product of the complex roots with multiplicity, a real number (`c/a`, Vieta) |
+| vertex of the parabola with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the `x` at which `ax² + bx + c` takes its least or its greatest value (`-b/(2a)`) |
+| extreme value of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the least value of `ax² + bx + c` for `a > 0`, the greatest for `a < 0` (`c - b²/(4a)`) |
+| number of real roots of the quadratic with coefficients $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the number of elements of the set of the real `x` with `ax² + bx + c = 0` (`2`, `1` or `0` by the sign of `b² - 4ac`) |
 | discriminant of the cubic with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `-4p³ - 27q²` for `x³ + px + q` |
 | cardano root of the cubic with coefficients $a$ and $b$ | ℝ → ℝ → ℝ | `∛(-q/2 + √Δ') + ∛(-q/2 - √Δ')`, `Δ' = q²/4 + p³/27 ≥ 0`: the real root of `x³ + px + q` |
 

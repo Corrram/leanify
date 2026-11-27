@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Quadratics.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["quadratics"]
 
-#leanify_article Quadratics "article.tex" "fnv1a64:dc99e76bada19ff6" with Quadratics.vocabulary
+#leanify_article Quadratics "article.tex" "fnv1a64:e57a916eae429640" with Quadratics.vocabulary

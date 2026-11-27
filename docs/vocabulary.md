@@ -356,7 +356,9 @@ Further fields cover other branches of mathematics:
   integral, primes in residue classes, twin primes;
 * `collatz`: the Collatz map, its iterates and stopping times.
 * `variations`: actions of Lagrangians, the Euler–Lagrange equation, minimizers;
-* `quadratics`: quadratics and cubics by their coefficients (discriminants, roots, Vieta);
+* `quadratics`: quadratics and cubics by their coefficients (discriminants; the roots, the
+  vertex and the extreme value by what they are, the sum and the product of the complex roots
+  by Mathlib's `Polynomial.roots`, so that the quadratic formula and Vieta's formulas are claims);
 * `classicalprobability`: the classical problems (birthday, coupons, ballot, Buffon, secretary);
 * `cryptography`: RSA, discrete logarithms, Diffie–Hellman;
 * `fractals`: similarity dimensions and the classical self-similar sets;
