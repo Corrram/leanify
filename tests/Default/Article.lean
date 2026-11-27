@@ -44,6 +44,7 @@ import Leanify.Library.PoissonProcessesModel
 import Leanify.Library.AlgorithmsModel
 import Leanify.Library.CombinatorialGamesModel
 import Leanify.Library.SurfacesModel
+import Leanify.Library.OrthogonalPolynomialsModel
 import Leanify.Library.ArithmeticModel
 import Leanify.Library.CongruencesModel
 

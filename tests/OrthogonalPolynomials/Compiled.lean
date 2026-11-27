@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def OrthogonalPolynomials.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["orthogonalpolynomials"]
 
-#leanify_article OrthogonalPolynomials "article.tex" "fnv1a64:94cf64674d956250" with OrthogonalPolynomials.vocabulary
+#leanify_article OrthogonalPolynomials "article.tex" "fnv1a64:ef70d3f78f269e97" with OrthogonalPolynomials.vocabulary

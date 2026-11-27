@@ -2504,7 +2504,7 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| legendre polynomial of degree $a$ | ℝ → ℝ → ℝ | `P_n`, orthogonal on `[-1,1]` (Mathlib `Polynomial.shiftedLegendre`, shifted) |
+| legendre polynomial of degree $a$ | ℝ → ℝ → ℝ | `P_n`, orthogonal on `[-1,1]`: Mathlib's `Polynomial.shiftedLegendre n` at `(1 - x)/2` |
 | hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `H_n` (physicists'), orthogonal for `e^{-x²}` |
 | physicists' hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `H_n` |
 | probabilists' hermite polynomial of degree $a$ | ℝ → ℝ → ℝ | `He_n`, orthogonal for `e^{-x²/2}` (Mathlib `Polynomial.hermite`) |

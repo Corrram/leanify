@@ -1,5 +1,6 @@
 import OrthogonalPolynomials.Compiled
 import Leanify.Readable
+import Leanify.Library.OrthogonalPolynomialsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

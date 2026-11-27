@@ -273,7 +273,8 @@ Further fields cover other branches of mathematics:
   gamma, Chatterjee's xi and the tail dependence coefficients of a copula; quadrant
   dependence, radial symmetry, left tail decrease, max-stability, the concordance order;
 * `orthogonalpolynomials`: the Legendre, Hermite, Laguerre and Chebyshev polynomials of
-  degree `n`;
+  degree `n` (Mathlib's `Polynomial.shiftedLegendre`, `Polynomial.hermite` and
+  `Polynomial.Chebyshev.T`, `U` where Mathlib has them);
 * `counting`: subsets, permutations, multisets, maps, surjections, compositions and lattice
   paths (each the number of elements of the finite type of Mathlib of these objects, over
   `Fin n`: `Finset`, `Fin k ↪ Fin n`, `Equiv.Perm`, `Sym`, maps with `Function.Injective`,
