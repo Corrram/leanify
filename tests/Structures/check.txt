@@ -310,6 +310,9 @@ tests/Structures/article.tex:714:61: info: claim 250: \forall x\in \mathrm{El}\t
 tests/Structures/article.tex:718:1: info: claim 251: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PID}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{PrimeIdeal}(x)(y)\land (\exists t\in \mathrm{El},\ y(t)\land \neg t=0_{y})\Rightarrow \operatorname{MaximalIdeal}(x)(y))
 tests/Structures/article.tex:722:42: info: claim 252: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Field}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land \neg y=0\Rightarrow y\in x^\times)
 tests/Structures/article.tex:726:32: info: claim 253: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Domain}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow (\forall z\in \mathrm{El},\ x(z)\Rightarrow y\,z=0\Rightarrow y=0\lor z=0))
-tests/Structures/article.tex: 13 definitions, 254 claims
-  results: 473 compiled, 0 failed, 0 prose (of 473)
-  all: 473 compiled, 0 failed, 0 prose (of 473)
+tests/Structures/article.tex:730:1: info: claim 254: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow 0<\operatorname{ord}(y)\land \operatorname{ord}(y)\le 2)\Rightarrow (\forall z\in \mathrm{El},\ \forall s\in \mathrm{El},\ x(z)\land x(s)\Rightarrow z\,s=s\,z)
+tests/Structures/article.tex:730:120: info: claim 255: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land 0<\operatorname{ord}(y)\land \operatorname{ord}(y)\le 2\Rightarrow {y}^{2}=1)
+tests/Structures/article.tex:730:120: info: claim 255 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\land 0<\operatorname{ord}(y)\land \operatorname{ord}(y)\le 2\Rightarrow 2\in \mathbb{Z}\land (0\le 2\lor \operatorname{Invertible}(y)))
+tests/Structures/article.tex: 13 definitions, 256 claims
+  results: 476 compiled, 0 failed, 0 prose (of 476)
+  all: 476 compiled, 0 failed, 0 prose (of 476)

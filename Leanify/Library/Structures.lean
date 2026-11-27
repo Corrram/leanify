@@ -43,7 +43,7 @@ are bound by their signatures.
   `path-connected`, `locally compact`, `sequentially compact`, `second countable`, `separable`, `metrizable`,
   `discrete`, `regular`, `normal`, `complete`, `totally bounded`, `bounded`, `open`, `Polish`,
   `convex` (of a real vector space), `nonempty`, `$p$-` before `group` (`a finite $p$-group`),
-  `geodesic`, `$d$-dimensional`; and `of order $n$`, `of prime power order`, `of squarefree order`, `of characteristic $p$`, `isomorphic to
+  `geodesic`, `$d$-dimensional`; and `of order $n$` (of an element also `of order at most $n$`, `at least`), `of prime power order`, `of squarefree order`, `of characteristic $p$`, `isomorphic to
   $H$`, `homeomorphic to $Y$`, `isometric to $Y$`, `quasi-isometric to $Y$` (`$X$ and $Y$ are
   homeomorphic`), `$p$-group`, `locally closed in $X$`;
 * notions: the order of a group and of an element, the index of a subgroup, the centre, the
@@ -733,6 +733,12 @@ def vocab : Vocab where
     postS phrase!"of order $v$" (close <| lamR fun n => lamT S (fun _ => tt) fun g => eq (cardOf g) n) "with `n` elements (Mathlib `Nat.card`)",
     { phrase := phrase!"of order $v$", prenominal := false, ty := E,
       pred := close (lamR fun n => lamT E (fun _ => tt) fun a => eq (app (const 23) a) n), doc := "an element of order `n` (Mathlib `orderOf`)" },
+    { phrase := phrase!"of order at most $v$", prenominal := false, ty := E,
+      pred := close (lamR fun n => lamT E (fun _ => tt) fun a => and (lt (num 0) (app (const 23) a)) (le (app (const 23) a) n)),
+      doc := "of finite order `≤ n` (Mathlib `orderOf`)" },
+    { phrase := phrase!"of order at least $v$", prenominal := false, ty := E,
+      pred := close (lamR fun n => lamT E (fun _ => tt) fun a => or (eq (app (const 23) a) (num 0)) (le n (app (const 23) a))),
+      doc := "of infinite order or of order `≥ n` (Mathlib `orderOf`)" },
     { phrase := phrase!"of finite order", prenominal := false, ty := E,
       pred := close (lamT E (fun _ => tt) fun a => lt (num 0) (app (const 23) a)), doc := "(Mathlib `IsOfFinOrder`)" },
     { phrase := phrase!"of infinite order", prenominal := false, ty := E,

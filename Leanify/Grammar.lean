@@ -7609,6 +7609,19 @@ def chunkForms : Nat → List Chunk → List Chunk
       | _ => false
     if (v == w!"converges" || v == w!"diverges") && ends then
       .m x :: .w w!"is" :: .w (if v == w!"converges" then w!"convergent" else w!"divergent") :: chunkForms f rest
+    -- (`$X$ has even degree`: `$X$ is of even degree`)
+    else if v == w!"has" && (
+        let qs := [w!"order", w!"characteristic", w!"dimension", w!"index", w!"degree"]
+        (match rest with
+          | .w a :: .w q :: _ => [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains a && qs.contains q
+          | _ => false) ||
+        (match rest with
+          | .w q :: .m _ :: _ => qs.contains q
+          | _ => false) ||
+        (match rest with
+          | .w q :: .w a :: .w b :: .m _ :: _ => qs.contains q && a == w!"at" && (b == w!"most" || b == w!"least")
+          | _ => false)) then
+      .m x :: .w w!"is" :: .w w!"of" :: chunkForms f rest
     else .m x :: chunkForms f (.w v :: rest)
   | f + 1, c :: rest => c :: chunkForms f rest
   | _, [] => []
@@ -8028,6 +8041,32 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let .m ts := rest[k + 1]! | return []
     if cond.isEmpty then return []
     (sentence (lead ++ [.w w!"for", .w w!"all", .m ts, .p 44, .w w!"if"] ++ cond ++ rest.drop (k + 2))).toList
+  -- `A group in which every element has order at most $2$ is abelian.`: `For every group $X$, if
+  -- every element of $X$ has order at most $2$, then $X$ is abelian.` (the clause ends before
+  -- the last verb)
+  let inWhich : List Sent := Id.run do
+    if !generic then return []
+    let .w q :: rest := cs | return []
+    if ![w!"every", w!"each", w!"any", w!"a", w!"an"].contains (lower q) then return []
+    let some w := (List.range rest.length).find? (fun i => match (rest[i]? : Option Chunk), (rest[i + 1]? : Option Chunk) with
+        | some (.w a), some (.w b) => a == w!"in" && b == w!"which"
+        | _, _ => false) | return []
+    let np := rest.take w
+    if np.isEmpty || !plainWords np then return []
+    let after := rest.drop (w + 2)
+    let verbs := [w!"is", w!"are", w!"has", w!"have", w!"divides", w!"equals", w!"lies", w!"contains", w!"commutes", w!"converges"]
+    let some (_, j) := (after.zipIdx.filter fun (c, _) => match c with | .w x => verbs.contains x | _ => false).getLast? | return []
+    let clause := after.take j
+    let main := after.drop j
+    let .w e :: crest := clause | return []
+    if ![w!"every", w!"each", w!"no", w!"all"].contains e then return []
+    let some v := crest.findIdx? (fun c => match c with | .w x => verbs.contains x | _ => false) | return []
+    let noun := crest.take v
+    if noun.isEmpty || !plainWords noun then return []
+    let x := nestVar avoid cs 0
+    let built := [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .w w!"if", .w e] ++ noun ++ [.w w!"of", .m [.id x]] ++
+      crest.drop v ++ [.p 44, .w w!"then", .m [.id x]] ++ main
+    (sentence built <|> sentence (chunkForms (built.length + 1) built)).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -8078,7 +8117,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
               ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

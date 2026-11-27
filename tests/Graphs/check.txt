@@ -44,7 +44,8 @@ tests/Graphs/article.tex:93:259: info: claim 26: \forall x\in \mathbb{R},\ \fora
 tests/Graphs/article.tex:97:31: info: claim 27: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\operatorname{Eulerian}(x)\Leftrightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z)))
 tests/Graphs/article.tex:101:1: info: claim 28: \forall x\in \mathrm{Graph},\ \exists y\in \mathbb{R},\ y\in \mathbb{Z}\land \lvert V_{\mathrm{odd}}(x)\rvert=2\,y
 tests/Graphs/article.tex:101:79: info: claim 29: \forall x\in \mathrm{Graph},\ \sum_{v\in V(x)}\deg(v)=2\,\lvert E(x)\rvert
-tests/Graphs/article.tex: 8 definitions, 30 claims
+tests/Graphs/article.tex:105:1: info: claim 30: \forall x\in \mathrm{Graph},\ \operatorname{Connected}(x)\Rightarrow (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land \deg_{x}(y)=2\,z))\Rightarrow \operatorname{Eulerian}(x)
+tests/Graphs/article.tex: 8 definitions, 31 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 40 compiled, 0 failed, 0 prose (of 40)
-  all: 48 compiled, 0 failed, 0 prose (of 48)
+  results: 41 compiled, 0 failed, 0 prose (of 41)
+  all: 49 compiled, 0 failed, 0 prose (of 49)

@@ -1480,6 +1480,8 @@ except a notion whose meanings take arguments of different types, which the type
 | orthogonal to $x$ | $\mathrm{El}$ | `⟪a, b⟫ = 0` (Mathlib `inner`) |
 | of order $x$ | $\mathrm{El}$ → Prop | with `n` elements (Mathlib `Nat.card`) |
 | of order $x$ | $\mathrm{El}$ | an element of order `n` (Mathlib `orderOf`) |
+| of order at most $x$ | $\mathrm{El}$ | of finite order `≤ n` (Mathlib `orderOf`) |
+| of order at least $x$ | $\mathrm{El}$ | of infinite order or of order `≥ n` (Mathlib `orderOf`) |
 | of finite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of infinite order | $\mathrm{El}$ | (Mathlib `IsOfFinOrder`) |
 | of prime order | $\mathrm{El}$ → Prop | finite, with a prime number of elements |
