@@ -3393,17 +3393,17 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| number of comparisons of binary search on $a$ elements | ℝ → ℝ | `⌊log₂ n⌋ + 1`, in the worst case |
-| number of comparisons of insertion sort on $a$ elements | ℝ → ℝ | `n(n-1)/2`, in the worst case |
-| number of comparisons of merge sort on $a$ elements | ℝ → ℝ | `n⌈log₂ n⌉ - 2^{⌈log₂ n⌉} + 1`, in the worst case |
-| expected number of comparisons of quicksort on $a$ elements | ℝ → ℝ | `2(n+1)H_n - 4n`, for a uniformly random order of distinct keys |
+| number of comparisons of binary search on $a$ elements | ℝ → ℝ | in the worst case, three-way comparisons with the middle key (`⌊log₂ n⌋ + 1`) |
+| number of comparisons of insertion sort on $a$ elements | ℝ → ℝ | in the worst case (`n(n-1)/2`) |
+| number of comparisons of merge sort on $a$ elements | ℝ → ℝ | in the worst case, top-down (`n⌈log₂ n⌉ - 2^{⌈log₂ n⌉} + 1`) |
+| expected number of comparisons of quicksort on $a$ elements | ℝ → ℝ | for a uniformly random order of distinct keys, the first key the pivot (`2(n+1)H_n - 4n`) |
 | lower bound for sorting $a$ elements | ℝ → ℝ | `⌈log₂ n!⌉`: comparisons needed in the worst case by any comparison sort |
-| number of comparisons to find the maximum of $a$ elements | ℝ → ℝ | `n - 1` |
-| number of comparisons to find the maximum and the minimum of $a$ elements | ℝ → ℝ | `⌈3n/2⌉ - 2` |
-| number of moves of the tower of hanoi with $a$ disks | ℝ → ℝ | `2^n - 1` |
+| number of comparisons to find the maximum of $a$ elements | ℝ → ℝ | by a scan, in the worst case (`n - 1`) |
+| number of comparisons to find the maximum and the minimum of $a$ elements | ℝ → ℝ | by a scan in pairs, in the worst case (`⌈3n/2⌉ - 2`) |
+| number of moves of the tower of hanoi with $a$ disks | ℝ → ℝ | the least number of legal moves from one peg to another (`2^n - 1`) |
 | critical exponent for $a$ subproblems with shrinking factor $b$ | ℝ → ℝ → ℝ | `log a / log b` = `log_b a`, for `T(n) = a T(n/b) + f(n)` (master theorem) |
-| number of nodes of a perfect binary tree of height $a$ | ℝ → ℝ | `2^{h+1} - 1` |
-| minimal height of a binary tree with $a$ nodes | ℝ → ℝ | `⌊log₂ n⌋` |
+| number of nodes of a perfect binary tree of height $a$ | ℝ → ℝ | Mathlib `BinaryTree.numNodes` of the perfect tree (`2^{h+1} - 1`) |
+| minimal height of a binary tree with $a$ nodes | ℝ → ℝ | the least height in edges of a Mathlib `BinaryTree` with `n` nodes (`⌊log₂ n⌋`) |
 
 ## `populationgenetics`
 

@@ -1,5 +1,6 @@
 import Algorithms.Compiled
 import Leanify.Readable
+import Leanify.Library.AlgorithmsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

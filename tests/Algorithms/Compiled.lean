@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Algorithms.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["algorithms"]
 
-#leanify_article Algorithms "article.tex" "fnv1a64:428c95cfb7d83a71" with Algorithms.vocabulary
+#leanify_article Algorithms "article.tex" "fnv1a64:2ec197ff039b73da" with Algorithms.vocabulary

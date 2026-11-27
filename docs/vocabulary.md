@@ -374,7 +374,9 @@ Further fields cover other branches of mathematics:
 * `diophantine`: Frobenius numbers, sums of two squares, Pythagorean triples, congruent numbers;
 * `mechanics`: projectiles, pendulums, oscillators, orbits;
 * `inventory`: lot sizes and the newsvendor model;
-* `algorithms`: operation counts of searching and sorting, the master theorem;
+* `algorithms`: operation counts of searching and sorting (of the algorithms as programs that
+  count their comparisons, so that the worst cases and expectations are claims), the Tower of
+  Hanoi, binary trees, the master theorem;
 * `populationgenetics`: Hardy–Weinberg, selection, fixation, drift;
 * `waves`: Doppler, harmonics, refraction, decibels, lenses;
 * `relativity`: Lorentz factors, rapidities, relativistic energy;
