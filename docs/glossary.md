@@ -3722,17 +3722,17 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| number of edges of the complete graph on $a$ vertices | ℝ → ℝ | `n(n-1)/2` |
-| number of edges of the complete bipartite graph with parts of sizes $a$ and $b$ | ℝ → ℝ → ℝ | `mn` |
-| number of edges of the hypercube of dimension $a$ | ℝ → ℝ | `n2^{n-1}` |
-| number of labelled graphs on $a$ vertices | ℝ → ℝ | `2^{n(n-1)/2}` |
-| number of spanning trees of the complete graph on $a$ vertices | ℝ → ℝ | `n^{n-2}` (Cayley's formula) |
-| number of spanning trees of the complete bipartite graph with parts of sizes $a$ and $b$ | ℝ → ℝ → ℝ | `m^{n-1}n^{m-1}` |
-| number of spanning trees of the cycle on $a$ vertices | ℝ → ℝ | `n` |
-| chromatic polynomial of the complete graph on $a$ vertices at $b$ | ℝ → ℝ → ℝ | `k(k-1)⋯(k-n+1)` |
-| chromatic polynomial of a tree on $a$ vertices at $b$ | ℝ → ℝ → ℝ | `k(k-1)^{n-1}` |
-| chromatic polynomial of the cycle on $a$ vertices at $b$ | ℝ → ℝ → ℝ | `(k-1)^n + (-1)^n(k-1)` |
-| number of edges of the turán graph on $a$ vertices with $b$ parts | ℝ → ℝ → ℝ | `\binom{n}{2} - s\binom{q+1}{2} - (r-s)\binom{q}{2}` for `n = qr + s`, `0 ≤ s < r`: the largest number of edges of a graph on `n` vertices without `K_{r+1}` (Turán) |
+| number of edges of the complete graph on $a$ vertices | ℝ → ℝ | the edges of `⊤ : SimpleGraph (Fin n)` (`n(n-1)/2`) |
+| number of edges of the complete bipartite graph with parts of sizes $a$ and $b$ | ℝ → ℝ → ℝ | the edges of Mathlib `completeBipartiteGraph (Fin m) (Fin n)` (`mn`) |
+| number of edges of the hypercube of dimension $a$ | ℝ → ℝ | the edges of the graph of the words of `n` bits, adjacent when they differ in one bit (`n2^{n-1}`) |
+| number of labelled graphs on $a$ vertices | ℝ → ℝ | the simple graphs on `Fin n` (Mathlib `SimpleGraph`; `2^{n(n-1)/2}`) |
+| number of spanning trees of the complete graph on $a$ vertices | ℝ → ℝ | the subgraphs of `⊤ : SimpleGraph (Fin n)` with all its vertices that are trees (Mathlib `IsTree`; `n^{n-2}`, Cayley) |
+| number of spanning trees of the complete bipartite graph with parts of sizes $a$ and $b$ | ℝ → ℝ → ℝ | the spanning trees of `completeBipartiteGraph (Fin m) (Fin n)` (`m^{n-1}n^{m-1}`) |
+| number of spanning trees of the cycle on $a$ vertices | ℝ → ℝ | the spanning trees of Mathlib `cycleGraph n` (`n`) |
+| chromatic polynomial of the complete graph on $a$ vertices at $b$ | ℝ → ℝ → ℝ | the polynomial counting the colourings of `⊤ : SimpleGraph (Fin n)` (`k(k-1)⋯(k-n+1)`) |
+| chromatic polynomial of a tree on $a$ vertices at $b$ | ℝ → ℝ → ℝ | the chromatic polynomial that every tree on `Fin n` has (`k(k-1)^{n-1}`) |
+| chromatic polynomial of the cycle on $a$ vertices at $b$ | ℝ → ℝ → ℝ | the polynomial counting the colourings of `cycleGraph n` (`(k-1)^n + (-1)^n(k-1)`) |
+| number of edges of the turán graph on $a$ vertices with $b$ parts | ℝ → ℝ → ℝ | the edges of Mathlib `turanGraph n r`: the largest number of edges of a graph on `n` vertices without `K_{r+1}` (Turán) |
 | binomial bound on the ramsey number for $a$ and $b$ | ℝ → ℝ → ℝ | `\binom{s+t-2}{s-1}`: `R(s,t)` is at most this |
 
 ## `kinematics`

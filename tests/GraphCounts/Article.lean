@@ -1,5 +1,6 @@
 import GraphCounts.Compiled
 import Leanify.Readable
+import Leanify.Library.GraphCountsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

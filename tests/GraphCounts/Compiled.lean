@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def GraphCounts.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["graphcounts"]
 
-#leanify_article GraphCounts "article.tex" "fnv1a64:55cb914f11b59e66" with GraphCounts.vocabulary
+#leanify_article GraphCounts "article.tex" "fnv1a64:0eee53d4ca5d9ff1" with GraphCounts.vocabulary

@@ -387,7 +387,9 @@ Further fields cover other branches of mathematics:
 * `polyhedra`: Euler's formula and the Platonic solids;
 * `betting`: odds, the Kelly criterion, margins;
 * `surfaces`: Euler characteristic, genus, curvature;
-* `graphcounts`: counting edges, spanning trees and colourings of standard graphs;
+* `graphcounts`: counting edges, spanning trees and colourings of standard graphs (the graphs
+  of Mathlib on `Fin n`, their spanning trees with `SimpleGraph.IsTree` and their chromatic
+  polynomials, which count `SimpleGraph.Coloring`s);
 * `kinematics`: accelerated and circular motion, collisions;
 * `optics`: lenses, diffraction, polarization;
 * `pharmacokinetics`: the one-compartment model;

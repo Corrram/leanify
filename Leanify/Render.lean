@@ -124,16 +124,16 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .const i => cs.getD i s!"c_{i}"
   | .app (.app (.app (.prim .finSum) a) b) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
-    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
   | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
-    "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
+    "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
   | .app (.app (.prim .series) a) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
-    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls)
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
   | .app (.app (.prim .seriesConv) a) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
-    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ body.tex cs gs (v :: ls) ++ "\\text{ converges}"
+    "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s) ++ "\\text{ converges}"
   | .app (.app (.app (.prim .limAt) a) _) (.lam _ _ body) =>
     let v := varNames.getD ls.length "x"
     "\\lim_{" ++ v ++ "\\to " ++ a.tex cs gs ls ++ "}" ++ body.tex cs gs (v :: ls)
