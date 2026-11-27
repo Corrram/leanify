@@ -1790,6 +1790,17 @@ def fnAdjectiveOn (t : Tm) (a : List Codes) (dom : Tm) : Option Tm :=
       (.eq (.app (shift 2 0 t) (.loc 1)) (.app (shift 2 0 t) (.loc 0))))))
   else none
 
+/-- `surjective` (`onto`) and `bijective` of a real function with a signature
+`f\colon X\to Y` (domain `dom`, codomain `cod`, predicates of real numbers): every point of `Y`
+is the value at a point of `X`; bijective, and injective on `X`. -/
+def fnOnto (t : Tm) (a : List Codes) (dom cod : Tm) : Option Tm :=
+  let a := a.map Grammar.lower
+  let onto := Tm.all .real (.imp (.app (shift 1 0 cod) (.loc 0))
+    (.ex .real (.and (.app (shift 2 0 dom) (.loc 0)) (.eq (.app (shift 2 0 t) (.loc 0)) (.loc 1)))))
+  if a == [w!"surjective"] || a == [w!"onto"] then some onto
+  else if a == [w!"bijective"] then some (.and (.app (.app (.prim (.fnProp .injective)) t) dom) onto)
+  else none
+
 /-- `fnAdjectiveOn`, and `nonX` (`non-constant`, `nonconstant`): not `X`, for the words
 that it reads other than `positive`, `negative`, `increasing` and `decreasing` (whose `non`
 words it reads itself). -/
@@ -2374,9 +2385,13 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     -- (of a real function on the domain of its signature, `a continuous function
     -- $f\colon[a,b]\to\mathbb{R}$`: the property on that domain)
     if ty == .fn .real .real then
+      let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
+      -- (`a surjective function $f\colon X\to Y$`: onto `Y`)
+      if let some c := (← get).sigCod then
+        let d := ((← get).sigDom).getD (.lam .real .tt .tt)
+        if let some body := fnOnto (.loc 0) words (shift 1 0 d) (shift 1 0 c) then return Tm.lam ty .tt body
       if let some d := (← get).sigDom then
         if d != .lam .real .tt .tt then
-          let words := (ms.head?.map fun m => m.phrase.filterMap fun i => match i with | .w w => some w | _ => none).getD []
           if let some body := fnAdjectiveOnNeg (.loc 0) words (shift 1 0 d) then return Tm.lam ty .tt body
     match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs (ms.map (·, [])) with
     | some (m, _) => slotPred m cs
@@ -4886,6 +4901,11 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   -- (of a real function on the domain of its signature, `$f$ is uniformly continuous` for
   -- `f\colon[0,1]\to\mathbb{R}`: the property on that domain)
   if x.2 == .fn .real .real then
+    -- (`surjective`, `bijective`: onto the codomain of the signature)
+    if let some c := subjCod then
+      let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
+      if cs.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
+        if let some body := fnOnto x.1 ws (subjDom.getD (.lam .real .tt .tt)) c then return body
     if let some d := subjDom then
       if d != .lam .real .tt .tt then
         let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
@@ -5072,6 +5092,8 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
     else if a == [w!"negative"] then pure (.lt t (.num 0))
     else if a == [w!"nonnegative"] then pure (.le (.num 0) t)
     else if a == [w!"nonpositive"] then pure (.le t (.num 0))
+    -- (`$x$ is zero`, `the Lebesgue measure of $A$ is zero`)
+    else if a == [w!"zero"] then pure (.eq t (.num 0))
     else fail E.type
   else if ty == .fn .real (.fn .real .prop) then
     if on.isSome then fail E.unsupported
@@ -5104,6 +5126,11 @@ def adjectiveTmCore (sc : Scope) (t : Tm) (ty : Ty) (defDom : Option Tm) (a : Li
       match on with
       | none => return .or (Tm.app (.app (.prim p) t) own) (Tm.app (.app (.prim q) t) own)
       | some _ => fail E.unsupported
+    -- (`surjective` and `bijective` of a function with a signature `f\colon X\to Y`: onto `Y`,
+    -- from `X`)
+    if on.isNone then
+      if let some c := defCod then
+        if let some body := fnOnto t a (defDom.getD (.lam .real .tt .tt)) c then return body
     -- (the other standard words, `constant`, `uniformly continuous`, `negative`, …, and the
     -- vocabulary's adjectives meant on a domain, `Riemann integrable`: on the domain)
     if p.isNone then
@@ -5679,6 +5706,12 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let p ← clauseTm c (scopeOf [b] ++ sc) onVar lastRhs cl
     pure (wrap [b] p)
   | .isA s np neg => do
+    -- (`… is zero` of a number: the standard adjective)
+    if (match np with | [.w z] => z == w!"zero" | _ => false) then
+      let x ← subjTerm sc s
+      if x.2 == Ty.real then
+        let p ← adjectiveTmCore sc x.1 x.2 none [w!"zero"] none
+        return (if neg then .not p else p)
     -- words with which no phrase of the vocabulary starts are prose
     unless knownStart (← get) np do fail E.prose
     let x ← subjTerm sc s

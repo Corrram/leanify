@@ -1806,7 +1806,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           match ← fieldAt f sc [] x with
           | [v] => pure (.abs v, .real)
           | vs => pure (.app (.app (.prim .rpow) (sumAll (vs.map fun v => Tm.mul v v))) (.div (.num 1) (.num 2)), .real)
-        else do let a ← asReal (← term f sc pf x); pure (.abs a, .real)
+        else do
+          let (a, aty) ← term f sc pf x
+          -- (`|A\cup B|`: the number of elements of a set)
+          if aty == .fn .real .prop then pure (cardTm a, .real)
+          else if (← ownTy aty) || (← method aty .abs).isSome then callMethod aty .abs [a]
+          else do let a ← asReal (a, aty); pure (.abs a, .real)
       | _ => do
         -- `|A|` of a set: its number of elements
         unstatedCount x

@@ -25,8 +25,8 @@ are bound by their signatures.
   `metric space`, `Polish space`, `geodesic metric space`, `unital ring`,
   `open subset of $X$`, `closed subset of $X$`, `dense subset of $X$`, `locally closed subset
   of $X$`, `subset of $X$`,
-  `neighbourhood of $x$`, `partially ordered set`, `totally ordered set`, `lattice`,
-  `well-ordered set`; of elements: `element of $G$` (`point of $X$`), `unit of $R$`,
+  `neighbourhood of $x$`, `partially ordered set` (`in which every chain has an upper
+  bound`), `totally ordered set`, `lattice`, `complete lattice`, `well-ordered set`; of elements: `element of $G$` (`point of $X$`), `unit of $R$`,
   `irreducible element of $R$`, `prime element of $R$` (`$a$ is irreducible`, `$a$ is prime`),
   …;
 * nouns of maps, with a signature `$\varphi\colon G\to H$`: `homomorphism`, `ring
@@ -300,7 +300,9 @@ def table2 : List (Ty × Codes × Codes) := [
   (.real ⟶ S ⟶ S ⟶ .prop, w!"\\operatorname{Syl}_{#1}(#2)(#3)", w!"Leanify.Structures.SylowIn"), -- 218
   (S ⟶ S ⟶ .prop, w!"#1\\approx #2", w!"Leanify.Structures.HomeomorphicS"),                     -- 219
   (S ⟶ S ⟶ .prop, w!"\\operatorname{Isometric}(#1,#2)", w!"Leanify.Structures.IsometricS"),     -- 220
-  (S ⟶ S ⟶ .prop, w!"\\operatorname{QI}(#1,#2)", w!"Leanify.Structures.QuasiIsometricS")]       -- 221
+  (S ⟶ S ⟶ .prop, w!"\\operatorname{QI}(#1,#2)", w!"Leanify.Structures.QuasiIsometricS"),       -- 221
+  (S ⟶ .prop, w!"\\operatorname{CompleteLattice}", w!"Leanify.Structures.CompleteLatticeS"),    -- 222
+  (S ⟶ .prop, w!"\\operatorname{ChainsBounded}", w!"Leanify.Structures.ChainsBoundedS")]        -- 223
 
 /-- The constants, in the order of their indices. -/
 def table : List (Ty × Codes × Codes) := table1 ++ table2
@@ -490,6 +492,8 @@ def vocab : Vocab where
     noun phrase!"linearly ordered set" phrase!"linearly ordered sets" (c 93) "(Mathlib `LinearOrder`)",
     noun phrase!"chain" phrase!"chains" (c 93) "a totally ordered set (Mathlib `IsChain`)",
     noun phrase!"lattice" phrase!"lattices" (c 94) "(Mathlib `Lattice`)",
+    noun phrase!"complete lattice" phrase!"complete lattices" (c 222)
+      "every subset has a least upper bound (Mathlib `CompleteLattice`)",
     noun phrase!"well-ordered set" phrase!"well-ordered sets" (c 95) "(Mathlib `IsWellOrder`)",
     -- maps between structures, with their domain and codomain
     mapN phrase!"homomorphism" phrase!"homomorphisms" 147 "`φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`)",
@@ -686,6 +690,8 @@ def vocab : Vocab where
     postS phrase!"finite over $v$" (close <| lamT S (fun _ => tt) fun k => lamT S (fun _ => tt) fun l => app2 (const 179) k l) "(Mathlib `FiniteDimensional`)",
     adjS phrase!"open" (c 80) "(Mathlib `IsOpen`)",
     adjS phrase!"totally ordered" (c 93) "(Mathlib `LinearOrder`)",
+    postS phrase!"with chains bounded above" (sP fun s => app (const 223) s)
+      "every subset of comparable elements has an upper bound in it (the hypothesis of Zorn's lemma, Mathlib `zorn_le`); `in which every chain has an upper bound` is read as these words",
     adjS phrase!"well-ordered" (c 95) "(Mathlib `IsWellOrder`)",
     { phrase := phrase!"orthogonal to $v$", prenominal := false, ty := E,
       pred := close (lamT E (fun _ => tt) fun b => lamT E (fun _ => tt) fun a => app2 (const 129) a b), doc := "`⟪a, b⟫ = 0` (Mathlib `inner`)" },

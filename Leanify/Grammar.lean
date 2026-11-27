@@ -1083,6 +1083,24 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     if ws.isEmpty then none else
     let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws0.length, r' with
       | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
+      -- `all real numbers $a$, $b$ and $c$`: names separated by commas, the last after `and`
+      | [.m [a]], .p 44 :: rest =>
+        let rec names : Nat → List Chunk → List (List MTok) → Option (List (List MTok) × List Chunk)
+          | 0, _, _ => none
+          | f + 1, cs, acc =>
+            match cs with
+            | .m [b] :: .p 44 :: .w w :: .m [c] :: r => if w == w!"and" then some ((acc ++ [[b], [c]]), r) else none
+            | .m [b] :: .w w :: .m [c] :: r => if w == w!"and" then some ((acc ++ [[b], [c]]), r) else none
+            | .m [b] :: .p 44 :: r => names f r (acc ++ [[b]])
+            | _ => none
+        let isName (t : MTok) : Bool := match t with | .id _ => true | .cmd c => Math.greekNames.contains c | _ => false
+        let plural := match ws.getLast? with
+          | some (.w w) => w.getLast? == some 115
+          | _ => false
+        if !plural || !isName a then none else
+        let (vs, r'') ← names 8 rest [[a]]
+        if !(vs.all fun v => match v with | [t] => isName t | _ => false) then none else
+        some (vs, [], r'')
       | [.m ts], _ => ((seqBound ts).map fun _ => ([ts], [], r')) <|> (splitVars ts).map (·, [], r') <|>
         -- `all integers $n\ge k\ge0$`: the variables of the chain, and the chain (after a
         -- plural noun; `every integer $b\ge c$` bounds `b` by `c`)
@@ -1695,7 +1713,7 @@ def wAdjectives : List (List Codes × List Codes) :=
     same [w!"nonincreasing"], ([w!"non", w!"increasing"], [w!"nonincreasing"]),
     same [w!"nonnegative"], ([w!"non", w!"negative"], [w!"nonnegative"]),
     same [w!"nonpositive"], ([w!"non", w!"positive"], [w!"nonpositive"]),
-    same [w!"positive"], same [w!"negative"],
+    same [w!"positive"], same [w!"negative"], same [w!"zero"],
     same [w!"compact"], same [w!"convex"], same [w!"concave"], same [w!"centrally", w!"symmetric"],
     same [w!"continuous"], same [w!"differentiable"], same [w!"injective"], same [w!"bounded"],
     same [w!"closed"], same [w!"open"], same [w!"connected"], same [w!"holomorphic"] ]
@@ -5688,6 +5706,15 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
   let (np, r1) ← chunksUntil [w!"has"] r [] <|> chunksUntil [w!"contains"] r []
   let _ ← kw [w!"has"] r1 <|> kw [w!"contains"] r1
   if np.isEmpty then none
+  -- (a formula after a preposition is a complement, `every countable subset of
+  -- $\mathbb{R}$ has …`: the object has a variable of its own)
+  let preps := [w!"of", w!"in", w!"on", w!"over", w!"to", w!"from", w!"with", w!"at", w!"by", w!"for"]
+  let afterPrep : Bool := match np.reverse with
+    | .m _ :: .w p :: _ => preps.contains p
+    | _ => false
+  if afterPrep then
+    let v : Codes := w!"ve"
+    return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1
   match np.getLast? with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   -- (a variable with a bound, `Every integer $n>1$ has …`)
@@ -6508,11 +6535,26 @@ def sylowForms : Nat → List Chunk → List Chunk → List Chunk
     | c :: rest => c :: sylowForms f (c :: prev) rest
     | [] => []
 
+/-- `in which every chain has an upper bound` (the hypothesis of Zorn's lemma) as the modifier
+`with chains bounded above`: words that do not end the noun phrase at `has`. -/
+def chainForms : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, cs =>
+    match cs with
+    | .w a :: .w b :: .w c :: .w d :: .w e :: .w g :: .w h :: .w i :: rest =>
+      if [a, b, c, d, e, g, h, i] == [w!"in", w!"which", w!"every", w!"chain", w!"has", w!"an", w!"upper", w!"bound"] then
+        [.w w!"with", .w w!"chains", .w w!"bounded", .w w!"above"] ++ chainForms f rest
+      else .w a :: chainForms f (.w b :: .w c :: .w d :: .w e :: .w g :: .w h :: .w i :: rest)
+    | c :: rest => c :: chainForms f rest
+    | [] => []
+
 /-- A sentence; or, of `INFORMAL, that is, FORMAL`, the formal restatement read with the
 forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies …`). -/
 def sentence (cs : List Chunk) : Option Sent :=
   let cs := if cs.any (fun c => match c with | .w s => lower s == w!"sylow" | _ => false) then
     sylowForms (cs.length + 1) [] cs else cs
+  let cs := if cs.any (fun c => match c with | .w s => s == w!"chain" | _ => false) then
+    chainForms (cs.length + 1) cs else cs
   match sentence1 cs with
   | some s => some s
   | none => skipThatIs cs >>= sentence1

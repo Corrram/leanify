@@ -6,12 +6,14 @@ The topology and measure of the real line. A set is a set of real numbers (a pre
 real numbers, as everywhere in Leanify), so that an article binds sets by a noun (`Let $S$
 be a nonempty compact set.`, `every open subset $U$ of $\mathbb{R}$`) and writes `x\in S`.
 
-* nouns: `set`, `set of real numbers`, `subset of $\mathbb{R}$`, `null set`, `interval` (`open
+* nouns: `set`, `set of real numbers`, `set of natural numbers`, `set of integers`, `set of
+  positive integers`, `subset of $\mathbb{R}$`, `null set`, `interval` (`open
   interval`, `closed bounded interval`, … with the adjectives);
 * adjectives: `open`, `closed`, `compact`, `bounded`, `bounded above`, `bounded below`,
   `connected`, `dense`, `nowhere dense`, `perfect`, `discrete`, `finite`, `infinite`,
   `countable`, `uncountable`, `nonempty`, `empty`, `convex`, `measurable`,
-  `of measure zero`, `dense in $B$`;
+  `of measure zero`, `dense in $B$`, `with a least element` (`$S$ has a least element`), `with a
+  greatest element`;
 * notions: the closure, interior, boundary and complement of a set, its limit points and
   isolated points, its supremum, infimum and diameter, its Lebesgue measure, its number
   of elements, the distance from a point to a set, and the Cantor set.
@@ -78,6 +80,12 @@ def vocab : Vocab where
     nounS phrase!"set" phrase!"sets" anySet "a set of real numbers (Mathlib `Set ℝ`)",
     nounS phrase!"set of real numbers" phrase!"sets of real numbers" anySet "(Mathlib `Set ℝ`)",
     nounS phrase!"subset $v$ of $\\mathbb{R}$" phrase!"subsets $v$ of $\\mathbb{R}$" anySet "(Mathlib `Set ℝ`)",
+    nounS phrase!"set of natural numbers" phrase!"sets of natural numbers" (sPred fun s => allR fun x => imp (app s x) (isNat x))
+      "a subset of `ℕ = {0, 1, 2, …}` (Mathlib `Set ℕ`)",
+    nounS phrase!"set of positive integers" phrase!"sets of positive integers"
+      (sPred fun s => allR fun x => imp (app s x) (and (isInt x) (lt (num 0) x))) "a subset of `{1, 2, …}`",
+    nounS phrase!"set of integers" phrase!"sets of integers" (sPred fun s => allR fun x => imp (app s x) (isInt x))
+      "a subset of `ℤ` (Mathlib `Set ℤ`)",
     nounS phrase!"null set" phrase!"null sets" (.const 12) "of Lebesgue measure zero",
     nounS phrase!"interval" phrase!"intervals" (.const 25)
       "every number between two of its numbers is in it (Mathlib `Set.OrdConnected`, `Convex ℝ`): possibly empty, a point or unbounded",
@@ -119,10 +127,21 @@ def vocab : Vocab where
     mod phrase!"uncountable" true (sPred fun s => not (c1 10 s)) "not countable",
     mod phrase!"nonempty" true (sPred fun s => nonempty s) "(Mathlib `Set.Nonempty`)",
     mod phrase!"empty" true (sPred fun s => not (nonempty s)) "`∅`",
+    mod phrase!"with a least element" false (sPred fun s => exR fun m => and (app s m) (allR fun x => imp (app s x) (le m x)))
+      "an element at most every element (Mathlib `IsLeast`; `$S$ has a least element`)",
+    mod phrase!"with a smallest element" false (sPred fun s => exR fun m => and (app s m) (allR fun x => imp (app s x) (le m x)))
+      "(Mathlib `IsLeast`)",
+    mod phrase!"with a greatest element" false (sPred fun s => exR fun m => and (app s m) (allR fun x => imp (app s x) (le x m)))
+      "an element at least every element (Mathlib `IsGreatest`; `$S$ has a greatest element`)",
+    mod phrase!"with a largest element" false (sPred fun s => exR fun m => and (app s m) (allR fun x => imp (app s x) (le x m)))
+      "(Mathlib `IsGreatest`)",
     mod phrase!"convex" true (.const 25) "an interval (Mathlib `Convex ℝ`)",
     mod phrase!"measurable" true (.const 11) "Lebesgue measurable (Mathlib `NullMeasurableSet`)",
     mod phrase!"null" true (.const 12) "of Lebesgue measure zero",
     mod phrase!"of measure zero" false (.const 12) "Lebesgue measure zero",
+    mod phrase!"of Lebesgue measure zero" false (.const 12) "(Mathlib `MeasureTheory.volume`)",
+    mod phrase!"with Lebesgue measure zero" false (.const 12) "(`$S$ has Lebesgue measure zero`)",
+    mod phrase!"with measure zero" false (.const 12) "(`$S$ has measure zero`)",
     mod phrase!"of finite measure" false (sPred fun s => and (c1 11 s) (c1 13 s)) "measurable, of finite Lebesgue measure"]
   notions := [
     ofS phrase!"closure of $v$" (.const 14) (S ⟶ S) none "(Mathlib `closure`)",

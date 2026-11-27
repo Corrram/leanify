@@ -937,6 +937,17 @@ def QuasiIsometryM (φ : Map) : Prop :=
   QuasiIsoEmbM φ ∧ ∃ D : ℝ, 0 ≤ D ∧ ∀ b, φ.cod b → ∃ a, φ.dom a ∧ dist (apply φ a) b ≤ D
 
 
+/-- A complete lattice: a partially ordered set in which every subset has a least upper bound
+(and so a greatest lower bound; Mathlib `CompleteLattice`). -/
+def CompleteLatticeS : (El → Prop) → Prop := posetHas fun α P =>
+  ∀ A : Set α, ∃ s, @IsLUB α P.toPreorder.toLE A s
+
+/-- Every chain has an upper bound: every subset of `P` whose elements are comparable has an
+upper bound in `P` (the hypothesis of Zorn's lemma, Mathlib `zorn_le`). -/
+def ChainsBoundedS (P : El → Prop) : Prop :=
+  ∀ C : El → Prop, (∀ a, C a → P a) → (∀ a b, C a → C b → le a b ∨ le b a) →
+    ∃ u, P u ∧ UpperBound C u
+
 /-- `X` and `Y` are homeomorphic: there is a homeomorphism of `X` onto `Y` (Mathlib
 `Homeomorph`). -/
 def HomeomorphicS (X Y : El → Prop) : Prop := ∃ φ : Map, MapSig X Y φ ∧ HomeoM φ

@@ -226,6 +226,9 @@ tests/Structures/article.tex:626:225: info: claim 185: \forall x\in \mathrm{El}\
 tests/Structures/article.tex:626:299: info: claim 186: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(y)\Rightarrow \operatorname{Isometric}(x,y)\Rightarrow \operatorname{QI}(x,y))
 tests/Structures/article.tex:626:401: info: claim 187: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\cong x\Rightarrow \lvert x\rvert=\lvert y\rvert)
 tests/Structures/article.tex:626:417: info: claim 188: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\cong x\Rightarrow \lvert x\rvert=\lvert y\rvert)
-tests/Structures/article.tex: 13 definitions, 189 claims
-  results: 367 compiled, 0 failed, 0 prose (of 367)
-  all: 367 compiled, 0 failed, 0 prose (of 367)
+tests/Structures/article.tex:630:69: info: claim 189: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{CompleteLattice}(x)\Rightarrow (\forall y\in \mathrm{Map},\ \operatorname{Monotone}(y)\land y\colon x\to x\Rightarrow (\exists z\in \mathrm{El},\ \operatorname{Fix}(y)(z)\land \top))
+tests/Structures/article.tex:630:182: info: claim 190: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Poset}(x)\land (\exists s\in \mathrm{El},\ x(s))\land \operatorname{ChainsBounded}(x)\Rightarrow (\exists y\in \mathrm{El},\ \operatorname{Maximal}(x)(y)\land \top)
+tests/Structures/article.tex:630:214: info: claim 191: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TotalOrder}(x)\land \operatorname{Finite}(x)\Rightarrow \operatorname{WellOrder}(x)
+tests/Structures/article.tex: 13 definitions, 192 claims
+  results: 372 compiled, 0 failed, 0 prose (of 372)
+  all: 372 compiled, 0 failed, 0 prose (of 372)

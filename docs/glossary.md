@@ -958,6 +958,9 @@ except a notion whose meanings take arguments of different types, which the type
 | set | ℝ → Prop | a set of real numbers (Mathlib `Set ℝ`) |
 | set of real numbers | ℝ → Prop | (Mathlib `Set ℝ`) |
 | subset $x$ of $\mathbb{R}$ | ℝ → Prop | (Mathlib `Set ℝ`) |
+| set of natural numbers | ℝ → Prop | a subset of `ℕ = {0, 1, 2, …}` (Mathlib `Set ℕ`) |
+| set of positive integers | ℝ → Prop | a subset of `{1, 2, …}` |
+| set of integers | ℝ → Prop | a subset of `ℤ` (Mathlib `Set ℤ`) |
 | null set | ℝ → Prop | of Lebesgue measure zero |
 | interval | ℝ → Prop | every number between two of its numbers is in it (Mathlib `Set.OrdConnected`, `Convex ℝ`): possibly empty, a point or unbounded |
 | subset | ℝ → Prop | a set of real numbers inside another |
@@ -986,10 +989,17 @@ except a notion whose meanings take arguments of different types, which the type
 | uncountable | ℝ → Prop | not countable |
 | nonempty | ℝ → Prop | (Mathlib `Set.Nonempty`) |
 | empty | ℝ → Prop | `∅` |
+| with a least element | ℝ → Prop | an element at most every element (Mathlib `IsLeast`; `$S$ has a least element`) |
+| with a smallest element | ℝ → Prop | (Mathlib `IsLeast`) |
+| with a greatest element | ℝ → Prop | an element at least every element (Mathlib `IsGreatest`; `$S$ has a greatest element`) |
+| with a largest element | ℝ → Prop | (Mathlib `IsGreatest`) |
 | convex | ℝ → Prop | an interval (Mathlib `Convex ℝ`) |
 | measurable | ℝ → Prop | Lebesgue measurable (Mathlib `NullMeasurableSet`) |
 | null | ℝ → Prop | of Lebesgue measure zero |
 | of measure zero | ℝ → Prop | Lebesgue measure zero |
+| of lebesgue measure zero | ℝ → Prop | (Mathlib `MeasureTheory.volume`) |
+| with lebesgue measure zero | ℝ → Prop | (`$S$ has Lebesgue measure zero`) |
+| with measure zero | ℝ → Prop | (`$S$ has measure zero`) |
 | of finite measure | ℝ → Prop | measurable, of finite Lebesgue measure |
 
 | Notion | Type | Meaning |
@@ -1282,6 +1292,7 @@ except a notion whose meanings take arguments of different types, which the type
 | linearly ordered set | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
 | chain | $\mathrm{El}$ → Prop | a totally ordered set (Mathlib `IsChain`) |
 | lattice | $\mathrm{El}$ → Prop | (Mathlib `Lattice`) |
+| complete lattice | $\mathrm{El}$ → Prop | every subset has a least upper bound (Mathlib `CompleteLattice`) |
 | well-ordered set | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
 | homomorphism | $\mathrm{Map}$ | `φ(ab) = φ(a)φ(b)` (Mathlib `MonoidHom`) |
 | group homomorphism | $\mathrm{Map}$ | (Mathlib `MonoidHom`) |
@@ -1426,6 +1437,7 @@ except a notion whose meanings take arguments of different types, which the type
 | finite over $x$ | $\mathrm{El}$ → Prop | (Mathlib `FiniteDimensional`) |
 | open | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
 | totally ordered | $\mathrm{El}$ → Prop | (Mathlib `LinearOrder`) |
+| with chains bounded above | $\mathrm{El}$ → Prop | every subset of comparable elements has an upper bound in it (the hypothesis of Zorn's lemma, Mathlib `zorn_le`); `in which every chain has an upper bound` is read as these words |
 | well-ordered | $\mathrm{El}$ → Prop | (Mathlib `IsWellOrder`) |
 | orthogonal to $x$ | $\mathrm{El}$ | `⟪a, b⟫ = 0` (Mathlib `inner`) |
 | of order $x$ | $\mathrm{El}$ → Prop | with `n` elements (Mathlib `Nat.card`) |
