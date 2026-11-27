@@ -2753,6 +2753,11 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         | .p 45 => true
         | _ => false
       if ws.length < 2 then none
+      -- (`has finite order`: `of finite order`, below, as the lexer reads it)
+      if (match ws with
+          | [.w a, .w q] => [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains a &&
+              [w!"order", w!"characteristic", w!"dimension", w!"index", w!"degree"].contains q
+          | _ => false) then none
       let rest := r1.drop ws.length
       if (match rest with | .m _ :: _ => true | _ => false) then none
       some (Clause.isA s ([Chunk.w w!"with"] ++ ws) false, rest) : Option (Clause × List Chunk)) with
@@ -2797,6 +2802,26 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let rhs := if parity == w!"even" then twoK else MT.add twoK (.num 1)
       some (Clause.fact (.quant false [k] (.id w!"\\mathbb{Z}") (.chain n [(.eq, rhs)])), r2.drop ws.length) :
       Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$g$ has finite order`, `$G$ has order $n$`, `has dimension at most $3$`: the modifiers `of
+  -- finite order`, `of order $n$` (as the lexer reads them; here for sentences made from others)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has"] r <|> kw [w!"have"] r
+      let quantities := [w!"order", w!"characteristic", w!"dimension", w!"index", w!"degree"]
+      let (adj, r2) : List Chunk × List Chunk := match r1 with
+        | .w a :: r' => if [w!"finite", w!"infinite", w!"prime", w!"odd", w!"even", w!"positive"].contains a then ([.w a], r') else ([], r1)
+        | _ => ([], r1)
+      let .w q :: r3 := r2 | none
+      if !quantities.contains q then none
+      if !adj.isEmpty then some (Clause.isA s ([.w w!"of"] ++ adj ++ [.w q]) false, r3) else
+      match r3 with
+      | .m k :: r4 => some (Clause.isA s [.w w!"of", .w q, .m k] false, r4)
+      | .w a :: .w b :: .m k :: r4 =>
+        if a == w!"at" && (b == w!"most" || b == w!"least") then some (Clause.isA s [.w w!"of", .w q, .w a, .w b, .m k] false, r4) else none
+      | _ => none : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$K$ has exactly two ideals`, `$G$ has at least two elements of order $2$`, `$R$ has at
@@ -7936,6 +7961,27 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let x := nestVar avoid cs 0
     (sentence ([.w t, .w i, .w d] ++ np ++ [.m [.id x], .w w!"such", .w w!"that", .w w!"the"] ++ words ++
       [.w w!"of", .m [.id x]] ++ after.drop j)).toList
+  -- `The order of every element of $G$ divides the order of $G$.`: `For every element $X$ of
+  -- $G$, the order of $X$ divides the order of $G$.`
+  let theOfEvery : List Sent := Id.run do
+    if !generic then return []
+    let .w t :: rest := cs | return []
+    if t != w!"the" then return []
+    let some k := (List.range rest.length).find? fun i => match (rest[i]? : Option Chunk), (rest[i + 1]? : Option Chunk) with
+        | some (.w o), some (.w e) => o == w!"of" && (e == w!"every" || e == w!"each")
+        | _, _ => false
+      | return []
+    let words := rest.take k
+    if words.isEmpty || !plainWords words then return []
+    let after := rest.drop (k + 2)
+    let verbs := [w!"is", w!"are", w!"divides", w!"equals", w!"has", w!"lies", w!"belongs", w!"exceeds", w!"contains"]
+    let some j := after.findIdx? (fun c => match c with | .w x => verbs.contains x | _ => false) | return []
+    let np := after.take j
+    let head := np.takeWhile fun c => match c with | .w x => ![w!"of", w!"in", w!"on"].contains x | .p 45 => true | _ => false
+    if head.isEmpty || !plainWords head then return []
+    let x := nestVar avoid cs 0
+    (sentence ([.w w!"for", .w w!"every"] ++ head ++ [.m [.id x]] ++ np.drop head.length ++ [.p 44, .w w!"the"] ++ words ++
+      [.w w!"of", .m [.id x]] ++ after.drop j)).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -7985,7 +8031,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
