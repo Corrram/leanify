@@ -1537,6 +1537,11 @@ inductive Clause where
   | forEveryNP (c : Clause) (np : List Chunk)
   /-- `there is [exactly one|a unique] NP [such that CLAUSE]`. -/
   | existsNP (np : List Chunk) (unique : Bool) (c : Option Clause)
+  /-- `$K$ has exactly two ideals` (`at least`, `at most`): the number of objects that the
+  noun phrase (in the singular) describes, compared with `k` (`mode` 0 exactly, 1 at least,
+  2 at most). `first` is the reading tried before it: a modifier of the vocabulary
+  (`with at least $2$ leaves`). -/
+  | countNP (np : List Chunk) (mode : Nat) (k : Nat) (first : Option Clause)
   /-- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, …]`: objects
   with the conditions. -/
   | existsNPs (nps : List (List Chunk)) (conds : List Clause)
@@ -2644,7 +2649,35 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let ws := match ws.getLast?, r2.drop ws.length with
         | some (.w p), (.m x :: _) => if [w!"in", w!"over", w!"of", w!"on"].contains p then ws ++ [.m x] else ws
         | _, _ => ws
-      some (Clause.isA s ([Chunk.w w!"with"] ++ q ++ [Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
+      let isA := Clause.isA s ([Chunk.w w!"with"] ++ q ++ [Chunk.m k] ++ ws) false
+      -- (else the number of such objects of the subject, `$K$ has exactly two ideals`)
+      let count : Option Clause := do
+        let .num n ← Math.parseFormula k | none
+        if n == 0 || n > 6 then none
+        let mode := match q with
+          | [.w w] => if w == w!"exactly" then 0 else 1
+          | [_, .w w] => if w == w!"most" then 2 else 1
+          | _ => 1
+        let head := ws.takeWhile fun (c : Chunk) => match c with
+          | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"satisfying"].contains w
+          | .p 45 => true
+          | _ => false
+        if head.isEmpty then none
+        some (Clause.countNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ ws.drop head.length) mode n (some isA))
+      -- (`elements of order $2$`: a formula after the words, which no modifier reads)
+      let np' := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | .m _ => true
+        | .p 45 => true
+        | _ => false
+      if np'.length > ws.length then
+        match count with
+        | some (.countNP cnp mode n _) =>
+          let head := cnp.takeWhile fun (c : Chunk) => match c with | .w w => w != w!"of" | _ => true
+          some (Clause.countNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ np'.drop (head.length)) mode n none, r2.drop np'.length)
+        | _ => some (isA, r2.drop ws.length)
+      else
+      some (count.getD isA, r2.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ has $n-1$ edges`: the modifier `with $n-1$ edges` of the vocabulary
@@ -2755,6 +2788,39 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let twoK := MT.mul (.num 2) (.id k)
       let rhs := if parity == w!"even" then twoK else MT.add twoK (.num 1)
       some (Clause.fact (.quant false [k] (.id w!"\\mathbb{Z}") (.chain n [(.eq, rhs)])), r2.drop ws.length) :
+      Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$K$ has exactly two ideals`, `$G$ has at least two elements of order $2$`, `$R$ has at
+  -- most one maximal ideal`: the number of such objects of the subject, a number word
+  match (do
+      let (ts, r) ← mathChunk cs
+      let r1 ← kw [w!"has"] r
+      let (mode, r2) ← (kw [w!"exactly"] r1).map (0, ·) <|> (kw [w!"at", w!"least"] r1).map (1, ·) <|>
+        (kw [w!"at", w!"most"] r1).map (2, ·)
+      -- (`two`, …, after `exactly`, is `$2$` already)
+      let words := [w!"one", w!"two", w!"three", w!"four", w!"five", w!"six"]
+      let (k, r3) ← match r2 with
+        | .w nw :: r3 => (words.findIdx? (· == nw)).map fun i => (i + 1, r3)
+        | .m kt :: r3 => match Math.parseFormula kt with
+          | some (.num n) => if n == 0 || n > 6 then none else some (n, r3)
+          | _ => none
+        | _ => none
+      -- (`exactly one`: the unique object, read below)
+      if mode == 0 && k == 1 then none
+      let np := r3.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever"].contains w
+        | .m _ => true
+        | .p 45 => true
+        | _ => false
+      let rest := r3.drop np.length
+      let head := np.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"satisfying"].contains w
+        | .p 45 => true
+        | _ => false
+      if head.isEmpty || !(head.all fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false) then none
+      if (Math.parseFormula ts).isNone then none
+      some (Clause.countNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ np.drop head.length) mode k none, rest) :
       Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
@@ -4413,7 +4479,11 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       (match t with | [.cmd _] => true | _ => false)
     let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from", w!"modulo", w!"at", w!"by"]
     let lastPrep := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?
-    let argPhrase : Option (List Chunk × List Chunk) := match lastPrep, r1.drop ws.length with
+    -- (`an integer greater than [or equal to] $1$`: the variable before the comparison)
+    let cmpAt : Option (Chunk × Nat) := (ws.zipIdx.find? fun (c, i) => match c, ws[i + 1]? with
+      | .w w, some (.w t) => t == w!"than" && [w!"greater", w!"less", w!"larger", w!"smaller"].contains w
+      | _, _ => false)
+    let argPhrase : Option (List Chunk × List Chunk) := match cmpAt <|> lastPrep, r1.drop ws.length with
       | some (_, i), .m t :: more =>
         -- (after `on` or `in`, a formula that is not a number may end the noun: `on $\mathbb{N}_0$`)
         if i == 0 || (!tail.isEmpty && !simple t) then none else
@@ -6971,6 +7041,8 @@ def twoOp (op : Codes) (x y : Codes) : Option (List MTok) :=
   if op == w!"intersection" then some [.id x, .cmd w!"cap", .id y]
   else if op == w!"union" then some [.id x, .cmd w!"cup", .id y]
   else if op == w!"product" then some [.id x, .cmd w!"times", .id y]
+  else if op == w!"sum" then some [.id x, .sym 43, .id y]
+  else if op == w!"difference" then some [.id x, .sym 45, .id y]
   else none
 
 /-- One step of reading nested indefinites and the idioms around them, as sentences with
@@ -7082,6 +7154,12 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     if [[w!"set"], [w!"class"], [w!"number"], [w!"continuous", w!"image"]].contains (plain front) then none
     let x := v?.getD (fresh 0)
     let (chain, after) := nestChain 4 after
+    -- (`the square of an odd integer`: `$X^2$`, `the cube`: `$X^3$`)
+    let power : Option Nat := match plain front with
+      | [f] => if f == w!"square" then some 2 else if f == w!"cube" then some 3 else none
+      | _ => none
+    if let some k := power then
+      return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.p 44, .m [.id x, .sym 94, .digit k]] ++ after
     some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x]] ++ chain ++ [.p 44, .w w!"the"] ++ front ++ [.w w!"of", .m [.id x]] ++ after)
   -- `for every NP1 $v$ PREP a NP3 …, …`
   let forEvery : Option (List Chunk) := do
@@ -7287,22 +7365,41 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | .w o :: .m d :: r => if o == w!"on" || o == w!"over" || o == w!"in" then (some d, r) else (none, r2)
       | _ => (none, r2)
     if !isEnd r3 then none
-    let subj := cs.take i
+    -- (after binders, `for every compact interval $X$ and every continuous function $Y$ on $X$,
+    -- $Y$ attains …`: the domain of the function there)
+    let pre : List Chunk := match cs.head? with
+      | some (.w fo) =>
+        if fo != w!"for" then [] else
+        match ((cs.take i).zipIdx.filter fun (c, _) => match c with | .p 44 => true | _ => false).getLast? with
+        | some (_, k) => cs.take (k + 1)
+        | none => []
+      | _ => []
+    let subj := (cs.take i).drop pre.length
+    let domIn (f : Codes) : Option (List MTok) := (List.range pre.length).findSome? fun k =>
+      match (pre[k]? : Option Chunk), (pre[k + 1]? : Option Chunk), (pre[k + 2]? : Option Chunk) with
+      | some (.m [.id g]), some (.w o), some (.m d) => if g == f && o == w!"on" then some d else none
+      | _, _, _ => none
     let (lead, fn, dom) ← match subj with
-      | [.m [.id f]] => onD.map fun d => ([], f, d)
-      | [.w t, .m [.id f]] => if t == w!"then" then onD.map fun d => ([.w t], f, d) else none
+      | [.m [.id f]] => (onD <|> domIn f).map fun d => (pre, f, d)
+      | [.w t, .m [.id f]] => if t == w!"then" then onD.map fun d => (pre ++ [.w t], f, d) else none
       | .w q :: rest =>
         if ![w!"every", w!"each", w!"any"].contains q then none else
-        match rest.getLast? with
-        | some (.m sg) => match Math.parseSig sg with
-          | some (.sig (.id f) _ _) =>
-            let i' ← sg.findIdx? (· == .sym 58) <|> sg.findIdx? (· == .cmd w!"colon")
-            let j ← sg.findIdx? (· == .cmd w!"to")
-            let d := (sg.drop (i' + 1)).take (j - i' - 1)
-            if !plainWords rest.dropLast then none
-            some ([.w w!"for", .w w!"every"] ++ rest ++ [.p 44], f, onD.getD d)
+        -- (`every continuous function on $[a,b]$`: a function `f` of that domain)
+        let onDom : Option (List Chunk × Codes × List MTok) := match rest.reverse with
+          | .m d :: .w o :: words =>
+            if o != w!"on" || !plainWords words.reverse || words.isEmpty || used.contains w!"f" then none else
+            some (pre ++ [.w w!"for", .w w!"every"] ++ words.reverse ++
+              [.m ([.id w!"f", .sym 58] ++ d ++ [.cmd w!"to", .id w!"\\mathbb{R}"]), .p 44], w!"f", onD.getD d)
           | _ => none
-        | _ => none
+        let bySig : Option (List Chunk × Codes × List MTok) := do
+          let some (.m sg) := rest.getLast? | none
+          let some (.sig (.id f) _ _) := Math.parseSig sg | none
+          let i' ← sg.findIdx? (· == .sym 58) <|> sg.findIdx? (· == .cmd w!"colon")
+          let j ← sg.findIdx? (· == .cmd w!"to")
+          let d := (sg.drop (i' + 1)).take (j - i' - 1)
+          if !plainWords rest.dropLast then none
+          some (pre ++ [.w w!"for", .w w!"every"] ++ rest ++ [.p 44], f, onD.getD d)
+        onDom <|> bySig
       | _ => none
     let app (v : Codes) : List MTok := [.id fn, .sym 40, .id v, .sym 41]
     let clause (mx : Bool) : List Chunk :=
@@ -7676,22 +7773,70 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     (sentence (lead ++ cs.take (k + 1) ++ [.w w!"we", .w w!"have", .w w!"that"] ++ cs.drop (k + 1))).toList
   -- `A compact subset of a Hausdorff space is closed.`, in a result: a statement about every
   -- object of the noun phrase (`Every compact subset …`)
+  -- `Every ideal $M$ of $R$ is maximal if and only if $R/M$ is a field.`: `For every ideal $M$
+  -- of $R$, $M$ is maximal if and only if …`, the letter bound for the whole sentence
+  let everyVar (cs : List Chunk) : Option (List Chunk) := do
+    let .w e :: rest := cs | none
+    if !(e == w!"every" || e == w!"each") then none
+    let vi ← rest.findIdx? fun c => match c with | .m [.id _] => true | _ => false
+    let .m [.id x] ← rest[vi]? | none
+    if vi == 0 || !((rest.take vi).all fun c => match c with | .w _ | .p 45 => true | _ => false) then none
+    let ii ← rest.findIdx? fun c => match c with
+      | .w w => [w!"is", w!"has", w!"satisfies", w!"divides", w!"lies", w!"belongs", w!"contains", w!"equals"].contains w
+      | _ => false
+    if ii <= vi then none
+    if (rest.take ii).any (fun c => match c with | .p _ => true | _ => false) && !((rest.take ii).all fun c => match c with | .p 45 | .w _ | .m _ => true | _ => false) then none
+    some ([.w w!"for", .w w!"every"] ++ rest.take ii ++ [.p 44, .m [.id x]] ++ rest.drop ii)
+  let everyV : List Sent := if !generic then [] else
+    ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
+  -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
+  -- bounded above converges.`, the words after `that is` after the noun
+  let relFree : List Sent := Id.run do
+    let some i := (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk), (cs[i + 2]? : Option Chunk), (cs[i + 3]? : Option Chunk) with
+        | some (.w t), some (.w b), some (.w _), some _ => i > 1 && (t == w!"that" || t == w!"which") && (b == w!"is" || b == w!"are")
+        | _, _, _, _ => false
+      | return []
+    -- (only inside a subject that a quantifier or an article opens)
+    let some (.w q) := (cs[0]? : Option Chunk) | return []
+    if ![w!"every", w!"each", w!"any", w!"a", w!"an", w!"all"].contains (lower q) then return []
+    let cs' := cs.take i ++ cs.drop (i + 2)
+    let mut acc := (sentence (lead ++ cs')).toList
+    if generic && (lower q == w!"a" || lower q == w!"an") then
+      acc := acc ++ (sentence (lead ++ .w w!"every" :: cs'.drop 1)).toList
+    -- (or the words of the clause before the noun, as adjectives: `Every bounded above increasing
+    -- sequence converges.`; the relative clause ends before the last verb)
+    if generic && (lower q != w!"all") then
+      let verbs := [w!"is", w!"are", w!"has", w!"have", w!"converges", w!"converge", w!"contains", w!"lies", w!"attains",
+        w!"divides", w!"equals", w!"satisfies", w!"admits", w!"diverges"]
+      let after := cs.drop (i + 2)
+      if let some (_, j) := (after.zipIdx.filter fun (c, _) => match c with | .w w => verbs.contains w | _ => false).getLast? then
+        let rel := after.take j
+        let np := (cs.take i).drop 1
+        if !rel.isEmpty && rel.all (fun c => match c with | .w _ | .p 45 => true | _ => false) &&
+            np.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
+          acc := acc ++ (sentence (lead ++ [.w w!"every"] ++ rel ++ np ++ after.drop j)).toList
+    return acc
   let generic' : List Sent := Id.run do
     if !generic then return []
     let .w a :: rest := cs | return []
     if !(lower a == w!"a" || lower a == w!"an") then return []
     let ev := .w w!"every" :: rest
-    let mut acc := (sentence (lead ++ ev)).toList
+    let mut acc := (sentence (lead ++ ev)).toList ++
+      ((everyVar ev).bind fun cs' => sentence (lead ++ cs')).toList
     -- (and its nested indefinites: `A compact subset of a Hausdorff space is closed.`)
-    let mut cur := ev
-    for _ in [0:5] do
-      match nestedIndef avoid generic cur with
-      | some cs' =>
-        cur := cs'
-        if let some sn := sentence (lead ++ cs') then acc := acc ++ [sn]
-      | none => break
+    -- (`A continuous image of a connected space is connected.`: the image of every such map,
+    -- as `The continuous image of …`)
+    let starts := if rest.any (fun c => match c with | .w w => w == w!"image" | _ => false) then [ev, .w w!"the" :: rest] else [ev]
+    for st in starts do
+      let mut cur := st
+      for _ in [0:5] do
+        match nestedIndef avoid generic cur with
+        | some cs' =>
+          cur := cs'
+          if let some sn := sentence (lead ++ cs') then acc := acc ++ [sn]
+        | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ generic'
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ generic'
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

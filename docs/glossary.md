@@ -214,6 +214,12 @@ except a notion whose meanings take arguments of different types, which the type
 | negative | ℝ | `x < 0` |
 | nonnegative | ℝ | `x ≥ 0` |
 | nonpositive | ℝ | `x ≤ 0` |
+| greater than or equal to $x$ | ℝ | `x ≥ c` |
+| less than or equal to $x$ | ℝ | `x ≤ c` |
+| greater than $x$ | ℝ | `x > c` |
+| larger than $x$ | ℝ | `x > c` |
+| less than $x$ | ℝ | `x < c` |
+| smaller than $x$ | ℝ | `x < c` |
 
 ## `unitsquare`
 

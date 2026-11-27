@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Arithmetic.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["numbers", "arithmetic"]
 
-#leanify_article Arithmetic "article.tex" "fnv1a64:688a164184aa4d61" with Arithmetic.vocabulary
+#leanify_article Arithmetic "article.tex" "fnv1a64:9c57c6664bf23bfc" with Arithmetic.vocabulary

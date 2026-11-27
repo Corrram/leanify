@@ -2789,6 +2789,16 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   if let some np' := polyOver then
     if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
     set st00
+  -- (`increasing sequence that is bounded above`: the words after `that is` follow the noun,
+  -- `increasing sequence bounded above`)
+  let relFree : Option (List Chunk) := do
+    let i ← (List.range np.length).find? fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk), (np[i + 2]? : Option Chunk) with
+      | some (.w t), some (.w b), some (.w _) => (t == w!"that" || t == w!"which") && (b == w!"is" || b == w!"are") && i > 0
+      | _, _, _ => false
+    some (np.take i ++ np.drop (i + 2))
+  if let some np' := relFree then
+    if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
+    set st00
   tryCatch (nounPhrase0 np outer) fun e00 => do
   set st00
   if let some (np', vts, condCs) := seqOfElems (← get).vocab np then
@@ -3422,6 +3432,8 @@ def clauseMaths : Clause → List MT
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ none => (mathsOf np).filterMap Math.parseFormula
   | .existsNPs nps cs => clauseMathsAll cs ++ (nps.flatMap mathsOf).filterMap Math.parseFormula
+  | .countNP np _ _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
+  | .countNP np _ _ none => (mathsOf np).filterMap Math.parseFormula
   | .noneExist c => clauseMaths c
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
@@ -5771,6 +5783,73 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         Tm.and px (.all b.ty (.imp (shift 1 1 px) (.eq (.loc 0) (.loc 1))))
       else px
     pure (.ex b.ty body)
+  | .countNP np mode k first => do
+    -- (the vocabulary's modifier first, `with at least $2$ leaves`)
+    let mut firstErr : Option Err := none
+    if let some cl := first then
+      let st0 ← get
+      match ← tryCatch (Sum.inl <$> clauseTm c sc onVar lastRhs cl) fun e => do
+          if e.code == E.prose || e.code == E.noun || e.code == E.unsupported || e.code == E.nounWords then
+            set st0; pure (Sum.inr e)
+          else throw e with
+      | .inl t => return t
+      | .inr e => firstErr := some e
+    -- the noun phrase of one of the objects, in the singular (`ideals of $K$`: `ideal of $K$`;
+    -- `one maximal ideal of $R$` is already)
+    let V := (← get).vocab
+    let head := np.takeWhile fun ch => match ch with
+      | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"satisfying"].contains w
+      | .p 45 => true
+      | _ => false
+    -- (a noun with its complement, `ideals of $K$`: its last word in the singular)
+    let byRule : Option (List Chunk) := match head.getLast? with
+      | some (.w w) => (Grammar.DefForm.singular w).map fun w' => head.dropLast ++ [Chunk.w w'] ++ np.drop head.length
+      | _ => none
+    let bySet := (setOfElems V ([Chunk.w w!"set", Chunk.w w!"of"] ++ head)).map (· ++ np.drop head.length)
+    let cands := if k == 1 then [np] else byRule.toList ++ bySet.toList
+    let st0 ← get
+    let rec firstNP : List (List Chunk) → M BindInfo
+      | [] => fail E.noun
+      | [c] => do
+        match ← pdeNoun c with
+        | some [b] => pure b
+        | _ => nounPhrase c sc
+      | c :: rest => tryCatch (do
+          match ← pdeNoun c with
+          | some [b] => pure b
+          | _ => nounPhrase c sc) fun _ => do set st0; firstNP rest
+    -- (a noun phrase that is not the vocabulary's: the sentence is prose, or what stopped the
+    -- modifier's reading)
+    let b ← tryCatch (firstNP cands) fun e => do
+      if let some e1 := firstErr then throw e1
+      if e.code == E.noun || e.code == E.unsupported then fail E.prose else throw e
+    -- `P y`, with `y` the innermost local (the predicate is stated under its binder)
+    let px := holdsAt b.pred (.loc 0)
+    -- (`P` of the `i`-th of `n` objects bound around it, the innermost `0`)
+    let pAt (n i : Nat) : Tm := Tm.subst (.loc i) 0 (shift n 1 px)
+    let conj (ts : List Tm) : Tm := match ts.reverse with
+      | [] => .tt
+      | t :: r => r.foldl (fun acc x => Tm.and x acc) t
+    let disj (ts : List Tm) : Tm := match ts.reverse with
+      | [] => .not .tt
+      | t :: r => r.foldl (fun acc x => Tm.or x acc) t
+    let pairs (n : Nat) : List (Nat × Nat) :=
+      (List.range n).flatMap fun i => ((List.range n).filter (i < ·)).map fun j => (i, j)
+    let exs (n : Nat) (body : Tm) : Tm := (List.range n).foldl (fun t _ => Tm.ex b.ty t) body
+    let alls (n : Nat) (body : Tm) : Tm := (List.range n).foldl (fun t _ => Tm.all b.ty t) body
+    -- at least `k`: `k` distinct objects
+    let atLeast (n : Nat) (extra : Tm) : Tm :=
+      exs n (conj ((List.range n).map (pAt n) ++ (pairs n).map (fun (i, j) => Tm.not (.eq (.loc i) (.loc j))) ++ [extra]))
+    match mode with
+    | 1 => pure (atLeast k .tt)
+    | 2 =>
+      -- at most `k`: among any `k+1` of them, two are the same
+      let n := k + 1
+      pure (alls n (.imp (conj ((List.range n).map (pAt n))) (disj ((pairs n).map fun (i, j) => Tm.eq (.loc i) (.loc j)))))
+    | _ =>
+      -- exactly `k`: at least `k`, and every one is one of them
+      let every := Tm.all b.ty (.imp (pAt (k + 1) 0) (disj ((List.range k).map fun i => Tm.eq (.loc 0) (.loc (i + 1)))))
+      pure (atLeast k every)
   | .existsNPs nps cls => do
     -- the objects, each NP after the ones before it
     let mut bs : List BindInfo := []

@@ -3,8 +3,8 @@ import Leanify.Library.Build
 /-! # The core vocabulary
 
 The words that every article may use, whatever its fields: real numbers and integers,
-rational and irrational numbers, and the signs of a real number (`positive`,
-`nonnegative`, `nonzero`). Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
+rational and irrational numbers, the signs of a real number (`positive`,
+`nonnegative`, `nonzero`), and a bound after the noun (`greater than $1$`). Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`.
 Every meaning is a term of the core language, so the core has no constants and no model.
 
 *Natural number* has two meanings (with and without 0), so Leanify does not read it
@@ -33,6 +33,10 @@ def noun (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
 def adj (p : Phrase) (pred : Tm) (doc : String) : Modifier :=
   { phrase := p, prenominal := true, ty := .real, pred, doc }
 
+/-- A modifier of real numbers after the noun, with a bound `c`. -/
+def post (p : Phrase) (body : B → B → B) (doc : String) : Modifier :=
+  { phrase := p, prenominal := false, ty := .real, doc, pred := close <| lamR fun c => lamR fun x => body c x }
+
 /-- The words about numbers. -/
 def numbers : Vocab where
   nouns := [
@@ -56,7 +60,14 @@ def numbers : Vocab where
     adj phrase!"positive" (predR fun x => lt (num 0) x) "`x > 0`",
     adj phrase!"negative" (predR fun x => lt x (num 0)) "`x < 0`",
     adj phrase!"nonnegative" (predR fun x => le (num 0) x) "`x ≥ 0`",
-    adj phrase!"nonpositive" (predR fun x => le x (num 0)) "`x ≤ 0`"]
+    adj phrase!"nonpositive" (predR fun x => le x (num 0)) "`x ≤ 0`",
+    -- after the noun, with a bound: `every integer greater than $1$`
+    post phrase!"greater than or equal to $v$" (fun c x => le c x) "`x ≥ c`",
+    post phrase!"less than or equal to $v$" (fun c x => le x c) "`x ≤ c`",
+    post phrase!"greater than $v$" (fun c x => lt c x) "`x > c`",
+    post phrase!"larger than $v$" (fun c x => lt c x) "`x > c`",
+    post phrase!"less than $v$" (fun c x => lt x c) "`x < c`",
+    post phrase!"smaller than $v$" (fun c x => lt x c) "`x < c`"]
 
 end Leanify.Core
 

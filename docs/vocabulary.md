@@ -94,7 +94,8 @@ alone, whatever the fields:
 Every article is read with the core vocabulary, whatever fields it names: *real
 number*, *integer*, *positive*, *negative* and *nonnegative integer*, *rational* and
 *irrational number*, and the adjectives *positive*, *negative*, *nonnegative*,
-*nonpositive*, *nonzero*, *rational*, *irrational* of a real number. So
+*nonpositive*, *nonzero*, *rational*, *irrational* of a real number, and after the noun
+*greater than*, *less than* (*larger*, *smaller*; *or equal to*) a bound. So
 `Let $x$ and $y$ be positive real numbers.` needs no field. The words of number
 theory (*prime*, *even*, *squarefree*, the greatest common divisor) are the field
 `numbers`. A symbol or noun that a field would read is reported with the field's
