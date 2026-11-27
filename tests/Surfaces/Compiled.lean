@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Surfaces.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["surfaces"]
 
-#leanify_article Surfaces "article.tex" "fnv1a64:eae135ee4455ff09" with Surfaces.vocabulary
+#leanify_article Surfaces "article.tex" "fnv1a64:72e12322020995e7" with Surfaces.vocabulary

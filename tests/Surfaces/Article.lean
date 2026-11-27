@@ -1,5 +1,6 @@
 import Surfaces.Compiled
 import Leanify.Readable
+import Leanify.Library.SurfacesModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

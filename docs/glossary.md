@@ -3712,11 +3712,11 @@ except a notion whose meanings take arguments of different types, which the type
 | euler characteristic of the closed nonorientable surface of genus $a$ | ℝ → ℝ | `2 - k`: the connected sum of `k` projective planes |
 | genus of the closed orientable surface with euler characteristic $a$ | ℝ → ℝ | `(2 - χ)/2`, for an even `χ ≤ 2` |
 | total curvature of the closed orientable surface of genus $a$ | ℝ → ℝ | `4π(1 - g)` = `2πχ` (Gauss–Bonnet) |
-| gaussian curvature of the sphere of radius $a$ | ℝ → ℝ | `1/R²` |
-| mean curvature of the sphere of radius $a$ | ℝ → ℝ | `1/R` |
-| mean curvature of the cylinder of radius $a$ | ℝ → ℝ | `1/(2R)` |
-| surface area of the torus with radii $a$ and $b$ | ℝ → ℝ → ℝ | `4π²Rr`, for the distance `R` from the axis to the centre of the tube and the tube radius `r < R` |
-| gaussian curvature of the torus with radii $a$ and $b$ at the angle $c$ | ℝ → ℝ → ℝ → ℝ | `cos θ/(r(R + r cos θ))`, `θ` measured from the outer equator |
+| gaussian curvature of the sphere of radius $a$ | ℝ → ℝ | `(LN - M²)/(EG - F²)` at every regular point of the parametrized sphere (`1/R²`) |
+| mean curvature of the sphere of radius $a$ | ℝ → ℝ | `(EN - 2FM + GL)/(2(EG - F²))`, the normal towards the centre (`1/R`) |
+| mean curvature of the cylinder of radius $a$ | ℝ → ℝ | the normal towards the axis (`1/(2R)`) |
+| surface area of the torus with radii $a$ and $b$ | ℝ → ℝ → ℝ | the Euclidean Hausdorff measure of the torus, for the distance `R` from the axis to the centre of the tube and the tube radius `r < R` (`4π²Rr`) |
+| gaussian curvature of the torus with radii $a$ and $b$ at the angle $c$ | ℝ → ℝ → ℝ → ℝ | at the points at the angle `θ` from the outer equator (`cos θ/(r(R + r cos θ))`) |
 
 ## `graphcounts`
 

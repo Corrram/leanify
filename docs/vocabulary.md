@@ -407,7 +407,9 @@ Further fields cover other branches of mathematics:
   `EuclideanSpace ℝ (Fin 3)` with regular faces, their faces the exposed subsets of Mathlib, so
   that their counts and dihedral angles are claims);
 * `betting`: odds, the Kelly criterion, margins;
-* `surfaces`: Euler characteristic, genus, curvature;
+* `surfaces`: Euler characteristic, genus, curvature (the curvatures of the parametrized
+  sphere, cylinder and torus by their fundamental forms, the area of the torus by the Euclidean
+  Hausdorff measure; the Euler characteristics of the closed surfaces by their classical values);
 * `graphcounts`: counting edges, spanning trees and colourings of standard graphs (the graphs
   of Mathlib on `Fin n`, their spanning trees with `SimpleGraph.IsTree` and their chromatic
   polynomials, which count `SimpleGraph.Coloring`s);
