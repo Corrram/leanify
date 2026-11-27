@@ -42,7 +42,7 @@ are bound by their signatures.
   `path-connected`, `locally compact`, `sequentially compact`, `second countable`, `separable`, `metrizable`,
   `discrete`, `regular`, `normal`, `complete`, `totally bounded`, `bounded`, `open`, `Polish`,
   `convex` (of a real vector space), `nonempty`, `$p$-` before `group` (`a finite $p$-group`),
-  `geodesic`, `$d$-dimensional`; and `of order $n$`, `of prime power order`, `of characteristic $p$`, `isomorphic to
+  `geodesic`, `$d$-dimensional`; and `of order $n$`, `of prime power order`, `of squarefree order`, `of characteristic $p$`, `isomorphic to
   $H$`, `homeomorphic to $Y$`, `isometric to $Y$`, `quasi-isometric to $Y$` (`$X$ and $Y$ are
   homeomorphic`), `$p$-group`, `locally closed in $X$`;
 * notions: the order of a group and of an element, the index of a subgroup, the centre, the
@@ -735,6 +735,8 @@ def vocab : Vocab where
     postS phrase!"of prime order" (orderIs Numbers.isPrime) "finite, with a prime number of elements",
     postS phrase!"of odd order" (orderIs fun n => not (isEvenB n)) "finite, with an odd number of elements",
     postS phrase!"of even order" (orderIs isEvenB) "finite, with an even number of elements",
+    postS phrase!"of squarefree order" (orderIs fun n => allInt fun k => imp (divides (mul k k) n) (eq (mul k k) (num 1)))
+      "finite, with a number of elements divisible by no square but `1` (Mathlib `Squarefree`)",
     { phrase := phrase!"of prime order", prenominal := false, ty := E, pred := elOrderIs Numbers.isPrime, doc := "(Mathlib `orderOf`)" },
     { phrase := phrase!"of odd order", prenominal := false, ty := E, pred := elOrderIs fun n => not (isEvenB n), doc := "(Mathlib `orderOf`)" },
     { phrase := phrase!"of even order", prenominal := false, ty := E, pred := elOrderIs isEvenB, doc := "(Mathlib `orderOf`)" },

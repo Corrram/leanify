@@ -55,7 +55,8 @@ tests/Topology/article.tex:100:200: info: claim 35: \forall x\in \mathbb{R}\to \
 tests/Topology/article.tex:100:200: info: claim 35 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R}\to \mathrm{Prop},\ (\forall y\in \mathbb{R},\ y\in \mathbb{N}\Rightarrow (\forall z\in \mathbb{R},\ y+1\in \mathbb{N}\land (x(y+1,z)\Rightarrow y\in \mathbb{N})))\land ((\forall z\in \mathbb{R},\ z\in \mathbb{N}\Rightarrow (\forall s\in \mathbb{R},\ x(z+1,s)\Rightarrow x(z,s)))\Rightarrow (\forall y\in \mathbb{R},\ (\forall z\in \mathbb{R},\ (z\in \mathbb{Z}\land 0\le z)\land z\le 3\Rightarrow z\in \mathbb{N})\land 0\in \mathbb{N}))
 tests/Topology/article.tex:104:1: info: claim 36: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ ((\forall z\in \mathbb{R},\ x(z)\Rightarrow z\le y)\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\Rightarrow y\le z))\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ x(t)\Rightarrow t\le s)\Rightarrow z\le s)\Rightarrow z=y))
 tests/Topology/article.tex:104:74: info: claim 37: \forall x\in \mathbb{R}\to \mathrm{Prop},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\in \mathbb{Z})\land \operatorname{BddAbove}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists z\in \mathbb{R},\ x(z)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z))
-tests/Topology/article.tex: 7 definitions, 38 claims
+tests/Topology/article.tex:108:1: info: claim 38: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\Leftrightarrow \operatorname{Closed}(x)\land \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
+tests/Topology/article.tex: 7 definitions, 39 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 55 compiled, 0 failed, 0 prose (of 55)
-  all: 62 compiled, 0 failed, 0 prose (of 62)
+  results: 56 compiled, 0 failed, 0 prose (of 56)
+  all: 63 compiled, 0 failed, 0 prose (of 63)

@@ -59,7 +59,8 @@ tests/Arithmetic/article.tex:103:149: info: claim 35: \forall x\in \mathbb{R},\ 
 tests/Arithmetic/article.tex:103:163: info: claim 36: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z+1)
 tests/Arithmetic/article.tex:103:200: info: claim 37: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=2\,t+1)\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x+y=2\,s))
 tests/Arithmetic/article.tex:103:237: info: claim 38: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s)\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=2\,t)\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x-y=2\,s))
-tests/Arithmetic/article.tex: 10 definitions, 39 claims
+tests/Arithmetic/article.tex:107:24: info: claim 39: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z)
+tests/Arithmetic/article.tex: 10 definitions, 40 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 37 compiled, 0 failed, 0 prose (of 37)
-  all: 47 compiled, 0 failed, 0 prose (of 47)
+  results: 39 compiled, 0 failed, 0 prose (of 39)
+  all: 49 compiled, 0 failed, 0 prose (of 49)

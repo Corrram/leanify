@@ -1471,6 +1471,7 @@ except a notion whose meanings take arguments of different types, which the type
 | of prime order | $\mathrm{El}$ → Prop | finite, with a prime number of elements |
 | of odd order | $\mathrm{El}$ → Prop | finite, with an odd number of elements |
 | of even order | $\mathrm{El}$ → Prop | finite, with an even number of elements |
+| of squarefree order | $\mathrm{El}$ → Prop | finite, with a number of elements divisible by no square but `1` (Mathlib `Squarefree`) |
 | of prime order | $\mathrm{El}$ | (Mathlib `orderOf`) |
 | of odd order | $\mathrm{El}$ | (Mathlib `orderOf`) |
 | of even order | $\mathrm{El}$ | (Mathlib `orderOf`) |

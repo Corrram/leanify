@@ -7043,6 +7043,7 @@ def twoOp (op : Codes) (x y : Codes) : Option (List MTok) :=
   else if op == w!"product" then some [.id x, .cmd w!"times", .id y]
   else if op == w!"sum" then some [.id x, .sym 43, .id y]
   else if op == w!"difference" then some [.id x, .sym 45, .id y]
+  else if op == w!"composition" then some [.id x, .cmd w!"circ", .id y]
   else none
 
 /-- One step of reading nested indefinites and the idioms around them, as sentences with
@@ -7137,7 +7138,11 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
         if !more.isEmpty then ([], comp) else
         ([.w w!"for", .w w!"every"] ++ words ++ [.m [.id z], .w w!"and"], [.w p, .m [.id z]])
       | _ => ([], comp)
-    let fm ← twoOp op x y
+    -- (`the product of two continuous functions`: of values, `$X\cdot Y$`)
+    let ofValues := match np.getLast? with
+      | some (.w w) => [w!"functions", w!"polynomials", w!"maps"].contains w
+      | _ => false
+    let fm ← if op == w!"product" && ofValues then some [.id x, .cmd w!"cdot", .id y] else twoOp op x y
     -- (each object with its own binder: `for every normal subgroup $X$ of $G$ and every
     -- normal subgroup $Y$ of $G$`)
     let .w last := (← np.getLast?) | none
@@ -7329,17 +7334,28 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
   let genericB : Option (List Chunk) := do
     if !generic then none
     let .w a :: rest := cs | none
-    if !isIndef (.w a) then none
+    let every := [w!"every", w!"each", w!"any"].contains a
+    if !isIndef (.w a) && !every then none
     let j ← rest.findIdx? fun ch => match ch with | .w w => w == w!"is" | .m _ => false | .p 45 => false | _ => true
     let np := rest.take j
     let .w is :: _ := rest.drop j | none
     if is != w!"is" then none
+    -- (`every` only with `it` after it: `Every subset of $\mathbb{R}$ is compact if and only if it
+    -- is closed and bounded.`)
+    if every && !(rest.drop j).any (fun c => match c with | .w w => w == w!"it" || w == w!"its" | _ => false) then none
     let (np, x) : List Chunk × Codes := match np.getLast? with
-      | some (.m [.id v]) => (np.dropLast, v)
+      -- (a letter, not `\mathbb{R}`)
+      | some (.m [.id v]) => if v.head? == some 92 then (np, fresh 0) else (np.dropLast, v)
       | _ => (np, fresh 0)
-    if !plainWords np then none
     let body := DefForm.resolveIt x (rest.length + 1) (rest.drop j)
-    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body)
+    if plainWords np then
+      return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body
+    -- (a complement with a formula, `a subset of $\mathbb{R}$`: the letter after the noun's words)
+    let k ← np.findIdx? fun ch => match ch with | .w w => w == w!"of" || w == w!"in" | _ => false
+    let head := np.take k
+    if head.isEmpty || !plainWords head then none
+    if !(match np.drop k with | [.w _, .m _] => true | _ => false) then none
+    some ([.w w!"for", .w w!"every"] ++ head ++ [.m [.id x]] ++ np.drop k ++ [.p 44, .m [.id x]] ++ body)
   -- `$f$ attains its maximum on $D$`, `every continuous function $f\colon D\to\mathbb{R}$ attains its
   -- maximum and its minimum`: a point of `D` where the value is largest (smallest)
   let attains : Option (List Chunk) := do
@@ -7516,6 +7532,39 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
   image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> inA <|>
     between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr
 
+/-- `$X$ is cyclic if the order of $X$ is squarefree.` (in a result): `If the order of $X$ is
+squarefree, then $X$ is cyclic.`, after the binders of `For every NP $X$, …`. Not with `only
+if`, `even if`, `if and only if` or a `then` of its own. -/
+def postIf (cs : List Chunk) : Option (List Chunk) := do
+  if cs.any (fun c => match c with | .w w => w == w!"then" || w == w!"iff" | _ => false) then none
+  let ifs := cs.zipIdx.filter fun (c, i) => match c with
+    | .w w => w == w!"if" && i > 0
+    | _ => false
+  let [(_, k)] := ifs | none
+  -- (`even if` after a comma; `$n$ is even if …` is about `even`)
+  if (match (cs[k - 2]? : Option Chunk), (cs[k - 1]? : Option Chunk), (cs[k + 1]? : Option Chunk) with
+      | before, some (.w a), after =>
+        a == w!"only" || (a == w!"even" && (match before with | some (.p 44) => true | _ => false)) || (match after with | some (.w b) => b == w!"and" | _ => false)
+      | _, _, some (.w b) => b == w!"and"
+      | _, _, _ => false) then none
+  -- (the binders before the claim, `For every NP $X$,`)
+  let pre : List Chunk := match cs with
+    | .w f :: .w q :: _ =>
+      if f == w!"for" && [w!"every", w!"all", w!"each", w!"any"].contains q then
+        match (cs.take k).findIdx? (fun c => match c with | .p 44 => true | _ => false) with
+        | some j => cs.take (j + 1)
+        | none => []
+      else []
+    | _ => []
+  let main := (cs.take k).drop pre.length
+  let cond := cs.drop (k + 1)
+  let (cond, stop) := match cond.getLast? with
+    | some (.p 46) => (cond.dropLast, [Chunk.p 46])
+    | _ => (cond, [])
+  if main.isEmpty || cond.isEmpty then none
+  if main.any (fun c => match c with | .p 44 => true | _ => false) then none
+  some (pre ++ [.w w!"if"] ++ cond ++ [.p 44, .w w!"then"] ++ main ++ stop)
+
 /-- The readings of `nestedIndef`, one step after another (the last first), as readings of
 the sentence where its own reading does not compile. -/
 def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
@@ -7536,7 +7585,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     | some cs' =>
       cur := cs'
       nested := nested ++ [cs']
-      if let some sn := sentence (lead ++ cs') then out := sn :: out
+      if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then out := sn :: out
     | none => break
   -- `The set of nilpotent elements of $R$ is an ideal of $R$.`: the set, bound as `Let $X$ be the
   -- set of …` binds it, and the claim about it
@@ -7833,10 +7882,11 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
         match nestedIndef avoid generic cur with
         | some cs' =>
           cur := cs'
-          if let some sn := sentence (lead ++ cs') then acc := acc ++ [sn]
+          if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ generic'
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ generic' ++
+    (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

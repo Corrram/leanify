@@ -2242,6 +2242,18 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let (b', t') ← term f sc pf y
           let b'' ← coerce b' t' t
           callMethod t (.fn w!"\\circ") [a', b'']
+        -- `f\circ g` of real functions: `x ↦ f(g(x))`
+        else if op == w!"\\circ" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone && (← (do
+            let st ← get
+            let r ← tryCatch (do
+                let (_, t) ← term f sc pf x
+                let (_, t') ← term f sc pf y
+                pure (t == .fn .real .real && t' == .fn .real .real)) fun _ => pure false
+            set st
+            pure r)) then do
+          let (a', _) ← term f sc pf x
+          let (b', _) ← term f sc pf y
+          pure (.lam .real .tt (.app (shift 1 0 a') (.app (shift 1 0 b') (.loc 0))), .fn .real .real)
         else do
           let (h, hty, doms) ← head f sc hd
           let xs ← args.mapM (term f sc pf)

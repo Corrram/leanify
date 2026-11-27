@@ -28,7 +28,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 
 | Notation | Read as |
 | --- | --- |
-| `(f\circ g)(x)` | `f(g(x))`, with `g(x)` in the domain of `f` |
+| `(f\circ g)(x)`, `f\circ g` | `f(g(x))`, with `g(x)` in the domain of `f`; of real functions `f`, `g`, the function `x\mapsto f(g(x))` |
 | `A\subseteq B`, `A\supseteq B` | every real number in `A` is in `B` (and the reverse), for intervals, sets `\{x\in A : …\}` and sets the article defines |
 | `\sup_{x\in A} e`, `\sup\{e : x\in A\}`, `\sup S` (and `\inf`) | the least upper (greatest lower) bound: defined only when it exists, so a claim about an unbounded or empty set is not meaningful |
 | `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | with numeral bounds: the terms written out |
@@ -717,11 +717,13 @@ object that is not in use:
 | `Let $f\colon X\to Y$ be a continuous bijection from a compact space to a Hausdorff space.` | `Let $X$ be a compact space, let $Y$ be a Hausdorff space and let $f\colon X\to Y$ be a continuous bijection.` |
 | `Let $T\colon V\to V$ be a linear operator on a finite-dimensional vector space.` | `Let $V$ be a finite-dimensional vector space and let $T\colon V\to V$ be a linear operator.` |
 | `Let $\varphi\colon G\to H$ be a group homomorphism.`, with new letters `G`, `H` (also in a later `let`: `Let $V$ be a vector space and let $T\colon V\to W$ be a linear map.`) | `Let $G$ be a group, let $H$ be a group and let $\varphi\colon G\to H$ be a group homomorphism.` (the noun of the map says what its domain and codomain are: groups, rings, vector spaces, topological or metric spaces, partially ordered sets) |
-| `The intersection of two normal subgroups of $G$ is a normal subgroup of $G$.` (`union`, `product`; `The sum of two odd integers is even.`, `difference`) | `For every normal subgroup $X$ of $G$ and every normal subgroup $Y$ of $G$, $X\cap Y$ is a normal subgroup of $G$.` |
+| `The intersection of two normal subgroups of $G$ is a normal subgroup of $G$.` (`union`, `product`; `The sum of two odd integers is even.`, `difference`; `The composition of two continuous functions is continuous.`, `$X\circ Y$`; the product of two functions, `$X\cdot Y$`) | `For every normal subgroup $X$ of $G$ and every normal subgroup $Y$ of $G$, $X\cap Y$ is a normal subgroup of $G$.` |
 | `The continuous image of a compact space is compact.` | `For every compact space $X$, every topological space $Y$ and every continuous map $f\colon X\to Y$, the image of $f$ is compact.` |
 | in a result, `A continuous image of a connected space is connected.` | the same, as `The continuous image of a connected space is connected.` |
 | `The square of an odd integer is odd.`, `The cube of a negative real number is negative.` | `For every odd integer $X$, $X^2$ is odd.` |
 | in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
+| in a result, `A subset of $\mathbb{R}$ is compact if and only if it is closed and bounded.`, `Every subset of $\mathbb{R}$ is …` with `it` | `For every subset $X$ of $\mathbb{R}$, $X$ is compact if and only if $X$ is closed and bounded.` |
+| in a result, `A finite abelian group is cyclic if its order is squarefree.`, `Then $n^2$ is even if $n$ is even.` | `If $n$ is even, then $n^2$ is even.`: a condition after the claim (not `only if`, `if and only if`, `, even if`) |
 | in a result, `A compact subset of a Hausdorff space is closed.`, `A finite integral domain is a field.`, `An integer is even or odd.` | `Every compact subset of a Hausdorff space is closed.` (an indefinite subject of a result is generic), then the indefinites inside it as above |
 | `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |
 | `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |

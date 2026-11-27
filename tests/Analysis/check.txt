@@ -57,7 +57,9 @@ tests/Analysis/article.tex:139:108: info: claim 39: \forall x\in \mathbb{R},\ \f
 tests/Analysis/article.tex:139:108: info: claim 39 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{t:x\le t\land t\le y\}\Rightarrow (\forall s\in \mathbb{R},\ x<s\land s<y\Rightarrow (\forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{p:x\le p\land p\le y\}\land x<y)\land (\exists t\in \mathbb{R},\ ((a\in \mathbb{R}\mapsto F(x,y,z,a)))'(s)=t\text{ within }(a\in \mathbb{R}\mapsto \top)\land (\forall a\in \mathbb{R},\ ((b\in \mathbb{R}\mapsto F(x,y,z,b)))'(s)=a\text{ within }(b\in \mathbb{R}\mapsto \top)\Rightarrow a=t))))
 tests/Analysis/article.tex:143:12: info: claim 40: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{t:y\le t\land t\le x\}\Rightarrow (\exists s\in \mathbb{R},\ (y\le s\land s\le x)\land (\forall t\in \mathbb{R},\ y\le t\land t\le x\Rightarrow z(t)\le z(s))))
 tests/Analysis/article.tex:143:75: info: claim 41: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow \operatorname{continuous}(x)\text{ on }\{y:\top\}
-tests/Analysis/article.tex: 5 definitions, 42 claims
+tests/Analysis/article.tex:147:1: info: claim 42: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(y)\text{ on }\{s:\top\}\Rightarrow \operatorname{continuous}((z\in \mathbb{R}\mapsto x(y(z))))\text{ on }\{z:\top\})
+tests/Analysis/article.tex:147:60: info: claim 43: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(y)\text{ on }\{s:\top\}\Rightarrow \operatorname{differentiable}((z\in \mathbb{R}\mapsto x(z)\,y(z)))\text{ on }\{z:\top\})
+tests/Analysis/article.tex: 5 definitions, 44 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 70 compiled, 0 failed, 0 prose (of 70)
-  all: 74 compiled, 0 failed, 0 prose (of 74)
+  results: 72 compiled, 0 failed, 0 prose (of 72)
+  all: 76 compiled, 0 failed, 0 prose (of 76)
