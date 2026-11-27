@@ -1895,14 +1895,31 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     if w == w!"@the" then
       let some (.m vts) := rest.getLast? | fail E.unsupported
       let some v := varName vts | fail E.unsupported
-      let cs := rest.dropLast
+      let cs0 := rest.dropLast
       let V := (← get).vocab
-      let cands := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), [])
       let elabArgs (args : List (List MTok)) : M (List (Tm × Ty)) := args.mapM fun a => do
         let some m := Math.parseFormula a | fail E.unsupported
         Elab.term 100000 outer none m
       let fits (na : Notion × List (List MTok)) : M Unit := do
         let _ ← applyAll na.1.value na.1.ty na.1.doms (← elabArgs na.2)
+      let candsOf (cs : List Chunk) := V.notions.filterMap fun n => (Notation.matchSlots n.name cs []).map fun a => ((n, a), ([] : List Chunk))
+      -- (`the closure of $A$`, of a subset `A` of `X`: in the space of the complement of `A`,
+      -- where no notion with these words fits `A` itself)
+      let stc ← get
+      let anyFits (cs : List Chunk) : M Bool := do
+        let ok ← (candsOf cs).anyM fun c => tryCatch (do fits c.1; pure true) fun _ => pure false
+        set stc
+        pure ok
+      let cs2 : Option (List Chunk) := match cs0.getLast? with
+        | some (.m [.id k]) =>
+          (stc.complements.find? (fun ((e, n, _) : Nat × Codes × List MTok) => n == k && (e == stc.curEnv || stc.curProved == some e))).map
+            fun (_, _, cts) => cs0 ++ [.w w!"@in", .m cts]
+        | _ => none
+      let cs ← match cs2 with
+        | some c2 => do
+          if !(candsOf c2).isEmpty && !(← anyFits cs0) then pure c2 else pure cs0
+        | none => pure cs0
+      let cands := candsOf cs
       match ← theMeaningBy (fun (na : Notion × List (List MTok)) => (na.1.ty, na.1.value)) (·.1.field) fits cs cands with
       | some ((n, args), _) =>
         let ts ← elabArgs args
@@ -3196,6 +3213,24 @@ where
 whose domain uses the binders before it (`e\in[0,x]`) keeps them all. -/
 def binderInfos (b : Bind) (before : List BindInfo := []) : M (List BindInfo) := do
   declaredInts (← binderInfosRaw b before)
+
+/-- The binders of `env` without those named in `names` (rebound by a new binder) and
+without the binders whose domains use one of them (`For every cyclic group $X$ and every
+subgroup $Y$ of $X$, …` before `Let $X$ be a group`: `Y` was about the old `X`); the domains
+of the others no longer count the removed binders. -/
+def dropShadowed (env : List BindInfo) (names : List Codes) : List BindInfo := Id.run do
+  let mut removed : List Nat := []
+  let mut out : List BindInfo := []
+  for (b, j) in env.zipIdx do
+    let mentions (i : Nat) : Bool := b.pred.any fun p => Tm.subst (.num 0) (j - i) p != Tm.subst (.num 1) (j - i) p
+    if names.contains b.name || removed.any mentions then
+      removed := removed ++ [j]
+    else
+      -- (lower the indices past the removed binders, the farthest first: a nearer one keeps
+      -- its index)
+      let p := removed.foldl (fun (acc : Option Tm) i => acc.map (Tm.subst (.num 0) (j - i))) b.pred
+      out := out ++ [{ b with pred := p }]
+  return out
 
 def usedBinders (bs : List BindInfo) (used0 : List Codes) : List BindInfo :=
   -- (a binder whose condition is about a used variable is used too: `Let $K$ be a field
@@ -6212,7 +6247,7 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
     -- (a binder is in the scope of those before it in the list: new binders that use
     -- variables of the result come after them)
     if domEnv.isEmpty then
-      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun b => !(bs.any (·.name == b.name)) }
+      modify fun st => { st with envBinders := bs ++ dropShadowed st.envBinders (bs.map (·.name)) }
     else modify fun st => { st with envBinders := st.envBinders ++ bs }
   let allBs := inherited ++ bs ++ onVar.toList
   let sc := scopeOf allBs
@@ -6476,7 +6511,7 @@ def assumeIn (c : SentCtx) (binds : List Bind) (defs : List MT) : M (List Nat ×
     modify fun st => { st with fixed := bs.map (c.ctx.sec, ·) ++ st.fixed.filter fun (_, x) => !(bs.any (·.name == x.name)) }
   | _ =>
     if domEnv.isEmpty then
-      modify fun st => { st with envBinders := bs ++ st.envBinders.filter fun x => !(bs.any (·.name == x.name)) }
+      modify fun st => { st with envBinders := bs ++ dropShadowed st.envBinders (bs.map (·.name)) }
     else modify fun st => { st with envBinders := st.envBinders ++ bs }
   let st ← get
   let scope := match c.ctx.kind with

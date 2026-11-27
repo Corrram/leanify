@@ -2090,14 +2090,34 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let V := (← get).vocab
           let pat : List (Option Codes) := args.map fun m => match m with | .text w => some w | _ => none
           let actual := args.filter fun m => match m with | .text _ => false | _ => true
-          let fitsName (n : Notion) : Bool := n.name.length == pat.length && (n.name.zip pat).all fun (it, p) =>
+          let fitsPat (pat : List (Option Codes)) (n : Notion) : Bool := n.name.length == pat.length && (n.name.zip pat).all fun (it, p) =>
             match it, p with
             | .w w, some w' => Grammar.lower w == w'
             | .v, none => true
             | _, _ => false
+          let fitsName := fitsPat pat
           let cands := (V.notions.filter fitsName).foldl (fun acc n => if acc.any (fun m => m.ty == n.ty && m.value == n.value) then acc else acc ++ [n]) []
+          -- (`the closure of $A$`, of a subset `A` of `X`: the notion `closure of $v$ in $v$`, in
+          -- the object of the complement of `A`)
+          let inComplement : M (Option (Tm × Ty)) := do
+            let candsIn := V.notions.filter (fitsPat (pat ++ [some w!"@in", none]))
+            if candsIn.isEmpty then return none
+            let [.id k] := actual | return none
+            let st ← get
+            let some (_, _, cts) := st.complements.find? (fun ((e, n, _) : Nat × Codes × List MTok) =>
+                n == k && (e == st.curEnv || st.curProved == some e)) | return none
+            let some cm := Math.parseFormula cts | return none
+            let ts2 ← (actual ++ [cm]).mapM (term f sc pf)
+            for n in candsIn do
+              let st1 ← get
+              match ← tryCatch (some <$> applyAll n.value n.ty n.doms ts2) (fun _ => pure none) with
+              | some r => return some r
+              | none => set st1
+            return none
           -- (words that are no notion of the vocabulary: prose)
-          if cands.isEmpty then fail E.prose ((pat.filterMap id).intersperse [32]).flatten
+          if cands.isEmpty then
+            if let some r ← inComplement then return r
+            fail E.prose ((pat.filterMap id).intersperse [32]).flatten
           let ts ← actual.mapM (term f sc pf)
           let st0 ← get
           let fits ← cands.filterM fun n => do
@@ -2107,7 +2127,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let words := (pat.filterMap id).intersperse [32]
           match fits with
           | [n] => return (← applyAll n.value n.ty n.doms ts)
-          | [] => fail E.noun words.flatten
+          | [] =>
+            if let some r ← inComplement then return r
+            fail E.noun words.flatten
           | _ => fail E.ambiguous (words.flatten ++ w!" has several meanings")
       match hd, args with
       -- `\limsup_{n\to\infty} a_n`, `\liminf_{x\to\infty} f(x)`: the number `L` such that, for
