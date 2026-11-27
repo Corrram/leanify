@@ -1215,6 +1215,11 @@ except a notion whose meanings take arguments of different types, which the type
 | disc with centre $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
 | disk with center $a$ and radius $b$ | $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|PC\| ≤ r}`, `r > 0` |
 
+| Notation | On | Meaning |
+| --- | --- | --- |
+| $\operatorname{@dist}$ | $\mathrm{Point}$ | `\|AB\|`, the distance between two points |
+| $\angle$ | $\mathrm{Point}$ | `\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B` |
+
 ## `congruences`
 
 | Noun | Of | Meaning |
@@ -2287,6 +2292,11 @@ except a notion whose meanings take arguments of different types, which the type
 | hyperbola with foci $a$ and $b$ and semi-major axis $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ → $\mathrm{Point}$ → Prop | `{P : \|\|PF₁\| - \|PF₂\|\| = 2a}`, `0 < 2a < \|F₁F₂\|` |
 | parabola with focus $a$ and directrix through $b$ and $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → $\mathrm{Point}$ → Prop | `{P : \|PF\| = dist(P, AB)}`, `F` not on the line `AB` |
 | eccentricity of the ellipse with foci $a$ and $b$ and semi-major axis $c$ | $\mathrm{Point}$ → $\mathrm{Point}$ → ℝ → ℝ | `\|F₁F₂\|/(2a)` |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| $\operatorname{@dist}$ | $\mathrm{Point}$ | `\|AB\|`, the distance between two points |
+| $\angle$ | $\mathrm{Point}$ | `\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B` |
 
 ## `matrixnorms`
 

@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def PlaneGeometry.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["planegeometry"]
 
-#leanify_article PlaneGeometry "article.tex" "fnv1a64:eeeaced6aed58226" with PlaneGeometry.vocabulary
+#leanify_article PlaneGeometry "article.tex" "fnv1a64:b602f23a608c742d" with PlaneGeometry.vocabulary

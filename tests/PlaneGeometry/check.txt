@@ -22,7 +22,10 @@ tests/PlaneGeometry/article.tex:31:79: info: claim 3: \forall x\in \mathrm{Point
 tests/PlaneGeometry/article.tex:31:79: info: claim 3 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathbb{R},\ \delta(x,y)<2\,z\Rightarrow \lvert xy\rvert<2\,z
 tests/PlaneGeometry/article.tex:31:79: info: claim 4: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathbb{R},\ \delta(x,y)<2\,z\Rightarrow \neg \@n6(x,y,z,x)
 tests/PlaneGeometry/article.tex:31:79: info: claim 4 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathbb{R},\ \delta(x,y)<2\,z\Rightarrow \lvert xy\rvert<2\,z
-tests/PlaneGeometry/article.tex: 8 definitions, 5 claims
+tests/PlaneGeometry/article.tex:35:33: info: claim 5: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \lvert xz\rvert\le \lvert xy\rvert+\lvert yz\rvert
+tests/PlaneGeometry/article.tex:35:110: info: claim 6: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(y)(z)(x)\Rightarrow \angle yxz+\angle xyz+\angle yzx=\pi
+tests/PlaneGeometry/article.tex:35:110: info: claim 6 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(y)(z)(x)\Rightarrow ((a\in \mathrm{Point}\mapsto \neg (y=x)\land \neg (a=x))(z)\land (a\in \mathrm{Point}\mapsto \neg (x=y)\land \neg (a=y))(z))\land (a\in \mathrm{Point}\mapsto \neg (y=z)\land \neg (a=z))(x)
+tests/PlaneGeometry/article.tex: 8 definitions, 7 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 7 compiled, 0 failed, 0 prose (of 7)
-  all: 15 compiled, 0 failed, 0 prose (of 15)
+  results: 11 compiled, 0 failed, 0 prose (of 11)
+  all: 19 compiled, 0 failed, 0 prose (of 19)

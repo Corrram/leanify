@@ -694,6 +694,13 @@ def run : Nat → Mode → List MTok → R
           let (a, r1) ← run f .group rest
           some (.sup a (.frac (.num 1) (.num 2)), r1)
       -- (`\deg_G(v)`: a name with a subscript is a symbol of the article, not the function)
+      -- `\angle ABC`: the angle at `B`, of three points (letters)
+      else if n == w!"angle" && (match rest with
+          | .id [a] :: .id [b] :: .id [c] :: _ => [a, b, c].all fun k => 65 ≤ k && k ≤ 90
+          | _ => false) then
+        match rest with
+        | .id a :: .id b :: .id c :: r => some (.app (.id w!"\\angle") [.id a, .id b, .id c], r)
+        | _ => none
       -- `$\sin$`, `\exp\circ f`: the function itself
       else if [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan"].contains n &&
           (rest.isEmpty || rest.head? == some (.cmd w!"circ")) then

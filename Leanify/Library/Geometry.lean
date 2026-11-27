@@ -14,6 +14,7 @@ figures as sets of points (`a point $P$ lying on $C$`).
   angle at a point, the slope of a line; and the figures: the line through two points, the
   segment, the perpendicular bisector, the circle and the disc with a centre and a radius.
 
+In formulas, `|AB|` is the distance and `\angle ABC` the angle at `B` between `A` and `C`.
 The line through `A` and `B` asks that they are distinct, the angle at `B` between `A` and
 `C` that both differ from `B`, a circle that its radius is positive. The constants are
 interpreted by `Leanify/Library/GeometryModel.lean`. -/
@@ -61,6 +62,10 @@ def vocab : Vocab where
   constLean := table.map (·.2.2)
   typeLean := [(w!"Leanify.Geometry.Point", w!"Leanify.Geometry.Point.origin")]
   modules := [w!"Leanify.Library.GeometryModel"]
+  methods := [
+    ⟨P, .fn w!"@dist", 3, "`|AB|`, the distance between two points", none⟩,
+    ⟨P, .fn w!"\\angle", 6, "`\\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B`",
+      some (close <| lamP fun b => lamP fun a => lamP fun c => and (distinct a b) (distinct c b))⟩]
   nouns := [
     { sing := phrase!"point", plural := phrase!"points", ty := P, pred := close (lamP fun _ => tt),
       doc := "a point of the Euclidean plane (`ℝ × ℝ`)" },

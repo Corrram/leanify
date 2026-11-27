@@ -1846,6 +1846,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       else pure (.neg (← asReal a), .real)
     | .abs x => do
       let st ← get
+      -- `|AB|` of two points: the vocabulary's distance between them
+      if let .mul (.id a) (.id b) := x then
+        if let (some (i, t), some (j, t')) := (lookupLocal sc a, lookupLocal sc b) then
+          if t == t' && t != .real && (← method t (.fn w!"@dist")).isSome then
+            return ← callMethod t (.fn w!"@dist") [.loc i, .loc j]
       match x with
       -- `|u(x,t)|`: the Euclidean norm of the value of a field
       | .app (.id n) _ =>
@@ -2251,6 +2256,13 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             (.all .real (.ex .real (conjAll [beyond, definedAnd e often])))
             (.ex .real (.all .real (.imp beyond (definedAnd e eventually))))))
           pure (.the .real p, .real)
+        -- `\angle ABC` of three points: the vocabulary's angle at `B`
+        else if op == w!"\\angle" && (lookupLocal sc op).isNone && (← lookupGlob op).isNone then do
+          let (pa, t) ← term f sc pf (.id v)
+          let (pb, t') ← term f sc pf a
+          let (pc, t'') ← term f sc pf body
+          if t != t' || t != t'' then fail E.type
+          callMethod t (.fn w!"\\angle") [pb, pa, pc]
         else do
           let (h, hty, doms) ← head f sc hd
           let xs ← args.mapM (term f sc pf)
