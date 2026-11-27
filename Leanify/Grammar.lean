@@ -1418,7 +1418,12 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
                   let (vs, d) ← binderMath ts
                   if (punct 44 r2).isNone then none else some (Bind.ifCond (.quant true vs d m), r2)) with
               | some res => some res
-              | none => some (.ifCond m, r'))
+              | none =>
+                -- (`If $f$ attains a maximum on $U$, …`: a verb after the formula begins a
+                -- clause, read as a hypothesis later)
+                match r' with
+                | .w w :: _ => if w == w!"then" then some (.ifCond m, r') else none
+                | _ => some (.ifCond m, r'))
           | none => none
 
 inductive Subj where
@@ -1548,6 +1553,10 @@ inductive Clause where
   /-- `there are infinitely many NPs [such that CLAUSE]`, `CLAUSE for infinitely many NPs`:
   the numbers the noun phrase (and the clause) describe are not finitely many. -/
   | infinitelyMany (np : List Chunk) (c : Option Clause)
+  /-- `the equation $E$ has no solution in NOUNs` (`kind` 0), `has a solution in NOUNs` (1),
+  `has infinitely many solutions in NOUNs` (2): the unknowns of `E` (its letters that nothing
+  binds), each one of the numbers of the noun phrase (plural words). -/
+  | solutions (kind : Nat) (eq : MT) (np : List Chunk)
   /-- The false statement (`This is a contradiction.`): under hypotheses, that they
   cannot all hold. -/
   | absurd
@@ -2524,19 +2533,64 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       some (Clause.compare l rel rr, r2)) with
   | some res => some res
   | none =>
+  -- `the equation $x^4+y^4=z^4$ has no solution in positive integers`, `has a solution in
+  -- integers`, `has infinitely many solutions in positive integers`, `has no integer
+  -- solutions`: the unknowns of the equation, each a number of the noun
+  match (do
+      let r0 := (kw [w!"the"] cs).getD cs
+      let r1 ← kw [w!"equation"] r0
+      let (ts, r2) ← mathChunk r1
+      let e ← Math.parseFormula ts
+      let .chain _ [(.eq, _)] := e | none
+      let r3 ← kw [w!"has"] r2
+      let stops : List Codes := [w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then",
+        w!"whenever", w!"iff", w!"but", w!"so"]
+      let inNoun (kind : Nat) (r : List Chunk) : Option (Clause × List Chunk) := do
+        let r' ← kw [w!"in"] r
+        let np := r'.takeWhile fun (c : Chunk) => match c with
+          | .w w => !stops.contains w
+          | .p 45 => true
+          | _ => false
+        if np.isEmpty then none
+        some (Clause.solutions kind e np, r'.drop np.length)
+      -- (`no integer solutions`: the numbers named before `solutions`)
+      let named (kind : Nat) (r : List Chunk) : Option (Clause × List Chunk) := do
+        let i ← r.findIdx? fun (c : Chunk) => match c with | .w w => w == w!"solutions" || w == w!"solution" | _ => false
+        let ws := r.take i
+        if ws.isEmpty || i > 2 then none
+        let np : List Chunk ← match ws with
+          | [.w a] =>
+            if a == w!"integer" then some [.w w!"integers"]
+            else if a == w!"rational" then some [.w w!"rational", .w w!"numbers"]
+            else if a == w!"real" then some [.w w!"real", .w w!"numbers"]
+            else none
+          | [.w p, .w a] => if p == w!"positive" && a == w!"integer" then some [.w p, .w w!"integers"] else none
+          | _ => none
+        some (Clause.solutions kind e np, r.drop (i + 1))
+      (do let r ← kw [w!"no", w!"solutions"] r3 <|> kw [w!"no", w!"solution"] r3; inNoun 0 r) <|>
+      (do let r ← kw [w!"no"] r3; named 0 r) <|>
+      (do let r ← kw [w!"a", w!"solution"] r3 <|> kw [w!"solutions"] r3; inNoun 1 r) <|>
+      (do let r ← kw [w!"an"] r3 <|> kw [w!"a"] r3; named 1 r) <|>
+      (do let r ← kw [w!"infinitely", w!"many", w!"solutions"] r3; inNoun 2 r) <|>
+      (do let r ← kw [w!"infinitely", w!"many"] r3; named 2 r) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
   -- `$f$ attains its maximum on $[a,b]$`: a point of the set where no value is larger
   match (do
       let (ts, r) ← mathChunk cs
       let f ← Math.parseFormula ts
       let r1 ← kw [w!"attains", w!"its"] r <|> kw [w!"attains", w!"a"] r
       let (isMax, r2) ← (kw [w!"maximum"] r1).map (true, ·) <|> (kw [w!"minimum"] r1).map (false, ·)
-      let r3 ← kw [w!"on"] r2
+      let r3 ← kw [w!"on"] r2 <|> kw [w!"in"] r2
       let (dts, r4) ← mathChunk r3
       let d ← Math.parseFormula dts
       let c : Codes := w!"\\attained"
       let x : Codes := w!"\\attaining"
-      let fc := MT.app f [.id c]
-      some (Clause.fact (.quant false [c] d (.quant true [x] d (.chain (MT.app f [.id x]) [(if isMax then Rel.le else Rel.ge, fc)]))), r4) :
+      -- (`$|f|$ attains a maximum in $U$`: the modulus of the values)
+      let at_ (v : Codes) : MT := match f with
+        | .abs g => .abs (.app g [.id v])
+        | g => .app g [.id v]
+      some (Clause.fact (.quant false [c] d (.quant true [x] d (.chain (at_ x) [(if isMax then Rel.le else Rel.ge, at_ c)]))), r4) :
       Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
@@ -3000,8 +3054,9 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
   -- `there are integers $a,b$ with $a+b=1$`, `there are real numbers $x_1,\ldots,x_n$
   -- [with $φ$] such that CLAUSE`: a variable for each (a sequence is one); without
   -- `such that`, the condition after `with` is the clause
+  -- (`there are no positive integers $x,y,z$ with $φ$`: none such)
+  let noneOf (c : Clause) : Clause := if none_ then Clause.noneExist c else c
   match (do
-      if none_ then none else
       let ws0 := r.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
       -- (`integers $x$ and $y$`, as `integers $x,y$`)
       let (ts, r1) ← joinedVars (r.drop ws0.length)
@@ -3016,12 +3071,12 @@ def thereIsWith (sub : List Chunk → Option (Clause × List Chunk)) (cs : List 
         match followingProperty r2 <|> kw [w!"such", w!"that"] r2 with
         | some r3 => do
           let (c, r4) ← suchThatClauses sub r3
-          some (Clause.thereIs (.many (nouns ++ [Bind.ifCond φ])) c, r4)
-        | none => if clauseEnd r2 then some (Clause.thereIs (.many nouns) (.fact φ), r2) else none
+          some (noneOf (Clause.thereIs (.many (nouns ++ [Bind.ifCond φ])) c), r4)
+        | none => if clauseEnd r2 then some (noneOf (Clause.thereIs (.many nouns) (.fact φ)), r2) else none
       | none => do
         let r2 ← followingProperty r1 <|> kw [w!"such", w!"that"] r1
         let (c, r3) ← suchThatClauses sub r2
-        some (Clause.thereIs (.many nouns) c, r3)) with
+        some (noneOf (Clause.thereIs (.many nouns) c), r3)) with
   | some res => some res
   | none =>
   -- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, CLAUSE]`
@@ -7048,7 +7103,7 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
         else ([mx1], r1)
       | _ => ([mx1], r1)
     let (onD, r3) : Option (List MTok) × List Chunk := match r2 with
-      | .w o :: .m d :: r => if o == w!"on" || o == w!"over" then (some d, r) else (none, r2)
+      | .w o :: .m d :: r => if o == w!"on" || o == w!"over" || o == w!"in" then (some d, r) else (none, r2)
       | _ => (none, r2)
     if !isEnd r3 then none
     let subj := cs.take i

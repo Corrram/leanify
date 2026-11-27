@@ -122,6 +122,9 @@ inductive Prim where
   /-- `cardIs P r`: the set of real numbers `P` is finite and has `r` elements. A number of
   elements is a description (`the r with cardIs P r`), so that an infinite set has none. -/
   | cardIs
+  /-- `finiteN n S`: the set of points of `ℝⁿ` (`Ty.setN n`) is finite (the solutions of an
+  equation in `n` unknowns). -/
+  | finiteN (n : Nat)
   deriving DecidableEq, Repr, Lean.ToExpr
 
 /-- Real functions of `n` real variables, curried. -/
@@ -163,6 +166,7 @@ def Prim.ty : Prim → Ty
   | .l2NormN n | .supNormN n | .integralN n => Ty.fns n ⟶ .real ⟶ .prop
   | .partialMulti n => Ty.fns n ⟶ Ty.fns (n + n) ⟶ .prop
   | .cardIs => (.real ⟶ .prop) ⟶ .real ⟶ .prop
+  | .finiteN n => Ty.setN n ⟶ .prop
 
 /-- Untyped core terms with de Bruijn locals, indexed article definitions
 (`glob`) and vocabulary constants (`const`). Types are checked by `typeOf`;

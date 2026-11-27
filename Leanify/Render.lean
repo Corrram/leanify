@@ -51,6 +51,7 @@ def Prim.tex : Prim → String
   | .l2NormN _ => "\\operatorname{L2norm}" | .supNormN _ => "\\operatorname{supnorm}"
   | .integralN _ => "\\operatorname{integral}" | .partialMulti _ => "\\operatorname{partials}"
   | .cardIs => "\\operatorname{card}"
+  | .finiteN _ => "\\operatorname{finite}"
 
 /-- Binding strength for parentheses: propositions (1–4), relations (5), sums (6),
 products (7), signs (8), atoms (9). -/

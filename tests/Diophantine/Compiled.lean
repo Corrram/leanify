@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Diophantine.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["diophantine"]
 
-#leanify_article Diophantine "article.tex" "fnv1a64:3d3c679d3714afbf" with Diophantine.vocabulary
+#leanify_article Diophantine "article.tex" "fnv1a64:19c7c6a471e4b1ed" with Diophantine.vocabulary

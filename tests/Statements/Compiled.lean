@@ -22,4 +22,4 @@ set_option maxHeartbeats 0
 /-- The vocabulary of the article: the core and the fields `numbers` and `complex`. -/
 def Statements.vocabulary : Leanify.Vocab := Leanify.Fields.select ["numbers", "complex"]
 
-#leanify_article Statements "article.tex" "fnv1a64:29c71a0ca1ca04c7" with Statements.vocabulary
+#leanify_article Statements "article.tex" "fnv1a64:f6ceb15cba2ae4b7" with Statements.vocabulary

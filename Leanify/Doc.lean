@@ -2833,7 +2833,7 @@ def freeIds : Nat → List Codes → MT → List Codes
   | f + 1, bound, m =>
     match m with
     -- (`@the`, `@norm`: markers of the parser, no variables)
-    | .id n => if bound.contains n || n == [42] || n.head? == some 64 then [] else [n]
+    | .id n => if bound.contains n || n == [42] || n == [39] || n.head? == some 64 then [] else [n]
     | .num _ => []
     -- the base of `e_b` is a symbol, not a variable; `a_0` may be a variable
     | .sub (.id k) i =>
@@ -3109,7 +3109,7 @@ def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo)
     -- variables bound before (of the result: `Let $n\ge1$. If $x\in[0,n]$, …`) are not
     -- bound again
     let st ← get
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
     -- (a symbol of an earlier sentence that Leanify did not read is an object of the
     -- article, not a variable: `If $q>2-s$` about the `q` and `s` introduced in words)
     -- (not a variable that the result or the sentence has bound: `Let $T$ be …. If
@@ -3256,7 +3256,7 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
   -- $b\ge0$ and $|b|<1$` does not bind `b` again)
   let restates (out : List BindInfo) (φ : MT) : Bool :=
     let fr := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n =>
-      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
+      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
     -- (it may also use the variables bound before: `Let $c>0$. Let $v$ be a real number
     -- with … and $|v|<c$.`)
     fr.any (fun n => out.any (·.name == n)) && fr.all fun n => out.any (·.name == n) || before.any (·.name == n)
@@ -3328,6 +3328,7 @@ def clauseMaths : Clause → List MT
   | .orC p q => clauseMaths p ++ clauseMaths q
   | .infinitelyMany np (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .infinitelyMany np none => (mathsOf np).filterMap Math.parseFormula
+  | .solutions _ e _ => [e]
   | .under _ c => clauseMaths c
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
@@ -4584,7 +4585,7 @@ def bindNames1 (st : St) (env : List Codes) : Bind → List Codes
     | some (x, _, _, _) => [x]
     | none => npVars [.m ts]
   | .ifCond φ =>
-    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n).eraseDups
+    let free := ((dropBoundIndices st φ (freeIds 64 [] φ)).filter fun n => !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n && !st.vocab.symbols.any (·.sym == n)).eraseDups
     (seqFree st [] φ free).filter (!env.contains ·)
   | .hyp b => bindNames1 st env b
   | _ => []
@@ -5634,8 +5635,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       match np.drop head.length with
       | .w o :: .m ts :: tail =>
         -- (`$G$ has a cycle of odd length`: the words after the subject go with the noun,
-        -- `with a cycle of odd length`)
-        if o != w!"of" || head.isEmpty || !(tail.all fun ch => match ch with | .w _ | .p 45 => true | _ => false) then none else
+        -- `with a cycle of odd length`; also with formulas, `$p$ has a root in $\mathbb{C}$`)
+        if o != w!"of" || head.isEmpty || !(tail.all fun ch => match ch with | .w _ | .m _ | .p 45 => true | _ => false) then none else
         (Math.parseFormula ts).map fun s => (s, head ++ tail)
       | _ => none
     -- (`there is a unique $y\in C$`: the variable with its domain)
@@ -5715,6 +5716,42 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     -- the set of the numbers described is not finite (it has no number of elements)
     let set := Tm.lam .real .tt (.and (holdsAt b.pred (.loc 0)) inner)
     pure (.not (.ex .real (.app (.app (.prim .cardIs) (shift 1 0 set)) (.loc 0))))
+  | .solutions kind e np => do
+    -- the unknowns: the letters of the equation that nothing binds, in their order, each a
+    -- number of the noun phrase (`positive integers`)
+    let st ← get
+    let unknowns := (freeIds 64 [] e).eraseDups.filter fun n => (Elab.lookupLocal sc n).isNone &&
+      !(st.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st i) && !constName n &&
+      !st.vocab.symbols.any (·.sym == n)
+    if unknowns.isEmpty then fail E.finding w!"an equation without unknowns: every letter of it is bound"
+    -- (`e` and `i` alone are Euler's number and the imaginary unit elsewhere: as unknowns
+    -- they would be read otherwise than written)
+    if let some v := unknowns.find? (fun n => n == [101] || n == [105]) then
+      fail E.finding (w!"the letter " ++ v ++ w!" as an unknown of an equation: name the unknowns (there are no integers $x,y$ with …)")
+    let mut bs : List BindInfo := []
+    for v in unknowns do
+      let b ← nounPhrase (np ++ [.m [.id v]]) (scopeOf bs ++ sc)
+      if b.name != v then fail E.unsupported
+      bs := bs ++ [b]
+    let (p, pty) ← Elab.term 100000 (scopeOf bs ++ sc) none e
+    if pty != .prop then fail E.type
+    match kind with
+    | 2 =>
+      -- infinitely many: the set of solutions, of points of `ℝⁿ`, is not finite
+      if !(bs.all (·.ty == .real)) then fail E.type
+      let k := bs.length
+      let conds := bs.zipIdx.map fun (b, j) => shift (k - 1 - j) 0 (holdsAt b.pred (.loc 0))
+      let body := conds.foldr (fun q acc => if q == .tt then acc else Tm.and q acc) p
+      let set := bs.foldr (fun _ acc => Tm.lam .real .tt acc) body
+      if k == 1 then
+        pure (.not (.ex .real (.app (.app (.prim .cardIs) (shift 1 0 set)) (.loc 0))))
+      else
+        pure (.not (.app (.prim (.finiteN k)) set))
+    | _ =>
+      let ex := bs.foldr (fun b acc => Tm.ex b.ty (match b.pred with
+        | some q => .and (.app q (.loc 0)) acc
+        | none => acc)) p
+      pure (if kind == 0 then .not ex else ex)
   | .both cls => do
     let ps ← cls.mapM (clauseTm c sc onVar lastRhs)
     pure (Elab.conjAll ps)
@@ -6146,7 +6183,9 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   -- if $x>0$, then …`)
   let isHyp (known : List Codes) (b : Bind) : Bool := match b with
     | .ifCond φ =>
-      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i) && !constName n).eraseDups
+      -- (a variable bound by the result or the sentence hides a definition of the article
+      -- with its name)
+      let fr := ((dropBoundIndices st0 φ (freeIds 64 [] φ)).filter fun n => (known.contains n || !(st0.globs.zipIdx.any fun (g, i) => g.key == n && !g.family && Elab.visibleIn st0 i)) && !constName n && !st0.vocab.symbols.any (·.sym == n)).eraseDups
       let fr := seqFree st0 [] φ fr
       -- (`U_1` of a known `U` is a term of that sequence)
       let fr := fr.map fun n =>

@@ -25,7 +25,13 @@ tests/Diophantine/article.tex:34:1: info: claim 7 is meaningful if: 6\in \mathbb
 tests/Diophantine/article.tex:34:1: info: claim 8: (13\in \mathbb{Z}\land 0\le 13)\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land y\,y+z\,z=13))
 tests/Diophantine/article.tex:38:52: info: claim 9: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0\le x\land 0<\@n3(x)\Rightarrow (x\in \mathbb{Z}\land 0\le x)\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land z\,z+s\,s=x))
 tests/Diophantine/article.tex:38:52: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow 0\le x\Rightarrow x\in \mathbb{Z}\land 0\le x
-tests/Diophantine/article.tex: 7 definitions, 10 claims
+tests/Diophantine/article.tex:42:1: info: claim 10: \neg (\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land 0<y)\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land 0<z)\land {x}^{4}+{y}^{4}={z}^{4})))
+tests/Diophantine/article.tex:42:66: info: claim 11: \neg \operatorname{finite}((x\in \mathbb{R}\mapsto (y\in \mathbb{R}\mapsto (z\in \mathbb{R}\mapsto (x\in \mathbb{Z}\land 0<x)\land (y\in \mathbb{Z}\land 0<y)\land (z\in \mathbb{Z}\land 0<z)\land {x}^{2}+{y}^{2}={z}^{2}))))
+tests/Diophantine/article.tex:42:145: info: claim 12: \neg \operatorname{finite}((x\in \mathbb{R}\mapsto (y\in \mathbb{R}\mapsto x\in \mathbb{Z}\land y\in \mathbb{Z}\land {x}^{2}-2\,{y}^{2}=1)))
+tests/Diophantine/article.tex:42:241: info: claim 13: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {y}^{2}-x\,{z}^{2}=1))
+tests/Diophantine/article.tex:42:300: info: claim 14: \neg (\exists x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\land {x}^{2}=2)
+tests/Diophantine/article.tex:42:348: info: claim 15: \neg (\exists x\in \mathbb{R},\ (x\in \mathbb{Z}\land 0<x)\land (\exists y\in \mathbb{R},\ (y\in \mathbb{Z}\land 0<y)\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land 0<z)\land {x}^{3}+{y}^{3}={z}^{3})))
+tests/Diophantine/article.tex: 7 definitions, 16 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 7 compiled, 0 failed, 0 prose (of 7)
-  all: 14 compiled, 0 failed, 0 prose (of 14)
+  results: 14 compiled, 0 failed, 0 prose (of 14)
+  all: 21 compiled, 0 failed, 0 prose (of 21)

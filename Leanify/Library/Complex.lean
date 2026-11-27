@@ -10,7 +10,11 @@ Mathlib by `Leanify.Complex.model` (`Leanify/Library/ComplexModel.lean`).
 * functions of a complex variable: `entire function`, `holomorphic` (on the domain of the
   signature `f\colon U\to\mathbb{C}`, or `on $U$`), `bounded`, `constant`, `nonconstant`; sets
   of complex numbers: `subset of $\mathbb{C}$`, `open`, `connected`, `domain in $\mathbb{C}$`;
-* `\mathrm{i}`, the imaginary unit;
+* `f'` of a function of a complex variable: the complex derivative (Mathlib `deriv`, the `d`
+  with `HasDerivAt f d z`), on the domain of the signature;
+* `polynomial with complex coefficients`, `complex polynomial` (Mathlib `Polynomial ℂ`
+  evaluated), `with a root in $U$`, `with a zero in $U$`, `with a root`, `without zeros`;
+* `\mathrm{i}`, the imaginary unit (also a bare `i` that the article does not name);
 * a real number where a complex number is expected (`1+z`): `(x : ℂ)`;
 * `z+w`, `z-w`, `zw`, `z/w` (defined for `w\ne0`), `-z`, `z^n` (for a natural number
   `n`), `|z|` (the modulus `‖z‖`), `\overline{z}` and `\bar z` (the conjugate),
@@ -52,6 +56,8 @@ def boundedOn : Nat := 17
 def constantOn : Nat := 18
 def openSet : Nat := 19
 def connectedSet : Nat := 20
+def hasDerivAt : Nat := 21
+def polyC : Nat := 22
 end Const
 open Const in
 
@@ -61,18 +67,21 @@ def vocab : Vocab where
     C ⟶ .real, C ⟶ C, C ⟶ .real, C ⟶ .real, C ⟶ C, C,
     .real ⟶ .real ⟶ (.real ⟶ C) ⟶ C, .real ⟶ .real ⟶ (.real ⟶ C) ⟶ C,
     (C ⟶ C) ⟶ .prop, (C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, (C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop,
-    (C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, (C ⟶ .prop) ⟶ .prop, (C ⟶ .prop) ⟶ .prop]
+    (C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, (C ⟶ .prop) ⟶ .prop, (C ⟶ .prop) ⟶ .prop,
+    (C ⟶ C) ⟶ C ⟶ C ⟶ .prop, (C ⟶ C) ⟶ .prop]
   constNames := [w!"", w!"+", w!"-", w!"\\cdot", w!"/", w!"-", w!"^", w!"\\lvert #\\rvert",
     w!"\\overline{#}", w!"\\operatorname{Re}(#)", w!"\\operatorname{Im}(#)", w!"\\exp(#)",
     w!"\\mathrm{i}", w!"\\sum", w!"\\prod", w!"\\operatorname{Entire}", w!"\\operatorname{Holomorphic}",
-    w!"\\operatorname{Bounded}", w!"\\operatorname{Constant}", w!"\\operatorname{Open}", w!"\\operatorname{Connected}"]
+    w!"\\operatorname{Bounded}", w!"\\operatorname{Constant}", w!"\\operatorname{Open}", w!"\\operatorname{Connected}",
+    w!"\\operatorname{HasDerivAt}", w!"\\operatorname{Polynomial}"]
   constLean := [w!"Leanify.Complex.Lean.ofReal", w!"Leanify.Complex.Lean.add", w!"Leanify.Complex.Lean.sub",
     w!"Leanify.Complex.Lean.mul", w!"Leanify.Complex.Lean.div", w!"Leanify.Complex.Lean.neg",
     w!"Leanify.Complex.powNat", w!"Leanify.Complex.Lean.abs", w!"Leanify.Complex.Lean.conj",
     w!"Leanify.Complex.Lean.re", w!"Leanify.Complex.Lean.im", w!"Complex.exp", w!"Complex.I",
     w!"Leanify.Complex.finSum", w!"Leanify.Complex.finProd", w!"Leanify.Complex.Entire",
     w!"Leanify.Complex.HolomorphicOn", w!"Leanify.Complex.BoundedOn", w!"Leanify.Complex.ConstantOn",
-    w!"Leanify.Complex.OpenSet", w!"Leanify.Complex.ConnectedSet"]
+    w!"Leanify.Complex.OpenSet", w!"Leanify.Complex.ConnectedSet", w!"Leanify.Complex.HasDerivAtC",
+    w!"Leanify.Complex.PolyC"]
   typeLean := [(w!"Complex", w!"Leanify.Complex.Lean.zero")]
   modules := [w!"Leanify.Library.ComplexModel"]
   nouns := [
@@ -84,6 +93,10 @@ def vocab : Vocab where
       pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun _ => tt), doc := "a set of complex numbers" },
     { sing := phrase!"set of complex numbers", plural := phrase!"sets of complex numbers", ty := C ⟶ .prop,
       pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun _ => tt), doc := "(Mathlib `Set ℂ`)" },
+    { sing := phrase!"polynomial with complex coefficients", plural := phrase!"polynomials with complex coefficients", ty := C ⟶ C,
+      pred := .const polyC, doc := "a polynomial function `z ↦ p(z)` for some `p ∈ ℂ[X]` (Mathlib `Polynomial.eval`)" },
+    { sing := phrase!"complex polynomial", plural := phrase!"complex polynomials", ty := C ⟶ C,
+      pred := .const polyC, doc := "a polynomial with complex coefficients (Mathlib `Polynomial ℂ`)" },
     { sing := phrase!"domain in $\\mathbb{C}$", plural := phrase!"domains in $\\mathbb{C}$", ty := C ⟶ .prop,
       pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun u => and (app (const openSet) u) (app (const connectedSet) u)),
       doc := "an open connected set of complex numbers" }]
@@ -105,6 +118,20 @@ def vocab : Vocab where
     { phrase := phrase!"holomorphic", prenominal := true, ty := C ⟶ C, onDomain := true,
       pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun u => lamT (C ⟶ C) (fun _ => tt) fun f => app2 (const holomorphicOn) u f),
       doc := "on the domain of the signature `f\\colon U\\to\\mathbb{C}` (Mathlib `DifferentiableOn ℂ`)" },
+    { phrase := phrase!"with a root in $v$", prenominal := false, ty := C ⟶ C,
+      pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun u => lamT (C ⟶ C) (fun _ => tt) fun f =>
+        exT C fun z => and (app u z) (eq (app f z) (app (const ofReal) (num 0)))),
+      doc := "`f(z) = 0` for some `z ∈ U` (also `has a root in $U$`)" },
+    { phrase := phrase!"with a zero in $v$", prenominal := false, ty := C ⟶ C,
+      pred := close (lamT (C ⟶ .prop) (fun _ => tt) fun u => lamT (C ⟶ C) (fun _ => tt) fun f =>
+        exT C fun z => and (app u z) (eq (app f z) (app (const ofReal) (num 0)))),
+      doc := "`f(z) = 0` for some `z ∈ U`" },
+    { phrase := phrase!"with a root", prenominal := false, ty := C ⟶ C,
+      pred := close (lamT (C ⟶ C) (fun _ => tt) fun f => exT C fun z => eq (app f z) (app (const ofReal) (num 0))),
+      doc := "`f(z) = 0` for some complex number `z`" },
+    { phrase := phrase!"without zeros", prenominal := false, ty := C ⟶ C,
+      pred := close (lamT (C ⟶ C) (fun _ => tt) fun f => allT C fun z => not (eq (app f z) (app (const ofReal) (num 0)))),
+      doc := "`f(z) ≠ 0` for every complex number `z` (also `has no zeros`)" },
     { phrase := phrase!"open", prenominal := true, ty := C ⟶ .prop, pred := .const openSet, doc := "(Mathlib `IsOpen`)" },
     { phrase := phrase!"connected", prenominal := true, ty := C ⟶ .prop, pred := .const connectedSet,
       doc := "nonempty, and connected (Mathlib `IsConnected`)" }]
@@ -121,13 +148,15 @@ def vocab : Vocab where
   methods := [
     ⟨C, .ofReal, ofReal, "a real number `x` as the complex number `(x : ℂ)`", none⟩,
     ⟨C, .add, add, "`z + w`", none⟩, ⟨C, .sub, sub, "`z - w`", none⟩, ⟨C, .mul, mul, "`z * w`", none⟩,
-    ⟨C, .div, div, "`z / w`, for `w ≠ 0`", none⟩, ⟨C, .neg, neg, "`-z`", none⟩,
+    ⟨C, .div, div, "`z / w`, for `w ≠ 0`",
+      some (close <| lamT C (fun _ => tt) fun _ => lamT C (fun _ => tt) fun w => not (eq w (app (const ofReal) (num 0))))⟩, ⟨C, .neg, neg, "`-z`", none⟩,
     ⟨C, .pow, pow, "`z ^ n`, for a natural number `n`", none⟩, ⟨C, .abs, abs, "the modulus `‖z‖`", none⟩,
     ⟨C, .decor w!"\\overline", conj, "the conjugate `starRingEnd ℂ z`", none⟩,
     ⟨C, .decor w!"\\bar", conj, "the conjugate `starRingEnd ℂ z`", none⟩,
     ⟨C, .fn w!"\\Re", re, "the real part `z.re`", none⟩, ⟨C, .fn w!"Re", re, "the real part `z.re`", none⟩,
     ⟨C, .fn w!"\\Im", im, "the imaginary part `z.im`", none⟩, ⟨C, .fn w!"Im", im, "the imaginary part `z.im`", none⟩,
     ⟨C, .fn w!"\\exp", exp, "`Complex.exp z` (also `e^{z}`)", none⟩,
+    ⟨C ⟶ C, .decor w!"'", hasDerivAt, "`f'`, the complex derivative: at `z`, the `d` with `HasDerivAt f d z` (Mathlib `deriv`), defined where `f` is complex differentiable (on the domain of the signature `f\\colon U\\to\\mathbb{C}`)", none⟩,
     ⟨C, .sum, sum, "`∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`", none⟩, ⟨C, .prod, prod, "`∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k`", none⟩]
   symbols := [
     { sym := w!"\\mathbb{C}", ty := C, doc := "the complex numbers (Mathlib `ℂ`), as a domain" },

@@ -2,6 +2,8 @@ import Leanify.Library.Complex
 import Leanify.Denote
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.Calculus.FDeriv.Basic
+import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Topology.Connected.Basic
 
 /-! # The meaning of the complex numbers
@@ -38,6 +40,13 @@ def OpenSet (U : ℂ → Prop) : Prop := IsOpen {z | U z}
 /-- A connected set of complex numbers: nonempty and not the union of two disjoint relatively
 open nonempty parts (Mathlib `IsConnected`). -/
 def ConnectedSet (U : ℂ → Prop) : Prop := IsConnected {z | U z}
+
+/-- `d` is the complex derivative of `f` at `z` (Mathlib `HasDerivAt`): `f'(z)` is the one
+such `d`, defined where `f` is complex differentiable. -/
+def HasDerivAtC (f : ℂ → ℂ) (d z : ℂ) : Prop := HasDerivAt f d z
+/-- A polynomial function with complex coefficients: the evaluation of a polynomial of
+`ℂ[X]` (Mathlib `Polynomial.eval`). -/
+def PolyC (f : ℂ → ℂ) : Prop := ∃ p : Polynomial ℂ, ∀ z, f z = p.eval z
 
 /-! The meanings of the constants, by name (`Complex.vocab.constLean`). -/
 namespace Lean
@@ -81,6 +90,8 @@ noncomputable def model : Model where
     ⟨(C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, BoundedOn⟩,
     ⟨(C ⟶ .prop) ⟶ (C ⟶ C) ⟶ .prop, ConstantOn⟩,
     ⟨(C ⟶ .prop) ⟶ .prop, OpenSet⟩,
-    ⟨(C ⟶ .prop) ⟶ .prop, ConnectedSet⟩]
+    ⟨(C ⟶ .prop) ⟶ .prop, ConnectedSet⟩,
+    ⟨(C ⟶ C) ⟶ C ⟶ C ⟶ .prop, HasDerivAtC⟩,
+    ⟨(C ⟶ C) ⟶ .prop, PolyC⟩]
 
 end Leanify.Complex

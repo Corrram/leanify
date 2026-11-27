@@ -651,6 +651,10 @@ def Hilbert (S : El → Prop) : Prop := IsInnerProductSpace S ∧ Banach S
 /-- Orthogonal elements: their inner product is zero. -/
 def Orthogonal (a b : El) : Prop := inner a b = 0
 
+/-- The orthogonal complement of `U` in `V` (Mathlib `Submodule.orthogonal`, `Uᗮ`): the elements
+of `V` orthogonal to every element of `U`. -/
+def orthCompIn (U V : El → Prop) : El → Prop := fun v => V v ∧ ∀ u, U u → inner u v = 0
+
 /-- `f` is a bounded linear map on the normed space `X`: linear, with `‖f(x)‖ ≤ C‖x‖`
 (Mathlib `ContinuousLinearMap`). -/
 def BoundedLinearOn (X : El → Prop) (f : El → El) : Prop :=

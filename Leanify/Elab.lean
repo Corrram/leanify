@@ -1663,6 +1663,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
               -- `e` alone, where nothing names it (as `e^x`): Euler's number `\exp(1)`
               if n == [101] && !(← get).unreadIds.contains [101] then
                 pure (.app (.prim (.realFn .exp)) (.num 1), .real)
+              -- `i` alone, where nothing names it and the vocabulary has the imaginary unit
+              -- `\mathrm{i}`: that unit (`e^{i\theta}`)
+              else if n == [105] && !(← get).unreadIds.contains [105] then
+                match (← get).vocab.symbols.find? (·.sym == w!"\\mathrm{i}") with
+                | some { const := some i, ty, .. } => pure (.const i, ty)
+                | _ => fail E.undefined n
               else fail E.undefined n
     -- (with an operand of a vocabulary's type, that type's method)
     | .add x y => do
@@ -2916,6 +2922,31 @@ where
   supTerm : Nat → Scope → PF → MT → MT → M (Tm × Ty)
     | 0, _, _, _, _ => fail E.unsupported
     | f + 1, sc, pf, b, e => do
+      -- `f'` of a function of a vocabulary's type to itself (a complex function): at each
+      -- point `z` (of the domain of its signature `f\colon U\to\mathbb{C}`), the one `d` that
+      -- the vocabulary's derivative relates to `f` and `z`, defined where there is one
+      if let .id [39] := e then
+        let st0 ← get
+        let r ← tryCatch (some <$> term f sc none b) fun _ => pure none
+        match r with
+        | some (F, .fn a a') =>
+          if a == a' && isBase a then
+            if let some (c, _) ← method (.fn a a) (.decor [39]) then
+              let dom ← match b with
+                | .id n => do
+                  let st ← get
+                  match st.sigDoms.find? (fun (e, g, _, _) => g == n && (e == st.curEnv || st.curProved == some e)) with
+                  | some (_, _, d, _) =>
+                    let (D, dty) ← term f sc none d
+                    if dty == .fn a .prop then pure (Tm.app (shift 1 0 D) (.loc 0)) else pure Tm.tt
+                  | none => pure Tm.tt
+                | _ => pure Tm.tt
+              let dom := match dom with
+                | .app (.lam _ .tt .tt) _ => Tm.tt
+                | d => d
+              return (.lam a dom (.the a (.app (.app (.app c (shift 2 0 F)) (.loc 0)) (.loc 1))), .fn a a)
+          set st0
+        | _ => set st0
       -- `f'` of a real function that a sentence binds (`Let $f$ be a differentiable function`):
       -- its derivative, defined where `f` is differentiable
       if let (.id n, .id [39]) := (b, e) then
@@ -3021,6 +3052,14 @@ where
       match e with
       | .id d =>
         if d == w!"\\top" || d == w!"\\perp" then do
+          -- `U^\perp`, where the article defines no `^\perp`: the orthogonal complement of the
+          -- vocabulary (of a subset `U` of an inner product space, in that space)
+          if d == w!"\\perp" && (← lookupGlob (w!"^" ++ d)).isNone then
+            let st0 ← get
+            let r ← tryCatch (some <$> term f sc pf (.app (.id w!"@the")
+              [.text w!"orthogonal", .text w!"complement", .text w!"of", b])) fun _ => pure none
+            if let some res := r then return res
+            set st0
           let (h, g) ← liftO (← lookupGlob (w!"^" ++ d)) E.undefined (w!"^" ++ d)
           let x ← term f sc pf b
           applyAll (.glob h) g.ty g.doms [x]
