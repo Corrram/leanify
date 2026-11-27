@@ -2799,6 +2799,25 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   if let some np' := relFree then
     if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
     set st00
+  -- (`with more than $n-1$ edges`: `with at least $\lfloor n-1\rfloor+1$ edges`; `fewer than`,
+  -- `less than`: `at most $\lceil k\rceil-1$`, after `with` or `and`; `exactly $k$`: `$k$`)
+  let rec counted : Nat → List Chunk → List Chunk
+    | 0, cs => cs
+    | f + 1, .w a :: .w m :: .w t :: .m k :: rest =>
+      if (a == w!"with" || a == w!"and") && t == w!"than" && (m == w!"more" || m == w!"fewer" || m == w!"less") then
+        -- (of a number of objects: more than `k` is at least `⌊k⌋+1`, fewer than `k` at most `⌈k⌉-1`)
+        if m == w!"more" then .w a :: .w w!"at" :: .w w!"least" :: .m ([.cmd w!"lfloor"] ++ k ++ [.cmd w!"rfloor", .sym 43, .digit 1]) :: counted f rest
+        else .w a :: .w w!"at" :: .w w!"most" :: .m ([.cmd w!"lceil"] ++ k ++ [.cmd w!"rceil", .sym 45, .digit 1]) :: counted f rest
+      else .w a :: counted f (.w m :: .w t :: .m k :: rest)
+    | f + 1, .w a :: .w e :: .m k :: rest =>
+      if (a == w!"with" || a == w!"and") && e == w!"exactly" then .w a :: .m k :: counted f rest
+      else .w a :: counted f (.w e :: .m k :: rest)
+    | f + 1, c :: rest => c :: counted f rest
+    | _, [] => []
+  let npc := counted (np.length + 1) np
+  if np.any (fun c => match c with | .w w => w == w!"than" || w == w!"exactly" | _ => false) then
+    if let some b ← tryCatch (some <$> nounPhrase0 npc outer) (fun _ => pure none) then return b
+    set st00
   tryCatch (nounPhrase0 np outer) fun e00 => do
   set st00
   if let some (np', vts, condCs) := seqOfElems (← get).vocab np then
@@ -5983,6 +6002,18 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
             else none
           | _ => none
       | _ => []
+    -- (`with exactly $n-1$ edges`: `with $n-1$ edges`; `with more than $k$ edges`: `with at least
+    -- $\lfloor k\rfloor+1$ edges`, `fewer than`: `at most $\lceil k\rceil-1$`, of a number of objects)
+    let counts : List (List Chunk) := match np with
+      | .w w :: .w e :: .m k :: rest =>
+        if w == w!"with" && e == w!"exactly" then [[Chunk.w w, .m k] ++ rest] else []
+      | .w w :: .w m :: .w t :: .m k :: rest =>
+        if w != w!"with" || t != w!"than" then [] else
+        if m == w!"more" then [[Chunk.w w, .w w!"at", .w w!"least", .m ([.cmd w!"lfloor"] ++ k ++ [.cmd w!"rfloor", .sym 43, .digit 1])] ++ rest]
+        else if m == w!"fewer" || m == w!"less" then [[Chunk.w w, .w w!"at", .w w!"most", .m ([.cmd w!"lceil"] ++ k ++ [.cmd w!"rceil", .sym 45, .digit 1])] ++ rest]
+        else []
+      | _ => []
+    let singulars := singulars ++ counts
     let st0 ← get
     -- words that are not the vocabulary's are prose
     let p ← tryCatch (vocabPredicate sc x np) fun e => do
