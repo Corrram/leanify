@@ -114,6 +114,12 @@ def vocab : Vocab where
     mod phrase!"of degree at most $v$" false (close <| lamR fun n => lamT Ty.rfun (fun _ => tt) fun f =>
         and (poly f) (or (allR fun x => eq (app f x) (num 0)) (le (app (const degree) f) n)))
       "zero, or of degree at most `n`",
+    mod phrase!"of odd degree" false (close <| lamT Ty.rfun (fun _ => tt) fun f =>
+        and (and (poly f) (not (allR fun x => eq (app f x) (num 0)))) (isInt (div (sub (app (const degree) f) (num 1)) (num 2))))
+      "a nonzero polynomial whose degree is odd",
+    mod phrase!"of even degree" false (close <| lamT Ty.rfun (fun _ => tt) fun f =>
+        and (and (poly f) (not (allR fun x => eq (app f x) (num 0)))) (isInt (div (app (const degree) f) (num 2))))
+      "a nonzero polynomial whose degree is even",
     mod phrase!"with real coefficients" false polyPred "a polynomial (Mathlib `Polynomial ℝ`)",
     mod phrase!"with integer coefficients" false (withPoly intCoeffs) "every coefficient is an integer",
     mod phrase!"with rational coefficients" false (withPoly ratCoeffs) "every coefficient is rational"]

@@ -4478,7 +4478,9 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
       let elided : Option (Bind × List Chunk) := match r with
         | .m v :: .w a :: rest => if a == w!"a" || a == w!"an" then letBinder (.m v :: .w w!"be" :: .w a :: rest) else none
         | _ => none
-      match letBinder r <|> elided with
+      -- (the elided `be` first: `and $T\colon V\to V$ a linear map` is no signature binder
+      -- followed by words)
+      match elided <|> letBinder r with
       | some (b, r') => letMore f r' (b :: bs) ds
       | none =>
         match formula r with
@@ -7672,7 +7674,24 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let .w t :: _ := cs.drop (k + 1) | return []
     if lower t != w!"the" then return []
     (sentence (lead ++ cs.take (k + 1) ++ [.w w!"we", .w w!"have", .w w!"that"] ++ cs.drop (k + 1))).toList
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim
+  -- `A compact subset of a Hausdorff space is closed.`, in a result: a statement about every
+  -- object of the noun phrase (`Every compact subset …`)
+  let generic' : List Sent := Id.run do
+    if !generic then return []
+    let .w a :: rest := cs | return []
+    if !(lower a == w!"a" || lower a == w!"an") then return []
+    let ev := .w w!"every" :: rest
+    let mut acc := (sentence (lead ++ ev)).toList
+    -- (and its nested indefinites: `A compact subset of a Hausdorff space is closed.`)
+    let mut cur := ev
+    for _ in [0:5] do
+      match nestedIndef avoid generic cur with
+      | some cs' =>
+        cur := cs'
+        if let some sn := sentence (lead ++ cs') then acc := acc ++ [sn]
+      | none => break
+    return acc
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ generic'
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
 sentence when its reading as a whole does not compile. -/

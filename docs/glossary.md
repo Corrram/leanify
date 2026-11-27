@@ -674,6 +674,8 @@ except a notion whose meanings take arguments of different types, which the type
 | nonzero | ℝ → ℝ | not the zero polynomial |
 | of degree $x$ | ℝ → ℝ | a nonzero polynomial of degree `n` |
 | of degree at most $x$ | ℝ → ℝ | zero, or of degree at most `n` |
+| of odd degree | ℝ → ℝ | a nonzero polynomial whose degree is odd |
+| of even degree | ℝ → ℝ | a nonzero polynomial whose degree is even |
 | with real coefficients | ℝ → ℝ | a polynomial (Mathlib `Polynomial ℝ`) |
 | with integer coefficients | ℝ → ℝ | every coefficient is an integer |
 | with rational coefficients | ℝ → ℝ | every coefficient is rational |

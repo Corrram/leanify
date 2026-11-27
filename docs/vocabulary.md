@@ -152,7 +152,8 @@ Further fields cover other branches of mathematics:
   derangements, partitions of integers and of sets, Stirling numbers of both kinds;
 * `polynomials`: polynomials as real functions (`p(x)`, `pq`, `p'`), their degree
   (`\deg p`, of a nonzero polynomial), coefficients and real roots; monic, quadratic,
-  cubic and irreducible polynomials, polynomials with integer or rational coefficients;
+  cubic and irreducible polynomials, polynomials of odd or even degree (nonzero),
+  polynomials with integer or rational coefficients;
   `polynomial` as an adjective of a function (`a polynomial function $f\colon\mathbb{R}\to\mathbb{R}$`);
 * `graphs`: finite simple graphs on the vertices `1, …, n`, a type of its own: degrees,
   neighbours, distances, the chromatic, clique and independence numbers, components,
