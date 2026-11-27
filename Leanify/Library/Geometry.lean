@@ -8,7 +8,8 @@ figures as sets of points (`a point $P$ lying on $C$`).
 
 * nouns: `point`, `point of the plane`;
 * adjectives: `lying on $C$` (a set of points), `collinear with $A$ and $B$`, `equidistant from
-  $A$ and $B$`, `distinct from $A$`;
+  $A$ and $B$`, `distinct from $A$`; of three points together, `collinear points` and
+  `non-collinear points` (`points that are not collinear`);
 * notions: the point `$(x,y)$`, the origin, the coordinates of a point, the distance
   between two points, the midpoint, the area, perimeter and centroid of a triangle, the
   angle at a point, the slope of a line; and the figures: the line through two points, the
@@ -36,7 +37,7 @@ def table : List (Ty × Codes × Codes) := [
   (P ⟶ P ⟶ P, w!"\\operatorname{mid}", w!"Leanify.Geometry.midpoint"),                  -- 4
   (P ⟶ P ⟶ P ⟶ .real, w!"\\operatorname{area}", w!"Leanify.Geometry.area"),             -- 5
   (P ⟶ P ⟶ P ⟶ .real, w!"\\angle #2#1#3", w!"Leanify.Geometry.angle"),                   -- 6
-  (P ⟶ P ⟶ P ⟶ .prop, w!"\\operatorname{Collinear}", w!"Leanify.Geometry.Collinear"),   -- 7
+  (P ⟶ P ⟶ P ⟶ .prop, w!"\\operatorname{Collinear}(#1,#2,#3)", w!"Leanify.Geometry.Collinear"),   -- 7
   (P ⟶ P ⟶ P ⟶ P, w!"\\operatorname{centroid}", w!"Leanify.Geometry.centroid")]         -- 8
 
 def lamP (body : B → B) : B := lamT P (fun _ => tt) body
@@ -64,6 +65,7 @@ def vocab : Vocab where
   modules := [w!"Leanify.Library.GeometryModel"]
   methods := [
     ⟨P, .fn w!"@dist", 3, "`|AB|`, the distance between two points", none⟩,
+    ⟨P, .fn w!"@collinear", 7, "`collinear` (`non-collinear`) of three points: on one line", none⟩,
     ⟨P, .fn w!"\\angle", 6, "`\\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B`",
       some (close <| lamP fun b => lamP fun a => lamP fun c => and (distinct a b) (distinct c b))⟩]
   nouns := [

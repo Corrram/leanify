@@ -1218,6 +1218,7 @@ except a notion whose meanings take arguments of different types, which the type
 | Notation | On | Meaning |
 | --- | --- | --- |
 | $\operatorname{@dist}$ | $\mathrm{Point}$ | `\|AB\|`, the distance between two points |
+| $\operatorname{@collinear}$ | $\mathrm{Point}$ | `collinear` (`non-collinear`) of three points: on one line |
 | $\angle$ | $\mathrm{Point}$ | `\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B` |
 
 ## `congruences`
@@ -2296,6 +2297,7 @@ except a notion whose meanings take arguments of different types, which the type
 | Notation | On | Meaning |
 | --- | --- | --- |
 | $\operatorname{@dist}$ | $\mathrm{Point}$ | `\|AB\|`, the distance between two points |
+| $\operatorname{@collinear}$ | $\mathrm{Point}$ | `collinear` (`non-collinear`) of three points: on one line |
 | $\angle$ | $\mathrm{Point}$ | `\angle ABC`, the angle at `B` between `A` and `C` (in `[0, π]`), for `A ≠ B` and `C ≠ B` |
 
 ## `matrixnorms`

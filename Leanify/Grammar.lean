@@ -198,6 +198,9 @@ def collectiveWords : Nat → List Chunk → List Chunk × List Codes
       -- (of vectors: the family)
       ((kw [w!"linearly", w!"independent"] ws).map (w!"linearly independent", ·)) <|>
       ((kw [w!"linearly", w!"dependent"] ws).map (w!"linearly dependent", ·)) <|>
+      -- (of three points)
+      ((kw [w!"noncollinear"] ws <|> kw [w!"non", w!"collinear"] ws <|> kw [w!"not", w!"collinear"] ws).map (w!"noncollinear", ·)) <|>
+      ((kw [w!"collinear"] ws).map (w!"collinear", ·)) <|>
       -- (of vectors of an inner product space: any two; `orthogonal matrices` are each orthogonal)
       (if !(ws.any fun c => match c with | .w w => w == w!"vectors" || w == w!"elements" | _ => false) then none else
         (kw [w!"pairwise", w!"orthogonal"] ws <|> kw [w!"mutually", w!"orthogonal"] ws <|> kw [w!"orthogonal"] ws).map
@@ -247,6 +250,11 @@ def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
     some (if neg then .lnot c else c)
   let conds ← ps.mapM fun p => do
     if let some c := famCond p then return c
+    -- (three points on one line, or not)
+    if p == w!"collinear" || p == w!"noncollinear" then
+      let [a, b, c] ← vars.mapM fun v => Math.parseFormula (name v) | none
+      let m := MT.app (.id w!"@collinear") [a, b, c]
+      return (if p == w!"noncollinear" then .lnot m else m)
     if let some cs := rvConds p then
       return (cs.drop 1).foldl (fun acc c => MT.land acc c) (cs.headD (.id w!"@none"))
     match vars with
@@ -1292,6 +1300,12 @@ def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) 
     | .p 45 => true
     | _ => false
   let r1 := r.drop ws.length
+  -- (`points that are not collinear`: as `not collinear points`)
+  let ws := match (List.range ws.length).find? (fun i => match (ws[i]? : Option Chunk), (ws[i + 1]? : Option Chunk) with
+      | some (.w t), some (.w a) => (t == w!"that" || t == w!"which") && a == w!"are"
+      | _, _ => false) with
+    | some i => if i == 0 then ws else ws.drop (i + 2) ++ ws.take i
+    | none => ws
   -- (`graphs on $n$ vertices`, `polynomials of degree $n$`: a phrase with a number after
   -- the noun, which follows the variable)
   let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from"]

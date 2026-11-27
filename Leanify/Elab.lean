@@ -2887,6 +2887,7 @@ where
       match m with
       | .app (.id n) [x] => if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
       | .app (.id n) [x, y] => if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+      | .app (.id n) [x, y, z] => if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
       | _ => pure ()
       let some iv ← hilbertIv | pure none
       let fn1 := Ty.fn iv.ty .real
