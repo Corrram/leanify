@@ -52,7 +52,9 @@ tests/Matrices/article.tex:77:172: info: claim 28: \forall x\in \mathrm{Mat},\ \
 tests/Matrices/article.tex:77:172: info: claim 28 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow \operatorname{Invertible}(x^{\top})\land \operatorname{Invertible}(x)
 tests/Matrices/article.tex:77:257: info: claim 29: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow \det(x^{-1})=\frac{1}{\det(x)}
 tests/Matrices/article.tex:77:257: info: claim 29 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Invertible}(x)\Rightarrow (\operatorname{Invertible}(x)\land \operatorname{Square}(x^{-1}))\land \operatorname{Square}(x)\land \neg (\det(x)=0)\land \operatorname{Square}(x)\land \neg (\det(x)=0)
-tests/Matrices/article.tex: 4 definitions, 30 claims
+tests/Matrices/article.tex:81:1: info: claim 30: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow (\forall z\in \mathrm{Mat},\ \operatorname{rows}(z)=x\land \operatorname{cols}(z)=x\Rightarrow \det(y\,z)=\det(y)\,\det(z))
+tests/Matrices/article.tex:81:1: info: claim 30 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Mat},\ \operatorname{rows}(y)=x\land \operatorname{cols}(y)=x\Rightarrow (\forall z\in \mathrm{Mat},\ \operatorname{rows}(z)=x\land \operatorname{cols}(z)=x\Rightarrow (\operatorname{Mulable}(y,z)\land \operatorname{Square}(y\,z))\land \operatorname{Square}(y)\land \operatorname{Square}(z))
+tests/Matrices/article.tex: 4 definitions, 31 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 39 compiled, 0 failed, 0 prose (of 39)
-  all: 43 compiled, 0 failed, 0 prose (of 43)
+  results: 40 compiled, 0 failed, 0 prose (of 40)
+  all: 44 compiled, 0 failed, 0 prose (of 44)

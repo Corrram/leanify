@@ -1085,10 +1085,17 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
   (do
     -- `all integers $a,b\ge1$`, `all positive integers $a$ and $b$`: a binder for each
     let (np, r') := npUpTo (r.length + 1) r []
-    let ws0 := np.takeWhile fun c => match c with | .w _ => true | _ => false
+    -- (a formula before the noun: `all $n\times n$ matrices $A$ and $B$`, `all $k$-regular graphs`)
+    let lead : List Chunk := match np with
+      | .m t :: .p 45 :: .w _ :: _ => [.m t, .p 45]
+      | .m t :: .w _ :: _ => if t.contains (.cmd w!"times") then [.m t] else []
+      | _ => []
+    let ws0 := (np.drop lead.length).takeWhile fun c => match c with | .w _ => true | _ => false
     -- `all distinct primes $p,q$`: a condition on all of them
     let (ws, ps) := collectiveWords 8 ws0
     if ws.isEmpty then none else
+    let ws := lead ++ ws
+    let ws0 := lead ++ ws0
     let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws0.length, r' with
       | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
       -- `all real numbers $a$, $b$ and $c$`: names separated by commas, the last after `and`
