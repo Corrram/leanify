@@ -1,5 +1,6 @@
 import Solids.Compiled
 import Leanify.Readable
+import Leanify.Library.SolidsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

@@ -351,7 +351,9 @@ Further fields cover other branches of mathematics:
 * `epidemics`: reproduction numbers, thresholds and final sizes, the SIS model.
 * `triangles`: triangles by their side lengths (Heron's formula, angles, radii, medians),
   regular polygons;
-* `solids`: volumes and surface areas, the ball and the sphere in `n` dimensions;
+* `solids`: volumes and surface areas, the ball and the sphere in `n` dimensions (the solids
+  as sets of `EuclideanSpace ℝ (Fin n)`, their Lebesgue measure and the Euclidean Hausdorff
+  measure `μHE` of their boundary, so that the formulas are claims);
 * `analyticnumbertheory`: Chebyshev's functions, the von Mangoldt function, the logarithmic
   integral, primes in residue classes, twin primes;
 * `collatz`: the Collatz map, its iterates and stopping times.

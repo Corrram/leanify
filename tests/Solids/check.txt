@@ -1,15 +1,10 @@
 tests/Solids/article.tex:9:1: info: defines \@n0 (n0)
-tests/Solids/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow \neg (2=0)\land (\forall z\in \mathbb{R},\ \neg (2=0))\land \neg (\int_{\{z:0<z\}}{z}^{\frac{y}{2}+1-1}\,\exp(-z)\,dz=0))
 tests/Solids/article.tex:10:1: info: defines \@n1 (n1)
-tests/Solids/article.tex:10:1: info: \@n1 is well defined if: \forall x\in \mathbb{R},\ 0\le x\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow \neg (2=0)\land (\forall z\in \mathbb{R},\ \neg (2=0))\land \neg (\int_{\{z:0<z\}}{z}^{\frac{y}{2}-1}\,\exp(-z)\,dz=0))
 tests/Solids/article.tex:11:1: info: defines \@n2 (n2)
 tests/Solids/article.tex:12:1: info: defines \@n3 (n3)
-tests/Solids/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (3=0))
 tests/Solids/article.tex:13:1: info: defines \@n4 (n4)
 tests/Solids/article.tex:14:1: info: defines \@n5 (n5)
-tests/Solids/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ 0<x\Rightarrow \neg (2=0)\land \neg (3=0)
 tests/Solids/article.tex:15:1: info: defines \Sigma (Sigma)
-tests/Solids/article.tex:15:1: info: \Sigma is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 1\le x\Rightarrow \neg (x!=0)
 tests/Solids/article.tex:20:1: info: claim 0: \@n0(1,1)=2
 tests/Solids/article.tex:20:1: info: claim 0 is meaningful if: (1\in \mathbb{Z}\land 1\le 1)\land 0\le 1
 tests/Solids/article.tex:20:1: info: claim 1: \@n0(1,2)=\pi
@@ -30,7 +25,13 @@ tests/Solids/article.tex:30:1: info: claim 8: \@n5(1)=\frac{{2}^{\frac{1}{2}}}{3
 tests/Solids/article.tex:30:1: info: claim 8 is meaningful if: 0<1\land (0\le 2\land \neg (2=0))\land \neg (3=0)
 tests/Solids/article.tex:30:1: info: claim 9: \Sigma(3)=\frac{1}{6}
 tests/Solids/article.tex:30:1: info: claim 9 is meaningful if: (3\in \mathbb{Z}\land 1\le 3)\land \neg (6=0)
-tests/Solids/article.tex: 7 definitions, 10 claims
+tests/Solids/article.tex:36:43: info: claim 10: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n2(x,y)=\pi\,{x}^{2}\,y)
+tests/Solids/article.tex:36:43: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow 0<y\land 0<x)
+tests/Solids/article.tex:36:43: info: claim 11: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \@n3(x,y)=\frac{\pi\,{x}^{2}\,y}{3})
+tests/Solids/article.tex:36:43: info: claim 11 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (0<y\land 0<x)\land \neg (3=0))
+tests/Solids/article.tex:36:99: info: claim 12: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow \Sigma(x)=\frac{1}{x!}
+tests/Solids/article.tex:36:99: info: claim 12 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (x\in \mathbb{Z}\land 1\le x)\land x\in \mathbb{N}\land \neg (x!=0)
+tests/Solids/article.tex: 7 definitions, 13 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 4 compiled, 0 failed, 0 prose (of 4)
-  all: 11 compiled, 0 failed, 0 prose (of 11)
+  results: 7 compiled, 0 failed, 0 prose (of 7)
+  all: 14 compiled, 0 failed, 0 prose (of 14)

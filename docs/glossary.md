@@ -3225,19 +3225,19 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| volume of the ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `π^{n/2} r^n/Γ(n/2 + 1)` |
-| surface area of the sphere of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | `2π^{n/2} r^{n-1}/Γ(n/2)`, the sphere in `ℝ^n` |
-| volume of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r² h` |
-| surface area of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `2π r(r + h)` |
-| volume of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r² h/3` |
-| surface area of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | `π r(r + √(r² + h²))` |
-| volume of the ellipsoid with semi-axes $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `4π abc/3` |
-| volume of the torus with radii $a$ and $b$ | ℝ → ℝ → ℝ | `2π² R r²`, `0 < r < R` |
-| volume of the regular tetrahedron with edge $a$ | ℝ → ℝ | `a³/(6√2)` |
-| volume of the regular octahedron with edge $a$ | ℝ → ℝ | `√2 a³/3` |
-| volume of the regular dodecahedron with edge $a$ | ℝ → ℝ | `(15 + 7√5) a³/4` |
-| volume of the regular icosahedron with edge $a$ | ℝ → ℝ | `5(3 + √5) a³/12` |
-| volume of the standard simplex in dimension $a$ | ℝ → ℝ | `1/n!` |
+| volume of the ball of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of the ball of `ℝ^n` (`π^{n/2} r^n/Γ(n/2 + 1)`) |
+| surface area of the sphere of radius $a$ in dimension $b$ | ℝ → ℝ → ℝ | the `(n-1)`-dimensional Euclidean Hausdorff measure of the sphere in `ℝ^n` (Mathlib `μHE`) (`2π^{n/2} r^{n-1}/Γ(n/2)`) |
+| volume of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of `x₁² + x₂² ≤ r²`, `0 ≤ x₃ ≤ h` (`π r² h`) |
+| surface area of the cylinder with radius $a$ and height $b$ | ℝ → ℝ → ℝ | the area of its boundary, with the two disks (`2π r(r + h)`) |
+| volume of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of the solid cone (`π r² h/3`) |
+| surface area of the cone with radius $a$ and height $b$ | ℝ → ℝ → ℝ | the area of its boundary, with the base (`π r(r + √(r² + h²))`) |
+| volume of the ellipsoid with semi-axes $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the Lebesgue measure of `(x₁/a)² + (x₂/b)² + (x₃/c)² ≤ 1` (`4π abc/3`) |
+| volume of the torus with radii $a$ and $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of the solid torus, `0 < r < R` (`2π² R r²`) |
+| volume of the regular tetrahedron with edge $a$ | ℝ → ℝ | the Lebesgue measure of the convex hull of its vertices (`a³/(6√2)`) |
+| volume of the regular octahedron with edge $a$ | ℝ → ℝ | the Lebesgue measure of the convex hull of `±(a/√2)eᵢ` (`√2 a³/3`) |
+| volume of the regular dodecahedron with edge $a$ | ℝ → ℝ | the Lebesgue measure of the convex hull of its twenty vertices (`(15 + 7√5) a³/4`) |
+| volume of the regular icosahedron with edge $a$ | ℝ → ℝ | the Lebesgue measure of the convex hull of its twelve vertices (`5(3 + √5) a³/12`) |
+| volume of the standard simplex in dimension $a$ | ℝ → ℝ | the Lebesgue measure of the points with nonnegative coordinates of sum at most `1` (`1/n!`) |
 
 ## `analyticnumbertheory`
 

@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Solids.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["solids"]
 
-#leanify_article Solids "article.tex" "fnv1a64:3aa31d0588d06df5" with Solids.vocabulary
+#leanify_article Solids "article.tex" "fnv1a64:7121d9802d98b31c" with Solids.vocabulary
