@@ -65,8 +65,6 @@ def quotient : Tm := close <| lamT .real (fun a => isInt a) fun a =>
 
 def integerPart : Tm := close <| lamR fun x => floor x
 def fractionalPart : Tm := close <| lamR fun x => sub x (floor x)
-def absoluteValue : Tm := close <| lamR fun x => abs x
-
 def intDom : Option Tm := some integer
 def posIntDom : Option Tm := some posInt
 
@@ -110,8 +108,6 @@ def vocab : Vocab where
     { name := phrase!"integer part of $v$", value := integerPart, ty := .real ⟶ .real,
       doc := "`⌊x⌋` (Mathlib `Int.floor`)" },
     { name := phrase!"fractional part of $v$", value := fractionalPart, ty := .real ⟶ .real,
-      doc := "`x - ⌊x⌋` (Mathlib `Int.fract`)" },
-    { name := phrase!"absolute value of $v$", value := absoluteValue, ty := .real ⟶ .real,
-      doc := "`|x|`" }]
+      doc := "`x - ⌊x⌋` (Mathlib `Int.fract`)" }]
 
 end Leanify.Numbers

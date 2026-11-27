@@ -56,7 +56,11 @@ tests/Topology/article.tex:100:200: info: claim 35 is meaningful if: \forall x\i
 tests/Topology/article.tex:104:1: info: claim 36: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ ((\forall z\in \mathbb{R},\ x(z)\Rightarrow z\le y)\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\Rightarrow y\le z))\land (\forall z\in \mathbb{R},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ x(t)\Rightarrow t\le s)\Rightarrow z\le s)\Rightarrow z=y))
 tests/Topology/article.tex:104:74: info: claim 37: \forall x\in \mathbb{R}\to \mathrm{Prop},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\in \mathbb{Z})\land \operatorname{BddAbove}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists z\in \mathbb{R},\ x(z)\land (\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le z))
 tests/Topology/article.tex:108:1: info: claim 38: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Compact}(x)\Leftrightarrow \operatorname{Closed}(x)\land \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)
-tests/Topology/article.tex: 7 definitions, 39 claims
+tests/Topology/article.tex:112:1: info: claim 39: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ ((\forall s\in \mathbb{R},\ x(s)\Rightarrow s\le y)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ x(t)\Rightarrow t\le s)\Rightarrow y\le s))\land \top)
+tests/Topology/article.tex:112:86: info: claim 40: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddBelow}(x)\land (\exists s\in \mathbb{R},\ x(s))\Rightarrow (\exists y\in \mathbb{R},\ ((\forall s\in \mathbb{R},\ x(s)\Rightarrow y\le s)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ x(t)\Rightarrow s\le t)\Rightarrow s\le y))\land \top)
+tests/Topology/article.tex:112:171: info: claim 41: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x=y)\Rightarrow (\exists z\in \mathbb{R},\ ((\exists a\in \mathbb{R},\ a\in \mathbb{Z}\land (\exists b\in \mathbb{R},\ b\in \mathbb{Z}\land \neg (b=0)\land z=\frac{a}{b}))\land \min\{x,y\}<z\land z<\max\{x,y\})\land \top)
+tests/Topology/article.tex:112:237: info: claim 42: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ (0<y\land y<x)\land \top)
+tests/Topology/article.tex: 7 definitions, 43 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 56 compiled, 0 failed, 0 prose (of 56)
-  all: 63 compiled, 0 failed, 0 prose (of 63)
+  results: 60 compiled, 0 failed, 0 prose (of 60)
+  all: 67 compiled, 0 failed, 0 prose (of 67)

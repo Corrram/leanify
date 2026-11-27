@@ -95,7 +95,8 @@ Every article is read with the core vocabulary, whatever fields it names: *real
 number*, *integer*, *positive*, *negative* and *nonnegative integer*, *rational* and
 *irrational number*, and the adjectives *positive*, *negative*, *nonnegative*,
 *nonpositive*, *nonzero*, *rational*, *irrational* of a real number, and after the noun
-*greater than*, *less than* (*larger*, *smaller*; *or equal to*) a bound. So
+*greater than*, *less than* (*larger*, *smaller*; *or equal to*) a bound; *the square root of $x$*
+(of `x ≥ 0`) and *the absolute value of $x$*. So
 `Let $x$ and $y$ be positive real numbers.` needs no field. The words of number
 theory (*prime*, *even*, *squarefree*, the greatest common divisor) are the field
 `numbers`. A symbol or noun that a field would read is reported with the field's
@@ -176,7 +177,8 @@ Further fields cover other branches of mathematics:
 * `realsets` (formerly `topology`): sets of real numbers by a noun (`a nonempty compact set $S$`, `every open
   subset $U$ of $\mathbb{R}$`): open, closed, compact, bounded, connected, dense, nowhere
   dense, perfect, countable, measurable and null sets; closure, interior, boundary, limit
-  points, supremum, infimum, diameter, Lebesgue measure; the Cantor set;
+  points, supremum, infimum, diameter, Lebesgue measure; the Cantor set; upper and lower
+  bounds, least upper and greatest lower bounds of a set;
 * `realfunctions` (formerly `analysis`): real functions by a noun (`a continuous periodic function $f$`): uniformly
   continuous, Lipschitz, differentiable, smooth, analytic, monotone, convex, even, odd,
   periodic, injective, surjective, measurable and integrable functions; the derivative,

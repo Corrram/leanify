@@ -221,6 +221,11 @@ except a notion whose meanings take arguments of different types, which the type
 | less than $x$ | ℝ | `x < c` |
 | smaller than $x$ | ℝ | `x < c` |
 
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| square root of $a$ | ℝ → ℝ | `√x` of a number `x ≥ 0` (Mathlib `Real.sqrt`) |
+| absolute value of $a$ | ℝ → ℝ | `\|x\|` |
+
 ## `unitsquare`
 
 | Noun | Of | Meaning |
@@ -491,7 +496,6 @@ except a notion whose meanings take arguments of different types, which the type
 | quotient of $a$ by $b$ | ℝ → ℝ → ℝ | `⌊a/b⌋` for `b > 0` (Mathlib `Int.ediv`) |
 | integer part of $a$ | ℝ → ℝ | `⌊x⌋` (Mathlib `Int.floor`) |
 | fractional part of $a$ | ℝ → ℝ | `x - ⌊x⌋` (Mathlib `Int.fract`) |
-| absolute value of $a$ | ℝ → ℝ | `\|x\|` |
 
 ## `torus`
 
@@ -988,6 +992,8 @@ except a notion whose meanings take arguments of different types, which the type
 | element | ℝ | a number in a set of real numbers |
 | upper bound | ℝ | a number `u` with `a ≤ u` for every `a` of the set (Mathlib `upperBounds`) |
 | lower bound | ℝ | a number `l` with `l ≤ a` for every `a` of the set (Mathlib `lowerBounds`) |
+| least upper bound | ℝ | an upper bound below every upper bound: the supremum (Mathlib `IsLUB`) |
+| greatest lower bound | ℝ | a lower bound above every lower bound: the infimum (Mathlib `IsGLB`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |

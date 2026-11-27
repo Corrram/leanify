@@ -724,6 +724,8 @@ object that is not in use:
 | in a result, `A metric space is compact if and only if it is sequentially compact.` | `For every metric space $X$, $X$ is compact if and only if $X$ is sequentially compact.` |
 | in a result, `A subset of $\mathbb{R}$ is compact if and only if it is closed and bounded.`, `Every subset of $\mathbb{R}$ is …` with `it` | `For every subset $X$ of $\mathbb{R}$, $X$ is compact if and only if $X$ is closed and bounded.` |
 | in a result, `A finite abelian group is cyclic if its order is squarefree.`, `Then $n^2$ is even if $n$ is even.` | `If $n$ is even, then $n^2$ is even.`: a condition after the claim (not `only if`, `if and only if`, `, even if`) |
+| in a result, `There is no largest prime.` (`greatest`; `smallest`, `least`) | `For every prime $X$ there is a prime $Y$ with $Y>X$.` |
+| in a result, `Between any two real numbers there is a rational number.` (`any two distinct`) | `For all real numbers $X,Y$ with $X\neq Y$, there is a rational number $Z$ with $\min(X,Y)<Z<\max(X,Y)$.` (two numbers are distinct) |
 | in a result, `A compact subset of a Hausdorff space is closed.`, `A finite integral domain is a field.`, `An integer is even or odd.` | `Every compact subset of a Hausdorff space is closed.` (an indefinite subject of a result is generic), then the indefinites inside it as above |
 | `Let $G$ be a group of order $p^2$, where $p$ is a prime.` | `Let $p$ be a prime and let $G$ be a group of order $p^2$.` |
 | `Let $p$ be a prime dividing $n$.` | `Let $p$ be a prime with $p\mid n$.` |

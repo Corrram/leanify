@@ -7836,6 +7836,44 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     if ii <= vi then none
     if (rest.take ii).any (fun c => match c with | .p _ => true | _ => false) && !((rest.take ii).all fun c => match c with | .p 45 | .w _ | .m _ => true | _ => false) then none
     some ([.w w!"for", .w w!"every"] ++ rest.take ii ++ [.p 44, .m [.id x]] ++ rest.drop ii)
+  -- `Between any two real numbers there is a rational number.`: `For all real numbers $x,y$ with
+  -- $x\neq y$, there is a rational number $q$ with $\min(x,y)<q<\max(x,y)$.` (two numbers are
+  -- distinct)
+  let between2 : List Sent := Id.run do
+    if !generic then return []
+    let .w b :: rest := cs | return []
+    if b != w!"between" then return []
+    let rest := match rest with
+      | .w a :: r => if a == w!"any" || a == w!"every" then r else rest
+      | _ => rest
+    let .w t :: rest := rest | return []
+    if t != w!"two" then return []
+    let rest := match rest with
+      | .w d :: r => if d == w!"distinct" || d == w!"different" then r else rest
+      | _ => rest
+    let some k := rest.findIdx? (fun c => match c with | .w w => w == w!"there" | _ => false) | return []
+    let noun := rest.take k
+    let .w _ :: .w is :: .w art :: r2 := rest.drop k | return []
+    if !(is == w!"is" || is == w!"exists") || !(art == w!"a" || art == w!"an") then return []
+    let noun2 := r2.filter fun c => match c with | .p 46 => false | _ => true
+    if noun.isEmpty || noun2.isEmpty || !plainWords noun || !plainWords noun2 then return []
+    let (x, y, q) := (nestVar avoid cs 0, nestVar avoid cs 1, nestVar avoid cs 2)
+    let mm (m : Codes) : List MTok := [.cmd m, .sym 40, .id x, .sym 44, .id y, .sym 41]
+    (sentence ([.w w!"for", .w w!"all"] ++ noun ++ [.m [.id x, .sym 44, .id y], .w w!"with", .m [.id x, .cmd w!"neq", .id y], .p 44,
+      .w w!"there", .w w!"is", .w art] ++ noun2 ++ [.m [.id q], .w w!"with", .m (mm w!"min" ++ [.sym 60, .id q, .sym 60] ++ mm w!"max"), .p 46])).toList
+  -- `There is no largest prime.`: `For every prime $x$ there is a prime $y$ with $y>x$.`
+  -- (`smallest`: `y<x`)
+  let noLargest : List Sent := Id.run do
+    if !generic then return []
+    let .w t :: .w i :: .w n :: .w sup :: rest := cs | return []
+    if t != w!"there" || !(i == w!"is" || i == w!"exists") || n != w!"no" then return []
+    let large := [w!"largest", w!"greatest", w!"biggest"].contains sup
+    if !large && ![w!"smallest", w!"least"].contains sup then return []
+    let noun := rest.filter fun c => match c with | .p 46 => false | _ => true
+    if noun.isEmpty || !plainWords noun then return []
+    let (x, y) := (nestVar avoid cs 0, nestVar avoid cs 1)
+    (sentence ([.w w!"for", .w w!"every"] ++ noun ++ [.m [.id x], .w w!"there", .w w!"is", .w w!"a"] ++ noun ++
+      [.m [.id y], .w w!"with", .m [.id y, .sym (if large then 62 else 60), .id x], .p 46])).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -7862,7 +7900,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
         let rel := after.take j
         let np := (cs.take i).drop 1
         if !rel.isEmpty && rel.all (fun c => match c with | .w _ | .p 45 => true | _ => false) &&
-            np.all (fun c => match c with | .w _ | .p 45 => true | _ => false) then
+            np.all (fun c => match c with | .w _ | .p 45 | .m _ => true | _ => false) then
           acc := acc ++ (sentence (lead ++ [.w w!"every"] ++ rel ++ np ++ after.drop j)).toList
     return acc
   let generic' : List Sent := Id.run do
@@ -7885,7 +7923,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           if let some sn := sentence (lead ++ cs') <|> ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

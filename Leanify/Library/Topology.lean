@@ -8,7 +8,8 @@ be a nonempty compact set.`, `every open subset $U$ of $\mathbb{R}$`) and writes
 
 * nouns: `set`, `set of real numbers`, `set of natural numbers`, `set of integers`, `set of
   positive integers`, `subset of $\mathbb{R}$`, `null set`, `interval` (`open
-  interval`, `closed bounded interval`, … with the adjectives);
+  interval`, `closed bounded interval`, … with the adjectives); of a set, `element`, `upper
+  bound`, `lower bound`, `least upper bound`, `greatest lower bound`;
 * adjectives: `open`, `closed`, `compact`, `bounded`, `bounded above`, `bounded below`,
   `connected`, `dense`, `nowhere dense`, `perfect`, `discrete`, `finite`, `infinite`,
   `countable`, `uncountable`, `nonempty`, `empty`, `convex`, `measurable`,
@@ -102,7 +103,15 @@ def vocab : Vocab where
     { sing := phrase!"lower bound", plural := phrase!"lower bounds", ty := .real, pred := predR fun _ => tt,
       arg := some ([w!"of", w!"for"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun l =>
         allR fun x => imp (app a x) (le l x)),
-      doc := "a number `l` with `l ≤ a` for every `a` of the set (Mathlib `lowerBounds`)" }]
+      doc := "a number `l` with `l ≤ a` for every `a` of the set (Mathlib `lowerBounds`)" },
+    { sing := phrase!"least upper bound", plural := phrase!"least upper bounds", ty := .real, pred := predR fun _ => tt,
+      arg := some ([w!"of", w!"for"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun u =>
+        and (allR fun x => imp (app a x) (le x u)) (allR fun v => imp (allR fun x => imp (app a x) (le x v)) (le u v))),
+      doc := "an upper bound below every upper bound: the supremum (Mathlib `IsLUB`)" },
+    { sing := phrase!"greatest lower bound", plural := phrase!"greatest lower bounds", ty := .real, pred := predR fun _ => tt,
+      arg := some ([w!"of", w!"for"], .real ⟶ .prop, close <| lamT (.real ⟶ .prop) (fun _ => tt) fun a => lamR fun l =>
+        and (allR fun x => imp (app a x) (le l x)) (allR fun v => imp (allR fun x => imp (app a x) (le v x)) (le v l))),
+      doc := "a lower bound above every lower bound: the infimum (Mathlib `IsGLB`)" }]
   mods := [
     mod phrase!"open" true (.const 0) "(Mathlib `IsOpen`)",
     mod phrase!"closed" true (.const 1) "(Mathlib `IsClosed`)",
