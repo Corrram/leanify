@@ -815,6 +815,14 @@ def moreAnd : Nat → List Chunk → List Bind → List Bind × List Chunk
 def withConds (cs : List Chunk) : Option (MT × List Chunk) := do
   let r ← kw [w!"with"] cs <|> kw [w!"such", w!"that"] cs
   let (m, r1) ← formula r
+  -- (`with $f(x)\le g(x)$ for all $x\in[a,b]$`: for all of them)
+  let (m, r1) := match (do
+      let r2 ← kw [w!"for", w!"all"] r1 <|> kw [w!"for", w!"every"] r1
+      let (ts, r3) ← mathChunk r2
+      let (vs, dom) ← binderMath ts
+      some (MT.quant true vs dom m, r3)) with
+    | some res => res
+    | none => (m, r1)
   -- `with $φ$, $ψ$, or $χ$`, `with $φ$ or $ψ$`: one of the conditions
   let rec orList : Nat → List MT → List Chunk → Option (List MT × List Chunk)
     | 0, _, _ => none
@@ -4347,7 +4355,11 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | [], cur, acc => (cur.reverse :: acc).reverse
       | t :: rest, cur, acc => if t == .sym 44 then split rest [] (cur.reverse :: acc) else split rest (t :: cur) acc
     let sigs := (split (ts.take i) [] []).map fun n => n ++ ts.drop i
-    some (.many (sigs.map fun sg => Bind.noun (adjs ++ [.w w!"map", .m sg])), r1.drop ws.length)) <|>
+    let bs := sigs.map fun sg => Bind.noun (adjs ++ [.w w!"map", .m sg])
+    -- (a condition about them after `with`: `… be continuous with $f\le g$`)
+    match withConds (r1.drop ws.length) with
+    | some (m, r3) => some (.many (bs ++ [.ifCond m]), r3)
+    | none => some (.many bs, r1.drop ws.length)) <|>
   -- `$u:A\to B$ [be a map|function|field]`: a map of its signature
   (do
     let (ts, r) ← mathChunk cs
@@ -7922,8 +7934,15 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
   let everyVar (cs : List Chunk) : Option (List Chunk) := do
     let .w e :: rest := cs | none
     if !(e == w!"every" || e == w!"each") then none
-    let vi ← rest.findIdx? fun c => match c with | .m [.id _] => true | _ => false
-    let .m [.id x] ← rest[vi]? | none
+    -- (a letter, or a map with its signature: `every monotone function $f\colon[a,b]\to\mathbb{R}$`)
+    let sigName (ts : List MTok) : Option Codes := match Math.parseSig ts with
+      | some (.sig (.id f) _ _) => some f
+      | _ => none
+    let vi ← rest.findIdx? fun c => match c with | .m [.id _] => true | .m ts => (sigName ts).isSome | _ => false
+    let x ← match rest[vi]? with
+      | some (.m [.id x]) => some x
+      | some (.m ts) => sigName ts
+      | _ => none
     if vi == 0 || !((rest.take vi).all fun c => match c with | .w _ | .p 45 => true | _ => false) then none
     let ii ← rest.findIdx? fun c => match c with
       | .w w => [w!"is", w!"has", w!"satisfies", w!"divides", w!"lies", w!"belongs", w!"contains", w!"equals"].contains w
@@ -8084,6 +8103,27 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let x := nestVar avoid cs 0
     some ([.w w!"for", .w w!"every"] ++ head ++ [.m [.id x]] ++ np.drop head.length ++ [.p 44, .m [.id x]] ++ rest.drop j)
   let everyNoVar : List Sent := ((everyNoVarOf cs).bind fun c => sentence (lead ++ c)).toList
+  -- `Every continuous function on $[a,b]$ is bounded.`: `For every continuous function
+  -- $f\colon[a,b]\to\mathbb{R}$, $f$ is bounded.` (the letters of the domain bound with it)
+  let everyOn : List Sent := Id.run do
+    if !generic then return []
+    let .w q :: rest := cs | return []
+    if ![w!"every", w!"each", w!"any", w!"a", w!"an"].contains (lower q) then return []
+    let some k := (List.range rest.length).find? fun i => match (rest[i]? : Option Chunk), (rest[i + 1]? : Option Chunk) with
+        | some (.w o), some (.m _) => o == w!"on" && i > 0
+        | _, _ => false
+      | return []
+    let words := rest.take k
+    if !plainWords words || !(match words.getLast? with | some (.w w) => w == w!"function" | _ => false) then return []
+    let .m d := rest[k + 1]! | return []
+    let used := avoid ++ cs.flatMap fun c => match c with
+      | .m ts => ts.filterMap fun t => match t with | .id v => some v | _ => none
+      | _ => []
+    let some f := [w!"f", w!"g", w!"h"].find? (!used.contains ·) | return []
+    let after := rest.drop (k + 2)
+    let .w _ :: _ := after | return []
+    (sentence (lead ++ [.w w!"for", .w w!"every"] ++ words ++ [.m ([.id f, .sym 58] ++ d ++ [.cmd w!"to", .id w!"\\mathbb{R}"]), .p 44, .m [.id f]] ++
+      after)).toList
   let everyV : List Sent := if !generic then [] else
     ((everyVar cs).bind fun cs' => sentence (lead ++ cs')).toList
   -- `Every increasing sequence that is bounded above converges.`: `Every increasing sequence
@@ -8135,7 +8175,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
               ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ generic' ++
+  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the
