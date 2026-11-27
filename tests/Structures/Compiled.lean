@@ -18,4 +18,4 @@ set_option maxHeartbeats 0
 def Structures.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["structures"]
 
-#leanify_article Structures "article.tex" "fnv1a64:16bb0b62eec519b2" with Structures.vocabulary
+#leanify_article Structures "article.tex" "fnv1a64:76ad05756a06a4d6" with Structures.vocabulary

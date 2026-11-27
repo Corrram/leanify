@@ -203,6 +203,9 @@ Further forms that the fields use (they are read for any vocabulary):
 | `$\mathbb{E}[XY]=\mathbb{E}X\,\mathbb{E}Y$` | in a product, an expectation without parentheses is of the factor right after it |
 | `Let $A$ be an $n\times n$ matrix with $n$ distinct eigenvalues.`, `the row rank of $A$`, `the column rank of $A$` (field `matrices`) | a square matrix with exactly `n` real eigenvalues; the ranks of `Aᵀ` and of `A` |
 | `Let $K\subseteq L\subseteq M$ be fields.`, `Let $A\subseteq B$ be finite sets.` | new variables, each an object of the plural noun, with the chain of inclusions as a condition (`$A\subseteq X$ be finite`, of a bound `X`, is a subset of it) |
+| `Let $K\subseteq L$ be fields with $[L:K]=2$.` | the condition after `with` comes after the inclusions (which it may need) |
+| `every closed and bounded subset of $X$` | adjectives joined by `and`, one of them relative to the complement (`closed in $X$`) |
+| `Let $G$ be a group of order $p^n$, where $p$ is a prime and $n\ge1$.`, `Let $H$ be a subgroup of $G$, where $G$ is a finite group and $|G|=6$.` | the letters after `where` first, each as its part says (`$v$ is a NP`, a condition `$n\ge1$`; a condition on the letter of the part before is said `with` it), then the object |
 | `$[M:K]=[M:L][L:K]$` | a degree or an index after another is a factor |
 | `$N$ contains $H$`, `$N$ contains the commutator subgroup of $G$`, `$A$ contains $x$` | `H\subseteq N` of a set, `x\in A` of an element |
 | `The closure of a connected subset of a topological space is connected.`, `Let $B$ be the interior of $A$.` (field `structures`) | the closure and the interior of a subset `A` of `X` in the space `X` of its noun's complement |

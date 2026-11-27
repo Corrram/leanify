@@ -2750,7 +2750,11 @@ def nounPhrase0 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   if let some x := comp then
     if !rels.isEmpty && rels.length < k then
       let st0 ← get
-      let rest := np.zipIdx.filterMap fun (c, i) => if rels.any (·.1 == i) then none else some c
+      -- (`closed and bounded subset of $X$`: without the `and` of the adjectives)
+      let rest := np.zipIdx.filterMap fun (c, i) => if rels.any (·.1 == i) then none else
+        match c with
+        | .w w => if w == w!"and" && i < k then none else some c
+        | _ => some c
       let r ← tryCatch (do
           let b ← nounPhraseCore rest outer
           let some mx := Math.parseFormula x | fail E.unsupported

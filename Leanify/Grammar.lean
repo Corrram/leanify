@@ -4101,12 +4101,17 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     let .chain (.id _) rels ← Math.parseFormula ts | none
     if rels.isEmpty || !(rels.all fun (rel, y) => rel == .subset && (match y with | .id _ => true | _ => false)) then none
     let r1 ← kw [w!"be"] r
-    let ws := r1.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+    -- (the noun's words, before `with` or `such that`)
+    let ws := r1.takeWhile fun c => match c with | .w w => w != w!"with" && w != w!"such" | .p 45 => true | _ => false
     let plural := match ws.getLast? with
       | some (.w w) => w.getLast? == some 115
       | _ => false
     if !plural then none
-    pluralNoun ts r1) <|>
+    -- (`… be fields with $[L:K]=2$`: the condition after the inclusions, which it may need)
+    let (b, r2) ← pluralNoun ts (r1.take ws.length)
+    match withConds (r1.drop ws.length) with
+    | some (m, r3) => some (.many ((match b with | .many bs => bs | b => [b]) ++ [.ifCond m]), r3 ++ r2)
+    | none => some (b, r2 ++ r1.drop ws.length)) <|>
   (do
     let (ts, r) ← mathChunk cs
     let (vs, d) ← binderMath ts
@@ -7133,11 +7138,37 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | some (.p 44), some (.w w) => w == w!"where"
       | _, _ => false
     let head := cs.take i
-    let .m [.id v] :: .w is :: a :: r := cs.drop (i + 2) | none
-    if is != w!"is" || !isIndef a then none
-    let np := r.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
-    if np.isEmpty || !isEnd (r.drop np.length) then none
-    some ([.w w!"let", .m [.id v], .w w!"be", a] ++ np ++ [.w w!"and"] ++ head ++ [.p 46])
+    -- (each part, `$v$ is a NP` or a condition `$n\ge1$`, joined by `and`: `where $p$ is a
+    -- prime and $n\ge1$`)
+    let rec parts : Nat → List Chunk → Option (List (List Chunk))
+      | 0, _ => none
+      | k + 1, r =>
+        let one : Option (List Chunk × List Chunk) := match r with
+          | .m [.id v] :: .w is :: a :: r1 =>
+            if is != w!"is" || !isIndef a then none else
+            let np := r1.takeWhile fun ch => match ch with | .w w => w != w!"and" | .p 45 => true | _ => false
+            if np.isEmpty then none else some ([.w w!"let", .m [.id v], .w w!"be", a] ++ np, r1.drop np.length)
+          | .m ts :: r1 => some ([.w w!"let", .m ts], r1)
+          | _ => none
+        match one with
+        | some (p, rest) =>
+          if isEnd rest then some [p] else
+          match rest with
+          | .w w :: rest' => if w == w!"and" then (parts k rest').map (p :: ·) else none
+          | _ => none
+        | none => none
+    let ps ← parts 6 (cs.drop (i + 2))
+    -- (a condition on the letter of the part before, `where $G$ is a finite group and $|G|=6$`:
+    -- `with` it)
+    let ids (ts : List MTok) : List Codes := ts.filterMap fun t => match t with | .id v => some v | _ => none
+    let merged := ps.foldl (fun (acc : List (List Chunk)) p => match p, acc.getLast? with
+      | [.w _, .m ts], some prev =>
+        let bound := prev.filterMap fun ch => match ch with | .m [.id v] => some v | _ => none
+        if !(ids ts).isEmpty && (ids ts).all bound.contains && prev.length > 2 then acc.dropLast ++ [prev ++ [.w w!"with", .m ts]]
+        else acc ++ [p]
+      | _, _ => acc ++ [p]) []
+    let lets := merged.foldr (fun p acc => p ++ [.w w!"and"] ++ acc) []
+    some (lets ++ head ++ [.p 46])
   -- `Let $p$ be a NP dividing $X$.`
   let dividing : Option (List Chunk) := do
     let _ ← kw [w!"let"] cs
