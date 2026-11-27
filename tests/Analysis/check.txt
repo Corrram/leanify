@@ -68,7 +68,11 @@ tests/Analysis/article.tex:159:1: info: claim 48: \forall x\in \mathbb{R},\ \for
 tests/Analysis/article.tex:159:50: info: claim 49: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{t:x\le t\land t\le y\}\Rightarrow (\forall s\in \mathbb{R}\to \mathbb{R},\ \operatorname{nondecreasing}(s)\text{ on }\{a:x\le a\land a\le y\}\lor \operatorname{nonincreasing}(s)\text{ on }\{a:x\le a\land a\le y\}\Rightarrow \operatorname{R}((t\in \mathbb{R}\mapsto x\le t\land t\le y))(s))
 tests/Analysis/article.tex:163:104: info: claim 50: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{t:y\le t\land t\le x\}\Rightarrow (\forall s\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(s)\text{ on }\{b:y\le b\land b\le x\}\land (\forall a\in \mathbb{R},\ y\le a\land a\le x\Rightarrow z(a)\le s(a))\Rightarrow \int_{y}^{x}z(t)\,dt\le \int_{y}^{x}s(t)\,dt))
 tests/Analysis/article.tex:163:104: info: claim 50 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{t:y\le t\land t\le x\}\Rightarrow (\forall s\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(s)\text{ on }\{b:y\le b\land b\le x\}\land (\forall a\in \mathbb{R},\ y\le a\land a\le x\Rightarrow z(a)\le s(a))\Rightarrow \operatorname{Int}((t\in \mathbb{R}\,[y\le t\land t\le x\lor x\le t\land t\le y]\mapsto z(t)))(y)(x)\land \operatorname{Int}((t\in \mathbb{R}\,[y\le t\land t\le x\lor x\le t\land t\le y]\mapsto s(t)))(y)(x)))
-tests/Analysis/article.tex: 5 definitions, 51 claims
+tests/Analysis/article.tex:167:1: info: claim 51: \top\land (\forall x\in \mathbb{R},\ \sin(x+2\,\pi)=\sin(x))
+tests/Analysis/article.tex:167:41: info: claim 52: \operatorname{convex}((x\in \mathbb{R}\mapsto \exp(x)))\text{ on }\{x:\top\}
+tests/Analysis/article.tex:167:59: info: claim 53: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{z:\top\}\Rightarrow \operatorname{continuous}((y\in \mathbb{R}\mapsto \exp(x(y))))\text{ on }\{y:\top\}
+tests/Analysis/article.tex:167:123: info: claim 54: \operatorname{increasing}((x\in \mathbb{R}\mapsto \log(x)))\text{ on }\{x:0<x\}
+tests/Analysis/article.tex: 5 definitions, 55 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 83 compiled, 0 failed, 0 prose (of 83)
-  all: 87 compiled, 0 failed, 0 prose (of 87)
+  results: 87 compiled, 0 failed, 0 prose (of 87)
+  all: 91 compiled, 0 failed, 0 prose (of 91)

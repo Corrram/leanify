@@ -29,6 +29,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | Notation | Read as |
 | --- | --- |
 | `(f\circ g)(x)`, `f\circ g` | `f(g(x))`, with `g(x)` in the domain of `f`; of real functions `f`, `g`, the function `x\mapsto f(g(x))` |
+| `$\sin$`, `$\exp$`, `\exp\circ f` (`\log`, `\cos`, `\tan`) | the standard function itself, a real function: `The function $\sin$ is $2\pi$-periodic.` |
 | `A\subseteq B`, `A\supseteq B` | every real number in `A` is in `B` (and the reverse), for intervals, sets `\{x\in A : …\}` and sets the article defines |
 | `\sup_{x\in A} e`, `\sup\{e : x\in A\}`, `\sup S` (and `\inf`) | the least upper (greatest lower) bound: defined only when it exists, so a claim about an unbounded or empty set is not meaningful |
 | `\sum_{j=1}^{4} e`, `\prod_{k=0}^{2} e` | with numeral bounds: the terms written out |

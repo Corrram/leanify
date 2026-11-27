@@ -694,6 +694,11 @@ def run : Nat → Mode → List MTok → R
           let (a, r1) ← run f .group rest
           some (.sup a (.frac (.num 1) (.num 2)), r1)
       -- (`\deg_G(v)`: a name with a subscript is a symbol of the article, not the function)
+      -- `$\sin$`, `\exp\circ f`: the function itself
+      else if [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan"].contains n &&
+          (rest.isEmpty || rest.head? == some (.cmd w!"circ")) then
+        let name := if n == w!"ln" then w!"log" else n
+        some (.id ([92] ++ name), rest)
       else if wFunctions.contains n && rest.head? != some (.sym 95) then do
         -- `\exp(x)`, `\log x`, `\sin^2 x` (the square of `\sin x`)
         let (pow, r1) ← match rest with

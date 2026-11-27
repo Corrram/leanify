@@ -1661,6 +1661,10 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           match builtinConst n with
           | some r => pure r
           | none =>
+            -- `$\sin$`, `\exp\circ f`: a standard function itself, a real function
+            if let some (h, .fn .real .real, _) := builtinFn n then
+              if [w!"\\exp", w!"\\log", w!"\\sin", w!"\\cos", w!"\\tan"].contains n then
+                return (.lam .real .tt (.app (shift 1 0 h) (.loc 0)), Ty.rfun)
             -- `\overline{z}`, `\bar z` of a variable of a vocabulary's type: its
             -- method for the decoration (the conjugate of a complex number)
             let decor : Option (Codes × Codes) := [w!"\\overline", w!"\\bar"].findSome? fun p =>
