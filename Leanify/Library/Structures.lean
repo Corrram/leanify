@@ -387,6 +387,18 @@ def orderIs (p : B → B) : Tm := sP fun g => and (app (const 21) g) (p (cardOf 
 def elOrderIs (p : B → B) : Tm := close <| lamT E (fun _ => tt) fun a => and (lt (num 0) (app (const 23) a)) (p (app (const 23) a))
 def isEvenB (n : B) : B := exR fun k => and (isInt k) (eq n (mul (num 2) k))
 
+/-- Properties of a real function on a structure, the structure first (`S → (E → ℝ) → Prop`). -/
+def realFnBounded : Tm := close <| lamT S (fun _ => tt) fun d => lamT (E ⟶ .real) (fun _ => tt) fun f =>
+  exR fun m => allT E fun x => imp (app d x) (le (abs (app f x)) m)
+def realFnUnif : Tm := close <| lamT S (fun _ => tt) fun d => lamT (E ⟶ .real) (fun _ => tt) fun f =>
+  allR fun e => imp (lt (num 0) e) (exR fun dl => and (lt (num 0) dl) (allT E fun x => allT E fun y =>
+    imp (and (and (app d x) (app d y)) (lt (app2 (const 10) x y) dl)) (lt (abs (sub (app f x) (app f y))) e)))
+def realFnLip : Tm := close <| lamT S (fun _ => tt) fun d => lamT (E ⟶ .real) (fun _ => tt) fun f =>
+  exR fun k => and (le (num 0) k) (allT E fun x => allT E fun y =>
+    imp (and (app d x) (app d y)) (le (abs (sub (app f x) (app f y))) (mul k (app2 (const 10) x y))))
+/-- The same property with the function first, as an adjective takes it. -/
+def flipDom (p : Tm) : Tm := close <| lamT (E ⟶ .real) (fun _ => tt) fun f => lamT S (fun _ => tt) fun d => app2 (lift p) d f
+
 def vocab : Vocab where
   types := [w!"\\mathrm{El}", w!"\\mathrm{Map}"]
   consts := table.map (·.1)
@@ -831,11 +843,23 @@ def vocab : Vocab where
     { phrase := phrase!"converging to $v$", prenominal := false, ty := Q,
       pred := close (lamT E (fun _ => tt) fun l => lamT Q (fun _ => tt) fun q => app2 (const 136) q l), doc := "(Mathlib `Filter.Tendsto`)" },
     { phrase := phrase!"continuous", prenominal := true, ty := E ⟶ .real, pred := c 135, onDomain := true,
-      doc := "a real function on a space (Mathlib `ContinuousOn`)" }]
+      doc := "a real function on a space (Mathlib `ContinuousOn`)" },
+    { phrase := phrase!"bounded", prenominal := true, ty := E ⟶ .real, pred := realFnBounded, onDomain := true,
+      doc := "a real function on a space with `|f(x)| ≤ M` for some `M` (Mathlib `BddAbove` of `|f|`)" },
+    { phrase := phrase!"uniformly continuous", prenominal := true, ty := E ⟶ .real, pred := realFnUnif, onDomain := true,
+      doc := "a real function on a metric space: for every `ε>0` a `δ>0` with `|f(x)-f(y)|<ε` where `d(x,y)<δ` (Mathlib `UniformContinuousOn`)" },
+    { phrase := phrase!"Lipschitz", prenominal := true, ty := E ⟶ .real, pred := realFnLip, onDomain := true,
+      doc := "a real function on a metric space with `|f(x)-f(y)| ≤ K d(x,y)` for some `K ≥ 0` (Mathlib `LipschitzOnWith`)" }]
   adjectives := [
     { words := [w!"continuous"], ty := E ⟶ .real, onDomain := true,
       pred := close (lamT (E ⟶ .real) (fun _ => tt) fun f => lamT S (fun _ => tt) fun d => app2 (const 135) d f),
-      doc := "a real function on a space (Mathlib `ContinuousOn`)" }]
+      doc := "a real function on a space (Mathlib `ContinuousOn`)" },
+    { words := [w!"bounded"], ty := E ⟶ .real, onDomain := true, pred := flipDom realFnBounded,
+      doc := "a real function on a space with `|f(x)| ≤ M` for some `M`" },
+    { words := [w!"uniformly", w!"continuous"], ty := E ⟶ .real, onDomain := true, pred := flipDom realFnUnif,
+      doc := "a real function on a metric space (Mathlib `UniformContinuousOn`)" },
+    { words := [w!"Lipschitz"], ty := E ⟶ .real, onDomain := true, pred := flipDom realFnLip,
+      doc := "a real function on a metric space (Mathlib `LipschitzOnWith`)" }]
   notions := [
     { name := phrase!"order of $v$", value := .const 20, ty := S ⟶ .real, doc := "the number of elements (Mathlib `Nat.card`)" },
     { name := phrase!"order of $v$", value := .const 23, ty := E ⟶ .real, doc := "of an element (Mathlib `orderOf`)" },
@@ -915,6 +939,9 @@ def vocab : Vocab where
     { name := phrase!"inner product of $v$ and $v$", value := .const 139, ty := E ⟶ E ⟶ .real, doc := "(Mathlib `inner`)" },
     { name := phrase!"kernel of $v$", value := .const 163, ty := M ⟶ S, doc := "(Mathlib `MonoidHom.ker`, `LinearMap.ker`)" },
     { name := phrase!"image of $v$", value := .const 164, ty := M ⟶ S, doc := "(Mathlib `MonoidHom.range`, `LinearMap.range`)" },
+    { name := phrase!"image of $v$ under $v$", ty := S ⟶ M ⟶ S,
+      value := close <| lamT S (fun _ => tt) fun k => lamT M (fun _ => tt) fun f => app2 (const 194) f k,
+      doc := "`φ(K)`, of a set `K` of the domain of a map (Mathlib `Set.image`)" },
     { name := phrase!"range of $v$", value := .const 164, ty := M ⟶ S, doc := "(Mathlib `LinearMap.range`)" },
     { name := phrase!"rank of $v$", value := .const 165, ty := M ⟶ .real, doc := "(Mathlib `LinearMap.rank`)" },
     { name := phrase!"nullity of $v$", value := .const 166, ty := M ⟶ .real, doc := "the dimension of the kernel" },

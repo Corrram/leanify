@@ -6714,6 +6714,12 @@ forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies �
 def sentence (cs : List Chunk) : Option Sent :=
   let cs := if cs.any (fun c => match c with | .w s => s == w!"group" | _ => false) then
     namedGroupForms (cs.length + 1) cs else cs
+  -- (`Let $a\in G$ have order $n$`, read `Let $a\in G$ are of order $n$` by the forms of `have`:
+  -- `be of order $n$`)
+  let cs : List Chunk := match cs with
+    | .w l :: .m x :: .w a :: .w o :: rest =>
+      if lower l == w!"let" && a == w!"are" && o == w!"of" then Chunk.w l :: Chunk.m x :: Chunk.w w!"be" :: Chunk.w o :: rest else cs
+    | _ => cs
   let cs := if cs.any (fun c => match c with | .w s => lower s == w!"sylow" | _ => false) then
     sylowForms (cs.length + 1) [] cs else cs
   let cs := if cs.any (fun c => match c with | .w s => s == w!"chain" | _ => false) then

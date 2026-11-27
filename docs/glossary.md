@@ -1525,10 +1525,16 @@ except a notion whose meanings take arguments of different types, which the type
 | convergent | ℝ → $\mathrm{El}$ | converging to some point (Mathlib `Filter.Tendsto`) |
 | converging to $x$ | ℝ → $\mathrm{El}$ | (Mathlib `Filter.Tendsto`) |
 | continuous | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
+| bounded | $\mathrm{El}$ → ℝ | a real function on a space with `\|f(x)\| ≤ M` for some `M` (Mathlib `BddAbove` of `\|f\|`) |
+| uniformly continuous | $\mathrm{El}$ → ℝ | a real function on a metric space: for every `ε>0` a `δ>0` with `\|f(x)-f(y)\|<ε` where `d(x,y)<δ` (Mathlib `UniformContinuousOn`) |
+| lipschitz | $\mathrm{El}$ → ℝ | a real function on a metric space with `\|f(x)-f(y)\| ≤ K d(x,y)` for some `K ≥ 0` (Mathlib `LipschitzOnWith`) |
 
 | Adjective | Of | Meaning |
 | --- | --- | --- |
 | continuous [on $A$] | $\mathrm{El}$ → ℝ | a real function on a space (Mathlib `ContinuousOn`) |
+| bounded [on $A$] | $\mathrm{El}$ → ℝ | a real function on a space with `\|f(x)\| ≤ M` for some `M` |
+| uniformly continuous [on $A$] | $\mathrm{El}$ → ℝ | a real function on a metric space (Mathlib `UniformContinuousOn`) |
+| Lipschitz [on $A$] | $\mathrm{El}$ → ℝ | a real function on a metric space (Mathlib `LipschitzOnWith`) |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
@@ -1585,6 +1591,7 @@ except a notion whose meanings take arguments of different types, which the type
 | inner product of $a$ and $b$ | $\mathrm{El}$ → $\mathrm{El}$ → ℝ | (Mathlib `inner`) |
 | kernel of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.ker`, `LinearMap.ker`) |
 | image of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.range`, `LinearMap.range`) |
+| image of $a$ under $b$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ → $\mathrm{El}$ → Prop | `φ(K)`, of a set `K` of the domain of a map (Mathlib `Set.image`) |
 | range of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `LinearMap.range`) |
 | rank of $a$ | $\mathrm{Map}$ → ℝ | (Mathlib `LinearMap.rank`) |
 | nullity of $a$ | $\mathrm{Map}$ → ℝ | the dimension of the kernel |

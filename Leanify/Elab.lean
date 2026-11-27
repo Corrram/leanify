@@ -668,6 +668,9 @@ def callMethod (t : Ty) (op : OpKey) (args : List Tm) : M (Tm × Ty) := do
 
 def coerce (t : Tm) (src dst : Ty) : M Tm := do
   if src == dst then return t
+  -- the empty set as a set of other objects (`A\cap B\neq\emptyset` of subsets of a space)
+  if let (.lam .real .tt (.not .tt), .fn .real .prop, .fn d .prop) := (t, src, dst) then
+    return .lam d .tt (.not .tt)
   -- a real function as a function on an interval type of the vocabulary (`e_v` of `x\in\mathbb{R}`
   -- as an element of `L^2` on `[0,1]`): its restriction
   if let (.fn .real .real, .fn d .real) := (src, dst) then
@@ -1098,6 +1101,10 @@ def relTm (r : Rel) (x y : Tm × Ty) : M Tm := do
       | none => pure none
     if let some t ← fnNum x y then return t
     if let some t ← fnNum y x then return t
+  -- (`A\cap B=\emptyset` of sets of other objects: the empty set of their kind)
+  let isEmpty (t : Tm) : Bool := match t with | .lam .real .tt (.not .tt) => true | _ => false
+  let x : Tm × Ty ← if x.2 != y.2 && isEmpty x.1 then pure (← coerce x.1 x.2 y.2, y.2) else pure x
+  let y : Tm × Ty ← if x.2 != y.2 && isEmpty y.1 then pure (← coerce y.1 y.2 x.2, x.2) else pure y
   match r with
   | .eq =>
     if x.2 == y.2 then pure (.eq x.1 y.1)
