@@ -2160,6 +2160,23 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           -- (`the rank of the transpose of $A$`, where no notion has all these words: the inner
           -- notion, after `the` after a preposition, an argument of the outer one)
           if cands.isEmpty then
+            -- (`the dimension of the kernel of $T$ plus the dimension of the image of $T$`: a sum
+            -- (difference, product) of two notions)
+            let ops := [(w!"plus", 0), (w!"minus", 1), (w!"times", 2)]
+            let j? := (List.range args.length).find? fun i => match (args[i]? : Option MT), (args[i + 1]? : Option MT) with
+              | some (.text o), some (.text t) => t == w!"the" && ops.any (·.1 == o)
+              | _, _ => false
+            if let some j := j? then
+              let some (.text o) := (args[j]? : Option MT) | fail E.unsupported
+              let l := MT.app (.id w!"@the") (args.take j)
+              let r := MT.app (.id w!"@the") (args.drop (j + 2))
+              let e : MT := match (ops.find? (·.1 == o)).map (·.2) with
+                | some 0 => .add l r
+                | some 1 => .minus l r
+                | _ => .mul l r
+              let st1 ← get
+              if let some res ← tryCatch (some <$> term f sc pf e) (fun _ => pure none) then return res
+              set st1
             let preps := [w!"of", w!"between", w!"from", w!"in", w!"on", w!"at", w!"over", w!"to", w!"with", w!"by"]
             let i? := (List.range args.length).find? fun i => i > 0 && (match (args[i]? : Option MT), (args[i - 1]? : Option MT) with
               | some (.text t), some (.text p) => t == w!"the" && preps.contains p

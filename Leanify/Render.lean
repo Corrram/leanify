@@ -208,7 +208,17 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
     | "-" => cwrap 6 x ls ++ "-" ++ cwrap 7 y ls
     | "\\cdot" => cwrap 7 x ls ++ "\\," ++ cwrap 8 y ls
     | "/" => "\\frac{" ++ x.tex cs gs ls ++ "}{" ++ y.tex cs gs ls ++ "}"
-    | "^" => "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
+    | "^" =>
+      -- (a base that is an operation of the vocabulary, `(gh)^{-1}`, in parentheses)
+      let t := x.tex cs gs ls
+      -- (also a local that stands for such an operation, the argument of a vocabulary's function)
+      let opText := t.contains '+' || t.contains '-' || (t.splitOn "\\,").length > 1 || (t.splitOn "\\frac").length > 1
+      let infixBase := match x with
+        | .app (.app (.const j) _) _ => ["+", "-", "\\cdot", "/"].contains (cs.getD j "")
+        | .loc _ => opText
+        | _ => false
+      if infixBase then "(" ++ t ++ ")^{" ++ y.tex cs gs ls ++ "}"
+      else "{" ++ cwrap 9 x ls ++ "}^{" ++ y.tex cs gs ls ++ "}"
     | _ =>
       -- an integral of the vocabulary against a distribution function
       -- (`\int_{[0,1]^2}`), of a function of two points: over its variables

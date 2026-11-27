@@ -7199,6 +7199,20 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
         (each.intersperse [.w w!"and"]).flatten ++ after)
     else
     some ([.w w!"for", .w w!"every"] ++ np3 ++ [.m [.id y]] ++ chain ++ [.w w!"and", .w q] ++ np1 ++ vars ++ [.w prep, .m [.id y]] ++ after)
+  -- `Every group of order $p$, where $p$ is a prime, is cyclic.`: `For every prime $p$, every
+  -- group of order $p$ is cyclic.`
+  let whereMid : Option (List Chunk) := do
+    let .w q :: _ := cs | none
+    if ![w!"every", w!"each", w!"any"].contains q then none
+    let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk) with
+      | some (.p 44), some (.w w) => w == w!"where"
+      | _, _ => false
+    let .m [.id v] :: .w is :: a :: r1 := cs.drop (i + 2) | none
+    if is != w!"is" || !isIndef a then none
+    let np := r1.takeWhile fun ch => match ch with | .w _ | .p 45 => true | _ => false
+    if np.isEmpty then none
+    let .p 44 :: after := r1.drop np.length | none
+    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44] ++ cs.take i ++ after)
   -- `Let VARS be a NP1 PREP a NP2 …`
   let letB : Option (List Chunk) := do
     let r ← kw [w!"let"] cs
@@ -7531,7 +7545,7 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     if l == w!"let" then some ([.w w!"let", .m [.id p], .w w!"be", .w w!"a", .w w!"prime", .w w!"and"] ++ cs)
     else if [w!"every", w!"each", w!"any"].contains l then some ([.w w!"for", .w w!"every", .w w!"prime", .m [.id p], .p 44] ++ cs)
     else none
-  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> dividing <|> attains <|> inA <|>
+  image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> whereMid <|> dividing <|> attains <|> inA <|>
     between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr
 
 /-- `$X$ is cyclic if the order of $X$ is squarefree.` (in a result): `If the order of $X$ is

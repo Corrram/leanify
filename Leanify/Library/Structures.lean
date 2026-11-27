@@ -882,6 +882,8 @@ def vocab : Vocab where
     { name := phrase!"exponent of $v$", value := .const 26, ty := S ⟶ .real, doc := "(Mathlib `Monoid.exponent`)" },
     { name := phrase!"number of Sylow $v$-subgroups of $v$", value := .const 27, ty := .real ⟶ S ⟶ .real,
       doms := [some posInt, none], doc := "for a prime `p` (Mathlib `Sylow`)" },
+    { name := phrase!"inverse of $v$", value := close (lamT E (fun _ => tt) fun g => app2 (const 6) g (neg (num 1))), ty := E ⟶ E,
+      doc := "`g^{-1}`, of an element of a group (Mathlib `Inv`)" },
     { name := phrase!"identity element of $v$", value := .const 28, ty := S ⟶ E, doc := "the identity (Mathlib `1`)" },
     { name := phrase!"identity of $v$", value := .const 28, ty := S ⟶ E, doc := "(Mathlib `1`)" },
     { name := phrase!"neutral element of $v$", value := .const 28, ty := S ⟶ E, doc := "(Mathlib `1`)" },

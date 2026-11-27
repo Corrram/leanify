@@ -656,7 +656,9 @@ arguments, the subject of the claim as a formula would be: `The kernel of $\varp
 normal subgroup of $G$.`, `The order of $G$ is $6$.`, `The distance between $P$ and $Q$ is
 at least $0$.`. A notion may be the argument of another, after `the`: `the rank of the
 transpose of $A$`, `the order of the center of $G$`, `$\det(A^{-1})$ is the reciprocal of the
-determinant of $A$` (where no notion has all these words). Words that are no notion (`the
+determinant of $A$` (where no notion has all these words); and two notions may be added,
+subtracted or multiplied: `the dimension of the kernel of $T$ plus the dimension of the image
+of $T$` (`minus`, `times`). Words that are no notion (`the
 probability of an exit at $-1$ is at least …`) are prose.
 
 ### Other wordings of the same forms
@@ -735,6 +737,7 @@ object that is not in use:
 | `Let $T$ be a linear operator between normed spaces.` | `Let $X$ be a normed space, let $Y$ be a normed space and let $T\colon X\to Y$ be a linear operator.` |
 | `For all vectors $x$ and $y$ in an inner product space, …` | `For every inner product space $X$ and every vector $x$ in $X$ and every vector $y$ in $X$, …` |
 | `Every subgroup of index $2$ is normal.` | `For every group $X$ and every subgroup $Y$ of $X$ of index $2$ in $X$, $Y$ is normal.` |
+| `Every group of order $p$, where $p$ is a prime, is cyclic.` | `For every prime $p$, every group of order $p$ is cyclic.` |
 | `Let $G$ be a finite $p$-group.`, with a new letter `p` | `Let $p$ be a prime and let $G$ be a finite $p$-group.` (the letter of a `$p$-group` is a prime, not any number) |
 | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ attains its maximum and its minimum.`, `$f$ attains its maximum on $[a,b]$` | `For every continuous function $f\colon[a,b]\to\mathbb{R}$, there is $c\in[a,b]$ such that $f(x)\le f(c)$ for all $x\in[a,b]$, and there is …` (the domain is the signature's, or written after `on` or `in`) |
 | `Every continuous function on $[a,b]$ is …`, `Every continuous function on $[a,b]$ attains its maximum.`, in a result `A continuous function on a compact interval attains its maximum.` | `Every continuous function $f\colon[a,b]\to\mathbb{R}$ is …`; the maximum on the domain of the function (`For every compact interval $X$ and every continuous function $Y$ on $X$, there is $c\in X$ such that …`). An interval may be empty, and then nothing is attained on it |

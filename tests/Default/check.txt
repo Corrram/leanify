@@ -10,7 +10,8 @@ tests/Default/article.tex:12:1: info: claim 1 is meaningful if: 3\in \mathbb{Z}\
 tests/Default/article.tex:12:1: info: claim 2: \gamma(0,1)=1
 tests/Default/article.tex:12:1: info: claim 2 is meaningful if: 0<1\land \lvert 0\rvert<1
 tests/Default/article.tex:16:45: info: claim 3: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow {x}^{2}\le x
-tests/Default/article.tex: 3 definitions, 4 claims
+tests/Default/article.tex:20:1: info: claim 4: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land \lvert y\rvert=x\Rightarrow \operatorname{Cyclic}(y))
+tests/Default/article.tex: 3 definitions, 5 claims
   text: 3 compiled, 0 failed, 0 prose (of 3)
-  results: 3 compiled, 0 failed, 0 prose (of 3)
-  all: 6 compiled, 0 failed, 0 prose (of 6)
+  results: 4 compiled, 0 failed, 0 prose (of 4)
+  all: 7 compiled, 0 failed, 0 prose (of 7)

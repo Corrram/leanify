@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Default.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["math"]
 
-#leanify_article Default "article.tex" "fnv1a64:e3f5cf49a523ca71" with Default.vocabulary
+#leanify_article Default "article.tex" "fnv1a64:448a0f22d1f81ff2" with Default.vocabulary

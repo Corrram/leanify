@@ -1571,6 +1571,7 @@ except a notion whose meanings take arguments of different types, which the type
 | center of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ → Prop | (Mathlib `Subgroup.center`) |
 | exponent of $a$ | ($\mathrm{El}$ → Prop) → ℝ | (Mathlib `Monoid.exponent`) |
 | number of sylow $a$-subgroups of $b$ | ℝ → ($\mathrm{El}$ → Prop) → ℝ | for a prime `p` (Mathlib `Sylow`) |
+| inverse of $a$ | $\mathrm{El}$ → $\mathrm{El}$ | `g^{-1}`, of an element of a group (Mathlib `Inv`) |
 | identity element of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | the identity (Mathlib `1`) |
 | identity of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | (Mathlib `1`) |
 | neutral element of $a$ | ($\mathrm{El}$ → Prop) → $\mathrm{El}$ | (Mathlib `1`) |
