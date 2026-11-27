@@ -3327,15 +3327,15 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
-| similarity dimension of a self-similar set with $a$ pieces scaled by $b$ | ℝ → ℝ → ℝ | `log N / log(1/r)`: `N` copies of the set, each scaled by `0 < r < 1` |
+| similarity dimension of a self-similar set with $a$ pieces scaled by $b$ | ℝ → ℝ → ℝ | the `s` with `N r^s = 1`: `N` copies of the set, each scaled by `0 < r < 1` (`log N / log(1/r)`) |
 | similarity dimension of a self-similar set with ratios $a$ and $b$ | ℝ → ℝ → ℝ | the `s ≥ 0` with `r₁^s + r₂^s = 1` (Moran's equation), for `0 < r₁, r₂ < 1` |
-| dimension of the middle-thirds cantor set | ℝ | `log 2 / log 3` |
-| length of the cantor set after $a$ steps | ℝ → ℝ | `(2/3)^n`: the total length of the `n`th stage, from `[0,1]` |
-| number of intervals of the cantor set after $a$ steps | ℝ → ℝ | `2^n` |
-| length of the koch curve after $a$ steps | ℝ → ℝ | `(4/3)^n`, from a unit segment |
-| area of the koch snowflake with side $a$ | ℝ → ℝ | `2√3 s²/5`: the limit of the areas of the snowflake stages on a triangle with side `s` |
-| area of the sierpinski triangle with side $a$ after $b$ steps | ℝ → ℝ → ℝ | `(√3/4) s² (3/4)^n` |
-| volume of the menger sponge after $a$ steps | ℝ → ℝ | `(20/27)^n`, from a unit cube |
+| dimension of the middle-thirds cantor set | ℝ | the Hausdorff dimension of Mathlib's `cantorSet` (`log 2 / log 3`) |
+| length of the cantor set after $a$ steps | ℝ → ℝ | the Lebesgue measure of the `n`th stage, Mathlib's `preCantorSet n` (`(2/3)^n`) |
+| number of intervals of the cantor set after $a$ steps | ℝ → ℝ | the connected components of the `n`th stage (`2^n`) |
+| length of the koch curve after $a$ steps | ℝ → ℝ | the length of the polygonal path after `n` steps from a unit segment (`(4/3)^n`) |
+| area of the koch snowflake with side $a$ | ℝ → ℝ | the Lebesgue measure of the snowflake on a triangle with side `s` (`2√3 s²/5`) |
+| area of the sierpinski triangle with side $a$ after $b$ steps | ℝ → ℝ → ℝ | the Lebesgue measure of the `n`th stage (`(√3/4) s² (3/4)^n`) |
+| volume of the menger sponge after $a$ steps | ℝ → ℝ | the Lebesgue measure of the `n`th stage from a unit cube (`(20/27)^n`) |
 
 ## `diophantine`
 

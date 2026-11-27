@@ -1,5 +1,6 @@
 import Fractals.Compiled
 import Leanify.Readable
+import Leanify.Library.FractalsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

@@ -367,7 +367,9 @@ Further fields cover other branches of mathematics:
   as probabilities and expectations in their probability spaces, so that their closed forms
   are claims;
 * `cryptography`: RSA, discrete logarithms, Diffie–Hellman;
-* `fractals`: similarity dimensions and the classical self-similar sets;
+* `fractals`: similarity dimensions and the classical self-similar sets (by their
+  constructions: Mathlib's Cantor set and Hausdorff dimension, the stages of the Koch curve,
+  the snowflake, the Sierpinski triangle and the Menger sponge, measured by Lebesgue measure);
 * `diophantine`: Frobenius numbers, sums of two squares, Pythagorean triples, congruent numbers;
 * `mechanics`: projectiles, pendulums, oscillators, orbits;
 * `inventory`: lot sizes and the newsvendor model;

@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Fractals.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["fractals"]
 
-#leanify_article Fractals "article.tex" "fnv1a64:4701df576048be18" with Fractals.vocabulary
+#leanify_article Fractals "article.tex" "fnv1a64:74c52aa63bfc8c19" with Fractals.vocabulary
