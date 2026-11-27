@@ -1,5 +1,6 @@
 import Triangles.Compiled
 import Leanify.Readable
+import Leanify.Library.TrianglesModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

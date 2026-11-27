@@ -349,8 +349,10 @@ Further fields cover other branches of mathematics:
 * `channels`: capacities of the standard channels, rate-distortion functions;
 * `actuarial`: survival laws, life expectancies, premiums and annuities;
 * `epidemics`: reproduction numbers, thresholds and final sizes, the SIS model.
-* `triangles`: triangles by their side lengths (Heron's formula, angles, radii, medians),
-  regular polygons;
+* `triangles`: triangles by their side lengths (area, angles, radii, medians), regular
+  polygons (their values for the figures of the Euclidean plane with these sides, by Mathlib's
+  angles, simplices and Lebesgue measure, so that Heron's formula and the law of cosines are
+  claims);
 * `solids`: volumes and surface areas, the ball and the sphere in `n` dimensions (the solids
   as sets of `EuclideanSpace ℝ (Fin n)`, their Lebesgue measure and the Euclidean Hausdorff
   measure `μHE` of their boundary, so that the formulas are claims);

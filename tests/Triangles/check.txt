@@ -1,19 +1,12 @@
 tests/Triangles/article.tex:9:1: info: defines \@n0 (n0)
 tests/Triangles/article.tex:9:1: info: \@n0 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow \neg (2=0)
 tests/Triangles/article.tex:10:1: info: defines \Delta (Delta)
-tests/Triangles/article.tex:10:1: info: \Delta is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow ((\neg (2=0)\land \neg (2=0))\land \neg (2=0)\land \neg (2=0))\land \neg (2=0)
 tests/Triangles/article.tex:11:1: info: defines \gamma (gamma)
-tests/Triangles/article.tex:11:1: info: \gamma is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow (\forall s\in \mathbb{R},\ 0<s\land s<\pi\Rightarrow \neg (2\,(y\,z)=0))\land (\exists s\in \mathbb{R},\ ((0<s\land s<\pi)\land \cos(s)=\frac{y\,y+z\,z-x\,x}{2\,(y\,z)})\land (\forall t\in \mathbb{R},\ (0<t\land t<\pi)\land \cos(t)=\frac{y\,y+z\,z-x\,x}{2\,(y\,z)}\Rightarrow t=s))
 tests/Triangles/article.tex:12:1: info: defines \@n3 (n3)
-tests/Triangles/article.tex:12:1: info: \@n3 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow (((\neg (2=0)\land \neg (2=0))\land \neg (2=0)\land \neg (2=0))\land \neg (2=0))\land \neg (2=0)\land \neg (\frac{x+y+z}{2}=0)
 tests/Triangles/article.tex:13:1: info: defines \@n4 (n4)
-tests/Triangles/article.tex:13:1: info: \@n4 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow (((\neg (2=0)\land \neg (2=0))\land \neg (2=0)\land \neg (2=0))\land \neg (2=0))\land \neg (4\,{(\frac{x+y+z}{2}\,(\frac{x+y+z}{2}-x)\,((\frac{x+y+z}{2}-y)\,(\frac{x+y+z}{2}-z)))}^{\frac{1}{2}}=0)
 tests/Triangles/article.tex:14:1: info: defines \@n5 (n5)
-tests/Triangles/article.tex:14:1: info: \@n5 is well defined if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y\Rightarrow \neg (2=0)\land \neg (2=0)
 tests/Triangles/article.tex:15:1: info: defines \theta (theta)
-tests/Triangles/article.tex:15:1: info: \theta is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \neg (x=0))
 tests/Triangles/article.tex:16:1: info: defines \@n7 (n7)
-tests/Triangles/article.tex:16:1: info: \@n7 is well defined if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \neg (2=0)
 tests/Triangles/article.tex:21:1: info: claim 0: \@n0(3,4,5)=6
 tests/Triangles/article.tex:21:1: info: claim 0 is meaningful if: (0<3\land 0<4)\land 0<5\land 3<4+5\land 4<3+5\land 5<3+4
 tests/Triangles/article.tex:21:1: info: claim 1: \Delta(3,4,5)=6
@@ -38,7 +31,17 @@ tests/Triangles/article.tex:35:66: info: claim 10: \forall x\in \mathbb{R},\ 0<x
 tests/Triangles/article.tex:35:66: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y))
 tests/Triangles/article.tex:39:48: info: claim 11: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow {x}^{2}+{y}^{2}+{z}^{2}<2\,(x\,y+y\,z+z\,x)))
 tests/Triangles/article.tex:43:47: info: claim 12: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow \lvert x-y\rvert<z))
-tests/Triangles/article.tex: 8 definitions, 13 claims
+tests/Triangles/article.tex:47:66: info: claim 13: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow \Delta(x,y,z)={(\@n0(x,y,z)\,(\@n0(x,y,z)-x)\,(\@n0(x,y,z)-y)\,(\@n0(x,y,z)-z))}^{\frac{1}{2}}))
+tests/Triangles/article.tex:47:66: info: claim 13 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (((((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land 0\le \@n0(x,y,z)\,(\@n0(x,y,z)-x)\,(\@n0(x,y,z)-y)\,(\@n0(x,y,z)-z)\land (((((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land (0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land \neg (2=0)))
+tests/Triangles/article.tex:47:66: info: claim 14: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow \cos(\gamma(z,x,y))=\frac{{x}^{2}+{y}^{2}-{z}^{2}}{2\,x\,y}))
+tests/Triangles/article.tex:47:66: info: claim 14 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<z\land 0<x)\land 0<y\land z<x+y\land x<z+y\land y<z+x)\land \neg (2\,x\,y=0)))
+tests/Triangles/article.tex:47:66: info: claim 15: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow \@n3(x,y,z)=\frac{\Delta(x,y,z)}{\@n0(x,y,z)}))
+tests/Triangles/article.tex:47:66: info: claim 15 is meaningful if: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\forall z\in \mathbb{R},\ ((0<z\land x<y+z)\land y<x+z)\land z<x+y\Rightarrow ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land ((0<x\land 0<y)\land 0<z\land x<y+z\land y<x+z\land z<x+y)\land \neg (\@n0(x,y,z)=0)))
+tests/Triangles/article.tex:51:1: info: claim 16: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \theta(x,1)=\frac{(x-2)\,\pi}{x}
+tests/Triangles/article.tex:51:1: info: claim 16 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow (0<1\land x\in \mathbb{Z}\land 3\le x)\land \neg (x=0)
+tests/Triangles/article.tex:51:1: info: claim 17: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow \@n7(x)=\frac{x\,(x-3)}{2}
+tests/Triangles/article.tex:51:1: info: claim 17 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 3\le x\Rightarrow (x\in \mathbb{Z}\land 3\le x)\land \neg (2=0)
+tests/Triangles/article.tex: 8 definitions, 18 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 9 compiled, 0 failed, 0 prose (of 9)
-  all: 17 compiled, 0 failed, 0 prose (of 17)
+  results: 12 compiled, 0 failed, 0 prose (of 12)
+  all: 20 compiled, 0 failed, 0 prose (of 20)

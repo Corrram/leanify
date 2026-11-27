@@ -3208,18 +3208,18 @@ except a notion whose meanings take arguments of different types, which the type
 | Notion | Type | Meaning |
 | --- | --- | --- |
 | semiperimeter of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `s = (a + b + c)/2` |
-| area of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `√(s(s-a)(s-b)(s-c))` (Heron) |
-| angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the `γ ∈ (0,π)` with `cos γ = (a² + b² - c²)/(2ab)` (law of cosines) |
-| inradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `Δ/s` |
-| circumradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `abc/(4Δ)` |
-| altitude to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `2Δ/c` |
-| median to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `½ √(2a² + 2b² - c²)` |
-| bisector of the angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | `√(ab((a+b)² - c²))/(a+b)` |
-| interior angle of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `(n-2)π/n` |
-| area of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `n s²/(4 tan(π/n))` |
-| circumradius of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `s/(2 sin(π/n))` |
-| apothem of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | `s/(2 tan(π/n))`, the inradius |
-| number of diagonals of a convex polygon with $a$ vertices | ℝ → ℝ | `n(n-3)/2` |
+| area of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the Lebesgue measure of a triangle of the plane with these sides (`√(s(s-a)(s-b)(s-c))`, Heron) |
+| angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the angle where the sides `a` and `b` meet (Mathlib `EuclideanGeometry.angle`; `cos γ = (a² + b² - c²)/(2ab)`) |
+| inradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | Mathlib `Affine.Simplex.inradius` (`Δ/s`) |
+| circumradius of the triangle with sides $a$, $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | Mathlib `Affine.Simplex.circumradius` (`abc/(4Δ)`) |
+| altitude to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the height of the vertex opposite `c` (Mathlib `Affine.Simplex.height`; `2Δ/c`) |
+| median to $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the distance from the vertex opposite `c` to the midpoint of `c` (`½ √(2a² + 2b² - c²)`) |
+| bisector of the angle opposite $a$ in the triangle with sides $b$ and $c$ | ℝ → ℝ → ℝ → ℝ | the distance from the vertex opposite `c` to the point of `c` on the bisector (`√(ab((a+b)² - c²))/(a+b)`) |
+| interior angle of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | the angle at a vertex between its neighbours (`(n-2)π/n`) |
+| area of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | the Lebesgue measure of the convex hull of its vertices (`n s²/(4 tan(π/n))`) |
+| circumradius of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | the radius of the circle through its vertices (`s/(2 sin(π/n))`) |
+| apothem of the regular polygon with $a$ sides of length $b$ | ℝ → ℝ → ℝ | the distance from its centre to a side, the inradius (`s/(2 tan(π/n))`) |
+| number of diagonals of a convex polygon with $a$ vertices | ℝ → ℝ | the pairs of vertices that are not the ends of a side (`n(n-3)/2`) |
 
 ## `solids`
 
