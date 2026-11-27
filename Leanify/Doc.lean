@@ -2445,9 +2445,14 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if (t == w!"that" || t == w!"which") && (i == w!"is" || i == w!"are") then (true, rest) else (false, r1)
     | _ => (false, r1)
   -- postnominal modifiers
-  let rec post : Nat → List Chunk → List Tm → M (List Tm × List Chunk)
-    | 0, cs, acc => pure (acc.reverse, cs)
-    | f + 1, cs, acc => do
+  let rec post : Nat → Bool → List Chunk → List Tm → M (List Tm × List Chunk)
+    | 0, _, cs, acc => pure (acc.reverse, cs)
+    | f + 1, rel, cs, acc => do
+      -- (`an integer greater than $1$ that is not prime`: a relative clause after a modifier)
+      let (rel, cs) : Bool × List Chunk := if acc.isEmpty then (rel, cs) else match cs with
+        | .w t :: .w i :: rest =>
+          if (t == w!"that" || t == w!"which") && (i == w!"is" || i == w!"are") then (true, rest) else (rel, cs)
+        | _ => (rel, cs)
       let cs := if rel && !acc.isEmpty then (match cs with
           | .w a :: rest => if a == w!"and" then rest else cs
           | .p 44 :: .w a :: rest => if a == w!"and" then rest else cs
@@ -2475,8 +2480,28 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             pure ok
           pure (if fit.isEmpty then cands else fit)
         else pure cands
+      -- (`not coprime to $n$`: the negation of a modifier, as `that is not coprime to $n$`)
+      let negated : Option (List Chunk) := if !cands.isEmpty then none else match cs with
+        | .w n :: rest => if n == w!"not" then some rest else none
+        | _ => none
+      let neg ← match negated with
+        | some cs' =>
+          let ncands := V.mods.filterMap (fun m => if (rel || !m.prenominal) && m.ty == ty then
+              if Notation.hasSlots m.phrase then (Notation.matchPrefix m.phrase cs' []).map fun (_, r) => (m, r) else
+              (matchPhrase m.phrase cs').bind fun (v, r) => if v.isNone then some (m, r) else none
+            else none)
+          match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs' ncands with
+          | some (m, r) =>
+            let p ← slotPred m cs'
+            let np : Tm := match p with
+              | .lam t d b => .lam t d (.not b)
+              | p => .lam ty .tt (.not (.app (shift 1 0 p) (.loc 0)))
+            pure (some (np, r))
+          | none => pure none
+        | none => pure none
+      if let some (np, r) := neg then post f rel r (np :: acc) else
       match ← theMeaning (fun (m : Modifier) => m.pred) (·.field) cs cands with
-      | some (m, r) => post f r ((← slotPred m cs) :: acc)
+      | some (m, r) => post f rel r ((← slotPred m cs) :: acc)
       | none =>
         -- (`a subgroup of $G$ of index $2$`: a modifier that ends in `in $v$`, without it,
         -- of the object the noun's complement names)
@@ -2492,9 +2517,9 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
               | _ => none
           | none => []
         match ← theMeaning (fun (mc : Modifier × List Chunk) => mc.1.pred) (·.1.field) cs rels with
-        | some ((m, cs2), r) => post f r ((← slotPred m cs2) :: acc)
+        | some ((m, cs2), r) => post f rel r ((← slotPred m cs2) :: acc)
         | none => pure (acc.reverse, cs)
-  let (qms, r2) ← post 4 r1 []
+  let (qms, r2) ← post 4 rel r1 []
   -- `a copula $C$ with maximal correlation $R=R(C)$`: the value of a function at the
   -- variable, named by the function's letter for the rest of the result. The words are
   -- the name under which the article introduced the function.
@@ -2797,6 +2822,19 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       | _, _, _ => false
     some (np.take i ++ np.drop (i + 2))
   if let some np' := relFree then
+    if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
+    set st00
+  -- (`divisor of $n$ $d$ with $d>1$`: the variable after the noun's complement, before more
+  -- words, as `divisor $d$ of $n$ with $d>1$`)
+  let varAfterComp : Option (List Chunk) := do
+    let k ← np.findIdx? fun c => match c with | .w w => w == w!"of" | _ => false
+    if k == 0 || !((np.take k).all fun c => match c with | .w _ | .p 45 => true | _ => false) then none
+    match np.drop k with
+    | .w _ :: .m x :: .m v :: rest@(_ :: _) =>
+      let _ ← varName v
+      some (np.take k ++ [.m v, .w w!"of", .m x] ++ rest)
+    | _ => none
+  if let some np' := varAfterComp then
     if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
     set st00
   -- (`with more than $n-1$ edges`: `with at least $\lfloor n-1\rfloor+1$ edges`; `fewer than`,
@@ -5623,6 +5661,11 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     let st ← subjectTm sc s
     let st0 ← get
     tryCatch (predicate sc st ph o) fun e => do
+      -- (`$0$ is not a divisor of $n$`: the negation of `is a divisor of $n$`)
+      if let w :: rest@(_ :: _) := ph then
+        if w == w!"not" then
+          set st0
+          return .not (← clauseTm c sc onVar lastRhs (.pred s rest o))
       -- (`… is the reciprocal of $x$`, `… is the reciprocal of the determinant of $A$`: the value
       -- of a notion, also of a notion's value)
       let .w t :: _ := ph.map Chunk.w | throw e
@@ -6022,6 +6065,28 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
         if res.isNone then
           set st0
           res ← tryCatch (some <$> vocabPredicate sc x np') fun _ => pure none
+      -- (`$A$ has determinant zero`, `with trace $0$`: the value of a notion of the subject,
+      -- `the determinant of $A$ is zero`, where no modifier has the words)
+      if res.isNone then
+        let valueOf : Option (MT × Option MT) := match np with
+          | .w w :: rest =>
+            if w != w!"with" then none else
+            let ws := rest.dropLast
+            if ws.isEmpty || ws.length > 3 || !(ws.all fun ch => match ch with | .w _ => true | _ => false) then none else
+            let the := MT.app (.id w!"@the") (ws.filterMap (fun ch => match ch with | .w t => some (MT.text t) | _ => none) ++ [.text w!"of", s])
+            match rest.getLast? with
+            | some (.w z) => if z == w!"zero" then some (the, none) else none
+            | some (.m k) => (Math.parseFormula k).map fun v => (the, some v)
+            | _ => none
+          | _ => none
+        if let some (the, v) := valueOf then
+          set st0
+          res ← tryCatch (some <$> match v with
+              | some v => prop sc none (.chain the [(.eq, v)])
+              | none => do
+                let t ← Elab.term 100000 sc none the
+                if t.2 != Ty.real then fail E.type
+                adjectiveTmCore sc t.1 t.2 none [w!"zero"] none) fun _ => pure none
       match res with
       | some p => pure p
       | none =>

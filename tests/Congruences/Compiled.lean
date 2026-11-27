@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Congruences.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["numbers", "arithmetic", "congruences"]
 
-#leanify_article Congruences "article.tex" "fnv1a64:43ed3c0df1d93512" with Congruences.vocabulary
+#leanify_article Congruences "article.tex" "fnv1a64:7783289927863c79" with Congruences.vocabulary

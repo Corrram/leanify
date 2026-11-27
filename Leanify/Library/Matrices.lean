@@ -10,7 +10,8 @@ size), `AB` (when the columns of `A` are as many as the rows of `B`), `cA` for a
 `A^\top` (also `A^T`), `\det A`, `\operatorname{tr} A` and `\operatorname{rank} A`. A real number
 is the `1 × 1` matrix: the product of such a matrix with another is the scalar multiple.
 
-* nouns: `matrix`, `real matrix`, `square matrix`;
+* nouns: `matrix`, `real matrix`, `square matrix`; with their matrix, `eigenvalue of $A$`
+  (`real eigenvalue`, a real number) and `eigenvector of $A$` (an `n × 1` matrix);
 * adjectives: `square`, `symmetric`, `skew-symmetric`, `orthogonal`, `invertible`,
   `singular`, `nonsingular`, `positive definite`, `positive semidefinite`, `diagonal`,
   `upper triangular`, `lower triangular`, `nilpotent`, `idempotent`, `stochastic`,
@@ -70,6 +71,7 @@ def stochastic : Nat := 35
 def similar : Nat := 36
 def diagonalizable : Nat := 37
 def orthDiagonalizable : Nat := 38
+def eigenvector : Nat := 39
 end Const
 open Const
 
@@ -103,7 +105,7 @@ def vocab : Vocab where
     M ⟶ .real, M ⟶ .real, M ⟶ .real, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real ⟶ .real ⟶ .real,
     M ⟶ .real ⟶ .real ⟶ .prop, .real ⟶ M, .real ⟶ .real ⟶ M, M ⟶ Ty.rfun, M ⟶ .real ⟶ .prop,
     M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop,
-    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop]
+    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop]
   constNames := [w!"\\operatorname{rows}", w!"\\operatorname{cols}", w!"", w!"\\operatorname{Square}",
     w!"\\operatorname{SameSize}(#1,#2)", w!"\\operatorname{Mulable}(#1,#2)", w!"+", w!"-", w!"-", w!"\\cdot", w!"^",
     w!"#^{-1}", w!"#^{\\top}", w!"/", w!"\\det", w!"\\operatorname{tr}", w!"\\operatorname{rank}",
@@ -113,7 +115,7 @@ def vocab : Vocab where
     w!"\\operatorname{PosDef}", w!"\\operatorname{PosSemidef}", w!"\\operatorname{Diagonal}",
     w!"\\operatorname{UpperTriangular}", w!"\\operatorname{LowerTriangular}", w!"\\operatorname{Nilpotent}",
     w!"\\operatorname{Idempotent}", w!"\\operatorname{Stochastic}", w!"#2\\sim #1", w!"\\operatorname{Diagonalizable}",
-    w!"\\operatorname{OrthDiagonalizable}"]
+    w!"\\operatorname{OrthDiagonalizable}", w!"\\operatorname{Eigenvector}(#1,#2)"]
   constLean := [w!"Leanify.Matrices.rows", w!"Leanify.Matrices.cols", w!"Leanify.Matrices.ofReal",
     w!"Leanify.Matrices.Square", w!"Leanify.Matrices.SameSize", w!"Leanify.Matrices.Mulable",
     w!"Leanify.Matrices.add", w!"Leanify.Matrices.sub", w!"Leanify.Matrices.neg", w!"Leanify.Matrices.mul",
@@ -126,13 +128,22 @@ def vocab : Vocab where
     w!"Leanify.Matrices.PosSemidef", w!"Leanify.Matrices.Diagonal", w!"Leanify.Matrices.UpperTriangular",
     w!"Leanify.Matrices.LowerTriangular", w!"Leanify.Matrices.Nilpotent", w!"Leanify.Matrices.Idempotent",
     w!"Leanify.Matrices.Stochastic", w!"Leanify.Matrices.Similar", w!"Leanify.Matrices.Diagonalizable",
-    w!"Leanify.Matrices.OrthDiagonalizable"]
+    w!"Leanify.Matrices.OrthDiagonalizable", w!"Leanify.Matrices.Eigenvector"]
   typeLean := [(w!"Leanify.Matrices.Mat", w!"Leanify.Matrices.Mat.empty")]
   modules := [w!"Leanify.Library.MatricesModel"]
   nouns := [
     nounM phrase!"matrix" phrase!"matrices" (mPred fun _ => tt) "a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
     nounM phrase!"real matrix" phrase!"real matrices" (mPred fun _ => tt) "(Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
-    nounM phrase!"square matrix" phrase!"square matrices" squarePred "an `n × n` matrix"]
+    nounM phrase!"square matrix" phrase!"square matrices" squarePred "an `n × n` matrix",
+    { noun phrase!"eigenvalue" phrase!"eigenvalues" (close <| lamR fun _ => tt)
+        "of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`)" with
+      arg := some ([w!"of"], M, close <| lamT M (fun _ => tt) fun a => lamR fun t => and (app (const square) a) (app2 (const eigenvalue) a t)) },
+    { noun phrase!"real eigenvalue" phrase!"real eigenvalues" (close <| lamR fun _ => tt)
+        "of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0`" with
+      arg := some ([w!"of"], M, close <| lamT M (fun _ => tt) fun a => lamR fun t => and (app (const square) a) (app2 (const eigenvalue) a t)) },
+    { nounM phrase!"eigenvector" phrase!"eigenvectors" (mPred fun _ => tt)
+        "of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`)" with
+      arg := some ([w!"of"], M, close <| lamT M (fun _ => tt) fun a => lamT M (fun _ => tt) fun v => app2 (const eigenvector) a v) }]
   mods := [
     mod phrase!"square" true squarePred "`n × n`",
     mod phrase!"real" true (mPred fun _ => tt) "a matrix of real numbers (every matrix is)",

@@ -88,6 +88,12 @@ def charpoly (A : Mat) : ℝ → ℝ := fun t => (sq A).charpoly.eval t
 /-- The real eigenvalues. -/
 def Eigenvalue (A : Mat) (μ : ℝ) : Prop := ∃ v : Fin A.1 → ℝ, v ≠ 0 ∧ (sq A).mulVec v = μ • v
 
+/-- `v` is an eigenvector of `A`: a nonzero `n × 1` matrix, for `A` of size `n × n`, with
+`Av = λv` for a real `λ`. -/
+def Eigenvector (A v : Mat) : Prop :=
+  Square A ∧ v.1 = A.1 ∧ v.2.1 = 1 ∧ (∃ i : Fin A.1, at' v i 0 ≠ 0) ∧
+    ∃ μ : ℝ, (sq A).mulVec (fun i : Fin A.1 => at' v i 0) = μ • (fun i : Fin A.1 => at' v i 0)
+
 def Symmetric (A : Mat) : Prop := Square A ∧ (sq A).IsSymm
 def SkewSymmetric (A : Mat) : Prop := Square A ∧ (sq A)ᵀ = -sq A
 def Orthogonal (A : Mat) : Prop := Square A ∧ (sq A)ᵀ * sq A = 1

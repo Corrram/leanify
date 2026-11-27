@@ -169,7 +169,8 @@ Further fields cover other branches of mathematics:
   cycles and inversions; transpositions, cycles, derangements and involutions;
 * `matrices`: real `m × n` matrices, a type of its own, with their algebra (`A+B`, `AB`,
   `cA`, `A^k`, `A^{-1}`, `A^\top`), `\det`, `\operatorname{tr}`, `\operatorname{rank}`,
-  entries, the characteristic polynomial and the real eigenvalues; symmetric,
+  entries, the characteristic polynomial, the real eigenvalues (`eigenvalue of $A$`) and the
+  eigenvectors (`eigenvector of $A$`, an `n × 1` matrix); symmetric,
   orthogonal, invertible, positive definite, triangular, nilpotent and stochastic
   matrices;
 * `special`: the gamma function `\Gamma`, the beta function, the zeta function `\zeta` on

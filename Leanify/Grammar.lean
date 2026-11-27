@@ -563,6 +563,34 @@ def chunksUntil (stop : List Codes) : List Chunk → List Chunk → Option (List
     | .m _ | .p 45 => chunksUntil stop cs (c :: acc)
     | _ => none
 
+/-- `chunksUntil` past a relative clause: the verb of `that is not prime`, `which has`, is
+not the sentence's. -/
+def chunksUntilV (stop : List Codes) : List Chunk → List Chunk → Option (List Chunk × List Chunk)
+  | [], _ => none
+  | .w v :: cs, acc =>
+    let rel := match acc with | .w t :: _ => t == w!"that" || t == w!"which" | _ => false
+    if stop.contains v && !rel then some (acc.reverse, .w v :: cs) else chunksUntilV stop cs (.w v :: acc)
+  | c :: cs, acc =>
+    match c with
+    | .m _ | .p 45 => chunksUntilV stop cs (c :: acc)
+    | _ => none
+
+/-- A new variable for a noun phrase: before its relative clause (`integer $x$ that is not
+prime`), or at its end. -/
+def withVarAt (np : List Chunk) (v : Codes) : List Chunk :=
+  -- (`integer $x$ greater than $1$ that is …`: before a comparison)
+  let cmpAt := (List.range np.length).find? fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk) with
+    | some (.w c), some (.w t) => t == w!"than" && [w!"greater", w!"less", w!"larger", w!"smaller"].contains c
+    | _, _ => false
+  match cmpAt with
+  | some i => if i == 0 then np ++ [.m [.id v]] else np.take i ++ [.m [.id v]] ++ np.drop i
+  | none =>
+  match (List.range np.length).find? (fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk) with
+      | some (.w t), some (.w a) => (t == w!"that" || t == w!"which") && (a == w!"is" || a == w!"are" || a == w!"has" || a == w!"have")
+      | _, _ => false) with
+  | some i => if i == 0 then np ++ [.m [.id v]] else np.take i ++ [.m [.id v]] ++ np.drop i
+  | none => np ++ [.m [.id v]]
+
 /-- Citations: `Lemma~\ref{l}`, `Theorem~\ref{l}`, `Claim~\ref{l}`, `\eqref{l}`, `\cref{l}`. -/
 def cite : List Chunk → Option (Codes × List Chunk)
   | .r .eqref l :: cs => some (l, cs)
@@ -1198,6 +1226,28 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
             | _, _ => none
           | none => none
     | _, _ => none) <|>
+  (do
+    -- `every integer $n$ that is not prime`: the variable, then a relative clause of
+    -- modifiers (a modifier may precede it, `every integer $n$ greater than $1$ that is …`)
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+    if ws.isEmpty then none
+    let .m v :: post := np.drop ws.length | none
+    let isVar := match v with | [.id _] | [.cmd _] => true | _ => subName v
+    if !isVar then none
+    let i ← (List.range post.length).find? fun i => match (post[i]? : Option Chunk), (post[i + 1]? : Option Chunk) with
+      | some (.w t), some (.w a) => (t == w!"that" || t == w!"which") && (a == w!"is" || a == w!"are")
+      | _, _ => false
+    let rel := post.drop (i + 2)
+    if rel.isEmpty then none
+    -- (words of modifiers only: no second verb, no conditions)
+    if rel.any (fun c => match c with
+        | .w w => [w!"is", w!"are", w!"has", w!"have", w!"such", w!"for", w!"then", w!"there", w!"we", w!"where"].contains w
+        | _ => false) then none
+    if (post.take i).any (fun c => match c with
+        | .w w => [w!"is", w!"are", w!"has", w!"have", w!"such", w!"for", w!"then", w!"there", w!"we", w!"where", w!"that", w!"which"].contains w
+        | _ => false) then none
+    some (.noun np, r')) <|>
   (do
     -- `every graph $G$ on $n$ vertices`, `every matrix $A$ of size $n\times n$`: the variable,
     -- then a phrase with numbers (a modifier of the vocabulary with arguments)
@@ -2850,6 +2900,69 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       | .m k :: r4 => some (Clause.isA s [.w w!"of", .w q, .m k] false, r4)
       | .w a :: .w b :: .m k :: r4 =>
         if a == w!"at" && (b == w!"most" || b == w!"least") then some (Clause.isA s [.w w!"of", .w q, .w a, .w b, .m k] false, r4) else none
+      | _ => none : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$x$ is $0$ or $1$`, `$n$ is either $2$, $3$ or $5$`: equal to one of the values
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"is"] r
+      let r1 := (kw [w!"either"] r1).getD r1
+      let value (cs : List Chunk) : Option (MT × List Chunk) := do
+        let .m k :: rest := cs | none
+        -- (`$2$-colorable`: a word with a formula)
+        if (match rest with | .p 45 :: _ => true | _ => false) then none
+        let v ← Math.parseFormula k
+        -- (a value, not a condition: `… or $x^2>0$` is another clause)
+        match v with
+        | .chain _ (_ :: _) | .lnot _ | .land _ _ | .lor _ _ | .limp _ _ | .liff _ _ | .quant .. | .text _ => none
+        | _ => some (v, rest)
+      let ends (r : List Chunk) : Bool := clauseEnd r || (match r with
+        | .w w :: _ => [w!"and", w!"for", w!"if", w!"then", w!"whenever", w!"since", w!"where"].contains w
+        | _ => false)
+      let rec vals : Nat → List Chunk → List MT → Option (List MT × List Chunk)
+        | 0, _, _ => none
+        | f + 1, cs, acc => do
+          let (v, rest) ← value cs
+          let acc := acc ++ [v]
+          match rest with
+          | .w o :: rest' | .p 44 :: .w o :: rest' =>
+            if o != w!"or" then none else
+            let (v', r') ← value rest'
+            if !ends r' then none else some (acc ++ [v'], r')
+          | .p 44 :: rest' => vals f rest' acc
+          | _ => none
+      let (vs, r2) ← vals 8 r1 []
+      let eqs := vs.map fun v => MT.chain s [(.eq, v)]
+      let some first := eqs.head? | none
+      some (Clause.fact ((eqs.drop 1).foldl MT.lor first), r2) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$A$ has determinant $0$`, `$A$ has trace zero`: the value of a notion of the subject
+  -- (`the determinant of $A$ is $0$`; a notion only, the words are no noun of its objects)
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"has"] r <|> kw [w!"have"] r
+      let ws := r1.takeWhile fun (c : Chunk) => match c with | .w w => w != w!"zero" | .p 45 => true | _ => false
+      if ws.isEmpty || ws.length > 3 then none
+      if ws.any (fun (c : Chunk) => match c with
+          | .w w => [w!"a", w!"an", w!"the", w!"no", w!"at", w!"exactly", w!"more", w!"less", w!"fewer", w!"only", w!"precisely",
+              w!"one", w!"two", w!"three", w!"finite", w!"infinite", w!"and", w!"or", w!"if", w!"zero", w!"many", w!"some", w!"all",
+              w!"its", w!"his", w!"their"].contains w
+          | _ => false) then none
+      let words : List MT := ws.filterMap fun (c : Chunk) => match c with | .w w => some (MT.text w) | _ => none
+      if words.length != ws.length then none
+      let the := MT.app (.id w!"@the") (words ++ [.text w!"of", s])
+      match r1.drop ws.length with
+      | .m k :: r2 =>
+        let v ← Math.parseFormula k
+        if !clauseEnd r2 then none
+        some (Clause.fact (.chain the [(.eq, v)]), r2)
+      | .w z :: r2 =>
+        if z != w!"zero" || !clauseEnd r2 then none
+        some (Clause.isA the [.w z] false, r2)
       | _ => none : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
@@ -4558,9 +4671,25 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
           | some (.w p), .w a :: .m u :: _ => if p == w!"from" && a == w!"and" && simple u then [.w a, .m u] else []
           | _, _ => []
         let more := more.drop two.length
-        let after := two ++ more.takeWhile (fun c => match c with | .w w => !([w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w) | _ => false)
-        -- (`on $n$ vertices`: words after the number; `of degree $n$`: none)
-        some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop (after.length - two.length))
+        -- (`on $n$ vertices`: words after the number; `of degree $n$`: none; `congruent to $1$
+        -- modulo $4$`: a further formula after a preposition)
+        let rec afterOf : Nat → List Chunk → List Chunk → List Chunk
+          | 0, _, acc => acc.reverse
+          | f + 1, cs, acc => match cs with
+            | .w w :: rest =>
+              if [w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w then acc.reverse
+              else afterOf f rest (.w w :: acc)
+            | .m u :: rest => match acc with
+              | .w p :: _ => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at"].contains p then afterOf f rest (.m u :: acc) else acc.reverse
+              | _ => acc.reverse
+            | _ => acc.reverse
+        let after1 := afterOf (more.length + 1) more []
+        -- (not a dangling preposition before what follows)
+        let after1 := match after1.getLast? with
+          | some (.w p) => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at"].contains p && after1.any (fun c => match c with | .m _ => true | _ => false) then after1.dropLast else after1
+          | _ => after1
+        let after := two ++ after1
+        some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop after1.length)
       | _, _ => none
     match argPhrase with
     | some (np, rest') =>
@@ -5983,7 +6112,7 @@ def everySatisfies (cs : List Chunk) : Option (List Chunk) := do
 abelian.`): the noun phrase ends with its variable. -/
 def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
   let r ← kw [w!"every"] cs
-  let (np, r1) ← chunksUntil [w!"is"] r []
+  let (np, r1) ← chunksUntilV [w!"is"] r []
   let _ ← kw [w!"is"] r1
   -- (the variable: the first formula, after the noun; a modifier may follow it, `every point
   -- $P$ lying on $\Gamma$ is …`)
@@ -6010,7 +6139,7 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     let afterComp := (np.drop k).drop 2
     if afterComp.any (fun c => match c with | .m _ => true | _ => false) then
       return [.w w!"for", .w w!"every"] ++ np.take k ++ [.m [.id v]] ++ np.drop k ++ [.p 44, .m [.id v]] ++ r1
-    return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1
+    return [.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1
   match np.find? (fun c => match c with | .m _ => true | _ => false) with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   | some (.m [.cmd v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.cmd v]] ++ r1)
@@ -6022,26 +6151,38 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
       -- (`every prime $p\equiv1\pmod4$ is …`: the variable of the congruence)
       match ts with
       | .id v :: .cmd e :: _ => if e == w!"equiv" then some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1) else none
-      | _ => none
+      | _ =>
+        -- (`every integer greater than $1$ is …`: a bound after a comparison, the object has a
+        -- variable of its own)
+        let afterThan := match np.findIdx? (fun c => match c with | .m _ => true | _ => false) with
+          | some (i + 1) => match np[i]? with | some (.w w) => w == w!"than" | _ => false
+          | _ => false
+        if !afterThan then none else
+        let v : Codes := w!"ve"
+        some ([.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1)
   | some _ => none
   | none =>
     -- `Every Harshad number is a positive integer.`: a noun after `is a`, of an object
     -- that the sentence does not name (a variable of its own)
     let r2 ← kw [w!"is"] r1
-    -- (or an adjective with a formula, `is $2$-colorable`)
+    -- (or an adjective with a formula, `is $2$-colorable`; or any predicate of a noun phrase
+    -- with a relative clause, `every integer that is not prime is …`)
+    let relative := match (withVarAt np w!"ve").getLast? with
+      | some (.m [.id x]) => x != w!"ve"
+      | _ => true
     let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2 <|> (match r2 with
       | .m _ :: .p 45 :: .w _ :: _ => some r2
-      | _ => none)
+      | _ => if relative then some r2 else none)
     if np.isEmpty then none
     let v : Codes := w!"ve"
-    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
+    some ([.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1)
 
 /-- `Every NP has a NOUN …` as `For every NP $x$, $x$ has a NOUN …` (`Every bounded
 sequence of real numbers has a convergent subsequence.`): the noun phrase's variable, or one
 of its own. -/
 def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
   let r ← kw [w!"every"] cs
-  let (np, r1) ← chunksUntil [w!"has"] r [] <|> chunksUntil [w!"contains"] r []
+  let (np, r1) ← chunksUntilV [w!"has"] r [] <|> chunksUntilV [w!"contains"] r []
   let _ ← kw [w!"has"] r1 <|> kw [w!"contains"] r1
   if np.isEmpty then none
   -- (a formula after a preposition is a complement, `every countable subset of
@@ -6052,7 +6193,7 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
     | _ => false
   if afterPrep then
     let v : Codes := w!"ve"
-    return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1
+    return [.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1
   match np.getLast? with
   | some (.m [.id v]) => some ([.w w!"for", .w w!"every"] ++ np ++ [.p 44, .m [.id v]] ++ r1)
   -- (a variable with a bound, `Every integer $n>1$ has …`)
@@ -6063,7 +6204,7 @@ def everyHasSent (cs : List Chunk) : Option (List Chunk) := do
       some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
   | _ =>
     let v : Codes := w!"ve"
-    some ([.w w!"for", .w w!"every"] ++ np ++ [.m [.id v], .p 44, .m [.id v]] ++ r1)
+    some ([.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1)
 
 /-- `[Then] CLAUSE if CLAUSE'.` as `If CLAUSE', then CLAUSE.`: a condition after the claim
 (not `if and only if`, `only if`, `even if`). -/
@@ -8196,7 +8337,21 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
               ((postIf cs').bind fun c => sentence (lead ++ c)) then acc := acc ++ [sn]
         | none => break
     return acc
-  return out ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
+  -- `$n$ has a divisor $d$ such that $1<d<n$`: as `there is a divisor $d$ of $n$ such that …`
+  -- (the noun's complement the subject, as `$n$ has a divisor $d$` reads)
+  let hasSuchThat : List Sent := Id.run do
+    let .m subj :: .w h :: .w a :: rest := cs | return []
+    if h != w!"has" || !(a == w!"a" || a == w!"an") then return []
+    let ws := rest.takeWhile fun c => match c with
+      | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"such", w!"and", w!"or"].contains w
+      | .p 45 => true
+      | _ => false
+    let .m v :: .w s1 :: .w t1 :: more := rest.drop ws.length | return []
+    if ws.isEmpty || s1 != w!"such" || t1 != w!"that" then return []
+    if !(match v with | [.id _] => true | _ => subName v) then return []
+    if (Math.parseFormula subj).isNone then return []
+    return (sentence (lead ++ [.w w!"there", .w w!"is", .w a] ++ ws ++ [.m v, .w w!"of", .m subj, .w w!"such", .w w!"that"] ++ more)).toList
+  return out ++ hasSuchThat ++ theSet.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

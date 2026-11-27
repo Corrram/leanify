@@ -896,6 +896,9 @@ except a notion whose meanings take arguments of different types, which the type
 | matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
+| eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -2307,6 +2310,9 @@ except a notion whose meanings take arguments of different types, which the type
 | matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
+| eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -2716,6 +2722,9 @@ except a notion whose meanings take arguments of different types, which the type
 | matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
 | square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
+| eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
