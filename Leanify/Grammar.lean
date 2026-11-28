@@ -5154,6 +5154,10 @@ def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind
           -- (`and $a\in K$ nonzero`: an element of the domain with adjectives)
           else if v.contains (.cmd w!"in") && ![w!"be", w!"with", w!"such", w!"and", w!"satisfying", w!"where", w!"for",
               w!"then", w!"is", w!"are", w!"if"].contains a then letBinder (.m v :: .w w!"be" :: .w a :: rest)
+          -- (`and $I,J$ ideals of $R$`: several names, then the plural noun with its words)
+          else if v.contains (.sym 44) && !v.contains (.cmd w!"in") && a.getLast? == some 115 &&
+              ![w!"is", w!"as", w!"was", w!"has", w!"this", w!"thus"].contains a then
+            letBinder (.m v :: .w w!"be" :: .w a :: rest)
           else none
         | _ => none
       -- (the elided `be` first: `and $T\colon V\to V$ a linear map` is no signature binder

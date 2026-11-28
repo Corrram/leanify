@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def CalculusField.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["realfunctions", "optimization", "calculus"]
 
-#leanify_article CalculusField "article.tex" "fnv1a64:c01b051fe2240d08" with CalculusField.vocabulary
+#leanify_article CalculusField "article.tex" "fnv1a64:e53ec5ad94a4c2ae" with CalculusField.vocabulary

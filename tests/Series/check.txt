@@ -89,7 +89,8 @@ tests/Series/article.tex:177:95: info: claim 50: \forall x\in \mathbb{R}\to \mat
 tests/Series/article.tex:181:65: info: claim 51: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land \sum_{s=0}^{\infty}\lvert x(s)\rvert\text{ converges}\Rightarrow \sum_{y=1}^{\infty}x(y)\text{ converges}
 tests/Series/article.tex:181:65: info: claim 51 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land \sum_{s=0}^{\infty}\lvert x(s)\rvert\text{ converges}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow y\in \mathbb{N})
 tests/Series/article.tex:181:157: info: claim 52: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land \operatorname{converges}(0)(x)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow (\exists z\in \mathbb{R},\ \forall s\in \mathbb{R},\ s\in \mathbb{N}\land z\le s\Rightarrow s\in \mathbb{N}\land \lvert x(s)-0\rvert<y))
-tests/Series/article.tex: 10 definitions, 53 claims
+tests/Series/article.tex:185:24: info: claim 53: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land (\exists s\in \mathbb{R},\ \forall t\in \mathbb{R},\ 0<t\Rightarrow (\exists a\in \mathbb{R},\ \forall b\in \mathbb{R},\ (b\in \mathbb{Z}\land 0\le b)\land a\le b\Rightarrow \lvert x(b)-s\rvert<t))\Rightarrow (\forall s\in \mathbb{R},\ \neg (s\in \mathbb{Z}\land 0\le s)\Rightarrow x(s)=0)\land (\forall s\in \mathbb{R},\ 0<s\Rightarrow (\exists t\in \mathbb{R},\ \forall a\in \mathbb{R},\ \forall b\in \mathbb{R},\ ((a\in \mathbb{Z}\land 0\le a)\land b\in \mathbb{Z}\land 0\le b)\land t\le a\land t\le b\Rightarrow \lvert x(a)-x(b)\rvert<s))
+tests/Series/article.tex: 10 definitions, 54 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 83 compiled, 0 failed, 0 prose (of 83)
-  all: 93 compiled, 0 failed, 0 prose (of 93)
+  results: 85 compiled, 0 failed, 0 prose (of 85)
+  all: 95 compiled, 0 failed, 0 prose (of 95)

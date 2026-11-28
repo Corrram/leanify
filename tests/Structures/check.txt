@@ -330,6 +330,8 @@ tests/Structures/article.tex:746:119: info: claim 267: \forall x\in \mathrm{El}\
 tests/Structures/article.tex:750:40: info: claim 268: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{MetricSpace}(x)\land \operatorname{Compact}(x)\Rightarrow \operatorname{Complete}(x)
 tests/Structures/article.tex:754:79: info: claim 269: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{TopologicalSpace}(y)\Rightarrow (\forall z\in \mathrm{Map},\ \operatorname{Continuous}(z)\land z\colon x\to y\Rightarrow (\forall s\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Compact}(s)\land (\forall b\in \mathrm{El},\ s(b)\Rightarrow x(b))\Rightarrow \operatorname{Compact}(z[z](s)))))
 tests/Structures/article.tex:758:1: info: claim 270: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{Abelian}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\le x\Rightarrow y\trianglelefteq x)
-tests/Structures/article.tex: 13 definitions, 271 claims
-  results: 500 compiled, 0 failed, 0 prose (of 500)
-  all: 500 compiled, 0 failed, 0 prose (of 500)
+tests/Structures/article.tex:762:44: info: claim 271: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Ring}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ y\trianglelefteq x\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ z\trianglelefteq x\Rightarrow (y+z)\trianglelefteq x))
+tests/Structures/article.tex:762:44: info: claim 271 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Ring}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ y\trianglelefteq x\Rightarrow (\forall z\in \mathrm{El}\to \mathrm{Prop},\ z\trianglelefteq x\Rightarrow \operatorname{SameSpaces}(y)(z)))
+tests/Structures/article.tex: 13 definitions, 272 claims
+  results: 502 compiled, 0 failed, 0 prose (of 502)
+  all: 502 compiled, 0 failed, 0 prose (of 502)

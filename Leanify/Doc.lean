@@ -3057,16 +3057,16 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let bases : List (List Codes) := [[w!"real", w!"number"], [w!"function"], [w!"sequence"], [w!"set"],
         [w!"matrix"], [w!"vector"], [w!"graph"], [w!"permutation"], [w!"complex", w!"number"],
         [w!"random", w!"variable"], [w!"polynomial"]]
-      -- (the kinds of the field of the words: `odd` of the field `numbers` is said of numbers, of
-      -- `realfunctions` of functions, not of sequences; a noun of the core takes the words of
-      -- every field)
+      -- (the fields of the words: `odd` of the field `numbers` is said of numbers, of
+      -- `realfunctions` of functions; a noun of the core takes the words of every field)
       let firstWord : Option Codes := post.findSome? fun c => match c with | .w w => some w | _ => none
       let wordFields : List Codes := match firstWord with
         | some w =>
           ((V.adjectives.filter fun a => a.words.head? == some w).map (·.field)) ++
           ((V.mods.filter fun m => match m.phrase.head? with | some (.w x) => x == w | _ => false).map (·.field))
         | none => []
-      let present := bases.filter fun b => V.nouns.any fun n => n.sing == b.map PItem.w && n.arg.isNone &&
+      let present := bases.filter fun b => V.nouns.any fun n => n.sing == b.map PItem.w && n.arg.isNone
+      let ofWordField (b : List Codes) : Bool := V.nouns.any fun n => n.sing == b.map PItem.w && n.arg.isNone &&
         (wordFields.isEmpty || n.field.isEmpty || wordFields.contains n.field)
       let allWords := post.all fun c => match c with | .w _ | .p 45 => true | _ => false
       -- (the words before a preposition before the noun, the phrase of the preposition after
@@ -3080,7 +3080,9 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         let noun : List Chunk := b.map Chunk.w
         let vm : Chunk := .m v
         ([noun ++ [vm] ++ post] ++ (if allWords then [post ++ noun ++ [vm]] else []) ++
-          (if !pre.isEmpty && !rest.isEmpty then [pre ++ noun ++ rest ++ [vm]] else [])).map (b, ·)
+          (if !pre.isEmpty && !rest.isEmpty then [pre ++ noun ++ rest ++ [vm]] else []) ++
+          -- (`twice differentiable function $f$ with …`: the variable before the condition)
+          (if !pre.isEmpty && (match rest with | .w w :: _ => w == w!"with" | _ => false) then [pre ++ noun ++ [vm] ++ rest] else [])).map (b, ·)
       let mut fits : List (List Codes × List Chunk × BindInfo) := []
       -- (a letter that nothing defines, `on $[a,b]$`: for the caller to bind, then read again)
       let mut undef : Option Err := none
@@ -3095,6 +3097,19 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       let kinds := match kinds.find? (fun (b, _, _) => b == [w!"real", w!"number"]) with
         | some k => [k]
         | none => kinds
+      -- (of one type, the general kind: a function, not a sequence or a polynomial, which are
+      -- functions of their own kind)
+      -- (the kinds of the field of the words, where it has any: `convergent` of the field `series`
+      -- is said of sequences, not of the functions of `realfunctions`)
+      let inField : List (List Codes × List Chunk × BindInfo) := kinds.filter fun (b, _, _) => ofWordField b
+      let kinds : List (List Codes × List Chunk × BindInfo) :=
+        if kinds.length < 2 || inField.isEmpty then kinds else inField
+      -- (otherwise, of one type, the general kind: `twice differentiable` of the field `calculus`
+      -- is said of functions, not of sequences or polynomials, functions of a kind of their own)
+      let general (b : List Codes) : Bool := V.nouns.any fun n => n.sing == b.map PItem.w && n.arg.isNone &&
+        (match n.pred with | .lam _ _ .tt => true | _ => false)
+      let kinds : List (List Codes × List Chunk × BindInfo) := kinds.filter fun (b, _, bi) =>
+        general b || !(kinds.any fun (b', _, bi') => bi'.ty == bi.ty && general b')
       match kinds with
       | [(_, c, _)] => return ← nounPhrase0 c outer
       | [] =>
