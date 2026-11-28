@@ -306,7 +306,8 @@ def subNameOf (ts : List MTok) : Option Codes :=
 
 def subName (ts : List MTok) : Bool := (subNameOf ts).isSome
 
-/-- Binder formulas `x\in A`, `u,v\in A`, or `(x,z)\in A^2` (each coordinate in `A`);
+/-- Binder formulas `x\in A`, `u,v\in A`, `(x,z)\in A^2` (each coordinate in `A`), or
+`(x,z)\in K` for a set `K` of pairs (`@tuplein K`: the pair is in `K`);
 `x_1,\ldots,x_n\in A` binds the sequence `x` (`@seq lo hi A`). -/
 def binderIn (ts : List MTok) : Option (List Codes × MT) := do
   let i ← ts.findIdx? (· == .cmd w!"in")
@@ -351,7 +352,9 @@ def binderIn (ts : List MTok) : Option (List Codes × MT) := do
   let dom ← if square then
       match dom with
       | .sup d (.num k) => if k == names.length then some d else none
-      | _ => none
+      -- `(x,y)\in K`: a pair (a triple, …) in a set of pairs, `@tuplein K`
+      | _ => if names.length ≥ 2 && names.eraseDups.length == names.length then
+          some (.app (.id w!"@tuplein") [dom]) else none
     else some dom
   if names.isEmpty then none else some (names, dom)
 
@@ -4798,8 +4801,20 @@ def condVars (cs : List Chunk) : Option (List (MTok × Option MT) × List Chunk)
   if items.length < 2 || items.all (·.2.isNone) then none
   some (items, r')
 
+
+/-- An object named with its parts, `$G=(V,E)$`: the name and the names of the parts (each a
+letter, or a letter with a subscript), at least two. -/
+def presentedParts (ts : List MTok) : Option (List MTok × List (List MTok)) := do
+  let .chain x [(.eq, .tuple xs)] ← Math.parseFormula ts | none
+  if xs.length < 2 then none
+  let g ← nameToks x
+  let ps ← xs.mapM nameToks
+  -- (the names differ: `$x=(x,y)$` names nothing)
+  if (g :: ps).eraseDups.length != ps.length + 1 then none
+  some (g, ps)
+
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
-def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+def letBinderCore (cs : List Chunk) : Option (Bind × List Chunk) :=
   -- `$\sum_{n=1}^\infty a_n$ be an absolutely convergent series`: the sequence of its terms,
   -- `$(a_n)$ be an absolutely summable sequence` (the series converges where its terms are
   -- summable, from whichever index it starts)
@@ -5197,6 +5212,23 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
     | [v] => some (.noun ([.w w!"@some", .m v] ++ phrase), r1.drop phrase.length)
     | _ => some (.many (vs.map fun v => .noun ([.w w!"@some", .m v] ++ phrase)), r1.drop phrase.length))
 
+/-- A binder of a `let` (`letBinderCore`). `$G=(V,E)$ be a graph`: the object `G` as
+`$G$ be a graph`, then its parts, which the vocabulary names for the objects of the noun
+(the noun phrase `@parts $G$ $V$ $E$`: `V` is the vertex set of `G` and `E` its edge set). -/
+def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+  match cs with
+  | .m ts :: rest =>
+    match presentedParts ts with
+    | some (g, ps) => do
+      let (b, r) ← letBinderCore (.m g :: rest)
+      let parts := Bind.noun (.w w!"@parts" :: .m g :: ps.map Chunk.m)
+      match b with
+      | .many bs => some (.many (bs ++ [parts]), r)
+      | .noun np => some (.many [.noun np, parts], r)
+      | _ => none
+    | none => letBinderCore cs
+  | _ => letBinderCore cs
+
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
 def letMore : Nat → List Chunk → List Bind → List MT → Option (List Bind × List MT × List Chunk)
@@ -5329,9 +5361,13 @@ def notationSent (cs : List Chunk) : Option Sent := do
       if name.isEmpty || !isEnd (name.drop (name.length - 1)) then none
       else some (.notation 2 name.dropLast)
   | none, some r2 =>
-    match r2 with
-    | [.m _, .p 46] => some (.notation 1 [])
-    | _ => none
+    -- (`if $φ$`, `if $φ$ and $ψ$`: the condition, or all of several joined by `and`)
+    let rec conds : Nat → List Chunk → Bool
+      | 0, _ => false
+      | _ + 1, [.m _, .p 46] => true
+      | f + 1, .m _ :: .w a :: rest => a == w!"and" && conds f rest
+      | _, _ => false
+    if conds 6 r2 then some (.notation 1 []) else none
   | none, none => none
 
 /-- `By a|an WORDS we mean …`, `Throughout[ the|this paper|article], WORDS means …`,

@@ -163,7 +163,8 @@ Further fields cover other branches of mathematics:
   neighbours, distances, the chromatic, clique and independence numbers, components,
   diameter and girth; connected, bipartite, regular, Hamiltonian and triangle-free
   graphs, trees and forests; complete graphs, cycles, paths, `K_{m,n}` and the
-  complement `\overline{G}`;
+  complement `\overline{G}`; a graph with its parts, `$G=(V,E)$`: the vertex set and the
+  edge set (the pairs of adjacent vertices);
 * `permutations`: permutations of `{1, …, n}`, a type of its own, applied to numbers
   (`\sigma(i)`) and composed (`\sigma\tau`, `\sigma^k`): the sign, order, fixed points,
   cycles and inversions; transpositions, cycles, derangements and involutions;

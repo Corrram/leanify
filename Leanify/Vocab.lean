@@ -66,6 +66,11 @@ structure Noun where
   (a predicate of its points): `fixed point of $f$` for `f\colon[0,1]\to\mathbb{R}` is a
   point of `[0,1]`. -/
   argOnDomain : Bool := false
+  /-- The parts that an object of the noun is given by, in the order in which an article
+  names them (`a graph $G=(V,E)$`): the names of notions of the vocabulary, each with the
+  object as its one variable (`vertex set of $v$`, `edge set of $v$`). A noun without parts is
+  not introduced with them. -/
+  parts : List Phrase := []
   deriving DecidableEq, Repr, Lean.ToExpr, Inhabited
 
 /-- A modifier restricts a noun of the same type: prenominal adjectives

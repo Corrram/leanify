@@ -607,8 +607,10 @@ def lexAux (macros : Macros) : Nat → Codes → Nat → List Bool → List PTok
             -- `\vcentcolon=` is `:=`
             if name == w!"vcentcolon" && rest.head? == some 61 then
               emit (.cmd w!"coloneqq") (rest.drop 1) (n + 1) st
-            -- `\smash{x}`, `\smash[b]{x}`, `\ensuremath{x}`: the group
-            else if name == w!"smash" || name == w!"ensuremath" then
+            -- `\smash{x}`, `\smash[b]{x}`, `\ensuremath{x}`: the group; `\mathrlap{x}`, `\mathllap{x}`,
+            -- `\mathclap{x}` (`\rlap`, `\llap`, `\clap`): the group too, typeset without its width
+            else if name == w!"smash" || name == w!"ensuremath" || name == w!"mathrlap" || name == w!"mathllap" ||
+                name == w!"mathclap" || name == w!"rlap" || name == w!"llap" || name == w!"clap" then
               let (r1, n1) := optArg rest
               lexAux macros f r1 (pos + n + n1) st out
             -- `\raisebox{.15\baselineskip}{x}`: the second group

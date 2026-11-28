@@ -43,6 +43,7 @@ def Prim.tex : Prim → String
   | .isInt => "\\mathbb{Z}" | .isNat => "\\mathbb{N}"
   | .floor => "\\operatorname{floor}" | .ceil => "\\operatorname{ceil}"
   | .finSum => "\\sum" | .finProd => "\\prod" | .series => "\\sum"
+  | .sumOn => "\\sum" | .prodOn => "\\prod"
   | .seriesConv => "\\operatorname{converges}" | .limAt | .limTop => "\\lim"
   | .limAtConv | .limTopConv => "\\operatorname{exists}"
   | .factorial => "\\operatorname{factorial}" | .binom => "\\binom" | .zpow => "\\operatorname{pow}"
@@ -128,6 +129,19 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .app (.app (.app (.prim .finProd) a) b) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\prod_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{" ++ b.tex cs gs ls ++ "}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
+  -- a sum (product) over the elements of a finite set; a set that is written out, as `\{u : φ\}`
+  | .app (.app (.prim .sumOn) s) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    let set := match s with
+      | .lam _ _ b => let u := varNames.getD (ls.length + 1) "u"; "\\{" ++ u ++ " : " ++ b.tex cs gs (u :: ls) ++ "\\}"
+      | _ => s.tex cs gs ls
+    "\\sum_{" ++ v ++ "\\in " ++ set ++ "}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
+  | .app (.app (.prim .prodOn) s) (.lam _ _ body) =>
+    let v := varNames.getD ls.length "k"
+    let set := match s with
+      | .lam _ _ b => let u := varNames.getD (ls.length + 1) "u"; "\\{" ++ u ++ " : " ++ b.tex cs gs (u :: ls) ++ "\\}"
+      | _ => s.tex cs gs ls
+    "\\prod_{" ++ v ++ "\\in " ++ set ++ "}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
   | .app (.app (.prim .series) a) (.lam _ _ body) =>
     let v := varNames.getD ls.length "k"
     "\\sum_{" ++ v ++ "=" ++ a.tex cs gs ls ++ "}^{\\infty}" ++ (let s := body.tex cs gs (v :: ls); if body.prec < 7 then "(" ++ s ++ ")" else s)
@@ -361,6 +375,11 @@ partial def Tm.tex (cs gs : List String) (ls : List String) : Tm → String
   | .lt x y => wrap 1 x ++ "<" ++ wrap 1 y
   | .le x y => wrap 1 x ++ "\\le " ++ wrap 1 y
   | .tt => "\\top"
+  -- a finite set: it has a number of elements (the condition of a sum over its elements)
+  | .ex .real (.app (.app (.prim .cardIs) s) (.loc 0)) =>
+    (match s with
+      | .lam _ _ b => let u := varNames.getD (ls.length + 1) "u"; "\\#\\{" ++ u ++ " : " ++ b.tex cs gs (u :: "" :: ls) ++ "\\}"
+      | _ => "\\#" ++ (let x := s.tex cs gs ("" :: ls); if s.prec < 9 then "(" ++ x ++ ")" else x)) ++ "<\\infty"
   -- an infinite set: it has no number of elements
   | .not (.ex .real (.app (.app (.prim .cardIs) (.lam _ _ b)) (.loc 0))) =>
     let v := varNames.getD (ls.length + 1) "u"

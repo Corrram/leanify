@@ -823,6 +823,7 @@ except a notion whose meanings take arguments of different types, which the type
 | set of neighbours of $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ → Prop | the vertices adjacent to a vertex (Mathlib `SimpleGraph.neighborSet`) |
 | set of neighbors of $a$ in $b$ | ℝ → $\mathrm{Graph}$ → ℝ → Prop | the vertices adjacent to a vertex (Mathlib `SimpleGraph.neighborSet`) |
 | adjacency relation of $a$ | $\mathrm{Graph}$ → ℝ → ℝ → Prop | `u ∼ v` (Mathlib `SimpleGraph.Adj`) |
+| edge set of $a$ | $\mathrm{Graph}$ → ℝ → ℝ → Prop | the pairs `(u, v)` of adjacent vertices, each edge in both orders (Mathlib `SimpleGraph.Adj`) |
 | distance between $a$ and $b$ in $c$ | ℝ → ℝ → $\mathrm{Graph}$ → ℝ | the length of a shortest walk, between vertices of one component (Mathlib `SimpleGraph.dist`) |
 | minimum degree of $a$ | $\mathrm{Graph}$ → ℝ | of a graph with a vertex (Mathlib `SimpleGraph.minDegree`) |
 | maximum degree of $a$ | $\mathrm{Graph}$ → ℝ | of a graph with a vertex (Mathlib `SimpleGraph.maxDegree`) |

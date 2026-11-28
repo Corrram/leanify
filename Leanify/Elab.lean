@@ -654,6 +654,22 @@ def tyName (t : Ty) : M Codes := do
   | .base k => pure ((((← get).vocab.types[k]?).map (w!"$" ++ · ++ w!"$")).getD w!"this type")
   | _ => pure w!"this type"
 
+/-- What kind of object a type is, for findings (`a set of numbers`, `a number`). -/
+def kindName (t : Ty) : M Codes := do
+  match t with
+  | .real => pure w!"a number"
+  | .prop => pure w!"a statement"
+  | .base k => pure ((((← get).vocab.types[k]?).map (w!"an object of the type $" ++ · ++ w!"$")).getD w!"an object of a type of the vocabulary")
+  | .fn .real .prop => pure w!"a set of numbers"
+  | .fn _ .prop => pure w!"a set"
+  | .fn _ (.fn _ .prop) => pure w!"a set of pairs"
+  | .fn .real .real => pure w!"a real function"
+  | .fn _ _ => pure w!"a function"
+
+/-- The finding for an object of the kind `src` where one of the kind `dst` is expected. -/
+def kindMismatch {α : Type} (src dst : Ty) : M α := do
+  fail E.type ((← kindName src) ++ w!" where " ++ (← kindName dst) ++ w!" is expected")
+
 /-- The notation `op`, for findings. -/
 def opName : OpKey → Codes
   | .ofReal => w!"a real number" | .add => w!"$+$" | .sub | .neg => w!"$-$"
@@ -717,7 +733,7 @@ def coerce (t : Tm) (src dst : Ty) : M Tm := do
     | some iv => pure (Tm.app (.const iv.val) t, Ty.real)
     | none => pure (t, src)
   if src == dst then return t
-  if src != .real then fail E.type
+  if src != .real then kindMismatch src dst
   match ← intervalOf dst with
   -- a number as an element of an interval type: defined for the numbers of the interval
   | some iv =>
@@ -728,8 +744,8 @@ def coerce (t : Tm) (src dst : Ty) : M Tm := do
     if isBase dst then
       match ← method dst .ofReal with
       | some (c, _) => pure (.app c t)
-      | none => fail E.type
-    else fail E.type
+      | none => kindMismatch src dst
+    else kindMismatch src dst
 
 def asReal (p : Tm × Ty) : M Tm := coerce p.1 p.2 .real
 
@@ -1696,6 +1712,20 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           (.cases (dvdTm (.loc 0) n1) b (.num (if k == w!"@sumdiv" then 0 else 1)))
         let p : Prim := if k == w!"@sumdiv" then .finSum else .finProd
         return (.guard (.and (isInt nt) (.lt (.num 0) nt)) (.app (.app (.app (.prim p) (.num 1)) nt) lam), .real)
+    -- `\sum_{x\in A} e`, `\prod_{x\in A} e`: over the elements of a finite set `A` of real
+    -- numbers; `e` has to be defined at each of them, and `A` finite (an infinite set has no sum)
+    if let .app (.id k) [dom, .mapsto (.id v) body] := m then
+      if k == w!"@sumin" || k == w!"@prodin" then
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        let (s, sty) ← term f sc none dom
+        if sty != .fn .real .prop then
+          fail E.finding (w!"a sum or a product over the elements of a set is read for a finite set of real numbers")
+        let sc' : Scope := (v, Ty.real) :: sc
+        let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+        let lam := Tm.lam .real (.app (shift 1 0 s) (.loc 0)) b
+        let finite := Tm.ex .real (.app (.app (.prim .cardIs) (shift 1 0 s)) (.loc 0))
+        let p : Prim := if k == w!"@sumin" then .sumOn else .prodOn
+        return (.guard finite (.app (.app (.prim p) s) lam), .real)
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
@@ -2509,6 +2539,21 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       if n < 2 || 8 < n then fail E.unsupported else
       let names := (List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat
       term f sc pf (names.foldr (fun nm acc => MT.quant isAll [nm] base acc) body)
+    -- `for all $(x,y)\in K$` inside a condition (`@tuplein K`): the components of a pair in a set
+    -- of pairs, each of the kind of its place
+    | .quant isAll vs (.app (.id [64, 116, 117, 112, 108, 101, 105, 110]) [d]) body => do
+      if let some v := vs.find? fun v => (lookupLocal sc v).isSome then fail E.shadow v
+      let (dt, dty) ← term f sc none d
+      let n := vs.length
+      let (tys, res) := (List.range n).foldl (fun (acc : List Ty × Ty) _ => match acc.2 with
+        | .fn a b => (acc.1 ++ [a], b)
+        | r => (acc.1, r)) (([] : List Ty), dty)
+      if tys.length != n || res != .prop then fail E.type
+      let sc' : Scope := (vs.zip tys).reverse ++ sc
+      let b ← propOf f sc' (pf.map fun (s, t) => (shift n 0 s, t)) body
+      let m := (List.range n).foldl (fun acc i => Tm.app acc (.loc (n - 1 - i))) (shift n 0 dt)
+      let inner := if isAll then Tm.imp m b else Tm.and m b
+      pure (tys.foldr (fun t acc => if isAll then Tm.all t acc else Tm.ex t acc) inner, .prop)
     | .quant isAll vs dom body =>
       -- each variable ranges over the real numbers in `dom`
       match vs with
@@ -2551,6 +2596,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           else .ex .real (if m == .tt then b else .and m b), .prop)
     -- `x\notin A`
     | .chain x [(.nmem, dom)] => do
+      -- (`(a,b)\notin S`: a pair that is not in a set of pairs)
+      if let .tuple xs := x then
+        if xs.length ≥ 2 then
+          let st0 ← get
+          if let some (p, _) ← tryCatch (some <$> term f sc pf (.chain x [(.mem, dom)])) (fun _ => do set st0; pure none) then
+            return (.not p, .prop)
       let a ← term f sc pf x
       pure (.not (← member f sc a dom), .prop)
     -- `A\subseteq B`: every real number in `A` is in `B`
@@ -3542,6 +3593,30 @@ where
         let (p, _) ← chainRest f ((v, st) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) (.app h [.id v]) rest
         pure (.all st p, .prop)
       | _, _ =>
+      -- `(a,b)\in S`: a pair (a triple, …) in a set of pairs, a set of the scope, of the
+      -- article, or one built from such (`A\times B`): `S` holds of the components
+      if let (.tuple xs, [(rel, dom)]) := (x, rest) then
+        let isSet := match dom with | .tuple _ | .interval .. | .ival .. => false | _ => true
+        if isSet && xs.length ≥ 2 && (rel == .mem || rel == .nmem) then
+          let st0 ← get
+          let d ← tryCatch (some <$> term f sc pf dom) fun _ => do set st0; pure none
+          if let some (p, pty) := d then
+            let rec argTys : Nat → Ty → List Ty
+              | 0, _ => []
+              | k + 1, .fn a b => a :: argTys k b
+              | _ + 1, _ => []
+            let rec resTy : Nat → Ty → Ty
+              | 0, t => t
+              | k + 1, .fn _ b => resTy k b
+              | _ + 1, t => t
+            let tys := argTys xs.length pty
+            if tys.length == xs.length && resTy xs.length pty == .prop then
+              let as ← (xs.zip tys).mapM fun (e, t) => do
+                let (v, vt) ← term f sc pf e
+                coerce v vt t
+              let holds := as.foldl Tm.app p
+              return (if rel == .nmem then .not holds else holds, .prop)
+          set st0
       let ts ← (x :: rest.map (·.2)).mapM (term f sc pf)
       let rels := rest.map (·.1)
       if rels.any (· == .mem) then

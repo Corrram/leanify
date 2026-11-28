@@ -145,6 +145,15 @@ give a domain to the argument of that function too (`the moment generating funct
 $f$`, of type `F ⟶ F`, has a domain for `t`): `K_f(t)` after `We write $K_f$ for …` asks
 for it.
 
+The *parts* of a noun (`Noun.parts`) are the notions by which an article names an object
+of the noun together with what it is given by: `graph` has `vertex set of $v$` and `edge
+set of $v$`, so that `Let $G=(V,E)$ be a graph.` binds `G`, then `V` as the vertex set of
+`G` and `E` as its edge set. Each part is the name of a notion of the field with the
+object as its one variable; the letters take the parts in their order, and their number
+has to be that of the parts. A new letter after the name of such a notion at the end of a
+noun phrase is bound in the same way (`a graph $G$ with vertex set $V$`, `a square matrix
+$A$ with determinant $d$`): this needs no `parts`, only the notion.
+
 An *adjective* is a property of objects of one type that a sentence states with
 `$X$ is ADJ [on $A$]`: the unit square's field has `convex`, `concave` and
 `lower semicontinuous with respect to uniform convergence` for a quantity of

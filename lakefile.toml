@@ -735,6 +735,12 @@ srcDir = "tests"
 globs = ["Conditions.+"]
 
 [[lean_lib]]
+# Pairs in sets of pairs, notations for pairs, and sums over the elements of a finite set.
+name = "Pairs"
+srcDir = "tests"
+globs = ["Pairs.+"]
+
+[[lean_lib]]
 # The field populationdynamics: population models.
 name = "PopulationDynamics"
 srcDir = "tests"

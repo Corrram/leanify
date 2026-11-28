@@ -77,6 +77,15 @@ noncomputable def ceil (x : ℝ) : ℝ := ((Int.ceil x : ℤ) : ℝ)
 noncomputable def finSum (a b : ℝ) (f : ℝ → ℝ) : ℝ := Finset.sum (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
 /-- `∏_{k=a}^{b} f(k)` over the integers `k` with `a ≤ k ≤ b`. -/
 noncomputable def finProd (a b : ℝ) (f : ℝ → ℝ) : ℝ := Finset.prod (Finset.Icc (Int.ceil a) (Int.floor b)) (fun k : ℤ => f (k : ℝ))
+open Classical in
+/-- `∑_{x∈P} f(x)` over the elements of a finite set of real numbers. The compiler asks that
+the set is finite (of an infinite set the value is `0`, and no claim uses it). -/
+noncomputable def sumOn (P : ℝ → Prop) (f : ℝ → ℝ) : ℝ :=
+  if h : {x | P x}.Finite then Finset.sum h.toFinset f else 0
+open Classical in
+/-- `∏_{x∈P} f(x)` over the elements of a finite set of real numbers (as `sumOn`). -/
+noncomputable def prodOn (P : ℝ → Prop) (f : ℝ → ℝ) : ℝ :=
+  if h : {x | P x}.Finite then Finset.prod h.toFinset f else 1
 /-- The partial sums `∑_{n<N} f(a+n)` of the series `∑_{k=a}^∞ f(k)`. -/
 noncomputable def partialSum (a : ℝ) (f : ℝ → ℝ) (N : ℕ) : ℝ :=
   Finset.sum (Finset.range N) (fun n : ℕ => f (((Int.ceil a : ℤ) : ℝ) + (n : ℝ)))
@@ -253,6 +262,8 @@ noncomputable def Prim.denote {B : Nat → Type} : (p : Prim) → p.ty.denote B
   | .ceil => Prelude.ceil
   | .finSum => Prelude.finSum
   | .finProd => Prelude.finProd
+  | .sumOn => Prelude.sumOn
+  | .prodOn => Prelude.prodOn
   | .series => Prelude.series
   | .seriesConv => Prelude.seriesConv
   | .limAt => Prelude.limAt

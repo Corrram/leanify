@@ -2069,6 +2069,10 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             if b2 == .real || Elab.isBase b2 then
               some (Tm.all a (Tm.all a2 (Tm.eq (.app (.app (.loc 2) (.loc 1)) (.loc 0))
                 (.app (.app (shift (k + 2) 0 val) (.loc 1)) (.loc 0)))))
+            -- (a set of pairs, `let $E$ be the edge set of $G$`: pair by pair)
+            else if b2 == .prop then
+              some (Tm.all a (Tm.all a2 (Tm.iff (.app (.app (.loc 2) (.loc 1)) (.loc 0))
+                (Notation.headBeta 8 (.app (.app (shift (k + 2) 0 val) (.loc 1)) (.loc 0))))))
             else none
           | .fn a b => if b == .real || Elab.isBase b then some (ptwise a false) else none
           | _ => none
@@ -2842,6 +2846,23 @@ def nounPhrase1 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       else none
     | _ => none
   tryCatch (nounPhrase1Core np outer) fun e => do
+    -- (a set of pairs of objects of a noun, `a set $T$ of pairs of subsets of $V$`: both
+    -- components of each of its elements are one)
+    if let some rest := Grammar.kw [w!"set", w!"of", w!"pairs", w!"of"] np <|>
+        Grammar.kw [w!"set", w!"of", w!"ordered", w!"pairs", w!"of"] np then
+      if let some np' := setOfElems V0 ([Chunk.w w!"set", Chunk.w w!"of"] ++ rest) then
+        set st0
+        if let some b ← tryCatch (some <$> nounPhrase1Core np' outer) (fun _ => pure none) then
+          let sty : Ty := .fn b.ty (.fn b.ty .prop)
+          let each (i : Nat) : Tm := match b.pred with
+            | some p => Notation.headBeta 4 (.app (shift 3 0 p) (.loc i))
+            | none => .tt
+          -- (a noun that says nothing of its objects, `real numbers`: no condition)
+          let cond := Tm.mkAnd (each 1) (each 0)
+          if cond == .tt then return ⟨b.name, sty, none⟩
+          return ⟨b.name, sty, some (.lam sty .tt (.all b.ty (.all b.ty
+            (.imp (.app (.app (.loc 2) (.loc 1)) (.loc 0)) cond))))⟩
+        set st0
     -- (a set of objects of a noun: each of its elements is one)
     if let some np' := setOfElems V0 np then
       set st0
@@ -3698,7 +3719,32 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
       let bs ← nounBindersImplicitN np f ((v, .real) :: outer)
       pure ((⟨v, .real, if conds.isEmpty then none else some (.lam .real .tt (Elab.conjAll conds))⟩ : BindInfo) :: bs)
 
-def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
+/-- The parts of an object that is named with them (`Let $G=(V,E)$ be a graph`, the noun
+phrase `@parts $G$ $V$ $E$` after the binder of `G`): each letter is the value of the notion
+that the vocabulary names for that part of the objects of `G`'s kind (`Noun.parts`: `V` is
+the vertex set of `G`, `E` its edge set), as `let $V$ be the vertex set of $G$` binds it. -/
+def partsBinders (g : List MTok) (ps : List (List MTok)) (outer : Scope) : M (List BindInfo) := do
+  let some key := Math.parseFormula g >>= Grammar.nameKey | fail E.unsupported
+  let some (_, ty) := Elab.lookupLocal outer key | fail E.undefined key
+  let V := (← get).vocab
+  let shown : Codes := (ps.map fun _ => w!"…").intersperse [44] |>.flatten
+  let some n := V.nouns.find? fun n => n.ty == ty && !n.parts.isEmpty
+    | fail E.finding (w!"$" ++ key ++ w!"=(" ++ shown ++ w!")$: the vocabulary names no parts for an object of this kind: introduce $" ++ key ++ w!"$ alone, and each part by what it is (let $V$ be the …)")
+  if n.parts.length != ps.length then
+    let names : Codes := (n.parts.map fun ph => ((ph.filterMap fun i => match i with | .w w => some w | _ => none).takeWhile (· != w!"of")).intersperse [32] |>.flatten).intersperse w!", " |>.flatten
+    fail E.finding (w!"$" ++ key ++ w!"=(" ++ shown ++ w!")$: the parts of such an object are the " ++ names)
+  let mut out : List BindInfo := []
+  for (ph, p) in n.parts.zip ps do
+    let cs : List Chunk := ph.filterMap fun i => match i with
+      | .w w => some (Chunk.w w)
+      | .v => some (Chunk.m g)
+      | .m toks => some (Chunk.m toks)
+      | .f _ => none
+    let sc : Scope := (out.map fun b => (b.name, b.ty)).reverse ++ outer
+    out := out ++ [← nounPhrase ([.w w!"@the"] ++ cs ++ [.m p]) sc]
+  pure out
+
+def nounBindersImplicitCore (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
   -- `a field $K$ of characteristic $p>0$`: a parameter with its bound, after the noun's
   -- variable: the letter, bound with the bound before the object
   let firstM := np.findIdx? fun c => match c with | .m _ => true | _ => false
@@ -3730,6 +3776,68 @@ def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) :=
     let bs ← nounBindersImplicitN np' 3 ((v, .real) :: outer)
     pure ((⟨v, .real, some (.lam .real .tt (shift 1 0 p))⟩ : BindInfo) :: bs)
   | none => nounBindersImplicitN np 3 outer
+
+/-- `a graph $G$ with vertex set $V$`, `… with vertex set $V$ and edge set $E$`: letters
+after the object's own for notions of it. The end of a noun phrase `with NAME $X$ [and NAME
+$Y$]`, where the vocabulary has the notions `NAME of $v$` and the letters are new: the
+phrase without it, the object's letter, and the names with their letters. -/
+def withNotionsSplit (V : Vocab) (np : List Chunk) (outer : Scope) :
+    Option (List Chunk × List MTok × List (List Codes × List MTok)) := do
+  let isName (ts : List MTok) : Bool := match ts with | [.id _] | [.cmd _] => true | _ => Grammar.subName ts
+  let i ← (List.range np.length).reverse.find? fun i => match (np[i]? : Option Chunk) with
+    | some (.w w) => w == w!"with"
+    | _ => false
+  let head := np.take i
+  -- (the object's letter: the first formula of the phrase, a name)
+  let g ← head.findSome? fun c => match c with | .m ts => some ts | _ => none
+  if !isName g then none
+  let rec items : Nat → List Chunk → List (List Codes × List MTok) → Option (List (List Codes × List MTok))
+    | 0, _, _ => none
+    | f + 1, cs, acc =>
+      let ws := cs.takeWhile fun (c : Chunk) => match c with | .w w => w != w!"and" | _ => false
+      match cs.drop ws.length with
+      | .m x :: rest =>
+        let name := ws.filterMap fun (c : Chunk) => match c with | .w w => some w | _ => none
+        if name.isEmpty || !isName x then none else
+        let acc := acc ++ [(name, x)]
+        match rest with
+        | [] => some acc
+        | .w a :: rest' => if a == w!"and" then items f rest' acc else none
+        | _ => none
+      | _ => none
+  let its ← items 4 (np.drop (i + 1)) []
+  let key (ts : List MTok) : Option Codes := Math.parseFormula ts >>= Grammar.nameKey
+  let gk ← key g
+  let ks ← its.mapM fun (_, x) => key x
+  if ks.any (fun k => k == gk || (Elab.lookupLocal outer k).isSome) || ks.eraseDups.length != ks.length then none
+  -- (each name is a notion of one object: `vertex set of $v$`)
+  if !(its.all fun (name, _) => V.notions.any fun n => n.name == name.map PItem.w ++ [.w w!"of", .v]) then none
+  some (head, g, its)
+
+/-- The binders of a noun phrase (`nounBindersImplicitCore`); of `@parts $G$ $V$ $E$`, the
+parts of `G` (`partsBinders`); and, where the phrase is not read as it stands, of a phrase
+that ends with letters for notions of its object (`withNotionsSplit`): the object, then each
+letter as `let $V$ be the vertex set of $G$` binds it. -/
+def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
+  if let .w pw :: .m g :: ps := np then
+    if pw == w!"@parts" then
+      return ← partsBinders g (ps.filterMap fun c => match c with | .m ts => some ts | _ => none) outer
+  let st0 ← get
+  tryCatch (nounBindersImplicitCore np outer) fun e => do
+    let some (head, g, its) := withNotionsSplit st0.vocab np outer | throw e
+    set st0
+    -- (a letter that the article has defined is that object, not a new one)
+    for (_, x) in its do
+      if let some k := Math.parseFormula x >>= Grammar.nameKey then
+        if (← Elab.lookupGlob k).isSome then throw e
+    tryCatch (do
+        let mut out ← nounBindersImplicitCore head outer
+        for (name, x) in its do
+          let sc : Scope := (out.map fun b => (b.name, b.ty)).reverse ++ outer
+          out := out ++ [← nounPhrase ([.w w!"@the"] ++ name.map Chunk.w ++ [.w w!"of", .m g, .m x]) sc]
+        pure out) fun _ => do
+      set st0
+      throw e
 
 def binderInfosRaw (b : Bind) (before : List BindInfo := []) : M (List BindInfo) :=
   let outer : Scope := (before.map fun b => (b.name, b.ty)).reverse
@@ -3820,6 +3928,21 @@ where
     everyIn (before.map fun b => (b.name, b.ty)).reverse vs d
   /-- The same, with the domain in the scope `sc` of the binders around it. -/
   everyIn (sc : Scope) (vs : List Codes) (d : MT) : M (List BindInfo) := do
+    -- `(x,y)\in K` (`@tuplein K`): the components of a pair in a set of pairs, a set of the
+    -- scope or of the article; each has the type of its place, and the last one carries the
+    -- condition that the pair is in `K`
+    if let .app (.id tup) [d'] := d then
+      if tup == w!"@tuplein" then
+        let (dt, dty) ← Elab.term 100000 sc none d'
+        let n := vs.length
+        let (tys, res) := (List.range n).foldl (fun (acc : List Ty × Ty) _ => match acc.2 with
+          | .fn a b => (acc.1 ++ [a], b)
+          | r => (acc.1, r)) (([] : List Ty), dty)
+        if tys.length != n || res != .prop then
+          fail E.finding (w!"$(" ++ (vs.intersperse [44]).flatten ++ w!")\\in…$: the set is not a set of such tuples")
+        let args := (List.range n).map fun i => if i + 1 == n then Tm.loc 0 else Tm.loc (n - i)
+        let p := Tm.lam (tys.getLastD .real) .tt (args.foldl Tm.app (shift (n + 1) 0 dt))
+        return (vs.zip tys).zipIdx.map fun ((v, ty), i) => (⟨v, ty, if i + 1 == n then some p else none⟩ : BindInfo)
     -- a multi-index: its components
     let (vs, d) := match vs, multiIndex d with
       | [v], some (base, n) => ((List.range n).map fun k => v ++ [95] ++ (Nat.toDigits 10 (k + 1)).map Char.toNat, base)
@@ -3901,7 +4024,11 @@ def bindersInfos (binds : List Bind) (before : List BindInfo := []) : M (List Bi
     match b with
     | .every vs d =>
       if !vs.isEmpty && vs.all (fun n => out.any (·.name == n)) then
-        let cs := vs.map fun v => condOfDomain v d
+        -- (`(x,y)\in K` of a pair of variables bound before: the pair is in `K`)
+        let cs := match d with
+          | .app (.id tup) [d'] =>
+            if tup == w!"@tuplein" then [MT.chain (.tuple (vs.map MT.id)) [(.mem, d')]] else vs.map fun v => condOfDomain v d
+          | _ => vs.map fun v => condOfDomain v d
         out ← attachCond before out (match cs with | [c] => c | _ => .conj cs)
       else out := out ++ (← binderInfosRaw.everyAfter (before ++ out) vs d)
     | .noun np => out := out ++ (← nounBindersImplicit np ((before ++ out).map fun b => (b.name, b.ty)).reverse)
@@ -3968,9 +4095,11 @@ def clauseMaths : Clause → List MT
   | .solutions _ e _ => [e]
   | .under _ c => clauseMaths c
   | .forEveryNP c np => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
-  | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
-  | .existsNP np _ none => (mathsOf np).filterMap Math.parseFormula
-  | .existsNPs nps cs => clauseMathsAll cs ++ (nps.flatMap mathsOf).filterMap Math.parseFormula
+  -- (with the sets of a signature, `there is a function $w\colon V\to\mathbb{R}$`: `V` may be
+  -- a set that the result binds)
+  | .existsNP np _ (some c) => clauseMaths c ++ (mathsOf np).filterMap fun ts => Math.parseFormula ts <|> Math.parseSig ts
+  | .existsNP np _ none => (mathsOf np).filterMap fun ts => Math.parseFormula ts <|> Math.parseSig ts
+  | .existsNPs nps cs => clauseMathsAll cs ++ (nps.flatMap mathsOf).filterMap fun ts => Math.parseFormula ts <|> Math.parseSig ts
   | .countNP np _ _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .countNP np _ _ none => (mathsOf np).filterMap Math.parseFormula
   | .noneExist c => clauseMaths c
@@ -4110,6 +4239,7 @@ def bareIds : Nat → MT → List Codes
     | .app (.id _) args => args.flatMap (bareIds f)
     | _ => (mtChildren m).flatMap (bareIds f)
 
+mutual
 /-- The domains of the binders inside a clause (`there is $x\in U$ such that …`,
 `… for every $x\in U$`): a domain may be a set that the result binds. -/
 def innerDoms : Clause → List MT
@@ -4119,7 +4249,15 @@ def innerDoms : Clause → List MT
       | .many bs => bs.filterMap fun b' => match b' with | .every _ d => some d | _ => none
       | _ => []) ++ innerDoms c
   | .scoped _ _ (some d) _ => [d]
+  -- (the clauses about objects that exist: `there is a function $w$ such that … for every
+  -- $v\in V$`)
+  | .existsNP _ _ (some c) => innerDoms c
+  | .existsNPs _ cs => innerDomsAll cs
   | _ => []
+def innerDomsAll : List Clause → List MT
+  | [] => []
+  | c :: cs => innerDoms c ++ innerDomsAll cs
+end
 
 /-- Does a formula speak of the random pair of the result: an expectation `\mathbb{E}[…]`
 or a condition that holds almost surely? -/
@@ -4146,7 +4284,11 @@ parameters of the definitions it uses (for the binders it inherits). -/
 def clauseFree (st : St) (bound : List Codes) (cl : CClause) : List Codes :=
   let ms := clauseMaths cl.clause ++ cl.defs ++
     -- (only a letter that is a set bound before: the other domains are as they were)
-    (innerDoms cl.clause).filter (fun d => match d with | .id n => n.length == 1 | _ => false)
+    (innerDoms cl.clause).filterMap (fun d => match d with
+      | .id n => if n.length == 1 then some d else none
+      -- (`for every $(x,y)\in K$`: the set of pairs)
+      | .app (.id tup) [d'] => if tup == w!"@tuplein" then some d' else none
+      | _ => none)
   let ids := ms.flatMap fun m => seqFree st bound m (freeIds 64 bound m)
   -- (`R` for `R(C)`, after `a copula $C$ with maximal correlation $R=R(C)$`, uses `C`; not
   -- the function `R` applied, `R(M_r)`)
@@ -6305,6 +6447,9 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     -- before it
     let items : List (BindInfo × Nat) ← match b with
       | .every vs d => do
+        -- (`for every $(x,y)\in K$`: the components, the last with its condition)
+        let tupleIn := match d with | .app (.id tup) [_] => tup == w!"@tuplein" | _ => false
+        if tupleIn then pure ((← binderInfosRaw.everyIn sc vs d).map (·, 0)) else
         let (ty, p) ← binderDomain vs d sc
         pure ((vs.zip (List.range vs.length)).map fun (v, j) => (⟨v, ty, p⟩, j + 1))
       | .noun np => do pure [(← nounPhrase np sc, 0)]
@@ -8036,7 +8181,10 @@ def notationDef (toks : List PTok) (kind : Nat) (rhs : List Chunk) : M (List Nat
         pure ([i], [])
       | none => fail E.noun (((wordsOf rest).intersperse [32]).flatten)
   else
-    let some repl := fs[1]? | fail E.unsupported
+    let some repl0 := fs[1]? | fail E.unsupported
+    -- (`if $φ$ and $ψ$`: both conditions, `φ\land ψ`)
+    let repl : List PTok := (fs.drop 2).foldl (fun acc g =>
+      acc ++ [(⟨.cmd w!"land", (g.head?.map (·.pos)).getD 0, true⟩ : PTok)] ++ g) repl0
     let tpl := Notation.template pat repl
     -- the variables it binds, other than its arguments
     let bound : List Codes := match (Math.simplify (repl.length + 1) repl).bind Math.parseDisplay with

@@ -91,6 +91,9 @@ inductive Prim where
   | floor | ceil
   /-- `finSum a b f`: `∑_{k=a}^{b} f(k)` over the integers between `a` and `b` (`finProd`: the product). -/
   | finSum | finProd
+  /-- `sumOn S f`: `∑_{x∈S} f(x)` over the elements of a finite set `S` of real numbers
+  (`prodOn`: the product). The compiler asks that `S` is finite: an infinite set has no sum. -/
+  | sumOn | prodOn
   /-- `series a f`: `∑_{k=a}^{∞} f(k)`, the limit of the partial sums; `seriesConv a f`:
   the partial sums converge. -/
   | series | seriesConv
@@ -153,6 +156,7 @@ def Prim.ty : Prim → Ty
   | .isInt | .isNat => .real ⟶ .prop
   | .floor | .ceil => .real ⟶ .real
   | .finSum | .finProd => .real ⟶ .real ⟶ Ty.rfun ⟶ .real
+  | .sumOn | .prodOn => (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .real
   | .series => .real ⟶ Ty.rfun ⟶ .real
   | .seriesConv => .real ⟶ Ty.rfun ⟶ .prop
   | .limAt => .real ⟶ (.real ⟶ .prop) ⟶ Ty.rfun ⟶ .real

@@ -40,6 +40,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `\sum_{k=a}^{\infty} e` | the limit of the partial sums, defined only when it exists (so conditionally convergent series such as `\sum_{k=1}^{\infty}\frac{(-1)^{k+1}}{k}` are read) |
 | `\sum a_n`, `\sum_n a_n` | without bounds: only the series of the terms of an infinite sequence `(a_n)` that converges, diverges or converges absolutely (`$\sum a_n$ converges`; from the index `0`, which does not matter there); elsewhere a sum needs its bounds |
 | `\sum_{d\mid n} e`, `\prod_{d\mid n} e` | over the positive divisors of a positive integer `n` (`\sum_{d\mid n}\varphi(d)=n`) |
+| `\sum_{x\in A} e`, `\prod_{x\in A} e` | over the elements of a finite set `A` of real numbers (`\sum_{u\in U}w(u)`, `\sum_{k\in\{1,2\}}k^n`). `e` has to be defined at each of them, and the claim is meaningful only where `A` is finite: an infinite set has no sum (`Let $A$ be a finite set of real numbers.`) |
 | `f^\prime`, `f^{\prime\prime}` | as `f'` and `f''`: the derivatives |
 | `\sum_{i=1}^n x_i^2\sum_{i=1}^n y_i^2` | a sum over the same index after the terms of a sum ends it: the product of the two sums |
 | `\lim_{x\to a} e`, `\lim_{x\to\infty} e` | the limit within the points where `e` is defined (`x\ne a`), defined only when it exists and the points accumulate at `a` |
@@ -63,10 +64,12 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `2\times3` | the product of two numbers (between sets, `\times` is the product of the sets) |
 | `A\cap B`, `A\setminus B`, `\{a,b\}`, `\emptyset` | intersection, difference, finite sets and the empty set of real numbers; `(a,b)` as a set is the open interval |
 | `x\notin A` | not `x\in A` |
+| `(a,b)\in S`, `(a,b)\notin S` | a pair (a triple, …) in a set of pairs: a set that the result binds (`a set $K$ of pairs of integers`), one the article defines, the edge set of a graph, or a product `A\times B`. The components may be sets (`$(A,B)\in T$` for a set `T` of pairs of subsets of `V`) |
 | `\mathbb{R}_{>0}`, `\mathbb{R}_{\ge0}`, `\mathbb{R}_+` | `(0,\infty)`, `[0,\infty)`, `[0,\infty)` |
 | `\{x\in A\mid φ\}` | as `\{x\in A : φ\}` |
 | `\forall x,y\in A: φ`, `\exists x\in A: φ` | quantifiers over real numbers in `A` (the domain ends at the first `:` or `,`; the body extends to the end of the formula) |
 | `\neg`, `\land`/`\wedge`, `\lor`/`\vee`, `\Rightarrow`/`\implies`, `\iff`/`\Leftrightarrow` | the connectives, binding in this order (`\neg` the tightest) |
+| `(x>0\land y>0)\Rightarrow xy>0`, `xy=0\Rightarrow(x=0\lor y=0)` | parentheses (or braces) around a formula with connectives group it |
 | `\int_0^1 x\,dx` | as `\int_0^1 x\,\mathrm{d}x` |
 | `\int_a^b e\,dx`, `\int_1^2\frac1x\,dx`, `\int_0^x t^2\,dt` | the oriented integral of a function of a real variable. It is meaningful when `e` is defined at almost every point between `a` and `b` and integrable there (so `\int_1^2\frac1x\,dx` and `\int_0^1\frac{1}{\sqrt x}\,dx` are, and `\int_{-1}^1\frac1x\,dx` is not): an integral does not depend on a set of measure zero, so the integrand may be undefined on one. With the field `unitsquare`, `\int_0^1` is the integral over the type `[0,1]` |
 | `\int_{[0,1]^2} e\,\mathrm{d}C(u,v)` | with the field `unitsquare`: the integral of `e`, a function of the points `u`, `v` of the unit square, against the probability measure whose distribution function is `C` (a copula). It is meaningful when `C` is a distribution function on `[0,1]^2` and `e` is integrable for that measure and defined at almost every point for it (`\Phi_{\mathrm N}^{-1}(u)` has no value at `u=0`) |
@@ -90,6 +93,7 @@ variable in the parentheses may be a name that states its dependence, and is ref
 | `x^{-1}`, `x^{-2}` | `\frac1x`, `\frac1{x^2}`: defined for `x\ne0`, of either sign |
 | `(x-1)^+`, `f(x)^-` | the positive part `\max\{x-1,0\}` and the negative part `\max\{-f(x),0\}` of a value that is not a name: `x^+` and `R^+` are names of their own (`We write $x^+$ for …` gives `x^+` a meaning) |
 | `$$…$$` | a display, like `\[…\]` |
+| `\mathrlap{x}`, `\mathllap{x}`, `\mathclap{x}`, `\rlap{x}`, `\llap{x}`, `\clap{x}` | layout: `x`, typeset without its width (`\sum_{x\in\mathrlap{A\cap B}}`) |
 | `:=`, `\vcentcolon=`, `\colonequals`, `\triangleq`, `\mathrel{:=}` | the defining sign, as `\coloneqq` (so a macro `\defeq` of the article for one of them is read too) |
 | `\colon`, `\leqslant`, `\geqslant`, `\lvert`/`\rvert`, `\lbrace`/`\rbrace` | `:`, `\le`, `\ge`, a vertical bar, `\{`/`\}` |
 | `||x|-|y||`, `\big||x|-|y|\big|` | absolute values inside an absolute value: a bar where an operand begins opens another (`\big`, `\left`, `\right` are layout) |
@@ -118,6 +122,7 @@ for the rest of the article (`tests/Vocabulary/article.tex` uses each form):
 | `We write $r_k$ for $R(C^{\ast k})$.`, `We write $x^+$ for $\max\{x,0\}$.` | an argument in a subscript or a superscript is one symbol or one group, as in TeX: `r_k^{1/k}` is `r_k` to the power `1/k`, and `r_{k+1}` has the argument `k+1`. An argument before a script is the symbol or group before it, with the scripts the notation does not use: `x_1^+` is `\max\{x_1,0\}`. A letter on the right that is not an argument (`C`) is the one of the sentence that uses the notation |
 | `We write $h_a$ for $a^2+1$.`, then in a result `For $x\in\mathbb R$, let $h_y(x)\coloneqq x+y$.` | a symbol that a result or its proof defines hides a notation of the article written with the same letter: in the sentence that defines it and after it, in the result and its proof, `h_y` is that symbol; elsewhere `h_2` is the notation |
 | `We write $\ell_A(x)$ for $\min\{R(C) : C\in\mathcal C,\ A(C)=x\}$.` | a notation may bind a variable (the `C` of the set, the variable of an integral, a sum or a limit). Where it is written with a formula that uses the same letter, `\ell_\beta(\beta(C))`, the bound variable is another one: the minimum is over the copulas whose `\beta` is `\beta(C)` |
+| `We write $(A,B)\preceq(C,D)$ if $A\subseteq C$ and $D\subseteq B$.` | a relation between pairs, or with any other brackets in its pattern: the letters of the pattern that occur on the right are its arguments. Several conditions joined by `and` all hold (`A\subseteq C\land D\subseteq B`) |
 | `We write $A\subset B$ if $A\subseteq B$.` | one relation symbol for another: every later `\subset` is `\subseteq`, whatever stands on either side (Leanify refuses `\subset` without such a sentence, since it also means strict inclusion) |
 | `We write $\mathrm{Poi}(\lambda)$ for the Poisson distribution with mean $\lambda$.` | a symbol for a notion of the vocabulary, with its arguments |
 | `We write $C_n$ for the $n$th Catalan number.`, `We write $\deg_G(v)$ for the degree of $v$ in $G$.`, `We write $M_n$ for the set of $n\times n$ matrices.` | the same, for the notions of the fields of other branches (`docs/vocabulary.md`); `$n$-th` is `$n$th`, and a letter that stands for several arguments (`n` of `$n\times n$`) is one argument of the notation |
@@ -139,6 +144,8 @@ article binds as it binds numbers, and modifiers that take numbers:
 | `$AB$`, `$2A$`, `$A+B$`, `$A^{-1}$`, `$A^\top$` (or `$A^T$`), `$\det A$`, `$\operatorname{tr}(A)$` | the algebra of matrices: `AB` asks that the columns of `A` are as many as the rows of `B`, `A^{-1}` that `A` is invertible; a claim that uses them is meaningful only then |
 | `$\deg p$`, `$\deg(pq)=\deg p+\deg q$` | `\deg` and `\det` apply to what follows them, as `\sin` does; the product of two real functions, or of a number and a real function, is taken value by value |
 | `$\overline{G}$` | the complement of a graph (a decoration of the field's type) |
+| `Let $G=(V,E)$ be a graph.`, `Let $T=(V,E)$ be a tree with $n$ vertices.` | an object named with its parts: `G`, as `Let $G$ be a graph.`, then each letter as the part that the field names for the objects of this kind, in their order (`V` is the vertex set of `G` and `E` its edge set, the pairs of adjacent vertices; `$(u,v)\in E$`). A kind of object for which the field names no parts is not introduced so, and the finding says which parts there are |
+| `Let $G$ be a graph with vertex set $V$.`, `every graph $G$ with vertex set $V$ and edge set $E$`, `a square matrix $A$ with determinant $d$ and trace $t$`, `a group $G$ with center $Z$` | a new letter after the name of a notion of the object (`NAME of $v$` in the vocabulary), at the end of the noun phrase: the letter is that notion of the object, as `let $V$ be the vertex set of $G$` binds it. Read where the phrase has no other reading (`a random variable with mean $\mu$` is the field's modifier) |
 
 Structures with their elements (the field `structures`):
 
@@ -267,6 +274,9 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $\mathcal{F}$ be a family of subgroups of $G$.`, `a collection of real numbers`, `a set of finite subsets of $\mathbb{R}$` | a set each of whose elements is as the plural noun phrase says (`family` and `collection` are `set`) |
 | `Let $\varphi\colon G\to G$ be a mapping.`, `an injective mapping` | `mapping` is `map` |
 | `Let $(a,b)$ be a pair of integers with $a<b$.`, `a triple of positive integers`, `an ordered pair of …` | as `Let $a,b$ be integers with $a<b$.` |
+| `Let $K$ be a set of pairs of integers.`, `a set $T$ of pairs of subsets of $V$`, `a family of ordered pairs of …` | a set of pairs: both components of each of its elements are as the plural noun phrase says |
+| `… for all $(x,y)\in K$`, `there is $(x,y)\in K$ such that …`, `Let $(A,B)\in T$.`, `For every $(a,b)\in A\times B$, …` | the components of a pair in a set of pairs, each of the kind of its place (`(x,y)\in A^2` is still `x,y\in A`) |
+| `Then there exists a function $w\colon V\to\mathbb{R}$ such that $w(v)>0$ for every $v\in V$.` | an object that exists, with a signature or a condition on a set that the result binds (`Let $V$ be a finite set of real numbers.`) |
 | `Let $M$ be a finitely generated $R$-module.`, `a finite-dimensional $K$-vector space` | `a … module over $R$`: a formula and a hyphen before a noun that has a complement after `over` |
 | `Let $X$ be a complete and separable metric space.` | adjectives before a noun joined by `and` |
 | `Then either $n$ is even or $n$ is odd.`, `Then $n$ has a prime factor $p\le\sqrt{n}$ or $n$ is prime.` | one of the clauses (`either` is left out; the noun phrase after `has a` ends before `or`) |

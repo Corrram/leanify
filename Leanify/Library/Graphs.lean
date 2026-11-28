@@ -127,8 +127,9 @@ def vertexMod (p : Phrase) (q : B → B → B) (doc : String) : Modifier :=
   { phrase := p, prenominal := false, ty := .real, doc,
     pred := close <| lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (q v g) }
 
+/-- A noun of graphs. A graph is given by its vertex set and its edge set (`$G=(V,E)$`). -/
 def nounG (sing plural : Phrase) (pred : Tm) (doc : String) : Noun :=
-  { sing, plural, ty := G, pred, doc }
+  { sing, plural, ty := G, pred, doc, parts := [phrase!"vertex set of $v$", phrase!"edge set of $v$"] }
 
 def vocab : Vocab where
   types := [w!"\\mathrm{Graph}"]
@@ -278,6 +279,8 @@ def vocab : Vocab where
       doc := "the vertices adjacent to a vertex (Mathlib `SimpleGraph.neighborSet`)" },
     { name := phrase!"adjacency relation of $v$", value := adjacency, ty := G ⟶ .real ⟶ .real ⟶ .prop,
       doc := "`u ∼ v` (Mathlib `SimpleGraph.Adj`)" },
+    { name := phrase!"edge set of $v$", value := adjacency, ty := G ⟶ .real ⟶ .real ⟶ .prop,
+      doc := "the pairs `(u, v)` of adjacent vertices, each edge in both orders (Mathlib `SimpleGraph.Adj`)" },
     { name := phrase!"distance between $v$ and $v$ in $v$", value := distIn, ty := .real ⟶ .real ⟶ G ⟶ .real,
       doc := "the length of a shortest walk, between vertices of one component (Mathlib `SimpleGraph.dist`)" },
     { ofG phrase!"minimum degree of $v$" minDegree "of a graph with a vertex (Mathlib `SimpleGraph.minDegree`)" with

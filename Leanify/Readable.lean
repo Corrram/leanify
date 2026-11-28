@@ -102,6 +102,8 @@ def primConst : Prim → Option Name
   | .ceil => some ``Prelude.ceil
   | .finSum => some ``Prelude.finSum
   | .finProd => some ``Prelude.finProd
+  | .sumOn => some ``Prelude.sumOn
+  | .prodOn => some ``Prelude.prodOn
   | .series => some ``Prelude.series
   | .seriesConv => some ``Prelude.seriesConv
   | .limAt => some ``Prelude.limAt

@@ -798,6 +798,14 @@ def run : Nat → Mode → List MTok → R
           let (body, r2) ← run f (.product false) r
           some (.app (.id w!"@sumall") [body], r2))
       <|> (do
+        -- `\sum_{x\in A} e`, `\prod_{x\in A} e`: over the elements of a finite set
+        let .sym 95 :: r := rest | none
+        let (b, r1) ← run f .group r
+        let .chain (.id v) [(.mem, dom)] := b | none
+        if r1.head? == some (.sym 94) then none
+        let (body, r2) ← run f (.product false) r1
+        some (.app (.id (if n == w!"sum" then w!"@sumin" else w!"@prodin")) [dom, .mapsto (.id v) body], r2))
+      <|> (do
         -- `\sum_{S\subseteq A} e`: the sum over the subsets of a finite set
         let .sym 95 :: r := rest | none
         let (b, r1) ← run f .group r
@@ -1304,6 +1312,21 @@ def wholeTop (ts : List MTok) : Option MT :=
   | some (x, []) => some x
   | _ => none
 
+/-- The tokens inside the parentheses or braces that enclose all of `ts`: `(φ\land ψ)`. -/
+def enclosed (ts : List MTok) : Option (List MTok) :=
+  let opens (t : MTok) : Bool := t == .sym 40 || t == .lb
+  let closes (t : MTok) : Bool := t == .sym 41 || t == .rb
+  let rec go : Nat → List MTok → List MTok → Option (List MTok)
+    | _, [], _ => none
+    | d, [c], acc => if closes c && d == 0 then some acc.reverse else none
+    | d, t :: r, acc =>
+      if opens t then go (d + 1) r (t :: acc)
+      else if closes t then (if d == 0 then none else go (d - 1) r (t :: acc))
+      else go d r (t :: acc)
+  match ts with
+  | o :: rest => if opens o then go 0 rest [] else none
+  | [] => none
+
 /-- A formula with connectives and quantifiers: `\forall x\in A: φ`, `φ\Rightarrow ψ`,
 `φ\iff ψ`, `φ\lor ψ`, `φ\land ψ`, `\neg φ`; its atoms are chains. A quantifier's
 domain ends at the first `:` or `,`, and its body extends to the end. -/
@@ -1352,9 +1375,12 @@ def logic : Nat → List MTok → Option MT
     match split wAnd with
     | some (a, b) => do some (.land (← logic f a) (← logic f b))
     | none =>
+    -- (a formula in parentheses or braces with connectives inside: `(φ\land ψ)\Rightarrow χ`)
+    let grouped : Option MT := (enclosed ts).bind fun inner =>
+      if inner.any (isCmdIn wConnectives) then logic f inner else none
     match ts with
     | .cmd n :: rest => if n == w!"neg" || n == w!"lnot" then (logic f rest).map .lnot else wholeTop ts
-    | _ => wholeTop ts
+    | _ => wholeTop ts <|> grouped
 
 /-- Spellings of number theory: `\mid` separates a set-builder (`\{n\mid n>0\}`) and is
 divisibility elsewhere; a modulus `(\bmod m)`, `(\operatorname{mod} m)` or `\pmod m`

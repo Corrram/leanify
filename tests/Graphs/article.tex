@@ -129,4 +129,30 @@ A graph is a tree if and only if it is connected and has no cycle. Every biparti
 Let $G$ be a graph in which every vertex has degree at least $2$. Then $G$ contains a cycle.
 \end{lemma}
 
+\section{A graph with its vertex set and its edge set}
+
+\begin{lemma}\label{parts}
+Let $G=(V,E)$ be a graph. Then for all $u,v\in V$ we have $(u,v)\in E$ if and only if $(v,u)\in E$.
+\end{lemma}
+
+\begin{lemma}\label{parts-tree}
+Let $T=(V,E)$ be a tree with $n$ vertices. Then $|V|=n$.
+\end{lemma}
+
+\begin{lemma}\label{parts-degrees}
+Let $G=(V,E)$ be a graph. Then $\sum_{v\in V}\deg_G(v)=2e(G)$.
+\end{lemma}
+
+\begin{lemma}\label{with-vertex-set}
+Let $G$ be a graph with vertex set $V$. Then there exists a function $w\colon V\to\mathbb{N}$ such that $w(v)=\deg_G(v)$ for every $v\in V$.
+\end{lemma}
+
+\begin{lemma}\label{with-both}
+For every graph $G$ with vertex set $V$ and edge set $E$, $u\in V$ for all $(u,v)\in E$.
+\end{lemma}
+
+\begin{lemma}\label{with-numbers}
+Let $G$ be a graph with chromatic number $k$ and clique number $m$. Then $m\le k$.
+\end{lemma}
+
 \end{document}
