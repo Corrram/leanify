@@ -916,9 +916,33 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
                 | .mvar u, .mvar k => 65 ≤ u && u ≤ 90 && k == 100
                 | _, _ => false) then some x else none
         | _, _ => none
-      match spaceOf with
-      | some x => t :: x :: standardForms f there cond (some x) (ts.drop 5)
-      | none => t :: standardForms f there cond (some t) ts
+      -- `$a^2\equiv0$ or $a^2\equiv1\pmod4$`: the modulus of the second congruence is also that
+      -- of the first
+      let sharedMod : Option (List PTok) := do
+        if t.tok != .mopen then none
+        let body1 := ts.takeWhile (·.tok != .mclose)
+        let rest1 := ts.drop body1.length
+        if !(body1.any (·.tok == .cmd w!"equiv")) || body1.any (fun p => p.tok == .cmd w!"pmod" || p.tok == .cmd w!"bmod") then none
+        -- (the first congruence after it with a modulus, through `or` and `and`: `$x\equiv0$ or
+        -- $x\equiv1$ or $x\equiv8\pmod9$`)
+        let rec ahead : Nat → List PTok → Option (List PTok)
+          | 0, _ => none
+          | g + 1, rest =>
+            match rest with
+            | _ :: conj :: open2 :: more =>
+              if !(lw conj == some w!"or" || lw conj == some w!"and") || open2.tok != .mopen then none else
+              let body2 := more.takeWhile (·.tok != .mclose)
+              if !(body2.any (·.tok == .cmd w!"equiv")) then none else
+              match body2.findIdx? (·.tok == .cmd w!"pmod") with
+              | some k => some (body2.drop k)
+              | none => ahead g (more.drop body2.length)
+            | _ => none
+        let modToks ← ahead 6 rest1
+        some (body1 ++ modToks ++ rest1)
+      match spaceOf, sharedMod with
+      | some x, _ => t :: x :: standardForms f there cond (some x) (ts.drop 5)
+      | none, some ts' => t :: standardForms f there cond (some t) ts'
+      | none, none => t :: standardForms f there cond (some t) ts
 
 /-- `$x$ satisfies $φ$`: `$φ$` (the variables are bound); `$a,b\in R$ satisfy $φ$`:
 `$a,b\in R$ and $φ$`. -/

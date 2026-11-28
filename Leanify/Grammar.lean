@@ -3538,6 +3538,15 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       | _ => false
     if usedAfter then none
     let (q, r2) ← clause2E rest
+    -- (`A or B or C`: each further `or`, one of them)
+    let rec more : Nat → Clause → List Chunk → Clause × List Chunk
+      | 0, q, r => (q, r)
+      | g + 1, q, r =>
+        if ws != [w!"or"] then (q, r) else
+        match kw [w!"or"] r >>= clause2E with
+        | some (q', r') => more g (Clause.orC q q') r'
+        | none => (q, r)
+    let (q, r2) := more 6 q r2
     some (mk p q, r2)
   let split : Option (Clause × List Chunk) := splitAt iffW .iffC <|> splitAt [w!"or"] .orC
   let hasWord (np : List Chunk) (w : Codes) : Bool := np.any fun c => match c with | .w v => v == w | _ => false
@@ -4238,7 +4247,49 @@ def clauses : Nat → List Chunk → List CClause → Option (List CClause)
       match next with
       | some r'' => clauses f r'' acc
       | none => none
-  step cs0 acc0 <|> (skipThatIs cs0 >>= fun r => step r acc0)
+  -- (`$x<0$, $x=0$ or $x>0$`, `$x$ is positive, $x$ is negative or $x=0$`: clauses separated by
+  -- commas, the last after `or`: one of them, as `… or … or …`; read so or not at all)
+  let orList : Option (List Chunk) := do
+    let body := match cs0.getLast? with | some (.p 46) => cs0.dropLast | _ => cs0
+    let segs : List (List Chunk) := body.foldr (fun ch (acc : List (List Chunk)) => match ch, acc with
+      | .p 44, _ => [] :: acc
+      | _, cur :: more => (ch :: cur) :: more
+      | _, [] => [[ch]]) [[]]
+    if segs.length < 2 || segs.any (·.isEmpty) then none
+    let isW (w : Codes) (ch : Chunk) : Bool := match ch with | .w v => v == w | _ => false
+    let last ← segs.getLast?
+    if !last.any (isW w!"or") then none
+    let leads := [w!"and", w!"so", w!"since", w!"where", w!"which", w!"with", w!"whereas", w!"hence", w!"thus",
+      w!"that", w!"but", w!"because", w!"as", w!"for", w!"if", w!"then", w!"provided", w!"respectively"]
+    let starts (sg : List Chunk) : Bool := match sg.head? with | some (.w w) => leads.contains w | _ => false
+    if (segs.dropLast ++ [last.dropWhile (isW w!"or")]).any starts then none
+    if segs.dropLast.any (fun sg => sg.any (isW w!"or") || sg.any (isW w!"and")) then none
+    let last := last.dropWhile (isW w!"or")
+    -- (the parts of the last item, around its `or`)
+    let lastParts : List (List Chunk) := (last.foldr (fun ch (acc : List (List Chunk)) =>
+      if isW w!"or" ch then [] :: acc else match acc with
+        | cur :: more => (ch :: cur) :: more
+        | [] => [[ch]]) [[]]).filter (!·.isEmpty)
+    let items := segs.dropLast ++ lastParts
+    -- (each a statement: not `$p$ is $2$, $3$ or $5$`, values of one subject)
+    let bare (it : List Chunk) : Bool := match it with
+      | [.m t] => match Math.parseFormula t with
+        | some (.chain _ (_ :: _)) | some (.lor _ _) | some (.land _ _) | some (.lnot _) | some (.quant _ _ _ _) => false
+        | _ => true
+      | _ => false
+    if items.any bare then none
+    some ((items.intersperse [Chunk.w w!"or"]).flatten ++ [.p 46])
+  match orList with
+  | some cs' =>
+    match step cs' acc0 with
+    | some r => some r
+    | none =>
+      -- (a list that a rule of its own reads, `$p$ is $2$, $3$ or $5$`: one claim; not claims
+      -- split at the commas)
+      match step cs0 acc0 with
+      | some r => if r.length == acc0.length + 1 then some r else none
+      | none => none
+  | none => step cs0 acc0 <|> (skipThatIs cs0 >>= fun r => step r acc0)
 
 /-- A definition item `the NAME [of $x$ ...] is DEF`. -/
 structure DefItem where
@@ -8199,7 +8250,15 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     let y := rest.take k
     if x.isEmpty || y.isEmpty || k + 1 != rest.length then none
     if (cs.filter fun ch => match ch with | .w w => w == w!"is" || w == w!"or" | _ => false).length != 2 then none
-    some (pre ++ subj ++ [.w w!"is"] ++ x ++ [.w w!"or"] ++ subj ++ [.w w!"is"] ++ y ++ [.p 46])
+    -- (`SUBJ is X, Y or Z`: each of them, `SUBJ is X or SUBJ is Y or SUBJ is Z`; not with `and`)
+    let xs : List (List Chunk) := (x.foldr (fun ch (acc : List (List Chunk)) => match ch, acc with
+      | .p 44, _ => [] :: acc
+      | _, cur :: more => (ch :: cur) :: more
+      | _, [] => [[ch]]) [[]]).filter (!·.isEmpty)
+    if x.any (fun ch => match ch with | .w w => w == w!"and" | _ => false) then none
+    let items := xs ++ [y]
+    let alts := items.map fun it => subj ++ [Chunk.w w!"is"] ++ it
+    some (pre ++ (alts.intersperse [Chunk.w w!"or"]).flatten ++ [.p 46])
   -- `The number $\sqrt2$ is irrational.`, `The polynomial $x^2-2$ is …`: what the noun says of the
   -- formula, and the claim (`$\sqrt2$ is a number and $\sqrt2$ is irrational`)
   let appositive : Option (List Chunk) := do
