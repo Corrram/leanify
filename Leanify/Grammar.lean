@@ -2794,6 +2794,23 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       | cs => some (.both cs, r3)) with
   | some res => some res
   | none =>
+  -- `$n$ and $n+1$ are coprime`, `$a$ and $b+1$ are distinct`: two terms, together
+  match (do
+      let (a, r1) ← mathChunk cs
+      let r2 ← kw [w!"and"] r1
+      let (b, r3) ← mathChunk r2
+      let r4 ← kw [w!"are"] r3
+      let ma ← Math.parseFormula a
+      let mb ← Math.parseFormula b
+      let term (m : MT) : Bool := match m with | .chain _ (_ :: _) => false | _ => true
+      if !(term ma && term mb) then none
+      let ws0 := r4.takeWhile fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false
+      let (ws, ps) := collectiveWords 8 ws0
+      if !ws.isEmpty || ps.isEmpty then none
+      let c ← collectiveCond ps [a, b]
+      some (Clause.fact c, r4.drop ws0.length)) with
+  | some res => some res
+  | none =>
   -- [the WORDS] $X$ is at most [the WORDS] $Y$
   match (do
       let (l, r) ← namedTerm cs
@@ -3427,6 +3444,17 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
             | none => ([], none, r)
           | none => ([], none, r)
         | none => ([], none, r)
+      -- (`for all $x,y$ and $t\in[0,1]$`: the second group inside the first)
+      let second : Option (List Codes × MT × List Chunk) := do
+        if vars.isEmpty then none
+        let r2 ← kw [w!"and", w!"all"] r1 <|> kw [w!"and", w!"every"] r1 <|> kw [w!"and"] r1
+        let (ts, r3) ← mathChunk r2
+        let (vs, d) ← binderMath ts <|> bare ts
+        if vs.any vars.contains then none
+        some (vs, d, r3)
+      let (f, r1) := match second with
+        | some (vs, d, r3) => (MT.quant true vs d f, r3)
+        | none => (f, r1)
       match punct 44 r1 >>= kw [w!"with", w!"equality", w!"only", w!"at"] with
       | some r2 => do
         let (at_, r3) ← formula r2
@@ -6648,6 +6676,28 @@ def postIfSent (cs : List Chunk) : Option (List Chunk) := do
   if a.any (fun c => match c with | .w w => binding.contains w | _ => false) then none
   some ([.w w!"if"] ++ b ++ [.p 44, .w w!"then"] ++ a ++ stop)
 
+/-- `For all $x$, $φ$.`, `Then for all $x,y$ and $t\in[0,1]$, $φ$.`: letters without a domain
+before a formula, as `$φ$ for all $x$` (a real number; a natural number where it is the index
+of a subscript). -/
+def forAllBare (cs : List Chunk) : Option (List Chunk) := do
+  let (lead, cs) : List Chunk × List Chunk := match cs with
+    | .w t :: rest => if t == w!"then" then ([.w t], rest) else ([], cs)
+    | _ => ([], cs)
+  let r ← kw [w!"for", w!"all"] cs <|> kw [w!"for", w!"every"] cs <|> kw [w!"for", w!"any"] cs
+  let i ← r.findIdx? fun c => match c with | .p 44 => true | _ => false
+  let bs := r.take i
+  let rest := r.drop (i + 1)
+  -- (the first binder: letters only)
+  let .m ts :: more := bs | none
+  if !(ts.all fun t => match t with | .id _ | .sym 44 => true | _ => false) then none
+  -- (then `and $t\in[0,1]$`, or nothing)
+  match more with
+  | [] | [.w _, .m _] | [.w _, .w _, .m _] => pure ()
+  | _ => none
+  -- the clause: one formula
+  let [.m f, .p 46] := rest | none
+  some (lead ++ [.m f, .w w!"for", .w w!"all"] ++ bs ++ [.p 46])
+
 /-- `[Then] CLAUSE for $φ$.` with a condition `φ` of order relations (`for $0<k<p$`) as
 `If $φ$, then CLAUSE.`: for every value of its new variables. -/
 def postForSent (cs : List Chunk) : Option (List Chunk) := do
@@ -7396,6 +7446,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
         | some s => some s
         | none =>
         match postIfSent cs >>= sentence0 with
+        | some s => some s
+        | none =>
+        match forAllBare cs >>= sentence0 with
         | some s => some s
         | none =>
         match postForSent cs >>= sentence0 with
@@ -8470,7 +8523,12 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     | _ => []
   -- `Any two bases of $V$ have the same number of elements.`: for every two objects of the
   -- noun, the notion of one equals that of the other
-  let anyTwoAt (lead cs : List Chunk) : List Sent := match cs with
+  let anyTwoAt (lead cs : List Chunk) : List Sent :=
+    -- (`Two consecutive integers are coprime.`, in a result: any two)
+    let cs : List Chunk := match cs with
+      | .w t :: _ => if generic && lower t == w!"two" then Chunk.w w!"any" :: Chunk.w w!"two" :: cs.drop 1 else cs
+      | _ => cs
+    match cs with
     | .w a :: .w t :: rest =>
       if lower a != w!"any" || t != w!"two" then [] else
       let np0 := rest.takeWhile fun c => match c with | .w w => w != w!"have" && w != w!"are" | .m _ => true | .p 45 => true | _ => false
@@ -8490,8 +8548,13 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           if are != w!"are" then [] else
           let ws := rest2.takeWhile fun c => match c with | .w w => !stops.contains w | .p 45 => true | _ => false
           let after := rest2.drop ws.length
-          if ws.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then [] else
-          [w!"to", w!"with", w!"from"].map fun prep => [.m [.id x], .w w!"is"] ++ ws ++ [.w prep, .m [.id y]] ++ after
+          -- (`Any two distinct primes are coprime.`: of the two together)
+          let wsAll := rest2.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+          let together : List (List Chunk) :=
+            if wsAll.isEmpty || !(match rest2.drop wsAll.length with | [] | [.p 46] => true | _ => false) then [] else
+            [[.m [.id x], .w w!"and", .m [.id y], .w w!"are"] ++ rest2]
+          if ws.isEmpty || !(match after with | [] | [.p 46] => true | _ => false) then together else
+          ([w!"to", w!"with", w!"from"].map fun prep => [.m [.id x], .w w!"is"] ++ ws ++ [.w prep, .m [.id y]] ++ after) ++ together
         | _ => []
       if np0.isEmpty then [] else
       -- (`of a finite-dimensional vector space`: one space for both, bound before them)
@@ -8502,6 +8565,11 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           let z := nestVar avoid cs 2
           ([.w w!"for", .w w!"every"] ++ np0.drop (k + 1) ++ [.m [.id z], .p 44], np0.take k ++ [.m [.id z]])
         | none => ([], np0)
+      -- (`two distinct primes`, `two consecutive integers`: a condition on both)
+      let (np, ps) := collectiveWords 8 np
+      let together : List Bind := if ps.isEmpty then [] else
+        ((collectiveCond ps [[.id x], [.id y]]).map Bind.ifCond).toList
+      if !ps.isEmpty && together.isEmpty then [] else
       if np.isEmpty then [] else
       -- (the variable after the noun phrase, as `Let $B$ be bases of $V$` has it)
       let withVar (v : Codes) : List Chunk := np ++ [.m [.id v]]
@@ -8529,8 +8597,8 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           -- (one binder list, each object after the ones it refers to)
           let flat := bs.flatMap fun b => match b with | .many bs' => bs' | b => [b]
           let mk (x' y' : List Chunk) : Sent :=
-            let nouns := [Bind.noun x', Bind.noun y']
-            .claims tp (if flat.isEmpty then nouns else [.many (flat ++ nouns)]) cls
+            let nouns := [Bind.noun x', Bind.noun y'] ++ together
+            .claims tp (if flat.isEmpty && together.isEmpty then nouns else [.many (flat ++ nouns)]) cls
           (sings.map fun n => mk (atVar n x) (atVar n y)) ++ [mk (withVar x) (withVar y)]
         | _ => []
     | _ => []

@@ -3949,7 +3949,7 @@ where
       -- `\mathbb{E}[X^2]<\infty`, `\operatorname{Var}(X)<\infty`: integrable
       if let .chain (.app (.id n) [e]) [(.lt, .id inf)] := m then
         if inf == w!"\\infty" then
-          if (← isName expNames n) || (n == w!"@rexp" && st0.randomPair.isNone) then return some (integ (← pw e), .prop)
+          if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then return some (integ (← pw e), .prop)
           if ← isName varNames n then return some (integ (← pw (.sup e (.num 2))), .prop)
       -- `X\sim N(\mu,\sigma^2)`, `X\sim\mathrm{Poi}(\lambda)`, `X\sim\mathrm{Bin}(n,p)`,
       -- `X\sim\mathcal{U}[a,b]`: the modifier of the vocabulary for that distribution
@@ -4006,7 +4006,7 @@ where
                 (.mul (.app (.app (.prim .integralOn) omega) a) (.app (.app (.prim .integralOn) omega) b))), .real)
           pure ()
         | .app (.id n) [e] =>
-          if (← isName expNames n) || (n == w!"@rexp" && st0.randomPair.isNone) then
+          if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then
             return some (expect (← pw e), .real)
           if ← isName probNames n then
             -- (`P(A\mid B)`, `P(X>s+t\mid X>s)`: the bar splits the chain into two conditions)

@@ -106,7 +106,10 @@ tests/Analysis/article.tex:203:50: info: claim 73 is meaningful if: \forall x\in
 tests/Analysis/article.tex:203:85: info: claim 74: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(z)\text{ on }\{t:x<t\land t<y\}\Rightarrow \operatorname{continuous}(z)\text{ on }\{s:x<s\land s<y\})
 tests/Analysis/article.tex:203:85: info: claim 74 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(z)\text{ on }\{t:x<t\land t<y\}\Rightarrow (\forall s\in \mathbb{R},\ x<s\land s<y\Rightarrow x<s\land s<y))
 tests/Analysis/article.tex:207:57: info: claim 75: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{nondecreasing}(z)\text{ on }\{t:x\le t\land t\le y\}\Rightarrow z(x)\le z(y))
-tests/Analysis/article.tex: 5 definitions, 76 claims
+tests/Analysis/article.tex:211:1: info: claim 76: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 2\,x\,y\le {x}^{2}+{y}^{2}
+tests/Analysis/article.tex:211:34: info: claim 77: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow y\,{x}^{2}\le {x}^{2}
+tests/Analysis/article.tex:215:31: info: claim 78: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ 0\le s\land s\le 1\Rightarrow x(s\,y+(1-s)\,z)\le s\,x(y)+(1-s)\,x(z))
+tests/Analysis/article.tex: 5 definitions, 79 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 122 compiled, 0 failed, 0 prose (of 122)
-  all: 126 compiled, 0 failed, 0 prose (of 126)
+  results: 126 compiled, 0 failed, 0 prose (of 126)
+  all: 130 compiled, 0 failed, 0 prose (of 130)

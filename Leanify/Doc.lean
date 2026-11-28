@@ -4049,10 +4049,11 @@ they speak of the pair (`\mathbb{E}[…]`, `almost surely`) or of the distributi
 its first variable. -/
 def lawIds (st : St) (ms : List MT) (ids : List Codes) : List Codes :=
   match st.randomPair with
-  | some (_, _, _, df, _, _) =>
+  -- (a pair: the first variable alone is a random variable of the vocabulary, `randomVar`)
+  | some (_, _, some _, df, _, _) =>
     if ms.any (usesRandomPair 64) || (match df with | some d => ids.contains d | none => false)
     then [w!"\\mathbb{P}"] else []
-  | none => []
+  | _ => []
 
 /-- The free variables of a clause, its trailing definitions and the implicit
 parameters of the definitions it uses (for the binders it inherits). -/
@@ -7587,12 +7588,21 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
   | .randomVar y integ df cont => do
     if c.ctx.kind == .text then fail E.prose
     modify fun st => { st with randomPair := some (st.curEnv, y, none, df, integ, cont) }
+    -- (`Let $X$ be a random variable.`, with a noun `random variable` in the vocabulary: one of
+    -- them, until a second makes the two a random pair, `uniformVar`)
+    let rv : List PItem := [.w w!"random", .w w!"variable"]
+    if !integ && df.isNone && !cont && (← get).vocab.nouns.any (fun n => n.sing == rv && n.arg.isNone) then
+      return ← assumeIn c [.noun [.w w!"random", .w w!"variable", .m [.id y]]] []
     pure ([], [])
   | .uniformVar z dom => do
     if c.ctx.kind == .text then fail E.prose
     let st ← get
     let some (e, y, none, df, integ, cont) := st.randomPair | fail E.prose
     if e != st.curEnv then fail E.prose
+    -- (the first variable, bound as a random variable of the vocabulary: now of the pair)
+    if let some b := st.envBinders.head? then
+      if b.name == y && b.ty != .real then
+        modify fun st => { st with envBinders := st.envBinders.drop 1 }
     let some iv ← Elab.intervalType dom | fail E.unsupported
     let (some pl, some pu, some pi, some pd) := (iv.pairLaw, iv.pairUniform, iv.pairInt, iv.pairDf) | fail E.unsupported
     let lawTy : Ty := .fn (.fn .real (.fn iv.ty .prop)) .real
