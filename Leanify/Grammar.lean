@@ -5005,7 +5005,23 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _, _ => false).map (·.2)
     let phrase := phrase.take (cutAt.getD phrase.length)
     if phrase.isEmpty then none
-    some (.noun ([.w w!"@the"] ++ phrase ++ [.m v]), r1.drop phrase.length))
+    some (.noun ([.w w!"@the"] ++ phrase ++ [.m v]), r1.drop phrase.length)) <|>
+  -- `Let $f$ be continuous on $[a,b]$.`, `Let $x$ be positive.`: words without a noun (the
+  -- object is of the one kind of the vocabulary that the words fit, `@some`)
+  (do
+    let (v, r) ← mathChunk cs
+    if !(match v with | [.id _] | [.cmd _] => true | _ => subName v) then none
+    let r1 ← kw [w!"be"] r
+    let .w first :: _ := r1 | none
+    if [w!"a", w!"an", w!"the", w!"@the", w!"equal", w!"given", w!"as", w!"such", w!"in", w!"of", w!"defined",
+        w!"called", w!"chosen", w!"fixed", w!"any", w!"some", w!"arbitrary", w!"either", w!"both", w!"one", w!"two"].contains first then none
+    let phrase := r1.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+    let cutAt := (phrase.zipIdx.find? fun (c, i) => match c, phrase[i + 1]? with
+      | .w a, some (.w l) => a == w!"and" && l == w!"let"
+      | _, _ => false).map (·.2)
+    let phrase := phrase.take (cutAt.getD phrase.length)
+    if phrase.isEmpty then none
+    some (.noun ([.w w!"@some", .m v] ++ phrase), r1.drop phrase.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
@@ -9025,6 +9041,29 @@ def partsOfAt : Nat → Sentence → Option (List Sentence)
     let p3 := [w w!"suppose", w w!"that"] ++ rest.drop (wi + 1)
     if parses p1 && parses p2 && parses p3 then some [p1, p2, p3] else none
   if let some ps := sigOn then return ps.map fun ts => { s with toks := ts }
+  -- `Let $f$ be continuous on $[a,b]$ and differentiable on $(a,b)$.` (no signature, no noun): the
+  -- object with the first words, then the hypothesis `Suppose that $f$ is differentiable on $(a,b)$.`
+  let adjAnd : Option (List (List PTok)) := do
+    if (s.toks.head? >>= textWord) != some w!"let" then none
+    let t1 ← s.toks[1]?
+    if t1.tok != .mopen then none
+    let body := (s.toks.drop 2).takeWhile (·.tok != .mclose)
+    if body.length != 1 then none
+    let k := 2 + body.length
+    if (s.toks[k + 1]? >>= textWord) != some w!"be" then none
+    let rest := s.toks.drop (k + 2)
+    let first ← rest.head? >>= textWord
+    if [w!"a", w!"an", w!"the"].contains first then none
+    let ai ← rest.findIdx? fun t => textWord t == some w!"and"
+    -- (`and` before words, not `and let`, not a formula)
+    let next ← rest[ai + 1]? >>= textWord
+    if next == w!"let" then none
+    let pos := t1.pos
+    let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
+    let p1 := s.toks.take (k + 2) ++ rest.take ai ++ [⟨.punct 46, pos, false⟩]
+    let p2 := [w w!"suppose", w w!"that", t1] ++ body ++ [⟨.mclose, pos, true⟩, w w!"is"] ++ rest.drop (ai + 1)
+    if parses p1 && parses p2 then some [p1, p2] else none
+  if let some ps := adjAnd then return ps.map fun ts => { s with toks := ts }
   -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
   -- hypothesis `Suppose that the order of $G$ is divisible by $p$.`
   let whose : Option (List (List PTok)) := do

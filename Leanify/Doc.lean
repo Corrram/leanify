@@ -2971,6 +2971,63 @@ natural numbers whose terms `U_n` are each as the noun phrase says (its values e
 used). -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st00 ← get
+  -- `@some $f$ continuous on $[a,b]$` (`Let $f$ be continuous on $[a,b]$.`, words without a
+  -- noun): the one kind of object of the vocabulary that the words fit, with its noun
+  if let .w sm :: .m v :: post := np then
+    if sm == w!"@some" then
+      let V := (← get).vocab
+      let bases : List (List Codes) := [[w!"real", w!"number"], [w!"function"], [w!"sequence"], [w!"set"],
+        [w!"matrix"], [w!"vector"], [w!"graph"], [w!"permutation"], [w!"complex", w!"number"],
+        [w!"random", w!"variable"], [w!"polynomial"]]
+      -- (the kinds of the field of the words: `odd` of the field `numbers` is said of numbers, of
+      -- `realfunctions` of functions, not of sequences; a noun of the core takes the words of
+      -- every field)
+      let firstWord : Option Codes := post.findSome? fun c => match c with | .w w => some w | _ => none
+      let wordFields : List Codes := match firstWord with
+        | some w =>
+          ((V.adjectives.filter fun a => a.words.head? == some w).map (·.field)) ++
+          ((V.mods.filter fun m => match m.phrase.head? with | some (.w x) => x == w | _ => false).map (·.field))
+        | none => []
+      let present := bases.filter fun b => V.nouns.any fun n => n.sing == b.map PItem.w && n.arg.isNone &&
+        (wordFields.isEmpty || n.field.isEmpty || wordFields.contains n.field)
+      let allWords := post.all fun c => match c with | .w _ | .p 45 => true | _ => false
+      -- (the words before a preposition before the noun, the phrase of the preposition after
+      -- it: `continuous function on $[a,b]$ $f$`)
+      let pre := post.takeWhile fun c => match c with
+        | .w w => ![w!"on", w!"at", w!"in", w!"over", w!"from", w!"to", w!"with", w!"of"].contains w
+        | .p 45 => true
+        | _ => false
+      let rest := post.drop pre.length
+      let cands : List (List Codes × List Chunk) := present.flatMap fun b =>
+        let noun : List Chunk := b.map Chunk.w
+        let vm : Chunk := .m v
+        ([noun ++ [vm] ++ post] ++ (if allWords then [post ++ noun ++ [vm]] else []) ++
+          (if !pre.isEmpty && !rest.isEmpty then [pre ++ noun ++ rest ++ [vm]] else [])).map (b, ·)
+      let mut fits : List (List Codes × List Chunk × BindInfo) := []
+      -- (a letter that nothing defines, `on $[a,b]$`: for the caller to bind, then read again)
+      let mut undef : Option Err := none
+      for (b, c) in cands do
+        match ← tryCatch (Sum.inl <$> nounPhrase0 c outer) (fun e => pure (Sum.inr e)) with
+        | .inl bi => fits := fits ++ [(b, c, bi)]
+        | .inr e => if (e.code == E.undefined || e.code == E.free) && undef.isNone then undef := some e
+        set st00
+      let kinds := fits.foldl (fun acc (b, c, bi) =>
+        if acc.any (fun (_, _, b') => b'.ty == bi.ty && b'.pred == bi.pred) then acc else acc ++ [(b, c, bi)]) []
+      match kinds with
+      | [(_, c, _)] => return ← nounPhrase0 c outer
+      | [] =>
+        if let some e := undef then throw e
+        fail E.finding (w!"say what kind of object " ++ (varName v |>.getD []) ++ w!" is, with a noun (Let $f$ be a continuous function on $[a,b]$.)")
+      | _ =>
+        -- (the kinds by their nouns, each once: `a real number or a function`)
+        let names := (kinds.map fun (b, _, _) => w!" ".intercalate b).eraseDups
+        let art (n : Codes) : Codes := (if [97, 101, 105, 111, 117].contains (n.headD 0) then w!"an " else w!"a ") ++ n
+        let arts := names.map art
+        let listed := match arts.reverse with
+          | last :: more@(_ :: _) => w!", ".intercalate more.reverse ++ w!" or " ++ last
+          | _ => w!", ".intercalate arts
+        fail E.finding (w!"the words fit several kinds of objects (" ++ listed ++
+          w!"): say what kind of object " ++ (varName v |>.getD []) ++ w!" is, with a noun (Let $f$ be a continuous function on $[a,b]$.)")
   -- `Let $f\in K[x]$ be a nonzero polynomial of degree $n$`: a polynomial over the ring of the
   -- coefficients of its domain (not over its domain), read first
   let polyOver : Option (List Chunk) := do
@@ -6818,6 +6875,27 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   -- claim is made under them, the first hypothesis outermost
   let cls := match c.ctx.kind with
     | .text => cls
+    | .result _ =>
+      -- (in a result, a hypothesis about variables that the claim does not use, nor the
+      -- hypotheses about them, is not one of its hypotheses, as the condition of a binder that
+      -- the claim does not use: `Let $g$ be continuous on $[c,d]$ and differentiable on $(c,d)$.
+      -- … Let $h$ be differentiable at $x_0$. Then $h$ is continuous at $x_0$.`)
+      let envNames := st0.envBinders.map (·.name)
+      let about (h : Hyp) : List Codes :=
+        (((clauseMaths h.clause).flatMap fun m => freeIds 64 [] m ++ subKeys 64 m).filter envNames.contains).eraseDups
+      let touches (used : List Codes) (h : Hyp) : Bool :=
+        h.heading || h.contra || (about h).isEmpty || (about h).any used.contains
+      let rec close : Nat → List Codes → List Codes
+        | 0, u => u
+        | f + 1, u =>
+          let u1 := (usedBinders st0.envBinders u).map (·.name)
+          let u2 := (u1 ++ (st0.envHyps.filter (touches u1)).flatMap about).eraseDups
+          if u2.length == u.length then u2 else close f u2
+      cls.map fun cl =>
+        let used := close (st0.envHyps.length + st0.envBinders.length + 1)
+          ((clauseFree st0 [] cl).filter envNames.contains).eraseDups
+        (st0.envHyps.filter (touches used)).foldr (fun h cl =>
+          { cl with clause := Clause.ifClause h.clause cl.clause }) cl
     | _ => st0.envHyps.foldr (fun h acc => acc.map fun cl =>
         { cl with clause := Clause.ifClause h.clause cl.clause }) cls
   -- variables bound by the opening binders of the current result carry over to
@@ -7164,7 +7242,9 @@ ends, until a contradiction refutes them, or until another case takes their plac
   place of the latest assumption of the proof (of the item).
 
 A formula with a new variable (`Assume $c>0$.`, `Suppose $x\in A$.`) binds it, as `Let`
-does. -/
+does. In a result, a claim that uses none of the variables of a hypothesis (nor of the
+hypotheses that it is made under) is made without it, as without the conditions of the binders
+that it does not use. -/
 def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Bool) (asBinder : Option Bind) :
     M (List Nat × List Nat) := do
   if c.ctx.kind == .text then fail E.prose

@@ -269,6 +269,7 @@ Further forms that the fields use (they are read for any vocabulary):
 | `Let $F$ be a field with at least four elements.`, `with at most $n$ elements`, `a commutative ring with $1$` (`with identity`, `with unity`) | infinite or of order at least `n`; finite of order at most `n`; every ring of the vocabulary has an identity |
 | `Let $X$ be a random variable with values in $\{0,1\}$.` | `X\in\{0,1\}` almost surely |
 | `Let $f\colon\mathbb{R}\to\mathbb{R}$ be continuous at $0$.` | the map, then the hypothesis `Suppose that $f$ is continuous at $0$.` |
+| `Let $f$ be continuous on $[a,b]$.`, `Let $n$ be odd.`, `Let $f$ be continuous on $[a,b]$ and differentiable on $(a,b)$.` | words without a noun: the object is of the one kind of object (real number, function, sequence, set, matrix, …) of the field of the words, or of the core, that the words fit (`odd` of the field `numbers` fits only numbers, `continuous on $[a,b]$` only functions, not the sequences of another field); after `and`, the hypothesis `Suppose that $f$ is differentiable on $(a,b)$.` Where the words fit several kinds (`positive` with the field `realfunctions`), the article says which, with a noun |
 | `$\operatorname{Var}(X_1+\dots+X_n)$`, `$\frac{x_1+\cdots+x_n}{n}$` | a sum (product) with an ellipsis inside brackets as well |
 | `Let $S$ be a finite set with $n$ elements.`, `Let $G$ be a group with $6$ elements.`, `every nonzero element of $K$ is invertible` | a finite set with `n` elements; a finite structure of order `n`; elements `a\ne0`, and with an inverse |
 | `Let $U$ be a nonempty open set. Then there is $x\in U$ such that …`, `$\sigma(S)\in S$`, `… for every $x\in U$` | membership in a set that the result binds |
@@ -935,7 +936,7 @@ place. `tests/Arguments/article.tex` uses each form.
 
 | Sentence | Reading |
 | --- | --- |
-| `Assume that $x>1$.`, `Suppose $0<x$ and $x<y$.`, `We assume that $n$ is even.`, `Let us assume …` | hypotheses of the following sentences of the result or proof (inside an item of a list: of the item). In the statement of a result they are hypotheses of the result, and its proof starts with them |
+| `Assume that $x>1$.`, `Suppose $0<x$ and $x<y$.`, `We assume that $n$ is even.`, `Let us assume …` | hypotheses of the following sentences of the result or proof (inside an item of a list: of the item). In the statement of a result they are hypotheses of the result, and its proof starts with them; a claim of the result that uses none of the variables of a hypothesis (nor of the hypotheses that it is made under) is made without it, as it is made without the conditions of the binders that it does not use (`Let $f\colon\mathbb{R}\to\mathbb{R}$ be differentiable at $x_0$. Then … . Every function $g$ differentiable at $x_1$ is continuous at $x_1$.`) |
 | `Assume $c>0$.`, `Suppose $x\in A$.` about a variable that is not bound yet | the variable, as `Let $c>0$.` |
 | `Let $G$ and $H$ be groups, with $H$ abelian.`, `…, with $n\ge3$.` | the variables, then the hypothesis `Suppose that $H$ is abelian.` |
 | `Assume that $a>0$ and let $n$ be an integer such that $n>a$.` | the hypothesis, then the variable (each part read as a sentence of its own, and split again where it needs to be) |
