@@ -29,7 +29,8 @@ $Y$ be independent random variables.`) and writes
   are independent and identically distributed`): independence by the factorization of
   the joint distribution function, identical distribution by the distribution functions;
 * notions: the expectation (expected value) and standard deviation of a random variable,
-  the probability of an event (the variance is `\operatorname{Var}(X)`). -/
+  the probability of an event (the variance is `\operatorname{Var}(X)`; `E[X]` is the
+  expectation, as `\mathbb{E}[X]`). -/
 
 namespace Leanify.RandomVariables
 open Build Core

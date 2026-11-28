@@ -16,6 +16,8 @@ figures as sets of points (`a point $P$ lying on $C$`).
   segment, the perpendicular bisector, the circle and the disc with a centre and a radius.
 
 In formulas, `|AB|` is the distance and `\angle ABC` the angle at `B` between `A` and `C`.
+`Let $ABC$ be a triangle.` binds the three points, not collinear, as the vertices of a
+triangle, whose angle at `A` is then `\angle A`.
 The line through `A` and `B` asks that they are distinct, the angle at `B` between `A` and
 `C` that both differ from `B`, a circle that its radius is positive. The constants are
 interpreted by `Leanify/Library/GeometryModel.lean`. -/

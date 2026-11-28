@@ -30,7 +30,13 @@ tests/PlaneGeometry/article.tex:39:47: info: claim 8: \forall x\in \mathrm{Point
 tests/PlaneGeometry/article.tex:39:47: info: claim 8 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\Rightarrow (a\in \mathrm{Point}\mapsto \neg (y=x)\land \neg (a=x))(z)
 tests/PlaneGeometry/article.tex:43:56: info: claim 9: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\Rightarrow \neg \operatorname{Collinear}(z,x,y)
 tests/PlaneGeometry/article.tex:43:142: info: claim 10: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \operatorname{Collinear}(x,y,z)\Rightarrow \operatorname{Collinear}(x,y,z)
-tests/PlaneGeometry/article.tex: 8 definitions, 11 claims
+tests/PlaneGeometry/article.tex:47:26: info: claim 11: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\Rightarrow \angle yxz+\angle xyz+\angle xzy=\pi
+tests/PlaneGeometry/article.tex:47:26: info: claim 11 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\Rightarrow ((a\in \mathrm{Point}\mapsto \neg (y=x)\land \neg (a=x))(z)\land (a\in \mathrm{Point}\mapsto \neg (x=y)\land \neg (a=y))(z))\land (a\in \mathrm{Point}\mapsto \neg (x=z)\land \neg (a=z))(y)
+tests/PlaneGeometry/article.tex:47:107: info: claim 12: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\land \lvert xy\rvert=\lvert xz\rvert\Rightarrow \angle xyz=\angle xzy
+tests/PlaneGeometry/article.tex:47:107: info: claim 12 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\land \lvert xy\rvert=\lvert xz\rvert\Rightarrow (a\in \mathrm{Point}\mapsto \neg (x=y)\land \neg (a=y))(z)\land (a\in \mathrm{Point}\mapsto \neg (x=z)\land \neg (a=z))(y)
+tests/PlaneGeometry/article.tex:47:180: info: claim 13: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\land \angle xzy=\frac{\pi}{2}\Rightarrow {\lvert xy\rvert}^{2}={\lvert xz\rvert}^{2}+{\lvert yz\rvert}^{2}
+tests/PlaneGeometry/article.tex:47:180: info: claim 13 is meaningful if: \forall x\in \mathrm{Point},\ \forall y\in \mathrm{Point},\ \forall z\in \mathrm{Point},\ \neg \operatorname{Collinear}(x,y,z)\Rightarrow (a\in \mathrm{Point}\mapsto \neg (x=z)\land \neg (a=z))(y)\land \neg (2=0)
+tests/PlaneGeometry/article.tex: 8 definitions, 14 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 17 compiled, 0 failed, 0 prose (of 17)
-  all: 25 compiled, 0 failed, 0 prose (of 25)
+  results: 23 compiled, 0 failed, 0 prose (of 23)
+  all: 31 compiled, 0 failed, 0 prose (of 31)

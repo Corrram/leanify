@@ -625,7 +625,16 @@ def run : Nat → Mode → List MTok → R
             some (.app (.id w!"@rexp") [body], r3)
           | _ => none
         else none
-      match sample with
+      -- `E[X]`, `\mathrm{E}[X^2]`: the expectation (the brackets are no application)
+      let bracketE : Option (MT × List MTok) :=
+        if !(n == [69] || n == w!"\\mathrm{E}" || n == w!"\\operatorname{E}") then none else
+        match rest with
+        | .sym 91 :: r1 => do
+          let (body, r2) ← run f .top r1
+          let r3 ← expect (.sym 93) r2
+          some (.app (.id w!"@expect") [body], r3)
+        | _ => none
+      match sample <|> bracketE with
       | some r => some r
       | none => some (.id n, rest)
     | .sym 40 :: rest =>
@@ -711,6 +720,13 @@ def run : Nat → Mode → List MTok → R
           | _ => false) then
         match rest with
         | .id a :: .id b :: .id c :: r => some (.app (.id w!"\\angle") [.id a, .id b, .id c], r)
+        | _ => none
+      -- `\angle A`: the angle of a triangle at its vertex `A` (one capital letter)
+      else if n == w!"angle" && (match rest with
+          | .id [a] :: r => 65 ≤ a && a ≤ 90 && (match r with | .id _ :: _ => false | _ => true)
+          | _ => false) then
+        match rest with
+        | .id a :: r => some (.app (.id w!"\\angle") [.id a], r)
         | _ => none
       -- `$\sin$`, `\exp\circ f`: the function itself
       else if [w!"exp", w!"log", w!"ln", w!"sin", w!"cos", w!"tan"].contains n &&

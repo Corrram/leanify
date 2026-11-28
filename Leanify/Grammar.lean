@@ -1115,7 +1115,13 @@ def joinedVars (cs : List Chunk) : Option (List MTok × List Chunk) := do
       match (punct 44 r >>= kw [w!"and"]) <|> kw [w!"and"] r <|> punct 44 r with
       | some (.m b :: r2) => if isName b then go f (acc ++ [.sym 44] ++ b) r2 else (acc, r)
       | _ => (acc, r)
-  if isName ts then some (go 8 ts r) else some (ts, r)
+  if isName ts then some (go 8 ts r) else
+  -- (`$a_1,\ldots,a_n$ and $b_1,\ldots,b_n$`: two sequences, apart by `;`)
+  if (seqVars ts).isSome then
+    match (punct 44 r >>= kw [w!"and"]) <|> kw [w!"and"] r with
+    | some (.m b :: r2) => if (seqVars b).isSome then some (ts ++ [.sym 59] ++ b, r2) else some (ts, r)
+    | _ => some (ts, r)
+  else some (ts, r)
 
 /-- One binder after `for every|each|all`: a smallness chain, `$x\in A$` (with
 conditions), or `NP $x$` (`For every LTD copula $C$`, as `For an LTD copula $C$`). -/
@@ -1145,6 +1151,9 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     let ws0 := lead ++ ws0
     let (vars, conds, r'') : List (List MTok) × List Bind × List Chunk ← match np.drop ws0.length, r' with
       | [.m [a]], .w w :: .m [b] :: r'' => if w == w!"and" then some ([[a], [b]], [], r'') else none
+      -- `all real numbers $a_1,\ldots,a_n$ and $b_1,\ldots,b_n$`: two sequences
+      | [.m sa], .w w :: .m sb :: r'' =>
+        if w == w!"and" && (seqVars sa).isSome && (seqVars sb).isSome then some ([sa, sb], [], r'') else none
       -- `all real numbers $a$, $b$ and $c$`: names separated by commas, the last after `and`
       | [.m [a]], .p 44 :: rest =>
         let rec names : Nat → List Chunk → List (List MTok) → Option (List (List MTok) × List Chunk)
@@ -1353,7 +1362,15 @@ def everyBinders (r : List Chunk) : Option (Bind × List Chunk) :=
 conditions (`with $a<b$`): a binder for each variable (a sequence `x_1,\ldots,x_n` is one),
 then the conditions. -/
 def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) := do
-  let vars ← ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
+  -- (two sequences, `$a_1,\ldots,a_n$ and $b_1,\ldots,b_n$`, apart by `;`)
+  let seqPair : Option (List (List MTok)) :=
+    match ts.findIdx? (· == .sym 59) with
+    | some i =>
+      let a := ts.take i
+      let b := ts.drop (i + 1)
+      if (seqVars a).isSome && (seqVars b).isSome then some [a, b] else none
+    | none => none
+  let vars ← seqPair <|> ((seqBound ts).map fun _ => [ts]) <|> splitVars ts
   let r := normIID r
   -- (a singular noun is read where its variable is)
   if (kw [w!"a"] r).isSome || (kw [w!"an"] r).isSome then none else
@@ -2040,7 +2057,19 @@ def compareRel (cs : List Chunk) : Option (Rel × List Chunk) :=
   ((kw [w!"lies", w!"in"] cs).map (.mem, ·)) <|> ((kw [w!"belongs", w!"to"] cs).map (.mem, ·)) <|>
   ((kw [w!"does", w!"not", w!"lie", w!"in"] cs).map (.nmem, ·)) <|> ((kw [w!"does", w!"not", w!"belong", w!"to"] cs).map (.nmem, ·)) <|>
   ((kw [w!"divides"] cs).map (.dvd, ·)) <|> ((kw [w!"does", w!"not", w!"divide"] cs).map (.ndvd, ·)) <|>
-  ((kw [w!"exceeds"] cs).map (.gt, ·))
+  ((kw [w!"exceeds"] cs).map (.gt, ·)) <|>
+  -- (`the degree of $pq$ is the degree of $p$ plus the degree of $q$`: equal to a sum of
+  -- notions, as `equals`)
+  (do
+    let r ← kw [w!"is"] cs
+    let _ ← kw [w!"the"] r
+    let upTo := r.takeWhile fun c => match c with | .p _ => false | _ => true
+    let ops := [w!"plus", w!"minus", w!"times"]
+    if !((List.range upTo.length).any fun i => match (upTo[i]? : Option Chunk), (upTo[i + 1]? : Option Chunk) with
+        | some (.w o), some (.w t) => ops.contains o && t == w!"the"
+        | some (.w o), some (.m _) => ops.contains o && i + 2 == upTo.length
+        | _, _ => false) then none
+    some (.eq, r))
 
 /-- `$A\to L$ as $v\to c$`, `$A\sim B$ as $v\to c$`, `$A=o(B)$ as $v\to c$`: the limit of `A`
 is `L`, of `A/B` is `1`, of `A/B` is `0` (a finite limit). -/
@@ -4419,6 +4448,18 @@ def condVars (cs : List Chunk) : Option (List (MTok × Option MT) × List Chunk)
 
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+  -- `$ABC$ be a triangle [with …]`: three points (field `planegeometry`), not collinear, the
+  -- vertices of a triangle (`\angle A` is its angle at `A`)
+  (do
+    let (ts, r) ← mathChunk cs
+    let [.id a, .id b, .id c] := ts | none
+    if !([a, b, c].all fun v => v.length == 1 && (v.head?.all fun k => 65 ≤ k && k ≤ 90)) then none
+    let r1 ← kw [w!"be", w!"a", w!"triangle"] r
+    let pts := [a, b, c].map fun v => Bind.noun [.w w!"point", .m [.id v]]
+    let tri := Bind.ifCond (.app (.id w!"@triangle") [.id a, .id b, .id c])
+    match withConds r1 with
+    | some (m, r2) => some (.many (pts ++ [tri, .ifCond m]), r2)
+    | none => some (.many (pts ++ [tri]), r1)) <|>
   -- `$R>0$ and $h$ be real numbers`: the names, each of the noun, and their conditions
   (do
     let (items, r) ← condVars cs
@@ -7921,6 +7962,44 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let x := nestVar avoid cs 0
     let .claims tp bs cls ← sentence (lead ++ .m [.id x] :: rest.drop i) | none
     some (.claims tp (.noun ([.w w!"@the", .w st, .w o] ++ members ++ [.m [.id x]]) :: bs) cls)
+  -- `In every graph, the number of vertices of odd degree is even.`: the notion of the object
+  -- that `in every NOUN` speaks of, as `For every graph $X$, the number of vertices of odd degree
+  -- in $X$ is even.` (also `of $X$`)
+  let inEvery : List Sent := Id.run do
+    let .w i :: .w e :: rest := cs | return []
+    if i != w!"in" || !(e == w!"every" || e == w!"any" || e == w!"each") then return []
+    let some k := rest.findIdx? (fun c => match c with | .p 44 => true | _ => false) | return []
+    let noun := rest.take k
+    if noun.isEmpty || !(noun.all fun c => match c with | .w _ | .p 45 => true | _ => false) then return []
+    let .w t :: body := rest.drop (k + 1) | return []
+    if t != w!"the" then return []
+    let verbs := [w!"is", w!"are", w!"has", w!"have", w!"divides", w!"equals", w!"contains"]
+    let some j := body.findIdx? (fun c => match c with | .w w => verbs.contains w | _ => false) | return []
+    let words := body.take j
+    if words.isEmpty || !(words.all fun c => match c with | .w _ | .p 45 => true | _ => false) then return []
+    let x := nestVar avoid cs 2
+    -- (a notion after the verb, `is the number of vertices minus $1$`, of the same object)
+    let ops := [w!"plus", w!"minus", w!"times"]
+    let rec obj (prep : Codes) : Nat → List Chunk → List Chunk
+      | 0, cs => cs
+      | f + 1, cs => match cs with
+        | .w t :: more =>
+          if t != w!"the" then .w t :: obj prep f more else
+          let ws := more.takeWhile fun c => match c with | .w w => !ops.contains w | .p 45 => true | _ => false
+          match more.drop ws.length with
+          | [] | .p _ :: _ | .w _ :: _ =>
+            if ws.isEmpty then .w t :: obj prep f more
+            else .w t :: ws ++ [.w prep, .m [.id x]] ++ obj prep f (more.drop ws.length)
+          | c :: rest => .w t :: ws ++ c :: obj prep f rest
+        | c :: more => c :: obj prep f more
+        | [] => []
+    let mut acc : List Sent := []
+    for prep in [w!"in", w!"of"] do
+      let after := body.drop j
+      for tail in [after, (body.take (j + 1)).drop j ++ obj prep (after.length + 1) (after.drop 1)] do
+        if let some sn := sentence (lead ++ [.w w!"for", .w w!"every"] ++ noun ++ [.m [.id x], .p 44, .w w!"the"] ++ words ++
+            [.w prep, .m [.id x]] ++ tail) then acc := acc ++ [sn]
+    return acc
   -- `The complete graph on $n$ vertices has $n(n-1)/2$ edges.`: the value of a notion with its
   -- arguments, bound as `Let $X$ be the complete graph on $n$ vertices.` binds it, and the claim
   -- about it (a notion of the vocabulary: the elaboration looks it up)
@@ -8437,7 +8516,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     if !(match v with | [.id _] => true | _ => subName v) then return []
     if (Math.parseFormula subj).isNone then return []
     return (sentence (lead ++ [.w w!"there", .w w!"is", .w a] ++ ws ++ [.m v, .w w!"of", .m subj, .w w!"such", .w w!"that"] ++ more)).toList
-  return out ++ hasSuchThat ++ theSet.toList ++ theNotion.toList ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
+  return out ++ hasSuchThat ++ theSet.toList ++ theNotion.toList ++ inEvery ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

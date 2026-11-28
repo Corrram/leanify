@@ -22,7 +22,9 @@ tests/Polynomials/article.tex:53:77: info: claim 10: \forall x\in \mathbb{R}\to 
 tests/Polynomials/article.tex:57:44: info: claim 11: \forall x\in \mathbb{R},\ 1\le x\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(y)\land (\operatorname{IsPoly}(y)\land \neg (\forall t\in \mathbb{R},\ y(t)=0))\land \deg(y)=x\Rightarrow (\exists z\in \mathbb{R},\ \operatorname{card}((s\in \mathbb{R}\mapsto y(s)=0))(z)\land z\le x))
 tests/Polynomials/article.tex:61:1: info: claim 12: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land (\operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0))\land \frac{\deg(x)-1}{2}\in \mathbb{Z}\Rightarrow \operatorname{IsPoly}(x)\land (\exists z\in \mathbb{R},\ x(z)=0)
 tests/Polynomials/article.tex:61:1: info: claim 12 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\Rightarrow \operatorname{IsPoly}(x)\land \neg (\forall y\in \mathbb{R},\ x(y)=0)\Rightarrow \neg (2=0)
-tests/Polynomials/article.tex: 4 definitions, 13 claims
+tests/Polynomials/article.tex:65:41: info: claim 13: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land \operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0)\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(y)\land \operatorname{IsPoly}(y)\land \neg (\forall t\in \mathbb{R},\ y(t)=0)\Rightarrow \deg((z\in \mathbb{R}\mapsto x(z)\,y(z)))=\deg(x)+\deg(y))
+tests/Polynomials/article.tex:65:41: info: claim 13 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(x)\land \operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0)\Rightarrow (\forall y\in \mathbb{R}\to \mathbb{R},\ \operatorname{IsPoly}(y)\land \operatorname{IsPoly}(y)\land \neg (\forall t\in \mathbb{R},\ y(t)=0)\Rightarrow (\operatorname{IsPoly}((z\in \mathbb{R}\mapsto x(z)\,y(z)))\land \neg (\forall s\in \mathbb{R},\ (z\in \mathbb{R}\mapsto x(z)\,y(z))(s)=0))\land (\operatorname{IsPoly}(x)\land \neg (\forall s\in \mathbb{R},\ x(s)=0))\land \operatorname{IsPoly}(y)\land \neg (\forall s\in \mathbb{R},\ y(s)=0))
+tests/Polynomials/article.tex: 4 definitions, 14 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 23 compiled, 0 failed, 0 prose (of 23)
-  all: 27 compiled, 0 failed, 0 prose (of 27)
+  results: 25 compiled, 0 failed, 0 prose (of 25)
+  all: 29 compiled, 0 failed, 0 prose (of 29)

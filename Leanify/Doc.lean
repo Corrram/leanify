@@ -2615,6 +2615,24 @@ def setOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk) := do
     | none => some c) none
   some (rest.take i ++ n.sing.filterMap (fun it => match it with | .w w => some (Chunk.w w) | _ => none) ++ rest.drop words.length)
 
+/-- `vertices of $G$ of odd degree`, `primes less than $n$`: the noun phrase of one of the
+objects, its plural noun in the singular (the earliest plural noun of the vocabulary, the
+longest there). -/
+def singularNP (V : Vocab) (cs : List Chunk) : Option (List Chunk) := do
+  let isWords (p : Phrase) : Bool := !p.isEmpty && p.all fun i => match i with | .w _ => true | _ => false
+  let cands := V.nouns.filterMap fun n =>
+    if n.plural == n.sing || !isWords n.plural || !isWords n.sing then none else
+    (List.range cs.length).findSome? fun i =>
+      match matchPhrase n.plural (cs.drop i) with
+      | some (none, r) => some (i, cs.length - i - r.length, n)
+      | _ => none
+  let (i, len, n) ← cands.foldl (fun (best : Option (Nat × Nat × Noun)) c => match best with
+    | some b => if c.1 < b.1 || (c.1 == b.1 && c.2.1 > b.2.1) then some c else some b
+    | none => some c) none
+  -- (the words before it are adjectives: no formula among them)
+  if (cs.take i).any (fun c => match c with | .w _ | .p 45 => false | _ => true) then none
+  some (cs.take i ++ n.sing.filterMap (fun it => match it with | .w w => some (Chunk.w w) | _ => none) ++ cs.drop (i + len))
+
 /-- `sequence of dense open subsets of $X$ $(U_n)$`: the noun phrase of each term, in the singular
 and without a variable (`dense open subset of $X$`), and the sequence's variable. -/
 def seqOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk × List MTok × List Chunk) := do
@@ -2757,6 +2775,29 @@ def nounPhraseCore (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     ((np.zipIdx.findSome? fun (c, i) => match c with
         | .m ts => if i == 0 then none else (seqAt ts).map fun r => (i, r)
         | _ => none).map fun (i, (x, name, bound, lo, hi)) => (np.take i, np.drop (i + 1), x, name, bound, lo, hi))
+  -- `Let $N$ be the number of primes less than $n$.`, `the number of vertices of $G$ of odd
+  -- degree` (where no notion of the vocabulary has these words): how many objects of the noun
+  -- phrase (real numbers) there are, defined when they are finitely many (as `\#\{x : …\}`)
+  let Vc := (← get).vocab
+  let countOf : Option (Codes × List Chunk) := match np with
+    | .w t :: .w n :: .w o :: rest =>
+      if t != w!"@the" || n != w!"number" || o != w!"of" then none else
+      match rest.getLast? with
+      | some (.m vts) => (varName vts).bind fun v => (singularNP Vc rest.dropLast).map (v, ·)
+      | _ => none
+    | _ => none
+  if let some (v, sing) := countOf then
+    let st0 ← get
+    match ← tryCatch (some <$> nounPhrase1 np outer) (fun e => do set st0; if e.code == E.noun then pure none else throw e) with
+    | some b => return b
+    | none =>
+      let b ← nounPhrase1 sing outer
+      if b.ty != .real || !b.name.isEmpty then fail E.unsupported
+      let p := b.pred.getD (.lam .real .tt .tt)
+      -- (the predicate's object, the dummy of its scope, is the counted object `y`)
+      let set := Tm.lam .real .tt (.app (shift 3 1 p) (.loc 0))
+      let body := Tm.eq (.loc 0) (.the .real (.app (.app (.prim .cardIs) set) (.loc 0)))
+      return ⟨v, .real, some (Tm.lam .real .tt body)⟩
   match seq with
   | some (pre, post, x, name, bound, lo, hi) => do
     let b ← nounPhrase1 (pre ++ [.m (name ++ bound)] ++ post) outer
@@ -6835,8 +6876,9 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   let some key := Elab.symKey hd | fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
   let argNames ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.finding w!"the symbol a sentence defines is a name ($X$, $d_0$, $\\Gamma$) or a function of variables ($f(x,y)$)"
   let st ← get
-  -- the variables the description uses, apart from its own
-  let own := npVars np
+  -- the variables the description uses, apart from its own (not the values of its modifiers,
+  -- `$n$` in `primes less than $n$`)
+  let own := npVars (withoutSlotArgs st.vocab np)
   let maths := (mathsOf np).filterMap Math.parseFormula ++ (cond.map clauseMaths).getD []
   let ids := (maths.flatMap (freeIds 64 [])).filter (!own.contains ·)
   let used := ids ++ implicitVars st (ids ++ maths.flatMap (subKeys 64))

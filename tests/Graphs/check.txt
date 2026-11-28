@@ -53,7 +53,8 @@ tests/Graphs/article.tex:117:21: info: claim 35: \forall x\in \mathrm{Graph},\ \
 tests/Graphs/article.tex:117:21: info: claim 35 is meaningful if: \forall x\in \mathrm{Graph},\ 1\le \lvert V(x)\rvert
 tests/Graphs/article.tex:117:132: info: claim 36: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Graph},\ \forall z\in \mathrm{Graph},\ z=K_{x}\Rightarrow \lvert E(z)\rvert=\frac{x\,(x-1)}{2})
 tests/Graphs/article.tex:117:132: info: claim 36 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow (\forall y\in \mathrm{Graph},\ \forall z\in \mathrm{Graph},\ (x\in \mathbb{Z}\land 0\le x)\land (z=K_{x}\Rightarrow \neg (2=0)))
-tests/Graphs/article.tex: 8 definitions, 37 claims
+tests/Graphs/article.tex:121:1: info: claim 37: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\Rightarrow \lvert E(x)\rvert=\lvert V(x)\rvert-1
+tests/Graphs/article.tex: 8 definitions, 38 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 50 compiled, 0 failed, 0 prose (of 50)
-  all: 58 compiled, 0 failed, 0 prose (of 58)
+  results: 51 compiled, 0 failed, 0 prose (of 51)
+  all: 59 compiled, 0 failed, 0 prose (of 59)

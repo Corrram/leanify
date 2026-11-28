@@ -312,6 +312,9 @@ adjective of maps that is meant on a domain (`homomorphism`, `injective`) is abo
   vocabulary has relative to a structure (`normal in $G$`) is said relative to it (`$H$ is
   normal`). -/
   complements : List (Nat × Codes × List MTok) := []
+  /-- The triangles bound by `Let $ABC$ be a triangle.`: the environment and the names of the
+  vertices; `\angle A` is the angle of the triangle at `A`. -/
+  triangles : List (Nat × List Codes) := []
   /-- The domains of the maps bound by a signature: the environment, the map's name and the
   domain as written (read again where a sentence says that the map is injective). -/
   sigDoms : List (Nat × Codes × MT × MT) := []
@@ -2913,7 +2916,20 @@ where
         if r.isNone then set st0
         pure r
       match m with
-      | .app (.id n) [x] => if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
+      | .app (.id n) [x] =>
+        if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
+        -- `\angle A` of a vertex of a triangle: the angle of the triangle there
+        if let .id v := x then
+          if n == w!"\\angle" && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then
+            let st ← get
+            let tri := st.triangles.find? fun (e, vs) => vs.contains v && (e == st.curEnv || st.curProved == some e)
+            let some (_, vs) := tri | fail E.finding w!"`\\angle A` with one letter is the angle at a vertex of a triangle bound by `Let $ABC$ be a triangle.`; otherwise write `\\angle BAC`"
+            let others := vs.filter (· != v)
+            let [p, q] := others | fail E.unsupported
+            let (pa, t) ← term f sc pf (.id v)
+            let (pp, _) ← term f sc pf (.id p)
+            let (pq, _) ← term f sc pf (.id q)
+            return some (← callMethod t (.fn w!"\\angle") [pa, pp, pq])
       | .app (.id n) [x, y] =>
         if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
         -- `$S$ contains $x$`: `x\in S` of an element, `x\subseteq S` of a set of the same
@@ -2927,7 +2943,15 @@ where
             if r.2 == .prop then return some r
           set st0
           fail E.type
-      | .app (.id n) [x, y, z] => if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
+      | .app (.id n) [x, y, z] =>
+        if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
+        -- `Let $ABC$ be a triangle.`: three points that are not collinear, the vertices of a
+        -- triangle (for `\angle A`)
+        if n == w!"@triangle" then
+          if let some (p, t) ← own? [x, y, z] w!"@collinear" then
+            if let (.id a, .id b, .id c) := (x, y, z) then
+              modify fun st => { st with triangles := (st.curEnv, [a, b, c]) :: st.triangles }
+            return some (.not p, t)
       | _ => pure ()
       let some iv ← hilbertIv | pure none
       let fn1 := Ty.fn iv.ty .real
