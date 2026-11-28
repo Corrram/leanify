@@ -60,7 +60,11 @@ tests/Topology/article.tex:112:1: info: claim 39: \forall x\in \mathbb{R}\to \ma
 tests/Topology/article.tex:112:86: info: claim 40: \forall x\in \mathbb{R}\to \mathrm{Prop},\ (\exists s\in \mathbb{R},\ x(s))\land \operatorname{BddBelow}(x)\Rightarrow (\exists y\in \mathbb{R},\ ((\forall s\in \mathbb{R},\ x(s)\Rightarrow y\le s)\land (\forall s\in \mathbb{R},\ (\forall t\in \mathbb{R},\ x(t)\Rightarrow s\le t)\Rightarrow s\le y))\land \top)
 tests/Topology/article.tex:112:171: info: claim 41: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \neg (x=y)\Rightarrow (\exists z\in \mathbb{R},\ ((\exists a\in \mathbb{R},\ a\in \mathbb{Z}\land (\exists b\in \mathbb{R},\ b\in \mathbb{Z}\land \neg (b=0)\land z=\frac{a}{b}))\land \min\{x,y\}<z\land z<\max\{x,y\})\land \top)
 tests/Topology/article.tex:112:237: info: claim 42: \forall x\in \mathbb{R},\ 0<x\Rightarrow (\exists y\in \mathbb{R},\ (0<y\land y<x)\land \top)
-tests/Topology/article.tex: 7 definitions, 43 claims
+tests/Topology/article.tex:116:50: info: claim 43: \forall x\in \mathbb{R}\to \mathrm{Prop},\ x(0)\Rightarrow x(0)
+tests/Topology/article.tex:116:50: info: claim 44: \forall x\in \mathbb{R}\to \mathrm{Prop},\ x(0)\Rightarrow (\exists z\in \mathbb{R},\ x(z))
+tests/Topology/article.tex:116:154: info: claim 45: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \forall y\in \mathbb{R}\to \mathrm{Prop},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow y(s))\Rightarrow (\forall z\in \mathbb{R},\ x(z)\Rightarrow y(z))
+tests/Topology/article.tex:116:177: info: claim 46: \neg (0<0\land 0<1)
+tests/Topology/article.tex: 7 definitions, 47 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 60 compiled, 0 failed, 0 prose (of 60)
-  all: 67 compiled, 0 failed, 0 prose (of 67)
+  results: 65 compiled, 0 failed, 0 prose (of 65)
+  all: 72 compiled, 0 failed, 0 prose (of 72)

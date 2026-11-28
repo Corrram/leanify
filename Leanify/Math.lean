@@ -543,6 +543,17 @@ def run : Nat → Mode → List MTok → R
     | .sym 94 :: rest => do
       -- `C^{\ast k}`, `C^{*k}`: a star before the exponent is the power of a product other
       -- than the product of numbers (the Markov power of a copula, in `unitsquare`)
+      -- `f^\prime`, `f^{\prime\prime}`: the derivatives, as `f'`, `f''`
+      let primes : Option (Nat × List MTok) := match rest with
+        | .cmd p :: more => if p == w!"prime" then some (1, more) else none
+        | .lb :: more =>
+          let ps := more.takeWhile (· == .cmd w!"prime")
+          match more.drop ps.length with
+          | .rb :: more' => if ps.length ≥ 1 then some (ps.length, more') else none
+          | _ => none
+        | _ => none
+      if let some (k, r) := primes then
+        run f (.postfix bar ((List.range k).foldl (fun m _ => MT.sup m (.id [39])) x)) r else
       let starred : Option (MT × List MTok) := match rest with
         | .lb :: star :: more =>
           let isStar := match star with | .sym 42 => true | .cmd c => c == w!"ast" | _ => false
@@ -747,6 +758,21 @@ def run : Nat → Mode → List MTok → R
             | _ => some (.bigop (n == w!"sum") v lo hi body, r4)
           | _ => none
         | _ => none)
+      <|> (do
+        -- `\sum a_n`, `\sum_n a_n`: the series of a sequence's terms, without bounds (read
+        -- where the start of the index does not matter: `$\sum a_n$ converges`)
+        if n != w!"sum" then none
+        match rest with
+        | .sym 95 :: r => do
+          let (b, r1) ← run f .group r
+          let .id v := b | none
+          if r1.head? == some (.sym 94) then none
+          let (body, r2) ← run f (.product false) r1
+          some (.app (.id w!"@sumall") [body, .id v], r2)
+        | .sym 94 :: _ | [] => none
+        | r => do
+          let (body, r2) ← run f (.product false) r
+          some (.app (.id w!"@sumall") [body], r2))
       <|> (do
         -- `\sum_{S\subseteq A} e`: the sum over the subsets of a finite set
         let .sym 95 :: r := rest | none

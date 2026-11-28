@@ -184,8 +184,9 @@ Further fields cover other branches of mathematics:
   bounds, least upper and greatest lower bounds of a set;
 * `realfunctions` (formerly `analysis`): real functions by a noun (`a continuous periodic function $f$`): uniformly
   continuous, Lipschitz, differentiable, smooth, analytic, monotone, convex, even, odd,
-  periodic, injective, surjective, identically zero, nowhere zero, measurable and integrable
-  functions; their fixed points and zeros (roots); the derivative,
+  periodic, injective, surjective, identically zero, nowhere zero, positive, nonnegative,
+  measurable and integrable functions; their fixed points and zeros (roots); the exponential,
+  sine, cosine and identity functions by name; the derivative,
   the supremum norm, the Lipschitz constant, the total variation, the range and the zeros;
 * `vectors`: real vectors of some dimension, a type of its own: `x+y`, `cx`,
   `\lVert x\rVert`, `\langle x,y\rangle`, coordinates, the cross product, angles;

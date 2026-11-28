@@ -12,10 +12,12 @@ continuous function.` or `every bounded increasing function $f$`.
   `increasing` and `nondecreasing`, `decreasing` and `nonincreasing`, `strictly
   increasing`, `strictly decreasing`, `monotone`, `convex`, `concave`, `strictly convex`,
   `even`, `odd`, `periodic`, `$T$-periodic`, `injective`, `surjective`, `bijective`,
-  `constant`, `identically zero` (`zero everywhere`), `nowhere zero`, `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
+  `constant`, `identically zero` (`zero everywhere`), `nowhere zero`, `positive`, `nonnegative`,
+  `negative`, `nonpositive` (at every point), `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
   integrable on $[a,b]$` (and `Riemann integrable` of a function on a domain `[a,b]`),
   `Hölder continuous with exponent $\alpha$`;
-* notions: the derivative, the supremum norm, the Lipschitz constant, the total variation
+* notions: the exponential, sine, cosine and identity functions by their names (`The
+  exponential function is convex.`), the derivative, the supremum norm, the Lipschitz constant, the total variation
   on an interval, the integral over the line, the inverse and the composition, the range,
   the sets of zeros, of fixed points and of critical points.
 
@@ -130,6 +132,10 @@ def vocab : Vocab where
     mod phrase!"surjective" true (fPred fun f => surjective f) "onto `ℝ` (Mathlib `Function.Surjective`)",
     mod phrase!"bijective" true (fPred fun f => and (injective f) (surjective f)) "(Mathlib `Function.Bijective`)",
     mod phrase!"constant" true (fPred fun f => allR fun x => allR fun y => eq (app f x) (app f y)) "`f(x) = f(y)`",
+    mod phrase!"positive" true (fPred fun f => allR fun x => lt (num 0) (app f x)) "`f(x) > 0` for every `x`",
+    mod phrase!"nonnegative" true (fPred fun f => allR fun x => le (num 0) (app f x)) "`f(x) ≥ 0` for every `x`",
+    mod phrase!"negative" true (fPred fun f => allR fun x => lt (app f x) (num 0)) "`f(x) < 0` for every `x`",
+    mod phrase!"nonpositive" true (fPred fun f => allR fun x => le (app f x) (num 0)) "`f(x) ≤ 0` for every `x`",
     mod phrase!"identically zero" true (fPred fun f => allR fun x => eq (app f x) (num 0)) "`f(x) = 0` for every `x`",
     mod phrase!"zero everywhere" true (fPred fun f => allR fun x => eq (app f x) (num 0)) "`f(x) = 0` for every `x`",
     mod phrase!"nowhere zero" true (fPred fun f => allR fun x => not (eq (app f x) (num 0))) "`f(x) ≠ 0` for every `x`",
@@ -153,6 +159,10 @@ def vocab : Vocab where
       pred := close (lamT F (fun _ => tt) fun f => lamT (.real ⟶ .prop) (fun _ => tt) fun d => app2 (const 15) d f),
       doc := "on the domain of the signature, a closed bounded interval up to its end points (Darboux)" }]
   notions := [
+    { name := phrase!"exponential function", value := .prim (.realFn .exp), ty := F, doc := "`exp` (Mathlib `Real.exp`)" },
+    { name := phrase!"sine function", value := .prim (.realFn .sin), ty := F, doc := "`sin` (Mathlib `Real.sin`)" },
+    { name := phrase!"cosine function", value := .prim (.realFn .cos), ty := F, doc := "`cos` (Mathlib `Real.cos`)" },
+    { name := phrase!"identity function", value := .lam .real .tt (.loc 0), ty := F, doc := "`x ↦ x` (Mathlib `id`)" },
     ofF phrase!"derivative of $v$" (.const 7) (F ⟶ F) (some differentiable) "of a differentiable function (Mathlib `deriv`)",
     ofF phrase!"supremum norm of $v$" (.const 8) (F ⟶ .real) (some (fPred fun f => bounded f))
       "`sup |f|`, of a bounded function",

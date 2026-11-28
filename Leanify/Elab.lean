@@ -541,6 +541,11 @@ def lookupLocal : Scope → Codes → Option (Nat × Ty)
   | [], _ => none
   | (n, t) :: sc, x => if n == x then some (0, t) else (lookupLocal sc x).map fun (i, t) => (i + 1, t)
 
+/-- The innermost local of the name whose type is as `p` says. -/
+def lookupLocalTy (p : Ty → Bool) : Scope → Codes → Option (Nat × Ty)
+  | [], _ => none
+  | (n, t) :: sc, x => if n == x && p t then some (0, t) else (lookupLocalTy p sc x).map fun (i, t) => (i + 1, t)
+
 /-- Is `h` a number, so that `h(a)` is a product: a bound real variable (`c`, `B_I` of a
 convention), a sequence of real numbers at an index (`x_n`), or a defined real constant
 (`d_0`)? -/
@@ -739,6 +744,10 @@ def arith (op : OpKey) (a b : Tm × Ty) : M (Tm × Ty) := do
     let zero ← coerce (.num 0) .real t
     return (.guard (.not (.eq y zero)) r.1, r.2)
   return r
+
+/-- `\sum a_n` where its bounds matter. -/
+def sumAllMsg : Codes :=
+  w!"a sum without bounds, `\\sum a_n`, is read only as a series of an infinite sequence that converges or diverges (`$\\sum a_n$ converges`, `converges absolutely`); elsewhere write its bounds, `\\sum_{n=0}^{\\infty} a_n`"
 
 /-- The finding for `\mathbb{F}_p` and `\mathbb{Z}/p\mathbb{Z}`. -/
 def finiteField : Codes :=
@@ -1633,10 +1642,18 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     if let some r ← opTerm f sc pf m then return r
     -- expectations, probabilities, variances of random variables
     if let some r ← probTerm f sc pf m then return r
+    -- (`\sum a_n` without bounds: read only where the start does not matter)
+    if let .app (.id k) _ := m then
+      if k == w!"@sumall" then fail E.finding sumAllMsg
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do
-      match lookupLocal sc n with
+      -- (`a_n\to a`: a sequence `(a_n)` and a number `a` of the same letter; the letter alone
+      -- is the number)
+      let st ← get
+      let seqName := st.infSeqs.any fun (e, k) => k == n && (e == st.curEnv || st.curProved == some e)
+      let hit := if seqName then lookupLocalTy (· == .real) sc n <|> lookupLocal sc n else lookupLocal sc n
+      match hit with
       | some (i, t) =>
         match pf, t with
         | some (s, sty), .fn a b => if a == sty then pure (.app (.loc i) s, b) else pure (.loc i, t)
@@ -2175,10 +2192,17 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
             let j? := (List.range args.length).find? fun i => match (args[i]? : Option MT), (args[i + 1]? : Option MT) with
               | some (.text o), some (.text t) => t == w!"the" && ops.any (·.1 == o)
               | _, _ => false
+            -- (`the maximum degree of $G$ plus $1$`: a notion plus a formula at the end)
+            let j? := j?.orElse fun _ => (List.range args.length).find? fun i => i + 2 == args.length && i > 0 &&
+              (match (args[i]? : Option MT), (args[i + 1]? : Option MT) with
+                | some (.text o), some m => ops.any (·.1 == o) && (match m with | .text _ => false | _ => true)
+                | _, _ => false)
             if let some j := j? then
               let some (.text o) := (args[j]? : Option MT) | fail E.unsupported
               let l := MT.app (.id w!"@the") (args.take j)
-              let r := MT.app (.id w!"@the") (args.drop (j + 2))
+              let r := match args.drop (j + 1) with
+                | [m@(.num _)] | [m@(.id _)] | [m@(.frac _ _)] | [m@(.app _ _)] | [m@(.sup _ _)] | [m@(.sub _ _)] => m
+                | _ => MT.app (.id w!"@the") (args.drop (j + 2))
               let e : MT := match (ops.find? (·.1 == o)).map (·.2) with
                 | some 0 => .add l r
                 | some 1 => .minus l r
@@ -2192,8 +2216,12 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
               | _, _ => false)
             if let some i := i? then
               let inner := args.drop (i + 1)
+              -- (an inner notion with an argument, or a function by its name, `the derivative
+              -- of the sine function`)
+              let namedFn := inner.length ≥ 2 && (match inner.getLast? with | some (.text w) => w == w!"function" | _ => false) &&
+                inner.all fun m => match m with | .text _ => true | _ => false
               if (inner.head?.map fun m => match m with | .text _ => true | _ => false).getD false &&
-                  inner.any (fun m => match m with | .text _ => false | _ => true) then
+                  (namedFn || inner.any (fun m => match m with | .text _ => false | _ => true)) then
                 let st1 ← get
                 if let some r ← tryCatch (some <$> term f sc pf (.app (.id w!"@the") (args.take i ++ [.app (.id w!"@the") inner])))
                     (fun _ => pure none) then
@@ -2886,7 +2914,19 @@ where
         pure r
       match m with
       | .app (.id n) [x] => if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
-      | .app (.id n) [x, y] => if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+      | .app (.id n) [x, y] =>
+        if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+        -- `$S$ contains $x$`: `x\in S` of an element, `x\subseteq S` of a set of the same
+        -- elements (the types decide)
+        if n == w!"@contains" then
+          let st0 ← get
+          if let some r ← tryCatch (some <$> term f sc pf (.chain y [(.mem, x)])) (fun _ => pure none) then
+            if r.2 == .prop then return some r
+          set st0
+          if let some r ← tryCatch (some <$> term f sc pf (.chain y [(.subset, x)])) (fun _ => pure none) then
+            if r.2 == .prop then return some r
+          set st0
+          fail E.type
       | .app (.id n) [x, y, z] => if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
       | _ => pure ()
       let some iv ← hilbertIv | pure none
@@ -3724,7 +3764,9 @@ where
         if key == w!"\\mathbb{F}" then fail E.finding finiteField
         -- `a_n` for an infinite sequence `a` (`Let $(a_n)$ be a sequence of real numbers`): its
         -- term at the natural number `n`; `(a_n)` with an index bound nowhere is the sequence
-        if let some (j, sty) := lookupLocal sc key then
+        -- (the sequence, also where a number of the same letter is bound: `a_n\to a`)
+        let isFn (t : Ty) : Bool := match t with | .fn .real _ => true | _ => false
+        if let some (j, sty) := lookupLocalTy isFn sc key <|> lookupLocal sc key then
           let st ← get
           if st.infSeqs.any (fun (e, k) => k == key && (e == st.curEnv || st.curProved == some e)) then
             if let .fn .real et := sty then

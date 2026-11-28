@@ -1103,6 +1103,10 @@ except a notion whose meanings take arguments of different types, which the type
 | surjective | ℝ → ℝ | onto `ℝ` (Mathlib `Function.Surjective`) |
 | bijective | ℝ → ℝ | (Mathlib `Function.Bijective`) |
 | constant | ℝ → ℝ | `f(x) = f(y)` |
+| positive | ℝ → ℝ | `f(x) > 0` for every `x` |
+| nonnegative | ℝ → ℝ | `f(x) ≥ 0` for every `x` |
+| negative | ℝ → ℝ | `f(x) < 0` for every `x` |
+| nonpositive | ℝ → ℝ | `f(x) ≤ 0` for every `x` |
 | identically zero | ℝ → ℝ | `f(x) = 0` for every `x` |
 | zero everywhere | ℝ → ℝ | `f(x) = 0` for every `x` |
 | nowhere zero | ℝ → ℝ | `f(x) ≠ 0` for every `x` |
@@ -1122,6 +1126,10 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Notion | Type | Meaning |
 | --- | --- | --- |
+| exponential function | ℝ → ℝ | `exp` (Mathlib `Real.exp`) |
+| sine function | ℝ → ℝ | `sin` (Mathlib `Real.sin`) |
+| cosine function | ℝ → ℝ | `cos` (Mathlib `Real.cos`) |
+| identity function | ℝ → ℝ | `x ↦ x` (Mathlib `id`) |
 | derivative of $a$ | (ℝ → ℝ) → ℝ → ℝ | of a differentiable function (Mathlib `deriv`) |
 | supremum norm of $a$ | (ℝ → ℝ) → ℝ | `sup \|f\|`, of a bounded function |
 | lipschitz constant of $a$ | (ℝ → ℝ) → ℝ | the least `L`, of a Lipschitz function |

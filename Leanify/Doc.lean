@@ -2480,6 +2480,21 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
             pure ok
           pure (if fit.isEmpty then cands else fit)
         else pure cands
+      -- (`a set of real numbers containing $0$`, `an open subset of $X$ containing $K$`: the
+      -- object contains it, `x\in S`, or `x\subseteq S` of a set of the same elements)
+      let containing : Option (MT × List Chunk) := match cs with
+        | .w c :: .m ts :: rest =>
+          if c != w!"containing" then none else
+          match Math.parseFormula ts with
+          | some (.chain _ (_ :: _)) | none => none
+          | some x => some (x, rest)
+        | _ => none
+      if let some (x, rest) := containing then
+        let v : Codes := w!"@obj"
+        let sc : Scope := [(v, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer
+        let (p, pty) ← Elab.term 100000 sc none (.app (.id w!"@contains") [.id v, x])
+        if pty != .prop then fail E.type
+        post f rel rest (Tm.lam ty .tt p :: acc) else
       -- (`not coprime to $n$`: the negation of a modifier, as `that is not coprime to $n$`)
       let negated : Option (List Chunk) := if !cands.isEmpty then none else match cs with
         | .w n :: rest => if n == w!"not" then some rest else none
@@ -2835,6 +2850,19 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       some (np.take k ++ [.m v, .w w!"of", .m x] ++ rest)
     | _ => none
   if let some np' := varAfterComp then
+    if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
+    set st00
+  -- (`convergent sequence $(a_n)$ of real numbers with …`: a sequence's variable before the
+  -- words of its terms, as `convergent sequence of real numbers $(a_n)$ with …`)
+  let seqBeforeOf : Option (List Chunk) := do
+    let k ← np.findIdx? fun c => match c with | .m _ => true | _ => false
+    let .m v :: .w o :: post := np.drop k | none
+    if o != w!"of" || !Grammar.seqParenName v then none
+    let words := post.takeWhile fun c => match c with
+      | .w w => w != w!"with" && w != w!"such" && w != w!"that" && w != w!"which" | .p 45 => true | _ => false
+    if words.isEmpty then none
+    some (np.take k ++ [.w o] ++ words ++ [.m v] ++ post.drop words.length)
+  if let some np' := seqBeforeOf then
     if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
     set st00
   -- (`with more than $n-1$ edges`: `with at least $\lfloor n-1\rfloor+1$ edges`; `fewer than`,
@@ -5752,6 +5780,33 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.imp h p)
   | .notions s names disj => do
     let st ← get
+    -- `$\sum a_n$ converges`: the series of the terms of an infinite sequence `(a_n)` (from
+    -- the index `0`; the start does not matter for convergence)
+    let s : MT := match s with
+      | .app (.id k) args =>
+        if k != w!"@sumall" || !(names.all fun n => n == [w!"convergent"] || n == [w!"divergent"] || n == [w!"absolutely", w!"convergent"]) then s else
+        let body := args.headD (.num 0)
+        let isSeq (a : Codes) : Bool := (Elab.lookupLocal sc a).isSome &&
+          st.infSeqs.any fun (e, n) => n == a && (e == st.curEnv || st.curProved == some e)
+        let rec idxs : Nat → MT → List Codes
+          | 0, _ => []
+          | f + 1, m => match m with
+            | .sub (.id a) (.id i) => if isSeq a then [i] else []
+            | .add x y | .minus x y | .mul x y | .div x y | .frac x y | .sup x y => idxs f x ++ idxs f y
+            | .neg x | .abs x => idxs f x
+            | .app _ xs => xs.flatMap (idxs f)
+            | _ => []
+        let v? : Option Codes := match args with
+          | [_, .id v] => some v
+          | _ => match (idxs 30 body).eraseDups with
+            | [v] => some v
+            | _ => none
+        match v? with
+        | some v =>
+          if (Elab.lookupLocal sc v).isSome || (idxs 30 body).isEmpty then s
+          else .bigop true v (.num 0) (.id w!"\\infty") body
+        | none => s
+      | _ => s
     -- `$\sum_{k=0}^\infty a_k$ converges` (`is convergent`), `diverges`: of the series
     if let [[w]] := names then
       if w == w!"convergent" || w == w!"divergent" then

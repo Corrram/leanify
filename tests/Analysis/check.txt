@@ -72,7 +72,20 @@ tests/Analysis/article.tex:167:1: info: claim 51: \top\land (\forall x\in \mathb
 tests/Analysis/article.tex:167:41: info: claim 52: \operatorname{convex}((x\in \mathbb{R}\mapsto \exp(x)))\text{ on }\{x:\top\}
 tests/Analysis/article.tex:167:59: info: claim 53: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(x)\text{ on }\{z:\top\}\Rightarrow \operatorname{continuous}((y\in \mathbb{R}\mapsto \exp(x(y))))\text{ on }\{y:\top\}
 tests/Analysis/article.tex:167:123: info: claim 54: \operatorname{increasing}((x\in \mathbb{R}\mapsto \log(x)))\text{ on }\{x:0<x\}
-tests/Analysis/article.tex: 5 definitions, 55 claims
+tests/Analysis/article.tex:171:1: info: claim 55: \operatorname{convex}(\exp)\text{ on }\{y:\top\}
+tests/Analysis/article.tex:171:37: info: claim 56: \operatorname{increasing}(\exp)\text{ on }\{y:\top\}\land (\forall y\in \mathbb{R},\ 0<\exp(y))
+tests/Analysis/article.tex:171:99: info: claim 57: \exists y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \lvert \sin(z)\rvert\le y
+tests/Analysis/article.tex:171:129: info: claim 58: \forall x\in \mathbb{R},\ \sin'(x)=\cos(x)
+tests/Analysis/article.tex:171:129: info: claim 58 is meaningful if: \forall x\in \mathbb{R},\ \operatorname{differentiable}(\sin)\text{ on }\{z:\top\}
+tests/Analysis/article.tex:171:189: info: claim 59: \operatorname{continuous}((x\in \mathbb{R}\mapsto x))\text{ on }\{y:\top\}
+tests/Analysis/article.tex:175:85: info: claim 60: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{nonnegative}(z)\text{ on }\{a:x\le a\land a\le y\}\land \operatorname{continuous}(z)\text{ on }\{a:x\le a\land a\le y\}\land \int_{x}^{y}z(a)\,da=0\Rightarrow (\forall s\in \mathbb{R},\ x\le s\land s\le y\Rightarrow z(s)=0)
+tests/Analysis/article.tex:175:85: info: claim 60 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{nonnegative}(z)\text{ on }\{t:x\le t\land t\le y\}\Rightarrow \operatorname{continuous}(z)\text{ on }\{t:x\le t\land t\le y\}\Rightarrow \operatorname{Int}((s\in \mathbb{R}\,[x\le s\land s\le y\lor y\le s\land s\le x]\mapsto z(s)))(x)(y)
+tests/Analysis/article.tex:175:152: info: claim 61: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ 0<x(z))\Rightarrow 0<x(0)
+tests/Analysis/article.tex:175:238: info: claim 62: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{s:\top\}\land (\forall s\in \mathbb{R},\ (\tfrac{\mathrm{d}}{\mathrm{d}b}x(b)\big|_{b=s})=0)\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s))
+tests/Analysis/article.tex:175:238: info: claim 62 is meaningful if: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{differentiable}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R},\ \exists z\in \mathbb{R},\ ((s\in \mathbb{R}\mapsto x(s)))'(y)=z\text{ within }(s\in \mathbb{R}\mapsto \top)\land (\forall s\in \mathbb{R},\ ((t\in \mathbb{R}\mapsto x(t)))'(y)=s\text{ within }(t\in \mathbb{R}\mapsto \top)\Rightarrow s=z))
+tests/Analysis/article.tex:179:89: info: claim 63: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{s:x\le s\land s\le y\}\land \operatorname{differentiable}(z)\text{ on }\{s:x<s\land s<y\}\Rightarrow (\exists s\in \mathbb{R},\ (x<s\land s<y)\land z(y)-z(x)=(\tfrac{\mathrm{d}}{\mathrm{d}b}z(b)\big|_{b=s})\,(y-x))
+tests/Analysis/article.tex:179:89: info: claim 63 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R}\to \mathbb{R},\ ((\forall s\in \mathbb{R},\ x\le s\land s\le y\Rightarrow x\le s\land s\le y)\land (\operatorname{continuous}(z)\text{ on }\{s:x\le s\land s\le y\}\Rightarrow (\forall s\in \mathbb{R},\ x<s\land s<y\Rightarrow x\le s\land s\le y)))\land (\operatorname{continuous}(z)\text{ on }\{s:x\le s\land s\le y\}\land \operatorname{differentiable}(z)\text{ on }\{s:x<s\land s<y\}\Rightarrow (\forall s\in \mathbb{R},\ x<s\land s<y\Rightarrow (\exists t\in \mathbb{R},\ ((a\in \mathbb{R}\mapsto z(a)))'(s)=t\text{ within }(a\in \mathbb{R}\mapsto \top)\land (\forall a\in \mathbb{R},\ ((b\in \mathbb{R}\mapsto z(b)))'(s)=a\text{ within }(b\in \mathbb{R}\mapsto \top)\Rightarrow a=t))))
+tests/Analysis/article.tex: 5 definitions, 64 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 87 compiled, 0 failed, 0 prose (of 87)
-  all: 91 compiled, 0 failed, 0 prose (of 91)
+  results: 100 compiled, 0 failed, 0 prose (of 100)
+  all: 104 compiled, 0 failed, 0 prose (of 104)
