@@ -1455,6 +1455,11 @@ def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) 
     | .m t :: .w w :: _ => if t.contains (.cmd w!"times") || w == w!"times" then adjs ++ [.m t] else []
     | _ => []
   let r := r.drop lead.length
+  -- (`independent $d$-dimensional random vectors`: a condition on all of them, before the formula)
+  let (lead, psLead) : List Chunk × List Codes :=
+    if lead.isEmpty then (lead, []) else
+    let (a, ps) := collectiveWords 8 adjs
+    (a ++ lead.drop adjs.length, ps)
   let ws := r.takeWhile fun c => match c with
     | .w w => w != w!"with" && w != w!"such" && w != w!"then" && w != w!"and"
     | .p 45 => true
@@ -1480,6 +1485,7 @@ def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) 
     | _, _ => none
   if let some (head, tailPhrase, r2) := slotted then
     let (head, ps) := collectiveWords 8 head
+    let ps := psLead ++ ps
     let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
     let nouns := vars.map fun v => Bind.noun (lead ++ head ++ [.m v] ++ tailPhrase)
     return (match withConds r2 with
@@ -1487,6 +1493,7 @@ def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) 
       | none => (.many (nouns ++ together), r2))
   -- `distinct`, `relatively prime`: a condition on all of them
   let (ws, ps) := collectiveWords 8 ws
+  let ps := psLead ++ ps
   let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
   -- `$v,w\in A$ are distinct`: the variables of their domain, together
   if ws.isEmpty then

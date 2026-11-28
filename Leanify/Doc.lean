@@ -571,8 +571,12 @@ def relationTok (t : Tok) : Bool :=
       w!"subsetneq", w!"supsetneq", w!"coloneqq"].contains c
   | _ => false
 
-/-- `\stackrel{(a)}{\le}`, `\overset{\text{def}}{=}`: the relation, its annotation dropped (a
-reason for it, or a reference); `def`, `\triangle` or `:` above `=` make it `\coloneqq`. -/
+/-- `\stackrel{(a)}{\le}`, `\overset{\text{def}}{=}`, `\stackrel{d}{=}`: a relation with an
+annotation above it. `def`, `\triangle` or `:` above `=` make it `\coloneqq`; `d`, `D`,
+`\mathcal{D}`, `\mathcal{L}`, `law` or `dist` above `=` make it equality in distribution. An
+annotation that is a label or a reference (`(a)`, `(2.3)`, `\eqref{…}`, `*`) or a reason
+in words (`\text{by (2)}`, `\text{IH}`) is dropped. Any other annotation may change what
+the relation says (`a.s.`, `n\to\infty`, `!`), and the notation is then not read. -/
 def annotatedRel : Nat → List PTok → List PTok
   | 0, ts => ts
   | _ + 1, [] => []
@@ -594,8 +598,24 @@ def annotatedRel : Nat → List PTok → List PTok
             | _ => []
           let isDef := letters == w!"def" || letters == w!"Def" ||
             (above.length == 1 && (above.head?.any fun u => u.tok == .cmd w!"triangle" || u.tok == .msym 58))
+          -- (the letters alone, in any font: `d`, `\mathrm{d}`, `\mathcal{D}`, `\text{law}`)
+          let plain := above.all fun u => match u.tok with
+            | .mvar _ | .word _ | .lbrace | .rbrace => true
+            | .cmd c => [w!"mathrm", w!"mathcal", w!"mathscr", w!"text", w!"textrm", w!"mathit", w!"operatorname", w!"scriptscriptstyle", w!"scriptstyle"].contains c
+            | _ => false
+          let isLaw := plain && [w!"d", w!"D", w!"L", w!"law", w!"dist", w!"distr"].contains letters
+          let isRef := above.any fun u => match u.tok with
+            | .cmd c => [w!"ref", w!"eqref", w!"cref", w!"Cref", w!"cite", w!"ast", w!"star", w!"dagger"].contains c
+            | .msym 40 | .msym 41 | .msym 42 | .punct 40 | .punct 41 | .punct 42 => true
+            | _ => false
+          -- (a reason in words: not the abbreviations that say how the relation holds)
+          let isWords := !above.isEmpty && !above.any (fun u => match u.tok with | .mvar _ => true | _ => false) &&
+            (above.any fun u => match u.tok with | .word _ => true | _ => false) &&
+            ![w!"as", w!"ae", w!"a", w!"p", w!"P", w!"prob", w!"wp", w!"d", w!"D", w!"L", w!"law", w!"dist", w!"distr", w!"def", w!"Def"].contains letters
           if isDef && rel.tok == .msym 61 then ⟨.cmd w!"coloneqq", rel.pos, rel.math⟩ :: annotatedRel f r4
-          else rel :: annotatedRel f r4
+          else if isLaw && rel.tok == .msym 61 then ⟨.cmd w!"leanifyeqd", rel.pos, rel.math⟩ :: annotatedRel f r4
+          else if isRef || isWords then rel :: annotatedRel f r4
+          else keep
         | _ => keep
       | _ => keep
     | [] => keep

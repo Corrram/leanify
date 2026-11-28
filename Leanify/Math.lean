@@ -27,6 +27,8 @@ inductive Rel where
   | dvd | ndvd
   /-- `a\equiv b`: a congruence, read only with its modulus (`\pmod m`). -/
   | equiv
+  /-- `X\stackrel{d}{=}Y`: the random variables `X` and `Y` have the same distribution. -/
+  | eqd
   deriving DecidableEq, Repr, Lean.ToExpr
 
 inductive MT where
@@ -305,6 +307,7 @@ def relOf : MTok → Option Rel
     else if n == w!"mid" || n == w!"divides" then some .dvd
     else if n == w!"nmid" then some .ndvd
     else if n == w!"equiv" then some .equiv
+    else if n == w!"leanifyeqd" then some .eqd
     else none
   | _ => none
 
@@ -504,6 +507,14 @@ abbrev R := Option (MT × List MTok)
 def expect (t : MTok) : List MTok → Option (List MTok)
   | u :: us => if u == t then some us else none
   | [] => none
+
+/-- A chain of relations. `X\stackrel{d}{=}Y` alone is the collective condition that `X`
+and `Y` are identically distributed (field `randomvariables`). -/
+def chainOf (x : MT) (rels : List (Rel × MT)) : MT :=
+  match rels with
+  | [] => x
+  | [(.eqd, y)] => .app (.id (("@identdist".toList).map Char.toNat)) [x, y]
+  | _ => .chain x rels
 
 /-- One structurally recursive parser with explicit modes (kernel-reducible). -/
 def run : Nat → Mode → List MTok → R
@@ -1089,9 +1100,9 @@ where
             let rest' := rest.dropWhile fun u => match u with
               | .digit _ | .sym 46 | .cmd [108, 100, 111, 116, 115] | .cmd [100, 111, 116, 115] => true
               | _ => false
-            some (if acc.isEmpty then x else .chain x acc.reverse, rest')
-          else some (if acc.isEmpty then x else .chain x acc.reverse, ts)
-      | [] => some (if acc.isEmpty then x else .chain x acc.reverse, ts)
+            some (chainOf x acc.reverse, rest')
+          else some (chainOf x acc.reverse, ts)
+      | [] => some (chainOf x acc.reverse, ts)
   addRest : Nat → Bool → MT → List MTok → R
     | 0, _, _, _ => none
     | g + 1, bar, x, ts =>

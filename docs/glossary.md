@@ -102,6 +102,7 @@ except a notion whose meanings take arguments of different types, which the type
     * `statistics`
       * `probability`
         * `randomvariables`
+        * `randomvectors`
         * `distributions`
         * `densities`
         * `information`
@@ -171,12 +172,12 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
 | `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` |
 | `topology` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` |
-| `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
+| `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
 | `discrete` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` | `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs` |
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` |
@@ -185,9 +186,9 @@ except a notion whose meanings take arguments of different types, which the type
 | `groups` | `structures` | `structures` |
 | `rings` | `structures` | `structures` |
 | `spaces` | `structures` | `structures` |
-| `probability` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
+| `probability` | `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` | `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting` |
 | `dependence` | `copulas` | `copulas` |
-| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `dependence` | `randomvariables`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas` |
+| `statistics` | `probability`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `dependence` | `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas` |
 
 ## `core`
 
@@ -4192,4 +4193,197 @@ except a notion whose meanings take arguments of different types, which the type
 | Notation | On | Meaning |
 | --- | --- | --- |
 | $\operatorname{@at}$ | $\mathrm{RV}$ | the value at an outcome, inside `\mathbb{E}[…]` and `P(…)` |
+
+## `randomvectors`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| vector | $\mathrm{Vec}$ | a real vector of some dimension (Mathlib `Fin n → ℝ`) |
+| unit vector | $\mathrm{Vec}$ | of norm 1 |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix, `n ≥ 1` |
+| eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
+| eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
+| complex number | $\mathbb{C}$ | a complex number (Mathlib `ℂ`) |
+| entire function | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at every point (Mathlib `Differentiable ℂ`) |
+| subset $x$ of $\mathbb{C}$ | $\mathbb{C}$ → Prop | a set of complex numbers |
+| set of complex numbers | $\mathbb{C}$ → Prop | (Mathlib `Set ℂ`) |
+| polynomial with complex coefficients | $\mathbb{C}$ → $\mathbb{C}$ | a polynomial function `z ↦ p(z)` for some `p ∈ ℂ[X]` (Mathlib `Polynomial.eval`) |
+| complex polynomial | $\mathbb{C}$ → $\mathbb{C}$ | a polynomial with complex coefficients (Mathlib `Polynomial ℂ`) |
+| domain in $\mathbb{C}$ | $\mathbb{C}$ → Prop | an open connected set of complex numbers |
+| random vector | $\mathrm{RVec}$ | a function of the outcome, on `[0,1]` with Lebesgue measure, into the real vectors of one dimension, with measurable coordinates (Mathlib `Measurable`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| nonzero | $\mathrm{Vec}$ | not the zero vector |
+| unit | $\mathrm{Vec}$ | of norm 1 |
+| in $\mathbb{R}^x$ | $\mathrm{Vec}$ | of dimension `n` |
+| in $\mathbb{R}^{x}$ | $\mathrm{Vec}$ | of dimension `n` |
+| of dimension $x$ | $\mathrm{Vec}$ | in `ℝⁿ` |
+| orthogonal to $x$ | $\mathrm{Vec}$ | of the same dimension, with inner product 0 |
+| parallel to $x$ | $\mathrm{Vec}$ | of the same dimension, one a multiple of the other |
+| square | $\mathrm{Mat}$ | `n × n` |
+| real | $\mathrm{Mat}$ | a matrix of real numbers (every matrix is) |
+| symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
+| skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
+| orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
+| invertible | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| nonsingular | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| singular | $\mathrm{Mat}$ | square, with `det A = 0` |
+| positive definite | $\mathrm{Mat}$ | `xᵀAx > 0` for `x ≠ 0`, and symmetric (Mathlib `Matrix.PosDef`) |
+| positive semidefinite | $\mathrm{Mat}$ | `xᵀAx ≥ 0`, and symmetric (Mathlib `Matrix.PosSemidef`) |
+| diagonal | $\mathrm{Mat}$ | square, zero off the diagonal |
+| upper triangular | $\mathrm{Mat}$ | square, zero below the diagonal |
+| lower triangular | $\mathrm{Mat}$ | square, zero above the diagonal |
+| nilpotent | $\mathrm{Mat}$ | square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`) |
+| idempotent | $\mathrm{Mat}$ | square, `A² = A` |
+| stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
+| diagonalizable | $\mathrm{Mat}$ | `P⁻¹AP` diagonal for an invertible real `P` |
+| with $x$ distinct eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`) |
+| with $x$ distinct real eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues |
+| orthogonally diagonalizable | $\mathrm{Mat}$ | `QᵀAQ` diagonal for an orthogonal `Q` |
+| similar to $x$ | $\mathrm{Mat}$ | `B = P⁻¹AP` for an invertible `P` |
+| $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
+| of size $x\timesa$ | $\mathrm{Mat}$ | `m × n` |
+| of order $x$ | $\mathrm{Mat}$ | `n × n` |
+| of rank $x$ | $\mathrm{Mat}$ | (Mathlib `Matrix.rank`) |
+| entire | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at every point (Mathlib `Differentiable ℂ`) |
+| bounded | $\mathbb{C}$ → $\mathbb{C}$ | `‖f(z)‖ ≤ M` for all `z` |
+| constant | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = f(w)` for all `z`, `w` |
+| nonconstant | $\mathbb{C}$ → $\mathbb{C}$ | not constant |
+| holomorphic on $x$ | $\mathbb{C}$ → $\mathbb{C}$ | complex differentiable at the points of `U` (Mathlib `DifferentiableOn ℂ`) |
+| holomorphic | $\mathbb{C}$ → $\mathbb{C}$ | on the domain of the signature `f\colon U\to\mathbb{C}` (Mathlib `DifferentiableOn ℂ`) |
+| with a root in $x$ | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some `z ∈ U` (also `has a root in $U$`) |
+| with a zero in $x$ | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some `z ∈ U` |
+| with a root | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some complex number `z` |
+| with a complex root | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some complex number `z` (also `has a complex root`) |
+| nonzero | $\mathbb{C}$ | `z ≠ 0` |
+| real | $\mathbb{C}$ | `Im z = 0` |
+| of modulus $x$ | $\mathbb{C}$ | `\|z\| = r` |
+| with modulus $x$ | $\mathbb{C}$ | `\|z\| = r` |
+| without zeros | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) ≠ 0` for every complex number `z` (also `has no zeros`) |
+| open | $\mathbb{C}$ → Prop | (Mathlib `IsOpen`) |
+| connected | $\mathbb{C}$ → Prop | nonempty, and connected (Mathlib `IsConnected`) |
+| $x$-dimensional | $\mathrm{RVec}$ | with values in `ℝᵈ` |
+| in $\mathbb{R}^x$ | $\mathrm{RVec}$ | of dimension `d` |
+| in $\mathbb{R}^{x}$ | $\mathrm{RVec}$ | of dimension `d` |
+| of dimension $x$ | $\mathrm{RVec}$ | with values in `ℝᵈ` |
+| integrable | $\mathrm{RVec}$ | every coordinate is integrable (Mathlib `Integrable`) |
+| independent of $x$ | $\mathrm{RVec}$ | `P(X ≤ s, Y ≤ t) = P(X ≤ s) P(Y ≤ t)` for all vectors `s`, `t`, coordinatewise (Mathlib `IndepFun`) |
+| equal in distribution to $x$ | $\mathrm{RVec}$ | the same dimension and the same joint distribution function (Mathlib `IdentDistrib`) |
+| with the same distribution as $x$ | $\mathrm{RVec}$ | the same dimension and the same joint distribution function |
+| with joint distribution function $x$ | $\mathrm{RVec}$ | `P(X ≤ t) = F(t)` for every vector `t` of the dimension of `X`, coordinatewise (Mathlib `HasLaw`, by the distribution function) |
+| with characteristic function $x$ | $\mathrm{RVec}$ | `E[e^{i⟨t,X⟩}] = φ(t)` for every vector `t` of the dimension of `X` (Mathlib `charFun`) |
+
+| Adjective | Of | Meaning |
+| --- | --- | --- |
+| holomorphic [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | on the domain of its signature, or on the set after `on` (Mathlib `DifferentiableOn ℂ`) |
+| bounded [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | `‖f(z)‖ ≤ M` on the domain |
+| constant [on $A$] | $\mathbb{C}$ → $\mathbb{C}$ | the same value at any two points of the domain |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| dimension of $a$ | $\mathrm{Vec}$ → ℝ | `n`, for a vector in `ℝⁿ` |
+| norm of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm (Mathlib `EuclideanSpace`) |
+| length of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm |
+| inner product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension (Mathlib `inner`) |
+| dot product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension |
+| $a$ th coordinate of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `xᵢ`, for `1 ≤ i ≤ n` |
+| distance between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `‖x - y‖`, of vectors of the same dimension |
+| angle between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | in `[0, π]`, of nonzero vectors of the same dimension (Mathlib `InnerProductGeometry.angle`) |
+| cross product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → $\mathrm{Vec}$ | of vectors of dimension 3 (Mathlib `crossProduct`) |
+| zero vector of dimension $a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| zero vector in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| $a$ th standard basis vector of dimension $b$ | ℝ → ℝ → $\mathrm{Vec}$ | `eᵢ ∈ ℝⁿ`, for `1 ≤ i ≤ n` |
+| sum of the coordinates of $a$ | $\mathrm{Vec}$ → ℝ | `∑ xᵢ` |
+| set of vectors in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| set of vectors of dimension $a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| number of rows of $a$ | $\mathrm{Mat}$ → ℝ | `m` |
+| number of columns of $a$ | $\mathrm{Mat}$ → ℝ | `n` |
+| entry of $a$ in row $b$ and column $c$ | $\mathrm{Mat}$ → ℝ → ℝ → ℝ | `A i j`, for `1 ≤ i ≤ m`, `1 ≤ j ≤ n` |
+| determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
+| trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
+| rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
+| row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
+| nullity of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`) |
+| transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
+| inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
+| identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| identity matrix of order $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ identity matrix | ℝ → ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
+| set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| dimension of $a$ | $\mathrm{RVec}$ → ℝ | `d`, for a random vector with values in `ℝᵈ` |
+| characteristic function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → $\mathbb{C}$ | `t ↦ E[e^{i⟨t,X⟩}]`, on the vectors of the dimension of `X` (Mathlib `charFun`) |
+| joint distribution function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → ℝ | `t ↦ P(X ≤ t)`, coordinatewise, on the vectors of the dimension of `X` |
+| mean vector of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
+| expectation of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
+| expected value of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
+| mean of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
+| expectation of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
+| expected value of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
+
+| Symbol | Type | Meaning |
+| --- | --- | --- |
+| $\mathbb{C}$ | $\mathbb{C}$ | the complex numbers (Mathlib `ℂ`), as a domain |
+| $\mathrm{i}$ | $\mathbb{C}$ | the imaginary unit (Mathlib `Complex.I`) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Vec}$ | a real number `c` as the vector `(c)` of dimension 1 |
+| $+$ | $\mathrm{Vec}$ | `x + y`, of the same dimension |
+| $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
+| $-$ (sign) | $\mathrm{Vec}$ | `-x` |
+| $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
+| $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
+| a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
+| $+$ | $\mathrm{Mat}$ | `A + B`, of the same size |
+| $-$ | $\mathrm{Mat}$ | `A - B`, of the same size |
+| $-$ (sign) | $\mathrm{Mat}$ | `-A` |
+| $\cdot$ | $\mathrm{Mat}$ | `AB` (`cA` for a `1 × 1` matrix `c`) |
+| $/$ | $\mathrm{Mat}$ | `A B⁻¹`, for an invertible `B` (`1/A = A⁻¹`) |
+| $x^n$ | $\mathrm{Mat}$ | `A^k` of a square matrix, `k` natural |
+| $x^\top$ | $\mathrm{Mat}$ | `Aᵀ` (also `A^T`, `A^\intercal`) |
+| $\det$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{det}$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
+| $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| a real number | $\mathbb{C}$ | a real number `x` as the complex number `(x : ℂ)` |
+| $+$ | $\mathbb{C}$ | `z + w` |
+| $-$ | $\mathbb{C}$ | `z - w` |
+| $\cdot$ | $\mathbb{C}$ | `z * w` |
+| $/$ | $\mathbb{C}$ | `z / w`, for `w ≠ 0` |
+| $-$ (sign) | $\mathbb{C}$ | `-z` |
+| $x^n$ | $\mathbb{C}$ | `z ^ n`, for a natural number `n` |
+| $\lvert x\rvert$ | $\mathbb{C}$ | the modulus `‖z‖` |
+| $\overline{x}$ | $\mathbb{C}$ | the conjugate `starRingEnd ℂ z` |
+| $\bar{x}$ | $\mathbb{C}$ | the conjugate `starRingEnd ℂ z` |
+| $\Re$ | $\mathbb{C}$ | the real part `z.re` |
+| $\operatorname{Re}$ | $\mathbb{C}$ | the real part `z.re` |
+| $\Im$ | $\mathbb{C}$ | the imaginary part `z.im` |
+| $\operatorname{Im}$ | $\mathbb{C}$ | the imaginary part `z.im` |
+| $\exp$ | $\mathbb{C}$ | `Complex.exp z` (also `e^{z}`) |
+| $'{x}$ | $\mathbb{C}$ → $\mathbb{C}$ | `f'`, the complex derivative: at `z`, the `d` with `HasDerivAt f d z` (Mathlib `deriv`), defined where `f` is complex differentiable (on the domain of the signature `f\colon U\to\mathbb{C}`) |
+| $\sum_{k=a}^{b}$ | $\mathbb{C}$ | `∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
+| $\prod_{k=a}^{b}$ | $\mathbb{C}$ | `∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
+| a real number | $\mathrm{RVec}$ | a real number `c` as the constant random vector `(c)` of dimension 1 |
+| $+$ | $\mathrm{RVec}$ | `X + Y`, of the same dimension |
+| $-$ | $\mathrm{RVec}$ | `X - Y`, of the same dimension |
+| $-$ (sign) | $\mathrm{RVec}$ | `-X` |
+| $\cdot$ | $\mathrm{RVec}$ | `cX`, for a random vector `c` of dimension 1 (a number) |
+| $\operatorname{@identdist}$ | $\mathrm{RVec}$ | `X\stackrel{d}{=}Y`, `identically distributed`: the same dimension and the same joint distribution function |
+| $\operatorname{@indep}$ | $\mathrm{RVec}$ | `independent`, of two random vectors: the joint distribution function of the coordinates of both is the product of theirs |
+| $\operatorname{@of}$ | $\mathrm{RVec}$ | a vector `b` as the constant random vector (`X + b`) |
+| $\operatorname{@act}$ | $\mathrm{RVec}$ | `AX`, for a matrix `A` with as many columns as `X` has coordinates: `ω ↦ A X(ω)` |
+| $\operatorname{@act}$ | $\mathrm{Vec}$ | `Ab`, for a matrix `A` with as many columns as the vector `b` has coordinates (Mathlib `Matrix.mulVec`) |
+| $\operatorname{@sim}$ | $\mathrm{RVec}$ | `X\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X` |
 

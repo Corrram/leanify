@@ -146,7 +146,7 @@ functions, ODEs, epidemic and population models, pharmacokinetics, calculus of v
 matrices, majorization, polynomials, quadratics and cubics, groups, rings, fields and vector spaces with their elements, finite fields, Lie algebras), `topology` (topologies and metrics on the line, plane
 geometry, conics, triangles, solids, polyhedra, the sphere, map projections, surfaces, curves and fractals), `numerics` (approximation, quadrature, iterative methods, ODE
 solvers, matrix norms, descent methods, floating-point arithmetic, convergence acceleration), `stochastic`
-(probability on the unit square, on the natural numbers and by densities, information,
+(probability on the unit square, on the natural numbers and by densities, random vectors, information,
 risk measures, stochastic orders, Markov chains, branching processes, random walks, Poisson processes, extremes, population genetics, betting, geometric probability, copulas, samples, regression, time series, tests, Bayesian updating, diagnostic tests, machine learning, survey sampling, variograms, finance, bonds, options, expected utility, economics, macroeconomics, games, ratings, queues, reliability, actuarial mathematics, inventory models, voting, traffic, information channels, concentration bounds), `discrete` (combinatorics, words, permutations,
 graphs, graph counts, recurrences, codes, algorithms, combinatorial games, designs) and `numbertheory` (primes, arithmetic functions, congruences, special numbers, the
 distribution of primes, continued fractions, digits, the Collatz map,

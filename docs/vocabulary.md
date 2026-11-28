@@ -317,6 +317,13 @@ Further fields cover other branches of mathematics:
   `\mathbb{E}[…]`, `P(…)`, `P(A\mid B)`, `\operatorname{Var}`, `\operatorname{Cov}`,
   independence and identical distribution, the normal, exponential, uniform, Poisson,
   Bernoulli and binomial distributions (also `$X\sim N(\mu,\sigma^2)$`), and events;
+* `randomvectors` (loads `vectors`, `matrices` and `complex`, and shares their types with
+  the other fields that have them): random vectors on one probability space, with values in
+  `ℝᵈ`: their sums and multiples, `$X+b$` for a vector and `$AX$` for a matrix, equality in
+  distribution (`$X\stackrel{d}{=}Y$`), `$X\sim F$` for a distribution function,
+  independence, integrability, the characteristic function (`For a random vector $X$, let
+  $\varphi_X$ denote the characteristic function of $X$.`), the joint distribution function and
+  the mean vector;
 * `markovchains` (loads `matrixnorms`): doubly stochastic, irreducible and primitive
   transition matrices, absorbing states, stationary and reversible distributions,
   `k`-step transition probabilities.

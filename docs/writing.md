@@ -758,9 +758,13 @@ switches `\rm`, `\sf`; `\smash{x}`, `\ensuremath{x}` and `\raisebox{…}{x}` are
 nothing. `\mathsf`, `\mathfrak`, `\mathscr`, `\mathtt`, `\boldsymbol`, `\bm`, `\EuScript`,
 `\mathpzc`, `\mathds`, `\mathbbm` and `\pmb` name a symbol as `\mathcal` and `\mathbb` do, and so do
 the old switches `{\cal G}`, `\bf x`, `\Bbb R` (`\mathcal{G}`, `\mathbf{x}`, `\mathbb{R}`). `{n
-\choose k}` is `\binom{n}{k}`. A relation with a note above it, `\stackrel{(a)}{\le}` or
-`\overset{(1)}{=}`, is the relation (the note is a reason); `\overset{\text{def}}{=}` (`def`,
-`\triangle` or `:` above `=`) is `\coloneqq`.
+\choose k}` is `\binom{n}{k}`. A relation with a note above it that is a label, a reference or a reason in words,
+`\stackrel{(a)}{\le}`, `\overset{\eqref{eq:1}}{=}` or `\stackrel{\text{by assumption}}{=}`, is the
+relation; `\overset{\text{def}}{=}` (`def`, `\triangle` or `:` above `=`) is `\coloneqq`;
+`\stackrel{d}{=}` (`d`, `D`, `\mathcal{D}`, `\mathcal{L}`, `law` or `dist` above `=`) is equality in
+distribution, of two random variables (field `randomvariables`) or two random vectors (field
+`randomvectors`). Any other note may change what the relation says (`\stackrel{\text{a.s.}}{=}`,
+`\stackrel{n\to\infty}{\to}`, `\stackrel{!}{\le}`): the formula is then not read.
 
 `A\subsetneq B` (`\subsetneqq`, `\varsubsetneq`) is `A\subseteq B` and `A\neq B`, and `A\supsetneq
 B` the same the other way; `Let $A\subsetneq X$.` binds a subset of `X` other than `X`. `\subset`

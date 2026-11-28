@@ -54,6 +54,8 @@ tests/RandomVariables/article.tex:108:1: info: claim 26 is meaningful if: \foral
 tests/RandomVariables/article.tex:112:31: info: claim 27: \forall x\in \mathrm{RV},\ \operatorname{RV}(x)\Rightarrow \int_{\{y:(0\le y\land y\le 1)\land x(y)\le 1\}}1\,dy\le 1
 tests/RandomVariables/article.tex:112:31: info: claim 28: \forall x\in \mathrm{RV},\ \operatorname{RV}(x)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \int_{\{z:(0\le z\land z\le 1)\land y\le \lvert x(z)\rvert\}}1\,dz\le \frac{\int_{\{z:0\le z\land z\le 1\}}\lvert x(z)\rvert\,dz}{y})
 tests/RandomVariables/article.tex:112:31: info: claim 28 is meaningful if: \forall x\in \mathrm{RV},\ \operatorname{RV}(x)\Rightarrow (\forall y\in \mathbb{R},\ 0<y\Rightarrow \operatorname{Int}((z\in \mathbb{R}\mapsto \lvert x(z)\rvert))((z\in \mathbb{R}\mapsto 0\le z\land z\le 1))\land \neg (y=0))
-tests/RandomVariables/article.tex: 0 definitions, 29 claims
-  results: 52 compiled, 0 failed, 0 prose (of 52)
-  all: 52 compiled, 0 failed, 0 prose (of 52)
+tests/RandomVariables/article.tex:116:63: info: claim 29: \forall x\in \mathrm{RV},\ \operatorname{RV}(x)\Rightarrow (\forall y\in \mathrm{RV},\ \operatorname{RV}(y)\land (\forall s\in \mathbb{R},\ \int_{\{t:(0\le t\land t\le 1)\land y(t)\le s\}}1\,dt=\int_{\{t:(0\le t\land t\le 1)\land x(t)\le s\}}1\,dt)\Rightarrow (\forall z\in \mathbb{R},\ \int_{\{s:(0\le s\land s\le 1)\land 2\,y(s)\le z\}}1\,ds=\int_{\{s:(0\le s\land s\le 1)\land 2\,x(s)\le z\}}1\,ds))
+tests/RandomVariables/article.tex:116:63: info: claim 30: \forall x\in \mathrm{RV},\ \operatorname{RV}(x)\Rightarrow (\forall y\in \mathrm{RV},\ \operatorname{RV}(y)\land (\forall s\in \mathbb{R},\ \int_{\{t:(0\le t\land t\le 1)\land y(t)\le s\}}1\,dt=\int_{\{t:(0\le t\land t\le 1)\land x(t)\le s\}}1\,dt)\Rightarrow \int_{\{z:(0\le z\land z\le 1)\land x(z)\le 1\}}1\,dz=\int_{\{z:(0\le z\land z\le 1)\land y(z)\le 1\}}1\,dz)
+tests/RandomVariables/article.tex: 0 definitions, 31 claims
+  results: 54 compiled, 0 failed, 0 prose (of 54)
+  all: 54 compiled, 0 failed, 0 prose (of 54)

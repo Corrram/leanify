@@ -733,6 +733,12 @@ def coerce (t : Tm) (src dst : Ty) : M Tm := do
     | some iv => pure (Tm.app (.const iv.val) t, Ty.real)
     | none => pure (t, src)
   if src == dst then return t
+  -- an element of one type of the vocabulary as an element of another, whose method `@of`
+  -- takes it (a vector as the constant random vector, in `X+b`)
+  if isBase src && isBase dst then
+    let V := (← get).vocab
+    if let some m := V.methods.find? fun m => m.ty == dst && m.op == .fn w!"@of" && V.consts.getD m.const .prop == .fn src dst then
+      return .app (.const m.const) t
   if src != .real then kindMismatch src dst
   match ← intervalOf dst with
   -- a number as an element of an interval type: defined for the numbers of the interval
@@ -752,7 +758,17 @@ def asReal (p : Tm × Ty) : M Tm := coerce p.1 p.2 .real
 /-- `a op b` with an operand of a vocabulary's type: that type's method `op`, a real
 operand being an element of the type; `a/b` is defined when `b` is not `0`. -/
 def arith (op : OpKey) (a b : Tm × Ty) : M (Tm × Ty) := do
-  let t := if (← ownTy a.2) then a.2 else b.2
+  let mixed := (← ownTy a.2) && (← ownTy b.2) && a.2 != b.2
+  -- an element of one type acting on an element of another (`AX` of a matrix and a random
+  -- vector): the method `@act` of the second type for the first
+  if mixed && op == .mul then
+    let V := (← get).vocab
+    if let some m := V.methods.find? fun m => m.ty == b.2 && m.op == .fn w!"@act" && V.consts.getD m.const .prop == .fn a.2 (.fn b.2 b.2) then
+      let r := Tm.app (.app (.const m.const) a.1) b.1
+      return (match m.dom with | some d => .guard (.app (.app d a.1) b.1) r | none => r, b.2)
+  -- (of two types of the vocabulary, the one that takes the elements of the other)
+  let bFirst ← if mixed then tryCatch (do discard <| coerce a.1 a.2 b.2; pure true) (fun _ => pure false) else pure false
+  let t := if (← ownTy a.2) && !bFirst then a.2 else b.2
   let x ← coerce a.1 a.2 t
   let y ← coerce b.1 b.2 t
   let r ← callMethod t op [x, y]
@@ -3019,6 +3035,23 @@ where
             | [] => pure none) (fun _ => pure none)
         if r.isNone then set st0
         pure r
+      -- `X\sim F` for an element of a type of the vocabulary that has the method `@sim`
+      -- (a random vector and its distribution function)
+      if let .chain x [(.sim, d)] := m then
+        let st0 ← get
+        let r ← tryCatch (do
+            let (xt, xty) ← term f sc pf x
+            let V := (← get).vocab
+            match V.methods.find? fun md => md.ty == xty && md.op == .fn w!"@sim" with
+            | some md =>
+              match V.consts.getD md.const .prop with
+              | .fn _ (.fn want _) =>
+                let (dt, dty) ← term f sc pf d
+                pure (some (Tm.app (.app (.const md.const) xt) (← coerce dt dty want), Ty.prop))
+              | _ => pure none
+            | none => pure none) (fun _ => pure none)
+        if r.isNone then set st0
+        if let some r := r then return some r
       match m with
       | .app (.id n) [x] =>
         if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
@@ -3036,6 +3069,8 @@ where
             return some (← callMethod t (.fn w!"\\angle") [pa, pp, pq])
       | .app (.id n) [x, y] =>
         if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+        -- (two random vectors: identically distributed, `X\stackrel{d}{=}Y`, and independent)
+        if n == w!"@identdist" || n == w!"@indep" then if let some r ← own? [x, y] n then return some r
         -- `$S$ contains $x$`: `x\in S` of an element, `x\subseteq S` of a set of the same
         -- elements (the types decide)
         if n == w!"@contains" then

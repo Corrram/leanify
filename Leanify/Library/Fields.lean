@@ -72,6 +72,7 @@ import Leanify.Library.Games
 import Leanify.Library.Regression
 import Leanify.Library.Bayesian
 import Leanify.Library.Majorization
+import Leanify.Library.RandomVectors
 import Leanify.Library.Odes
 import Leanify.Library.RandomWalks
 import Leanify.Library.FunctionSequences
@@ -295,20 +296,21 @@ def all : List (String × Vocab) := [
   ("variograms", Variograms.vocab),
   ("traffic", Traffic.vocab),
   ("geometricprobability", GeometricProbability.vocab),
-  ("randomvariables", RandomVariables.vocab)]
+  ("randomvariables", RandomVariables.vocab),
+  ("randomvectors", RandomVectors.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
 /-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
 `hilbert` with more, `copulas` is `markov` with more, `metricspaces` is `topologies` with
-more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more and `majorization` is `vectors` with more. Their entries are tagged with the field that adds
+more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more and `majorization` is `vectors` with more; `randomvectors` builds on `vectors`, `matrices` and `complex` (see `extensions`). Their entries are tagged with the field that adds
 them. -/
 def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
    ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
    ("markovchains", ["matrices", "matrixnorms"]),
-   ("majorization", ["vectors"])]
+   ("majorization", ["vectors"]), ("randomvectors", ["vectors", "matrices", "complex"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -339,7 +341,7 @@ def bundles : List (String × List String) := [
   ("linearalgebra", ["vectors", "matrices", "majorization"]),
   -- names of parts of `structures`, kept for articles that name them
   ("groups", ["structures"]), ("rings", ["structures"]), ("spaces", ["structures"]),
-  ("probability", ["randomvariables", "distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
+  ("probability", ["randomvariables", "randomvectors", "distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
   ("dependence", ["copulas"]),
   ("statistics", ["probability", "samples", "regression", "timeseries", "testing", "bayesian", "diagnostictests", "learning", "surveysampling", "variograms", "dependence"])]
 
@@ -359,15 +361,45 @@ def expand (fs : List String) : List String :=
       | none => [f]
   (go 8 fs).eraseDups
 
+/-- The fields that build on several other fields, each of which may also be named by the
+article or come with another field (`randomvectors` on `vectors`, `matrices` and `complex`):
+the fields it builds on, and its own words for where these and the field itself stand in
+the vocabulary (the first constant and the type of each). Such a field shares the types of
+the fields it builds on with every other field that has them: a vector of `majorization`
+is a vector for `randomvectors`. -/
+def extensions : List (String × List String × (List (Nat × Nat) → Nat → Nat → Vocab)) :=
+  [("randomvectors", ["vectors", "matrices", "complex"], fun bs co to =>
+      match bs with
+      | [(cv, tv), (cm, tm), (cc, tc)] => RandomVectors.own { cv, tv, cm, tm, cc, tc, co, to }
+      | _ => {})]
+
 /-- The core vocabulary followed by the named fields, in order (each entry tagged
 with its field). A bundle stands for its fields. A field that another named field includes
-is left out: its words are there. -/
+is left out: its words are there. A field that builds on other fields (`extensions`) comes
+after all the others, and the fields it builds on come with it. -/
 def select (fs : List String) : Vocab :=
   let fs := expand fs
-  let fs := fs.filter fun f => !fs.any fun g => ((includes.lookup g).getD []).contains f
-  fs.foldl (fun V f => match all.lookup f with
-    | some W => V ++ (if (includes.lookup f).isSome then W else Vocab.tag (f.toList.map Char.toNat) W)
-    | none => V) Vocab.core
+  let isExt (f : String) : Bool := (extensions.lookup f).isSome
+  let exts := fs.filter isExt
+  let plain := fs.filter (!isExt ·)
+  let inc (g f : String) : Bool := ((includes.lookup g).getD []).contains f
+  -- (the fields that an extension builds on, unless they are named or come with a named field)
+  let need := (exts.flatMap fun e => ((extensions.lookup e).map (·.1)).getD []).eraseDups
+  let plain := plain ++ need.filter fun b => !plain.contains b && !plain.any (inc · b)
+  let plain := plain.filter fun f => !plain.any (inc · f)
+  -- (with where each field begins: its first constant and its first type)
+  let (V, at_) := plain.foldl (fun (acc : Vocab × List (String × Nat × Nat)) f => match all.lookup f with
+    | some W => (acc.1 ++ (if (includes.lookup f).isSome then W else Vocab.tag (f.toList.map Char.toNat) W),
+                 acc.2 ++ [(f, acc.1.consts.length, acc.1.types.length)])
+    | none => acc) (Vocab.core, [])
+  -- (a field begins where it stands, or where a field stands that begins with it)
+  let begin_ (b : String) : Nat × Nat :=
+    match at_.lookup b with
+    | some p => p
+    | none => ((at_.find? fun (g, _) => ((includes.lookup g).getD []).head? == some b).map (·.2)).getD (0, 0)
+  exts.foldl (fun V e => match extensions.lookup e with
+    | some (bases, own) => V.join (Vocab.tag (e.toList.map Char.toNat) (own (bases.map begin_) V.consts.length V.types.length))
+    | none => V) V
 
 /-- The phrases of a vocabulary that have more than one meaning, with the fields of the
 meanings: a notion with the same name and another type or value, a modifier or a noun with

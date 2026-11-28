@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage[vocab={randomvectors}]{leanify}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\begin{document}
+
+\section{Equality in distribution}
+
+\begin{lemma}\label{scaling}
+Let $X$ and $Y$ be $d$-dimensional random vectors with $X\stackrel{d}{=}Y$. Then $2X\stackrel{d}{=}2Y$ and $-X\overset{\mathcal{D}}{=}-Y$.
+\end{lemma}
+
+\begin{lemma}\label{copies}
+Let $X$, $X_1$ and $X_2$ be random vectors of dimension $d$. If $X_1\stackrel{d}{=}X$ and $X_2\stackrel{d}{=}X$, then $X_1+X_2\stackrel{\text{law}}{=}X_2+X_1$.
+\end{lemma}
+
+\begin{lemma}\label{words}
+Let $X$ and $Y$ be identically distributed random vectors. Then $Y$ is equal in distribution to $X$.
+\end{lemma}
+
+\section{Independence, dimension and integrability}
+
+\begin{lemma}\label{independent}
+Let $X$ and $Y$ be independent random vectors in $\mathbb{R}^d$. Then $Y$ is independent of $X$.
+\end{lemma}
+
+\begin{lemma}\label{dimension}
+Let $X$ be a $2$-dimensional random vector. Then the dimension of $X$ is $2$ and $X-X\stackrel{d}{=}0X$.
+\end{lemma}
+
+\begin{lemma}\label{integrable}
+Let $X$ be an integrable $d$-dimensional random vector and let $Y$ be a random vector with $X\stackrel{d}{=}Y$. Then $Y$ is integrable.
+\end{lemma}
+
+\begin{lemma}\label{means}
+Let $X$ be an integrable $2$-dimensional random vector and $i\in\{1,2\}$. Then the mean of the $i$th coordinate of $X-X$ is $0$.
+\end{lemma}
+
+\section{Notions of the article}
+
+\begin{definition}\label{symmetric}
+A random vector $X$ is called \emph{symmetric} if $X\stackrel{d}{=}-X$.
+\end{definition}
+
+\begin{lemma}\label{sums}
+Let $X$ and $Y$ be independent symmetric random vectors of dimension $d$. Then $X+Y$ is symmetric.
+\end{lemma}
+
+\begin{definition}\label{invariant}
+A random vector $X$ is called \emph{sign-invariant} if for all $b>0$ and all random vectors $Y$ with $Y\stackrel{d}{=}X$ we have $bY\stackrel{d}{=}-bX$.
+\end{definition}
+
+\begin{lemma}\label{invariant-symmetric}
+Every sign-invariant random vector is symmetric.
+\end{lemma}
+
+\section{Vectors, matrices and characteristic functions}
+
+\begin{lemma}\label{shift}
+Let $X$ be a $d$-dimensional random vector and let $b$ be a vector in $\mathbb{R}^d$. Then $X+b-b\stackrel{d}{=}X$ and $b+X\stackrel{d}{=}X+b$.
+\end{lemma}
+
+\begin{lemma}\label{affine-symmetric}
+Let $X$ be a $d$-dimensional random vector, let $A$ be a $d\times d$ matrix and let $b$ be a vector in $\mathbb{R}^d$. If $X\stackrel{d}{=}-X$, then $AX+b\stackrel{d}{=}-AX+b$.
+\end{lemma}
+
+For a random vector $X$, let $\varphi_X$ denote the characteristic function of $X$.
+
+\begin{lemma}\label{convolution}
+Let $X$ and $Y$ be independent $d$-dimensional random vectors. Then $\varphi_{X+Y}(t)=\varphi_X(t)\varphi_Y(t)$ for every vector $t$ in $\mathbb{R}^d$.
+\end{lemma}
+
+\begin{lemma}\label{affine}
+Let $X$ be a $d$-dimensional random vector, let $A$ be an $n\times d$ matrix and let $b$ be a vector in $\mathbb{R}^n$. Then $\varphi_{AX+b}(t)=e^{\mathrm{i}\langle t,b\rangle}\varphi_X(A^{\top}t)$ for every vector $t$ in $\mathbb{R}^n$.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+Let $X$ be a $d$-dimensional random vector. Then $|\varphi_X(t)|\le 1$ for every vector $t$ in $\mathbb{R}^d$.
+\end{lemma}
+
+\begin{lemma}\label{law}
+Let $X$ and $Y$ be $d$-dimensional random vectors and let $F$ be the joint distribution function of $X$. If $Y\sim F$, then $X\stackrel{d}{=}Y$.
+\end{lemma}
+
+\begin{lemma}\label{mean-vector}
+Let $X$ be an integrable $d$-dimensional random vector and let $b$ be a vector in $\mathbb{R}^d$. Let $\mu$ be the mean vector of $X$. Then the mean vector of $X+b$ is $\mu+b$.
+\end{lemma}
+
+\section{Notes above a relation}
+
+\begin{lemma}\label{notes}
+Let $a$ and $b$ be real numbers with $a\stackrel{(i)}{\le}b$ and $b\stackrel{\text{by assumption}}{=}1$. Then $a\stackrel{(\ast)}{\le}1$.
+\end{lemma}
+
+\end{document}

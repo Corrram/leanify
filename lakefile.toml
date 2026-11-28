@@ -741,6 +741,12 @@ srcDir = "tests"
 globs = ["Pairs.+"]
 
 [[lean_lib]]
+# The field randomvectors: random vectors, equality in distribution and independence.
+name = "RandomVectors"
+srcDir = "tests"
+globs = ["RandomVectors.+"]
+
+[[lean_lib]]
 # Recursive definitions of sequences, functions and families.
 name = "Recursion"
 srcDir = "tests"

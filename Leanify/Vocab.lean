@@ -407,6 +407,26 @@ def append (V W : Vocab) : Vocab :=
 
 instance : Append Vocab := ⟨append⟩
 
+/-- `V` followed by the entries of `W`, where `W` is written with the indices of the
+result: its constants and types come after those of `V`, and its terms may use those of `V`
+(a field that builds on several fields, wherever they stand in the vocabulary). -/
+def join (V W : Vocab) : Vocab :=
+  let pad (xs : List Codes) (n : Nat) : List Codes := xs ++ List.replicate (n - xs.length) []
+  { V with
+    types := V.types ++ W.types
+    consts := V.consts ++ W.consts
+    constNames := pad V.constNames V.consts.length ++ W.constNames
+    constLean := pad V.constLean V.consts.length ++ W.constLean
+    typeLean := V.typeLean ++ List.replicate (V.types.length - V.typeLean.length) ([], []) ++ W.typeLean
+    modules := V.modules ++ W.modules.filter (!V.modules.contains ·)
+    adjectives := V.adjectives ++ W.adjectives
+    nouns := V.nouns ++ W.nouns
+    mods := V.mods ++ W.mods
+    notions := V.notions ++ W.notions
+    methods := V.methods ++ W.methods
+    symbols := V.symbols ++ W.symbols
+    intervals := V.intervals ++ W.intervals }
+
 /-- A reading with the names of the vocabulary's types (`\mathsf{T}_{k}` is the `k`-th). -/
 def texTypes (V : Vocab) (s : String) : String :=
   V.types.zipIdx.foldl (fun s (n, k) => s.replace s!"\\mathsf\{T}_\{{k}}" (Codes.toString n)) s
