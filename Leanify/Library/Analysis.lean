@@ -12,6 +12,7 @@ continuous function.` or `every bounded increasing function $f$`.
   `increasing` and `nondecreasing`, `decreasing` and `nonincreasing`, `strictly
   increasing`, `strictly decreasing`, `monotone`, `convex`, `concave`, `strictly convex`,
   `even`, `odd`, `periodic`, `$T$-periodic`, `injective`, `surjective`, `bijective`,
+  `invertible` (`with an inverse`, `$f$ has an inverse`: a two-sided one),
   `constant`, `identically zero` (`zero everywhere`), `nowhere zero`, `positive`, `nonnegative`,
   `negative`, `nonpositive` (at every point), `measurable`, `integrable`, `of bounded variation on $[a,b]$`, `Riemann
   integrable on $[a,b]$` (and `Riemann integrable` of a function on a domain `[a,b]`),
@@ -57,6 +58,8 @@ def c1 (i : Nat) (f : B) : B := app (const i) f
 
 def injective (f : B) : B := allR fun x => allR fun y => imp (eq (app f x) (app f y)) (eq x y)
 def surjective (f : B) : B := allR fun y => exR fun x => eq (app f x) y
+/-- A two-sided inverse `g`: `g(f(x)) = x` and `f(g(y)) = y`. -/
+def invertible (f : B) : B := exT F fun g => and (allR fun x => eq (app g (app f x)) x) (allR fun y => eq (app f (app g y)) y)
 def bounded (f : B) : B := exR fun m => allR fun x => le (abs (app f x)) m
 def differentiable : Tm := fnP .differentiable
 def lipschitzWith (l f : B) : B :=
@@ -131,6 +134,9 @@ def vocab : Vocab where
     mod phrase!"injective" true (fPred fun f => injective f) "(Mathlib `Function.Injective`)",
     mod phrase!"surjective" true (fPred fun f => surjective f) "onto `ℝ` (Mathlib `Function.Surjective`)",
     mod phrase!"bijective" true (fPred fun f => and (injective f) (surjective f)) "(Mathlib `Function.Bijective`)",
+    mod phrase!"invertible" true (fPred fun f => invertible f) "`g(f(x)) = x` and `f(g(y)) = y` for some `g : ℝ → ℝ`",
+    mod phrase!"with an inverse" false (fPred fun f => invertible f)
+      "a two-sided inverse: `g(f(x)) = x` and `f(g(y)) = y` for some `g : ℝ → ℝ` (`$f$ has an inverse`)",
     mod phrase!"constant" true (fPred fun f => allR fun x => allR fun y => eq (app f x) (app f y)) "`f(x) = f(y)`",
     mod phrase!"positive" true (fPred fun f => allR fun x => lt (num 0) (app f x)) "`f(x) > 0` for every `x`",
     mod phrase!"nonnegative" true (fPred fun f => allR fun x => le (num 0) (app f x)) "`f(x) ≥ 0` for every `x`",

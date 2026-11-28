@@ -110,7 +110,9 @@ tests/Analysis/article.tex:211:1: info: claim 76: \forall x\in \mathbb{R},\ \for
 tests/Analysis/article.tex:211:34: info: claim 77: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ 0\le y\land y\le 1\Rightarrow y\,{x}^{2}\le {x}^{2}
 tests/Analysis/article.tex:215:31: info: claim 78: \forall x\in \mathbb{R}\to \mathbb{R},\ \operatorname{convex}(x)\text{ on }\{z:\top\}\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ 0\le s\land s\le 1\Rightarrow x(s\,y+(1-s)\,z)\le s\,x(y)+(1-s)\,x(z))
 tests/Analysis/article.tex:219:54: info: claim 79: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow (\forall z\in \mathbb{R}\to \mathbb{R},\ \operatorname{continuous}(z)\text{ on }\{a:x\le a\land a\le y\}\land z(x)<0\land 0<z(y)\Rightarrow (\exists s\in \mathbb{R},\ (x<s\land s<y)\land z(s)=0))
-tests/Analysis/article.tex: 5 definitions, 80 claims
+tests/Analysis/article.tex:223:24: info: claim 80: \forall x\in \mathbb{R}\to \mathbb{R},\ (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s)\Rightarrow z=s)\land (\forall z\in \mathbb{R},\ \exists s\in \mathbb{R},\ x(s)=z)\Leftrightarrow (\exists z\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ z(x(s))=s)\land (\forall s\in \mathbb{R},\ x(z(s))=s))
+tests/Analysis/article.tex:223:81: info: claim 81: \forall x\in \mathbb{R}\to \mathbb{R},\ (\exists z\in \mathbb{R}\to \mathbb{R},\ (\forall s\in \mathbb{R},\ z(x(s))=s)\land (\forall s\in \mathbb{R},\ x(z(s))=s))\Rightarrow (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ x(z)=x(s)\Rightarrow z=s)
+tests/Analysis/article.tex: 5 definitions, 82 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 128 compiled, 0 failed, 0 prose (of 128)
-  all: 132 compiled, 0 failed, 0 prose (of 132)
+  results: 131 compiled, 0 failed, 0 prose (of 131)
+  all: 135 compiled, 0 failed, 0 prose (of 135)

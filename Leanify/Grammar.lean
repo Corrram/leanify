@@ -3388,6 +3388,8 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
         match s with
         | .math f => do
           let (neg, r2) := match kw [w!"not"] r1 with | some r' => (true, r') | none => (false, r1)
+          -- (`is not both even and odd`: not a noun phrase, the negation of both of them)
+          if (kw [w!"both"] r2).isSome then none
           let (np, r3) ← untilClauseEnd 32 r2 []
           -- `$v$ is a solution of … and a solution of …`: two noun phrases of the same object
           let andA := (List.range np.length).find? fun i => i > 0 && match (np[i]? : Option Chunk), (np[i+1]? : Option Chunk) with
@@ -3527,7 +3529,7 @@ def clause2E (cs : List Chunk) : Option (Clause × List Chunk) :=
 /-- A clause, or two of them joined by `if and only if` or by `or`
 (`$S$ is compact if and only if $S$ is closed and bounded`, `$G$ is cyclic or $G$ is
 isomorphic to $V$`). -/
-def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+def clause0 (cs : List Chunk) : Option (Clause × List Chunk) :=
   let iffW := [w!"if", w!"and", w!"only", w!"if"]
   -- the two clauses around the first `if and only if` (or `or`), each read whole
   let splitAt (ws : List Codes) (mk : Clause → Clause → Clause) : Option (Clause × List Chunk) := do
@@ -3591,6 +3593,76 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
       | _ => false
     if (kw iffW r).isSome || (kw [w!"or"] r).isSome || swallowed then split <|> some (c, r) else some (c, r)
   | none => split
+
+/-- `Exactly one of $a<b$, $a=b$ and $a>b$ holds.`, `Exactly one of $n$ and $n+1$ is even.`,
+`At least one of …`, `At most one of …`, `Each of $a$, $b$ and $c$ is positive.`, `Neither of $x$
+and $y$ is zero.`, `None of …`: the clause of each of the formulas (a statement that holds,
+is true or is satisfied; or what the words after them say of each), and how many of them hold. -/
+def countedOf (cs : List Chunk) : Option (Clause × List Chunk) := do
+  -- 0 exactly one, 1 at least one, 2 at most one, 3 each, 4 none
+  let (mode, r) ← (kw [w!"exactly", w!"one", w!"of"] cs).map (0, ·) <|> (kw [w!"at", w!"least", w!"one", w!"of"] cs).map (1, ·) <|>
+    (kw [w!"at", w!"most", w!"one", w!"of"] cs).map (2, ·) <|> (kw [w!"each", w!"of"] cs).map (3, ·) <|>
+    (kw [w!"neither", w!"of"] cs).map (4, ·) <|> (kw [w!"none", w!"of"] cs).map (4, ·)
+  -- (`of the integers $n$ and $n+1$`: the words before the formulas name them)
+  let r := match kw [w!"the"] r with
+    | some r1 =>
+      let ws := r1.takeWhile fun c => match c with | .w _ => true | _ => false
+      if ws.length ≤ 2 && (match r1.drop ws.length with | .m _ :: _ => true | _ => false) then r1.drop ws.length else r
+    | none => r
+  -- the formulas: separated by commas, `and`, `or`
+  let rec items : Nat → List Chunk → List (List MTok) → Option (List (List MTok) × List Chunk)
+    | 0, _, _ => none
+    | f + 1, cs, acc =>
+      match cs with
+      | .m ts :: r =>
+        let acc := ts :: acc
+        let sep := ((punct 44 r).map fun r1 => (kw [w!"and"] r1 <|> kw [w!"or"] r1).getD r1) <|> kw [w!"and"] r <|> kw [w!"or"] r
+        match sep with
+        | some r1 => match r1 with
+          | .m _ :: _ => items f r1 acc
+          | _ => none
+        | none => some (acc.reverse, r)
+      | _ => none
+  let (fs, r1) ← items 12 r []
+  if fs.length < 2 then none
+  -- `neither of $x$ and $y$`: two of them
+  if mode == 4 && (kw [w!"neither", w!"of"] cs).isSome && fs.length != 2 then none
+  -- what is said of each
+  -- (`$φ$ holds` is read as `$φ$` before the grammar: the formulas at the end of the clause)
+  let holds := (kw [w!"holds"] r1 <|> kw [w!"is", w!"true"] r1 <|> kw [w!"is", w!"satisfied"] r1 <|> kw [w!"is", w!"valid"] r1 <|>
+    (if clauseEnd r1 then some r1 else none))
+  let cls ← match holds with
+    | some rest => fs.mapM fun f => do
+      let (c, r') ← clause2 [.m f, .p 46]
+      if !isEnd r' then none
+      some (c, rest)
+    | none => do
+      let _ ← kw [w!"is"] r1 <|> kw [w!"has"] r1 <|> kw [w!"divides"] r1 <|> kw [w!"lies"] r1 <|> kw [w!"belongs"] r1
+      fs.mapM fun f => clause2 ([.m f] ++ r1)
+  let rest := (cls.head?.map (·.2)).getD []
+  -- (each of them read to the same end)
+  if !(cls.all fun (_, r') => r'.length == rest.length) then none
+  let cs' := cls.map (·.1)
+  let others (i : Nat) : List Clause := cs'.zipIdx.filterMap fun (d, j) => if j == i then none else some (Clause.noneExist d)
+  let result : Clause := match mode with
+    | 0 =>
+      let alts := cs'.zipIdx.map fun (c, i) => Clause.both (c :: others i)
+      match alts with
+      | a :: more => more.foldl (fun acc b => Clause.orC acc b) a
+      | [] => .absurd
+    | 1 => match cs' with
+      | a :: more => more.foldl (fun acc b => Clause.orC acc b) a
+      | [] => .absurd
+    | 2 =>
+      let pairs := cs'.zipIdx.flatMap fun (c, i) => (cs'.drop (i + 1)).map fun d => Clause.noneExist (.both [c, d])
+      .both pairs
+    | 3 => .both cs'
+    | _ => .both (cs'.map Clause.noneExist)
+  some (result, rest)
+
+/-- A clause: one about several formulas and how many of them hold (`countedOf`), or `clause0`. -/
+def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
+  countedOf cs <|> clause0 cs
 
 /-- `CLAUSE and CLAUSE [and CLAUSE]`, the hypothesis of `if …, then …`: each clause read on
 its own (`if $f$ is continuous and $g$ is dominated by $f$, then …`). -/
@@ -4666,6 +4738,9 @@ def nounVar (cs : List Chunk) : Option (List Chunk × List Chunk) :=
 /-- `NAME [(ABBR)]`. -/
 def nameAbbr (cs : List Chunk) : Option (List Codes × List Codes × List Chunk) := do
   let (name, r) := nameWords 8 cs []
+  -- (`$n$ is odd only if …`: `only` begins the condition, a necessary one, and is not a
+  -- word of the name)
+  let (name, r) := if name.getLast? == some w!"only" then (name.dropLast, .w w!"only" :: r) else (name, r)
   if name.isEmpty then none else
   match punct 40 r with
   | some r1 => do
@@ -6789,6 +6864,46 @@ def postIfSent (cs : List Chunk) : Option (List Chunk) := do
   if a.any (fun c => match c with | .w w => binding.contains w | _ => false) then none
   some ([.w w!"if"] ++ b ++ [.p 44, .w w!"then"] ++ a ++ stop)
 
+/-- `[Then] A only if B.` as `If A, then B.`; `A provided [that] B.` as `If B, then A.`; `A unless
+$φ$.` as `If $\neg(φ)$, then A.` -/
+def postCondSent (cs : List Chunk) : Option (List Chunk) := do
+  let (cs, stop) : List Chunk × List Chunk := match cs.getLast? with
+    | some (.p 46) => (cs.dropLast, [.p 46])
+    | _ => (cs, [])
+  let body := (kw [w!"then"] cs).getD cs
+  let isW (w : Codes) (c : Option Chunk) : Bool := match c with | some (.w v) => v == w | _ => false
+  let i ← (List.range body.length).find? fun i => i > 0 &&
+    ((isW w!"only" body[i]? && isW w!"if" body[i + 1]?) || isW w!"unless" body[i]? || isW w!"provided" body[i]?)
+  let a := (body.take i).reverse.dropWhile (fun c => match c with | .p 44 => true | _ => false) |>.reverse
+  let (kind, b) : Nat × List Chunk :=
+    if isW w!"only" body[i]? then (0, body.drop (i + 2))
+    else if isW w!"unless" body[i]? then (1, body.drop (i + 1))
+    else (2, (kw [w!"that"] (body.drop (i + 1))).getD (body.drop (i + 1)))
+  if a.isEmpty || b.isEmpty then none
+  -- (one condition, and no claim that binds variables of its own)
+  let binding := [w!"there", w!"exists", w!"exist", w!"such", w!"some", w!"every", w!"all", w!"each", w!"any", w!"unique",
+    w!"if", w!"only", w!"unless", w!"provided", w!"iff",
+    -- (and no sentence that names: `We say that $x$ is NAME provided …` is a definition)
+    w!"say", w!"said", w!"call", w!"called", w!"termed", w!"define", w!"defined", w!"denote", w!"write", w!"let", w!"set"]
+  if (a ++ b).any (fun c => match c with | .w w => binding.contains w | _ => false) then none
+  match kind with
+  | 0 => some ([.w w!"if"] ++ a ++ [.p 44, .w w!"then"] ++ b ++ stop)
+  | 1 =>
+    match b with
+    -- (the condition a formula: its negation)
+    | [.m φ] => some ([.w w!"if", .m ([.cmd w!"neg", .sym 40] ++ φ ++ [.sym 41]), .p 44, .w w!"then"] ++ a ++ stop)
+    -- (`unless $n$ is odd`: `if $n$ is not odd`; one clause about one subject, without `not`,
+    -- `and`, `or` or a comma, whose negation is the `not` after its verb)
+    | .m x :: .w v :: rest =>
+      if !(v == w!"is" || v == w!"are") || rest.isEmpty then none
+      if rest.any (fun c => match c with
+          | .w w => [w!"not", w!"and", w!"or", w!"nor", w!"no", w!"never"].contains w
+          | .p 44 => true
+          | _ => false) then none
+      some ([.w w!"if", .m x, .w v, .w w!"not"] ++ rest ++ [.p 44, .w w!"then"] ++ a ++ stop)
+    | _ => none
+  | _ => some ([.w w!"if"] ++ b ++ [.p 44, .w w!"then"] ++ a ++ stop)
+
 /-- `For all $x$, $φ$.`, `Then for all $x,y$ and $t\in[0,1]$, $φ$.`: letters without a domain
 before a formula, as `$φ$ for all $x$` (a real number; a natural number where it is the index
 of a subscript). -/
@@ -7285,7 +7400,7 @@ def nameStops : List Codes :=
   notionStops ++ [w!"provided", w!"iff", w!"precisely", w!"exactly", w!"denoted", w!"written", w!"which", w!"that",
     w!"where", w!"see", w!"cf", w!"respectively", w!"resp", w!"over", w!"between", w!"under", w!"it", w!"its", w!"this",
     w!"these", w!"such", w!"we", w!"also", w!"simply", w!"called", w!"said", w!"has", w!"have", w!"be", w!"following",
-    w!"whose", w!"their", w!"his", w!"her", w!"our", w!"those", w!"both", w!"will", w!"shall", w!"then"]
+    w!"whose", w!"their", w!"his", w!"her", w!"our", w!"those", w!"both", w!"will", w!"shall", w!"then", w!"only"]
 
 /-- The shapes of the sentence as one that names a notion (`… SUBJECT is called [a] NAME …`,
 `we call SUBJECT [a] NAME`), read more freely than `forms`: the subject after the last comma
@@ -7446,6 +7561,64 @@ def theNounSubjSent (cs : List Chunk) : Option Sent := do
   if !isEnd e2 then none
   some (.claims topic [] [{ cites := [], clause := .both [pre, c] }])
 
+/-- `No NP VP.` as `There is no NP $x$ such that $x$ VP.` (`No integer $n$ satisfies $n^2=2$.`,
+`No perfect square is negative.`, `No prime greater than $2$ is even.`): the noun phrase's
+variable, or one of its own (not `no two …`, `no other …`, `no more than …`). -/
+def noSent (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"no"] cs
+  let first ← r.head?
+  let stops := [w!"two", w!"three", w!"four", w!"other", w!"more", w!"less", w!"fewer", w!"longer", w!"one",
+    w!"such", w!"matter", w!"further", w!"element", w!"elements", w!"later", w!"sooner", w!"doubt"]
+  if (match first with | .w w => stops.contains w | _ => true) then none
+  let ev : List Chunk := .w w!"every" :: r
+  -- (the forms of `every`, with the variable in its place: `for every NP $x$, $x$ VP`)
+  let thereNo (out : List Chunk) : Option (List Chunk) := do
+    let r1 ← kw [w!"for", w!"every"] out
+    let i ← r1.findIdx? fun c => match c with | .p 44 => true | _ => false
+    some ([.w w!"there", .w w!"is", .w w!"no"] ++ r1.take i ++ [.w w!"such", .w w!"that"] ++ r1.drop (i + 1))
+  (everySatisfies ev >>= thereNo) <|> (everyIsSent ev >>= thereNo) <|> (everyHasSent ev >>= thereNo) <|>
+    (everyVerbSent ev >>= thereNo) <|> (do
+    -- `No NP is ADJ`: a noun phrase of words, with a variable of its own
+    let (np, r1) ← chunksUntilV [w!"is"] r []
+    if np.isEmpty || !(np.all fun c => match c with | .w _ | .p 45 => true | _ => false) then none
+    let used (c : Codes) : Bool := cs.any fun ch => match ch with
+      | .m ts => ts.contains (.id c)
+      | _ => false
+    let v ← [w!"x", w!"y", w!"z", w!"u", w!"w", w!"t", w!"s"].find? (!used ·)
+    some ([.w w!"there", .w w!"is", .w w!"no"] ++ withVarAt np v ++ [.w w!"such", .w w!"that", .m [.id v]] ++ r1))
+
+/-- `[Then] $n$ is not both even and odd.`: the negation of `$n$ is even and odd`, one
+statement about its subject (the binders of the sentence outside). -/
+def notBothSent (cs : List Chunk) : Option Sent := do
+  let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk), (cs[i + 2]? : Option Chunk) with
+    | some (.w a), some (.w b), some (.w c) => a == w!"is" && b == w!"not" && c == w!"both"
+    | _, _, _ => false
+  let rest := cs.drop (i + 3)
+  if !rest.any (fun c => match c with | .w a => a == w!"and" | _ => false) then none
+  let s ← sentence0 (cs.take i ++ [.w w!"is"] ++ rest)
+  match s with
+  | .claims t bs [cl] =>
+    if !cl.defs.isEmpty || !cl.forDefs.isEmpty then none
+    let simple := match cl.clause with
+      | .adjectives _ _ | .both _ | .notions _ _ false | .isA _ _ false | .pred _ _ _ => true
+      | _ => false
+    if !simple then none
+    some (.claims t bs [{ cl with clause := .noneExist cl.clause }])
+  | _ => none
+
+/-- `Not every NP VP.`, `Not all NOUNS are ADJ.`: the negation of the statement about every one
+of them (one statement, without definitions of its own). -/
+def notEverySent (cs : List Chunk) : Option Sent := do
+  let r ← kw [w!"not"] cs
+  let _ ← kw [w!"every"] r <|> kw [w!"all"] r
+  let s ← sentence0 r <|> (allAreSent r >>= fun r' => sentence0 r' <|> (everyIsSent r' >>= sentence0)) <|>
+    (everyIsSent r >>= sentence0) <|> (everyHasSent r >>= sentence0) <|> (everyVerbSent r >>= sentence0)
+  match s with
+  | .claims t bs [cl] =>
+    if !cl.defs.isEmpty || !cl.forDefs.isEmpty || !cl.cites.isEmpty then none
+    some (.claims t [] [{ cites := [], clause := .noneExist ((bs ++ cl.binds).foldr (fun b acc => Clause.under b acc) cl.clause) }])
+  | _ => none
+
 /-- `Neither $A$ nor $B$ is REST.`: `$A$ is not REST` and `$B$ is not REST`. -/
 def neitherNorSent (cs : List Chunk) : Option Sent := do
   let (topic, cs) := marker cs
@@ -7510,6 +7683,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
     let words := r.any fun c => match c with | .w w => w != w!"for" | _ => false
     if !words then none
     postForSent cs >>= sentence0)
+  -- (`A only if B.`, `A unless B.`, `A provided that B.`: the condition first, before the
+  -- words after `is` would take it, `$n$ is odd only if …` as `is WORDS`)
+  let postIf := postIf <|> (postCondSent cs >>= sentence0)
   match postIf with
   | some s => some s
   | none =>
@@ -7517,7 +7693,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
   -- to be a definition, or not read)
   let s0 := match sentence0 cs with
     | some (.notionSubject np) => (notionDefWide cs).orElse fun _ => some (.notionSubject np)
-    | none => notionDefWide cs <|> asInSent cs <|> neitherNorSent cs <|> theNounSubjSent cs <|>
+    | none => notionDefWide cs <|> asInSent cs <|> neitherNorSent cs <|> notEverySent cs <|> (noSent cs >>= sentence0) <|>
+      notBothSent cs <|>
+      theNounSubjSent cs <|>
       (denoteAsLet cs >>= fun cs' => sentence0 cs' <|> (letTheSent cs' >>= sentence0))
     | s => s
   match s0 with
@@ -7637,6 +7815,19 @@ def namedGroupForms : Nat → List Chunk → List Chunk
     | c :: rest => c :: namedGroupForms f rest
     | [] => []
 
+/-- `is both A and B` as `is A and B`: each of them (not `is not both A and B`, which says
+that they do not both hold). -/
+def dropBothAfterIs : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, cs =>
+    match cs with
+    | .w i :: .w b :: rest =>
+      if i == w!"is" && b == w!"both" && rest.any (fun c => match c with | .w a => a == w!"and" | _ => false) then
+        .w i :: dropBothAfterIs f rest
+      else .w i :: dropBothAfterIs f (.w b :: rest)
+    | c :: rest => c :: dropBothAfterIs f rest
+    | [] => []
+
 /-- A sentence; or, of `INFORMAL, that is, FORMAL`, the formal restatement read with the
 forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies …`). -/
 def sentence (cs : List Chunk) : Option Sent :=
@@ -7652,6 +7843,8 @@ def sentence (cs : List Chunk) : Option Sent :=
     sylowForms (cs.length + 1) [] cs else cs
   let cs := if cs.any (fun c => match c with | .w s => s == w!"chain" | _ => false) then
     chainForms (cs.length + 1) cs else cs
+  let cs := if cs.any (fun c => match c with | .w s => s == w!"both" | _ => false) then
+    dropBothAfterIs (cs.length + 1) cs else cs
   match sentence1 cs with
   | some s => some s
   | none => skipThatIs cs >>= sentence1
@@ -9136,6 +9329,12 @@ def parseSentence (s : Sentence) : Option Sent := do
     -- (the forms of a definition, where the sentence is otherwise not read; not in a proof)
     let inDef := match s.ctx.kind with | .result e => e.take 3 == w!"def" | _ => false
     let define (_ : Unit) : Option Sent := if s.ctx.kind == .proof then none else defSentence inDef cs
+    -- (in a definition, `A NP $x$ is NAME provided COND.` names a notion: the forms of a
+    -- definition before the reading as a claim with its condition first)
+    let defFirst := if inDef && (postCondSent cs).isSome then define () else none
+    match defFirst with
+    | some d => some d
+    | none =>
     match sentence cs with
     | some (.notionSubject np) => (define ()).orElse fun _ => some (.notionSubject np)
     | none => define ()

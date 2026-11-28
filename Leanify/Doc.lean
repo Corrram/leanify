@@ -5725,6 +5725,15 @@ def relativeAdj (sc : Scope) (x : Tm × Ty) (a : Codes) : M (Option (List MTok))
   if !(← complementFits sc m ts) then return none
   return some ts
 
+/-- `$\lambda$ is real`, `… is a real number`, said of a real number: every real number is
+one, and the article means a number that need not be real (a complex eigenvalue or root), which
+the field does not read. -/
+def realOfReal (ty : Ty) (ws : List Codes) : M Unit := do
+  if ty == .real && [[w!"real"], [w!"real", w!"number"], [w!"real", w!"numbers"], [w!"reals"]].contains ws then
+    fail E.finding (w!"says that a real number is real, which every real number is: the article means a number that " ++
+      w!"need not be real (a complex eigenvalue or root), which this field does not read; the field complex reads " ++
+      w!"`is real` of a complex number")
+
 /-- `[a|an] NP` or `ADJ[, ADJ] [and ADJ]` about the term `x`: a noun of the vocabulary
 (with its modifiers), or prenominal modifiers alone. The type of `x` decides between
 modifiers with the same words. -/
@@ -5736,6 +5745,10 @@ def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
     let p ← ofFormBody ((w!"@obj", .real) :: sc) w!"@obj" e
     return Notation.betaApply (.lam .real .tt p) [x.1]
   let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
+  -- (`$\lambda$ is real`, `… is a real number`, of a real number: every real number is one, and
+  -- the article means a number that need not be real, a complex eigenvalue or root)
+  let ws := cs.filterMap fun c => match c with | .w w => some w | _ => none
+  if ws.length == cs.length then realOfReal x.2 ws
   -- (adjectives of an infinite sequence, `$(a_n)$ is increasing and bounded`: properties of
   -- its terms)
   let stS ← get
@@ -6478,6 +6491,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
           return conv
     unless names.all (fun n => (st.notions.lookup n).isSome || knownStart st (nameChunks n)) do fail E.prose
     let x ← subjTerm sc s
+    for n in names do
+      if (st.notions.lookup n).isNone then realOfReal x.2 n
     -- a name the article does not define is an adjective of the vocabulary
     let notions := (← get).notions
     let ps ← names.mapM fun n =>
@@ -6827,6 +6842,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     if let some ts := complementOf np then
       modify fun st => { st with complements := (st.curEnv, b.name, ts) :: st.complements.filter (·.2.1 != b.name) }
     let st1 ← get
+    for n in names do
+      if (st1.notions.lookup n).isNone then realOfReal b.ty n
     -- (notions of the article; or adjectives and nouns of the vocabulary, `Every cyclic group
     -- $G$ is abelian`)
     let ps ← tryCatch (names.mapM (notionApp (.loc 0, b.ty))) fun e => do

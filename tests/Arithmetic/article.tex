@@ -2,6 +2,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage[vocab={numbers,arithmetic}]{leanify}
 \newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
 \begin{document}
 
 \section{Notation}
@@ -177,6 +178,38 @@ For every rational number $x$, there are integers $p$ and $q\ne0$ such that $x=\
 
 \begin{lemma}\label{for-some}
 Let $n$ be an odd integer. Then $n^2=8k+1$ for some integer $k$. Let $x$ be a rational number. Then $x=\frac{p}{q}$ for some integers $p$ and $q$ with $q\ne0$.
+\end{lemma}
+
+\begin{lemma}\label{conditions-after}
+Let $n$ be an integer. Then $n$ is odd only if $n^2$ is odd. Then $n^2$ is odd unless $n$ is even. Then $n^2-1$ is divisible by $8$ provided that $n$ is odd.
+\end{lemma}
+
+\begin{lemma}\label{formula-conditions-after}
+Let $x$ be a real number. Then $x>1$ only if $x^2>1$. Then $x^2>0$ unless $x=0$. Then $x^2>0$ provided $x\ne0$.
+\end{lemma}
+
+\begin{definition}\label{named-provided}
+An integer $n$ is called sturdy provided that $n>1$. An integer $n$ is lofty provided that $n>5$.
+\end{definition}
+
+\begin{lemma}\label{conditions-after-names}
+Let $n$ be an integer. Then $n$ is sturdy only if $n>0$. Then $n$ is lofty unless $n\le5$.
+\end{lemma}
+
+\begin{lemma}\label{no-and-not-every}
+No perfect square is negative. No integer $n$ satisfies $n^2=2$. No prime greater than $2$ is even. No integer is both even and odd. Not every integer is even. Not all odd integers are prime.
+\end{lemma}
+
+\begin{lemma}\label{both-and-not-both}
+Let $n$ be an integer. Then $n$ is not both even and odd. Then $n^2+n$ is both even and nonnegative.
+\end{lemma}
+
+\begin{lemma}\label{how-many-of}
+For all real numbers $a$ and $b$, exactly one of $a<b$, $a=b$ and $a>b$ holds. Let $n$ be an integer. Then exactly one of $n$ and $n+1$ is even.
+\end{lemma}
+
+\begin{lemma}\label{how-many-of-terms}
+Let $x$ and $y$ be real numbers with $xy=0$. Then at least one of $x$ and $y$ is zero. Then at most one of $x<0$ and $x>0$ holds. Let $a$ and $b$ be real numbers with $ab>0$. Then neither of $a$ and $b$ is zero. Then each of $a^2$ and $b^2$ is positive.
 \end{lemma}
 
 \end{document}

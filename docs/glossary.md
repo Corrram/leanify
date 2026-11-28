@@ -1114,6 +1114,8 @@ except a notion whose meanings take arguments of different types, which the type
 | injective | ℝ → ℝ | (Mathlib `Function.Injective`) |
 | surjective | ℝ → ℝ | onto `ℝ` (Mathlib `Function.Surjective`) |
 | bijective | ℝ → ℝ | (Mathlib `Function.Bijective`) |
+| invertible | ℝ → ℝ | `g(f(x)) = x` and `f(g(y)) = y` for some `g : ℝ → ℝ` |
+| with an inverse | ℝ → ℝ | a two-sided inverse: `g(f(x)) = x` and `f(g(y)) = y` for some `g : ℝ → ℝ` (`$f$ has an inverse`) |
 | constant | ℝ → ℝ | `f(x) = f(y)` |
 | positive | ℝ → ℝ | `f(x) > 0` for every `x` |
 | nonnegative | ℝ → ℝ | `f(x) ≥ 0` for every `x` |

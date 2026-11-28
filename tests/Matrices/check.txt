@@ -75,7 +75,8 @@ tests/Matrices/article.tex:97:64: info: claim 42: \forall x\in \mathrm{Mat},\ \o
 tests/Matrices/article.tex:97:64: info: claim 42 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\land 1\le \operatorname{rows}(x)\Rightarrow (\forall y\in \mathbb{R},\ \operatorname{Square}(x)\land (y=\det(x)\Rightarrow (\forall z\in \mathbb{R},\ \operatorname{Square}(x)\land (z=\operatorname{tr}(x)\Rightarrow \operatorname{Square}(x^{\top})))))
 tests/Matrices/article.tex:97:64: info: claim 43: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\land 1\le \operatorname{rows}(x)\Rightarrow (\forall y\in \mathbb{R},\ y=\det(x)\Rightarrow (\forall z\in \mathbb{R},\ z=\operatorname{tr}(x)\Rightarrow \operatorname{tr}(x^{\top})=z))
 tests/Matrices/article.tex:97:64: info: claim 43 is meaningful if: \forall x\in \mathrm{Mat},\ \operatorname{Square}(x)\land 1\le \operatorname{rows}(x)\Rightarrow (\forall y\in \mathbb{R},\ \operatorname{Square}(x)\land (y=\det(x)\Rightarrow (\forall z\in \mathbb{R},\ \operatorname{Square}(x)\land (z=\operatorname{tr}(x)\Rightarrow \operatorname{Square}(x^{\top})))))
+tests/Matrices/article.tex:101:74: warning: says that a real number is real, which every real number is: the article means a number that need not be real (a complex eigenvalue or root), which this field does not read; the field complex reads `is real` of a complex number: sentence not checked
 tests/Matrices/article.tex: 4 definitions, 44 claims
   text: 4 compiled, 0 failed, 0 prose (of 4)
-  results: 60 compiled, 0 failed, 0 prose (of 60)
-  all: 64 compiled, 0 failed, 0 prose (of 64)
+  results: 61 compiled, 1 failed, 0 prose (of 62)
+  all: 65 compiled, 1 failed, 0 prose (of 66)
