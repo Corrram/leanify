@@ -161,3 +161,5 @@ article-reader/
 /tests/Default/article.leanify.*
 /tests/Defined/article.leanify.*
 /tests/Structures/article.leanify.*
+# the sources of the corpus (python scripts/corpus.py --fetch); its list is committed
+/corpus/*/

@@ -1,0 +1,7 @@
+# The corpus of docs/mathlib-coverage.md: articles of other authors, read as they are printed.
+# ARXIV-ID      MAIN.tex                            NAME
+1811.06821v4    weighted-deciders-journal.tex       Elbracht, Kneip, Teegen: weighted vertex sets
+2604.22991v2    manuscript.tex                      Pfaffelhuber: the all-heads coin game
+2110.03397v3    paper.tex                           Coblenz, Grothe, Herrmann, Hofert: smooth bootstrap
+2611.32773v1    elliptical_wasserstein_arXiv.tex    Ansari, Rüschendorf: Wasserstein transport
+2107.01087v3    PointSetsArXiv.tex                  Diestel, Elbracht, Jacobs: point sets inducing tangles
