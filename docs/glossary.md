@@ -1281,6 +1281,7 @@ except a notion whose meanings take arguments of different types, which the type
 | proper subgroup | $\mathrm{El}$ → Prop | a subgroup other than `G` |
 | vector | $\mathrm{El}$ | an element of a vector space, with it: `vectors in $V$` (`v ∈ V`) |
 | element | $\mathrm{El}$ | an element of a structure: `g ∈ G` |
+| point | $\mathrm{El}$ | a point of a space (of a subset of it), an element: `x ∈ X` |
 | unit | $\mathrm{El}$ | an invertible element of a ring (Mathlib `IsUnit`) |
 | zero divisor | $\mathrm{El}$ | `ab = 0` for some `b ≠ 0` |
 | polynomial | $\mathrm{El}$ | `polynomial over $R$`: an element of the ring `R[x]` of polynomials over a ring `R` (Mathlib `Polynomial R`); `Let $f\in K[x]$ be a polynomial` is over `K` |

@@ -25,7 +25,10 @@ tests/Groups/article.tex:45:51: info: claim 9 is meaningful if: \forall x\in \ma
 tests/Groups/article.tex:45:51: info: claim 10: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\forall z\in \mathrm{El},\ x(z)\Leftrightarrow (\@n2(2)\times \@n2(3))(z))\Rightarrow \operatorname{Cyclic}(x)
 tests/Groups/article.tex:45:51: info: claim 10 is meaningful if: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \forall y\in \mathrm{El},\ (2\in \mathbb{Z}\land 0<2)\land 3\in \mathbb{Z}\land 0<3
 tests/Groups/article.tex:49:34: info: claim 11: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \lvert x\rvert=4\Rightarrow \operatorname{Finite}(x)\land \exp(x)\le 4
-tests/Groups/article.tex: 8 definitions, 12 claims
+tests/Groups/article.tex:53:1: info: claim 12: \forall x\in \mathrm{El}\to \mathrm{Prop},\ (\operatorname{Group}(x)\land \operatorname{Finite}(x))\land \operatorname{Finite}(x)\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \lvert x\rvert=2\,s)\Rightarrow (\exists y\in \mathrm{El},\ (x(y)\land \operatorname{ord}(y)=2)\land \top)
+tests/Groups/article.tex:53:134: info: claim 13: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\Rightarrow (\forall y\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(y)\land y\le x\land [x:y]=2\Rightarrow y\trianglelefteq x)
+tests/Groups/article.tex:53:188: info: claim 14: \forall x\in \mathrm{El}\to \mathrm{Prop},\ \operatorname{Group}(x)\land \operatorname{Finite}(x)\Rightarrow (\forall y\in \mathrm{El},\ x(y)\Rightarrow 0<\operatorname{ord}(y))
+tests/Groups/article.tex: 8 definitions, 15 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 16 compiled, 0 failed, 0 prose (of 16)
-  all: 24 compiled, 0 failed, 0 prose (of 24)
+  results: 21 compiled, 0 failed, 0 prose (of 21)
+  all: 29 compiled, 0 failed, 0 prose (of 29)

@@ -67,7 +67,9 @@ tests/Topology/article.tex:116:177: info: claim 46: \neg (0<0\land 0<1)
 tests/Topology/article.tex:120:1: info: claim 47: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(y)\land \operatorname{BddBelow}(y)\Rightarrow \operatorname{BddAbove}((z\in \mathbb{R}\mapsto x(z)\lor y(z)))\land \operatorname{BddBelow}((z\in \mathbb{R}\mapsto x(z)\lor y(z))))
 tests/Topology/article.tex:120:59: info: claim 48: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Closed}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Closed}(y)\Rightarrow \operatorname{Closed}((z\in \mathbb{R}\mapsto x(z)\land y(z))))
 tests/Topology/article.tex:120:122: info: claim 49: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(y)\Rightarrow \operatorname{Countable}((z\in \mathbb{R}\mapsto x(z)\lor y(z))))
-tests/Topology/article.tex: 7 definitions, 50 claims
+tests/Topology/article.tex:124:1: info: claim 50: \forall x\in \mathbb{R}\to \mathrm{Prop},\ (\exists s\in \mathbb{R},\ x(s))\land \operatorname{Open}(x)\Rightarrow (\exists y\in \mathbb{R},\ ((\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land (\exists a\in \mathbb{R},\ a\in \mathbb{Z}\land \neg (a=0)\land y=\frac{t}{a}))\land x(y))\land \top)
+tests/Topology/article.tex:124:83: info: claim 51: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ y<x\Rightarrow (\exists z\in \mathbb{R},\ ((\exists a\in \mathbb{R},\ a\in \mathbb{Z}\land (\exists b\in \mathbb{R},\ b\in \mathbb{Z}\land \neg (b=0)\land z=\frac{a}{b}))\land y<z\land z<x)\land \top)
+tests/Topology/article.tex: 7 definitions, 52 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 68 compiled, 0 failed, 0 prose (of 68)
-  all: 75 compiled, 0 failed, 0 prose (of 75)
+  results: 71 compiled, 0 failed, 0 prose (of 71)
+  all: 78 compiled, 0 failed, 0 prose (of 78)

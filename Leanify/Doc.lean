@@ -2497,6 +2497,21 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         let (p, pty) ← Elab.term 100000 sc none (.app (.id w!"@contains") [.id v, x])
         if pty != .prop then fail E.type
         post f rel rest (Tm.lam ty .tt p :: acc) else
+      -- (`a rational number contained in $I$`, `a neighbourhood of $x$ contained in $U$`: the
+      -- object is an element, `y\in I`, or a subset, `N\subseteq U`, of it)
+      let containedIn : Option (MT × List Chunk) := match cs with
+        | .w c :: .w i :: .m ts :: rest =>
+          if c != w!"contained" || i != w!"in" then none else
+          match Math.parseFormula ts with
+          | some (.chain _ (_ :: _)) | none => none
+          | some x => some (x, rest)
+        | _ => none
+      if let some (x, rest) := containedIn then
+        let v : Codes := w!"@obj"
+        let sc : Scope := [(v, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer
+        let (p, pty) ← Elab.term 100000 sc none (.app (.id w!"@contains") [x, .id v])
+        if pty != .prop then fail E.type
+        post f rel rest (Tm.lam ty .tt p :: acc) else
       -- (`not coprime to $n$`: the negation of a modifier, as `that is not coprime to $n$`)
       let negated : Option (List Chunk) := if !cands.isEmpty then none else match cs with
         | .w n :: rest => if n == w!"not" then some rest else none
@@ -2638,6 +2653,20 @@ def singularNP (V : Vocab) (cs : List Chunk) : Option (List Chunk) := do
 /-- `sequence of dense open subsets of $X$ $(U_n)$`: the noun phrase of each term, in the singular
 and without a variable (`dense open subset of $X$`), and the sequence's variable. -/
 def seqOfElems (V : Vocab) (np : List Chunk) : Option (List Chunk × List MTok × List Chunk) := do
+  -- (the variable after `sequence`, `sequence $(x_n)$ of points of $X$`: as at the end)
+  let np := match np with
+    | .w s :: .m vts :: .w o :: r =>
+      if s != w!"sequence" || o != w!"of" || r.isEmpty then np else
+      let ws := r.takeWhile fun c => match c with
+        | .w w => w != w!"with" && w != w!"such"
+        | .p 45 => true
+        | _ => false
+      -- (after the words, before the complement's preposition: `points $(x_n)$ of $X$`)
+      let k := match ws.getLast?, r[ws.length]? with
+        | some (.w p), some (.m _) => if [w!"of", w!"in", w!"over", w!"on"].contains p then ws.length - 1 else ws.length
+        | _, _ => ws.length
+      .w s :: .w o :: r.take k ++ [.m vts] ++ r.drop k
+    | _ => np
   let rest ← Grammar.kw [w!"sequence", w!"of"] np
   -- (the conditions, after `with` or `such that`)
   let ci := rest.findIdx? fun c => match c with | .w w => w == w!"with" || w == w!"such" | _ => false
@@ -2854,6 +2883,38 @@ def nounPhrase0 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if let some b := r then return b
   throw e00
 
+/-- `subgroup of index $2$ in $G$` as `subgroup of $G$ of index $2$`, `element in $G$` as
+`element of $G$`: readings of a noun phrase whose words have no complement, with an object after
+`in` at its end, as the noun's complement (the variable after the words, `subgroup $H$ of index
+$2$ in $G$`, or before `in`, `subgroup of finite index $H$ in $G$`, stays the variable). -/
+def compInForms (np : List Chunk) : List (List Chunk) :=
+  let lead := np.takeWhile fun c => match c with
+    | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"over", w!"at", w!"to", w!"from", w!"such", w!"that",
+        w!"which", w!"whose", w!"satisfying", w!"where"].contains w
+    | .p 45 => true
+    | _ => false
+  if lead.isEmpty || !(lead.any fun c => match c with | .w _ => true | _ => false) then [] else
+  let rest := np.drop lead.length
+  let (var, rest) : List Chunk × List Chunk := match rest with
+    | .m [.id v] :: r => ([.m [.id v]], r)
+    | _ => ([], rest)
+  -- (a complement already, `subgroup of $G$ …`)
+  let hasComp : Bool := match rest with
+    | .w o :: .m _ :: _ => o == w!"of"
+    | _ => false
+  if hasComp then [] else
+  match rest.reverse with
+  | .m x :: .w i :: mid =>
+    if i != w!"in" then [] else
+    -- (no other `in` before it, and only words and formulas between)
+    if mid.any (fun c => match c with | .w w => w == w!"in" || w == w!"such" || w == w!"that" || w == w!"which" | .p _ => true | _ => false) then [] else
+    let first := lead ++ var ++ [.w w!"of", .m x] ++ mid.reverse
+    let second : List (List Chunk) := match var, mid with
+      | [], .m [.id v] :: m' => [lead ++ [.m [.id v], .w w!"of", .m x] ++ m'.reverse]
+      | _, _ => []
+    first :: second
+  | _ => []
+
 /-- `nounPhrase0`, and `a sequence of dense open subsets of $X$ $(U_n)$`: a function of the
 natural numbers whose terms `U_n` are each as the noun phrase says (its values elsewhere are not
 used). -/
@@ -2949,6 +3010,11 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
           let terms : List Tm := if each == .tt then [] else [Tm.all .real (.imp (.app (.prim .isNat) (.loc 0)) each)]
           return ⟨v, sty, some (.lam sty .tt (Elab.conjAll (terms ++ cs)))⟩
     set st00
+  -- (`subgroup of index $2$ in $G$`: the object after `in` as the noun's complement)
+  if !(e00.code == E.undefined || e00.code == E.free) then
+    for np' in compInForms np do
+      if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then return b
+      set st00
   throw e00
 
 /-- The subformulas of a formula. -/
@@ -3258,9 +3324,33 @@ def nounBinders (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
       pure [← nounPhrase np outer]
   | none => pure [← nounPhrase np outer]
 
+/-- The ends of the intervals that the formulas of a noun phrase name (`[a,b]`, `(a,b]`; `(a,b)`
+as the domain of a signature or after `on`, `over`): the left end and the right end. -/
+def npIntervalEnds (np : List Chunk) : List (MT × MT) :=
+  let rec ends : Nat → Bool → MT → List (MT × MT)
+    | 0, _, _ => []
+    | f + 1, dom, m =>
+      (match m with
+        | .interval a b | .ival a b _ _ => [(a, b)]
+        | .tuple [a, b] => if dom then [(a, b)] else []
+        | _ => []) ++
+      (match m with
+        | .sig n d c => ends f false n ++ ends f true d ++ ends f false c
+        | _ => (mtChildren m).flatMap (ends f false))
+  np.zipIdx.flatMap fun (c, i) => match c with
+    | .m ts =>
+      let dom := i > 0 && (match (np[i - 1]? : Option Chunk) with
+        | some (.w w) => w == w!"on" || w == w!"over"
+        | _ => false)
+      match Math.parseSig ts <|> Math.parseFormula ts with
+      | some m => ends 64 dom m
+      | none => []
+    | _ => []
+
 /-- `nounBinders`; and where a letter that nothing defines stands in a formula of the noun
 phrase (`Let $G$ be a graph with $n$ vertices`, `an $n\times n$ matrix`), the letter is a
-number bound with it, before it. -/
+number bound with it, before it. An end of an interval of the phrase (`a continuous function on
+$[a,b]$`, `$f\colon(a,b)\to\mathbb{R}$`) is below the other end, as the notation presupposes. -/
 def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
   | 0, outer => nounBinders np outer
   | f + 1, outer => do
@@ -3286,8 +3376,22 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
       -- (not the noun's own variable: `a graph $n$`)
       if varOfNoun && (np.filter fun c => match c with | .m _ => true | _ => false).length < 2 then throw e
       set st0
+      -- (an end of an interval: below the other end, a number or a real variable bound before;
+      -- the predicate is stated where the letter is bound, under its own binder)
+      let side (m : MT) : Option Tm := match m with
+        | .id p => if p == v then some (.loc 0) else
+          (outer.findIdx? fun (n, t) => n == p && t == .real).map fun k => Tm.loc (k + 2)
+        | .num n => some (.num n)
+        | _ => none
+      let conds : List Tm := (npIntervalEnds np).filterMap fun (l, r) =>
+        let mentions := (match l with | .id p => p == v | _ => false) || (match r with | .id p => p == v | _ => false)
+        if !mentions then none else
+        match side l, side r with
+        | some a, some b => if a == b then none else some (Tm.lt a b)
+        | _, _ => none
+      let conds := conds.eraseDups
       let bs ← nounBindersImplicitN np f ((v, .real) :: outer)
-      pure ((⟨v, .real, none⟩ : BindInfo) :: bs)
+      pure ((⟨v, .real, if conds.isEmpty then none else some (.lam .real .tt (Elab.conjAll conds))⟩ : BindInfo) :: bs)
 
 def nounBindersImplicit (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
   -- `a field $K$ of characteristic $p>0$`: a parameter with its bound, after the noun's
@@ -3563,6 +3667,7 @@ def clauseMaths : Clause → List MT
   | .countNP np _ _ (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .countNP np _ _ none => (mathsOf np).filterMap Math.parseFormula
   | .noneExist c => clauseMaths c
+  | .firstOf a b => clauseMaths a ++ clauseMaths b
   | .iff p q => [p, q]
   | .compare l _ r => [l, r]
   | .stmtAt e => [e]
@@ -6049,6 +6154,16 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
       | some q => .and (.app q (.loc 0)) acc
       | none => acc)) (Elab.conjAll ps))
   | .noneExist cl => do pure (.not (← clauseTm c sc onVar lastRhs cl))
+  | .firstOf a b => do
+    -- (the second reading where the first's noun phrase is not the vocabulary's)
+    let st0 ← get
+    tryCatch (clauseTm c sc onVar lastRhs a) fun e => do
+      if !(e.code == E.prose || e.code == E.noun || e.code == E.unsupported || e.code == E.nounWords ||
+          e.code == E.type || e.code == E.finding) then throw e
+      set st0
+      tryCatch (clauseTm c sc onVar lastRhs b) fun e' => do
+        if e'.code == E.prose || e'.code == E.noun || e'.code == E.unsupported || e'.code == E.nounWords then throw e
+        throw e'
   | .infinitelyMany np cl => do
     let b ← nounPhrase np sc
     if b.ty != .real then fail E.type
@@ -6660,12 +6775,15 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   -- (the binders' domains are in the scope of the inherited binders)
   let bs ← bindersInfos binds inherited
   checkThreshold known bs
-  if inResult && !bs.isEmpty then
+  -- (not the object of `every NP`, which only its sentence names: the variable that the grammar
+  -- gives it, the last binder)
+  let kept := (bs.reverse.dropWhile fun b => b.name == w!"ve" || b.name == w!"\\everyobj").reverse
+  if inResult && !kept.isEmpty then
     -- (a binder is in the scope of those before it in the list: new binders that use
     -- variables of the result come after them)
     if domEnv.isEmpty then
-      modify fun st => { st with envBinders := bs ++ dropShadowed st.envBinders (bs.map (·.name)) }
-    else modify fun st => { st with envBinders := st.envBinders ++ bs }
+      modify fun st => { st with envBinders := kept ++ dropShadowed st.envBinders (kept.map (·.name)) }
+    else modify fun st => { st with envBinders := st.envBinders ++ kept }
   let allBs := inherited ++ bs ++ onVar.toList
   let sc := scopeOf allBs
   let rec go : Nat → List CClause → Option MT → M (List Nat)

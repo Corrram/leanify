@@ -1684,6 +1684,10 @@ inductive Clause where
   /-- `there exist NP, NP, and NP [satisfying DISPLAY] [such that CLAUSE, …]`: objects
   with the conditions. -/
   | existsNPs (nps : List (List Chunk)) (conds : List Clause)
+  /-- The clause `a`, or `b` where `a` is not read (its noun phrase is not the vocabulary's):
+  `$G$ contains an element of order $2$` (an element of `G`), `$I$ contains a rational
+  number` (one contained in `I`). -/
+  | firstOf (a b : Clause)
   /-- `there is no NP …`, `there are no NP, NP …`: no such objects exist. -/
   | noneExist (c : Clause)
   /-- `[the WORDS] $X$ is at most [the WORDS] $Y$` (at least, less than, greater than,
@@ -2936,20 +2940,34 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       some (Clause.isA s ([Chunk.w w!"with"] ++ ws) false, rest) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
-  -- `$G$ contains a Hamiltonian cycle`: as `has` (words only, a modifier `with a …`)
+  -- `$G$ contains a Hamiltonian cycle`, `$G$ contains an element of order $2$`: an object of
+  -- the subject, as with `has` (the noun's complement `of $G$`, after the noun's words); where
+  -- the noun has no such complement (`$I$ contains a rational number`), or has its own (`$U$
+  -- contains a neighbourhood of $x$`): an object contained in the subject
   match (do
       let (ts, r) ← mathChunk cs
       let _ ← Math.parseFormula ts
       let r1 ← kw [w!"contains"] r
       let r2 ← kw [w!"a"] r1 <|> kw [w!"an"] r1
-      let ws := r2.takeWhile fun (c : Chunk) => match c with
-        | .w w => ![w!"and", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"of", w!"in", w!"with", w!"that"].contains w
+      let np := r2.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"and", w!"or", w!"if", w!"for", w!"where", w!"since", w!"which", w!"such", w!"then", w!"whenever", w!"that", w!"iff"].contains w
+        | .m _ => true
         | .p 45 => true
         | _ => false
-      if ws.isEmpty then none
-      let rest := r2.drop ws.length
-      if (match rest with | .m _ :: _ => true | _ => false) then none
-      some (Clause.existsNP (ws ++ [Chunk.w w!"of", Chunk.m ts]) false none, rest) : Option (Clause × List Chunk)) with
+      let rest := r2.drop np.length
+      let head := np.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"of", w!"with", w!"in", w!"on", w!"at", w!"over", w!"to", w!"from", w!"satisfying"].contains w
+        | .p 45 => true
+        | _ => false
+      if head.isEmpty || !(head.all fun (c : Chunk) => match c with | .w _ | .p 45 => true | _ => false) then none
+      let tail := np.drop head.length
+      let inIt := Clause.existsNP (np ++ [Chunk.w w!"contained", Chunk.w w!"in", Chunk.m ts]) false none
+      let own : Bool := match tail with
+        | .w o :: .m _ :: _ => o == w!"of"
+        | _ => false
+      if own then some (inIt, rest) else
+      some (Clause.firstOf (Clause.existsNP (head ++ [Chunk.w w!"of", Chunk.m ts] ++ tail) false none) inIt, rest) :
+      Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$G$ has an even number of vertices of odd degree`: the number of those objects of the
@@ -3363,6 +3381,20 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     let (p, r) ← clause2 (cs.take i ++ [.p 46])
     if !(match r with | [] | [.p 46] => true | _ => false) then none
     let rest := cs.drop (i + ws.length)
+    -- (`An ideal $M$ of $R$ is prime if and only if $R/M$ is …`: the variable of the objects of
+    -- the first clause, which the second uses, is bound over both, not in the first alone)
+    let ownVar (np : List Chunk) : Option Codes :=
+      let k := np.findIdx (fun c => match c with | .w _ | .p 45 => false | _ => true)
+      match np[k]?, (if k == 0 then none else np[k - 1]?) with
+      | some (.m [.id v]), some (.w w) =>
+        if [w!"of", w!"in", w!"on", w!"over", w!"to", w!"from", w!"with", w!"at", w!"by", w!"for", w!"modulo"].contains w then none else some v
+      | _, _ => none
+    let usedAfter : Bool := match p with
+      | .everyIs np _ _ | .everyMod np _ => match ownVar np with
+        | some v => rest.any fun c => match c with | .m ts => ts.contains (.id v) | _ => false
+        | none => false
+      | _ => false
+    if usedAfter then none
     let (q, r2) ← clause2E rest
     some (mk p q, r2)
   let split : Option (Clause × List Chunk) := splitAt iffW .iffC <|> splitAt [w!"or"] .orC
@@ -4854,13 +4886,13 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
               if [w!"with", w!"of", w!"such", w!"and", w!"satisfying", w!"that", w!"which", w!"whose", w!"where"].contains w then acc.reverse
               else afterOf f rest (.w w :: acc)
             | .m u :: rest => match acc with
-              | .w p :: _ => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at", w!"containing"].contains p then afterOf f rest (.m u :: acc) else acc.reverse
+              | .w p :: _ => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at", w!"containing", w!"in"].contains p then afterOf f rest (.m u :: acc) else acc.reverse
               | _ => acc.reverse
             | _ => acc.reverse
         let after1 := afterOf (more.length + 1) more []
         -- (not a dangling preposition before what follows)
         let after1 := match after1.getLast? with
-          | some (.w p) => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at", w!"containing"].contains p && after1.any (fun c => match c with | .m _ => true | _ => false) then after1.dropLast else after1
+          | some (.w p) => if [w!"modulo", w!"to", w!"by", w!"from", w!"over", w!"at", w!"containing", w!"in"].contains p && after1.any (fun c => match c with | .m _ => true | _ => false) then after1.dropLast else after1
           | _ => after1
         let after := two ++ after1
         some (ws.take i ++ [.m v] ++ ws.drop i ++ [.m t] ++ after, more.drop after1.length)

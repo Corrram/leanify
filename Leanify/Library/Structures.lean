@@ -425,6 +425,8 @@ def vocab : Vocab where
       doc := "an element of a vector space, with it: `vectors in $V$` (`v ∈ V`)" },
     { sing := phrase!"element", plural := phrase!"elements", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of"], S, elemOf), doc := "an element of a structure: `g ∈ G`" },
+    { sing := phrase!"point", plural := phrase!"points", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
+      arg := some ([w!"of", w!"in"], S, elemOf), doc := "a point of a space (of a subset of it), an element: `x ∈ X`" },
     { sing := phrase!"unit", plural := phrase!"units", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
       arg := some ([w!"of", w!"in"], S, rel S E fun r a => app2 (const 55) r a), doc := "an invertible element of a ring (Mathlib `IsUnit`)" },
     { sing := phrase!"zero divisor", plural := phrase!"zero divisors", ty := E, pred := close (lamT E (fun _ => tt) fun _ => tt),
