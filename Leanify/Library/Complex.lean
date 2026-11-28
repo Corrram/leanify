@@ -13,7 +13,9 @@ Mathlib by `Leanify.Complex.model` (`Leanify/Library/ComplexModel.lean`).
 * `f'` of a function of a complex variable: the complex derivative (Mathlib `deriv`, the `d`
   with `HasDerivAt f d z`), on the domain of the signature;
 * `polynomial with complex coefficients`, `complex polynomial` (Mathlib `Polynomial ℂ`
-  evaluated), `with a root in $U$`, `with a zero in $U$`, `with a root`, `without zeros`;
+  evaluated), `with a root in $U$`, `with a zero in $U$`, `with a root` (`with a complex
+  root`), `without zeros`;
+* complex numbers `nonzero`, `real` (`Im z = 0`), `of modulus $r$` (`with modulus $r$`);
 * `\mathrm{i}`, the imaginary unit (also a bare `i` that the article does not name);
 * a real number where a complex number is expected (`1+z`): `(x : ℂ)`;
 * `z+w`, `z-w`, `zw`, `z/w` (defined for `w\ne0`), `-z`, `z^n` (for a natural number
@@ -129,6 +131,17 @@ def vocab : Vocab where
     { phrase := phrase!"with a root", prenominal := false, ty := C ⟶ C,
       pred := close (lamT (C ⟶ C) (fun _ => tt) fun f => exT C fun z => eq (app f z) (app (const ofReal) (num 0))),
       doc := "`f(z) = 0` for some complex number `z`" },
+    { phrase := phrase!"with a complex root", prenominal := false, ty := C ⟶ C,
+      pred := close (lamT (C ⟶ C) (fun _ => tt) fun f => exT C fun z => eq (app f z) (app (const ofReal) (num 0))),
+      doc := "`f(z) = 0` for some complex number `z` (also `has a complex root`)" },
+    { phrase := phrase!"nonzero", prenominal := true, ty := C,
+      pred := close (lamT C (fun _ => tt) fun z => not (eq z (app (const ofReal) (num 0)))), doc := "`z ≠ 0`" },
+    { phrase := phrase!"real", prenominal := true, ty := C,
+      pred := close (lamT C (fun _ => tt) fun z => eq (app (const im) z) (num 0)), doc := "`Im z = 0`" },
+    { phrase := phrase!"of modulus $v$", prenominal := false, ty := C,
+      pred := close (lamR fun r => lamT C (fun _ => tt) fun z => eq (app (const abs) z) r), doc := "`|z| = r`" },
+    { phrase := phrase!"with modulus $v$", prenominal := false, ty := C,
+      pred := close (lamR fun r => lamT C (fun _ => tt) fun z => eq (app (const abs) z) r), doc := "`|z| = r`" },
     { phrase := phrase!"without zeros", prenominal := false, ty := C ⟶ C,
       pred := close (lamT (C ⟶ C) (fun _ => tt) fun f => allT C fun z => not (eq (app f z) (app (const ofReal) (num 0)))),
       doc := "`f(z) ≠ 0` for every complex number `z` (also `has no zeros`)" },

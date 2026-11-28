@@ -1641,6 +1641,33 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
           let set : Tm := .lam et .tt ((eqs.drop 1).foldl (fun acc e => Tm.or acc e) (eqs.headD (.not .tt)))
           let pairs := ts.zipIdx.flatMap fun (a, k) => (ts.drop (k + 1)).map fun b => Tm.not (.eq a.1 b.1)
           return (conjAll (pairs ++ [.app (← adjOf et) set]), .prop)
+    -- `@familyof(@N, X, a, b, …)`, `@familyofseq(@N, X, x, lo, hi)` (of the grammar, for
+    -- `$v_1,\ldots,v_n$ span $V$`): the set of the terms is an object of the vocabulary's noun
+    -- `N` of sets with the complement `X` (`spanning set of $V$`)
+    if let .app (.id fn) (.id nounKey :: x :: xs) := m then
+      if fn == w!"@familyof" || fn == w!"@familyofseq" then
+        let words : Phrase := ((nounKey.drop 1).splitOn 32).map PItem.w
+        let V := (← get).vocab
+        let (xt, xty) ← term f sc pf x
+        let some n := V.nouns.find? (fun n => n.sing == words && (match n.arg with | some (_, aty, _) => aty == xty | none => false))
+          | fail E.type
+        let some (_, _, rel) := n.arg | fail E.type
+        let .fn et .prop := n.ty | fail E.type
+        let set ← if fn == w!"@familyofseq" then do
+            let [y, lo, hi] := xs | fail E.unsupported
+            let (yt, yty) ← term f sc pf y
+            if yty != .fn .real et then fail E.type
+            let l ← asReal (← term f sc pf lo)
+            let h ← asReal (← term f sc pf hi)
+            let range (i : Tm) (k : Nat) : Tm := .and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
+            pure (Tm.lam et .tt (.ex .real (.and (range (.loc 0) 2) (.eq (.loc 1) (.app (shift 2 0 yt) (.loc 0))))))
+          else do
+            let ts ← xs.mapM (term f sc pf)
+            if ts.isEmpty || !ts.all (·.2 == et) then fail E.type
+            let eqs := ts.map fun (t, _) => Tm.eq (.loc 0) (shift 1 0 t)
+            pure (Tm.lam et .tt ((eqs.drop 1).foldl (fun acc e => Tm.or acc e) (eqs.headD (.not .tt))))
+        let r := Tm.app (.app rel xt) set
+        return (if n.pred == .lam n.ty .tt .tt then r else .and (.app n.pred set) r, .prop)
     -- the notation of the field `hilbert`
     if let some r ← opTerm f sc pf m then return r
     -- expectations, probabilities, variances of random variables

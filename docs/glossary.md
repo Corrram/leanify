@@ -544,6 +544,11 @@ except a notion whose meanings take arguments of different types, which the type
 | with a root in $x$ | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some `z ∈ U` (also `has a root in $U$`) |
 | with a zero in $x$ | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some `z ∈ U` |
 | with a root | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some complex number `z` |
+| with a complex root | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) = 0` for some complex number `z` (also `has a complex root`) |
+| nonzero | $\mathbb{C}$ | `z ≠ 0` |
+| real | $\mathbb{C}$ | `Im z = 0` |
+| of modulus $x$ | $\mathbb{C}$ | `\|z\| = r` |
+| with modulus $x$ | $\mathbb{C}$ | `\|z\| = r` |
 | without zeros | $\mathbb{C}$ → $\mathbb{C}$ | `f(z) ≠ 0` for every complex number `z` (also `has no zeros`) |
 | open | $\mathbb{C}$ → Prop | (Mathlib `IsOpen`) |
 | connected | $\mathbb{C}$ → Prop | nonempty, and connected (Mathlib `IsConnected`) |

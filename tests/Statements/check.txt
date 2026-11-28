@@ -147,9 +147,13 @@ tests/Statements/article.tex:510:350: info: claim 118: \forall x\in \mathbb{R},\
 tests/Statements/article.tex:510:471: info: claim 119: \forall x\in \mathbb{C}\to \mathbb{C},\ \operatorname{Entire}(x)\Rightarrow (\forall y\in \mathbb{C},\ (\iota s\in \mathbb{C}.\ \operatorname{HasDerivAt}(x)(s)(y))=0)\Rightarrow \operatorname{Constant}((z\in \mathbb{C}\mapsto \top))(x)
 tests/Statements/article.tex:514:1: info: claim 120: \exists x\in \mathbb{R},\ (0<x\land {x}^{2}=2)\land (\forall y\in \mathbb{R},\ 0<y\land {y}^{2}=2\Rightarrow y=x)
 tests/Statements/article.tex:514:44: info: claim 121: \exists x\in \mathbb{R},\ (\top\land {x}^{3}=2)\land (\forall y\in \mathbb{R},\ \top\land {y}^{3}=2\Rightarrow y=x)
-tests/Statements/article.tex: 8 definitions, 122 claims
+tests/Statements/article.tex:518:38: info: claim 122: \forall x\in \mathbb{C},\ \neg (x=0)\Rightarrow \neg (x\,\overline{x}=0)
+tests/Statements/article.tex:518:102: info: claim 123: \forall x\in \mathbb{C},\ \lvert x\rvert=1\Rightarrow \overline{x}=\frac{1}{x}
+tests/Statements/article.tex:518:155: info: claim 124: \forall x\in \mathbb{C},\ \operatorname{Im}(x)=0\Rightarrow \overline{x}=x
+tests/Statements/article.tex:518:172: info: claim 125: \forall x\in \mathbb{C}\to \mathbb{C},\ \operatorname{Polynomial}(x)\land \neg \operatorname{Constant}((s\in \mathbb{C}\mapsto \top))(x)\Rightarrow (\exists z\in \mathbb{C},\ x(z)=0)
+tests/Statements/article.tex: 8 definitions, 126 claims
   text: 9 compiled, 1 failed, 17 prose (of 27)
-  results: 125 compiled, 16 failed, 3 prose (of 144)
+  results: 132 compiled, 16 failed, 3 prose (of 151)
   proofs: 2 compiled, 0 failed, 0 prose (of 2)
-  all: 136 compiled, 17 failed, 20 prose (of 173)
+  all: 143 compiled, 17 failed, 20 prose (of 180)
   complete proofs: 1 of 1 (a result is derived from a proof that is read completely)

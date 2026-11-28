@@ -2828,6 +2828,23 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       some (Clause.isA s ([Chunk.w w!"with", Chunk.m k] ++ ws) false, r2.drop ws.length) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
+  -- `$v_1,\ldots,v_n$ span $V$`, `$v$ and $w$ span $V$`: their set is a spanning set of it
+  match (do
+      let (ts, r) ← joinedVars cs
+      let (noun, r1) ← (kw [w!"span"] r).map (w!"@spanning set", ·)
+      let (xs, r2) ← mathChunk r1
+      let x ← Math.parseFormula xs
+      let fam ← match (seqBound ts).bind (fun (l, b) => if b.isEmpty then some l else none) with
+        | some l => do
+          let (y, _, lo, hi) ← seqVars l
+          some (MT.app (.id w!"@familyofseq") [.id noun, x, .id y, lo, hi])
+        | none => do
+          let vars ← splitVars ts
+          let ms ← vars.mapM Math.parseFormula
+          some (MT.app (.id w!"@familyof") (.id noun :: x :: ms))
+      some (Clause.fact fam, r2) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
   -- `$X$ and $Y$ are independent`, `$X_1,\ldots,X_n$ are independent and identically
   -- distributed`: the collective condition of random variables
   match (do
@@ -7281,12 +7298,26 @@ def plainWords (cs : List Chunk) : Bool :=
 `in`, `over`, `from`: the words before it, the preposition, the inner noun phrase, the
 variable written after it (if any), and the chunks after. -/
 def nestSplit (cs : List Chunk) : Option (List Chunk × Codes × List Chunk × Option Codes × List Chunk) := do
-  let i ← cs.findIdx? fun c => match c with
-    | .w w => [w!"of", w!"on", w!"in", w!"over", w!"from"].contains w
+  let preps := [w!"of", w!"on", w!"in", w!"over", w!"from"]
+  let i0 ← cs.findIdx? fun c => match c with
+    | .w w => preps.contains w
     | .p 45 => false
     | _ => true
+  -- (`vector space of dimension $n$ over a field`: a phrase with a formula before the nested
+  -- noun phrase, the first preposition before an article)
+  let i ← if plainWords (cs.take i0) && (match cs[i0 + 1]? with | some (.w d) => d == w!"a" || d == w!"an" | _ => false) then some i0
+    else (List.range cs.length).find? fun k => k > 0 &&
+      (match (cs[k]? : Option Chunk), (cs[k + 1]? : Option Chunk) with
+        | some (.w p), some (.w d) => preps.contains p && (d == w!"a" || d == w!"an")
+        | _, _ => false) &&
+      (cs.take k).all (fun c => match c with
+        | .w w => ![w!"with", w!"such", w!"that", w!"which", w!"where", w!"and", w!"a", w!"an", w!"the"].contains w
+        | .p p => p == 45
+        | .m _ => true
+        | _ => false) &&
+      (match cs.head? with | some (.w _) => true | _ => false)
   let front := cs.take i
-  if !plainWords front then none
+  if !(plainWords front || i != i0) then none
   let .w prep := (← cs[i]?) | none
   let det ← cs[i + 1]?
   if !(match det with | .w d => d == w!"a" || d == w!"an" | _ => false) then none
