@@ -2947,6 +2947,47 @@ def nounPhrase0 (np : List Chunk) (outer : Scope := []) : M BindInfo := do
       if let some b := r then return b
   throw e00
 
+/-- `function differentiable on $(a,b)$ $f$`, `function $f$ differentiable on $(a,b)$`,
+`set $A$ closed in $X$`: words after the noun, with the phrase of a preposition, read before it,
+`differentiable function on $(a,b)$ $f$` (the variable after the phrase). -/
+def postAdjForm (V : Vocab) (np : List Chunk) : Option (List Chunk) := do
+  let isW (c : Chunk) : Bool := match c with | .w _ | .p 45 => true | _ => false
+  let isVar (v : List MTok) : Bool := match v with | [.id _] | [.cmd _] => true | _ => Grammar.subName v
+  -- (the noun of the vocabulary after the first words: the one that ends last, the longest)
+  let cands : List (Nat × Nat) := (List.range np.length).flatMap fun i =>
+    if !(np.take i).all isW then [] else
+    V.nouns.filterMap fun n =>
+      let ws := n.sing.filterMap fun p => match p with | .w x => some x | _ => none
+      if ws.isEmpty || ws.length != n.sing.length then none
+      else if ((np.drop i).take ws.length).map (fun c => match c with | .w x => some x | _ => none) == ws.map some then
+        some (i, ws.length) else none
+  let (i, k) ← cands.foldl (fun (acc : Option (Nat × Nat)) (c : Nat × Nat) => match acc with
+    | some a => if c.1 + c.2 > a.1 + a.2 || (c.1 + c.2 == a.1 + a.2 && c.2 > a.2) then some c else some a
+    | none => some c) none
+  let after := np.drop (i + k)
+  let (var, after) : Option (List MTok) × List Chunk := match after with
+    | .m v :: rest => if isVar v then (some v, rest) else (none, after)
+    | _ => (none, after)
+  let preps := [w!"on", w!"at", w!"in", w!"over"]
+  let adjs := after.takeWhile fun c => match c with
+    | .w w => !(preps ++ [w!"with", w!"such", w!"that", w!"which", w!"of", w!"for", w!"whose", w!"where", w!"and"]).contains w
+    | .p 45 => true
+    | _ => false
+  if adjs.isEmpty then none
+  let rest := after.drop adjs.length
+  -- (`function differentiable $v$ on $(a,b)$`: the variable before the preposition)
+  let (var, rest) : Option (List MTok) × List Chunk := match var, rest with
+    | none, .m v :: r@(.w _ :: _) => if isVar v then (some v, r) else (none, rest)
+    | _, _ => (var, rest)
+  let .w p :: .m d :: tail := rest | none
+  if !preps.contains p then none
+  let (var, tail) : Option (List MTok) × List Chunk := match var, tail with
+    | none, .m v :: t => if isVar v then (some v, t) else (none, tail)
+    | _, _ => (var, tail)
+  let v ← var
+  let noun := (np.drop i).take k
+  some (np.take i ++ adjs ++ noun ++ [.w p, .m d, .m v] ++ tail)
+
 /-- `subgroup of index $2$ in $G$` as `subgroup of $G$ of index $2$`, `element in $G$` as
 `element of $G$`: readings of a noun phrase whose words have no complement, with an object after
 `in` at its end, as the noun's complement (the variable after the words, `subgroup $H$ of index
@@ -3139,6 +3180,13 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
     set st00
   tryCatch (nounPhrase0 np outer) fun e00 => do
   set st00
+  -- (`function differentiable on $(a,b)$`: as `differentiable function on $(a,b)$`)
+  -- (a letter that nothing defines, `on $(a,b)$`: for the caller to bind, then read again)
+  for np' in ([some np, relFree].filterMap id).filterMap (postAdjForm (← get).vocab) do
+    match ← tryCatch (Sum.inl <$> nounPhrase0 np' outer) (fun e => pure (Sum.inr e)) with
+    | .inl b => return b
+    | .inr e => if e.code == E.undefined || e.code == E.free then throw e
+    set st00
   if let some (np', vts, condCs) := seqOfElems (← get).vocab np then
     if let some v := varName vts then
       if let some b ← tryCatch (some <$> nounPhrase0 np' outer) (fun _ => pure none) then
@@ -6874,7 +6922,18 @@ def claimSentenceCore (c : SentCtx) (topic : Topic) (binds : List Bind) (cls : L
   -- already bound (by the result, or by a binder before it): a hypothesis about them;
   -- otherwise binders
   let hypNoun (known : List Codes) (b : Bind) : Option Clause := match b with
-    | .noun np => match np.reverse with
+    -- (`If $p$ is a prime with $p>3$` about a `p` bound before: both)
+    | .noun np =>
+      let withForm : Option Clause := match np.reverse with
+        | .m φ :: .w w :: .m ts :: rest =>
+          if w != w!"with" then none else do
+          let m ← Math.parseFormula ts
+          let v ← Elab.symKey m
+          let c ← Math.parseFormula φ
+          if known.contains v then some (Clause.both [Clause.isA m rest.reverse false, .fact c]) else none
+        | _ => none
+      if withForm.isSome then withForm else
+      match np.reverse with
       | .m ts :: rest =>
         -- (a sequence `x_1,\ldots,x_n` of the result: each of its terms)
         match Grammar.seqVars ts with

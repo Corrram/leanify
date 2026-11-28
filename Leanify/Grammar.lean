@@ -1584,6 +1584,16 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
               let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
               if ws.isEmpty || (punct 44 (r2.drop ws.length)).isNone then none
               else some (.hyp (.noun (ws ++ [.m v])), r2.drop ws.length)) <|>
+            -- `If $p$ is a prime with $p>3$,`: as `For a prime $p$ with $p>3$,`
+            (do
+              let (ts, r1) ← mathChunk r
+              let v ← match ts with | [.id _] => some ts | _ => if subName ts then some ts else none
+              let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
+              let ws := r2.takeWhile (fun c => match c with | .w w => w != w!"with" | .p 45 => true | _ => false)
+              let r3 ← kw [w!"with"] (r2.drop ws.length)
+              let .m φ :: r4 := r3 | none
+              if ws.isEmpty || (punct 44 r4).isNone then none
+              some (.hyp (.noun (ws ++ [.m v, .w w!"with", .m φ])), r4)) <|>
             -- `If $K\subseteq X$ is compact,`, `If $x\in A$ is positive,`: as `For a compact subset
             -- $K$ of $X$,` (a subset, an element of the set; a hypothesis where the letter is bound)
             (do
@@ -4690,6 +4700,19 @@ def condVars (cs : List Chunk) : Option (List (MTok × Option MT) × List Chunk)
 
 /-- `$x\in A$`, `$c>0$` (a condition), or `$C$ be a|an NP`: the variable of a `let`. -/
 def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
+  -- `$\sum_{n=1}^\infty a_n$ be an absolutely convergent series`: the sequence of its terms,
+  -- `$(a_n)$ be an absolutely summable sequence` (the series converges where its terms are
+  -- summable, from whichever index it starts)
+  (do
+    let (ts, r) ← mathChunk cs
+    let .bigop true n _ (.id inf) (.sub (.id a) (.id n')) ← Math.parseFormula ts | none
+    if inf != w!"\\infty" || n != n' then none
+    let r1 ← kw [w!"be", w!"a"] r <|> kw [w!"be", w!"an"] r
+    let (adj, r2) ← ((kw [w!"absolutely", w!"convergent", w!"series"] r1).map fun r => ([w!"absolutely", w!"summable"], r)) <|>
+      ((kw [w!"conditionally", w!"convergent", w!"series"] r1).map fun r => ([w!"conditionally", w!"summable"], r)) <|>
+      ((kw [w!"convergent", w!"series"] r1).map fun r => ([w!"summable"], r))
+    let seq : List MTok := [.sym 40, .id a, .sym 95, .id n, .sym 41]
+    some (.noun (adj.map Chunk.w ++ [.w w!"sequence", .m seq]), r2)) <|>
   -- `$ABC$ be a triangle [with …]`: three points (field `planegeometry`), not collinear, the
   -- vertices of a triangle (`\angle A` is its angle at `A`)
   (do
@@ -6530,12 +6553,38 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     let relative := match (withVarAt np w!"ve").getLast? with
       | some (.m [.id x]) => x != w!"ve"
       | _ => true
-    let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2 <|> (match r2 with
+    -- (or a comparison, `is equal to $2$`, `is at most $n$`)
+    let compares := [[w!"equal", w!"to"], [w!"less", w!"than"], [w!"greater", w!"than"], [w!"at", w!"most"],
+      [w!"at", w!"least"], [w!"not", w!"equal", w!"to"], [w!"different", w!"from"], [w!"smaller", w!"than"],
+      [w!"larger", w!"than"], [w!"bigger", w!"than"]]
+    let _ ← kw [w!"a"] r2 <|> kw [w!"an"] r2 <|> anyKw compares r2 <|> (match r2 with
       | .m _ :: .p 45 :: .w _ :: _ => some r2
       | _ => if relative then some r2 else none)
     if np.isEmpty then none
     let v : Codes := w!"ve"
     some ([.w w!"for", .w w!"every"] ++ withVarAt np v ++ [.p 44, .m [.id v]] ++ r1)
+
+/-- `All NOUNS … are ADJ` (`All eigenvalues of $A$ are real.`, `All primes greater than $2$
+are odd.`) as `Every NOUNS … is ADJ`: each of them (not with words said of them together,
+`distinct`, `pairwise coprime`, `equal`). -/
+def allAreSent (cs : List Chunk) : Option (List Chunk) := do
+  let r ← kw [w!"all"] cs
+  let r := (kw [w!"the"] r).getD r
+  let (np, r1) ← chunksUntilV [w!"are"] r []
+  let r2 ← kw [w!"are"] r1
+  if np.isEmpty || !(np.head?.any fun c => match c with | .w _ => true | _ => false) then none
+  let together := [w!"distinct", w!"equal", w!"consecutive", w!"coprime", w!"pairwise", w!"different", w!"collinear",
+    w!"concurrent", w!"disjoint", w!"independent", w!"identically", w!"orthogonal", w!"mutually", w!"relatively",
+    w!"same", w!"comparable", w!"congruent", w!"similar", w!"isomorphic", w!"conjugate", w!"equivalent", w!"parallel",
+    w!"perpendicular", w!"adjacent", w!"linearly", w!"all", w!"both"]
+  -- (`equal to $1$`, `coprime to $n$`, `orthogonal to $v$`: of each)
+  let joint := r2.zipIdx.any fun (c, i) => match c with
+    | .w w => together.contains w && !(match r2[i + 1]? with
+      | some (.w x) => [w!"to", w!"from", w!"of", w!"with"].contains x
+      | _ => false)
+    | _ => false
+  if joint then none
+  some ([.w w!"every"] ++ np ++ [.w w!"is"] ++ r2)
 
 /-- `Every NP has a NOUN …` as `For every NP $x$, $x$ has a NOUN …` (`Every bounded
 sequence of real numbers has a convergent subsequence.`): the noun phrase's variable, or one
@@ -7335,6 +7384,9 @@ def sentence1 (cs : List Chunk) : Option Sent :=
       | some s => some s
       | none =>
         match everyIsSent body >>= sentence0 with
+        | some s => some s
+        | none =>
+        match allAreSent body >>= fun cs' => sentence0 cs' <|> (everyIsSent cs' >>= sentence0) with
         | some s => some s
         | none =>
         match everyHasSent body >>= sentence0 with
@@ -8836,7 +8888,20 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     if !(match v with | [.id _] => true | _ => subName v) then return []
     if (Math.parseFormula subj).isNone then return []
     return (sentence (lead ++ [.w w!"there", .w w!"is", .w a] ++ ws ++ [.m v, .w w!"of", .m subj, .w w!"such", .w w!"that"] ++ more)).toList
-  return out ++ hasSuchThat ++ theSet.toList ++ theNotion.toList ++ inEvery ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++
+  -- `All subgroups of an abelian group are normal.`: as `Every subgroups of …` (`allAreSent`),
+  -- and its nested indefinites
+  let allForm : List Sent := Id.run do
+    let some ev := allAreSent cs | return []
+    let mut acc : List Sent := []
+    let mut cur := ev
+    for _ in [0:5] do
+      match nestedIndef avoid generic cur with
+      | some cs' =>
+        cur := cs'
+        if let some sn := sentence (lead ++ cs') <|> sentence (lead ++ chunkForms (cs'.length + 1) cs') then acc := acc ++ [sn]
+      | none => break
+    return acc
+  return out ++ hasSuchThat ++ theSet.toList ++ theNotion.toList ++ inEvery ++ pairs ++ same ++ letPair ++ genericSame ++ anyTwo ++ bothIs ++ contains ++ binderClaim ++ everyV ++ relFree ++ between2 ++ noLargest ++ whoseAlt ++ thereWhose ++ theOfEvery ++ ifFor ++ inWhich ++ everyNoVar ++ everyOn ++ generic' ++ allForm ++
     (if generic then ((postIf cs).bind fun c => sentence c <|> sentence (lead ++ c)).toList else [])
 
 /-- The formal restatement of `INFORMAL, that is, FORMAL`, read on its own: the reading of the

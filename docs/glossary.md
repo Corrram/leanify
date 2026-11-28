@@ -484,6 +484,7 @@ except a notion whose meanings take arguments of different types, which the type
 | positive divisor | ℝ | a divisor `d ≥ 1` (Mathlib `Nat.divisors`) |
 | prime divisor | ℝ | a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`) |
 | prime factor | ℝ | a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`) |
+| multiple | ℝ | an integer `m` with `n ∣ m` (Mathlib `Dvd`) |
 
 | Adjective or phrase | Of | Meaning |
 | --- | --- | --- |
@@ -492,6 +493,8 @@ except a notion whose meanings take arguments of different types, which the type
 | prime | ℝ | prime (Mathlib `Nat.Prime`) |
 | composite | ℝ | an integer `≥ 2` that is not prime |
 | squarefree | ℝ | an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`) |
+| divisible by $x$ | ℝ | `d ∣ a` |
+| not divisible by $x$ | ℝ | `d ∤ a` |
 
 | Notion | Type | Meaning |
 | --- | --- | --- |

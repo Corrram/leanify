@@ -105,7 +105,13 @@ tests/Arithmetic/article.tex:143:169: info: claim 69: \forall x\in \mathbb{R},\ 
 tests/Arithmetic/article.tex:147:17: info: claim 70: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z+1)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land {x}^{2}=2\,z+1)
 tests/Arithmetic/article.tex:147:53: info: claim 71: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z)\Rightarrow 4\in \mathbb{Z}\land {x}^{2}\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}=4\,y)
 tests/Arithmetic/article.tex:147:95: info: claim 72: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 2\le x\land (\forall z\in \mathbb{R},\ \forall s\in \mathbb{R},\ (z\in \mathbb{N}\land s\in \mathbb{N})\land z\,s=x\Rightarrow z=1\lor s=1)\Rightarrow 2\le x
-tests/Arithmetic/article.tex: 11 definitions, 73 claims
+tests/Arithmetic/article.tex:151:24: info: claim 73: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow ({x}^{3}-x\in \mathbb{Z}\land 6\in \mathbb{Z})\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{3}-x=6\,y)
+tests/Arithmetic/article.tex:151:24: info: claim 74: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow {x}^{3}-x\in \mathbb{Z}\land 6\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{3}-x=6\,y)
+tests/Arithmetic/article.tex:151:143: info: claim 75: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (x\in \mathbb{Z}\land 3\in \mathbb{Z})\land \neg (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=3\,s)\Rightarrow ({x}^{2}-1\in \mathbb{Z}\land 3\in \mathbb{Z})\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-1=3\,y)
+tests/Arithmetic/article.tex:151:177: info: claim 76: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land 3<x\Rightarrow ({x}^{2}-1\in \mathbb{Z}\land 24\in \mathbb{Z})\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-1=24\,y)
+tests/Arithmetic/article.tex:155:1: info: claim 77: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land 2<x\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z+1)
+tests/Arithmetic/article.tex:155:38: info: claim 78: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s)\Rightarrow x=2
+tests/Arithmetic/article.tex: 11 definitions, 79 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 84 compiled, 0 failed, 0 prose (of 84)
-  all: 94 compiled, 0 failed, 0 prose (of 94)
+  results: 91 compiled, 0 failed, 0 prose (of 91)
+  all: 101 compiled, 0 failed, 0 prose (of 101)

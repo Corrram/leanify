@@ -2,8 +2,8 @@ import Leanify.Library.Core
 
 /-! # Vocabulary: numbers
 
-Primes, divisibility, parity and the arithmetic of integers, as properties of real
-numbers (Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`). Every meaning is a
+Primes, divisibility (`divisor of`, `multiple of`, `divisible by`), parity and the arithmetic
+of integers, as properties of real numbers (Leanify's numbers are real numbers; `x ∈ ℤ` is `isInt x`). Every meaning is a
 term of the core language, so the field has no constants and no model.
 
 The words every article may use (*integer*, *real number*, *positive*, *rational
@@ -89,13 +89,20 @@ def vocab : Vocab where
     { noun phrase!"prime divisor" phrase!"prime divisors" prime "a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`)" with
       arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) },
     { noun phrase!"prime factor" phrase!"prime factors" prime "a prime `p` with `p ∣ n` (Mathlib `Nat.primeFactors`)" with
-      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) }]
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun d => and (isInt n) (divides d n)) },
+    { noun phrase!"multiple" phrase!"multiples" (close <| lamR fun m => isInt m) "an integer `m` with `n ∣ m` (Mathlib `Dvd`)" with
+      arg := some ([w!"of"], .real, close <| lamR fun n => lamR fun m => and (isInt n) (divides n m)) }]
   mods := [
     adj phrase!"even" even "`x = 2k` for an integer `k` (Mathlib `Even`)",
     adj phrase!"odd" odd "`x = 2k+1` for an integer `k` (Mathlib `Odd`)",
     adj phrase!"prime" prime "prime (Mathlib `Nat.Prime`)",
     adj phrase!"composite" composite "an integer `≥ 2` that is not prime",
-    adj phrase!"squarefree" squarefree "an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`)"]
+    adj phrase!"squarefree" squarefree "an integer not divisible by the square of an integer other than ±1 (Mathlib `Squarefree`)",
+    -- (as in the field `congruences`)
+    { phrase := phrase!"divisible by $v$", prenominal := false, ty := .real, doc := "`d ∣ a`",
+      pred := close <| lamR fun n => lamR fun a => and (and (isInt a) (isInt n)) (divides n a) },
+    { phrase := phrase!"not divisible by $v$", prenominal := false, ty := .real, doc := "`d ∤ a`",
+      pred := close <| lamR fun n => lamR fun a => and (and (isInt a) (isInt n)) (not (divides n a)) }]
   notions := [
     { name := phrase!"greatest common divisor of $v$ and $v$", value := gcd, ty := .real ⟶ .real ⟶ .real,
       doms := [intDom, intDom], doc := "the largest positive common divisor; defined unless both are 0 (Mathlib `Int.gcd`)" },
