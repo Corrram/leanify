@@ -7495,8 +7495,12 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     let fm ← if op == w!"product" && ofValues then some [.id x, .cmd w!"cdot", .id y] else twoOp op x y
     -- (each object with its own binder: `for every normal subgroup $X$ of $G$ and every
     -- normal subgroup $Y$ of $G$`)
-    let .w last := (← np.getLast?) | none
-    let one := np.dropLast ++ [.w ((DefForm.singular last).getD last)]
+    -- (the noun in the singular: the word before its complement, `sets of real numbers`)
+    let hi := match np.findIdx? (fun ch => match ch with | .w w => [w!"of", w!"with", w!"in", w!"on", w!"over"].contains w | _ => false) with
+      | some k => if k > 0 then k - 1 else np.length - 1
+      | none => np.length - 1
+    let .w last := (← np[hi]?) | none
+    let one := np.take hi ++ [.w ((DefForm.singular last).getD last)] ++ np.drop (hi + 1)
     let lead := if pre.isEmpty then [.w w!"for", .w w!"every"] else pre ++ [.w w!"every"]
     some (lead ++ one ++ [.m [.id x]] ++ comp ++ [.w w!"and", .w w!"every"] ++ one ++ [.m [.id y]] ++ comp ++
       [.p 44, .m fm] ++ after)
@@ -7700,6 +7704,15 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
   let genericB : Option (List Chunk) := do
     if !generic then none
     let .w a :: rest := cs | none
+    -- (`converges if and only if it is …`: `is convergent`, as the lexer reads it)
+    let rest := match rest.findIdx? (fun ch => match ch with | .w w => w == w!"is" || w == w!"converges" || w == w!"diverges" | _ => false) with
+      | some k => match rest[k]? with
+        | some (.w v) =>
+          if v == w!"converges" || v == w!"diverges" then
+            rest.take k ++ [Chunk.w w!"is", Chunk.w (if v == w!"converges" then w!"convergent" else w!"divergent")] ++ rest.drop (k + 1)
+          else rest
+        | _ => rest
+      | none => rest
     let every := [w!"every", w!"each", w!"any"].contains a
     if !isIndef (.w a) && !every then none
     let j ← rest.findIdx? fun ch => match ch with | .w w => w == w!"is" | .m _ => false | .p 45 => false | _ => true
@@ -7715,6 +7728,10 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | _ => (np, fresh 0)
     let body := DefForm.resolveIt x (rest.length + 1) (rest.drop j)
     if plainWords np then
+      return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body
+    -- (a complement of words, `a sequence of real numbers`: the letter after the noun phrase)
+    if np.all (fun ch => match ch with | .w _ | .p 45 => true | _ => false) &&
+        (np.head?.map fun ch => match ch with | .w w => w != w!"of" | _ => false).getD false then
       return [.w w!"for", .w w!"every"] ++ np ++ [.m [.id x], .p 44, .m [.id x]] ++ body
     -- (a complement with a formula, `a subset of $\mathbb{R}$`: the letter after the noun's words)
     let k ← np.findIdx? fun ch => match ch with | .w w => w == w!"of" || w == w!"in" | _ => false
@@ -7902,10 +7919,19 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
 replaced before it was made): `$Y$ converges.` is `$Y$ is convergent.` -/
 def chunkForms : Nat → List Chunk → List Chunk
   | 0, cs => cs
+  -- (`… sequence of real numbers converges if and only if it is …`: a noun as the subject)
+  | f + 1, .w n :: .w v :: rest =>
+    let ends := match rest with
+      | [] | .p _ :: _ => true
+      | .w w :: _ => [w!"and", w!"or", w!"if", w!"iff", w!"whenever", w!"since", w!"but"].contains w
+      | _ => false
+    if (v == w!"converges" || v == w!"diverges") && ends && ![w!"not", w!"does", w!"which", w!"that", w!"and", w!"or"].contains n then
+      .w n :: .w w!"is" :: .w (if v == w!"converges" then w!"convergent" else w!"divergent") :: chunkForms f rest
+    else .w n :: chunkForms f (.w v :: rest)
   | f + 1, .m x :: .w v :: rest =>
     let ends := match rest with
       | [] | .p _ :: _ => true
-      | .w w :: _ => w == w!"and" || w == w!"or"
+      | .w w :: _ => [w!"and", w!"or", w!"if", w!"iff", w!"whenever", w!"since", w!"but"].contains w
       | _ => false
     if (v == w!"converges" || v == w!"diverges") && ends then
       .m x :: .w w!"is" :: .w (if v == w!"converges" then w!"convergent" else w!"divergent") :: chunkForms f rest
@@ -8516,7 +8542,7 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
     let .w a :: rest := cs | return []
     if !(lower a == w!"a" || lower a == w!"an") then return []
     let ev := .w w!"every" :: rest
-    let mut acc := (sentence (lead ++ ev)).toList ++
+    let mut acc := (sentence (lead ++ ev) <|> sentence (lead ++ chunkForms (ev.length + 1) ev)).toList ++
       ((everyVar ev).bind fun cs' => sentence (lead ++ cs')).toList ++
       ((everyNoVarOf ev).bind fun cs' => sentence (lead ++ cs')).toList
     -- (and its nested indefinites: `A compact subset of a Hausdorff space is closed.`)

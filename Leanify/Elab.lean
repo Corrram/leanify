@@ -1675,6 +1675,20 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     -- (`\sum a_n` without bounds: read only where the start does not matter)
     if let .app (.id k) _ := m then
       if k == w!"@sumall" then fail E.finding sumAllMsg
+    -- `\sum_{d\mid n} e`, `\prod_{d\mid n} e`: over the positive divisors of a positive integer
+    -- `n`, the terms at the integers from `1` to `n` that divide it
+    if let .app (.id k) [nm, .mapsto (.id v) body] := m then
+      if k == w!"@sumdiv" || k == w!"@proddiv" then
+        if (lookupLocal sc v).isSome then fail E.shadow v
+        let nt ← asReal (← term f sc none nm)
+        let isInt (t : Tm) : Tm := .app (.prim .isInt) t
+        let sc' : Scope := (v, Ty.real) :: sc
+        let b ← asReal (← term f sc' (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+        let n1 := shift 1 0 nt
+        let lam := Tm.lam .real (.and (isInt (.loc 0)) (.and (.le (.num 1) (.loc 0)) (.le (.loc 0) n1)))
+          (.cases (dvdTm (.loc 0) n1) b (.num (if k == w!"@sumdiv" then 0 else 1)))
+        let p : Prim := if k == w!"@sumdiv" then .finSum else .finProd
+        return (.guard (.and (isInt nt) (.lt (.num 0) nt)) (.app (.app (.app (.prim p) (.num 1)) nt) lam), .real)
     match m with
     | .num n => pure (.num n, .real)
     | .id n => do

@@ -757,7 +757,9 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
                 quantity (lw m))
           | _ => false) then
         word (if v == w!"has" then w!"is" else w!"are") :: word w!"of" :: standardForms f there cond (some (word w!"of")) ts
-      else if (v == w!"converges" || v == w!"diverges") && afterMath && beforeEnd then
+      else if (v == w!"converges" || v == w!"diverges") && afterMath && (beforeEnd || (match ts with
+          | n :: _ => ((lw n).map fun x => [w!"if", w!"iff", w!"whenever", w!"since", w!"and", w!"or", w!"but"].contains x).getD false
+          | [] => false)) then
         word w!"is" :: word (if v == w!"converges" then w!"convergent" else w!"divergent") ::
           standardForms f there cond (some (word w!"convergent")) ts
       -- `the inequality $φ$`

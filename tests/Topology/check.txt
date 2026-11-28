@@ -64,7 +64,10 @@ tests/Topology/article.tex:116:50: info: claim 43: \forall x\in \mathbb{R}\to \m
 tests/Topology/article.tex:116:50: info: claim 44: \forall x\in \mathbb{R}\to \mathrm{Prop},\ x(0)\Rightarrow (\exists z\in \mathbb{R},\ x(z))
 tests/Topology/article.tex:116:154: info: claim 45: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \forall y\in \mathbb{R}\to \mathrm{Prop},\ (\forall s\in \mathbb{R},\ x(s)\Rightarrow y(s))\Rightarrow (\forall z\in \mathbb{R},\ x(z)\Rightarrow y(z))
 tests/Topology/article.tex:116:177: info: claim 46: \neg (0<0\land 0<1)
-tests/Topology/article.tex: 7 definitions, 47 claims
+tests/Topology/article.tex:120:1: info: claim 47: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(x)\land \operatorname{BddBelow}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{BddAbove}(y)\land \operatorname{BddBelow}(y)\Rightarrow \operatorname{BddAbove}((z\in \mathbb{R}\mapsto x(z)\lor y(z)))\land \operatorname{BddBelow}((z\in \mathbb{R}\mapsto x(z)\lor y(z))))
+tests/Topology/article.tex:120:59: info: claim 48: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Closed}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Closed}(y)\Rightarrow \operatorname{Closed}((z\in \mathbb{R}\mapsto x(z)\land y(z))))
+tests/Topology/article.tex:120:122: info: claim 49: \forall x\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(x)\Rightarrow (\forall y\in \mathbb{R}\to \mathrm{Prop},\ \operatorname{Countable}(y)\Rightarrow \operatorname{Countable}((z\in \mathbb{R}\mapsto x(z)\lor y(z))))
+tests/Topology/article.tex: 7 definitions, 50 claims
   text: 7 compiled, 0 failed, 0 prose (of 7)
-  results: 65 compiled, 0 failed, 0 prose (of 65)
-  all: 72 compiled, 0 failed, 0 prose (of 72)
+  results: 68 compiled, 0 failed, 0 prose (of 68)
+  all: 75 compiled, 0 failed, 0 prose (of 75)

@@ -775,6 +775,14 @@ def run : Nat → Mode → List MTok → R
           | _ => none
         | _ => none)
       <|> (do
+        -- `\sum_{d\mid n} e`, `\prod_{d\mid n} e`: over the positive divisors of `n`
+        let .sym 95 :: r := rest | none
+        let (b, r1) ← run f .group r
+        let .chain (.id v) [(.dvd, nm)] := b | none
+        if r1.head? == some (.sym 94) then none
+        let (body, r2) ← run f (.product false) r1
+        some (.app (.id (if n == w!"sum" then w!"@sumdiv" else w!"@proddiv")) [nm, .mapsto (.id v) body], r2))
+      <|> (do
         -- `\sum a_n`, `\sum_n a_n`: the series of a sequence's terms, without bounds (read
         -- where the start of the index does not matter: `$\sum a_n$ converges`)
         if n != w!"sum" then none
