@@ -1,1 +1,1 @@
---vocab randomvectors --claims --defined
+--vocab randomvectors,linearsystems --claims --defined

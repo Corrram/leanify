@@ -1389,6 +1389,26 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       let V := (← get).vocab
       let rn := V.notions.find? fun n =>
         (n.name.filterMap fun p => match p with | .w w => some w | _ => none) == [w!"set", w!"of", w!"vectors", w!"in"]
+      -- `Q\in\mathbb{R}^{m\times n}` with the field `matrices`: the matrices of that size
+      let rmn := V.notions.find? fun n =>
+        (n.name.filterMap fun p => match p with | .w w => some w | _ => none) == [w!"set", w!"of", w!"matrices"]
+      if let (true, some n, MT.app (.id tm) [a, b]) := (r == w!"\\mathbb{R}", rmn, e) then
+        if tm == w!"\\times" then
+          let .fn .real (.fn .real (.fn mt .prop)) := n.ty | fail E.unsupported
+          let at_ ← Elab.asReal (← Elab.term 100000 sc none a)
+          let bt ← Elab.asReal (← Elab.term 100000 sc none b)
+          return (mt, some (.app (Notation.headBeta 4 (.app n.value at_)) bt))
+      -- `x\in\mathbb{R}_{\ge0}^n`, `\mathbb{R}_+^n`, `\mathbb{R}_{>0}^n`: the vectors of dimension
+      -- `n` that are at least (or more than) `0`, in the order of the vectors
+      let orthant : Option Rel :=
+        if [w!"\\mathbb{R}_{\\ge0}", w!"\\mathbb{R}_{\\geq0}", w!"\\mathbb{R}_+", w!"\\mathbb{R}_{+}"].contains r then some .ge
+        else if [w!"\\mathbb{R}_{>0}", w!"\\mathbb{R}_{++}"].contains r then some .gt else none
+      if let (some rel, some n) := (orthant, rn) then
+        let .fn .real (.fn vt .prop) := n.ty | fail E.unsupported
+        let (et, ety) ← Elab.term 100000 sc none e
+        if ety != .real then fail E.type
+        let sign ← Elab.relTm rel (.loc 0, vt) (.num 0, .real)
+        return (vt, some (.lam vt .tt (.and (.app (shift 1 0 (.app n.value et)) (.loc 0)) sign)))
       match (if r == w!"\\mathbb{R}" then rn else none) with
       | some n =>
         let .fn .real (.fn vt .prop) := n.ty | fail E.unsupported
@@ -3711,7 +3731,9 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
       let v := subName.getD v0
       -- (a Latin or Greek letter: `with mean $\mu$ and variance $\sigma^2$`)
       let greek := [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta", w!"theta",
-        w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"rho", w!"sigma", w!"tau", w!"phi", w!"varphi", w!"chi", w!"psi", w!"omega"]
+        w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"rho", w!"sigma", w!"tau", w!"phi", w!"varphi", w!"chi", w!"psi", w!"omega",
+        -- (the script letter `\ell`)
+        w!"ell"]
       let isGreek := v.head? == some 92 && greek.contains (v.drop 1)
       let single := isGreek || match v with | [c] => (c ≥ 97 && c ≤ 122) || (c ≥ 65 && c ≤ 90) | _ => false
       let inPhrase := np.any fun c => match c with
@@ -3980,7 +4002,10 @@ where
       let some h := (match d with
           | .app (.id s) [_, .id h, _] => if s == w!"@seq" then some h else none
           -- (`u\in\mathbb{R}^n` with the field `vectors`: the dimension, a number bound before)
-          | .sup (.id r) (.id h) => if r == w!"\\mathbb{R}" then some h else none
+          | .sup (.id r) (.id h) => if (w!"\\mathbb{R}").isPrefixOf r then some h else none
+          -- (`Q\in\mathbb{R}^{m\times n}` with the field `matrices`: its numbers of rows and columns)
+          | .sup (.id r) (.app (.id tm) [.id a, .id b]) =>
+            if r == w!"\\mathbb{R}" && tm == w!"\\times" then (if b == e.detail then some b else some a) else none
           | .ival lo hi _ _ => match lo, hi with
             | .id h, _ => if h == e.detail then some h else (match hi with | .id h' => some h' | _ => none)
             | _, .id h => some h
@@ -3988,8 +4013,22 @@ where
           | _ => none) | throw e
       if !(e.code == E.undefined || e.code == E.free) || e.detail != h || sc.any (·.1 == h) then throw e
       set st0
-      let (t, q) ← binderDomain vs d ((h, .real) :: sc)
-      pure (t, q, [(⟨h, .real, none⟩ : BindInfo)])
+      -- (the other of the two letters of `m\times n`, where nothing defines it either)
+      let other : Option Codes := match d with
+        | .sup _ (.app _ [.id a, .id b]) => if a == b then none else some (if h == a then b else a)
+        | _ => none
+      tryCatch (do
+          let (t, q) ← binderDomain vs d ((h, .real) :: sc)
+          pure (t, q, [(⟨h, .real, none⟩ : BindInfo)])) fun e2 => do
+        let some h2 := other | throw e2
+        if !(e2.code == E.undefined || e2.code == E.free) || e2.detail != h2 || sc.any (·.1 == h2) then throw e2
+        set st0
+        -- (in the order in which they are written)
+        let (o, i) := match d with
+          | .sup _ (.app _ [.id a, _]) => if a == h then (h, h2) else (h2, h)
+          | _ => (h, h2)
+        let (t, q) ← binderDomain vs d ((i, .real) :: (o, .real) :: sc)
+        pure (t, q, [(⟨o, .real, none⟩ : BindInfo), (⟨i, .real, none⟩ : BindInfo)])
     let (bis, _) := vs.foldl (fun (acc, j) v =>
       (acc ++ [(⟨v, ty, p.map (shift (j + 1) 0)⟩ : BindInfo)], j + 1)) (([] : List BindInfo), 0)
     pure (pre ++ bis)
@@ -4115,6 +4154,7 @@ def clauseMaths : Clause → List MT
   | .both cs => clauseMathsAll cs
   | .iffC p q => clauseMaths p ++ clauseMaths q
   | .orC p q => clauseMaths p ++ clauseMaths q
+  | .xorC p q => clauseMaths p ++ clauseMaths q
   | .infinitelyMany np (some c) => clauseMaths c ++ (mathsOf np).filterMap Math.parseFormula
   | .infinitelyMany np none => (mathsOf np).filterMap Math.parseFormula
   | .solutions _ e _ => [e]
@@ -6778,6 +6818,8 @@ def clauseTm (c : SentCtx) (sc : Scope) (onVar : Option BindInfo) (lastRhs : Opt
     pure (.iff (← clauseTm c sc onVar lastRhs p) (← clauseTm c sc onVar lastRhs q))
   | .orC p q => do
     pure (.or (← clauseTm c sc onVar lastRhs p) (← clauseTm c sc onVar lastRhs q))
+  | .xorC p q => do
+    pure (.not (.iff (← clauseTm c sc onVar lastRhs p) (← clauseTm c sc onVar lastRhs q)))
   | .aliased ps cl => do
     -- `Q(\nu)` stands for `Q` in the clause
     let saved := (← get).aliases

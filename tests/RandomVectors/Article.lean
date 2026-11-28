@@ -2,6 +2,7 @@ import RandomVectors.Compiled
 import Leanify.Readable
 import Leanify.Library.RandomVectorsModel
 import Leanify.Library.ComplexModel
+import Leanify.Library.LinearSystemsModel
 
 /-! # The definitions and claims of `article.tex` as Lean
 

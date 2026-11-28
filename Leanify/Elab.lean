@@ -864,6 +864,10 @@ def applyAllD (head : Tm) (ty : Ty) (doms : List (Option Tm)) :
         let a' ← coerce a aty ty
         let (t, t') ← callMethod ty .mul [head, a']
         pure (t, t', [])
+      -- (and an element of one type acting on one of another: `Q(2y)` of a matrix and a vector)
+      else if rest.isEmpty && (← ownTy ty) && (← ownTy aty) then do
+        let (t, t') ← arith .mul (head, ty) (a, aty)
+        pure (t, t', [])
       else fail E.type
 
 def applyAll (head : Tm) (ty : Ty) (doms : List (Option Tm)) (args : List (Tm × Ty)) : M (Tm × Ty) := do
@@ -3052,6 +3056,10 @@ where
             | none => pure none) (fun _ => pure none)
         if r.isNone then set st0
         if let some r := r then return some r
+      -- `x^\top y` of two elements of a type with an inner product (vectors): `\langle x,y\rangle`
+      if let .mul (.sup x (.id tp)) y := m then
+        if [w!"T", w!"\\top", w!"\\intercal", w!"\\mathsf{T}", w!"\\mathrm{T}", w!"\\mathsf T"].contains tp then
+          if let some r ← own? [x, y] w!"@inner" then return some r
       match m with
       | .app (.id n) [x] =>
         if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r

@@ -45,6 +45,16 @@ def angle (x y : Vec) : ℝ := Real.arccos (inner x y / (norm x * norm y))
 def coordSum (x : Vec) : ℝ := ∑ i ∈ Finset.range x.1, at' x i
 def Parallel (x y : Vec) : Prop := ∃ c : ℝ, y = mul (ofReal c) x ∨ x = mul (ofReal c) y
 
+/-- The coordinate at `i` of `x` beside another vector: a vector of dimension 1 (a number)
+has its one coordinate at every `i`. -/
+def atAs (x : Vec) (i : ℕ) : ℝ := if x.1 = 1 then at' x 0 else at' x i
+/-- `x ≤ y` and `x < y` are defined: the same dimension, or one of them is a number. -/
+def Comparable (x y : Vec) : Prop := x.1 = y.1 ∨ x.1 = 1 ∨ y.1 = 1
+/-- `x ≤ y` in every coordinate (Mathlib's order of `Fin n → ℝ`). -/
+def le (x y : Vec) : Prop := ∀ i : ℕ, i < max x.1 y.1 → atAs x i ≤ atAs y i
+/-- `x < y` in every coordinate. -/
+def lt (x y : Vec) : Prop := ∀ i : ℕ, i < max x.1 y.1 → atAs x i < atAs y i
+
 end
 
 end Leanify.Vectors

@@ -12,7 +12,7 @@ $d$-dimensional random vectors.`). The field builds on the fields `vectors`, `ma
 
 * `X+Y`, `X-Y`, `-X` (of the same dimension), `cX` for a number `c`, `X+b` for a vector `b`
   (the constant random vector) and `AX` for a matrix `A` with as many columns as `X` has
-  coordinates (`AX+b`), and `Ab` for such a matrix and a vector `b`;
+  coordinates (`AX+b`); `Ab` for a matrix and a vector is of the field `linearsystems`;
 * `X\stackrel{d}{=}Y` (also `\overset{d}{=}`, with `d`, `D`, `\mathcal{D}`, `\mathcal{L}` or
   `law` above `=`): the random vectors have the same distribution, that is, the same
   dimension and the same joint distribution function;
@@ -84,9 +84,7 @@ def own (o : Offs) : Vocab :=
     (M ⟶ RV ⟶ .prop, w!"\\operatorname{Actable}(#1,#2)", w!"Leanify.RandomVectors.Actable"),   -- 14
     (RV ⟶ V ⟶ C, w!"\\varphi_{#1}(#2)", w!"Leanify.RandomVectors.charFun"),                    -- 15
     (RV ⟶ V ⟶ .real, w!"F_{#1}(#2)", w!"Leanify.RandomVectors.cdf"),                           -- 16
-    (RV ⟶ (V ⟶ .real) ⟶ .prop, w!"#1\\sim #2", w!"Leanify.RandomVectors.HasCdf"),              -- 17
-    (M ⟶ V ⟶ V, w!"\\cdot", w!"Leanify.RandomVectors.mulVec"),                                 -- 18
-    (M ⟶ V ⟶ .prop, w!"\\operatorname{cols}(#1)=\\dim #2", w!"Leanify.RandomVectors.MulVecable")] -- 19
+    (RV ⟶ (V ⟶ .real) ⟶ .prop, w!"#1\\sim #2", w!"Leanify.RandomVectors.HasCdf")]              -- 17
   let c (k : Nat) : B := const (o.co + k)
   let dimOf (x : B) : B := app (c 2) x
   -- `X_i(ω)`: the `i`-th coordinate at the outcome `ω`
@@ -162,8 +160,6 @@ def own (o : Offs) : Vocab :=
       { ty := RV, op := .fn w!"@of", const := o.co + 12, doc := "a vector `b` as the constant random vector (`X + b`)" },
       { ty := RV, op := .fn w!"@act", const := o.co + 13, dom := some (close (c 14)),
         doc := "`AX`, for a matrix `A` with as many columns as `X` has coordinates: `ω ↦ A X(ω)`" },
-      { ty := V, op := .fn w!"@act", const := o.co + 18, dom := some (close (c 19)),
-        doc := "`Ab`, for a matrix `A` with as many columns as the vector `b` has coordinates (Mathlib `Matrix.mulVec`)" },
       { ty := RV, op := .fn w!"@sim", const := o.co + 17,
         doc := "`X\\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X`" }] }
 

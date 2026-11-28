@@ -70,6 +70,7 @@ except a notion whose meanings take arguments of different types, which the type
       * `vectors`
       * `matrices`
       * `majorization`
+      * `linearsystems`
     * `polynomials`
     * `quadratics`
     * `structures`
@@ -172,9 +173,9 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Bundle | Made of | Its fields |
 | --- | --- | --- |
-| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
+| `math` | `analysis`, `algebra`, `topology`, `numerics`, `stochastic`, `discrete`, `numbertheory` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus`, `vectors`, `matrices`, `majorization`, `linearsystems`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals`, `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence`, `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic`, `combinatorics`, `counting`, `words`, `permutations`, `graphs`, `graphcounts`, `recurrences`, `codes`, `algorithms`, `combinatorialgames`, `designs`, `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `analysis` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `physics`, `integralequations`, `classicalpdes`, `elementary`, `complex`, `torus` | `realfunctions`, `realsets`, `calculus`, `series`, `integration`, `optimization`, `asymptotics`, `transforms`, `fourier`, `signals`, `dynamics`, `functionalequations`, `convexity`, `fractional`, `summability`, `functionsequences`, `odes`, `epidemics`, `populationdynamics`, `pharmacokinetics`, `variations`, `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits`, `integralequations`, `classicalpdes`, `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions`, `complex`, `torus` |
-| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` |
+| `algebra` | `linearalgebra`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` | `vectors`, `matrices`, `majorization`, `linearsystems`, `polynomials`, `quadratics`, `structures`, `finitefields`, `liealgebras` |
 | `topology` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` | `realsets`, `structures`, `topologies`, `metricspaces`, `geometry`, `planegeometry`, `triangles`, `solids`, `polyhedra`, `sphericalgeometry`, `mapprojections`, `surfaces`, `curves`, `fractals` |
 | `numerics` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` | `approximation`, `iteration`, `odesolvers`, `matrixnorms`, `descent`, `floatingpoint`, `convergence` |
 | `stochastic` | `statistics`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` | `randomvariables`, `randomvectors`, `distributions`, `densities`, `information`, `channels`, `concentration`, `classicalprobability`, `geometricprobability`, `risk`, `stochasticorders`, `markovchains`, `branching`, `randomwalks`, `poissonprocesses`, `extremes`, `populationgenetics`, `betting`, `samples`, `regression`, `timeseries`, `testing`, `bayesian`, `diagnostictests`, `learning`, `surveysampling`, `variograms`, `copulas`, `finance`, `fixedincome`, `options`, `utility`, `economics`, `macroeconomics`, `games`, `ratings`, `queues`, `reliability`, `actuarial`, `inventory`, `voting`, `traffic` |
@@ -182,7 +183,7 @@ except a notion whose meanings take arguments of different types, which the type
 | `numbertheory` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` | `numbers`, `arithmetic`, `congruences`, `specialnumbers`, `analyticnumbertheory`, `continuedfractions`, `digits`, `collatz`, `cryptography`, `diophantine`, `latticepoints`, `calendar` |
 | `physics` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` | `mechanics`, `waves`, `relativity`, `circuits`, `thermodynamics`, `kinetics`, `fluids`, `quantum`, `materials`, `astronomy`, `electromagnetism`, `kinematics`, `optics`, `acoustics`, `music`, `crystallography`, `orbits` |
 | `elementary` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` | `special`, `hyperbolic`, `trigonometry`, `means`, `orthogonalpolynomials`, `higherfunctions` |
-| `linearalgebra` | `vectors`, `matrices`, `majorization` | `vectors`, `matrices`, `majorization` |
+| `linearalgebra` | `vectors`, `matrices`, `majorization`, `linearsystems` | `vectors`, `matrices`, `majorization`, `linearsystems` |
 | `groups` | `structures` | `structures` |
 | `rings` | `structures` | `structures` |
 | `spaces` | `structures` | `structures` |
@@ -1201,6 +1202,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
 | $-$ (sign) | $\mathrm{Vec}$ | `-x` |
 | $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\le$ | $\mathrm{Vec}$ | `x\le y`: in every coordinate, of vectors of the same dimension; a number is compared with every coordinate (`x\ge 0`) |
+| $<$ | $\mathrm{Vec}$ | `x<y`: in every coordinate (`x>0`: every coordinate is positive) |
 | $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
 | $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
 
@@ -3178,6 +3181,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
 | $-$ (sign) | $\mathrm{Vec}$ | `-x` |
 | $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\le$ | $\mathrm{Vec}$ | `x\le y`: in every coordinate, of vectors of the same dimension; a number is compared with every coordinate (`x\ge 0`) |
+| $<$ | $\mathrm{Vec}$ | `x<y`: in every coordinate (`x>0`: every coordinate is positive) |
 | $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
 | $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
 
@@ -4346,6 +4351,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
 | $-$ (sign) | $\mathrm{Vec}$ | `-x` |
 | $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\le$ | $\mathrm{Vec}$ | `x\le y`: in every coordinate, of vectors of the same dimension; a number is compared with every coordinate (`x\ge 0`) |
+| $<$ | $\mathrm{Vec}$ | `x<y`: in every coordinate (`x>0`: every coordinate is positive) |
 | $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
 | $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
 | a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
@@ -4388,6 +4395,119 @@ except a notion whose meanings take arguments of different types, which the type
 | $\operatorname{@indep}$ | $\mathrm{RVec}$ | `independent`, of two random vectors: the joint distribution function of the coordinates of both is the product of theirs |
 | $\operatorname{@of}$ | $\mathrm{RVec}$ | a vector `b` as the constant random vector (`X + b`) |
 | $\operatorname{@act}$ | $\mathrm{RVec}$ | `AX`, for a matrix `A` with as many columns as `X` has coordinates: `ω ↦ A X(ω)` |
-| $\operatorname{@act}$ | $\mathrm{Vec}$ | `Ab`, for a matrix `A` with as many columns as the vector `b` has coordinates (Mathlib `Matrix.mulVec`) |
 | $\operatorname{@sim}$ | $\mathrm{RVec}$ | `X\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X` |
+
+## `linearsystems`
+
+| Noun | Of | Meaning |
+| --- | --- | --- |
+| vector | $\mathrm{Vec}$ | a real vector of some dimension (Mathlib `Fin n → ℝ`) |
+| unit vector | $\mathrm{Vec}$ | of norm 1 |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix, `n ≥ 1` |
+| eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
+| real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
+| eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
+
+| Adjective or phrase | Of | Meaning |
+| --- | --- | --- |
+| nonzero | $\mathrm{Vec}$ | not the zero vector |
+| unit | $\mathrm{Vec}$ | of norm 1 |
+| in $\mathbb{R}^x$ | $\mathrm{Vec}$ | of dimension `n` |
+| in $\mathbb{R}^{x}$ | $\mathrm{Vec}$ | of dimension `n` |
+| of dimension $x$ | $\mathrm{Vec}$ | in `ℝⁿ` |
+| orthogonal to $x$ | $\mathrm{Vec}$ | of the same dimension, with inner product 0 |
+| parallel to $x$ | $\mathrm{Vec}$ | of the same dimension, one a multiple of the other |
+| square | $\mathrm{Mat}$ | `n × n` |
+| real | $\mathrm{Mat}$ | a matrix of real numbers (every matrix is) |
+| symmetric | $\mathrm{Mat}$ | `Aᵀ = A` (Mathlib `Matrix.IsSymm`) |
+| skew-symmetric | $\mathrm{Mat}$ | `Aᵀ = -A` |
+| orthogonal | $\mathrm{Mat}$ | `AᵀA = I` |
+| invertible | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| nonsingular | $\mathrm{Mat}$ | square, with `det A ≠ 0` |
+| singular | $\mathrm{Mat}$ | square, with `det A = 0` |
+| positive definite | $\mathrm{Mat}$ | `xᵀAx > 0` for `x ≠ 0`, and symmetric (Mathlib `Matrix.PosDef`) |
+| positive semidefinite | $\mathrm{Mat}$ | `xᵀAx ≥ 0`, and symmetric (Mathlib `Matrix.PosSemidef`) |
+| diagonal | $\mathrm{Mat}$ | square, zero off the diagonal |
+| upper triangular | $\mathrm{Mat}$ | square, zero below the diagonal |
+| lower triangular | $\mathrm{Mat}$ | square, zero above the diagonal |
+| nilpotent | $\mathrm{Mat}$ | square, `A^k = 0` for some `k` (Mathlib `IsNilpotent`) |
+| idempotent | $\mathrm{Mat}$ | square, `A² = A` |
+| stochastic | $\mathrm{Mat}$ | square, nonnegative entries, rows summing to `1` |
+| diagonalizable | $\mathrm{Mat}$ | `P⁻¹AP` diagonal for an invertible real `P` |
+| with $x$ distinct eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues (Mathlib `Module.End.HasEigenvalue`) |
+| with $x$ distinct real eigenvalues | $\mathrm{Mat}$ | square, with exactly `k` real eigenvalues |
+| orthogonally diagonalizable | $\mathrm{Mat}$ | `QᵀAQ` diagonal for an orthogonal `Q` |
+| similar to $x$ | $\mathrm{Mat}$ | `B = P⁻¹AP` for an invertible `P` |
+| $x\timesa$ | $\mathrm{Mat}$ | of size `m × n` |
+| of size $x\timesa$ | $\mathrm{Mat}$ | `m × n` |
+| of order $x$ | $\mathrm{Mat}$ | `n × n` |
+| of rank $x$ | $\mathrm{Mat}$ | (Mathlib `Matrix.rank`) |
+
+| Notion | Type | Meaning |
+| --- | --- | --- |
+| dimension of $a$ | $\mathrm{Vec}$ → ℝ | `n`, for a vector in `ℝⁿ` |
+| norm of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm (Mathlib `EuclideanSpace`) |
+| length of $a$ | $\mathrm{Vec}$ → ℝ | the Euclidean norm |
+| inner product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension (Mathlib `inner`) |
+| dot product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `∑ xᵢyᵢ`, of vectors of the same dimension |
+| $a$ th coordinate of $b$ | ℝ → $\mathrm{Vec}$ → ℝ | `xᵢ`, for `1 ≤ i ≤ n` |
+| distance between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | `‖x - y‖`, of vectors of the same dimension |
+| angle between $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → ℝ | in `[0, π]`, of nonzero vectors of the same dimension (Mathlib `InnerProductGeometry.angle`) |
+| cross product of $a$ and $b$ | $\mathrm{Vec}$ → $\mathrm{Vec}$ → $\mathrm{Vec}$ | of vectors of dimension 3 (Mathlib `crossProduct`) |
+| zero vector of dimension $a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| zero vector in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ | `0 ∈ ℝⁿ` |
+| $a$ th standard basis vector of dimension $b$ | ℝ → ℝ → $\mathrm{Vec}$ | `eᵢ ∈ ℝⁿ`, for `1 ≤ i ≤ n` |
+| sum of the coordinates of $a$ | $\mathrm{Vec}$ → ℝ | `∑ xᵢ` |
+| set of vectors in $\mathbb{R}^a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| set of vectors of dimension $a$ | ℝ → $\mathrm{Vec}$ → Prop | `ℝⁿ` |
+| number of rows of $a$ | $\mathrm{Mat}$ → ℝ | `m` |
+| number of columns of $a$ | $\mathrm{Mat}$ → ℝ | `n` |
+| entry of $a$ in row $b$ and column $c$ | $\mathrm{Mat}$ → ℝ → ℝ → ℝ | `A i j`, for `1 ≤ i ≤ m`, `1 ≤ j ≤ n` |
+| determinant of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.det`) |
+| trace of $a$ | $\mathrm{Mat}$ → ℝ | of a square matrix (Mathlib `Matrix.trace`) |
+| rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
+| column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
+| row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
+| nullity of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`) |
+| transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
+| inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
+| identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| identity matrix of order $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ identity matrix | ℝ → ℝ → $\mathrm{Mat}$ | `I_n` |
+| $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
+| characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| matrix square root of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse |
+| set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
+| set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| image of $a$ under $b$ | $\mathrm{Vec}$ → $\mathrm{Mat}$ → $\mathrm{Vec}$ | `Ax`, for a matrix `A` with as many columns as the vector `x` has coordinates (Mathlib `Matrix.mulVec`) |
+
+| Notation | On | Meaning |
+| --- | --- | --- |
+| a real number | $\mathrm{Vec}$ | a real number `c` as the vector `(c)` of dimension 1 |
+| $+$ | $\mathrm{Vec}$ | `x + y`, of the same dimension |
+| $-$ | $\mathrm{Vec}$ | `x - y`, of the same dimension |
+| $-$ (sign) | $\mathrm{Vec}$ | `-x` |
+| $\cdot$ | $\mathrm{Vec}$ | `cx`, for a vector `c` of dimension 1 (a number) |
+| $\le$ | $\mathrm{Vec}$ | `x\le y`: in every coordinate, of vectors of the same dimension; a number is compared with every coordinate (`x\ge 0`) |
+| $<$ | $\mathrm{Vec}$ | `x<y`: in every coordinate (`x>0`: every coordinate is positive) |
+| $\operatorname{@norm}$ | $\mathrm{Vec}$ | `\lVert x\rVert`, `\\|x\\|`: the Euclidean norm |
+| $\operatorname{@inner}$ | $\mathrm{Vec}$ | `\langle x,y\rangle`: the inner product, of the same dimension |
+| a real number | $\mathrm{Mat}$ | a real number `c` as the `1 × 1` matrix `(c)` |
+| $+$ | $\mathrm{Mat}$ | `A + B`, of the same size |
+| $-$ | $\mathrm{Mat}$ | `A - B`, of the same size |
+| $-$ (sign) | $\mathrm{Mat}$ | `-A` |
+| $\cdot$ | $\mathrm{Mat}$ | `AB` (`cA` for a `1 × 1` matrix `c`) |
+| $/$ | $\mathrm{Mat}$ | `A B⁻¹`, for an invertible `B` (`1/A = A⁻¹`) |
+| $x^n$ | $\mathrm{Mat}$ | `A^k` of a square matrix, `k` natural |
+| $x^\top$ | $\mathrm{Mat}$ | `Aᵀ` (also `A^T`, `A^\intercal`) |
+| $\det$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{det}$ | $\mathrm{Mat}$ | the determinant of a square matrix |
+| $\operatorname{tr}$ | $\mathrm{Mat}$ | the trace of a square matrix |
+| $\operatorname{rank}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{rk}$ | $\mathrm{Mat}$ | the rank (Mathlib `Matrix.rank`) |
+| $\operatorname{@act}$ | $\mathrm{Vec}$ | `Ax`, for a matrix `A` with as many columns as the vector `x` has coordinates (Mathlib `Matrix.mulVec`) |
 

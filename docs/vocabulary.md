@@ -318,6 +318,10 @@ Further fields cover other branches of mathematics:
   `\mathbb{E}[…]`, `P(…)`, `P(A\mid B)`, `\operatorname{Var}`, `\operatorname{Cov}`,
   independence and identical distribution, the normal, exponential, uniform, Poisson,
   Bernoulli and binomial distributions (also `$X\sim N(\mu,\sigma^2)$`), and events;
+* `linearsystems` (loads `vectors` and `matrices`, and shares their types with the other
+  fields that have them): a matrix applied to a vector (`$Ax$`), which with the order of
+  vectors in every coordinate (`$x\le y$`, `$x\ge 0$`, of `vectors`) states systems of
+  linear inequalities, as in Farkas's lemma;
 * `randomvectors` (loads `vectors`, `matrices` and `complex`, and shares their types with
   the other fields that have them): random vectors on one probability space, with values in
   `ℝᵈ`: their sums and multiples, `$X+b$` for a vector and `$AX$` for a matrix, equality in

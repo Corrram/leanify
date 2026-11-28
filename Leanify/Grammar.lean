@@ -1820,6 +1820,9 @@ inductive Clause where
   | iffC (p q : Clause)
   /-- `CLAUSE or CLAUSE`. -/
   | orC (p q : Clause)
+  /-- `exactly one of the following two statements holds:` with its two items: one of the
+  clauses holds and the other does not. -/
+  | xorC (p q : Clause)
   /-- `there are infinitely many NPs [such that CLAUSE]`, `CLAUSE for infinitely many NPs`:
   the numbers the noun phrase (and the clause) describe are not finitely many. -/
   | infinitelyMany (np : List Chunk) (c : Option Clause)
@@ -5421,6 +5424,8 @@ def listItems : List Chunk → List Chunk → List (List Chunk) → List (List C
 /-- The formula of an item: `$φ$`, or a display, with its label `[(i)]` and its
 final `;`, `.`, `,` or `, and` removed. -/
 def itemFormula (it : List Chunk) : Option MT :=
+  -- (the label of the item, `\item $φ$.\label{one}`, is no part of its statement)
+  let it := it.filter fun c => match c with | .r .label _ => false | _ => true
   let it := match it with
     | .p 91 :: rest => (rest.dropWhile (fun (c : Chunk) => match c with
         | .p 93 => false | .w _ | .p _ => true | _ => false)).drop 1
@@ -5446,6 +5451,7 @@ def tfaeIntros : List (List Codes) :=
 /-- The statement of an item (`[(ii)] $f$ is continuous and bounded;`): its label and its
 final `;`, `.`, `,` or `, and` removed, read as one or several clauses joined by `and`. -/
 def itemClause (it : List Chunk) : Option Clause := do
+  let it := it.filter fun c => match c with | .r .label _ => false | _ => true
   let it := match it with
     | .p 91 :: rest => (rest.dropWhile (fun (c : Chunk) => match c with
         | .p 93 => false | .w _ | .p _ => true | _ => false)).drop 1
@@ -5458,12 +5464,29 @@ def itemClause (it : List Chunk) : Option Clause := do
     | .p c :: r => if c == 59 || c == 46 || c == 44 then r.reverse else it
     | _ => it
   if it.isEmpty then none
-  let (c, r) ← andClauses (it ++ [.p 46])
+  -- (`There exists $x\in A$ with $φ$ and $ψ$.`: an object with its conditions, before the
+  -- clauses joined by `and`)
+  let (c, r) ← (thereIs (it ++ [.p 46])).filter (fun (_, r) => isEnd r) <|> andClauses (it ++ [.p 46])
   if isEnd r then some c else none
 
 /-- `the following [statements] are equivalent:` and a list of formulas, or of statements:
 each is equivalent to the next (and so all are). -/
 def tfae (cs : List Chunk) : Option (List CClause) := do
+  -- `[then] exactly one of the following [two] statements holds:` and two statements
+  let exactlyOne : Option (List CClause) := do
+    let cs := (kw [w!"then"] cs).getD cs
+    let r ← kw [w!"exactly", w!"one", w!"of", w!"the", w!"following"] cs
+    let r := (kw [w!"two"] r).getD r
+    let r ← [w!"statements", w!"assertions", w!"conditions", w!"alternatives", w!"cases", w!"possibilities"].findSome?
+      fun n => kw [n] r
+    let r ← (kw [w!"holds"] r <|> kw [w!"is", w!"true"] r <|> kw [w!"occurs"] r) >>= punct 58
+    let items := (listItems r [] []).filter fun it => match it with
+      | [] | [.p 46] => false
+      | _ => true
+    match ← items.mapM itemClause with
+    | [p, q] => some [({ cites := [], clause := .xorC p q } : CClause)]
+    | _ => none
+  if let some r := exactlyOne then return r
   let r ← tfaeIntros.findSome? (kw · cs) >>= punct 58
   let items := (listItems r [] []).filter fun it => match it with
     | [] | [.p 46] => false

@@ -12,8 +12,8 @@ and then `lake build`. -/
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
 
-/-- The vocabulary of the article: the core and the field `randomvectors`. -/
+/-- The vocabulary of the article: the core and the fields `randomvectors` and `linearsystems`. -/
 def RandomVectors.vocabulary : Leanify.Vocab :=
-  Leanify.Fields.select ["randomvectors"]
+  Leanify.Fields.select ["randomvectors", "linearsystems"]
 
-#leanify_article RandomVectors "article.tex" "fnv1a64:565a7c9aa2e964f3" with RandomVectors.vocabulary
+#leanify_article RandomVectors "article.tex" "fnv1a64:0fc0dc7e93fa1de8" with RandomVectors.vocabulary

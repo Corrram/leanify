@@ -73,6 +73,7 @@ import Leanify.Library.Regression
 import Leanify.Library.Bayesian
 import Leanify.Library.Majorization
 import Leanify.Library.RandomVectors
+import Leanify.Library.LinearSystems
 import Leanify.Library.Odes
 import Leanify.Library.RandomWalks
 import Leanify.Library.FunctionSequences
@@ -297,7 +298,8 @@ def all : List (String × Vocab) := [
   ("traffic", Traffic.vocab),
   ("geometricprobability", GeometricProbability.vocab),
   ("randomvariables", RandomVariables.vocab),
-  ("randomvectors", RandomVectors.vocab)]
+  ("randomvectors", RandomVectors.vocab),
+  ("linearsystems", LinearSystems.vocab)]
 
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
@@ -310,7 +312,8 @@ def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
    ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
    ("markovchains", ["matrices", "matrixnorms"]),
-   ("majorization", ["vectors"]), ("randomvectors", ["vectors", "matrices", "complex"])]
+   ("majorization", ["vectors"]), ("randomvectors", ["vectors", "matrices", "complex"]),
+   ("linearsystems", ["vectors", "matrices"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
 (`\usepackage[vocab=analysis]{leanify}`) and not each of its fields. A bundle may name
@@ -338,7 +341,7 @@ def bundles : List (String × List String) := [
   -- the areas inside them
   ("physics", ["mechanics", "waves", "relativity", "circuits", "thermodynamics", "kinetics", "fluids", "quantum", "materials", "astronomy", "electromagnetism", "kinematics", "optics", "acoustics", "music", "crystallography", "orbits"]),
   ("elementary", ["special", "hyperbolic", "trigonometry", "means", "orthogonalpolynomials", "higherfunctions"]),
-  ("linearalgebra", ["vectors", "matrices", "majorization"]),
+  ("linearalgebra", ["vectors", "matrices", "majorization", "linearsystems"]),
   -- names of parts of `structures`, kept for articles that name them
   ("groups", ["structures"]), ("rings", ["structures"]), ("spaces", ["structures"]),
   ("probability", ["randomvariables", "randomvectors", "distributions", "densities", "information", "channels", "concentration", "classicalprobability", "geometricprobability", "risk", "stochasticorders", "markovchains", "branching", "randomwalks", "poissonprocesses", "extremes", "populationgenetics", "betting"]),
@@ -371,6 +374,10 @@ def extensions : List (String × List String × (List (Nat × Nat) → Nat → N
   [("randomvectors", ["vectors", "matrices", "complex"], fun bs co to =>
       match bs with
       | [(cv, tv), (cm, tm), (cc, tc)] => RandomVectors.own { cv, tv, cm, tm, cc, tc, co, to }
+      | _ => {}),
+   ("linearsystems", ["vectors", "matrices"], fun bs co _ =>
+      match bs with
+      | [(_, tv), (_, tm)] => LinearSystems.own tv tm co
       | _ => {})]
 
 /-- The core vocabulary followed by the named fields, in order (each entry tagged

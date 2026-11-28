@@ -101,7 +101,8 @@ math
 │   ├── linearalgebra
 │   │   ├── vectors
 │   │   ├── matrices
-│   │   └── majorization          majorization of vectors (with vectors)
+│   │   ├── majorization          majorization of vectors (with vectors)
+│   │   └── linearsystems         matrices applied to vectors: Ax, Ax ≤ b (with vectors, matrices)
 │   ├── polynomials
 │   ├── quadratics                discriminants, roots and Vieta; Cardano's root of a cubic
 │   ├── structures                groups, rings, fields, vector spaces, with their elements (also in topology)
@@ -336,6 +337,7 @@ bundles `functions` and `realanalysis` are the realm `analysis`.
 | [`vectors`](glossary.md#vectors) | real vectors: norms, inner products, coordinates, angles | |
 | [`matrices`](glossary.md#matrices) | real matrices: determinant, trace, rank, inverse, eigenvalues; symmetric, orthogonal, positive definite | |
 | [`majorization`](glossary.md#majorization) | vectors majorized, weakly submajorized or weakly supermajorized by another, decreasingly ordered vectors; the `k`th largest coordinate, the sum of the `k` largest coordinates, the positive-part sum | loads `vectors` |
+| [`linearsystems`](glossary.md#linearsystems) | a matrix applied to a vector, `Ax` (Mathlib `Matrix.mulVec`); with the order of vectors in every coordinate, systems of linear inequalities (`Ax\le b`, `x\ge 0`) | loads `vectors`, `matrices` |
 | [`polynomials`](glossary.md#polynomials) | real polynomials: degree, coefficients, roots (with a real root, without real roots) | |
 | [`quadratics`](glossary.md#quadratics) | for `ax² + bx + c`: the discriminant, the larger and smaller root, the sum and product of the roots, the vertex and extreme value, the number of real roots; the discriminant and Cardano's real root of `x³ + px + q` | |
 | [`structures`](glossary.md#structures) | structures with their elements (`Let $G$ be a group and $g\in G$`): groups, subgroups and normal subgroups, the order `|G|`, the index `[G:H]` (`a subgroup of $G$ of index $2$`, `of finite index`), groups and elements of prime, odd or even order, monoids and semigroups (cancellative, commutative), idempotents and one-sided identities, finitely generated groups and modules; rings, ideals (prime, maximal, principal), integral domains, fields and field extensions (finite, finitely generated, algebraic; the degree `[L:K]`, algebraic and transcendental elements), characteristic (positive, zero), the perfection `K^{p^\infty}` of a field; modules and vector spaces over a ring or field, real vector spaces (`over $\mathbb{R}$`), subspaces, bases, linear independence (of sets, and of families of vectors: `linearly independent vectors $v_1,\ldots,v_n$ in $V$`), span, dimension; real normed, Banach, inner product and Hilbert spaces, bounded linear operators; topological and metric spaces, Cauchy and bounded sequences in them, open, closed, dense and compact subsets, limit and isolated points, neighbourhoods, first countable, Lindelöf, σ-compact, totally disconnected, Hausdorff, compact, connected, complete; partially and totally ordered sets, lattices, bounds; maps between structures with their domain and codomain, bound by a signature (`$\varphi\colon G\to H$`): kernel, image, rank, composition, eigenvalues and fixed points; homomorphisms (`of groups`, `of rings`), isomorphisms, automorphisms, contractions, linear, continuous and monotone maps, injective, surjective and bijective maps, homeomorphisms, isometries; cyclic, symmetric, alternating and dihedral groups, direct products. Also loaded as `groups`, `rings` or `spaces` | |

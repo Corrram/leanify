@@ -222,6 +222,7 @@ Further forms that the fields use (they are read for any vocabulary):
 | `For all $n\in\mathbb{N}$, the number of subsets of a set of $n$ elements is $2^n$.` (in a result) | a claim about the notion at the binder's variables, when it is no definition of the words (`For B, the NAME of $x$ is DEF` that defines nothing) |
 | `Any two bases of a finite-dimensional vector space have the same number of elements.`, `Any two groups of order $3$ are isomorphic.` | for every two objects of the noun (of one object of a noun after `of a`, `of an`, bound first), the notion of the one equals that of the other; `are WORDS`: the first is WORDS to (with, from) the second |
 | `Let $f\colon X\to X$ be injective. Then $f$ is surjective.`, `a bijective function $g\colon[0,1]\to[0,1]$` | of a function with a signature: onto its codomain (every point of `X` is a value at a point of `X`); bijective is injective on the domain and onto the codomain |
+| `Then exactly one of the following two assertions holds:` and a list of two statements | one of the two holds and the other does not (also `statements`, `conditions`, `alternatives`, `cases`). An item of such a list, and of `the following are equivalent:`, may be an existence statement (`There exists $x\in A$ with $φ$ and $ψ$.`) |
 | `For all real numbers $a$, $b$ and $c$, …`, `For all sets $A$, $B$ and $C$, …` | a binder for each name, the last after `and`; `all` may be left out before a plural noun with several names (`For real numbers $x$ and $y$, …`, `For positive definite matrices $A$ and $B$, set $D(A,B)\coloneqq…$`) |
 | `Every nonempty set of natural numbers has a least element.`, `a set of integers that is bounded above` (field `realsets`) | sets of natural numbers, of integers and of positive integers; `with a least element` (`has a least element`), `with a greatest element` |
 | `$P(|X-\mathbb{E}X|\ge t)\le\frac{\operatorname{Var}X}{t^2}$`, `\operatorname{Var}(X+Y)=\operatorname{Var}X+\operatorname{Var}Y` (field `randomvariables`) | an expectation or a variance inside a probability is a number, not a function of the outcome; `\operatorname{Var}X` is `\operatorname{Var}(X)` |
@@ -763,7 +764,11 @@ switches `\rm`, `\sf`; `\smash{x}`, `\ensuremath{x}` and `\raisebox{…}{x}` are
 nothing. `\mathsf`, `\mathfrak`, `\mathscr`, `\mathtt`, `\boldsymbol`, `\bm`, `\EuScript`,
 `\mathpzc`, `\mathds`, `\mathbbm` and `\pmb` name a symbol as `\mathcal` and `\mathbb` do, and so do
 the old switches `{\cal G}`, `\bf x`, `\Bbb R` (`\mathcal{G}`, `\mathbf{x}`, `\mathbb{R}`). `{n
-\choose k}` is `\binom{n}{k}`. A relation with a note above it that is a label, a reference or a reason in words,
+\choose k}` is `\binom{n}{k}`. With the fields `vectors` and `matrices`, `$b\in\mathbb{R}^n$` binds a vector, `$Q\in\mathbb{R}^{m\times n}$`
+a matrix, and `$x\in\mathbb{R}_{\ge0}^n$` (`\mathbb{R}_+^n`, `\mathbb{R}_{>0}^n`) a vector that is at least
+(more than) `0` in every coordinate; a letter for a size that nothing defines (`n`, `\ell`) is a
+number bound before the object. `$x^\top y$` of two vectors is `\langle x,y\rangle`.
+A relation with a note above it that is a label, a reference or a reason in words,
 `\stackrel{(a)}{\le}`, `\overset{\eqref{eq:1}}{=}` or `\stackrel{\text{by assumption}}{=}`, is the
 relation; `\overset{\text{def}}{=}` (`def`, `\triangle` or `:` above `=`) is `\coloneqq`;
 `\stackrel{d}{=}` (`d`, `D`, `\mathcal{D}`, `\mathcal{L}`, `law` or `dist` above `=`, also `\stackrel{\mathrm d}=`) is equality in

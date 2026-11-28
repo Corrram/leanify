@@ -1,5 +1,6 @@
 import Leanify.Library.VectorsModel
 import Leanify.Library.MatricesModel
+import Leanify.Library.LinearSystemsModel
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Real
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
@@ -72,15 +73,8 @@ def ofVec (b : Leanify.Vectors.Vec) : RVec := fun _ => b
 /-- `AX` is defined: `A` has as many columns as `X` has coordinates. -/
 def Actable (A : Leanify.Matrices.Mat) (X : RVec) : Prop := A.2.1 = size X
 
-/-- `Ab` is defined: `A` has as many columns as `b` has coordinates. -/
-def MulVecable (A : Leanify.Matrices.Mat) (b : Leanify.Vectors.Vec) : Prop := A.2.1 = b.1
-
-/-- `Ab`, the matrix `A` applied to the vector `b` (Mathlib `Matrix.mulVec`). -/
-def mulVec (A : Leanify.Matrices.Mat) (b : Leanify.Vectors.Vec) : Leanify.Vectors.Vec :=
-  Leanify.Vectors.mk A.1 fun i => ∑ j ∈ Finset.range A.2.1, Leanify.Matrices.at' A i j * Leanify.Vectors.at' b j
-
 /-- `AX`: the matrix `A` applied to the value at every outcome. -/
-def act (A : Leanify.Matrices.Mat) (X : RVec) : RVec := fun ω => mulVec A (X ω)
+def act (A : Leanify.Matrices.Mat) (X : RVec) : RVec := fun ω => Leanify.LinearSystems.mulVec A (X ω)
 
 /-- The characteristic function `t ↦ E[e^{i⟨t,X⟩}]` (as Mathlib's `MeasureTheory.charFun` of
 the distribution of `X`). -/

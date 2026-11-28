@@ -31,7 +31,8 @@ inc = {"hilbert": ["unitsquare"], "markov": ["unitsquare", "hilbert"], "metricsp
        "copulas": ["unitsquare", "hilbert", "markov"],
        "planegeometry": ["geometry"], "matrixnorms": ["matrices"],
        "markovchains": ["matrices", "matrixnorms"], "majorization": ["vectors"],
-       "randomvectors": ["vectors", "matrices", "complex"]}
+       "randomvectors": ["vectors", "matrices", "complex"],
+       "linearsystems": ["vectors", "matrices"]}
 def expand(fs):
     out = []
     for f in fs:

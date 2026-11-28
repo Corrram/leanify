@@ -75,13 +75,23 @@ def abbrevBefore : List PTok → Bool
 
 /-- Does the current sentence (latest token first) end with `the following are
 equivalent:`? Its list then belongs to it. -/
-def tfaeIntro : List PTok → Bool
+def tfaeIntroEq : List PTok → Bool
   | ⟨.punct 58, _, false⟩ :: ⟨.word e, _, _⟩ :: ⟨.word a, _, _⟩ :: ⟨.word f, _, _⟩ :: rest =>
     e == w!"equivalent" && a == w!"are" && (f == w!"following" || f == w!"Following" ||
       ([w!"statements", w!"conditions", w!"assertions", w!"properties"].contains f &&
         (match rest with
           | ⟨.word g, _, _⟩ :: _ => g == w!"following" || g == w!"Following"
           | _ => false)))
+  | _ => false
+
+/-- Does the current sentence end with `the following are equivalent:` or `exactly one of
+the following statements holds:`? Its list then belongs to it. -/
+def tfaeIntro : List PTok → Bool
+  -- (`exactly one of the following two statements holds:`)
+  | ⟨.punct 58, _, false⟩ :: ⟨.word h, _, _⟩ :: rest =>
+    let ws := (rest.take 8).filterMap fun t => match t.tok with | .word w => some w | _ => none
+    (([w!"holds", w!"occurs", w!"true"].contains h) && ws.contains w!"following" && ws.contains w!"one" &&
+      (ws.contains w!"exactly" || ws.contains w!"Exactly")) || tfaeIntroEq (⟨.punct 58, 0, false⟩ :: ⟨.word h, 0, false⟩ :: rest)
   | _ => false
 
 /-- Does the current sentence (latest token first) run on into a list? It does when it

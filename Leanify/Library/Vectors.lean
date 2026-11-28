@@ -6,7 +6,9 @@ A vector is a real vector of some dimension `n` (Mathlib's `Fin n → ℝ`, with
 Euclidean norm): a type of its own, so that an article binds vectors as it binds numbers
 (`Let $x$ and $y$ be vectors in $\mathbb{R}^n$.`) and writes `x+y`, `x-y`, `-x` (of the
 same dimension), `cx` for a number `c`, `\lVert x\rVert` (also `\|x\|`) and
-`\langle x,y\rangle` (of the same dimension). A real number is the vector of dimension 1.
+`\langle x,y\rangle` (of the same dimension), and `x\le y`, `x<y` for the order in every
+coordinate (`x\ge 0`: a number is compared with every coordinate). A real number is the
+vector of dimension 1.
 
 * nouns: `vector`, `unit vector`;
 * adjectives: `nonzero`, `unit`, `in $\mathbb{R}^n$`, `of dimension $n$`, `orthogonal to
@@ -42,7 +44,10 @@ def table : List (Ty × Codes × Codes) := [
   (.real ⟶ .real ⟶ V, w!"e_{#1}^{(#2)}", w!"Leanify.Vectors.basis"),                 -- 13
   (V ⟶ V ⟶ .real, w!"\\angle(#1,#2)", w!"Leanify.Vectors.angle"),                    -- 14
   (V ⟶ .real, w!"\\operatorname{sum}", w!"Leanify.Vectors.coordSum"),                -- 15
-  (V ⟶ V ⟶ .prop, w!"#1\\parallel #2", w!"Leanify.Vectors.Parallel")]                -- 16
+  (V ⟶ V ⟶ .prop, w!"#1\\parallel #2", w!"Leanify.Vectors.Parallel"),                -- 16
+  (V ⟶ V ⟶ .prop, w!"#1\\le #2", w!"Leanify.Vectors.le"),                            -- 17
+  (V ⟶ V ⟶ .prop, w!"#1<#2", w!"Leanify.Vectors.lt"),                                 -- 18
+  (V ⟶ V ⟶ .prop, w!"\\operatorname{Comparable}(#1,#2)", w!"Leanify.Vectors.Comparable")] -- 19
 
 def vPred (p : B → B) : Tm := close <| lamT V (fun _ => tt) p
 def dimOf (x : B) : B := app (const 0) x
@@ -112,6 +117,10 @@ def vocab : Vocab where
     { ty := V, op := .sub, const := 5, doc := "`x - y`, of the same dimension", dom := some sameDim },
     { ty := V, op := .neg, const := 6, doc := "`-x`" },
     { ty := V, op := .mul, const := 7, doc := "`cx`, for a vector `c` of dimension 1 (a number)", dom := some (.const 3) },
+    { ty := V, op := .le, const := 17, dom := some (.const 19),
+      doc := "`x\\le y`: in every coordinate, of vectors of the same dimension; a number is compared with every coordinate (`x\\ge 0`)" },
+    { ty := V, op := .lt, const := 18, dom := some (.const 19),
+      doc := "`x<y`: in every coordinate (`x>0`: every coordinate is positive)" },
     { ty := V, op := .fn w!"@norm", const := 8, doc := "`\\lVert x\\rVert`, `\\|x\\|`: the Euclidean norm" },
     { ty := V, op := .fn w!"@inner", const := 9, doc := "`\\langle x,y\\rangle`: the inner product, of the same dimension",
       dom := some sameDim }]
