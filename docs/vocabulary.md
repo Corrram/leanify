@@ -173,7 +173,8 @@ Further fields cover other branches of mathematics:
   entries, the characteristic polynomial, the real eigenvalues (`eigenvalue of $A$`) and the
   eigenvectors (`eigenvector of $A$`, an `n × 1` matrix); symmetric,
   orthogonal, invertible, positive definite, triangular, nilpotent and stochastic
-  matrices;
+  matrices; the square root `$A^{1/2}$` of a positive semidefinite matrix and its inverse
+  `$A^{-1/2}$`, as in `$(A^{1/2}BA^{1/2})^{1/2}$`;
 * `special`: the gamma function `\Gamma`, the beta function, the zeta function `\zeta` on
   `(1,∞)`, the Bernoulli numbers, the sinc function, the Euler–Mascheroni constant and
   the golden ratio.

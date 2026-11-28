@@ -1562,7 +1562,15 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | some r => sufficientBinder r <|> postSufficient r <|> (do
           let (ts, r') ← mathChunk r
           let b ← smallBinder ts
-          some (b, r')) <|> do
+          some (b, r')) <|> (do
+          -- `For real numbers $x$ and $y$,`: several objects of a plural noun, as `For all …`
+          match r with
+          | .w _ :: _ =>
+            let (b, r') ← everyBinders r
+            match b with
+            | .many (_ :: _ :: _) => some (b, r')
+            | _ => none
+          | _ => none) <|> do
         let (ts, r') ← mathChunk r
         let (vs, dom) ← binderMath ts
         match moreAnd 4 r' [] with
@@ -1994,6 +2002,9 @@ def wAdjectives : List (List Codes × List Codes) :=
     same [w!"nonincreasing"], ([w!"non", w!"increasing"], [w!"nonincreasing"]),
     same [w!"nonnegative"], ([w!"non", w!"negative"], [w!"nonnegative"]),
     same [w!"nonpositive"], ([w!"non", w!"positive"], [w!"nonpositive"]),
+    -- (of matrices: before `positive`, which they start with)
+    same [w!"positive", w!"definite"], same [w!"positive", w!"semidefinite"],
+    ([w!"positive", w!"semi", w!"definite"], [w!"positive", w!"semidefinite"]),
     same [w!"positive"], same [w!"negative"], same [w!"zero"],
     same [w!"compact"], same [w!"convex"], same [w!"concave"], same [w!"centrally", w!"symmetric"],
     same [w!"continuous"], same [w!"differentiable"], same [w!"injective"], same [w!"bounded"],

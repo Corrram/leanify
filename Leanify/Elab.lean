@@ -3322,6 +3322,24 @@ where
             if let .neg (.num n) := e then
               let base ← if n == 1 then pure z else do pure (← callMethod t .pow [z, .num n]).1
               return (← callMethod t .inv [base])
+          -- `A^{1/2}`, `A^{-1/2}`: the square root that the type has as a notion (a name that
+          -- ends with `square root of $v$`: `matrix square root of $v$`), and its inverse
+          let half : Option Bool := match e with
+            | .frac (.num 1) (.num 2) | .div (.num 1) (.num 2) => some false
+            | .neg (.frac (.num 1) (.num 2)) | .neg (.div (.num 1) (.num 2)) | .frac (.neg (.num 1)) (.num 2)
+            | .div (.neg (.num 1)) (.num 2) => some true
+            | _ => none
+          if let some inverse := half then
+            let sqrtNotion := (← get).vocab.notions.find? fun nt => nt.ty == .fn t t &&
+              ((nt.name.filterMap fun i => match i with | .w w => some w | _ => none).reverse.take 3) == [w!"of", w!"root", w!"square"]
+            if let some nt := sqrtNotion then
+              let r := Tm.app nt.value z
+              let r := match nt.doms.head? with
+                | some (some d) => Tm.guard (.app d z) r
+                | _ => r
+              if !inverse then return (r, t)
+              if (← method t .inv).isSome then return (← callMethod t .inv [r])
+              return (← arith .div (.num 1, .real) (r, t))
           match e with
           | .num n => return (← callMethod t .pow [z, .num n])
           | .neg (.num n) => return (← arith .div (.num 1, .real) (← callMethod t .pow [z, .num n]))

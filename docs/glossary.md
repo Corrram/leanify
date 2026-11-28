@@ -959,6 +959,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| matrix square root of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse |
 | set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
 | set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
 | set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
@@ -2396,6 +2397,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| matrix square root of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse |
 | set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
 | set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
 | set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
@@ -2816,6 +2818,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| matrix square root of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse |
 | set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
 | set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
 | set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
@@ -4317,6 +4320,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $a\timesb$ zero matrix | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | zero matrix of size $a\timesb$ | ℝ → ℝ → $\mathrm{Mat}$ | the `m × n` matrix of zeros |
 | characteristic polynomial of $a$ | $\mathrm{Mat}$ → ℝ → ℝ | `t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`) |
+| matrix square root of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse |
 | set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
 | set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
 | set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |

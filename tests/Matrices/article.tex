@@ -101,4 +101,24 @@ Let $A$ be a square matrix with determinant $d$ and trace $t$. Then the determin
 Let $A$ be a symmetric matrix and let $\lambda$ be an eigenvalue of $A$. Then $\lambda$ is real.
 \end{lemma}
 
+\section{Square roots}
+
+\begin{lemma}\label{square-root}
+Let $A$ be a positive semidefinite $d\times d$ matrix. Then $A^{1/2}A^{1/2}=A$ and $A^{1/2}$ is positive semidefinite. Moreover, the matrix square root of $A$ is symmetric.
+\end{lemma}
+
+\begin{lemma}\label{whitening}
+Let $A$ be a positive definite $d\times d$ matrix. Then $A^{-1}$ is positive definite and $A^{-1/2}AA^{-1/2}$ is the $d\times d$ identity matrix.
+\end{lemma}
+
+For positive definite matrices $A$ and $B$, set
+\[ K(A,B)\coloneqq\left(A^{1/2}BA^{1/2}\right)^{1/2}. \]
+
+For positive definite matrices $A$ and $B$, set
+\[ D(A,B)\coloneqq\operatorname{tr}\left(A+B-2\left(A^{1/2}BA^{1/2}\right)^{1/2}\right). \]
+
+\begin{lemma}\label{bures}
+Let $A$ and $B$ be positive definite $d\times d$ matrices. Then $D(A,B)\ge0$, $D(A,A)=0$ and $K(A,B)$ is positive definite.
+\end{lemma}
+
 \end{document}

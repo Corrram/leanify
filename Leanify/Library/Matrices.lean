@@ -104,6 +104,11 @@ def entryOf : Tm := close <| lamT M (fun _ => tt) fun a => lamR fun i => lamR fu
 
 def eigenvalues : Tm := close <| lamT M (fun _ => tt) fun a => lamR fun t => app2 (const eigenvalue) a t
 
+/-- The square root of a positive semidefinite matrix: the one positive semidefinite `B`
+with `BB = A`. -/
+def sqrtOf : Tm := close <| lamT M (fun a => app (const posSemidef) a) fun a =>
+  theT M fun b => and (app (const posSemidef) b) (eq (app2 (const mul) b b) a)
+
 def vocab : Vocab where
   types := [w!"\\mathrm{Mat}"]
   consts := [M ⟶ .real, M ⟶ .real, .real ⟶ M, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ M ⟶ .prop,
@@ -210,6 +215,8 @@ def vocab : Vocab where
       doms := [natDom, natDom], doc := "the `m × n` matrix of zeros" },
     ofM phrase!"characteristic polynomial of $v$" (.const charpoly) sqDom (M ⟶ Ty.rfun)
       "`t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`)",
+    ofM phrase!"matrix square root of $v$" sqrtOf (some (.const posSemidef)) (M ⟶ M)
+      "`A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse",
     ofM phrase!"set of eigenvalues of $v$" eigenvalues sqDom (M ⟶ .real ⟶ .prop)
       "the real `λ` with `Av = λv` for some `v ≠ 0`",
     { name := phrase!"set of $v\\times v$ matrices", value := ofSize, ty := .real ⟶ .real ⟶ M ⟶ .prop,
