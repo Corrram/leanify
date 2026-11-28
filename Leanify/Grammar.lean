@@ -1204,7 +1204,21 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
       match withConds r'' with
       | some (c, r3) => ([Bind.ifCond c], r3)
       | none => (conds, r'')
-    some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ together ++ conds), r'')) <|>
+    -- (`all vectors $x$ and $y$ in $\mathbb{R}^n$`: a complement after the names, of each)
+    let (post, r'') : List Chunk × List Chunk := if vars.length < 2 || !conds.isEmpty then ([], r'') else
+      match r'' with
+      | .w p :: .m t :: rest =>
+        if [w!"in", w!"of", w!"on", w!"over"].contains p then
+          match withConds rest with
+          | some _ => ([.w p, .m t], rest)
+          | none => ([.w p, .m t], rest)
+        else ([], r'')
+      | _ => ([], r'')
+    let (conds, r'') : List Bind × List Chunk := if post.isEmpty || !conds.isEmpty then (conds, r'') else
+      match withConds r'' with
+      | some (c, r3) => ([Bind.ifCond c], r3)
+      | none => (conds, r'')
+    some (Bind.many (vars.map (fun v => Bind.noun (ws ++ post ++ [.m v])) ++ together ++ conds), r'')) <|>
   (do
     -- `every sequence $x$ in $[0,1]$`, `every probability measure $\gamma$ on $[0,1]^2$`: a
     -- noun of the vocabulary with its variable inside the phrase
@@ -3042,7 +3056,10 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let (ts, r) ← mathChunk cs
       let s ← Math.parseFormula ts
       let r1 ← kw [w!"has"] r <|> kw [w!"have"] r
-      let ws := r1.takeWhile fun (c : Chunk) => match c with | .w w => w != w!"zero" | .p 45 => true | _ => false
+      let ws := r1.takeWhile fun (c : Chunk) => match c with
+        | .w w => ![w!"zero", w!"at", w!"less", w!"greater", w!"more", w!"fewer"].contains w
+        | .p 45 => true
+        | _ => false
       if ws.isEmpty || ws.length > 3 then none
       if ws.any (fun (c : Chunk) => match c with
           | .w w => [w!"a", w!"an", w!"the", w!"no", w!"at", w!"exactly", w!"more", w!"less", w!"fewer", w!"only", w!"precisely",
@@ -3052,6 +3069,19 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let words : List MT := ws.filterMap fun (c : Chunk) => match c with | .w w => some (MT.text w) | _ => none
       if words.length != ws.length then none
       let the := MT.app (.id w!"@the") (words ++ [.text w!"of", s])
+      -- (`has chromatic number at most $2$`: a bound on the value)
+      let bound : Option (Rel × List Chunk) := match r1.drop ws.length with
+        | .w a :: .w b :: rest =>
+          if a == w!"at" && b == w!"most" then some (.le, rest)
+          else if a == w!"at" && b == w!"least" then some (.ge, rest)
+          else if a == w!"less" && b == w!"than" then some (.lt, rest)
+          else if a == w!"greater" && b == w!"than" then some (.gt, rest)
+          else none
+        | _ => none
+      if let some (rel, .m k :: r2) := bound then
+        let v ← Math.parseFormula k
+        if !clauseEnd r2 then none
+        return (Clause.fact (.chain the [(rel, v)]), r2)
       match r1.drop ws.length with
       | .m k :: r2 =>
         let v ← Math.parseFormula k
@@ -3286,6 +3316,40 @@ def clause2 (cs : List Chunk) : Option (Clause × List Chunk) :=
     else some (.adjectives m adjs, r2)
   | r => r
 
+/-- `$G$ is connected and has no cycle`: after a clause about a formula, `and` and a verb go on
+with the same subject (`$G$ is connected and $G$ has no cycle`), both. -/
+def ellipticMore (cs : List Chunk) (res : Clause × List Chunk) : Clause × List Chunk :=
+  let verbs := [w!"is", w!"has", w!"contains", w!"divides", w!"lies", w!"belongs", w!"converges", w!"diverges",
+    w!"satisfies", w!"equals", w!"does"]
+  match cs, res.2 with
+  | .m s :: .w _ :: _, .w a :: r@(.w v :: _) =>
+    if a == w!"and" && verbs.contains v then
+      match clause2 (.m s :: r) with
+      | some (c2, r2) => (.both [res.1, c2], r2)
+      | none => res
+    else res
+  | _, _ => res
+
+/-- `clause2`, and `$G$ is finite and has order $4$` (where the words after `is` would swallow
+`and has …`): the clause before `and`, then the same subject with the verb after it. -/
+def clause2E (cs : List Chunk) : Option (Clause × List Chunk) :=
+  let verbs := [w!"is", w!"has", w!"contains", w!"divides", w!"lies", w!"belongs", w!"converges", w!"diverges",
+    w!"satisfies", w!"equals", w!"does"]
+  let split : Option (Clause × List Chunk) := do
+    let .m _ :: .w _ :: _ := cs | none
+    let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk) with
+      | some (.w a), some (.w v) => a == w!"and" && verbs.contains v
+      | _, _ => false
+    if i == 0 then none
+    -- (not inside `if and only if`)
+    if (cs.take i).any (fun c => match c with | .w w => w == w!"if" || w == w!"iff" || w == w!"or" | _ => false) then none
+    let (p, r) ← clause2 (cs.take i ++ [.p 46])
+    if !(match r with | [] | [.p 46] => true | _ => false) then none
+    let res := ellipticMore cs (p, cs.drop i)
+    if res.2.length == (cs.drop i).length then none
+    some res
+  split <|> (clause2 cs).map (ellipticMore cs)
+
 /-- A clause, or two of them joined by `if and only if` or by `or`
 (`$S$ is compact if and only if $S$ is closed and bounded`, `$G$ is cyclic or $G$ is
 isomorphic to $V$`). -/
@@ -3298,11 +3362,12 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     -- (the first clause as a sentence of its own, with its full stop)
     let (p, r) ← clause2 (cs.take i ++ [.p 46])
     if !(match r with | [] | [.p 46] => true | _ => false) then none
-    let (q, r2) ← clause2 (cs.drop (i + ws.length))
+    let rest := cs.drop (i + ws.length)
+    let (q, r2) ← clause2E rest
     some (mk p q, r2)
   let split : Option (Clause × List Chunk) := splitAt iffW .iffC <|> splitAt [w!"or"] .orC
   let hasWord (np : List Chunk) (w : Codes) : Bool := np.any fun c => match c with | .w v => v == w | _ => false
-  match clause2 cs with
+  match clause2E cs with
   | some (c, r) =>
     -- (a clause that stops before the connective, or a noun phrase that has swallowed it)
     let swallowed := match c with

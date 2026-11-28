@@ -19,7 +19,11 @@ tests/Vectors/article.tex:36:46: info: claim 6: \forall x\in \mathrm{Vec},\ \dim
 tests/Vectors/article.tex:40:54: info: claim 7: \forall x\in \mathrm{Vec},\ \neg (\lVert x\rVert=0)\land \dim(x)=2\Rightarrow (\forall y\in \mathrm{Vec},\ \neg (\lVert y\rVert=0)\land \dim(y)=2\Rightarrow \langle x,y\rangle=\lVert x\rVert\,\lVert y\rVert\,\cos(\theta(x,y)))
 tests/Vectors/article.tex:40:54: info: claim 7 is meaningful if: \forall x\in \mathrm{Vec},\ \neg (\lVert x\rVert=0)\land \dim(x)=2\Rightarrow (\forall y\in \mathrm{Vec},\ \neg (\lVert y\rVert=0)\land \dim(y)=2\Rightarrow \dim x=\dim y)
 tests/Vectors/article.tex:44:1: info: claim 8: \forall x\in \mathrm{Vec},\ \lVert x\rVert=1\land \dim(x)=2\Rightarrow {\@n2(1,x)}^{2}+{\@n2(2,x)}^{2}=1
-tests/Vectors/article.tex: 3 definitions, 9 claims
+tests/Vectors/article.tex:48:1: info: claim 9: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \lvert \langle y,z\rangle\rvert\le \lVert y\rVert\,\lVert z\rVert)
+tests/Vectors/article.tex:48:1: info: claim 9 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow \dim y=\dim z)
+tests/Vectors/article.tex:48:85: info: claim 10: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow (\forall s\in \mathrm{Vec},\ \dim(s)=x\Rightarrow (\forall t\in \mathrm{Vec},\ \dim(t)=x\Rightarrow (\forall a\in \mathrm{Vec},\ \dim(a)=x\Rightarrow \lVert s-a\rVert\le \lVert s-t\rVert+\lVert t-a\rVert))))
+tests/Vectors/article.tex:48:85: info: claim 10 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Vec},\ \dim(y)=x\Rightarrow (\forall z\in \mathrm{Vec},\ \dim(z)=x\Rightarrow (\forall s\in \mathrm{Vec},\ \dim(s)=x\Rightarrow (\forall t\in \mathrm{Vec},\ \dim(t)=x\Rightarrow (\forall a\in \mathrm{Vec},\ \dim(a)=x\Rightarrow \dim s=\dim a\land \dim s=\dim t\land \dim t=\dim a))))
+tests/Vectors/article.tex: 3 definitions, 11 claims
   text: 3 compiled, 0 failed, 0 prose (of 3)
-  results: 14 compiled, 0 failed, 0 prose (of 14)
-  all: 17 compiled, 0 failed, 0 prose (of 17)
+  results: 16 compiled, 0 failed, 0 prose (of 16)
+  all: 19 compiled, 0 failed, 0 prose (of 19)

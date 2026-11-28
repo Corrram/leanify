@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Vectors.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["vectors"]
 
-#leanify_article Vectors "article.tex" "fnv1a64:13ec8bbf57c8ad77" with Vectors.vocabulary
+#leanify_article Vectors "article.tex" "fnv1a64:be3a9ee73ec60b95" with Vectors.vocabulary
