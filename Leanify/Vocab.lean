@@ -405,6 +405,80 @@ def append (V W : Vocab) : Vocab :=
                hspace := i.hspace.map (· + kc), dependsFirst := i.dependsFirst.map (· + kc),
                isKernel := i.isKernel.map (· + kc), subsetSum := i.subsetSum.map (· + kc) } }
 
+/-- Base-type indices of a type renumbered by `ft`. -/
+def mapTy (ft : Nat → Nat) : Ty → Ty
+  | .base i => .base (ft i)
+  | .fn a b => .fn (mapTy ft a) (mapTy ft b)
+  | t => t
+
+/-- Base-type indices inside a term (binder annotations) renumbered by `ft`. -/
+def mapTmTy (ft : Nat → Nat) : Tm → Tm
+  | .lam t d b => .lam (mapTy ft t) (mapTmTy ft d) (mapTmTy ft b)
+  | .all t b => .all (mapTy ft t) (mapTmTy ft b)
+  | .ex t b => .ex (mapTy ft t) (mapTmTy ft b)
+  | .the t b => .the (mapTy ft t) (mapTmTy ft b)
+  | .undef t => .undef (mapTy ft t)
+  | .app f x => .app (mapTmTy ft f) (mapTmTy ft x)
+  | .add x y => .add (mapTmTy ft x) (mapTmTy ft y)
+  | .sub x y => .sub (mapTmTy ft x) (mapTmTy ft y)
+  | .mul x y => .mul (mapTmTy ft x) (mapTmTy ft y)
+  | .div x y => .div (mapTmTy ft x) (mapTmTy ft y)
+  | .neg x => .neg (mapTmTy ft x)
+  | .abs x => .abs (mapTmTy ft x)
+  | .powNat x n => .powNat (mapTmTy ft x) n
+  | .cases p v r => .cases (mapTmTy ft p) (mapTmTy ft v) (mapTmTy ft r)
+  | .eq x y => .eq (mapTmTy ft x) (mapTmTy ft y)
+  | .lt x y => .lt (mapTmTy ft x) (mapTmTy ft y)
+  | .le x y => .le (mapTmTy ft x) (mapTmTy ft y)
+  | .not p => .not (mapTmTy ft p)
+  | .and p q => .and (mapTmTy ft p) (mapTmTy ft q)
+  | .or p q => .or (mapTmTy ft p) (mapTmTy ft q)
+  | .imp p q => .imp (mapTmTy ft p) (mapTmTy ft q)
+  | .iff p q => .iff (mapTmTy ft p) (mapTmTy ft q)
+  | .guard p e => .guard (mapTmTy ft p) (mapTmTy ft e)
+  | t => t
+
+/-- The entries of `W` with its constants renumbered by `fc` and its types by `ft` (a field
+that is placed in a vocabulary in parts: the fields it builds on, then its own words). -/
+def remap (fc ft : Nat → Nat) (W : Vocab) : Vocab :=
+  let tm (t : Tm) : Tm := (mapTmTy ft t).mapConst fc
+  { types := W.types
+    consts := W.consts.map (mapTy ft)
+    constNames := W.constNames
+    constLean := W.constLean
+    typeLean := W.typeLean
+    modules := W.modules
+    adjectives := W.adjectives.map fun a => { a with ty := mapTy ft a.ty, pred := tm a.pred }
+    nouns := W.nouns.map fun n =>
+      { n with ty := mapTy ft n.ty, pred := tm n.pred, arg := n.arg.map fun (ws, t, r) => (ws, mapTy ft t, tm r) }
+    mods := W.mods.map fun m => { m with ty := mapTy ft m.ty, pred := tm m.pred }
+    notions := W.notions.map fun n =>
+      { n with ty := mapTy ft n.ty, value := tm n.value, doms := n.doms.map (·.map tm) }
+    methods := W.methods.map fun m =>
+      { m with ty := mapTy ft m.ty, const := fc m.const, dom := m.dom.map tm }
+    symbols := W.symbols.map fun s =>
+      { s with ty := mapTy ft s.ty, const := s.const.map fc, doms := s.doms.map (·.map tm) }
+    intervals := W.intervals.map fun i =>
+      { i with ty := mapTy ft i.ty, val := fc i.val, point := fc i.point, integral := fc i.integral,
+               integrable := fc i.integrable, measurable1 := fc i.measurable1,
+               measurable2 := fc i.measurable2, lebesgue := fc i.lebesgue,
+               integral2 := i.integral2.map fc, integrable2 := i.integrable2.map fc,
+               ae2 := i.ae2.map fc, markovPower := i.markovPower.map fc,
+               markovDom := i.markovDom.map tm, sampleExp := i.sampleExp.map fc,
+               sampleInt := i.sampleInt.map fc, sampleProb := i.sampleProb.map fc,
+               sampleEvent := i.sampleEvent.map fc, firstObs := i.firstObs.map fc,
+               couplingExp := i.couplingExp.map fc, couplingInt := i.couplingInt.map fc,
+               pairLaw := i.pairLaw.map fc, pairExp := i.pairExp.map fc,
+               pairInt := i.pairInt.map fc, pairAe := i.pairAe.map fc,
+               pairDf := i.pairDf.map fc, pairUniform := i.pairUniform.map fc,
+               memL2 := i.memL2.map fc, memL20 := i.memL20.map fc,
+               inner1 := i.inner1.map fc, norm1 := i.norm1.map fc,
+               innerSeq := i.innerSeq.map fc, normSeq := i.normSeq.map fc,
+               opNorm1 := i.opNorm1.map fc, opNormSeq := i.opNormSeq.map fc,
+               tensor := i.tensor.map fc, opPow := i.opPow.map fc, hoeff := i.hoeff.map fc,
+               hspace := i.hspace.map fc, dependsFirst := i.dependsFirst.map fc,
+               isKernel := i.isKernel.map fc, subsetSum := i.subsetSum.map fc } }
+
 instance : Append Vocab := ⟨append⟩
 
 /-- `V` followed by the entries of `W`, where `W` is written with the indices of the

@@ -304,10 +304,13 @@ def all : List (String × Vocab) := [
 /-- The names of the fields. -/
 def names : List String := all.map (·.1)
 
-/-- The fields that a field includes: `hilbert` is `unitsquare` with more words, `markov` is
-`hilbert` with more, `copulas` is `markov` with more, `metricspaces` is `topologies` with
-more, `planegeometry` is `geometry`, `matrixnorms` is `matrices` and `markovchains` is `matrixnorms` with more and `majorization` is `vectors` with more; `randomvectors` builds on `vectors`, `matrices` and `complex` (see `extensions`). Their entries are tagged with the field that adds
-them. -/
+/-- The fields that a field builds on, the first of a chain first: `hilbert` is `unitsquare`
+with more words, `markov` is `hilbert` with more, `copulas` is `markov` with more,
+`metricspaces` is `topologies` with more, `planegeometry` is `geometry`, `matrixnorms` is
+`matrices`, `markovchains` is `matrixnorms` and `majorization` is `vectors` with more;
+`linearsystems` builds on `vectors` and `matrices`, and `randomvectors` on these, `complex`
+and `linearsystems`. A field comes with the fields it builds on; fields that build on the
+same field share its words and types (`select`). -/
 def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
    ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
@@ -364,59 +367,88 @@ def expand (fs : List String) : List String :=
       | none => [f]
   (go 8 fs).eraseDups
 
-/-- The fields that build on several other fields, each of which may also be named by the
-article or come with another field (`randomvectors` on `vectors`, `matrices` and `complex`):
-the fields it builds on, and its own words for where these and the field itself stand in
-the vocabulary (the first constant and the type of each). Such a field shares the types of
-the fields it builds on with every other field that has them: a vector of `majorization`
-is a vector for `randomvectors`. -/
-def extensions : List (String × List String × (List (Nat × Nat) → Nat → Nat → Vocab)) :=
-  [("randomvectors", ["vectors", "matrices", "complex", "linearsystems"], fun bs co to =>
+/-- The fields whose own words are written for wherever the fields they build on stand in
+the vocabulary (`randomvectors` on `vectors`, `matrices`, `complex` and `linearsystems`):
+the words, for the first constant and the type of each field of `includes`, in its order, and
+of the field itself. The own words of any other field that builds on fields are found from
+its vocabulary (`ownWords`). -/
+def extensions : List (String × (List (Nat × Nat) → Nat → Nat → Vocab)) :=
+  [("randomvectors", fun bs co to =>
       match bs with
       | [(cv, tv), (cm, tm), (cc, tc), _] => RandomVectors.own { cv, tv, cm, tm, cc, tc, co, to }
       | _ => {}),
-   ("linearsystems", ["vectors", "matrices"], fun bs co _ =>
+   ("linearsystems", fun bs co _ =>
       match bs with
       | [(_, tv), (_, tm)] => LinearSystems.own tv tm co
       | _ => {})]
 
+/-- Where the own words of a field stand in a vocabulary: its first constant, type and
+interval type. -/
+abbrev Places := List (String × Nat × Nat × Nat)
+
+/-- A vocabulary with the own words of the field `f` after it, where `f` is one of a chain
+of fields each of which is the one before it with more words (`copulas` is `markov` is
+`hilbert` is `unitsquare`, each with more), and the fields before it in the chain stand
+at `at_`. In its vocabulary (`all`), the words of `f` come after those of the field before
+it and use its constants by their indices there: they are renumbered for where the parts
+stand. An interval type that `f` describes further (`[0,1]` of `unitsquare`, to which
+`hilbert` adds its inner product) is replaced by the description of `f`. -/
+def ownWords (V : Vocab) (at_ : Places) (f : String) (chain : List String) : Vocab :=
+  match all.lookup f, chain.getLast?.bind (fun b => all.lookup b) with
+  | some W, some B =>
+    -- (where each field of the chain begins in the vocabulary of `f`, and here)
+    let sizes (g : String) : Nat × Nat × Nat :=
+      ((all.lookup g).map fun P => (P.consts.length, P.types.length, P.intervals.length)).getD (0, 0, 0)
+    let los : List (Nat × Nat × Nat) := (0, 0, 0) :: chain.map sizes
+    let here (g : String) : Nat × Nat × Nat :=
+      if g == f then (V.consts.length, V.types.length, V.intervals.length) else (at_.lookup g).getD (0, 0, 0)
+    let segs : List ((Nat × Nat × Nat) × (Nat × Nat × Nat)) := los.zip ((chain ++ [f]).map here)
+    let at' (pick : Nat × Nat × Nat → Nat) (i : Nat) : Nat :=
+      match segs.reverse.find? fun (lo, _) => pick lo ≤ i with
+      | some (lo, h) => pick h + (i - pick lo)
+      | none => i
+    let fc := at' (·.1)
+    let ft := at' (·.2.1)
+    let own := Vocab.remap fc ft { W with
+      types := W.types.drop B.types.length, consts := W.consts.drop B.consts.length,
+      constNames := W.constNames.drop B.consts.length, constLean := W.constLean.drop B.consts.length,
+      typeLean := W.typeLean.drop B.types.length, adjectives := W.adjectives.drop B.adjectives.length,
+      nouns := W.nouns.drop B.nouns.length, mods := W.mods.drop B.mods.length,
+      notions := W.notions.drop B.notions.length, methods := W.methods.drop B.methods.length,
+      symbols := W.symbols.drop B.symbols.length, intervals := W.intervals.drop B.intervals.length }
+    let V' := V.join own
+    -- (the interval types of the chain that `f` describes further)
+    let again := (Vocab.remap fc ft { W with intervals := W.intervals.take B.intervals.length }).intervals
+    let ivs := (again.zip (B.intervals.zip (List.range B.intervals.length))).foldl (fun ivs (iv, old, k) =>
+      if W.intervals[k]? == some old then ivs else ivs.set (at' (·.2.2) k) iv) V'.intervals
+    { V' with intervals := ivs }
+  | _, _ => V
+
 /-- The core vocabulary followed by the named fields, in order (each entry tagged
-with its field). A bundle stands for its fields. A field that another named field includes
-is left out: its words are there. A field that builds on other fields (`extensions`) comes
-after all the others, and the fields it builds on come with it (also those that are
-extensions themselves: `randomvectors` builds on `linearsystems`). -/
+with its field). A bundle stands for its fields. A field that builds on other fields
+(`includes`) comes with them: they stand before it, once, and every field that builds on
+them shares their words and types (a vector of `majorization` is a vector for
+`randomvectors`). -/
 def select (fs : List String) : Vocab :=
-  let fs := expand fs
-  let isExt (f : String) : Bool := (extensions.lookup f).isSome
-  let basesOf (e : String) : List String := ((extensions.lookup e).map (·.1)).getD []
-  -- (an extension comes with the extensions it builds on, which stand before it)
-  let rec place : Nat → List String → String → List String
+  ((expand fs).foldl (place 8) (Vocab.core, [])).1
+where
+  /-- The vocabulary with the field `f`, after the fields it builds on (unless it is there). -/
+  place : Nat → Vocab × Places → String → Vocab × Places
     | 0, acc, _ => acc
-    | f + 1, acc, e =>
-      let acc := ((basesOf e).filter isExt).foldl (place f) acc
-      if acc.contains e then acc else acc ++ [e]
-  let exts := (fs.filter isExt).foldl (place 4) []
-  let plain := fs.filter (!isExt ·)
-  let inc (g f : String) : Bool := ((includes.lookup g).getD []).contains f
-  -- (the fields that an extension builds on, unless they are named or come with a named field)
-  let need := ((exts.flatMap basesOf).filter (!isExt ·)).eraseDups
-  let plain := plain ++ need.filter fun b => !plain.contains b && !plain.any (inc · b)
-  let plain := plain.filter fun f => !plain.any (inc · f)
-  -- (with where each field begins: its first constant and its first type)
-  let (V, at_) := plain.foldl (fun (acc : Vocab × List (String × Nat × Nat)) f => match all.lookup f with
-    | some W => (acc.1 ++ (if (includes.lookup f).isSome then W else Vocab.tag (f.toList.map Char.toNat) W),
-                 acc.2 ++ [(f, acc.1.consts.length, acc.1.types.length)])
-    | none => acc) (Vocab.core, [])
-  -- (a field begins where it stands, or where a field stands that begins with it)
-  let begin_ (at_ : List (String × Nat × Nat)) (b : String) : Nat × Nat :=
-    match at_.lookup b with
-    | some p => p
-    | none => ((at_.find? fun (g, _) => ((includes.lookup g).getD []).head? == some b).map (·.2)).getD (0, 0)
-  (exts.foldl (fun (acc : Vocab × List (String × Nat × Nat)) e => match extensions.lookup e with
-    | some (bases, own) =>
-      (acc.1.join (Vocab.tag (e.toList.map Char.toNat) (own (bases.map (begin_ acc.2)) acc.1.consts.length acc.1.types.length)),
-       acc.2 ++ [(e, acc.1.consts.length, acc.1.types.length)])
-    | none => acc) (V, at_)).1
+    | fuel + 1, acc, f =>
+      if (acc.2.lookup f).isSome then acc else
+      let bases := (includes.lookup f).getD []
+      let (V, at_) := bases.foldl (place fuel) acc
+      let here := (V.consts.length, V.types.length, V.intervals.length)
+      let tag := Vocab.tag (f.toList.map Char.toNat)
+      match extensions.lookup f, all.lookup f with
+      | some own, _ =>
+        (V.join (tag (own (bases.map fun b => ((at_.lookup b).map fun (c, t, _) => (c, t)).getD (0, 0)) here.1 here.2.1)),
+         at_ ++ [(f, here)])
+      | none, some W =>
+        if bases.isEmpty then (V ++ tag W, at_ ++ [(f, here)])
+        else (ownWords V at_ f bases, at_ ++ [(f, here)])
+      | none, none => (V, at_)
 
 /-- The phrases of a vocabulary that have more than one meaning, with the fields of the
 meanings: a notion with the same name and another type or value, a modifier or a noun with

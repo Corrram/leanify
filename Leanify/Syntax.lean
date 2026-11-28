@@ -347,6 +347,33 @@ def shiftConst (k : Nat) : Tm → Tm
   | .the t b => .the t (shiftConst k b)
   | t => t
 
+/-- Renumber vocabulary constant indices by `f`. -/
+def mapConst (f : Nat → Nat) : Tm → Tm
+  | .const i => .const (f i)
+  | .app g x => .app (mapConst f g) (mapConst f x)
+  | .lam t d b => .lam t (mapConst f d) (mapConst f b)
+  | .add x y => .add (mapConst f x) (mapConst f y)
+  | .sub x y => .sub (mapConst f x) (mapConst f y)
+  | .mul x y => .mul (mapConst f x) (mapConst f y)
+  | .div x y => .div (mapConst f x) (mapConst f y)
+  | .neg x => .neg (mapConst f x)
+  | .abs x => .abs (mapConst f x)
+  | .powNat x n => .powNat (mapConst f x) n
+  | .cases p v r => .cases (mapConst f p) (mapConst f v) (mapConst f r)
+  | .eq x y => .eq (mapConst f x) (mapConst f y)
+  | .lt x y => .lt (mapConst f x) (mapConst f y)
+  | .le x y => .le (mapConst f x) (mapConst f y)
+  | .not p => .not (mapConst f p)
+  | .and p q => .and (mapConst f p) (mapConst f q)
+  | .or p q => .or (mapConst f p) (mapConst f q)
+  | .imp p q => .imp (mapConst f p) (mapConst f q)
+  | .iff p q => .iff (mapConst f p) (mapConst f q)
+  | .all t b => .all t (mapConst f b)
+  | .ex t b => .ex t (mapConst f b)
+  | .guard p e => .guard (mapConst f p) (mapConst f e)
+  | .the t b => .the t (mapConst f b)
+  | t => t
+
 /-- Conjunction, implication and universal closure that omit trivial parts.
 (`defined` is a definition; omitting `True` keeps it readable.) -/
 def mkAnd : Tm → Tm → Tm
