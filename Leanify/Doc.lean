@@ -588,9 +588,14 @@ def annotatedRel : Nat → List PTok → List PTok
       if a.tok != .lbrace then keep else
       match groupBody (r1.length + 1) 0 r1 [] with
       | some (above, b :: r3) =>
-        if b.tok != .lbrace then keep else
-        match groupBody (r3.length + 1) 0 r3 [] with
-        | some ([rel], r4) =>
+        -- (the relation in braces, or alone: `\stackrel{d}=`)
+        let relOf : Option (PTok × List PTok) :=
+          if b.tok != .lbrace then (if relationTok b.tok then some (b, r3) else none) else
+          match groupBody (r3.length + 1) 0 r3 [] with
+          | some ([rel], r4) => some (rel, r4)
+          | _ => none
+        match relOf with
+        | some (rel, r4) =>
           if !relationTok rel.tok then keep else
           let letters : Codes := above.flatMap fun u => match u.tok with
             | .mvar c => [c]
@@ -616,7 +621,7 @@ def annotatedRel : Nat → List PTok → List PTok
           else if isLaw && rel.tok == .msym 61 then ⟨.cmd w!"leanifyeqd", rel.pos, rel.math⟩ :: annotatedRel f r4
           else if isRef || isWords then rel :: annotatedRel f r4
           else keep
-        | _ => keep
+        | none => keep
       | _ => keep
     | [] => keep
 

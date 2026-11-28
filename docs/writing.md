@@ -761,7 +761,7 @@ the old switches `{\cal G}`, `\bf x`, `\Bbb R` (`\mathcal{G}`, `\mathbf{x}`, `\m
 \choose k}` is `\binom{n}{k}`. A relation with a note above it that is a label, a reference or a reason in words,
 `\stackrel{(a)}{\le}`, `\overset{\eqref{eq:1}}{=}` or `\stackrel{\text{by assumption}}{=}`, is the
 relation; `\overset{\text{def}}{=}` (`def`, `\triangle` or `:` above `=`) is `\coloneqq`;
-`\stackrel{d}{=}` (`d`, `D`, `\mathcal{D}`, `\mathcal{L}`, `law` or `dist` above `=`) is equality in
+`\stackrel{d}{=}` (`d`, `D`, `\mathcal{D}`, `\mathcal{L}`, `law` or `dist` above `=`, also `\stackrel{\mathrm d}=`) is equality in
 distribution, of two random variables (field `randomvariables`) or two random vectors (field
 `randomvectors`). Any other note may change what the relation says (`\stackrel{\text{a.s.}}{=}`,
 `\stackrel{n\to\infty}{\to}`, `\stackrel{!}{\le}`): the formula is then not read.
