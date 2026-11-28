@@ -1310,6 +1310,22 @@ def domainOf (calculus : Bool) (d : MT) (sc : Scope := []) : M (Ty × Option Tm)
       match g.ty with
       | .fn a .prop => pure (a, some (.glob i))
       | _ => fail E.type n
+    | .sup (.id r) e =>
+      -- `u\in\mathbb{R}^n` with the field `vectors`: the vectors of dimension `n`
+      let V := (← get).vocab
+      let rn := V.notions.find? fun n =>
+        (n.name.filterMap fun p => match p with | .w w => some w | _ => none) == [w!"set", w!"of", w!"vectors", w!"in"]
+      match (if r == w!"\\mathbb{R}" then rn else none) with
+      | some n =>
+        let .fn .real (.fn vt .prop) := n.ty | fail E.unsupported
+        let (et, ety) ← Elab.term 100000 sc none e
+        if ety != .real then fail E.type
+        pure (vt, some (.app n.value et))
+      | none => do
+        let (p, t) ← Elab.term 100000 sc none d
+        match t with
+        | .fn a .prop => pure (a, some p)
+        | _ => fail E.unsupported
     | _ => do
       -- any other set of real numbers: `\mathbb{R}\setminus\{0\}`, `\{x\in A : …\}`; or a
       -- class of the article with its parameter (`\mathcal M_\beta`)
@@ -3762,6 +3778,8 @@ where
       -- (also an end of an interval, `Let $a<b$.`: `b` a number bound before `a`)
       let some h := (match d with
           | .app (.id s) [_, .id h, _] => if s == w!"@seq" then some h else none
+          -- (`u\in\mathbb{R}^n` with the field `vectors`: the dimension, a number bound before)
+          | .sup (.id r) (.id h) => if r == w!"\\mathbb{R}" then some h else none
           | .ival lo hi _ _ => match lo, hi with
             | .id h, _ => if h == e.detail then some h else (match hi with | .id h' => some h' | _ => none)
             | _, .id h => some h
