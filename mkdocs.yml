@@ -30,6 +30,7 @@ nav:
       - From the .tex file to the certificate: pipeline.md
       - Glossary of the vocabulary: glossary.md
   - Status and roadmap: roadmap.md
+  - Closing the gap to Mathlib: mathlib-coverage.md
 
 theme:
   name: material

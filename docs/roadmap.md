@@ -77,6 +77,9 @@ Each construction gets one documented reading in `Leanify/Grammar.lean` and
 `Leanify/Doc.lean`, an example in `docs/writing.md`, and an exemplar sentence
 that compiles and is certified.
 
+The notions that Mathlib has and Leanify does not read yet, found by reading articles of
+other authors, have a plan of their own: [Closing the gap to Mathlib](mathlib-coverage.md).
+
 ## Beyond constructions
 
 These points limit what a certificate says. None of them is a construction of the

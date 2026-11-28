@@ -1,0 +1,139 @@
+# Closing the gap to Mathlib
+
+Leanify reads a sentence only if every notion in it has a meaning in Lean. This page is the
+plan for the notions that Mathlib already has and Leanify does not read yet. It was written
+after five research articles by other authors were read as they are printed (November 2026),
+and it is meant to be worked through in order.
+
+One rule decides the scope. **A notion gets a field only if Mathlib backs it**: a
+declaration to point at, or a definition of a few lines whose basic facts Mathlib proves.
+What Mathlib does not have (the Wasserstein distance, couplings of measures on `ℝᵈ`,
+elliptical laws, tangles) stays with the article: defined there in words that Leanify
+reads, or named in `notions={…}` and left without a meaning.
+
+## What the five articles showed
+
+| Article | Sentences | Read at first | Read now | What the rest needs |
+| --- | ---: | ---: | ---: | --- |
+| Elbracht, Kneip, Teegen: tangles and weighted vertex sets (1811.06821) | 193 | 0 | 0 | separations as pairs of subsets of an abstract set `V`, the article's own notions with a parameter (`$k$-tangle in $G$`) |
+| Pfaffelhuber: the all-heads coin game (2604.22991) | 286 | 12 | 12 (15 with its one definition rewritten by cases) | the domain of every index (`n` an integer, `p\in(0,1)`), a first value with two subscripts, limits that exist, `O(δ)` expansions |
+| Coblenz, Grothe, Herrmann, Hofert: smooth bootstrap (2110.03397) | 630 | 0 | 1 | named laws (`\mathrm{Ell}_d(0,I,ψ)`), densities on `ℝᵈ`, integrals over `ℝᵈ`, equations between functions |
+| Ansari, Rüschendorf: Wasserstein transport (2611.32773) | 614 | 4 | 4 | probability measures as objects, couplings, `W_2` (not in Mathlib) |
+| Diestel, Elbracht, Jacobs: point sets inducing tangles (2107.01087) | 431 | 1 | 3 | as the first article; Farkas's lemma is read as printed |
+
+What was added on the way: recursive definitions, sums over finite sets, pairs in sets of
+pairs, equality in distribution, the fields `randomvectors` and `linearsystems`, square
+roots of matrices, the order of vectors, `exactly one of the following holds`.
+
+Two lessons carry the plan.
+
+1. **A whole article is read only when its first definitions are.** In every article the
+   read share stayed near zero although single statements, rewritten a little, were read.
+   The count that matters is therefore not sentences but *results whose statement is read
+   with every notion in it defined*. The plan measures that.
+2. **Much of what failed was not a missing Mathlib notion.** Some gaps were vocabulary
+   (random vectors, matrix square roots). As many were wordings of forms that are read in
+   another wording, or came from how Leanify is built (a field could not use the types of
+   two other fields; a notation was tied to one type in the compiler). The last kind is
+   the cheapest to remove and stands in the way of every new field.
+
+## Part 1: what makes every later step cheap
+
+These come first. Each is a change of the compiler or of the checks, not of the vocabulary.
+
+| # | Step | Why | Done when |
+| --- | --- | --- | --- |
+| 1.1 | **Notation by method, not by type.** `\mathbb{E}[…]`, `P(…)`, `\operatorname{Var}`, `\sim`, the collective adjectives and `\lVert\cdot\rVert` are tied to one type each inside `Elab.term`. Make each a method key that any type may have (as `@of`, `@act`, `@sim`, `@identdist`, `@indep` are now), and move the special code of `randomvariables` behind those keys. | A new type (random vectors, measures, complex random variables) then gets the notation with data alone. `Elab.term` is also at the limit of what the compiler accepts in one definition. | `\mathbb{E}[X]` of a random vector is the mean vector with no line of `Elab` naming the type; `Elab.term` is split into several definitions. |
+| 1.2 | **Fields that build on fields, in general.** `Fields.extensions` places a field after the fields it builds on and shares their types. Let an extension build on another extension, and move every field that copies another (`majorization` on `vectors`, `matrixnorms` on `matrices`) to this mechanism. | Today two fields that both include `vectors` each bring their own vectors. Every notion that needs two types (a matrix applied to a vector, a measure of a set of vectors) needs this. | `includes` is gone; `randomvectors` builds on `linearsystems`. |
+| 1.3 | **The Mathlib side is checked without the articles.** A generated Lean file that names every constant of every field with the type the vocabulary gives it (`example : Mat → Vec → Vec := Leanify.LinearSystems.mulVec`), built as its own target of `scripts/ci.sh`. | A model file is the one part that the checker does not compile. A wrong name or type shows today only when an article of that field is certified. | `bash scripts/ci.sh models` builds in minutes and fails on a constant whose type differs. |
+| 1.4 | **A notion may carry its notation.** A notion that is a description (`matrix square root of $v$`) is printed in full in every reading. Give `Notion` an optional TeX form (`{#1}^{1/2}`), as constants have. | Readings with nested square roots are several lines long, and the author has to recognise the formula. | The Bures matrix is printed as `(A^{1/2}BA^{1/2})^{1/2}`. |
+| 1.5 | **Say why a sentence is prose.** With `--prose`, name for each unread sentence of a *result* the first word or formula that stopped it, and do not name a notation that was read (`\stackrel` is named today where the sentence fails for another reason). | More than 90% of the sentences of the five articles are reported as prose without a reason; the gaps of this page were found by hand. | For each unread statement of the five articles, the report names the notion or form found by hand. |
+| 1.6 | **A corpus and one number.** Keep the five articles (and the authors' own) as a corpus outside the tests, with a script that reports, per article, the results whose statement is read and whose notions are all defined. | The plan needs a measure that a wording trick cannot move. | `python scripts/corpus.py` prints the table above; it is run before and after every step below. |
+
+## Part 2: objects that an article takes for granted
+
+The largest single gap is not a field. Both tangle articles, and most of combinatorics,
+speak about **a set `V` of things that are not numbers**, its subsets, pairs of subsets,
+and functions on it. The core has sets of real numbers only, and `structures` has elements
+of algebraic structures.
+
+| # | Step | Mathlib | Done when |
+| --- | --- | --- | --- |
+| 2.1 | **A ground set of the article.** `Let $V$ be a finite set.` with no kind of element binds a type of the article (as `notions={…}` declares one), with its subsets, `\lvert A\rvert`, `A\cup B`, sums `\sum_{v\in A}w(v)` and functions `w\colon V\to\mathbb{R}`. | `Finset`, `Set.ncard`, `Finset.sum` | The lemma on maximal separations of the 2021 article (`lem:MaximalSeparations`) is read as printed once its notions are defined (2.2). |
+| 2.2 | **Notions of the article with a parameter and a complement.** `a $k$-tangle in $G$`, `an orientation $\tau$ of $S$`, `$w$ induces $\tau$`: a defined noun or verb that takes a number before it and an object after `of`/`in`. | none needed | The definitions of the preliminaries of the 2021 article are read. |
+| 2.3 | **Unordered and ordered pairs as objects.** `a separation $s=\{A,B\}$`, `its orientations $(A,B)$ and $(B,A)$`, a set of such pairs, a letter for a pair. | `Sym2`, `Prod` | `Let $s=\{A,B\}$ be a separation of $V$.` binds `s`, `A` and `B`. |
+| 2.4 | **Sets and families indexed by a number.** `let $\mathcal{S}_d$ denote the set of positive definite $d\times d$ matrices`, `\mathbb{S}_{++}^d`, `\mathcal{P}_2(\mathbb{R}^d)`. | n/a | `Let $\Sigma\in\mathbb{S}_{++}^d$.` after such a definition. |
+
+## Part 3: fields, by what Mathlib has
+
+Checked against the Mathlib of this repository (September 2026). "Has" means the
+directory or declaration was found there; the order is by how often the five articles and
+the authors' own articles need it.
+
+| # | Field or extension | Mathlib has | Leanify has | First step |
+| --- | --- | --- | --- | --- |
+| 3.1 | **Probability measures as objects** (extension on `vectors`): `a probability measure $P$ on $\mathbb{R}^d$`, `$X\sim P$`, `P(A)`, `\int f\,dP`, finite second moment, the law of `X`, push-forward | `ProbabilityMeasure`, `HasLaw`, `Measure.map`, `IdentDistrib` | laws only through distribution functions | `Let $X\sim P_0$ and $Y\sim P_1$.` for measures bound before |
+| 3.2 | **Named laws on `ℝᵈ`**: the multivariate normal `N(m,\Sigma)`, and a law that the article names by its parameters (`\mathcal{E}(m,\Sigma,\nu)` defined in the article as the law of `m+RAU`) | `Distributions/Gaussian/Multivariate`, `IsGaussian`; elliptical laws: no | six laws of real random variables | `X\sim N(m,\Sigma)` for a vector `m` and a positive semidefinite `\Sigma` |
+| 3.3 | **Moments of random vectors**: `\mathbb{E}[X]`, `\operatorname{Cov}(X)` as a matrix, `\mathbb{E}\lVert X\rVert^2`, `\mathbb{E}[f(X)]` | integrals, `covarianceBilin` | the mean vector by words | after 1.1: `\mathbb{E}[AX+b]=A\,\mathbb{E}[X]+b` |
+| 3.4 | **Convergence of random variables and laws**: almost surely, in probability, in distribution, `\xrightarrow{d}`; the law of large numbers and the central limit theorem as statements | `StrongLaw`, `CentralLimitTheorem`, `LevyProkhorovMetric`, `Portmanteau`, `Tight` | none | `$X_n\to X$ almost surely` for a sequence of random variables |
+| 3.5 | **Conditioning**: `\mathbb{E}[X\mid Y]`, conditional laws, kernels, martingales | `ConditionalExpectation`, `Kernel`, `Martingale`, `HasCondDistrib` | `P(A\mid B)` of events | `\mathbb{E}[\mathbb{E}[X\mid Y]]=\mathbb{E}[X]` |
+| 3.6 | **Measures and integrals beyond the line**: `\int_{\mathbb{R}^d}f(x)\,dx`, a density on `ℝᵈ`, absolutely continuous, Radon–Nikodym derivative, product measure, `L^p` | `MeasureTheory/Integral`, `Measure/Decomposition/RadonNikodym`, `Constructions/Pi` | integrals over intervals and the unit square | `\int_{\mathbb{R}^d}k(x)\,dx=1` for a function of vectors |
+| 3.7 | **Spectral theory of symmetric matrices**: eigenspaces, their dimensions, orthogonal projections, `K=\sum_j\kappa_j\pi_j`, orthogonal matrices acting on vectors, the eigenvalues as a list | `Eigenspace`, `Matrix/Spectrum`, `InnerProductSpace/Projection` | real eigenvalues as a set, eigenvectors | `let $\kappa_1,\ldots,\kappa_k$ be the distinct eigenvalues of $K$` |
+| 3.8 | **Convex analysis on `ℝᵈ`**: convex sets and cones, hulls, extreme points, convex and lower semicontinuous functions of vectors, Jensen, separation | `Analysis/Convex` (`Cone`, `Hull`, `Extreme`, `KreinMilman`, `Jensen`) | convexity of real functions and of sets of reals | `a convex function $\varphi\colon\mathbb{R}^d\to\mathbb{R}$` |
+| 3.9 | **Calculus on `ℝᵈ`**: gradient, derivative of a map `ℝⁿ→ℝᵐ`, continuity and differentiability of functions of vectors, Lagrange multipliers | `Calculus/FDeriv`, `Gradient`, `LagrangeMultipliers` | derivatives of real functions, partial derivatives on the square | `\nabla f(x)=0` at a minimiser |
+| 3.10 | **Orders and lattices**: a partial order of the article, maximal elements, chains, suprema, submodular functions | `Order` (128 entries), `Combinatorics/SetFamily` | the order of numbers, of vectors, stochastic orders | `the maximal elements of $\tau$` after 2.1 |
+| 3.11 | **Set systems and matroids**: families of subsets of a ground set, Hall's theorem, matroids | `SetFamily`, `Hall`, `Matroid` | graphs with their vertices and edges | after 2.1 |
+
+Not on the list: category theory, algebraic geometry, representation theory. Their objects
+are types and structures on types, which the core language (`Ty`: numbers, propositions,
+functions, base types) does not have; they need a decision about the core first.
+
+## Part 4: wordings met more than once
+
+Each is a form that is read in another wording today. They are small, and each was the
+only reason some statement was not read.
+
+- a definition of a notion whose condition names two new objects (`if for all independent
+  random vectors $X_1$ and $X_2$ with … we have …`);
+- `where $q=1-p$` and `with $w_{0,p}=1$` after a display, as a definition or a first value;
+- indices given once for several objects (`For $i=0,1$, let $P_i=…$`, `$\Sigma_i$, $i=0,1$`);
+- an equation between functions (`\varphi_{X+Y}=\varphi_X\cdot\varphi_Y`) as the equation at
+  every point of their domain;
+- `the limit $\lim_{n\to\infty}a_n$ exists`, `$n\mapsto a_n$ is strictly increasing`;
+- a letter without a domain that the article fixes once (`Throughout, $n$ and $k$ are
+  integers and $p\in(0,1)$.`), instead of reading it as any real number;
+- macros that draw a symbol with kerns (`\lowfwd s{1.5}2` for an arrow over `s`): a
+  declaration in the preamble that such a macro is the symbol `\vec{s}`;
+- a noun phrase after `eigenvalues of $K$`, `orthogonal projection onto $E_j$`,
+  `block-radius vector`;
+- pronouns for the objects of the sentence before (`their sum`, `its inverse`).
+
+## Order of work
+
+1. **Part 1, all of it.** No article reads more after it, and every later step is a
+   fraction of its cost today. Step 1.3 first: it makes the Mathlib side of every later
+   field safe to write.
+2. **Steps 2.1 to 2.3, then 3.10.** They open combinatorics, where the two tangle articles
+   stand at zero for one reason.
+3. **Steps 3.1 to 3.3 and 2.4, then 3.7.** They open the statements of the transport and the
+   bootstrap article up to the notions that Mathlib lacks, and the authors' own work on
+   multivariate dependence.
+4. **Part 4**, each wording when the corpus shows it as the last thing between a result and
+   its reading.
+5. **Steps 3.4 to 3.6, 3.8, 3.9, 3.11** in the order in which the corpus asks for them.
+
+After each step: the corpus table of step 1.6, a test article of the field with its
+expected output, the entry in `docs/writing.md` or the glossary, and `bash scripts/ci.sh`.
+A step is not done while the number of results read in the corpus is the same as before it,
+unless it is a step of Part 1.
+
+## What will stay unread
+
+By the rule at the top, and so that it is not tried again without a reason:
+
+| Notion | Where it was met | Route |
+| --- | --- | --- |
+| Wasserstein distance, couplings of measures on `ℝᵈ`, optimal maps | Ansari, Rüschendorf | defined in the article, once 3.1 is there (`W_2^2(P,Q)` as an infimum over the random vectors with these laws) |
+| elliptical and spherical laws, stable laws | Grothe et al.; Ansari, Rüschendorf | defined in the article from `\stackrel{d}{=}`, orthogonal matrices and 3.2 |
+| tangles, separation systems | Elbracht et al. | defined in the article, after Part 2 |
+| the Bures–Wasserstein distance | Ansari, Rüschendorf | read today as a definition by its formula |
