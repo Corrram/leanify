@@ -1559,6 +1559,420 @@ def atOmega (rvs seqs : List Codes) : Nat → MT → MT
     | .bigop s v lo hi b => .bigop s v (go lo) (go hi) (go b)
     | _ => m
 
+/-! The notation of the fields that is read apart from `term`, which they call through `T` (`term` with the fuel of the caller): `opTerm` and `probTerm`. -/
+
+/-- A formula that is a proposition, read by `T`. -/
+def propOfWith (T : Scope → PF → MT → M (Tm × Ty)) (sc : Scope) (pf : PF) (x : MT) : M Tm := do
+  let (p, t) ← T sc pf x
+  if t == .prop then pure p else fail E.type
+
+/-- The notation of the field `hilbert`: `L^2` and `L^2_0`, `\langle f,g\rangle`, `\lVert f\rVert` of
+a function of the interval or of a kernel, `\lVert T|_{A}\rVert`, `T^{\otimes m}`, the sum over the
+subsets of `\{1,\dots,m\}`, and the Hoeffding components `F_S`, `F_\emptyset`, `F_{\{1,2\}}` of a
+kernel `F`. `none` for any other formula, or without the field. -/
+def opTerm (T : Scope → PF → MT → M (Tm × Ty)) : Nat → Scope → PF → MT → M (Option (Tm × Ty))
+  | 0, _, _, _ => pure none
+  | f + 1, sc, pf, m => do
+    -- `\lVert x\rVert` and `\langle x,y\rangle` of elements of a type of the vocabulary that
+    -- has them as methods (vectors): the type's norm and inner product
+    let own? (xs : List MT) (key : Codes) : M (Option (Tm × Ty)) := do
+      let st0 ← get
+      let r ← tryCatch (do
+          let ts ← xs.mapM (T sc pf)
+          match ts with
+          | (a, t) :: rest =>
+            if (← ownTy t) && rest.all (·.2 == t) && (← method t (.fn key)).isSome then
+              pure (some (← callMethod t (.fn key) (a :: rest.map (·.1))))
+            else pure none
+          | [] => pure none) (fun _ => pure none)
+      if r.isNone then set st0
+      pure r
+    -- `X\sim F` for an element of a type of the vocabulary that has the method `@sim`
+    -- (a random vector and its distribution function)
+    if let .chain x [(.sim, d)] := m then
+      let st0 ← get
+      let r ← tryCatch (do
+          let (xt, xty) ← T sc pf x
+          let V := (← get).vocab
+          match V.methods.find? fun md => md.ty == xty && md.op == .fn w!"@sim" with
+          | some md =>
+            match V.consts.getD md.const .prop with
+            | .fn _ (.fn want _) =>
+              let (dt, dty) ← T sc pf d
+              pure (some (Tm.app (.app (.const md.const) xt) (← coerce dt dty want), Ty.prop))
+            | _ => pure none
+          | none => pure none) (fun _ => pure none)
+      if r.isNone then set st0
+      if let some r := r then return some r
+    -- `x^\top y` of two elements of a type with an inner product (vectors): `\langle x,y\rangle`
+    if let .mul (.sup x (.id tp)) y := m then
+      if [w!"T", w!"\\top", w!"\\intercal", w!"\\mathsf{T}", w!"\\mathrm{T}", w!"\\mathsf T"].contains tp then
+        if let some r ← own? [x, y] w!"@inner" then return some r
+    match m with
+    | .app (.id n) [x] =>
+      if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
+      -- `\angle A` of a vertex of a triangle: the angle of the triangle there
+      if let .id v := x then
+        if n == w!"\\angle" && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then
+          let st ← get
+          let tri := st.triangles.find? fun (e, vs) => vs.contains v && (e == st.curEnv || st.curProved == some e)
+          let some (_, vs) := tri | fail E.finding w!"`\\angle A` with one letter is the angle at a vertex of a triangle bound by `Let $ABC$ be a triangle.`; otherwise write `\\angle BAC`"
+          let others := vs.filter (· != v)
+          let [p, q] := others | fail E.unsupported
+          let (pa, t) ← T sc pf (.id v)
+          let (pp, _) ← T sc pf (.id p)
+          let (pq, _) ← T sc pf (.id q)
+          return some (← callMethod t (.fn w!"\\angle") [pa, pp, pq])
+    | .app (.id n) [x, y] =>
+      if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
+      -- (two random vectors: identically distributed, `X\stackrel{d}{=}Y`, and independent)
+      if n == w!"@identdist" || n == w!"@indep" then if let some r ← own? [x, y] n then return some r
+      -- `$S$ contains $x$`: `x\in S` of an element, `x\subseteq S` of a set of the same
+      -- elements (the types decide)
+      if n == w!"@contains" then
+        let st0 ← get
+        if let some r ← tryCatch (some <$> T sc pf (.chain y [(.mem, x)])) (fun _ => pure none) then
+          if r.2 == .prop then return some r
+        set st0
+        if let some r ← tryCatch (some <$> T sc pf (.chain y [(.subset, x)])) (fun _ => pure none) then
+          if r.2 == .prop then return some r
+        set st0
+        fail E.type
+    | .app (.id n) [x, y, z] =>
+      if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
+      -- `Let $ABC$ be a triangle.`: three points that are not collinear, the vertices of a
+      -- triangle (for `\angle A`)
+      if n == w!"@triangle" then
+        if let some (p, t) ← own? [x, y, z] w!"@collinear" then
+          if let (.id a, .id b, .id c) := (x, y, z) then
+            modify fun st => { st with triangles := (st.curEnv, [a, b, c]) :: st.triangles }
+          return some (.not p, t)
+    | _ => pure ()
+    let some iv ← hilbertIv | pure none
+    let fn1 := Ty.fn iv.ty .real
+    let seqT := Ty.fn .real iv.ty
+    let kern := Ty.fn seqT .real
+    let rset := Ty.fn .real .prop
+    let free (n : Codes) : M Bool := do
+      pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
+    -- a formula elaborated tentatively: the state is kept only if it is read
+    let try? (x : MT) : M (Option (Tm × Ty)) := do
+      let st0 ← get
+      tryCatch (do let r ← T sc pf x; pure (some r)) (fun _ => do set st0; pure none)
+    let c (k : Option Nat) : M Nat := liftO k E.unsupported
+    let kernelOf (t : Tm) : M Tm := do pure (.app (.const (← c iv.isKernel)) t)
+    match m with
+    -- `\{1,\dots,m\}`: the integers from `1` to `m`
+    | .finset [.num 1, .id d, hi] =>
+      if d != w!"\\dots" && d != w!"\\ldots" then return none
+      let h ← asReal (← T sc pf hi)
+      pure (some (.lam .real .tt (.and (.app (.prim .isInt) (.loc 0))
+        (.and (.le (.num 1) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))), rset))
+    -- `L^2`, `L^2_0`: the classes of square-integrable functions on the interval
+    | .sup (.id [76]) (.num 2) =>
+      if !(← free [76]) then return none
+      pure (some (.const (← c iv.memL2), Ty.fn fn1 .prop))
+    | .sub (.sup (.id [76]) (.num 2)) (.num 0) | .sup (.sub (.id [76]) (.num 0)) (.num 2) =>
+      if !(← free [76]) then return none
+      pure (some (.const (← c iv.memL20), Ty.fn fn1 .prop))
+    -- `\sum_{S\subseteq\{1,\dots,m\}} e`
+    | .app (.id n) [dom, .mapsto (.id v) body] =>
+      if n != w!"@sumsub" then return none
+      let some hi := upTo dom | fail E.finding w!"a sum over sets is over the subsets of $\\{1,\\dots,m\\}$"
+      let kt ← asReal (← T sc pf hi)
+      -- the summand, for a subset `v` of `\{1,…,m\}` (the sum binds its own `v`)
+      let b ← asReal (← T ((v, rset) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
+      -- (the summand is asked to be defined only at the subsets of `\{1,…,m\}`)
+      let dom : Tm := .all .real (.imp (.app (.loc 1) (.loc 0))
+        (conjAll [.app (.prim .isInt) (.loc 0), Tm.le (.num 1) (.loc 0), Tm.le (.loc 0) (shift 2 0 kt)]))
+      pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.subsetSum)) kt) (.lam rset dom b)), .real))
+    -- `\langle f,g\rangle`
+    | .app (.id n) [x, y] =>
+      if n != w!"@inner" then return none
+      let a ← T sc pf x
+      let b ← T sc pf y
+      match asFn1 iv a, asFn1 iv b with
+      | some ta, some tb =>
+        let l2 ← c iv.memL2
+        pure (some (.guard (.and (.app (.const l2) ta) (.app (.const l2) tb))
+          (.app (.app (.const (← c iv.inner1)) ta) tb), .real))
+      | _, _ =>
+        if a.2 == kern && b.2 == kern then
+          pure (some (.guard (.and (← kernelOf a.1) (← kernelOf b.1))
+            (.app (.app (.const (← c iv.innerSeq)) a.1) b.1), .real))
+        else fail E.type
+    | .app (.id n) [x] =>
+      -- the subsets of a set of numbers (the domain of `S\subseteq A`)
+      if n == w!"@subsets" then
+        let (at_, aty) ← T sc pf x
+        if aty != rset then fail E.type
+        return some (.lam rset .tt (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0)))),
+          Ty.fn rset .prop)
+      -- (the proper subsets: the domain of `S\subsetneq A`)
+      if n == w!"@psubsets" then
+        let (at_, aty) ← T sc pf x
+        if aty != rset then fail E.type
+        return some (.lam rset .tt (.and (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0))))
+          (.not (.eq (.loc 0) (shift 1 0 at_)))), Ty.fn rset .prop)
+      -- `\lVert f\rVert`, `\lVert T|_{A}\rVert`
+      if n != w!"@norm" then return none
+      match x with
+      | .app (.id r) [op, dom] =>
+        if r != w!"@restrict" then return none
+        let (t, ty) ← T sc pf op
+        let (d, dty) ← T sc pf dom
+        if ty == Ty.fn fn1 fn1 && dty == Ty.fn fn1 .prop then
+          pure (some (.app (.app (.const (← c iv.opNorm1)) t) d, .real))
+        else if ty == Ty.fn kern kern && dty == Ty.fn kern .prop then
+          pure (some (.app (.app (.const (← c iv.opNormSeq)) t) d, .real))
+        else fail E.type
+      | _ =>
+        let some a ← try? x | return none
+        match asFn1 iv a with
+        | some ta =>
+          pure (some (.guard (.app (.const (← c iv.memL2)) ta) (.app (.const (← c iv.norm1)) ta), .real))
+        | none =>
+          if a.2 == kern then
+            pure (some (.guard (← kernelOf a.1) (.app (.const (← c iv.normSeq)) a.1), .real))
+          else return none
+    -- `T^{\otimes m}`
+    | .sup op (.app (.id n) [k]) =>
+      if n != w!"@otimes" then return none
+      let (t, ty) ← T sc pf op
+      if ty != Ty.fn fn1 fn1 then fail E.type
+      let kt ← asReal (← T sc pf k)
+      pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.tensor)) t) kt), Ty.fn kern kern))
+    -- `T^k`: a power of an operator on functions of the interval
+    | .sup op k => do
+      let st0 ← get
+      let some (t, ty) ← try? op | return none
+      if ty != Ty.fn fn1 fn1 then set st0; return none
+      let kt ← asReal (← T sc pf k)
+      pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.opPow)) t) kt), Ty.fn fn1 fn1))
+    -- `F_S(x)`: a component applied to a sequence
+    | .app (.sub (.id k) i) args => do
+      let some (h, hty) ← opTerm T f sc pf (.sub (.id k) i) | return none
+      let as ← args.mapM (T sc pf)
+      pure (some (← applyAll h hty [] as))
+    -- `F_S`: the component of a kernel `F` for a set `S` of indices
+    | .sub (.id k) i => do
+      match lookupLocal sc k with
+      | some (_, ty) => if ty != kern then return none
+      | none => match ← lookupGlob k with
+        | some (_, g) => if g.ty != kern then return none
+        | none => return none
+      let st? : Option Tm ← match i with
+        | .id e =>
+          if e == w!"\\emptyset" then pure (some (.lam .real .tt (.not .tt))) else
+          match ← try? i with
+          | some (t, ty) => pure (if ty == rset then some t else none)
+          | none => pure none
+        | .finset xs => do
+          let es ← xs.mapM fun e => do
+            let (t, ty) ← T sc pf e
+            coerce t ty .real
+          match es with
+          | [] => pure none
+          | e :: rest => pure (some (.lam .real .tt (rest.foldl (fun acc t => .or acc (.eq (.loc 0) (shift 1 0 t)))
+              (.eq (.loc 0) (shift 1 0 e)))))
+        | _ => pure none
+      let some st := st? | return none
+      let (t, _) ← T sc pf (.id k)
+      pure (some (.app (.app (.const (← c iv.hoeff)) t) st, kern))
+    | _ => pure none
+
+/-- The notation of the field `randomvariables`: `\mathbb{E}[e]`, `P(φ)`, `P(A\mid B)`,
+`\operatorname{Var}(e)`, `\operatorname{Cov}(e,f)` and the collective conditions of
+independence and identical distribution. `none` for any other formula, or without the
+field. -/
+def probTerm (T : Scope → PF → MT → M (Tm × Ty)) : Nat → Scope → PF → MT → M (Option (Tm × Ty))
+  | 0, _, _, _ => pure none
+  | g + 1, sc, pf, m => do
+    let st0 ← get
+    let some meth := st0.vocab.methods.find? (·.op == .fn w!"@at") | return none
+    let rv := meth.ty
+    let ev := meth.const
+    let free (n : Codes) : M Bool := do pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
+    let expNames := [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}", w!"@expect"]
+    let probNames := [w!"P", w!"\\mathbb{P}", w!"\\Pr", w!"\\operatorname{P}", w!"\\mathrm{P}", w!"@prob"]
+    let varNames := [w!"Var", w!"var", w!"\\mathbb{V}", w!"\\operatorname{Var}", w!"\\mathrm{Var}"]
+    let covNames := [w!"Cov", w!"cov", w!"\\operatorname{Cov}", w!"\\mathrm{Cov}"]
+    let isName (ns : List Codes) (n : Codes) : M Bool := do
+      if !ns.contains n then return false
+      if n.head? == some 64 then return true
+      free n
+    let rvNames := sc.filterMap fun (n, t) => if t == rv then some n else none
+    let seqNames := sc.filterMap fun (n, t) => if t == .fn .real rv then some n else none
+    let sc1 : Scope := (w!"@omega", .real) :: sc
+    let pf1 : PF := pf.map fun (s, t) => (shift 1 0 s, t)
+    -- the real function of the outcome that `e` is
+    let pw (e : MT) : M Tm := do
+      let r ← T sc1 pf1 (atOmega rvNames seqNames 64 e)
+      pure (.lam .real .tt (← asReal r))
+    -- the set of the outcomes where the condition (or the event) `e` holds
+    let pwSet (e : MT) : M Tm := do
+      let stE ← get
+      tryCatch (do
+          let (p, t) ← T sc1 pf1 (atOmega rvNames seqNames 64 e)
+          if t != .prop then fail E.type
+          pure (Tm.lam .real .tt p)) fun _ => do
+        set stE
+        let (a, t) ← T sc pf e
+        if t != .fn .real .prop then fail E.type
+        pure a
+    let omega : Tm := .lam .real .tt (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))
+    let integ (fn : Tm) : Tm := .app (.app (.prim .integrableOn) fn) omega
+    let expect (fn : Tm) : Tm := .guard (integ fn) (.app (.app (.prim .integralOn) omega) fn)
+    let prob (set : Tm) : Tm :=
+      .app (.app (.prim .integralOn) (.lam .real .tt (.and (.app omega (.loc 0)) (.app (shift 1 0 set) (.loc 0)))))
+        (.lam .real .tt (.num 1))
+    let condProb (a b : MT) : M Tm := do
+      let sa ← pwSet a
+      let sb ← pwSet b
+      let both : Tm := .lam .real .tt (.and (.app (shift 1 0 sa) (.loc 0)) (.app (shift 1 0 sb) (.loc 0)))
+      pure (.guard (.lt (.num 0) (prob sb)) (.div (prob both) (prob sb)))
+    -- (the collective conditions first: any number of arguments)
+    let collective : Bool := match m with
+      | .app (.id n) _ => [w!"@indep", w!"@identdist", w!"@indepseq", w!"@identdistseq"].contains n
+      | _ => false
+    -- `\mathbb{E}[X^2]<\infty`, `\operatorname{Var}(X)<\infty`: integrable
+    if let .chain (.app (.id n) [e]) [(.lt, .id inf)] := m then
+      if inf == w!"\\infty" then
+        if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then return some (integ (← pw e), .prop)
+        if ← isName varNames n then return some (integ (← pw (.sup e (.num 2))), .prop)
+    -- `X\sim N(\mu,\sigma^2)`, `X\sim\mathrm{Poi}(\lambda)`, `X\sim\mathrm{Bin}(n,p)`,
+    -- `X\sim\mathcal{U}[a,b]`: the modifier of the vocabulary for that distribution
+    if let .chain x [(.sim, d)] := m then
+      let strip (k : Codes) : Codes :=
+        let pre := [w!"\\mathrm{", w!"\\operatorname{", w!"\\mathcal{", w!"\\mathbb{", w!"\\text{", w!"\\textrm{", w!"\\mathsf{"]
+        match pre.find? (fun p => p.isPrefixOf k) with
+        | some p => (k.drop p.length).dropLast
+        | none => k
+      let (hd, args) : MT × List MT := match d with
+        | .app h [.tuple xs] => (h, xs)
+        | .app h [.interval a b] => (h, [a, b])
+        | .app h xs => (h, xs)
+        | .mul h (.interval a b) => (h, [a, b])
+        | .mul h (.tuple xs) => (h, xs)
+        | h => (h, [])
+      let some k := symKey hd | fail E.unsupported
+      let k := strip k
+      let kinds : List (List Codes × List Codes) := [
+        ([w!"N", w!"Normal", w!"Gauss", w!"Gaussian"], [w!"normally", w!"distributed", w!"with", w!"mean", w!"and", w!"variance"]),
+        ([w!"Poi", w!"Pois", w!"Poisson", w!"Po"], [w!"Poisson", w!"distributed", w!"with", w!"parameter"]),
+        ([w!"Bin", w!"Binom", w!"Binomial", w!"B"], [w!"binomially", w!"distributed", w!"with", w!"parameters", w!"and"]),
+        ([w!"Ber", w!"Bern", w!"Bernoulli"], [w!"Bernoulli", w!"distributed", w!"with", w!"parameter"]),
+        ([w!"Exp", w!"Expo", w!"Exponential"], [w!"exponentially", w!"distributed", w!"with", w!"rate"]),
+        ([w!"U", w!"Unif", w!"Uniform"], [w!"uniformly", w!"distributed", w!"on"])]
+      let some (_, words) := kinds.find? (·.1.contains k)
+        | fail E.finding (w!"the distribution " ++ k ++ w!" after \\sim is not one the vocabulary knows (N, Poi, Bin, Ber, Exp, U)")
+      let words0 (p : Phrase) : List Codes := p.filterMap fun i => match i with | .w w => some w | _ => none
+      let some md := st0.vocab.mods.find? (fun md => md.ty == rv && words0 md.phrase == words) | fail E.unsupported
+      let (xt, xty) ← T sc pf x
+      if xty != rv then fail E.type
+      let ats ← args.mapM fun a => do asReal (← T sc pf a)
+      let slots := md.phrase.foldl (fun n i => match i with | .v => n + 1 | .f segs => n + segs.length - 1 | _ => n) 0
+      if ats.length != slots then fail E.type
+      -- (and a random variable, as the noun says)
+      let law := betaAll md.pred (ats ++ [xt])
+      match st0.vocab.nouns.find? (·.ty == rv) with
+      | some nn => return some (.and (betaAll nn.pred [xt]) law, .prop)
+      | none => return some (law, .prop)
+    if !collective then
+      match m with
+      | .app (.id n) [x, w] =>
+        if n == w!"@at" then
+          let (xt, xty) ← T sc pf x
+          if xty != rv then fail E.type
+          let wt ← asReal (← T sc pf w)
+          return some (.app (.app (.const ev) xt) wt, .real)
+        if ← isName covNames n then
+          let a ← pw x
+          let b ← pw w
+          let ab ← pw (.mul x w)
+          return some (.guard (.and (integ a) (.and (integ b) (integ ab)))
+            (.sub (.app (.app (.prim .integralOn) omega) ab)
+              (.mul (.app (.app (.prim .integralOn) omega) a) (.app (.app (.prim .integralOn) omega) b))), .real)
+        pure ()
+      | .app (.id n) [e] =>
+        if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then
+          return some (expect (← pw e), .real)
+        if ← isName probNames n then
+          -- (`P(A\mid B)`, `P(X>s+t\mid X>s)`: the bar splits the chain into two conditions)
+          match e with
+          | .chain x rs =>
+            match rs.findIdx? (·.1 == .dvd) with
+            | some i =>
+              let before := rs.take i
+              let some (_, z) := rs[i]? | return none
+              let after := rs.drop (i + 1)
+              let a : MT := if before.isEmpty then x else .chain x before
+              let b : MT := if after.isEmpty then z else .chain z after
+              return some (← condProb a b, .real)
+            | none => return some (prob (← pwSet e), .real)
+          | _ => return some (prob (← pwSet e), .real)
+        if ← isName varNames n then
+          let fn ← pw e
+          let fn2 ← pw (.sup e (.num 2))
+          return some (.guard (integ fn2) (.sub (.app (.app (.prim .integralOn) omega) fn2)
+            (.mul (.app (.app (.prim .integralOn) omega) fn) (.app (.app (.prim .integralOn) omega) fn))), .real)
+        pure ()
+      | _ => pure ()
+    match m with
+    | .app (.id n) xs =>
+      -- `@indep(X, Y, …)`: the joint distribution function is the product of theirs
+      if n == w!"@indep" && xs.length ≥ 2 then
+        let ts := (List.range xs.length).map fun k => w!"@t" ++ (Nat.toDigits 10 k).map Char.toNat
+        let le (x : MT) (t : Codes) : MT := .chain x [(.le, .id t)]
+        let conds := (xs.zip ts).map fun (x, t) => le x t
+        let joint := conds.drop 1 |>.foldl (fun acc c => MT.land acc c) conds.head!
+        let prod := (conds.map fun c => MT.app (.id w!"@prob") [c])
+        let rhs := prod.drop 1 |>.foldl (fun acc p => MT.mul acc p) prod.head!
+        let body : MT := .chain (.app (.id w!"@prob") [joint]) [(.eq, rhs)]
+        let p ← propOfWith T sc pf (.quant true ts (.id w!"\\mathbb{R}") body)
+        return some (p, .prop)
+      -- `@identdist(X, Y, …)`: the same distribution function
+      if n == w!"@identdist" && xs.length ≥ 2 then
+        let t := w!"@t"
+        let x0 := xs.head!
+        let eqs := (xs.drop 1).map fun x =>
+          MT.chain (.app (.id w!"@prob") [.chain x [(.le, .id t)]]) [(.eq, .app (.id w!"@prob") [.chain x0 [(.le, .id t)]])]
+        let body := eqs.drop 1 |>.foldl (fun acc c => MT.land acc c) eqs.head!
+        let p ← propOfWith T sc pf (.quant true [t] (.id w!"\\mathbb{R}") body)
+        return some (p, .prop)
+      -- `@indepseq(X, lo, hi)`: the terms `X_lo, …, X_hi` are independent;
+      -- `@identdistseq(X, lo, hi)`: they have the distribution function of `X_lo`
+      if (n == w!"@indepseq" || n == w!"@identdistseq") && xs.length == 3 then
+        let [x, lo, hi] := xs | return none
+        let (xt, xty) ← T sc pf x
+        if xty != .fn .real rv then fail E.type
+        let l ← asReal (← T sc pf lo)
+        let h ← asReal (← T sc pf hi)
+        let range (i : Tm) (k : Nat) : Tm := .and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
+        -- (in a scope of `k` more binders: `X_i(ω)`)
+        let at_ (k : Nat) (i w : Tm) : Tm := .app (.app (.const ev) (.app (shift k 0 xt) i)) w
+        if n == w!"@indepseq" then
+          -- ∀ t, P(∀ i, X_i ≤ t_i) = ∏_i P(X_i ≤ t_i)
+          -- (scope: t; inside the set: ω, t; inside ∀ i: i, ω, t)
+          let joint : Tm := .lam .real .tt (.all .real (.imp (range (.loc 0) 3)
+            (.le (at_ 3 (.loc 0) (.loc 1)) (.app (.loc 2) (.loc 0)))))
+          let one : Tm := .lam .real .tt (prob (.lam .real .tt (.le (at_ 3 (.loc 1) (.loc 0)) (.app (.loc 2) (.loc 1)))))
+          let fp : Tm := .app (.app (.app (.prim .finProd) (shift 1 0 l)) (shift 1 0 h)) one
+          return some (.all (.fn .real .real) (.eq (prob joint) fp), .prop)
+        else
+          -- ∀ i, ∀ t, P(X_i ≤ t) = P(X_lo ≤ t) (scope: t, i)
+          let pi : Tm := prob (.lam .real .tt (.le (at_ 3 (.loc 2) (.loc 0)) (.loc 1)))
+          let p0 : Tm := prob (.lam .real .tt (.le (at_ 3 (shift 3 0 l) (.loc 0)) (.loc 1)))
+          return some (.all .real (.imp (range (.loc 0) 1) (.all .real (.eq pi p0))), .prop)
+      return none
+    | .mul (.id n) x =>
+      -- `\mathbb{E}X`
+      if (← isName expNames n) && n.head? != some 64 then return some (expect (← pw x), .real)
+      -- `\operatorname{Var}X`: as `\operatorname{Var}(X)`
+      if (← isName varNames n) && n.head? != some 64 then return ← probTerm T g sc pf (.app (.id n) [x])
+      return none
+    | _ => return none
+
 /-- Elaborate a formula. Fuel bounds the recursion (kernel-reducible). -/
 def term : Nat → Scope → PF → MT → M (Tm × Ty)
   | 0, _, _, _ => fail E.unsupported
@@ -1712,9 +2126,9 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         let r := Tm.app (.app rel xt) set
         return (if n.pred == .lam n.ty .tt .tt then r else .and (.app n.pred set) r, .prop)
     -- the notation of the field `hilbert`
-    if let some r ← opTerm f sc pf m then return r
+    if let some r ← opTerm (term f) f sc pf m then return r
     -- expectations, probabilities, variances of random variables
-    if let some r ← probTerm f sc pf m then return r
+    if let some r ← probTerm (term f) f sc pf m then return r
     -- (`\sum a_n` without bounds: read only where the start does not matter)
     if let .app (.id k) _ := m then
       if k == w!"@sumall" then fail E.finding sumAllMsg
@@ -3018,220 +3432,6 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
       | .setCond .. => fail E.finding w!"a set $\\{x : φ\\}$ needs the set its elements are taken from: $\\{x\\in A : φ\\}$"
       | _ => fail E.unsupported
 where
-  /-- The notation of the field `hilbert`: `L^2` and `L^2_0`, `\langle f,g\rangle`, `\lVert f\rVert` of
-  a function of the interval or of a kernel, `\lVert T|_{A}\rVert`, `T^{\otimes m}`, the sum over the
-  subsets of `\{1,\dots,m\}`, and the Hoeffding components `F_S`, `F_\emptyset`, `F_{\{1,2\}}` of a
-  kernel `F`. `none` for any other formula, or without the field. -/
-  opTerm : Nat → Scope → PF → MT → M (Option (Tm × Ty))
-    | 0, _, _, _ => pure none
-    | f + 1, sc, pf, m => do
-      -- `\lVert x\rVert` and `\langle x,y\rangle` of elements of a type of the vocabulary that
-      -- has them as methods (vectors): the type's norm and inner product
-      let own? (xs : List MT) (key : Codes) : M (Option (Tm × Ty)) := do
-        let st0 ← get
-        let r ← tryCatch (do
-            let ts ← xs.mapM (term f sc pf)
-            match ts with
-            | (a, t) :: rest =>
-              if (← ownTy t) && rest.all (·.2 == t) && (← method t (.fn key)).isSome then
-                pure (some (← callMethod t (.fn key) (a :: rest.map (·.1))))
-              else pure none
-            | [] => pure none) (fun _ => pure none)
-        if r.isNone then set st0
-        pure r
-      -- `X\sim F` for an element of a type of the vocabulary that has the method `@sim`
-      -- (a random vector and its distribution function)
-      if let .chain x [(.sim, d)] := m then
-        let st0 ← get
-        let r ← tryCatch (do
-            let (xt, xty) ← term f sc pf x
-            let V := (← get).vocab
-            match V.methods.find? fun md => md.ty == xty && md.op == .fn w!"@sim" with
-            | some md =>
-              match V.consts.getD md.const .prop with
-              | .fn _ (.fn want _) =>
-                let (dt, dty) ← term f sc pf d
-                pure (some (Tm.app (.app (.const md.const) xt) (← coerce dt dty want), Ty.prop))
-              | _ => pure none
-            | none => pure none) (fun _ => pure none)
-        if r.isNone then set st0
-        if let some r := r then return some r
-      -- `x^\top y` of two elements of a type with an inner product (vectors): `\langle x,y\rangle`
-      if let .mul (.sup x (.id tp)) y := m then
-        if [w!"T", w!"\\top", w!"\\intercal", w!"\\mathsf{T}", w!"\\mathrm{T}", w!"\\mathsf T"].contains tp then
-          if let some r ← own? [x, y] w!"@inner" then return some r
-      match m with
-      | .app (.id n) [x] =>
-        if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
-        -- `\angle A` of a vertex of a triangle: the angle of the triangle there
-        if let .id v := x then
-          if n == w!"\\angle" && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then
-            let st ← get
-            let tri := st.triangles.find? fun (e, vs) => vs.contains v && (e == st.curEnv || st.curProved == some e)
-            let some (_, vs) := tri | fail E.finding w!"`\\angle A` with one letter is the angle at a vertex of a triangle bound by `Let $ABC$ be a triangle.`; otherwise write `\\angle BAC`"
-            let others := vs.filter (· != v)
-            let [p, q] := others | fail E.unsupported
-            let (pa, t) ← term f sc pf (.id v)
-            let (pp, _) ← term f sc pf (.id p)
-            let (pq, _) ← term f sc pf (.id q)
-            return some (← callMethod t (.fn w!"\\angle") [pa, pp, pq])
-      | .app (.id n) [x, y] =>
-        if n == w!"@inner" then if let some r ← own? [x, y] w!"@inner" then return some r
-        -- (two random vectors: identically distributed, `X\stackrel{d}{=}Y`, and independent)
-        if n == w!"@identdist" || n == w!"@indep" then if let some r ← own? [x, y] n then return some r
-        -- `$S$ contains $x$`: `x\in S` of an element, `x\subseteq S` of a set of the same
-        -- elements (the types decide)
-        if n == w!"@contains" then
-          let st0 ← get
-          if let some r ← tryCatch (some <$> term f sc pf (.chain y [(.mem, x)])) (fun _ => pure none) then
-            if r.2 == .prop then return some r
-          set st0
-          if let some r ← tryCatch (some <$> term f sc pf (.chain y [(.subset, x)])) (fun _ => pure none) then
-            if r.2 == .prop then return some r
-          set st0
-          fail E.type
-      | .app (.id n) [x, y, z] =>
-        if n == w!"@collinear" then if let some r ← own? [x, y, z] w!"@collinear" then return some r
-        -- `Let $ABC$ be a triangle.`: three points that are not collinear, the vertices of a
-        -- triangle (for `\angle A`)
-        if n == w!"@triangle" then
-          if let some (p, t) ← own? [x, y, z] w!"@collinear" then
-            if let (.id a, .id b, .id c) := (x, y, z) then
-              modify fun st => { st with triangles := (st.curEnv, [a, b, c]) :: st.triangles }
-            return some (.not p, t)
-      | _ => pure ()
-      let some iv ← hilbertIv | pure none
-      let fn1 := Ty.fn iv.ty .real
-      let seqT := Ty.fn .real iv.ty
-      let kern := Ty.fn seqT .real
-      let rset := Ty.fn .real .prop
-      let free (n : Codes) : M Bool := do
-        pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
-      -- a formula elaborated tentatively: the state is kept only if it is read
-      let try? (x : MT) : M (Option (Tm × Ty)) := do
-        let st0 ← get
-        tryCatch (do let r ← term f sc pf x; pure (some r)) (fun _ => do set st0; pure none)
-      let c (k : Option Nat) : M Nat := liftO k E.unsupported
-      let kernelOf (t : Tm) : M Tm := do pure (.app (.const (← c iv.isKernel)) t)
-      match m with
-      -- `\{1,\dots,m\}`: the integers from `1` to `m`
-      | .finset [.num 1, .id d, hi] =>
-        if d != w!"\\dots" && d != w!"\\ldots" then return none
-        let h ← asReal (← term f sc pf hi)
-        pure (some (.lam .real .tt (.and (.app (.prim .isInt) (.loc 0))
-          (.and (.le (.num 1) (.loc 0)) (.le (.loc 0) (shift 1 0 h)))), rset))
-      -- `L^2`, `L^2_0`: the classes of square-integrable functions on the interval
-      | .sup (.id [76]) (.num 2) =>
-        if !(← free [76]) then return none
-        pure (some (.const (← c iv.memL2), Ty.fn fn1 .prop))
-      | .sub (.sup (.id [76]) (.num 2)) (.num 0) | .sup (.sub (.id [76]) (.num 0)) (.num 2) =>
-        if !(← free [76]) then return none
-        pure (some (.const (← c iv.memL20), Ty.fn fn1 .prop))
-      -- `\sum_{S\subseteq\{1,\dots,m\}} e`
-      | .app (.id n) [dom, .mapsto (.id v) body] =>
-        if n != w!"@sumsub" then return none
-        let some hi := upTo dom | fail E.finding w!"a sum over sets is over the subsets of $\\{1,\\dots,m\\}$"
-        let kt ← asReal (← term f sc pf hi)
-        -- the summand, for a subset `v` of `\{1,…,m\}` (the sum binds its own `v`)
-        let b ← asReal (← term f ((v, rset) :: sc) (pf.map fun (s, t) => (shift 1 0 s, t)) body)
-        -- (the summand is asked to be defined only at the subsets of `\{1,…,m\}`)
-        let dom : Tm := .all .real (.imp (.app (.loc 1) (.loc 0))
-          (conjAll [.app (.prim .isInt) (.loc 0), Tm.le (.num 1) (.loc 0), Tm.le (.loc 0) (shift 2 0 kt)]))
-        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.subsetSum)) kt) (.lam rset dom b)), .real))
-      -- `\langle f,g\rangle`
-      | .app (.id n) [x, y] =>
-        if n != w!"@inner" then return none
-        let a ← term f sc pf x
-        let b ← term f sc pf y
-        match asFn1 iv a, asFn1 iv b with
-        | some ta, some tb =>
-          let l2 ← c iv.memL2
-          pure (some (.guard (.and (.app (.const l2) ta) (.app (.const l2) tb))
-            (.app (.app (.const (← c iv.inner1)) ta) tb), .real))
-        | _, _ =>
-          if a.2 == kern && b.2 == kern then
-            pure (some (.guard (.and (← kernelOf a.1) (← kernelOf b.1))
-              (.app (.app (.const (← c iv.innerSeq)) a.1) b.1), .real))
-          else fail E.type
-      | .app (.id n) [x] =>
-        -- the subsets of a set of numbers (the domain of `S\subseteq A`)
-        if n == w!"@subsets" then
-          let (at_, aty) ← term f sc pf x
-          if aty != rset then fail E.type
-          return some (.lam rset .tt (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0)))),
-            Ty.fn rset .prop)
-        -- (the proper subsets: the domain of `S\subsetneq A`)
-        if n == w!"@psubsets" then
-          let (at_, aty) ← term f sc pf x
-          if aty != rset then fail E.type
-          return some (.lam rset .tt (.and (.all .real (.imp (.app (.loc 1) (.loc 0)) (.app (shift 2 0 at_) (.loc 0))))
-            (.not (.eq (.loc 0) (shift 1 0 at_)))), Ty.fn rset .prop)
-        -- `\lVert f\rVert`, `\lVert T|_{A}\rVert`
-        if n != w!"@norm" then return none
-        match x with
-        | .app (.id r) [op, dom] =>
-          if r != w!"@restrict" then return none
-          let (t, ty) ← term f sc pf op
-          let (d, dty) ← term f sc pf dom
-          if ty == Ty.fn fn1 fn1 && dty == Ty.fn fn1 .prop then
-            pure (some (.app (.app (.const (← c iv.opNorm1)) t) d, .real))
-          else if ty == Ty.fn kern kern && dty == Ty.fn kern .prop then
-            pure (some (.app (.app (.const (← c iv.opNormSeq)) t) d, .real))
-          else fail E.type
-        | _ =>
-          let some a ← try? x | return none
-          match asFn1 iv a with
-          | some ta =>
-            pure (some (.guard (.app (.const (← c iv.memL2)) ta) (.app (.const (← c iv.norm1)) ta), .real))
-          | none =>
-            if a.2 == kern then
-              pure (some (.guard (← kernelOf a.1) (.app (.const (← c iv.normSeq)) a.1), .real))
-            else return none
-      -- `T^{\otimes m}`
-      | .sup op (.app (.id n) [k]) =>
-        if n != w!"@otimes" then return none
-        let (t, ty) ← term f sc pf op
-        if ty != Ty.fn fn1 fn1 then fail E.type
-        let kt ← asReal (← term f sc pf k)
-        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.tensor)) t) kt), Ty.fn kern kern))
-      -- `T^k`: a power of an operator on functions of the interval
-      | .sup op k => do
-        let st0 ← get
-        let some (t, ty) ← try? op | return none
-        if ty != Ty.fn fn1 fn1 then set st0; return none
-        let kt ← asReal (← term f sc pf k)
-        pure (some (.guard (.app (.prim .isNat) kt) (.app (.app (.const (← c iv.opPow)) t) kt), Ty.fn fn1 fn1))
-      -- `F_S(x)`: a component applied to a sequence
-      | .app (.sub (.id k) i) args => do
-        let some (h, hty) ← opTerm f sc pf (.sub (.id k) i) | return none
-        let as ← args.mapM (term f sc pf)
-        pure (some (← applyAll h hty [] as))
-      -- `F_S`: the component of a kernel `F` for a set `S` of indices
-      | .sub (.id k) i => do
-        match lookupLocal sc k with
-        | some (_, ty) => if ty != kern then return none
-        | none => match ← lookupGlob k with
-          | some (_, g) => if g.ty != kern then return none
-          | none => return none
-        let st? : Option Tm ← match i with
-          | .id e =>
-            if e == w!"\\emptyset" then pure (some (.lam .real .tt (.not .tt))) else
-            match ← try? i with
-            | some (t, ty) => pure (if ty == rset then some t else none)
-            | none => pure none
-          | .finset xs => do
-            let es ← xs.mapM fun e => do
-              let (t, ty) ← term f sc pf e
-              coerce t ty .real
-            match es with
-            | [] => pure none
-            | e :: rest => pure (some (.lam .real .tt (rest.foldl (fun acc t => .or acc (.eq (.loc 0) (shift 1 0 t)))
-                (.eq (.loc 0) (shift 1 0 e)))))
-          | _ => pure none
-        let some st := st? | return none
-        let (t, _) ← term f sc pf (.id k)
-        pure (some (.app (.app (.const (← c iv.hoeff)) t) st, kern))
-      | _ => pure none
   casesRows : Nat → Scope → PF → List (MT × MT) → M (Tm × Ty)
     | 0, _, _, _ => fail E.unsupported
     | _ + 1, _, _, [] => pure (.undef .real, .real)
@@ -4028,197 +4228,6 @@ where
         let (h0, ty0, doms0) ← withImplicit sc h g
         applyAll h0 ty0 doms0 as
       | _ => fail E.finding w!"a subscript on a formula, such as $(B_k)_L$: name the quantity (Set $C_k\\coloneqq …$) and subscript the name"
-  /-- The notation of the field `randomvariables`: `\mathbb{E}[e]`, `P(φ)`, `P(A\mid B)`,
-  `\operatorname{Var}(e)`, `\operatorname{Cov}(e,f)` and the collective conditions of
-  independence and identical distribution. `none` for any other formula, or without the
-  field. -/
-  probTerm : Nat → Scope → PF → MT → M (Option (Tm × Ty))
-    | 0, _, _, _ => pure none
-    | g + 1, sc, pf, m => do
-      let st0 ← get
-      let some meth := st0.vocab.methods.find? (·.op == .fn w!"@at") | return none
-      let rv := meth.ty
-      let ev := meth.const
-      let free (n : Codes) : M Bool := do pure ((lookupLocal sc n).isNone && (← lookupGlob n).isNone)
-      let expNames := [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}", w!"@expect"]
-      let probNames := [w!"P", w!"\\mathbb{P}", w!"\\Pr", w!"\\operatorname{P}", w!"\\mathrm{P}", w!"@prob"]
-      let varNames := [w!"Var", w!"var", w!"\\mathbb{V}", w!"\\operatorname{Var}", w!"\\mathrm{Var}"]
-      let covNames := [w!"Cov", w!"cov", w!"\\operatorname{Cov}", w!"\\mathrm{Cov}"]
-      let isName (ns : List Codes) (n : Codes) : M Bool := do
-        if !ns.contains n then return false
-        if n.head? == some 64 then return true
-        free n
-      let rvNames := sc.filterMap fun (n, t) => if t == rv then some n else none
-      let seqNames := sc.filterMap fun (n, t) => if t == .fn .real rv then some n else none
-      let sc1 : Scope := (w!"@omega", .real) :: sc
-      let pf1 : PF := pf.map fun (s, t) => (shift 1 0 s, t)
-      -- the real function of the outcome that `e` is
-      let pw (e : MT) : M Tm := do
-        let r ← term g sc1 pf1 (atOmega rvNames seqNames 64 e)
-        pure (.lam .real .tt (← asReal r))
-      -- the set of the outcomes where the condition (or the event) `e` holds
-      let pwSet (e : MT) : M Tm := do
-        let stE ← get
-        tryCatch (do
-            let (p, t) ← term g sc1 pf1 (atOmega rvNames seqNames 64 e)
-            if t != .prop then fail E.type
-            pure (Tm.lam .real .tt p)) fun _ => do
-          set stE
-          let (a, t) ← term g sc pf e
-          if t != .fn .real .prop then fail E.type
-          pure a
-      let omega : Tm := .lam .real .tt (.and (.le (.num 0) (.loc 0)) (.le (.loc 0) (.num 1)))
-      let integ (fn : Tm) : Tm := .app (.app (.prim .integrableOn) fn) omega
-      let expect (fn : Tm) : Tm := .guard (integ fn) (.app (.app (.prim .integralOn) omega) fn)
-      let prob (set : Tm) : Tm :=
-        .app (.app (.prim .integralOn) (.lam .real .tt (.and (.app omega (.loc 0)) (.app (shift 1 0 set) (.loc 0)))))
-          (.lam .real .tt (.num 1))
-      let condProb (a b : MT) : M Tm := do
-        let sa ← pwSet a
-        let sb ← pwSet b
-        let both : Tm := .lam .real .tt (.and (.app (shift 1 0 sa) (.loc 0)) (.app (shift 1 0 sb) (.loc 0)))
-        pure (.guard (.lt (.num 0) (prob sb)) (.div (prob both) (prob sb)))
-      -- (the collective conditions first: any number of arguments)
-      let collective : Bool := match m with
-        | .app (.id n) _ => [w!"@indep", w!"@identdist", w!"@indepseq", w!"@identdistseq"].contains n
-        | _ => false
-      -- `\mathbb{E}[X^2]<\infty`, `\operatorname{Var}(X)<\infty`: integrable
-      if let .chain (.app (.id n) [e]) [(.lt, .id inf)] := m then
-        if inf == w!"\\infty" then
-          if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then return some (integ (← pw e), .prop)
-          if ← isName varNames n then return some (integ (← pw (.sup e (.num 2))), .prop)
-      -- `X\sim N(\mu,\sigma^2)`, `X\sim\mathrm{Poi}(\lambda)`, `X\sim\mathrm{Bin}(n,p)`,
-      -- `X\sim\mathcal{U}[a,b]`: the modifier of the vocabulary for that distribution
-      if let .chain x [(.sim, d)] := m then
-        let strip (k : Codes) : Codes :=
-          let pre := [w!"\\mathrm{", w!"\\operatorname{", w!"\\mathcal{", w!"\\mathbb{", w!"\\text{", w!"\\textrm{", w!"\\mathsf{"]
-          match pre.find? (fun p => p.isPrefixOf k) with
-          | some p => (k.drop p.length).dropLast
-          | none => k
-        let (hd, args) : MT × List MT := match d with
-          | .app h [.tuple xs] => (h, xs)
-          | .app h [.interval a b] => (h, [a, b])
-          | .app h xs => (h, xs)
-          | .mul h (.interval a b) => (h, [a, b])
-          | .mul h (.tuple xs) => (h, xs)
-          | h => (h, [])
-        let some k := symKey hd | fail E.unsupported
-        let k := strip k
-        let kinds : List (List Codes × List Codes) := [
-          ([w!"N", w!"Normal", w!"Gauss", w!"Gaussian"], [w!"normally", w!"distributed", w!"with", w!"mean", w!"and", w!"variance"]),
-          ([w!"Poi", w!"Pois", w!"Poisson", w!"Po"], [w!"Poisson", w!"distributed", w!"with", w!"parameter"]),
-          ([w!"Bin", w!"Binom", w!"Binomial", w!"B"], [w!"binomially", w!"distributed", w!"with", w!"parameters", w!"and"]),
-          ([w!"Ber", w!"Bern", w!"Bernoulli"], [w!"Bernoulli", w!"distributed", w!"with", w!"parameter"]),
-          ([w!"Exp", w!"Expo", w!"Exponential"], [w!"exponentially", w!"distributed", w!"with", w!"rate"]),
-          ([w!"U", w!"Unif", w!"Uniform"], [w!"uniformly", w!"distributed", w!"on"])]
-        let some (_, words) := kinds.find? (·.1.contains k)
-          | fail E.finding (w!"the distribution " ++ k ++ w!" after \\sim is not one the vocabulary knows (N, Poi, Bin, Ber, Exp, U)")
-        let words0 (p : Phrase) : List Codes := p.filterMap fun i => match i with | .w w => some w | _ => none
-        let some md := st0.vocab.mods.find? (fun md => md.ty == rv && words0 md.phrase == words) | fail E.unsupported
-        let (xt, xty) ← term g sc pf x
-        if xty != rv then fail E.type
-        let ats ← args.mapM fun a => do asReal (← term g sc pf a)
-        let slots := md.phrase.foldl (fun n i => match i with | .v => n + 1 | .f segs => n + segs.length - 1 | _ => n) 0
-        if ats.length != slots then fail E.type
-        -- (and a random variable, as the noun says)
-        let law := betaAll md.pred (ats ++ [xt])
-        match st0.vocab.nouns.find? (·.ty == rv) with
-        | some nn => return some (.and (betaAll nn.pred [xt]) law, .prop)
-        | none => return some (law, .prop)
-      if !collective then
-        match m with
-        | .app (.id n) [x, w] =>
-          if n == w!"@at" then
-            let (xt, xty) ← term g sc pf x
-            if xty != rv then fail E.type
-            let wt ← asReal (← term g sc pf w)
-            return some (.app (.app (.const ev) xt) wt, .real)
-          if ← isName covNames n then
-            let a ← pw x
-            let b ← pw w
-            let ab ← pw (.mul x w)
-            return some (.guard (.and (integ a) (.and (integ b) (integ ab)))
-              (.sub (.app (.app (.prim .integralOn) omega) ab)
-                (.mul (.app (.app (.prim .integralOn) omega) a) (.app (.app (.prim .integralOn) omega) b))), .real)
-          pure ()
-        | .app (.id n) [e] =>
-          if (← isName expNames n) || (n == w!"@rexp" && !(match st0.randomPair with | some (_, _, some _, _, _, _) => true | _ => false)) then
-            return some (expect (← pw e), .real)
-          if ← isName probNames n then
-            -- (`P(A\mid B)`, `P(X>s+t\mid X>s)`: the bar splits the chain into two conditions)
-            match e with
-            | .chain x rs =>
-              match rs.findIdx? (·.1 == .dvd) with
-              | some i =>
-                let before := rs.take i
-                let some (_, z) := rs[i]? | return none
-                let after := rs.drop (i + 1)
-                let a : MT := if before.isEmpty then x else .chain x before
-                let b : MT := if after.isEmpty then z else .chain z after
-                return some (← condProb a b, .real)
-              | none => return some (prob (← pwSet e), .real)
-            | _ => return some (prob (← pwSet e), .real)
-          if ← isName varNames n then
-            let fn ← pw e
-            let fn2 ← pw (.sup e (.num 2))
-            return some (.guard (integ fn2) (.sub (.app (.app (.prim .integralOn) omega) fn2)
-              (.mul (.app (.app (.prim .integralOn) omega) fn) (.app (.app (.prim .integralOn) omega) fn))), .real)
-          pure ()
-        | _ => pure ()
-      match m with
-      | .app (.id n) xs =>
-        -- `@indep(X, Y, …)`: the joint distribution function is the product of theirs
-        if n == w!"@indep" && xs.length ≥ 2 then
-          let ts := (List.range xs.length).map fun k => w!"@t" ++ (Nat.toDigits 10 k).map Char.toNat
-          let le (x : MT) (t : Codes) : MT := .chain x [(.le, .id t)]
-          let conds := (xs.zip ts).map fun (x, t) => le x t
-          let joint := conds.drop 1 |>.foldl (fun acc c => MT.land acc c) conds.head!
-          let prod := (conds.map fun c => MT.app (.id w!"@prob") [c])
-          let rhs := prod.drop 1 |>.foldl (fun acc p => MT.mul acc p) prod.head!
-          let body : MT := .chain (.app (.id w!"@prob") [joint]) [(.eq, rhs)]
-          let p ← propOf g sc pf (.quant true ts (.id w!"\\mathbb{R}") body)
-          return some (p, .prop)
-        -- `@identdist(X, Y, …)`: the same distribution function
-        if n == w!"@identdist" && xs.length ≥ 2 then
-          let t := w!"@t"
-          let x0 := xs.head!
-          let eqs := (xs.drop 1).map fun x =>
-            MT.chain (.app (.id w!"@prob") [.chain x [(.le, .id t)]]) [(.eq, .app (.id w!"@prob") [.chain x0 [(.le, .id t)]])]
-          let body := eqs.drop 1 |>.foldl (fun acc c => MT.land acc c) eqs.head!
-          let p ← propOf g sc pf (.quant true [t] (.id w!"\\mathbb{R}") body)
-          return some (p, .prop)
-        -- `@indepseq(X, lo, hi)`: the terms `X_lo, …, X_hi` are independent;
-        -- `@identdistseq(X, lo, hi)`: they have the distribution function of `X_lo`
-        if (n == w!"@indepseq" || n == w!"@identdistseq") && xs.length == 3 then
-          let [x, lo, hi] := xs | return none
-          let (xt, xty) ← term g sc pf x
-          if xty != .fn .real rv then fail E.type
-          let l ← asReal (← term g sc pf lo)
-          let h ← asReal (← term g sc pf hi)
-          let range (i : Tm) (k : Nat) : Tm := .and (.app (.prim .isInt) i) (.and (.le (shift k 0 l) i) (.le i (shift k 0 h)))
-          -- (in a scope of `k` more binders: `X_i(ω)`)
-          let at_ (k : Nat) (i w : Tm) : Tm := .app (.app (.const ev) (.app (shift k 0 xt) i)) w
-          if n == w!"@indepseq" then
-            -- ∀ t, P(∀ i, X_i ≤ t_i) = ∏_i P(X_i ≤ t_i)
-            -- (scope: t; inside the set: ω, t; inside ∀ i: i, ω, t)
-            let joint : Tm := .lam .real .tt (.all .real (.imp (range (.loc 0) 3)
-              (.le (at_ 3 (.loc 0) (.loc 1)) (.app (.loc 2) (.loc 0)))))
-            let one : Tm := .lam .real .tt (prob (.lam .real .tt (.le (at_ 3 (.loc 1) (.loc 0)) (.app (.loc 2) (.loc 1)))))
-            let fp : Tm := .app (.app (.app (.prim .finProd) (shift 1 0 l)) (shift 1 0 h)) one
-            return some (.all (.fn .real .real) (.eq (prob joint) fp), .prop)
-          else
-            -- ∀ i, ∀ t, P(X_i ≤ t) = P(X_lo ≤ t) (scope: t, i)
-            let pi : Tm := prob (.lam .real .tt (.le (at_ 3 (.loc 2) (.loc 0)) (.loc 1)))
-            let p0 : Tm := prob (.lam .real .tt (.le (at_ 3 (shift 3 0 l) (.loc 0)) (.loc 1)))
-            return some (.all .real (.imp (range (.loc 0) 1) (.all .real (.eq pi p0))), .prop)
-        return none
-      | .mul (.id n) x =>
-        -- `\mathbb{E}X`
-        if (← isName expNames n) && n.head? != some 64 then return some (expect (← pw x), .real)
-        -- `\operatorname{Var}X`: as `\operatorname{Var}(X)`
-        if (← isName varNames n) && n.head? != some 64 then return ← probTerm g sc pf (.app (.id n) [x])
-        return none
-      | _ => return none
   propOf : Nat → Scope → PF → MT → M Tm
     | 0, _, _, _ => fail E.unsupported
     | g + 1, sc, pf, x => do
