@@ -45,8 +45,8 @@ import Leanify.Library.PoissonProcessesModel
 import Leanify.Library.FiniteFieldsModel
 import Leanify.Library.WordsModel
 import Leanify.Library.RandomVariablesModel
-import Leanify.Library.RandomVectorsModel
 import Leanify.Library.LinearSystemsModel
+import Leanify.Library.RandomVectorsModel
 
 /-! # The Lean meanings of the vocabulary have the types the vocabulary gives them
 
@@ -907,6 +907,8 @@ example : ((Leanify.RandomVariables.RV) → Prop) := Leanify.RandomVariables.IsR
 /-! ## `randomvectors` -/
 
 example : Leanify.RandomVectors.RVec := Leanify.RandomVectors.RVec.zero
+example : ((Leanify.Matrices.Mat) → ((Leanify.Vectors.Vec) → (Leanify.Vectors.Vec))) := Leanify.LinearSystems.mulVec
+example : ((Leanify.Matrices.Mat) → ((Leanify.Vectors.Vec) → Prop)) := Leanify.LinearSystems.MulVecable
 example : ((Leanify.RandomVectors.RVec) → (ℝ → (ℝ → ℝ))) := Leanify.RandomVectors.coord
 example : ((Leanify.RandomVectors.RVec) → Prop) := Leanify.RandomVectors.IsRVec
 example : ((Leanify.RandomVectors.RVec) → ℝ) := Leanify.RandomVectors.dim
@@ -925,8 +927,3 @@ example : ((Leanify.Matrices.Mat) → ((Leanify.RandomVectors.RVec) → Prop)) :
 example : ((Leanify.RandomVectors.RVec) → ((Leanify.Vectors.Vec) → (Complex))) := Leanify.RandomVectors.charFun
 example : ((Leanify.RandomVectors.RVec) → ((Leanify.Vectors.Vec) → ℝ)) := Leanify.RandomVectors.cdf
 example : ((Leanify.RandomVectors.RVec) → (((Leanify.Vectors.Vec) → ℝ) → Prop)) := Leanify.RandomVectors.HasCdf
-
-/-! ## `linearsystems` -/
-
-example : ((Leanify.Matrices.Mat) → ((Leanify.Vectors.Vec) → (Leanify.Vectors.Vec))) := Leanify.LinearSystems.mulVec
-example : ((Leanify.Matrices.Mat) → ((Leanify.Vectors.Vec) → Prop)) := Leanify.LinearSystems.MulVecable

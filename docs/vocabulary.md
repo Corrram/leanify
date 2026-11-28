@@ -322,7 +322,7 @@ Further fields cover other branches of mathematics:
   fields that have them): a matrix applied to a vector (`$Ax$`), which with the order of
   vectors in every coordinate (`$x\le y$`, `$x\ge 0$`, of `vectors`) states systems of
   linear inequalities, as in Farkas's lemma;
-* `randomvectors` (loads `vectors`, `matrices` and `complex`, and shares their types with
+* `randomvectors` (loads `vectors`, `matrices`, `complex` and `linearsystems`, and shares their types with
   the other fields that have them): random vectors on one probability space, with values in
   `ℝᵈ`: their sums and multiples, `$X+b$` for a vector and `$AX$` for a matrix, equality in
   distribution (`$X\stackrel{d}{=}Y$`), `$X\sim F$` for a distribution function,

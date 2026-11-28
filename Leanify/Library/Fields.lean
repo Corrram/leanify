@@ -312,7 +312,7 @@ def includes : List (String × List String) :=
   [("hilbert", ["unitsquare"]), ("markov", ["unitsquare", "hilbert"]), ("metricspaces", ["topologies"]), ("planegeometry", ["geometry"]),
    ("matrixnorms", ["matrices"]), ("copulas", ["unitsquare", "hilbert", "markov"]),
    ("markovchains", ["matrices", "matrixnorms"]),
-   ("majorization", ["vectors"]), ("randomvectors", ["vectors", "matrices", "complex"]),
+   ("majorization", ["vectors"]), ("randomvectors", ["vectors", "matrices", "complex", "linearsystems"]),
    ("linearsystems", ["vectors", "matrices"])]
 
 /-- Bundles: a name for several fields, so that an article names a branch of mathematics
@@ -371,9 +371,9 @@ the vocabulary (the first constant and the type of each). Such a field shares th
 the fields it builds on with every other field that has them: a vector of `majorization`
 is a vector for `randomvectors`. -/
 def extensions : List (String × List String × (List (Nat × Nat) → Nat → Nat → Vocab)) :=
-  [("randomvectors", ["vectors", "matrices", "complex"], fun bs co to =>
+  [("randomvectors", ["vectors", "matrices", "complex", "linearsystems"], fun bs co to =>
       match bs with
-      | [(cv, tv), (cm, tm), (cc, tc)] => RandomVectors.own { cv, tv, cm, tm, cc, tc, co, to }
+      | [(cv, tv), (cm, tm), (cc, tc), _] => RandomVectors.own { cv, tv, cm, tm, cc, tc, co, to }
       | _ => {}),
    ("linearsystems", ["vectors", "matrices"], fun bs co _ =>
       match bs with
@@ -383,15 +383,23 @@ def extensions : List (String × List String × (List (Nat × Nat) → Nat → N
 /-- The core vocabulary followed by the named fields, in order (each entry tagged
 with its field). A bundle stands for its fields. A field that another named field includes
 is left out: its words are there. A field that builds on other fields (`extensions`) comes
-after all the others, and the fields it builds on come with it. -/
+after all the others, and the fields it builds on come with it (also those that are
+extensions themselves: `randomvectors` builds on `linearsystems`). -/
 def select (fs : List String) : Vocab :=
   let fs := expand fs
   let isExt (f : String) : Bool := (extensions.lookup f).isSome
-  let exts := fs.filter isExt
+  let basesOf (e : String) : List String := ((extensions.lookup e).map (·.1)).getD []
+  -- (an extension comes with the extensions it builds on, which stand before it)
+  let rec place : Nat → List String → String → List String
+    | 0, acc, _ => acc
+    | f + 1, acc, e =>
+      let acc := ((basesOf e).filter isExt).foldl (place f) acc
+      if acc.contains e then acc else acc ++ [e]
+  let exts := (fs.filter isExt).foldl (place 4) []
   let plain := fs.filter (!isExt ·)
   let inc (g f : String) : Bool := ((includes.lookup g).getD []).contains f
   -- (the fields that an extension builds on, unless they are named or come with a named field)
-  let need := (exts.flatMap fun e => ((extensions.lookup e).map (·.1)).getD []).eraseDups
+  let need := ((exts.flatMap basesOf).filter (!isExt ·)).eraseDups
   let plain := plain ++ need.filter fun b => !plain.contains b && !plain.any (inc · b)
   let plain := plain.filter fun f => !plain.any (inc · f)
   -- (with where each field begins: its first constant and its first type)
@@ -400,13 +408,15 @@ def select (fs : List String) : Vocab :=
                  acc.2 ++ [(f, acc.1.consts.length, acc.1.types.length)])
     | none => acc) (Vocab.core, [])
   -- (a field begins where it stands, or where a field stands that begins with it)
-  let begin_ (b : String) : Nat × Nat :=
+  let begin_ (at_ : List (String × Nat × Nat)) (b : String) : Nat × Nat :=
     match at_.lookup b with
     | some p => p
     | none => ((at_.find? fun (g, _) => ((includes.lookup g).getD []).head? == some b).map (·.2)).getD (0, 0)
-  exts.foldl (fun V e => match extensions.lookup e with
-    | some (bases, own) => V.join (Vocab.tag (e.toList.map Char.toNat) (own (bases.map begin_) V.consts.length V.types.length))
-    | none => V) V
+  (exts.foldl (fun (acc : Vocab × List (String × Nat × Nat)) e => match extensions.lookup e with
+    | some (bases, own) =>
+      (acc.1.join (Vocab.tag (e.toList.map Char.toNat) (own (bases.map (begin_ acc.2)) acc.1.consts.length acc.1.types.length)),
+       acc.2 ++ [(e, acc.1.consts.length, acc.1.types.length)])
+    | none => acc) (V, at_)).1
 
 /-- The phrases of a vocabulary that have more than one meaning, with the fields of the
 meanings: a notion with the same name and another type or value, a modifier or a noun with

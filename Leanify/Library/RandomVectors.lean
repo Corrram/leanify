@@ -1,6 +1,7 @@
 import Leanify.Library.Vectors
 import Leanify.Library.Matrices
 import Leanify.Library.Complex
+import Leanify.Library.LinearSystems
 
 /-! # Vocabulary: random vectors
 
@@ -8,11 +9,12 @@ A random vector is a function of the outcome `ω` of one probability space for t
 article, `[0,1]` with Lebesgue measure, into the real vectors of one dimension: a type of
 its own, so that an article binds random vectors by a noun (`Let $X$ and $Y$ be
 $d$-dimensional random vectors.`). The field builds on the fields `vectors`, `matrices` and
-`complex`, which come with it: an article writes
+`complex`, and on `linearsystems` (a matrix applied to a vector), which come with it: an
+article writes
 
 * `X+Y`, `X-Y`, `-X` (of the same dimension), `cX` for a number `c`, `X+b` for a vector `b`
   (the constant random vector) and `AX` for a matrix `A` with as many columns as `X` has
-  coordinates (`AX+b`); `Ab` for a matrix and a vector is of the field `linearsystems`;
+  coordinates (`AX+b`);
 * `X\stackrel{d}{=}Y` (also `\overset{d}{=}`, with `d`, `D`, `\mathcal{D}`, `\mathcal{L}` or
   `law` above `=`): the random vectors have the same distribution, that is, the same
   dimension and the same joint distribution function;
@@ -163,11 +165,13 @@ def own (o : Offs) : Vocab :=
       { ty := RV, op := .fn w!"@sim", const := o.co + 17,
         doc := "`X\\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X`" }] }
 
-/-- The field in a vocabulary of its own: after `vectors`, `matrices` and `complex`. -/
+/-- The field in a vocabulary of its own: after `vectors`, `matrices`, `complex` and
+`linearsystems`. -/
 def vocab : Vocab :=
   let G := Vocab.tag w!"vectors" Vectors.vocab ++ Vocab.tag w!"matrices" Matrices.vocab ++ Vocab.tag w!"complex" Complex.vocab
   let nv := Vectors.vocab.consts.length
   let nm := Matrices.vocab.consts.length
+  let G := G.join (Vocab.tag w!"linearsystems" (LinearSystems.own 0 1 G.consts.length))
   G.join (Vocab.tag w!"randomvectors" (own
     { cv := 0, tv := 0, cm := nv, tm := 1, cc := nv + nm, tc := 2, co := G.consts.length, to := 3 }))
 

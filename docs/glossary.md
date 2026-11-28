@@ -4329,6 +4329,7 @@ except a notion whose meanings take arguments of different types, which the type
 | set of eigenvalues of $a$ | $\mathrm{Mat}$ → ℝ → Prop | the real `λ` with `Av = λv` for some `v ≠ 0` |
 | set of $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
 | set of real $a\timesb$ matrices | ℝ → ℝ → $\mathrm{Mat}$ → Prop | `M_{m×n}(ℝ)` |
+| image of $a$ under $b$ | $\mathrm{Vec}$ → $\mathrm{Mat}$ → $\mathrm{Vec}$ | `Ax`, for a matrix `A` with as many columns as the vector `x` has coordinates (Mathlib `Matrix.mulVec`) |
 | dimension of $a$ | $\mathrm{RVec}$ → ℝ | `d`, for a random vector with values in `ℝᵈ` |
 | characteristic function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → $\mathbb{C}$ | `t ↦ E[e^{i⟨t,X⟩}]`, on the vectors of the dimension of `X` (Mathlib `charFun`) |
 | joint distribution function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → ℝ | `t ↦ P(X ≤ t)`, coordinatewise, on the vectors of the dimension of `X` |
@@ -4386,6 +4387,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $'{x}$ | $\mathbb{C}$ → $\mathbb{C}$ | `f'`, the complex derivative: at `z`, the `d` with `HasDerivAt f d z` (Mathlib `deriv`), defined where `f` is complex differentiable (on the domain of the signature `f\colon U\to\mathbb{C}`) |
 | $\sum_{k=a}^{b}$ | $\mathbb{C}$ | `∑ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
 | $\prod_{k=a}^{b}$ | $\mathbb{C}$ | `∏ k ∈ Finset.Icc ⌈a⌉ ⌊b⌋, f k` |
+| $\operatorname{@act}$ | $\mathrm{Vec}$ | `Ax`, for a matrix `A` with as many columns as the vector `x` has coordinates (Mathlib `Matrix.mulVec`) |
 | a real number | $\mathrm{RVec}$ | a real number `c` as the constant random vector `(c)` of dimension 1 |
 | $+$ | $\mathrm{RVec}$ | `X + Y`, of the same dimension |
 | $-$ | $\mathrm{RVec}$ | `X - Y`, of the same dimension |
