@@ -4191,7 +4191,7 @@ def clauses : Nat → List Chunk → List CClause → Option (List CClause)
         | .fact m => some m
         | .scoped m [] none none => some m
         | _ => none
-      match ineq, punct 44 r >>= kw [w!"with", w!"equality", w!"if", w!"and", w!"only", w!"if"] with
+      match ineq, (punct 44 r <|> some r) >>= kw [w!"with", w!"equality", w!"if", w!"and", w!"only", w!"if"] with
       | some (.chain x [(rel, y)]), some r' =>
         if rel != .le && rel != .ge then ([], r) else
         match formula r' with
@@ -8259,6 +8259,27 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     let items := xs ++ [y]
     let alts := items.map fun it => subj ++ [Chunk.w w!"is"] ++ it
     some (pre ++ (alts.intersperse [Chunk.w w!"or"]).flatten ++ [.p 46])
+  -- `SUBJ is neither X nor Y`: `SUBJ is not X and SUBJ is not Y`
+  let neitherNor : Option (List Chunk) := do
+    let (pre, cs) : List Chunk × List Chunk := match cs with
+      | .w f :: _ =>
+        if f != w!"for" then ([], cs) else
+        match cs.findIdx? (fun ch => match ch with | .p 44 => true | _ => false) with
+        | some c => (cs.take (c + 1), cs.drop (c + 1))
+        | none => ([], cs)
+      | _ => ([], cs)
+    let i ← cs.findIdx? fun ch => match ch with | .w w => w == w!"is" || w == w!"are" | _ => false
+    let subj := cs.take i
+    let verb := cs[i]?.getD (.w w!"is")
+    if subj.isEmpty then none
+    let r ← kw [w!"neither"] (cs.drop (i + 1))
+    let j ← r.findIdx? fun ch => match ch with | .w w => w == w!"nor" | _ => false
+    let x := r.take j
+    let rest := r.drop (j + 1)
+    let k ← rest.findIdx? fun ch => match ch with | .p 46 => true | _ => false
+    let y := rest.take k
+    if x.isEmpty || y.isEmpty || k + 1 != rest.length then none
+    some (pre ++ subj ++ [verb, .w w!"not"] ++ x ++ [.w w!"and"] ++ subj ++ [verb, .w w!"not"] ++ y ++ [.p 46])
   -- `The number $\sqrt2$ is irrational.`, `The polynomial $x^2-2$ is …`: what the noun says of the
   -- formula, and the claim (`$\sqrt2$ is a number and $\sqrt2$ is irrational`)
   let appositive : Option (List Chunk) := do
@@ -8340,7 +8361,7 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
     else if [w!"every", w!"each", w!"any"].contains l then some ([.w w!"for", .w w!"every", .w w!"prime", .m [.id p], .p 44] ++ cs)
     else none
   image <|> two <|> forEvery <|> quant <|> theOf <|> sigLet <|> letB <|> whereB <|> whereMid <|> dividing <|> attains <|> inA <|>
-    between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr
+    between <|> ofIndex <|> pGroup <|> genericB <|> appositive <|> eitherOr <|> neitherNor
 
 /-- The wordings that the lexer replaces, in a sentence made from another (whose words were
 replaced before it was made): `$Y$ converges.` is `$Y$ is convergent.` -/
