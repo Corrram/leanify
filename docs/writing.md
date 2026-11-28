@@ -283,6 +283,11 @@ Further forms that the fields use (they are read for any vocabulary):
 | `$x<0$, $x=0$ or $x>0$`, `$x<0$ or $x=0$ or $x>0$`, `$x$ is positive, $x$ is negative or $x=0$`, `$x$ is positive, negative or zero` | one of them: a list whose last word is `or` is read as one, or not at all (a list with `and`, `$x^2\ge0$, $x^4\ge0$ and $x^6\ge0$`, is several claims) |
 | `$a^2\equiv0$ or $a^2\equiv1\pmod4$`, `$n^3\equiv0$ or $n^3\equiv1$ or $n^3\equiv8\pmod9$` | the modulus of the last congruence is that of those before it |
 | `$x$ is neither positive nor negative`, `The number $1$ is neither prime nor composite.` | `$x$ is not positive and $x$ is not negative` |
+| `$f$ is continuous but not differentiable at $0$`, `$f$ is continuous and not differentiable at $0$` | `$f$ is continuous and $f$ is not differentiable at $0$` (`but not` as `and not`) |
+| `The function $f(x)=x^2$ is differentiable at $0$.`, `The function $x\mapsto|x|$ is not differentiable at $0$.` | what the words say of the real function of `x` on the line (its values defined where the claim uses them) |
+| `$\lim a_n$`, `$\lim(a_n+b_n)$`, `$\lim_n a_n$` | the limit of the sequence as its index (`n`, `m`, `k`, …: the one letter of the subscripts) tends to infinity, `\lim_{n\to\infty}` |
+| `If $f$ is a continuous function on $[a,b]$, then …` | as `For a continuous function $f$ on $[a,b]$, …` (the ends of the interval numbers with `a<b`, as after `Let`) |
+| `For every triangle with sides $a$, $b$ and $c$, $a<b+c$.`, `In a triangle with sides $a$, $b$, $c$, we have …` (`side lengths`) | for all positive `a`, `b`, `c` with the triangle inequalities, as after `Let $a$, $b$ and $c$ be the sides of a triangle.` |
 | `No perfect square is negative.`, `No integer $n$ satisfies $n^2=2$.`, `No prime greater than $2$ is even.` | there is no such object: `There is no perfect square $x$ such that $x$ is negative.` |
 | `Not every integer is even.`, `Not all odd integers are prime.` | the negation of `Every integer is even.` (of `All odd integers are prime.`) |
 | `$n$ is both even and odd`, `$n$ is not both even and odd` | `$n$ is even and odd`; its negation, not both of them (not `$n$ is not even and odd`) |

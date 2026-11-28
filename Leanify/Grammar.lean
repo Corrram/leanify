@@ -1612,6 +1612,33 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
               let .m φ :: r4 := r3 | none
               if ws.isEmpty || (punct 44 r4).isNone then none
               some (.hyp (.noun (ws ++ [.m v, .w w!"with", .m φ])), r4)) <|>
+            -- `If $f$ is a continuous function on $[a,b]$,`: as `For a continuous function $f$ on
+            -- $[a,b]$,` (the noun's words, then its complements with their formulas)
+            (do
+              let (ts, r1) ← mathChunk r
+              let x ← match ts with | [.id x] => some x | _ => none
+              let r2 ← kw [w!"is", w!"a"] r1 <|> kw [w!"is", w!"an"] r1
+              let np := r2.takeWhile (fun c => match c with | .p 44 | .p 46 => false | _ => true)
+              let rest := r2.drop np.length
+              if (punct 44 rest).isNone then none
+              -- (one noun phrase: no clause after `and`, `or`, no verb)
+              if np.any (fun c => match c with
+                | .w w => [w!"and", w!"or", w!"is", w!"are", w!"not", w!"then", w!"if", w!"has", w!"such"].contains w
+                | _ => false) then none
+              -- (a word before the first formula, and a preposition before each formula)
+              match np.head? with
+              | some (.w _) => pure ()
+              | _ => none
+              -- (a domain after `on`; not a complement after `of`, `to`, `with`: `If $x$ is a fixed
+              -- point of $f$,` is a hypothesis about `x`, which a sentence before may bind)
+              let preps := [w!"on"]
+              if !(np.any fun c => match c with | .m _ => true | _ => false) then none
+              if !((List.range np.length).all fun i => match (np[i]? : Option Chunk) with
+                | some (.m _) => match (if i == 0 then none else np[i - 1]?) with
+                  | some (.w p) => preps.contains p
+                  | _ => false
+                | _ => true) then none
+              some (.hyp (.noun (withVarAt np x)), rest)) <|>
             -- `If $K\subseteq X$ is compact,`, `If $x\in A$ is positive,`: as `For a compact subset
             -- $K$ of $X$,` (a subset, an element of the set; a hypothesis where the letter is bound)
             (do
@@ -1914,7 +1941,16 @@ def subj (cs : List Chunk) : Option (Subj × List Chunk) :=
   match cs with
   | .m _ :: _ => do let (m, r) ← formula cs; some (.math m, r)
   | .w v :: r =>
-    if v == w!"the" then (notionSubj cs).map fun (m, r) => (.math m, r) else
+    -- (`the function $f(x)=|x|$ is differentiable at $0$`: the map `x\mapsto|x|`; `the
+    -- function $x\mapsto x^2$`, `the map $f$`: the formula)
+    let fnSubj : Option (Subj × List Chunk) := do
+      let r1 ← kw [w!"the", w!"function"] cs <|> kw [w!"the", w!"map"] cs
+      let (m, r2) ← formula r1
+      let m := match m with
+        | .chain (.app (.id _) [.id x]) [(.eq, e)] => MT.mapsto (.id x) e
+        | _ => m
+      some (.math m, r2)
+    if v == w!"the" then fnSubj <|> (notionSubj cs).map fun (m, r) => (.math m, r) else
     if v == w!"its" then
       let ws := r.takeWhile (fun c => match c with
         | .w u => !([w!"is", w!"which", w!"attains"].contains u) | _ => false)
@@ -7605,6 +7641,45 @@ def noSent (cs : List Chunk) : Option (List Chunk) := do
     let v ← [w!"x", w!"y", w!"z", w!"u", w!"w", w!"t", w!"s"].find? (!used ·)
     some ([.w w!"there", .w w!"is", .w w!"no"] ++ withVarAt np v ++ [.w w!"such", .w w!"that", .m [.id v]] ++ r1))
 
+/-- Three letters, `$a$, $b$ and $c$` (with or without the comma before `and`) or `$a,b,c$`. -/
+def threeLetters (cs : List Chunk) : Option (List Codes × List Chunk) :=
+  (do
+    let (ts, r1) ← mathChunk cs
+    let parts := (Math.commaParts (ts.length + 1) 0 [] ts []).filter (!·.isEmpty)
+    let vs ← parts.mapM (fun (p : List MTok) => match p with | [.id v] => some v | _ => none)
+    if vs.length == 3 then some (vs, r1) else none) <|> (do
+    let rec letters : Nat → List Chunk → List Codes → Option (List Codes × List Chunk)
+      | 0, _, _ => none
+      | f + 1, cs, acc => match cs with
+        | .m [.id v] :: rest =>
+          let rest' := ((punct 44 rest).getD rest)
+          let rest' := (kw [w!"and"] rest').getD rest'
+          if rest'.length == rest.length then some ((v :: acc).reverse, rest)
+          else match rest' with
+            | .m [.id _] :: _ => letters f rest' (v :: acc)
+            | _ => some ((v :: acc).reverse, rest)
+        | _ => none
+    let (vs, r) ← letters 4 cs []
+    if vs.length == 3 then some (vs, r) else none)
+
+/-- `In every triangle with sides $a$, $b$ and $c$, [we have] CLAUSE.` (`For every`, `In a`,
+`with side lengths`): the clause for all positive `a`, `b`, `c` with the triangle
+inequalities, as after `Let $a$, $b$ and $c$ be the sides of a triangle.` -/
+def triangleSidesSent (cs : List Chunk) : Option Sent := do
+  let r ← kw [w!"in"] cs <|> kw [w!"for"] cs
+  let r ← kw [w!"every"] r <|> kw [w!"a"] r <|> kw [w!"any"] r <|> kw [w!"each"] r
+  let r ← kw [w!"triangle", w!"with", w!"sides"] r <|> kw [w!"triangle", w!"with", w!"side", w!"lengths"] r
+  let ([a, b, c], r1) ← threeLetters r | none
+  let r2 ← punct 44 r1
+  let r3 := (kw [w!"we", w!"have"] r2).getD r2
+  let lt (x y : MT) : MT := .chain x [(.lt, y)]
+  let (x, y, z) := (MT.id a, MT.id b, MT.id c)
+  let binds : List Bind := [.every [a, b, c] (.id w!"\\mathbb{R}"),
+    .ifCond (.conj [lt (.num 0) x, lt (.num 0) y, lt (.num 0) z, lt x (.add y z), lt y (.add x z), lt z (.add x y)])]
+  match ← sentence0 r3 with
+  | .claims t bs cls => some (.claims t (binds ++ bs) cls)
+  | _ => none
+
 /-- `[Then] $n$ is not both even and odd.`: the negation of `$n$ is even and odd`, one
 statement about its subject (the binders of the sentence outside). -/
 def notBothSent (cs : List Chunk) : Option Sent := do
@@ -7704,6 +7779,8 @@ def sentence1 (cs : List Chunk) : Option Sent :=
   -- (`A only if B.`, `A unless B.`, `A provided that B.`: the condition first, before the
   -- words after `is` would take it, `$n$ is odd only if …` as `is WORDS`)
   let postIf := postIf <|> (postCondSent cs >>= sentence0)
+  -- (`For every triangle with sides $a$, $b$ and $c$, …`: before `For every NP` takes it)
+  let postIf := postIf <|> triangleSidesSent cs
   match postIf with
   | some s => some s
   | none =>
@@ -7846,6 +7923,44 @@ def dropBothAfterIs : Nat → List Chunk → List Chunk
     | c :: rest => c :: dropBothAfterIs f rest
     | [] => []
 
+/-- `$f$ is continuous and not differentiable at $0$` as `$f$ is continuous and $f$ is not
+differentiable at $0$`: the subject again before the negated part (one subject, one verb before
+`and not`). -/
+def andNotSubj (cs : List Chunk) : List Chunk := Id.run do
+  let isW (c : Option Chunk) (w : Codes) : Bool := match c with | some (.w v) => v == w | _ => false
+  let some i := (List.range cs.length).find? (fun i => (match cs[i]? with | some (.m _) => true | _ => false) && isW cs[i + 1]? w!"is")
+    | return cs
+  let some subjC := cs[i]? | return cs
+  -- (`the function $f(x)=|x|$`: with its words)
+  let subjWords : List Chunk := match (if i ≥ 2 then cs[i - 2]? else none), (if i ≥ 1 then cs[i - 1]? else none) with
+    | some (.w t), some (.w fn) =>
+      if t == w!"the" && (fn == w!"function" || fn == w!"map") then [.w t, .w fn] else []
+    | _, _ => []
+  let rest := cs.drop (i + 2)
+  let some j := (List.range rest.length).find? (fun j => isW rest[j]? w!"and" && isW rest[j + 1]? w!"not") | return cs
+  let before := rest.take j
+  if before.isEmpty || before.any (fun c => match c with
+      | .w w => [w!"is", w!"are", w!"if", w!"then", w!"and", w!"or", w!"not", w!"for", w!"such"].contains w
+      | .p 44 => true
+      | _ => false) then return cs
+  return cs.take (i + 2) ++ before ++ [.w w!"and"] ++ subjWords ++ [subjC, .w w!"is"] ++ rest.drop (j + 1)
+
+/-- `continuous but not differentiable at $0$` as `continuous and not differentiable at $0$`,
+`…, but $f$ is not …` as `…, and $f$ is not …`: `but` as the conjunction it is (not `all but`,
+which `not` does not follow). -/
+def butAsAnd : Nat → List Chunk → List Chunk
+  | 0, cs => cs
+  | f + 1, cs =>
+    match cs with
+    | .w b :: .w n :: rest =>
+      if b == w!"but" && n == w!"not" then .w w!"and" :: .w n :: butAsAnd f rest
+      else .w b :: butAsAnd f (.w n :: rest)
+    | .p 44 :: .w b :: .m x :: rest =>
+      if b == w!"but" then .p 44 :: .w w!"and" :: .m x :: butAsAnd f rest
+      else .p 44 :: .w b :: butAsAnd f (.m x :: rest)
+    | c :: rest => c :: butAsAnd f rest
+    | [] => []
+
 /-- A sentence; or, of `INFORMAL, that is, FORMAL`, the formal restatement read with the
 forms that rewrite a sentence (`…, that is, if $φ$, then every NP satisfies …`). -/
 def sentence (cs : List Chunk) : Option Sent :=
@@ -7863,6 +7978,9 @@ def sentence (cs : List Chunk) : Option Sent :=
     chainForms (cs.length + 1) cs else cs
   let cs := if cs.any (fun c => match c with | .w s => s == w!"both" | _ => false) then
     dropBothAfterIs (cs.length + 1) cs else cs
+  let cs := if cs.any (fun c => match c with | .w s => s == w!"but" | _ => false) then
+    butAsAnd (cs.length + 1) cs else cs
+  let cs := if cs.any (fun c => match c with | .w s => s == w!"not" | _ => false) then andNotSubj cs else cs
   match sentence1 cs with
   | some s => some s
   | none => skipThatIs cs >>= sentence1

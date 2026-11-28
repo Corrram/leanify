@@ -462,6 +462,24 @@ def startsFactor : MTok → Bool
         n != w!"dots")
   | _ => false
 
+/-- The letters of the subscripts of a formula (`a_n`, `b_{n+1}`: `n`), the index of a
+sequence's terms. -/
+def subLetters : Nat → MT → List Codes
+  | 0, _ => []
+  | f + 1, m => match m with
+    | .sub b i => subLetters f b ++ idsOf f i
+    | .add x y | .minus x y | .mul x y | .div x y | .frac x y | .sup x y => subLetters f x ++ subLetters f y
+    | .neg x | .abs x | .hat x => subLetters f x
+    | .app g xs => subLetters f g ++ xs.flatMap (subLetters f)
+    | _ => []
+where
+  idsOf : Nat → MT → List Codes
+    | 0, _ => []
+    | f + 1, m => match m with
+      | .id v => if v.length == 1 then [v] else []
+      | .add x y | .minus x y | .mul x y => idsOf f x ++ idsOf f y
+      | _ => []
+
 /-- Heads that may be applied to a parenthesized argument list. -/
 def appHead : MT → Bool
   -- `n!` and `\binom{n}{k}` are values, not functions (`k!\,(n-k)!` is a product)
@@ -876,7 +894,17 @@ def run : Nat → Mode → List MTok → R
           let r2 ← expect .rb r1
           let (body, r3) ← run f (.product false) r2
           some (.limit v target body, r3)
-        | _ => none
+        -- `\lim_n a_n`, `\lim_{n} a_n`: the index to infinity
+        | .sym 95 :: .id v :: r | .sym 95 :: .lb :: .id v :: .rb :: r => do
+          let (body, r1) ← run f (.product false) r
+          some (.limit v (.id w!"\\infty") body, r1)
+        | _ => do
+          -- `\lim a_n`, `\lim(a_n+b_n)`: the limit of a sequence, the one index of its terms
+          -- to infinity
+          let (body, r1) ← run f (.product false) rest
+          let [v] := (subLetters 50 body).eraseDups | none
+          if !indexNames.contains v then none
+          some (.limit v (.id w!"\\infty") body, r1)
       else if n == w!"binom" || n == w!"tbinom" || n == w!"dbinom" then do
         let (a, r1) ← run f .group rest
         let (b, r2) ← run f .group r1

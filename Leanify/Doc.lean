@@ -4470,12 +4470,19 @@ def predicate (sc : Scope) (s : Tm × Ty) (phrase : List Codes) (o : Obj) : M Tm
 converges to $0$`, `0` at the numbers that are no natural numbers, as the article's
 sequences). -/
 def subjTerm (sc : Scope) (s : MT) : M (Tm × Ty) := do
+  -- (`the function $f(x)=x^2$ is differentiable at $0$`, `the map $x\mapsto|x|$ is even`: the
+  -- real function of `x` on the line, its values defined where the claim uses them)
+  if let .mapsto (.id v) body := s then
+    return ← Elab.lam F sc (.id v) [.real] (some .real) body
   if let some i ← Elab.seqTermVar sc s then
     let b ← Elab.asReal (← term F ((i, .real) :: sc) none s)
     return (.lam .real .tt (.cases (.app (.prim .isNat) (.loc 0)) b (.num 0)), .fn .real .real)
   term F sc none s
 
 def subjectTm (sc : Scope) : Subj → M (Tm × Ty)
+  -- (`the function $f(x)=x^2$ is differentiable at $0$`: the real function of `x`, its values
+  -- defined where the claim uses them)
+  | .math (.mapsto (.id v) body) => Elab.lam F sc (.id v) [.real] (some .real) body
   | .math m => term F sc none m
   | .its name => do
     let some (s, sty) := (← get).subject | fail E.referent
