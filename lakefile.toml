@@ -741,6 +741,13 @@ srcDir = "tests"
 globs = ["Pairs.+"]
 
 [[lean_lib]]
+# Every Lean declaration that a field of the vocabulary names, with the type the field gives it
+# (generated: `lake exe glossary --models > tests/ModelsCheck/Check.lean`).
+name = "ModelsCheck"
+srcDir = "tests"
+globs = ["ModelsCheck.+"]
+
+[[lean_lib]]
 # The field linearsystems: matrices applied to vectors, the order of vectors, Farkas's lemma.
 name = "LinearSystems"
 srcDir = "tests"

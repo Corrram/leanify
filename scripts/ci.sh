@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The checks of the repository, as CI runs them: `bash scripts/ci.sh` (all of them), or one
-# part: `build`, `checks`, `proofs`, `audit`, `reader`, `clean`. `bash scripts/ci.sh update`
+# part: `build`, `models`, `checks`, `proofs`, `audit`, `reader`, `clean`. `bash scripts/ci.sh update`
 # rewrites the expected outputs (review the diff before committing it).
 #
 # What is checked is read from the repository, so that a new test needs no change here and
@@ -134,6 +134,13 @@ checks() {
   else diff docs/glossary.md "$TMP/glossary.md" || fail "docs/glossary.md (lake exe glossary > docs/glossary.md)"; fi
   endgroup
 
+  group "The check of the Lean meanings of the vocabulary is up to date"
+  lake exe glossary --models > "$TMP/models.lean"
+  if [ "${UPDATE:-}" = 1 ]; then cp "$TMP/models.lean" tests/ModelsCheck/Check.lean; echo "wrote tests/ModelsCheck/Check.lean"
+  else diff tests/ModelsCheck/Check.lean "$TMP/models.lean" > /dev/null ||
+    fail "tests/ModelsCheck/Check.lean (lake exe glossary --models > tests/ModelsCheck/Check.lean)"; fi
+  endgroup
+
   group "A suggested rewrite of an unread sentence is kept only if the check reads it"
   cp examples/Demo/draft.tex "$TMP/draft.tex"
   $PYTHON scripts/leanify_suggest.py "$TMP/draft.tex" --hook "$PYTHON tests/suggest_hook.py" \
@@ -248,8 +255,18 @@ clean() {
   endgroup
 }
 
+# The Mathlib side of the vocabulary alone: every Lean declaration that a field names has
+# the type the field gives its constant (`tests/ModelsCheck/Check.lean`, generated). It is
+# part of `build`; alone, it does not build the certificates of the articles.
+models() {
+  group "The Lean meanings of the vocabulary have the types the vocabulary gives them"
+  lake build ModelsCheck
+  endgroup
+}
+
 case "${1:-all}" in
   build) build;;
+  models) models;;
   checks) checks;;
   proofs) proofs;;
   audit) audit;;
@@ -257,5 +274,5 @@ case "${1:-all}" in
   clean) clean;;
   update) UPDATE=1 checks;;
   all) build; checks; proofs; audit; reader; clean;;
-  *) echo "usage: bash scripts/ci.sh [build|checks|proofs|audit|reader|clean|update|all]" >&2; exit 2;;
+  *) echo "usage: bash scripts/ci.sh [build|models|checks|proofs|audit|reader|clean|update|all]" >&2; exit 2;;
 esac
