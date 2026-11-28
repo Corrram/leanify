@@ -47,7 +47,8 @@ def vocab : Vocab where
       "a prime of the form `2^{2^n} + 1`",
     noun phrase!"power of two" phrase!"powers of two" (predR fun x => exNat fun k => eq x (zpow (num 2) k)) "`2^k`, `k ≥ 0`"]
   mods := [
-    adjN phrase!"sum of two squares" false (fun x => and (isInt x) (exInt fun a => exInt fun b => eq x (add (mul a a) (mul b b))))
+    -- (the meaning of the noun of `numbers`, term for term: one reading where both are read)
+    adjN phrase!"sum of two squares" false (fun x => exInt fun a => exInt fun b => eq x (add (mul a a) (mul b b)))
       "`a² + b²` for integers `a`, `b`",
     adjN phrase!"triangular" true (fun x => exNat fun k => eq x (div (mul k (add k (num 1))) (num 2))) "`k(k+1)/2` for some `k ≥ 0`",
     { phrase := phrase!"power of $v$", prenominal := false, ty := .real,

@@ -40,7 +40,9 @@ tests/Congruences/article.tex:71:158: info: claim 21: \forall x\in \mathbb{R},\ 
 tests/Congruences/article.tex:71:264: info: claim 22: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (x\in \mathbb{Z}\land 3\in \mathbb{Z})\land \neg (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=3\,s)\Rightarrow {x}^{2}\in \mathbb{Z}\land 1\in \mathbb{Z}\land 3\in \mathbb{Z}\land {x}^{2}-1\in \mathbb{Z}\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-1=3\,y)
 tests/Congruences/article.tex:75:35: info: claim 23: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land x\in \mathbb{Z}\land 30\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land 30=x\,s)\Rightarrow (x=2\lor x=3)\lor x=5
 tests/Congruences/article.tex:75:100: info: claim 24: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land {x}^{2}=x\Rightarrow x=0\lor x=1
-tests/Congruences/article.tex: 6 definitions, 25 claims
+tests/Congruences/article.tex:79:1: info: claim 25: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow ({x}^{2}\in \mathbb{Z}\land 0\in \mathbb{Z})\land (4\in \mathbb{Z}\land 0<4)\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-0=4\,y)\lor ({x}^{2}\in \mathbb{Z}\land 1\in \mathbb{Z})\land (4\in \mathbb{Z}\land 0<4)\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}-1=4\,y)
+tests/Congruences/article.tex:79:69: info: claim 26: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow ({x}^{3}-x\in \mathbb{Z}\land 6\in \mathbb{Z})\land (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{3}-x=6\,y)
+tests/Congruences/article.tex: 6 definitions, 27 claims
   text: 6 compiled, 0 failed, 0 prose (of 6)
-  results: 35 compiled, 0 failed, 0 prose (of 35)
-  all: 41 compiled, 0 failed, 0 prose (of 41)
+  results: 37 compiled, 0 failed, 0 prose (of 37)
+  all: 43 compiled, 0 failed, 0 prose (of 43)

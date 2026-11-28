@@ -1296,15 +1296,21 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     if words.isEmpty then none
     some (.noun np, r')) <|>
   (do
-    -- `every random variable $X$ with finite mean`, `every group $G$ of odd order`: the
-    -- variable, then words of a modifier (no formula)
+    -- `every random variable $X$ with finite mean`, `every group $G$ of odd order`, `every
+    -- integer $n$ of the form $4k+1$`: the variable, then a modifier
     let (np, r') := npUpTo (r.length + 1) r []
     let ws := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
     if ws.isEmpty then none
     let .m [x] :: post@(.w p :: _) := np.drop ws.length | none
     if !(match x with | .id _ => true | .cmd c => Math.greekNames.contains c | _ => false) then none
     if ![w!"with", w!"without", w!"of", w!"in", w!"on", w!"over", w!"at", w!"from"].contains p then none
-    if !(post.all fun c => match c with | .w w => w != w!"and" && w != w!"such" && w != w!"that" && w != w!"which" | .p 45 => true | _ => false) then none
+    if !(post.all fun c => match c with
+        | .w w => w != w!"and" && w != w!"such" && w != w!"that" && w != w!"which"
+        | .p 45 => true
+        | .m _ => true
+        | _ => false) then none
+    -- (a formula only after a word, as the object of the modifier)
+    if (post.zip (post.drop 1)).any (fun (a, b) => match a, b with | .m _, .m _ => true | _, _ => false) then none
     some (.noun np, r')) <|>
   (do
     -- `every integer $n$ that is not prime`: the variable, then a relative clause of
@@ -3058,6 +3064,19 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       if !(clauseEnd r2 || (match r2 with | .w w :: _ => [w!"and", w!"for", w!"if", w!"then", w!"whenever", w!"since", w!"where"].contains w | _ => false)) then none
       let m := MT.app (.id w!"@contains") [s, x]
       some (Clause.fact (if neg then .lnot m else m), r2) : Option (Clause × List Chunk)) with
+  | some res => some res
+  | none =>
+  -- `$n^2$ is congruent to $0$ or $1$ modulo $4$`: congruent to one of the values, modulo the one
+  -- modulus
+  match (do
+      let (ts, r) ← mathChunk cs
+      let s ← Math.parseFormula ts
+      let r1 ← kw [w!"is", w!"congruent", w!"to"] r
+      let .m a :: .w o :: .m b :: .w md :: .m m :: r2 := r1 | none
+      if o != w!"or" || md != w!"modulo" then none
+      if !clauseEnd r2 && !(match r2 with | .w w :: _ => [w!"and", w!"for", w!"if", w!"whenever"].contains w | _ => false) then none
+      let one (v : List MTok) : Clause := Clause.isA s [.w w!"congruent", .w w!"to", .m v, .w w!"modulo", .m m] false
+      some (Clause.orC (one a) (one b), r2) : Option (Clause × List Chunk)) with
   | some res => some res
   | none =>
   -- `$x$ is $0$ or $1$`, `$n$ is either $2$, $3$ or $5$`: equal to one of the values
@@ -6381,7 +6400,7 @@ def everyIsSent (cs : List Chunk) : Option (List Chunk) := do
     | some (i + 1) => match np[i]? with
       -- (also after a word that takes an object, `every open set containing $x$`)
       | some (.w w) => preps.contains w || [w!"containing", w!"than", w!"modulo", w!"dividing", w!"divisible", w!"through",
-          w!"between", w!"without", w!"into", w!"onto", w!"under", w!"except"].contains w ||
+          w!"between", w!"without", w!"into", w!"onto", w!"under", w!"except", w!"form"].contains w ||
           (w.length > 4 && w.drop (w.length - 3) == w!"ing")
       | _ => false
     | _ => false

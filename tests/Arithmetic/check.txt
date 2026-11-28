@@ -98,7 +98,11 @@ tests/Arithmetic/article.tex:135:67: info: claim 63: \forall x\in \mathbb{R},\ x
 tests/Arithmetic/article.tex:135:67: info: claim 63 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\in \mathbb{Z}\land 0<x
 tests/Arithmetic/article.tex:139:1: info: claim 64: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land y=x+1\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x\,y=2\,s))
 tests/Arithmetic/article.tex:139:96: info: claim 65: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land y=x+1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land z=y+1\Rightarrow 3\in \mathbb{Z}\land x+y+z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x+y+z=3\,s)))
-tests/Arithmetic/article.tex: 11 definitions, 66 claims
+tests/Arithmetic/article.tex:143:1: info: claim 66: \#\{y : ((y\in \mathbb{Z}\land 2\le y\land (\forall t\in \mathbb{R},\ \forall a\in \mathbb{R},\ (t\in \mathbb{N}\land a\in \mathbb{N})\land t\,a=y\Rightarrow t=1\lor a=1))\land (\exists t\in \mathbb{R},\ t\in \mathbb{Z}\land y=4\,t+3))\land \top\}=\infty
+tests/Arithmetic/article.tex:143:54: info: claim 67: \forall x\in \mathbb{R},\ (x\in \mathbb{Z}\land 2\le x\land (\forall s\in \mathbb{R},\ \forall t\in \mathbb{R},\ (s\in \mathbb{N}\land t\in \mathbb{N})\land s\,t=x\Rightarrow s=1\lor t=1))\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=4\,s+1)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=z\,z+s\,s))
+tests/Arithmetic/article.tex:143:137: info: claim 68: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land x=2\,y+1)
+tests/Arithmetic/article.tex:143:169: info: claim 69: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=4\,s+3)\Rightarrow (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=2\,z+1)
+tests/Arithmetic/article.tex: 11 definitions, 70 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 73 compiled, 0 failed, 0 prose (of 73)
-  all: 83 compiled, 0 failed, 0 prose (of 83)
+  results: 78 compiled, 0 failed, 0 prose (of 78)
+  all: 88 compiled, 0 failed, 0 prose (of 88)

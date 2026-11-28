@@ -1834,6 +1834,41 @@ def seqAdjective (t : Tm) (a : List Codes) : Option Tm :=
       [w!"upper", w!"semicontinuous"]].contains a' then none
   else fnAdjectiveOn t a (.lam .real .tt (.app (.prim .isNat) (.loc 0)))
 
+/-- `of the form $E$` at the start of the chunks: the formula, and the chunks after it. -/
+def ofFormOf (cs : List Chunk) : Option (MT × List Chunk) := match cs with
+  | .w o :: .w t :: .w fm :: .m ts :: rest =>
+    if o != w!"of" || t != w!"the" || fm != w!"form" then none else
+    (Math.parseFormula ts).map (·, rest)
+  | _ => none
+
+/-- `of the form $E$` (`primes of the form $4k+3$`, `of the form $2^n-1$`): the number `obj`
+(bound first in `sc`) is the value of `E` for some values of its letters that nothing else
+binds, integers, or natural numbers where they stand in an exponent. -/
+def ofFormBody (sc : Scope) (obj : Codes) (e : MT) : M Tm := do
+  let rec lets : Nat → Bool → MT → List (Codes × Bool)
+    | 0, _, _ => []
+    | k + 1, ex, m => match m with
+      | .id n => [(n, ex)]
+      | .add a b | .minus a b | .mul a b | .div a b | .frac a b => lets k ex a ++ lets k ex b
+      | .sup b x => lets k ex b ++ lets k true x
+      | .neg a | .abs a => lets k ex a
+      | .app _ as => as.flatMap (lets k ex)
+      | _ => []
+  let letter (n : Codes) : Bool := match n with
+    | [ch] => (97 ≤ ch && ch ≤ 122) || (65 ≤ ch && ch ≤ 90)
+    | _ => false
+  let cand := (lets 32 false e).filter fun (n, _) => letter n && (Elab.lookupLocal sc n).isNone
+  let free ← cand.filterM fun (n, _) => do pure (← Elab.lookupGlob n).isNone
+  let names := (free.map (·.1)).eraseDups
+  if names.isEmpty then fail E.unsupported
+  let natural (n : Codes) : Bool := free.any fun (m, ex) => m == n && ex
+  let body := names.foldr (fun n acc =>
+    MT.quant false [n] (.id (if natural n then w!"\\mathbb{N}" else w!"\\mathbb{Z}")) acc)
+    (MT.chain (.id obj) [(.eq, e)])
+  let (p, pty) ← Elab.term 100000 sc none body
+  if pty != .prop then fail E.type
+  pure p
+
 /-- Read a noun phrase (without its determiner). -/
 def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   -- `fixed` before a noun phrase marks a parameter: the binder is the same without it
@@ -2512,6 +2547,14 @@ def nounPhrase1Core (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         let (p, pty) ← Elab.term 100000 sc none (.app (.id w!"@contains") [x, .id v])
         if pty != .prop then fail E.type
         post f rel rest (Tm.lam ty .tt p :: acc) else
+      -- (`primes of the form $4k+3$`, `of the form $2^n-1$`: a number that is the value of the
+      -- formula for some values of its letters that nothing else binds, integers, natural numbers
+      -- in an exponent)
+      if let some (e, rest) := ofFormOf cs then
+        if ty != .real then fail E.type
+        let v : Codes := w!"@obj"
+        let sc : Scope := [(v, ty)] ++ (if outer.isEmpty then [] else [([], ty)]) ++ outer
+        post f rel rest (Tm.lam ty .tt (← ofFormBody sc v e) :: acc) else
       -- (`not coprime to $n$`: the negation of a modifier, as `that is not coprime to $n$`)
       let negated : Option (List Chunk) := if !cands.isEmpty then none else match cs with
         | .w n :: rest => if n == w!"not" then some rest else none
@@ -5184,6 +5227,8 @@ def notionApp (x : Tm × Ty) (name : List Codes) : M Tm := do
 word of `np` (after `a`, `an`, `the`)? Otherwise the words are prose. -/
 def knownStart (st : St) (np : List Chunk) : Bool :=
   let V := st.vocab
+  -- (`of the form $2k+1$`, of numbers)
+  if (ofFormOf np).isSome then true else
   let cs := (kw [w!"a"] np <|> kw [w!"an"] np <|> kw [w!"the"] np).getD np
   match cs with
   | .w w :: _ =>
@@ -5249,6 +5294,11 @@ def relativeAdj (sc : Scope) (x : Tm × Ty) (a : Codes) : M (Option (List MTok))
 modifiers with the same words. -/
 def vocabPredicate (sc : Scope) (x : Tm × Ty) (cs : List Chunk) : M Tm := do
   let V := (← get).vocab
+  -- (`$n$ is of the form $2k+1$`: the number is a value of the formula)
+  if let some (e, []) := ofFormOf cs then
+    if x.2 != .real then fail E.type
+    let p ← ofFormBody ((w!"@obj", .real) :: sc) w!"@obj" e
+    return Notation.betaApply (.lam .real .tt p) [x.1]
   let cs := (kw [w!"a"] cs <|> kw [w!"an"] cs <|> kw [w!"the"] cs).getD cs
   -- (adjectives of an infinite sequence, `$(a_n)$ is increasing and bounded`: properties of
   -- its terms)
