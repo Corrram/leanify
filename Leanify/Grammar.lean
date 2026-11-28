@@ -884,7 +884,20 @@ def withConds (cs : List Chunk) : Option (MT × List Chunk) := do
       let r2 ← kw [w!"for", w!"all"] r1 <|> kw [w!"for", w!"every"] r1
       let (ts, r3) ← mathChunk r2
       let (vs, dom) ← binderMath ts
-      some (MT.quant true vs dom m, r3)) with
+      some (MT.quant true vs dom m, r3)) <|> (do
+      -- (`for all real numbers $x$ and $y$`, `for every integer $n$`: the numbers of the noun)
+      let r2 ← kw [w!"for", w!"all"] r1 <|> kw [w!"for", w!"every"] r1 <|> kw [w!"for", w!"each"] r1
+      let (dom, r3) ← (kw [w!"real", w!"numbers"] r2 <|> kw [w!"real", w!"number"] r2 <|> kw [w!"reals"] r2).map
+          (MT.id w!"\\mathbb{R}", ·) <|>
+        (kw [w!"integers"] r2 <|> kw [w!"integer"] r2).map (MT.id w!"\\mathbb{Z}", ·)
+      let name (ts : List MTok) : Option Codes := match ts with | [.id v] => some v | _ => none
+      let (vs, r4) ← match r3 with
+        | .m a :: .w n :: .m b :: r4 => if n == w!"and" then (do some ([← name a, ← name b], r4)) else none
+        | .m a :: .p 44 :: .m b :: r4 => do some ([← name a, ← name b], r4)
+        | .m [.id a] :: r4 => some ([a], r4)
+        | .m [.id a, .sym 44, .id b] :: r4 => some ([a, b], r4)
+        | _ => none
+      some (MT.quant true vs dom m, r4)) with
     | some res => res
     | none => (m, r1)
   -- `with $φ$, $ψ$, or $χ$`, `with $φ$ or $ψ$`: one of the conditions

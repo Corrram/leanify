@@ -1667,9 +1667,17 @@ def condsOf : Nat → List Chunk → List MT → List MT × List Chunk
         dom [w!"natural", w!"numbers"] w!"\\mathbb{N}" <|> dom [w!"natural", w!"number"] w!"\\mathbb{N}"
       let r0 : List Chunk := match (Grammar.kw [w!"for", w!"all"] r0 <|> Grammar.kw [w!"for", w!"every"] r0 <|>
           Grammar.kw [w!"for", w!"each"] r0) with
-        | some r1 => match nounDom r1 with
-          | some (d, .m [.id v] :: r2) => [.w w!"for", .w w!"all", .m ([.id v, .cmd w!"in"] ++ (match d with
-              | .id n => [.id n] | _ => []))] ++ r2
+        | some r1 =>
+          let domTs (d : MT) : List MTok := match d with | .id n => [.id n] | _ => []
+          match nounDom r1 with
+          -- (two of them: `for all real numbers $x$ and $y$`, `$x$, $y$`, `$x,y$`)
+          | some (d, .m [.id a] :: .w n :: .m [.id b] :: r2) =>
+            if n == w!"and" then [.w w!"for", .w w!"all", .m ([.id a, .sym 44, .id b, .cmd w!"in"] ++ domTs d)] ++ r2 else r0
+          | some (d, .m [.id a] :: .p 44 :: .m [.id b] :: r2) =>
+            [.w w!"for", .w w!"all", .m ([.id a, .sym 44, .id b, .cmd w!"in"] ++ domTs d)] ++ r2
+          | some (d, .m [.id a, .sym 44, .id b] :: r2) =>
+            [.w w!"for", .w w!"all", .m ([.id a, .sym 44, .id b, .cmd w!"in"] ++ domTs d)] ++ r2
+          | some (d, .m [.id v] :: r2) => [.w w!"for", .w w!"all", .m ([.id v, .cmd w!"in"] ++ domTs d)] ++ r2
           | _ => r0
         | none => r0
       let (m, r) : MT × List Chunk := match (Grammar.kw [w!"for", w!"all"] r0 <|> Grammar.kw [w!"for", w!"every"] r0 <|>
