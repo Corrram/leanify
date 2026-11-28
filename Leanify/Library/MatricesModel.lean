@@ -101,6 +101,11 @@ def SkewSymmetric (A : Mat) : Prop := Square A ∧ (sq A)ᵀ = -sq A
 def Orthogonal (A : Mat) : Prop := Square A ∧ (sq A)ᵀ * sq A = 1
 def PosDef (A : Mat) : Prop := Square A ∧ (sq A).PosDef
 def PosSemidef (A : Mat) : Prop := Square A ∧ (sq A).PosSemidef
+/-- The square root of a positive semidefinite matrix: the positive semidefinite `B` with
+`BB = A` (there is exactly one: Mathlib's `CFC.sqrt` of the matrix), and the `0 × 0` matrix
+if there is none. -/
+def sqrt (A : Mat) : Mat :=
+  if h : ∃ B : Mat, PosSemidef B ∧ mul B B = A then Classical.choose h else Mat.empty
 def Diagonal (A : Mat) : Prop := Square A ∧ ∀ i j, i ≠ j → at' A i j = 0
 def UpperTriangular (A : Mat) : Prop := Square A ∧ ∀ i j, j < i → at' A i j = 0
 def LowerTriangular (A : Mat) : Prop := Square A ∧ ∀ i j, i < j → at' A i j = 0

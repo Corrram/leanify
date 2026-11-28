@@ -322,6 +322,7 @@ example : ((Leanify.Matrices.Mat) → Prop) := Leanify.Matrices.Diagonalizable
 example : ((Leanify.Matrices.Mat) → Prop) := Leanify.Matrices.OrthDiagonalizable
 example : ((Leanify.Matrices.Mat) → ((Leanify.Matrices.Mat) → Prop)) := Leanify.Matrices.Eigenvector
 example : ((Leanify.Matrices.Mat) → ℝ) := Leanify.Matrices.nullity
+example : ((Leanify.Matrices.Mat) → (Leanify.Matrices.Mat)) := Leanify.Matrices.sqrt
 
 /-! ## `special` -/
 

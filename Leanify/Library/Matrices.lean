@@ -74,6 +74,7 @@ def diagonalizable : Nat := 37
 def orthDiagonalizable : Nat := 38
 def eigenvector : Nat := 39
 def nullity : Nat := 40
+def sqrt : Nat := 41
 end Const
 open Const
 
@@ -104,11 +105,6 @@ def entryOf : Tm := close <| lamT M (fun _ => tt) fun a => lamR fun i => lamR fu
 
 def eigenvalues : Tm := close <| lamT M (fun _ => tt) fun a => lamR fun t => app2 (const eigenvalue) a t
 
-/-- The square root of a positive semidefinite matrix: the one positive semidefinite `B`
-with `BB = A`. -/
-def sqrtOf : Tm := close <| lamT M (fun a => app (const posSemidef) a) fun a =>
-  theT M fun b => and (app (const posSemidef) b) (eq (app2 (const mul) b b) a)
-
 def vocab : Vocab where
   types := [w!"\\mathrm{Mat}"]
   consts := [M ⟶ .real, M ⟶ .real, .real ⟶ M, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ M ⟶ .prop,
@@ -116,7 +112,7 @@ def vocab : Vocab where
     M ⟶ .real, M ⟶ .real, M ⟶ .real, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real ⟶ .real ⟶ .real,
     M ⟶ .real ⟶ .real ⟶ .prop, .real ⟶ M, .real ⟶ .real ⟶ M, M ⟶ Ty.rfun, M ⟶ .real ⟶ .prop,
     M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop,
-    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real]
+    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real, M ⟶ M]
   constNames := [w!"\\operatorname{rows}", w!"\\operatorname{cols}", w!"", w!"\\operatorname{Square}",
     w!"\\operatorname{SameSize}(#1,#2)", w!"\\operatorname{Mulable}(#1,#2)", w!"+", w!"-", w!"-", w!"\\cdot", w!"^",
     w!"#^{-1}", w!"#^{\\top}", w!"/", w!"\\det", w!"\\operatorname{tr}", w!"\\operatorname{rank}",
@@ -126,7 +122,7 @@ def vocab : Vocab where
     w!"\\operatorname{PosDef}", w!"\\operatorname{PosSemidef}", w!"\\operatorname{Diagonal}",
     w!"\\operatorname{UpperTriangular}", w!"\\operatorname{LowerTriangular}", w!"\\operatorname{Nilpotent}",
     w!"\\operatorname{Idempotent}", w!"\\operatorname{Stochastic}", w!"#2\\sim #1", w!"\\operatorname{Diagonalizable}",
-    w!"\\operatorname{OrthDiagonalizable}", w!"\\operatorname{Eigenvector}(#1,#2)", w!"\\operatorname{nullity}"]
+    w!"\\operatorname{OrthDiagonalizable}", w!"\\operatorname{Eigenvector}(#1,#2)", w!"\\operatorname{nullity}", w!"#^{1/2}"]
   constLean := [w!"Leanify.Matrices.rows", w!"Leanify.Matrices.cols", w!"Leanify.Matrices.ofReal",
     w!"Leanify.Matrices.Square", w!"Leanify.Matrices.SameSize", w!"Leanify.Matrices.Mulable",
     w!"Leanify.Matrices.add", w!"Leanify.Matrices.sub", w!"Leanify.Matrices.neg", w!"Leanify.Matrices.mul",
@@ -139,7 +135,8 @@ def vocab : Vocab where
     w!"Leanify.Matrices.PosSemidef", w!"Leanify.Matrices.Diagonal", w!"Leanify.Matrices.UpperTriangular",
     w!"Leanify.Matrices.LowerTriangular", w!"Leanify.Matrices.Nilpotent", w!"Leanify.Matrices.Idempotent",
     w!"Leanify.Matrices.Stochastic", w!"Leanify.Matrices.Similar", w!"Leanify.Matrices.Diagonalizable",
-    w!"Leanify.Matrices.OrthDiagonalizable", w!"Leanify.Matrices.Eigenvector", w!"Leanify.Matrices.nullity"]
+    w!"Leanify.Matrices.OrthDiagonalizable", w!"Leanify.Matrices.Eigenvector", w!"Leanify.Matrices.nullity",
+    w!"Leanify.Matrices.sqrt"]
   typeLean := [(w!"Leanify.Matrices.Mat", w!"Leanify.Matrices.Mat.empty")]
   modules := [w!"Leanify.Library.MatricesModel"]
   nouns := [
@@ -215,7 +212,7 @@ def vocab : Vocab where
       doms := [natDom, natDom], doc := "the `m × n` matrix of zeros" },
     ofM phrase!"characteristic polynomial of $v$" (.const charpoly) sqDom (M ⟶ Ty.rfun)
       "`t ↦ det(tI - A)` (Mathlib `Matrix.charpoly`)",
-    ofM phrase!"matrix square root of $v$" sqrtOf (some (.const posSemidef)) (M ⟶ M)
+    ofM phrase!"matrix square root of $v$" (.const sqrt) (some (.const posSemidef)) (M ⟶ M)
       "`A^{1/2}`: the positive semidefinite `B` with `B² = A`, of a positive semidefinite matrix (Mathlib `CFC.sqrt`); `A^{-1/2}` is its inverse",
     ofM phrase!"set of eigenvalues of $v$" eigenvalues sqDom (M ⟶ .real ⟶ .prop)
       "the real `λ` with `Av = λv` for some `v ≠ 0`",
