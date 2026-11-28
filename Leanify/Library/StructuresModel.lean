@@ -546,6 +546,10 @@ def DiscreteS : (El → Prop) → Prop := topHas fun α t => letI := t; Discrete
 
 /-- A subset of a space is open: its points are an open set of the space's topology. -/
 def OpenS (U : El → Prop) : Prop := Uniform U ∧ carrier U ∈ (opsOf U).opens
+/-- `U` is open in `X`: a subset of `X` whose points are the trace on `X` of an open set (the
+subspace topology of `X`). -/
+def OpenIn (X U : El → Prop) : Prop :=
+  (∀ a, U a → X a) ∧ ∃ V ∈ (opsOf X).opens, {x | U (.el (opsOf X) x)} = V ∩ carrier X
 /-- `F` is closed in `X`: its complement in `X` is open in `X`. -/
 def ClosedIn (X F : El → Prop) : Prop :=
   (∀ a, F a → X a) ∧ ∃ V ∈ (opsOf X).opens, {x | x ∈ carrier X ∧ x ∉ carrier F} = V ∩ carrier X
@@ -973,6 +977,8 @@ def kernelM (φ : Map) : El → Prop := kernel φ.dom (apply φ)
 def imageM (φ : Map) : El → Prop := image φ.dom (apply φ)
 /-- `φ(K)`: the image of the elements of `K` in the domain. -/
 def imageSetM (φ : Map) (K : El → Prop) : El → Prop := image (fun a => φ.dom a ∧ K a) (apply φ)
+/-- `φ^{-1}(U)`: the elements of the domain that `φ` sends into `U` (Mathlib `Set.preimage`). -/
+def preimageSetM (φ : Map) (U : El → Prop) : El → Prop := fun a => φ.dom a ∧ U (apply φ a)
 /-- The rank and the nullity of a linear map (Mathlib `LinearMap.rank`). -/
 def rankM (φ : Map) : ℝ := dimS (imageM φ)
 def nullityM (φ : Map) : ℝ := dimS (kernelM φ)

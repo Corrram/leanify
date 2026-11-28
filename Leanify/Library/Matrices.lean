@@ -2,7 +2,8 @@ import Leanify.Library.Core
 
 /-! # Vocabulary: matrices
 
-A matrix is a real `m × n` matrix, for some `m` and `n`: a type of its own (Mathlib's
+A matrix is a real `m × n` matrix, for some `m, n ≥ 1` (an array of entries, as linear algebra
+has it): a type of its own (Mathlib's
 `Matrix (Fin m) (Fin n) ℝ`), so that an article binds matrices as it binds numbers
 (`Let $A$ be an $n\times n$ matrix.`) and writes their algebra: `A+B` and `A-B` (of the same
 size), `AB` (when the columns of `A` are as many as the rows of `B`), `cA` for a number `c`,
@@ -78,6 +79,10 @@ open Const
 
 def mPred (p : B → B) : Tm := close <| lamT M (fun _ => tt) p
 def squarePred : Tm := .const square
+/-- A matrix as linear algebra has it: at least one row and one column (`m, n ≥ 1`). -/
+def matrixPred : Tm := mPred fun a => and (le (num 1) (app (const rows) a)) (le (num 1) (app (const cols) a))
+/-- A square matrix with at least one row. -/
+def squareMatrixPred : Tm := mPred fun a => and (app (const square) a) (le (num 1) (app (const rows) a))
 def sqDom : Option Tm := some squarePred
 def natDom : Option Tm := some nonnegInt
 
@@ -133,9 +138,10 @@ def vocab : Vocab where
   typeLean := [(w!"Leanify.Matrices.Mat", w!"Leanify.Matrices.Mat.empty")]
   modules := [w!"Leanify.Library.MatricesModel"]
   nouns := [
-    nounM phrase!"matrix" phrase!"matrices" (mPred fun _ => tt) "a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
-    nounM phrase!"real matrix" phrase!"real matrices" (mPred fun _ => tt) "(Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
-    nounM phrase!"square matrix" phrase!"square matrices" squarePred "an `n × n` matrix",
+    nounM phrase!"matrix" phrase!"matrices" matrixPred
+      "a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
+    nounM phrase!"real matrix" phrase!"real matrices" matrixPred "`m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`)",
+    nounM phrase!"square matrix" phrase!"square matrices" squareMatrixPred "an `n × n` matrix, `n ≥ 1`",
     { noun phrase!"eigenvalue" phrase!"eigenvalues" (close <| lamR fun _ => tt)
         "of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`)" with
       arg := some ([w!"of"], M, close <| lamT M (fun _ => tt) fun a => lamR fun t => and (app (const square) a) (app2 (const eigenvalue) a t)) },

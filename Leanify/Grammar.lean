@@ -190,6 +190,8 @@ def collectiveWords : Nat → List Chunk → List Chunk × List Codes
       ((kw [w!"pairwise", w!"relatively", w!"prime"] ws <|> kw [w!"pairwise", w!"coprime"] ws).map
         (w!"pairwise coprime", ·)) <|>
       ((kw [w!"relatively", w!"prime"] ws <|> kw [w!"coprime"] ws).map (w!"coprime", ·)) <|>
+      -- (of integers: each the one before plus one)
+      ((kw [w!"consecutive"] ws).map (w!"consecutive", ·)) <|>
       -- (of random variables)
       ((kw [w!"independent", w!"and", w!"identically", w!"distributed"] ws <|> kw [w!"i.i.d."] ws <|>
         kw [w!"iid"] ws <|> kw [w!"i", w!"."] ws).map (w!"iid", ·)) <|>
@@ -248,7 +250,22 @@ def collectiveCond (ps : List Codes) (vars : List (List MTok)) : Option MT := do
         let ms ← vars.mapM fun v => Math.parseFormula (name v)
         some (MT.app (.id w!"@family") (.id ([64] ++ adj) :: ms))
     some (if neg then .lnot c else c)
+  -- (consecutive numbers: each the one before plus one, in their order)
+  let consecCond (p : Codes) : Option MT := do
+    if p != w!"consecutive" then none
+    match vars with
+    | [ts] => do
+      let (list, _) ← seqBound ts
+      let (x, _, lo, hi) ← seqVars list
+      let i := w!"i@"
+      some (.quant true [i] (.setOf (.id i) (.id w!"\\mathbb{Z}") [.chain lo [(.le, .id i), (.lt, hi)]])
+        (.chain (.sub (.id x) (.add (.id i) (.num 1))) [(.eq, .add (.sub (.id x) (.id i)) (.num 1))]))
+    | _ => do
+      let ms ← vars.mapM fun v => Math.parseFormula (name v)
+      if ms.length < 2 then none
+      some (.conj ((ms.zip (ms.drop 1)).map fun (a, b) => MT.chain b [(.eq, .add a (.num 1))]))
   let conds ← ps.mapM fun p => do
+    if let some c := consecCond p then return c
     if let some c := famCond p then return c
     -- (three points on one line, or not)
     if p == w!"collinear" || p == w!"noncollinear" then
@@ -3103,8 +3120,15 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       match r1.drop ws.length with
       | .m k :: r2 =>
         let v ← Math.parseFormula k
-        if !clauseEnd r2 then none
-        some (Clause.fact (.chain the [(.eq, v)]), r2)
+        -- (`has determinant $1$ or $-1$`: one of the values)
+        match r2 with
+        | .w o :: .m k2 :: r3 =>
+          if o != w!"or" || !clauseEnd r3 then none
+          let v2 ← Math.parseFormula k2
+          some (Clause.fact (.lor (.chain the [(.eq, v)]) (.chain the [(.eq, v2)])), r3)
+        | _ =>
+          if !clauseEnd r2 then none
+          some (Clause.fact (.chain the [(.eq, v)]), r2)
       | .w z :: r2 =>
         if z != w!"zero" || !clauseEnd r2 then none
         some (Clause.isA the [.w z] false, r2)
@@ -3399,8 +3423,25 @@ def clause (cs : List Chunk) : Option (Clause × List Chunk) :=
     some (mk p q, r2)
   let split : Option (Clause × List Chunk) := splitAt iffW .iffC <|> splitAt [w!"or"] .orC
   let hasWord (np : List Chunk) (w : Codes) : Bool := np.any fun c => match c with | .w v => v == w | _ => false
+  -- (`$x$ is open in $X$ and the preimage of $U$ is open in $X$`: the clause before `and`, where
+  -- the words after it have a subject and a verb of their own)
+  let beforeAnd : Option (Clause × List Chunk) := do
+    let i ← (List.range cs.length).find? fun i => match (cs[i]? : Option Chunk), (cs[i + 1]? : Option Chunk) with
+      | some (.w a), some (.w t) => a == w!"and" && [w!"the", w!"every", w!"each", w!"all"].contains t
+      | _, _ => false
+    if i == 0 then none
+    if !((cs.drop (i + 2)).any fun c => match c with | .w v => v == w!"is" || v == w!"are" | _ => false) then none
+    let (p, r) ← clause2 (cs.take i ++ [.p 46])
+    if !(match r with | [] | [.p 46] => true | _ => false) then none
+    some (p, cs.drop i)
   match clause2E cs with
   | some (c, r) =>
+    -- (a noun phrase that has swallowed `and` and a clause with its own verb)
+    let swallowedAnd := match c with
+      | .isA _ np _ => hasWord np w!"and" && (hasWord np w!"is" || hasWord np w!"are")
+      | _ => false
+    let andRes := if swallowedAnd then beforeAnd else none
+    if andRes.isSome then andRes else
     -- (a clause that stops before the connective, or a noun phrase that has swallowed it)
     let swallowed := match c with
       | .isA _ np _ => hasWord np w!"or" || (hasWord np w!"only" && hasWord np w!"if")
@@ -7597,6 +7638,10 @@ def nestedIndef (avoid : List Codes) (generic : Bool) (cs : List Chunk) : Option
       | some (.w w) => [w!"functions", w!"polynomials", w!"maps"].contains w
       | _ => false
     let fm ← if op == w!"product" && ofValues then some [.id x, .cmd w!"cdot", .id y] else twoOp op x y
+    -- (a collective adjective, `two consecutive integers`, `two distinct primes`: both objects
+    -- with it, `for all consecutive integers $X$ and $Y$`)
+    if pre.isEmpty && !(collectiveWords 8 np).2.isEmpty then
+      return [.w w!"for", .w w!"all"] ++ np ++ [.m [.id x], .w w!"and", .m [.id y]] ++ comp ++ [.p 44, .m fm] ++ after
     -- (each object with its own binder: `for every normal subgroup $X$ of $G$ and every
     -- normal subgroup $Y$ of $G$`)
     -- (the noun in the singular: the word before its complement, `sets of real numbers`)
@@ -8216,7 +8261,11 @@ def nestedAlts (avoid : List Codes) (s : Sentence) : List Sent := Id.run do
           | .p 45 => true
           | _ => false
         let after := rest.drop ws.length
-        if a == w!"and" && h == w!"have" && t == w!"the" && sm == w!"same" && single x && single y && !ws.isEmpty then
+        -- (two terms, `$A$ and $A^T$`)
+        let termLike (ts : List MTok) : Bool := match Math.parseFormula ts with
+          | some (.chain _ _) | some (.conj _) | some (.tuple _) | none => false
+          | _ => true
+        if a == w!"and" && h == w!"have" && t == w!"the" && sm == w!"same" && termLike x && termLike y && !ws.isEmpty then
           some ([.w w!"the"] ++ ws ++ [.w w!"of", .m x, .w w!"equals", .w w!"the"] ++ ws ++ [.w w!"of", .m y] ++ after)
         else (sameForm f (.w a :: .m y :: .w h :: .w t :: .w sm :: rest)).map (.m x :: ·)
       | c :: rest => (sameForm f rest).map (c :: ·)

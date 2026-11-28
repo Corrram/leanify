@@ -57,7 +57,8 @@ tests/Graphs/article.tex:121:1: info: claim 37: \forall x\in \mathrm{Graph},\ \o
 tests/Graphs/article.tex:125:1: info: claim 38: \forall x\in \mathrm{Graph},\ \operatorname{Tree}(x)\Leftrightarrow \operatorname{Connected}(x)\land \neg \neg \operatorname{Acyclic}(x)
 tests/Graphs/article.tex:125:68: info: claim 39: \forall x\in \mathrm{Graph},\ \operatorname{Bipartite}(x)\Rightarrow \chi(x)\le 2
 tests/Graphs/article.tex:125:162: info: claim 40: \forall x\in \mathbb{R},\ \forall y\in \mathrm{Graph},\ \lvert V(y)\rvert=x\Rightarrow \chi(y)\le x
-tests/Graphs/article.tex: 8 definitions, 41 claims
+tests/Graphs/article.tex:129:67: info: claim 41: \forall x\in \mathrm{Graph},\ (\forall y\in \mathbb{R},\ y\in V(x)\Rightarrow y\in V(x)\land 2\le \deg_{x}(y))\Rightarrow \neg \operatorname{Acyclic}(x)
+tests/Graphs/article.tex: 8 definitions, 42 claims
   text: 8 compiled, 0 failed, 0 prose (of 8)
-  results: 55 compiled, 0 failed, 0 prose (of 55)
-  all: 63 compiled, 0 failed, 0 prose (of 63)
+  results: 57 compiled, 0 failed, 0 prose (of 57)
+  all: 65 compiled, 0 failed, 0 prose (of 65)

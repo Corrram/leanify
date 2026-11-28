@@ -807,6 +807,8 @@ except a notion whose meanings take arguments of different types, which the type
 | with odd degree in $x$ | ℝ | a vertex with an odd number of neighbours (`$v$ has odd degree`) |
 | with even degree in $x$ | ℝ | a vertex with an even number of neighbours (`$v$ has even degree`) |
 | of degree $x$ in $a$ | ℝ | a vertex with `k` neighbours |
+| of degree at least $x$ in $a$ | ℝ | a vertex with at least `k` neighbours (`$v$ has degree at least $k$`) |
+| of degree at most $x$ in $a$ | ℝ | a vertex with at most `k` neighbours (`$v$ has degree at most $k$`) |
 | adjacent to $x$ in $a$ | ℝ | (Mathlib `SimpleGraph.Adj`) |
 
 | Notion | Type | Meaning |
@@ -898,9 +900,9 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix, `n ≥ 1` |
 | eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
 | real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
 | eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
@@ -1340,7 +1342,7 @@ except a notion whose meanings take arguments of different types, which the type
 | geodesic space | $\mathrm{El}$ → Prop | a geodesic metric space |
 | locally closed subset | $\mathrm{El}$ → Prop | the intersection of an open and a closed subset (Mathlib `IsLocallyClosed`) |
 | subset | $\mathrm{El}$ → Prop | a set of elements of `X` |
-| open subset | $\mathrm{El}$ → Prop | (Mathlib `IsOpen`) |
+| open subset | $\mathrm{El}$ → Prop | open in `X`, of its subspace topology (Mathlib `IsOpen`) |
 | closed subset | $\mathrm{El}$ → Prop | (Mathlib `IsClosed`) |
 | dense subset | $\mathrm{El}$ → Prop | (Mathlib `Dense`) |
 | compact subset | $\mathrm{El}$ → Prop | (Mathlib `IsCompact`) |
@@ -1531,6 +1533,7 @@ except a notion whose meanings take arguments of different types, which the type
 | isomorphic to $x$ | $\mathrm{El}$ → Prop | (Mathlib `MulEquiv`) |
 | $x$-group | $\mathrm{El}$ → Prop | every element has order a power of `p` (Mathlib `IsPGroup`) |
 | $x$ - | $\mathrm{El}$ → Prop | `a $p$-group`, `a finite $p$-group`: a group whose elements have orders powers of `p` (Mathlib `IsPGroup`) |
+| open in $x$ | $\mathrm{El}$ → Prop | a subset whose points are an open set of the space (of its subspace topology; Mathlib `IsOpen`) |
 | closed in $x$ | $\mathrm{El}$ → Prop | (Mathlib `IsClosed`) |
 | dense in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Dense`) |
 | normal in $x$ | $\mathrm{El}$ → Prop | (Mathlib `Subgroup.Normal`) |
@@ -1651,6 +1654,8 @@ except a notion whose meanings take arguments of different types, which the type
 | kernel of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.ker`, `LinearMap.ker`) |
 | image of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `MonoidHom.range`, `LinearMap.range`) |
 | image of $a$ under $b$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ → $\mathrm{El}$ → Prop | `φ(K)`, of a set `K` of the domain of a map (Mathlib `Set.image`) |
+| preimage of $a$ under $b$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ → $\mathrm{El}$ → Prop | `φ^{-1}(U)`, the elements of the domain that the map sends into `U` (Mathlib `Set.preimage`) |
+| inverse image of $a$ under $b$ | ($\mathrm{El}$ → Prop) → $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `Set.preimage`) |
 | range of $a$ | $\mathrm{Map}$ → $\mathrm{El}$ → Prop | (Mathlib `LinearMap.range`) |
 | rank of $a$ | $\mathrm{Map}$ → ℝ | (Mathlib `LinearMap.rank`) |
 | nullity of $a$ | $\mathrm{Map}$ → ℝ | the dimension of the kernel |
@@ -1694,6 +1699,7 @@ except a notion whose meanings take arguments of different types, which the type
 | $\operatorname{@polyring}$ | $\mathrm{El}$ → Prop | `R[x]`, the ring of polynomials in one variable over a ring `R` (Mathlib `Polynomial R`): the lists of coefficients, with the sum and the product of polynomials |
 | $\times$ | $\mathrm{El}$ → Prop | `G\times H`, the direct product: pairs, with the operations, the product topology and the maximum metric |
 | $\operatorname{@image}$ | $\mathrm{Map}$ | `φ(K)`: the image of a set `K` of the domain |
+| $\operatorname{@preimage}$ | $\mathrm{Map}$ | `φ^{-1}(U)`: the elements of the domain that `φ` sends into `U` |
 | $\ker$ | $\mathrm{Map}$ | `\ker φ`, the kernel |
 | $\operatorname{im}$ | $\mathrm{Map}$ | `\operatorname{im} φ`, the image |
 | $\operatorname{rank}$ | $\mathrm{Map}$ | `\operatorname{rank} T` |
@@ -2220,6 +2226,7 @@ except a notion whose meanings take arguments of different types, which the type
 | convergent | ℝ → ℝ | `a_n → l` for some `l` |
 | divergent | ℝ → ℝ | convergent to no number |
 | with a convergent subsequence | ℝ → ℝ | `a_{φ(n)} → l` for some strictly increasing `φ : ℕ → ℕ` and some `l` |
+| cauchy | ℝ → ℝ | `\|a_m - a_n\| < ε` for all large `m` and `n` (Mathlib `CauchySeq`) |
 | summable | ℝ → ℝ | `∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability) |
 | absolutely summable | ℝ → ℝ | `∑ \|a_k\|` converges (Mathlib `Summable`) |
 | conditionally summable | ℝ → ℝ | `∑ a_k` converges, `∑ \|a_k\|` does not |
@@ -2322,9 +2329,9 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix, `n ≥ 1` |
 | eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
 | real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
 | eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |
@@ -2735,9 +2742,9 @@ except a notion whose meanings take arguments of different types, which the type
 
 | Noun | Of | Meaning |
 | --- | --- | --- |
-| matrix | $\mathrm{Mat}$ | a real `m × n` matrix (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| real matrix | $\mathrm{Mat}$ | (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
-| square matrix | $\mathrm{Mat}$ | an `n × n` matrix |
+| matrix | $\mathrm{Mat}$ | a real `m × n` matrix, `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| real matrix | $\mathrm{Mat}$ | `m, n ≥ 1` (Mathlib `Matrix (Fin m) (Fin n) ℝ`) |
+| square matrix | $\mathrm{Mat}$ | an `n × n` matrix, `n ≥ 1` |
 | eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` (Mathlib `Module.End.HasEigenvalue`) |
 | real eigenvalue | ℝ | of a square matrix `A`: a real `λ` with `Av = λv` for some `v ≠ 0` |
 | eigenvector | $\mathrm{Mat}$ | of an `n × n` matrix `A`: a nonzero `n × 1` matrix `v` with `Av = λv` for a real `λ` (Mathlib `Module.End.HasEigenvector`) |

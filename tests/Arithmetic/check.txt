@@ -96,7 +96,9 @@ tests/Arithmetic/article.tex:135:67: info: claim 62: \forall x\in \mathbb{R},\ x
 tests/Arithmetic/article.tex:135:67: info: claim 62 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\in \mathbb{Z}\land 0<x
 tests/Arithmetic/article.tex:135:67: info: claim 63: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\le \prod_{y=1}^{x}\begin{cases}y&y\in \mathbb{Z}\land x\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land x=y\,z)\\1&\text{otherwise}\end{cases}
 tests/Arithmetic/article.tex:135:67: info: claim 63 is meaningful if: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land 0<x\Rightarrow x\in \mathbb{Z}\land 0<x
-tests/Arithmetic/article.tex: 11 definitions, 64 claims
+tests/Arithmetic/article.tex:139:1: info: claim 64: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land y=x+1\Rightarrow (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x\,y=2\,s))
+tests/Arithmetic/article.tex:139:96: info: claim 65: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land y=x+1\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land z=y+1\Rightarrow 3\in \mathbb{Z}\land x+y+z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x+y+z=3\,s)))
+tests/Arithmetic/article.tex: 11 definitions, 66 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 70 compiled, 0 failed, 0 prose (of 70)
-  all: 80 compiled, 0 failed, 0 prose (of 80)
+  results: 73 compiled, 0 failed, 0 prose (of 73)
+  all: 83 compiled, 0 failed, 0 prose (of 83)

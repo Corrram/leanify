@@ -1576,6 +1576,13 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
     if let .app (.id tn) [.limit v _ body, l] := m then
       if tn == w!"@tendsto" then
         if (lookupLocal sc v).isSome then fail E.shadow v
+        -- (`a_n\to a` with no number `a`: the letter of the sequence alone is a number that
+        -- nothing defines, bound where the sentence binds such letters)
+        if let .id ln := l then
+          let st ← get
+          let seqName := st.infSeqs.any fun (e, k) => k == ln && (e == st.curEnv || st.curProved == some e)
+          if seqName && (lookupLocalTy (· == .real) sc ln).isNone then
+            if let some (_, .fn _ _) := lookupLocal sc ln then fail E.undefined ln
         -- (`L` outside, `ε` `loc 0`; then `N`, then the index)
         let lv ← asReal (← term f sc pf l)
         let sc3 : Scope := (v, .real) :: (w!"@N", .real) :: (w!"@e", .real) :: sc
@@ -2100,6 +2107,11 @@ def term : Nat → Scope → PF → MT → M (Tm × Ty)
         pure (.the dty (conjAll (dom ++ [.eq fy.1 (shift 1 0 a')])), dty)
       | _ => fail E.type fn
     | .app (.sup (.id fn) (.neg (.num 1))) [a] => do
+      -- `\varphi^{-1}(U)` of a map of structures and a set: the type's method for the preimage
+      if let some (i, t) := lookupLocal sc fn then
+        if (← ownTy t) && (← method t (.fn w!"@preimage")).isSome then
+          let (v, _) ← term f sc pf a
+          return (← callMethod t (.fn w!"@preimage") [.loc i, v])
       -- `f^{-1}(a)`: the element of the domain of `f` that `f` sends to `a`
       let (i, g) ← liftO (← lookupGlob fn) E.undefined fn
       match g.ty with

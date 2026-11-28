@@ -11,7 +11,9 @@ vertices by numbers (`$\deg_G(v)$ for $v\in V(G)$`, `\sum_{v=1}^{n}`).
   `spanning tree of $G$` (a subgraph on other vertices is not a graph of this field: its
   vertices would not be `1, …, m`);
 * adjectives: `connected`, `acyclic`, `bipartite`, `regular`, `complete`, `triangle-free`,
-  `Hamiltonian`, `on $n$ vertices`, `with $m$ edges`, `$k$-regular`;
+  `Hamiltonian`, `on $n$ vertices`, `with $m$ edges`, `$k$-regular`; of vertices, `of degree
+  $k$`, `of degree at least $k$`, `of degree at most $k$`, `of even degree`, `of odd degree`
+  (in a graph: `every vertex of $G$ has degree at least $2$`);
 * notions: the vertex set, the number of vertices and of edges, the degree of a vertex, the
   neighbours of a vertex, adjacency, the distance between two vertices, the minimum and
   maximum degree, the chromatic, clique and independence numbers, the number of connected
@@ -255,6 +257,12 @@ def vocab : Vocab where
         "a vertex with an even number of neighbours (`$v$ has even degree`)",
       { phrase := phrase!"of degree $v$ in $v$", prenominal := false, ty := .real, doc := "a vertex with `k` neighbours",
         pred := close <| lamR fun k => lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (eq (app2 (const degree) v g) k) },
+      { phrase := phrase!"of degree at least $v$ in $v$", prenominal := false, ty := .real,
+        doc := "a vertex with at least `k` neighbours (`$v$ has degree at least $k$`)",
+        pred := close <| lamR fun k => lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (le k (app2 (const degree) v g)) },
+      { phrase := phrase!"of degree at most $v$ in $v$", prenominal := false, ty := .real,
+        doc := "a vertex with at most `k` neighbours (`$v$ has degree at most $k$`)",
+        pred := close <| lamR fun k => lamT G (fun _ => tt) fun g => lamR fun v => and (vert v g) (le (app2 (const degree) v g) k) },
       { phrase := phrase!"adjacent to $v$ in $v$", prenominal := false, ty := .real, doc := "(Mathlib `SimpleGraph.Adj`)",
         pred := close <| lamR fun u => lamT G (fun _ => tt) fun g => lamR fun v => app (app (app (const adj) v) u) g }]
   notions := [
