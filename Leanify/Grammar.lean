@@ -1296,6 +1296,17 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
     if words.isEmpty then none
     some (.noun np, r')) <|>
   (do
+    -- `every random variable $X$ with finite mean`, `every group $G$ of odd order`: the
+    -- variable, then words of a modifier (no formula)
+    let (np, r') := npUpTo (r.length + 1) r []
+    let ws := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+    if ws.isEmpty then none
+    let .m [x] :: post@(.w p :: _) := np.drop ws.length | none
+    if !(match x with | .id _ => true | .cmd c => Math.greekNames.contains c | _ => false) then none
+    if ![w!"with", w!"without", w!"of", w!"in", w!"on", w!"over", w!"at", w!"from"].contains p then none
+    if !(post.all fun c => match c with | .w w => w != w!"and" && w != w!"such" && w != w!"that" && w != w!"which" | .p 45 => true | _ => false) then none
+    some (.noun np, r')) <|>
+  (do
     -- `every integer $n$ that is not prime`: the variable, then a relative clause of
     -- modifiers (a modifier may precede it, `every integer $n$ greater than $1$ that is …`)
     let (np, r') := npUpTo (r.length + 1) r []

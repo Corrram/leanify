@@ -16,4 +16,4 @@ set_option maxHeartbeats 0
 def Groups.vocabulary : Leanify.Vocab :=
   Leanify.Fields.select ["groups"]
 
-#leanify_article Groups "article.tex" "fnv1a64:801f520b3471d241" with Groups.vocabulary
+#leanify_article Groups "article.tex" "fnv1a64:75ea147b02f79ec8" with Groups.vocabulary

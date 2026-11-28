@@ -100,8 +100,9 @@ def vocab : Vocab where
           (and (allR fun n => imp (nat n) (lt (app p n) (app p (add n (num 1)))))
             (exR fun l => tendsTo (lamR fun n => app a (app p n)) l)))
       "`a_{φ(n)} → l` for some strictly increasing `φ : ℕ → ℕ` and some `l`",
+    -- (the meaning of `Cauchy` in `summability`, term for term: one meaning where both are read)
     adj phrase!"Cauchy" true (fun a => allR fun e => imp (lt (num 0) e) (exR fun n0 => allR fun m => allR fun n =>
-        imp (and (and (nat m) (le n0 m)) (and (nat n) (le n0 n))) (lt (abs (sub (app a m) (app a n))) e)))
+        imp (and (and (nat m) (nat n)) (and (le n0 m) (le n0 n))) (lt (abs (sub (app a m) (app a n))) e)))
       "`|a_m - a_n| < ε` for all large `m` and `n` (Mathlib `CauchySeq`)",
     adj phrase!"summable" true converges "`∑_{k=0}^∞ a_k` converges (Mathlib `Summable`, for absolute summability)",
     adj phrase!"absolutely summable" true (fun a => converges (absTerms a)) "`∑ |a_k|` converges (Mathlib `Summable`)",

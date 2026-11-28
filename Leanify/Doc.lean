@@ -3324,6 +3324,26 @@ def nounBinders (np : List Chunk) (outer : Scope) : M (List BindInfo) := do
       pure [← nounPhrase np outer]
   | none => pure [← nounPhrase np outer]
 
+/-- The name with a number below it whose letter is `v0` (`x_0`), where the formulas name the
+letter only so (one name, no other number below it, and the letter nowhere alone). -/
+def subNameFor (maths : List MT) (v0 : Codes) : Option Codes :=
+  let rec subOf : Nat → MT → List Codes
+    | 0, _ => []
+    | k + 1, m => (match m with
+      | .sub (.id b) (.num n) => if b == v0 then [b ++ [95] ++ (Nat.toDigits 10 n).map Char.toNat] else []
+      | _ => []) ++ (match m with
+        | .sub (.id _) (.num _) => []
+        | _ => (mtChildren m).flatMap (subOf k))
+  let rec bare : Nat → MT → Bool
+    | 0, _ => false
+    | k + 1, m => match m with
+      | .id b => b == v0
+      | .sub (.id _) (.num _) => false
+      | _ => (mtChildren m).any (bare k)
+  match (maths.flatMap (subOf 64)).eraseDups with
+  | [key] => if maths.any (bare 64) then none else some key
+  | _ => none
+
 /-- The ends of the intervals that the formulas of a noun phrase name (`[a,b]`, `(a,b]`; `(a,b)`
 as the domain of a signature or after `on`, `over`): the left end and the right end. -/
 def npIntervalEnds (np : List Chunk) : List (MT × MT) :=
@@ -3357,7 +3377,11 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
     let st0 ← get
     tryCatch (nounBinders np outer) fun e => do
       if e.code != E.undefined && e.code != E.free then throw e
-      let v := e.detail
+      let v0 := e.detail
+      -- (a letter with a number below it, `x_0` in `differentiable at $x_0$`, where the letter
+      -- alone is nowhere: the name with its number, one variable)
+      let subName := subNameFor (np.filterMap fun c => match c with | .m ts => Math.parseFormula ts | _ => none) v0
+      let v := subName.getD v0
       -- (a Latin or Greek letter: `with mean $\mu$ and variance $\sigma^2$`)
       let greek := [w!"alpha", w!"beta", w!"gamma", w!"delta", w!"epsilon", w!"varepsilon", w!"zeta", w!"eta", w!"theta",
         w!"kappa", w!"lambda", w!"mu", w!"nu", w!"xi", w!"rho", w!"sigma", w!"tau", w!"phi", w!"varphi", w!"chi", w!"psi", w!"omega"]
@@ -3367,7 +3391,7 @@ def nounBindersImplicitN (np : List Chunk) : Nat → Scope → M (List BindInfo)
         | .m ts => ts.contains (.id v) || (isGreek && (ts.contains (.cmd (v.drop 1)) || ts.contains (.id v)))
         | _ => false
       let varOfNoun := np.any fun c => match c with | .m [.id w] => w == v | _ => false
-      if !single || !inPhrase || (outer.any (·.1 == v)) then throw e
+      if subName.isNone && (!single || !inPhrase) || (outer.any (·.1 == v)) then throw e
       -- (not the prime of a `$p$-group`: a prime that the sentence binds, not any number)
       let pGroupLetter := (List.range np.length).any fun i => match (np[i]? : Option Chunk), (np[i + 1]? : Option Chunk), (np[i + 2]? : Option Chunk) with
         | some (.m [.id u]), some (.p 45), some (.w g) => u == v && [w!"group", w!"groups", w!"subgroup", w!"subgroups"].contains g
@@ -7124,7 +7148,24 @@ def supposeIn (c : SentCtx) (hyps : List Clause) (additive caseLike contra : Boo
       discard <| assumeIn c [b] []
     | none =>
       let h ← expandStmt c h
-      checkHyp c h
+      -- (in a result, a letter that nothing defines in a hypothesis, `Let
+      -- $f\colon\mathbb{R}\to\mathbb{R}$ be differentiable at $x_0$.`: a number, a variable of the
+      -- result, bound before the hypothesis)
+      let isResult := match c.ctx.kind with | .result _ => true | _ => false
+      let st1 ← get
+      match ← tryCatch (do checkHyp c h; pure none) (fun e => pure (some e)) with
+      | none => pure ()
+      | some e =>
+        let letter (ch : Nat) : Bool := (97 ≤ ch && ch ≤ 122) || (65 ≤ ch && ch ≤ 90)
+        let name := (subNameFor (clauseMaths h) e.detail).getD e.detail
+        let ok := match name with
+          | [ch] => letter ch
+          | ch :: 95 :: ds => letter ch && !ds.isEmpty && ds.all fun d => 48 ≤ d && d ≤ 57
+          | _ => false
+        if !isResult || contra || e.code != E.undefined || !ok then throw e
+        set st1
+        discard <| assumeIn c [.every [name] (.id w!"\\mathbb{R}")] []
+        checkHyp c h
       modify fun st => { st with
         envHyps := st.envHyps ++ [({ item, contra, heading := false, env := c.ctx.env, sent := c.idx, clause := h, group } : Hyp)],
         hypUsed := false }
