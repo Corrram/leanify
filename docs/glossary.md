@@ -943,6 +943,7 @@ except a notion whose meanings take arguments of different types, which the type
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
 | column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
 | row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
+| nullity of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
@@ -2371,6 +2372,7 @@ except a notion whose meanings take arguments of different types, which the type
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
 | column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
 | row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
+| nullity of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |
@@ -2790,6 +2792,7 @@ except a notion whose meanings take arguments of different types, which the type
 | rank of $a$ | $\mathrm{Mat}$ → ℝ | (Mathlib `Matrix.rank`) |
 | column rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the column space (Mathlib `Matrix.rank`) |
 | row rank of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`) |
+| nullity of $a$ | $\mathrm{Mat}$ → ℝ | the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`) |
 | transpose of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | `Aᵀ` |
 | inverse of $a$ | $\mathrm{Mat}$ → $\mathrm{Mat}$ | of an invertible matrix (Mathlib `Matrix.inv`) |
 | identity matrix of size $a$ | ℝ → $\mathrm{Mat}$ | `I_n` |

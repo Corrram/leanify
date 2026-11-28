@@ -19,7 +19,7 @@ is the `1 × 1` matrix: the product of such a matrix with another is the scalar 
   eigenvalues`, `$m\times n$`, `of size
   $m\times n$`, `of rank $r$`;
 * notions: the numbers of rows and columns, the entry in row `i` and column `j`, the
-  determinant, trace, rank, transpose and inverse, the identity and zero matrices, the
+  determinant, trace, rank, nullity, transpose and inverse, the identity and zero matrices, the
   characteristic polynomial (a real function, `t ↦ det(tI - A)`), the set of (real)
   eigenvalues, and the set of the `m × n` matrices.
 
@@ -72,6 +72,7 @@ def similar : Nat := 36
 def diagonalizable : Nat := 37
 def orthDiagonalizable : Nat := 38
 def eigenvector : Nat := 39
+def nullity : Nat := 40
 end Const
 open Const
 
@@ -105,7 +106,7 @@ def vocab : Vocab where
     M ⟶ .real, M ⟶ .real, M ⟶ .real, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real ⟶ .real ⟶ .real,
     M ⟶ .real ⟶ .real ⟶ .prop, .real ⟶ M, .real ⟶ .real ⟶ M, M ⟶ Ty.rfun, M ⟶ .real ⟶ .prop,
     M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ .prop,
-    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop]
+    M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .prop, M ⟶ .prop, M ⟶ M ⟶ .prop, M ⟶ .real]
   constNames := [w!"\\operatorname{rows}", w!"\\operatorname{cols}", w!"", w!"\\operatorname{Square}",
     w!"\\operatorname{SameSize}(#1,#2)", w!"\\operatorname{Mulable}(#1,#2)", w!"+", w!"-", w!"-", w!"\\cdot", w!"^",
     w!"#^{-1}", w!"#^{\\top}", w!"/", w!"\\det", w!"\\operatorname{tr}", w!"\\operatorname{rank}",
@@ -115,7 +116,7 @@ def vocab : Vocab where
     w!"\\operatorname{PosDef}", w!"\\operatorname{PosSemidef}", w!"\\operatorname{Diagonal}",
     w!"\\operatorname{UpperTriangular}", w!"\\operatorname{LowerTriangular}", w!"\\operatorname{Nilpotent}",
     w!"\\operatorname{Idempotent}", w!"\\operatorname{Stochastic}", w!"#2\\sim #1", w!"\\operatorname{Diagonalizable}",
-    w!"\\operatorname{OrthDiagonalizable}", w!"\\operatorname{Eigenvector}(#1,#2)"]
+    w!"\\operatorname{OrthDiagonalizable}", w!"\\operatorname{Eigenvector}(#1,#2)", w!"\\operatorname{nullity}"]
   constLean := [w!"Leanify.Matrices.rows", w!"Leanify.Matrices.cols", w!"Leanify.Matrices.ofReal",
     w!"Leanify.Matrices.Square", w!"Leanify.Matrices.SameSize", w!"Leanify.Matrices.Mulable",
     w!"Leanify.Matrices.add", w!"Leanify.Matrices.sub", w!"Leanify.Matrices.neg", w!"Leanify.Matrices.mul",
@@ -128,7 +129,7 @@ def vocab : Vocab where
     w!"Leanify.Matrices.PosSemidef", w!"Leanify.Matrices.Diagonal", w!"Leanify.Matrices.UpperTriangular",
     w!"Leanify.Matrices.LowerTriangular", w!"Leanify.Matrices.Nilpotent", w!"Leanify.Matrices.Idempotent",
     w!"Leanify.Matrices.Stochastic", w!"Leanify.Matrices.Similar", w!"Leanify.Matrices.Diagonalizable",
-    w!"Leanify.Matrices.OrthDiagonalizable", w!"Leanify.Matrices.Eigenvector"]
+    w!"Leanify.Matrices.OrthDiagonalizable", w!"Leanify.Matrices.Eigenvector", w!"Leanify.Matrices.nullity"]
   typeLean := [(w!"Leanify.Matrices.Mat", w!"Leanify.Matrices.Mat.empty")]
   modules := [w!"Leanify.Library.MatricesModel"]
   nouns := [
@@ -188,6 +189,8 @@ def vocab : Vocab where
     ofM phrase!"column rank of $v$" (.const rank) none (M ⟶ .real) "the dimension of the column space (Mathlib `Matrix.rank`)",
     ofM phrase!"row rank of $v$" (close <| lamT M (fun _ => tt) fun a => app (const rank) (app (const transpose) a)) none (M ⟶ .real)
       "the dimension of the row space: the rank of `Aᵀ` (Mathlib `Matrix.rank` of `Aᵀ`)",
+    ofM phrase!"nullity of $v$" (.const nullity) none (M ⟶ .real)
+      "the dimension of the null space `{x : Ax = 0}` (Mathlib `Module.finrank` of `LinearMap.ker`)",
     ofM phrase!"transpose of $v$" (.const transpose) none (M ⟶ M) "`Aᵀ`",
     ofM phrase!"inverse of $v$" (.const inverse) (some (.const invertible)) (M ⟶ M)
       "of an invertible matrix (Mathlib `Matrix.inv`)",

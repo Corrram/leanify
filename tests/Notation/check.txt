@@ -123,7 +123,12 @@ tests/Notation/article.tex:202:1: info: defines v_{\cdot} (v)
 tests/Notation/article.tex:202:1: info: v_{\cdot} is well defined if: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ 0\le x\land x\le 1)
 tests/Notation/article.tex:203:1: info: claim 67: \forall x\in \mathbb{R},\ 0\le x\land x\le 1\Rightarrow v_{x}(0,0)=0
 tests/Notation/article.tex:207:1: info: claim 68: {2}^{2}+1=5
-tests/Notation/article.tex: 19 definitions, 69 claims
+tests/Notation/article.tex:210:1: info: claim 69: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \lvert \lvert x\rvert-\lvert y\rvert\rvert\le \lvert x-y\rvert
+tests/Notation/article.tex:210:1: info: claim 70: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \lvert \lvert x\rvert-\lvert y\rvert\rvert\le \lvert x\rvert+\lvert y\rvert
+tests/Notation/article.tex:210:90: info: claim 71: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow x<\frac{x+y}{2}\land \frac{x+y}{2}<y
+tests/Notation/article.tex:210:90: info: claim 71 is meaningful if: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ x<y\Rightarrow \neg (2=0)\land (x<\frac{x+y}{2}\Rightarrow \neg (2=0))
+tests/Notation/article.tex:210:156: info: claim 72: \forall x\in \mathbb{R},\ \forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ x<y\land y<z\Rightarrow x<z
+tests/Notation/article.tex: 19 definitions, 73 claims
   text: 12 compiled, 0 failed, 10 prose (of 22)
-  results: 57 compiled, 0 failed, 0 prose (of 57)
-  all: 69 compiled, 0 failed, 10 prose (of 79)
+  results: 60 compiled, 0 failed, 0 prose (of 60)
+  all: 72 compiled, 0 failed, 10 prose (of 82)

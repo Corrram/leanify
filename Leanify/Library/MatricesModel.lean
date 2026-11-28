@@ -69,6 +69,8 @@ def div (A B : Mat) : Mat := mul A (inverse B)
 def det (A : Mat) : ℝ := (sq A).det
 def trace (A : Mat) : ℝ := (sq A).trace
 def rank (A : Mat) : ℝ := A.2.2.rank
+/-- The dimension of the null space `{x : Ax = 0}` of `A`. -/
+def nullity (A : Mat) : ℝ := (Module.finrank ℝ (LinearMap.ker A.2.2.mulVecLin) : ℝ)
 
 def Invertible (A : Mat) : Prop := Square A ∧ (sq A).det ≠ 0
 /-- `A / B` is defined: `B` is invertible and `A B⁻¹` is defined. -/

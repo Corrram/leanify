@@ -1163,6 +1163,8 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
             | .m [b] :: .p 44 :: .w w :: .m [c] :: r => if w == w!"and" then some ((acc ++ [[b], [c]]), r) else none
             | .m [b] :: .w w :: .m [c] :: r => if w == w!"and" then some ((acc ++ [[b], [c]]), r) else none
             | .m [b] :: .p 44 :: r => names f r (acc ++ [[b]])
+            -- (`all real numbers $a$, $b$ with $a<b$`: the last name before a condition)
+            | .m [b] :: r@(.w w :: _) => if w == w!"with" || w == w!"such" then some (acc ++ [[b]], r) else none
             | _ => none
         let isName (t : MTok) : Bool := match t with | .id _ => true | .cmd c => Math.greekNames.contains c | _ => false
         let plural := match ws.getLast? with
@@ -1197,6 +1199,11 @@ def everyOne (r : List Chunk) : Option (Bind × List Chunk) :=
         some (vars, [Bind.ifCond c], r')
       | _, _ => none
     let together : List Bind ← if ps.isEmpty then some [] else (collectiveCond ps vars).map ([.ifCond ·])
+    -- (a condition on all of them after the names, `with $a<b$`)
+    let (conds, r'') : List Bind × List Chunk := if !conds.isEmpty || vars.length < 2 then (conds, r'') else
+      match withConds r'' with
+      | some (c, r3) => ([Bind.ifCond c], r3)
+      | none => (conds, r'')
     some (Bind.many (vars.map (fun v => Bind.noun (ws ++ [.m v])) ++ together ++ conds), r'')) <|>
   (do
     -- `every sequence $x$ in $[0,1]$`, `every probability measure $\gamma$ on $[0,1]^2$`: a

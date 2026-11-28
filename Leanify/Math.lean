@@ -594,7 +594,7 @@ def run : Nat → Mode → List MTok → R
         | .conj as => run f (.postfix bar (.app x as)) rest'
         | _ => none
     | _ => some (x, ts)
-  | f + 1, .atom bar, ts =>
+  | f + 1, .atom _, ts =>
     match ts with
     | .digit d :: rest => run f (.number d) rest
     | .id n :: rest =>
@@ -665,8 +665,8 @@ def run : Nat → Mode → List MTok → R
       | .sym 93 :: r4 => some (.interval a b, r4)
       | .sym 41 :: r4 => some (.ival a b false true, r4)
       | _ => none
-    | .sym 124 :: rest =>
-      if bar then none else do
+    -- `|x|`; inside bars, a bar where an operand begins opens another (`||x|-|y||`)
+    | .sym 124 :: rest => do
         let (x, r1) ← run f (.additive true) rest
         let r2 ← expect (.sym 124) r1
         some (.abs x, r2)
