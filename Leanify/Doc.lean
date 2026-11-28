@@ -4828,6 +4828,74 @@ def denotedBy (name : List Chunk) (sym : MT) : M (List Nat × List Nat) := do
     pure ([i], [])
   | none => fail E.noun (((wordsOf name).intersperse [32]).flatten)
 
+/-- Is a function or a family that a sentence of this context defines local to its
+environment? One defined inside a result or a proof is; one defined in the running text
+or in a definition environment (`\begin{definition}`) is a symbol of the article. -/
+def localDef (c : SentCtx) : Bool := match c.ctx.kind with
+  | .text => false
+  | .result n => n != w!"definition"
+  | _ => true
+
+/-- The definition `g` with the arguments `all` and the right-hand side `rhs`, which may
+use the symbol that it defines: `a_n\coloneqq 2a_{n-1}+1`. Such a recursive definition
+describes its function: the one function `F` with `F(x) = e(F, x)` at every point `x`
+of the domain (and, so that there is one, `0` elsewhere, where the symbol is never
+read). That exactly one such function exists is the definedness of the definition; its
+right-hand side is read as it stands, so `a_{n-1}` asks that `n-1` lies in the domain.
+
+The values that a sequence was given before (`Let $a_0\coloneqq 1$`) belong to it: its
+domain is then the stated one together with these indices. -/
+def recDef (g : Glob) (all : List BindInfo) (rhs : MT) : M (Nat × Ty) := do
+  let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
+  let lams := fun (bs : List BindInfo) (v : Tm) =>
+    bs.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
+  let st ← get
+  match ← tryCatch (Sum.inl <$> term F sc none rhs) (fun e => pure (Sum.inr e)) with
+  | .inl (v, vty) =>
+    let i ← addGlob { g with ty := all.foldr (fun b t => Ty.fn b.ty t) vty, doms := all.map (·.pred) } (lams all v)
+    pure (i, vty)
+  | .inr e =>
+    let own := e.code == E.undefined && e.detail == g.key && !g.key.isEmpty
+    if !own || all.isEmpty then throw e
+    if all.any (·.ty != .real) then
+      fail E.finding (w!"the definition of " ++ g.key ++ w!" uses " ++ g.key ++ w!" itself: a recursive definition has numbers as its arguments")
+    set st
+    let n := all.length
+    -- the values given before: `a_0`, `a_1`
+    let bases : List (Nat × Nat) :=
+      if n != 1 || !g.family then [] else
+      st.globs.zipIdx.filterMap fun (o, j) =>
+        let ds := o.key.drop (g.key.length + 1)
+        if visibleIn st j && !o.family && o.ty == .real && (st.implicits.lookup j).isNone &&
+            o.key.take (g.key.length + 1) == g.key ++ [95] && !ds.isEmpty && ds.all (fun c => 48 ≤ c && c ≤ 57) then
+          some (ds.foldl (fun a c => a * 10 + (c - 48)) 0, j)
+        else none
+    let all' : List BindInfo := match all, bases with
+      | [b], _ :: _ =>
+        match b.pred with
+        | some p => [{ b with pred := some (.lam .real .tt
+            (bases.foldr (fun (k, _) t => Tm.or (.eq (.loc 0) (.num k)) t) (.app (Tm.shift 1 0 p) (.loc 0)))) }]
+        | none => all
+      | _, _ => all
+    let ty := all.foldr (fun b t => Ty.fn b.ty t) Ty.real
+    let i ← addGlob { g with ty, doms := all'.map (·.pred) } (lams all' (.undef .real))
+    let (v, vty) ← tryCatch (term F sc none rhs) fun e' => do set st; throw e'
+    if vty != .real then
+      fail E.finding (w!"the definition of " ++ g.key ++ w!" uses " ++ g.key ++ w!" itself: a recursive definition has numbers as its values")
+    let fapp := (List.range n).foldl (fun f k => Tm.app f (.loc (n - 1 - k))) (Tm.loc n)
+    let dom := fun (bs : List BindInfo) => bs.zipIdx.foldr
+      (fun (b, k) t => Tm.mkAnd (Tm.shift (n - 1 - k) 0 (holdsAt b.pred (.loc 0))) t) Tm.tt
+    let d := dom all
+    let d' := dom all'
+    let step := if d == .tt then Tm.eq fapp (Tm.abstractGlob i n v) else Tm.imp d (.eq fapp (Tm.abstractGlob i n v))
+    let parts := bases.map (fun (k, j) => Tm.imp (.eq (.loc 0) (.num k)) (.eq fapp (.glob j))) ++ [step] ++
+      (if d' == .tt then [] else [Tm.imp (.not d') (.eq fapp (.num 0))])
+    let inner := parts.foldr Tm.mkAnd Tm.tt
+    let body := all.foldr (fun b t => Tm.all b.ty t) inner
+    let value := lams all' ((List.range n).foldl (fun f k => Tm.app f (.loc (n - 1 - k))) (Tm.the ty body))
+    modify fun st => { st with values := st.values.set i value }
+    pure (i, .real)
+
 /-- `For B, set $X_p\coloneqq e [\in D]$` or `$f(p)\coloneqq e$`. -/
 def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat) := do
   match m with
@@ -4843,8 +4911,7 @@ def setDefSimple (c : SentCtx) (b : BindInfo) (m : MT) : M (List Nat × List Nat
         | _, _ => fail E.unsupported
       | _ => fail E.unsupported
     let sc : Scope := [(b.name, b.ty)]
-    let (v, vty) ← term F sc none rhs
-    let i ← addGlob ⟨key, .fn b.ty vty, [b.pred], family, 1⟩ (.lam b.ty (holdsAt b.pred (.loc 0)) v)
+    let (i, vty) ← recDef ⟨key, .fn b.ty .real, [b.pred], family, 1⟩ [b] rhs
     let x : Tm × Ty := (.guard (holdsAt b.pred (.loc 0)) (.app (.glob i) (.loc 0)), vty)
     let ps ← more.mapM fun (r, y) => do
       if r == .mem then Elab.term.member F sc x y
@@ -4977,9 +5044,7 @@ def inlineDef (c : SentCtx) (bs : List BindInfo) (m : MT) : M Nat := do
     let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
     if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
     if !all.isEmpty then modify fun st => { st with telescopes := st.telescopes ++ [(i, all)] }
-    match c.ctx.kind with
-    | .text => pure ()
-    | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
+    if localDef c then modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
     pure i
   | _ => fail E.unsupported
 
@@ -5071,11 +5136,7 @@ def multiDefs (bs0 : List BindInfo) (defs : List MT) (labels : List Codes) (imp 
       if names != bs.map (·.name) then
         fail E.finding (w!"the subscripts of the family " ++ k ++ w!" are the variables of the binder before it, all of them and in its order (For $r\\in[0,1]$ and $g\\in[-r,r]$, set $C_{r,g}\\coloneqq …$)")
       let all := imp ++ bs
-      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
-      let (v, vty) ← term F sc none rhs
-      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
-      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
-      let i ← addGlob { key := k, ty, doms := all.map (·.pred), family := true, indices := names.length } value
+      let (i, _) ← recDef { key := k, ty := .real, doms := [], family := true, indices := names.length } all rhs
       if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
       ds := ds ++ [i]
     -- `For $s\in[0,1]$ and $u,v\in[0,1]$, set $S_s(u,v)\coloneqq e$`: a family, indexed by
@@ -5087,11 +5148,7 @@ def multiDefs (bs0 : List BindInfo) (defs : List MT) (labels : List Codes) (imp 
           let names ← args.mapM fun a => match a with | .id n => pure n | _ => fail E.unsupported
           if names != (bs.drop 1).map (·.name) then fail E.unsupported
           let all := imp ++ bs
-          let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
-          let (v, vty) ← term F sc none rhs
-          let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
-          let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
-          let i ← addGlob ⟨k, ty, all.map (·.pred), true, 1⟩ value
+          let (i, _) ← recDef ⟨k, .real, [], true, 1⟩ all rhs
           if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
           ds := ds ++ [i]
           continue
@@ -5099,11 +5156,7 @@ def multiDefs (bs0 : List BindInfo) (defs : List MT) (labels : List Codes) (imp 
       if names != bs.map (·.name) then fail E.unsupported
       let some key := Elab.symKey h | fail E.unsupported
       let all := imp ++ bs
-      let sc : Scope := (all.map fun b => (b.name, b.ty)).reverse
-      let (v, vty) ← term F sc none rhs
-      let value := all.foldr (fun b t => Tm.lam b.ty (holdsAt b.pred (.loc 0)) t) v
-      let ty := all.foldr (fun b t => Ty.fn b.ty t) vty
-      let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
+      let (i, _) ← recDef ⟨key, .real, [], false, 1⟩ all rhs
       if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
       modify fun st => { st with params := st.params ++ [(i, names)] }
       ds := ds ++ [i]
@@ -7519,9 +7572,7 @@ def descDef (c : SentCtx) (bs : List BindInfo) (lhs : MT) (kind : DescKind) (np 
   let ty := all.foldr (fun b acc => Ty.fn b.ty acc) Ty.real
   let i ← addGlob ⟨key, ty, all.map (·.pred), false, 1⟩ value
   if !imp.isEmpty then modify fun st => { st with implicits := st.implicits ++ [(i, imp.map (·.name))] }
-  match c.ctx.kind with
-  | .text => pure ()
-  | _ => modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
+  if localDef c then modify fun st => { st with locals := st.locals ++ [(i, c.ctx.env)] }
   pure ([i], [])
 
 /-- `Let B, …, and let DEFS.`: variables of the rest of the result or proof (of the section,
@@ -7763,8 +7814,8 @@ def sentence (c : SentCtx) (s : Sent) : M (List Nat × List Nat) := do
         | _ :: _ :: _ => multiDefs bis defs labels imp
         | [] => fail E.finding w!"`On $D$, put …`: a definition under `On $D$` is a function of a variable of $D$; name it (For $x\\in D$, set $f(x)\\coloneqq …$)"
       -- a function or a family defined inside a result or a proof is local to it, like a
-      -- constant defined there
-      if c.ctx.kind != .text then
+      -- constant defined there (`localDef`: not in a definition environment)
+      if localDef c then
         modify fun st => { st with locals := st.locals ++
           (res.1.filter fun i => (st.locals.lookup i).isNone).map fun i => (i, c.ctx.env) }
       -- in the statement of a result, the parameter of a family it defines stays bound in

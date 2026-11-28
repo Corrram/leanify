@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{leanify}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\begin{document}
+
+\section{A sequence with a first value}
+
+Let $a_0\coloneqq 1$. For every integer $n\ge1$, set $a_n\coloneqq 2a_{n-1}+1$.
+
+\begin{lemma}\label{mersenne}
+We have $a_1=3$ and $a_2=7$. For every $n\in\mathbb{N}$ we have $a_n=2^{n+1}-1$.
+\end{lemma}
+
+\section{A sequence defined by cases}
+
+For $n\in\mathbb{N}$, set
+\[ b_n\coloneqq\begin{cases}1&\text{if }n=0,\\ n\,b_{n-1}&\text{otherwise.}\end{cases}\]
+
+\begin{lemma}\label{factorial}
+For every $n\in\mathbb{N}$ we have $b_n=n!$.
+\end{lemma}
+
+\section{A function}
+
+For $n\in\mathbb{N}$, set
+\[ f(n)\coloneqq\begin{cases}0&\text{if }n=0,\\ f(n-1)+2n-1&\text{otherwise.}\end{cases}\]
+
+\begin{lemma}\label{squares}
+For every $n\in\mathbb{N}$ we have $f(n)=n^2$.
+\end{lemma}
+
+\section{A family with two indices}
+
+\begin{definition}\label{coins}
+For $n\in\mathbb{N}$ and $p\in(0,1)$, define
+\[ w_{n,p}\coloneqq\begin{cases}1&\text{if }n=0,\\ p^n+\sum_{j=1}^{n-1}\binom{n}{j}p^{n-j}(1-p)^{j}\max_{j\le m\le n-1}w_{m,p}&\text{otherwise.}\end{cases}\]
+\end{definition}
+
+\begin{lemma}\label{first}
+For every $p\in(0,1)$ we have $w_{1,p}=p$ and $w_{2,p}=p^2+2p^2(1-p)$.
+\end{lemma}
+
+\begin{lemma}\label{bounded}
+For every $n\in\mathbb{N}$ and $p\in(0,1)$ we have $0<w_{n,p}\le1$.
+\end{lemma}
+
+\end{document}

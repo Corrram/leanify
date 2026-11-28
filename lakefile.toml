@@ -741,6 +741,12 @@ srcDir = "tests"
 globs = ["Pairs.+"]
 
 [[lean_lib]]
+# Recursive definitions of sequences, functions and families.
+name = "Recursion"
+srcDir = "tests"
+globs = ["Recursion.+"]
+
+[[lean_lib]]
 # The field populationdynamics: population models.
 name = "PopulationDynamics"
 srcDir = "tests"

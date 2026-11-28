@@ -6435,7 +6435,8 @@ where
         | none =>
         -- For B, set $X\coloneqq e$ and let $S$ be NP[, where …].
         match kw [w!"set"] r1 <|> kw [w!"write"] r1 <|> kw [w!"put"] r1 <|> kw [w!"we", w!"set"] r1 <|>
-            kw [w!"we", w!"put"] r1 <|> kw [w!"we", w!"write"] r1 with
+            kw [w!"we", w!"put"] r1 <|> kw [w!"we", w!"write"] r1 <|> kw [w!"define"] r1 <|>
+            kw [w!"we", w!"define"] r1 with
         | some r2 =>
           -- `we write $C^\top(u,v)\coloneqq C(v,u)$ for the transpose of $C$`: the name is
           -- not read

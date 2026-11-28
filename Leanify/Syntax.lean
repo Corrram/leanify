@@ -291,6 +291,35 @@ def subst (s : Tm) : Nat → Tm → Tm
   | j, .the t b => .the t (subst s (j + 1) b)
   | _, t => t
 
+/-- Replace the article definition `glob i` by the local that is `loc j` outside the
+binders of the term (the right-hand side of a recursive definition, as a condition on
+the function that it defines). -/
+def abstractGlob (i : Nat) : Nat → Tm → Tm
+  | j, .glob k => if k == i then .loc j else .glob k
+  | j, .app f x => .app (abstractGlob i j f) (abstractGlob i j x)
+  | j, .lam t d b => .lam t (abstractGlob i (j + 1) d) (abstractGlob i (j + 1) b)
+  | j, .add x y => .add (abstractGlob i j x) (abstractGlob i j y)
+  | j, .sub x y => .sub (abstractGlob i j x) (abstractGlob i j y)
+  | j, .mul x y => .mul (abstractGlob i j x) (abstractGlob i j y)
+  | j, .div x y => .div (abstractGlob i j x) (abstractGlob i j y)
+  | j, .neg x => .neg (abstractGlob i j x)
+  | j, .abs x => .abs (abstractGlob i j x)
+  | j, .powNat x n => .powNat (abstractGlob i j x) n
+  | j, .cases p v r => .cases (abstractGlob i j p) (abstractGlob i j v) (abstractGlob i j r)
+  | j, .eq x y => .eq (abstractGlob i j x) (abstractGlob i j y)
+  | j, .lt x y => .lt (abstractGlob i j x) (abstractGlob i j y)
+  | j, .le x y => .le (abstractGlob i j x) (abstractGlob i j y)
+  | j, .not p => .not (abstractGlob i j p)
+  | j, .and p q => .and (abstractGlob i j p) (abstractGlob i j q)
+  | j, .or p q => .or (abstractGlob i j p) (abstractGlob i j q)
+  | j, .imp p q => .imp (abstractGlob i j p) (abstractGlob i j q)
+  | j, .iff p q => .iff (abstractGlob i j p) (abstractGlob i j q)
+  | j, .all t b => .all t (abstractGlob i (j + 1) b)
+  | j, .ex t b => .ex t (abstractGlob i (j + 1) b)
+  | j, .guard p e => .guard (abstractGlob i j p) (abstractGlob i j e)
+  | j, .the t b => .the t (abstractGlob i (j + 1) b)
+  | _, t => t
+
 /-- Shift vocabulary constant indices by `k` (for appending vocabularies). -/
 def shiftConst (k : Nat) : Tm → Tm
   | .const i => .const (i + k)
