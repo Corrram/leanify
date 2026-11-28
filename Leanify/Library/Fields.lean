@@ -317,7 +317,9 @@ branches of mathematics, and inside them are areas (`probability`, `linearalgebr
 may be in several (`realsets` is in `analysis` and in `topology`). A bundle has no words of
 its own: the article is read with its fields, in this order, exactly as if it had named
 them. The fields of a bundle read no phrase in two ways, except a notion whose meanings take
-arguments of different types (`resolvedByType`), where the type of the argument decides
+arguments of different types (`resolvedByType`), where the type of the argument decides, a
+modifier whose variables have different types, and a noun whose meanings have different
+complements or, one of them, none (`collisions`), where the formula or the complement decides
 (`lake exe glossary --bundles` checks this, and `scripts/ci.sh` reads the test article of
 every member with the bundle and compares). `docs/libraries.md` draws the tree. -/
 def bundles : List (String × List String) := [
@@ -376,15 +378,28 @@ def collisions (V : Vocab) : List (Phrase × List Codes) :=
   let ns := V.notions.filterMap fun n =>
     let same := V.notions.filter (·.name == n.name)
     if same.any fun m => m.ty != n.ty || m.value != n.value then some (n.name, fields (·.field) same) else none
+  -- (the types of the variables of a modifier: of the leading arguments of its predicate)
+  let rec lamTys : Nat → Tm → List Ty
+    | k + 1, .lam t _ b => t :: lamTys k b
+    | _, _ => []
+  let slotsOf (p : Phrase) : Nat :=
+    p.foldl (fun k i => match i with | .v => k + 1 | .f segs => k + segs.length - 1 | _ => k) 0
   let ms := V.mods.filterMap fun n =>
     let same := V.mods.filter fun m => m.phrase == n.phrase && m.ty == n.ty && m.prenominal == n.prenominal
-    if same.any (·.pred != n.pred) then some (n.phrase, fields (·.field) same) else none
+    -- (modifiers told apart by the types of their variables, `dense in $v$` of a set and of a
+    -- topology, are not: the formula says which is meant)
+    let preds := (same.map (·.pred)).eraseDups
+    let byVars := slotsOf n.phrase > 0 &&
+      (preds.map fun p => lamTys (slotsOf n.phrase) p).eraseDups.length == preds.length
+    if !byVars && same.any (·.pred != n.pred) then some (n.phrase, fields (·.field) same) else none
   let nouns := V.nouns.filterMap fun n =>
     let same := V.nouns.filter (·.sing == n.sing)
     -- (nouns told apart by the types of their complements, `subset of $A$`, are not)
     let meanings : List (Ty × Tm × Option (List Codes × Ty × Tm)) := (same.map fun m => (m.ty, m.pred, m.arg)).eraseDups
+    -- (nor a noun with a complement beside the noun without one, `vector space over $K$`
+    -- and `vector space`, `vector in $V$` and `vector`: the complement says which is meant)
     let argTys : List (Option Ty) := meanings.map fun m => m.2.2.map (·.2.1)
-    let byArg := argTys.all (·.isSome) && argTys.eraseDups.length == meanings.length
+    let byArg := argTys.eraseDups.length == meanings.length
     -- (nouns of maps of different types: a signature says which, `a bijection $f\colon G\to H$`)
     let bySig := meanings.all (fun m => match m.1 with
         | .fn _ _ => true
