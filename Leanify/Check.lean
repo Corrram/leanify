@@ -467,8 +467,10 @@ commands of its formulas other than Greek letters, the commands the grammar read
 and the symbols the article defines. -/
 def unknownNotation (d : Doc) (toks : List PTok) : List String :=
   let keys := d.globs.map fun g => Codes.toString g.key
+  -- (a relation with a note above it that is read, `\stackrel{d}{=}`, is not unknown)
+  let toks := Notation.annotatedRel (toks.length + 1) toks
   let known (n : String) : Bool :=
-    greekNames.contains n || structuralCmds.contains n || parserCmds.contains n ||
+    n == "leanifyeqd" || greekNames.contains n || structuralCmds.contains n || parserCmds.contains n ||
       Math.wFunctions.any (fun w => Codes.toString w == n) || keys.any fun k =>
       let c := "\\" ++ n
       k == c || (k.startsWith c && !((k.toList.drop c.length).head?.any Char.isAlpha))
