@@ -928,3 +928,5 @@ example : ((Leanify.Matrices.Mat) → ((Leanify.RandomVectors.RVec) → Prop)) :
 example : ((Leanify.RandomVectors.RVec) → ((Leanify.Vectors.Vec) → (Complex))) := Leanify.RandomVectors.charFun
 example : ((Leanify.RandomVectors.RVec) → ((Leanify.Vectors.Vec) → ℝ)) := Leanify.RandomVectors.cdf
 example : ((Leanify.RandomVectors.RVec) → (((Leanify.Vectors.Vec) → ℝ) → Prop)) := Leanify.RandomVectors.HasCdf
+example : ((Leanify.RandomVectors.RVec) → (Leanify.Vectors.Vec)) := Leanify.RandomVectors.mean
+example : ((Leanify.RandomVectors.RVec) → (Leanify.Matrices.Mat)) := Leanify.RandomVectors.cov

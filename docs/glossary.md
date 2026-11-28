@@ -4333,9 +4333,10 @@ except a notion whose meanings take arguments of different types, which the type
 | dimension of $a$ | $\mathrm{RVec}$ → ℝ | `d`, for a random vector with values in `ℝᵈ` |
 | characteristic function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → $\mathbb{C}$ | `t ↦ E[e^{i⟨t,X⟩}]`, on the vectors of the dimension of `X` (Mathlib `charFun`) |
 | joint distribution function of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ → ℝ | `t ↦ P(X ≤ t)`, coordinatewise, on the vectors of the dimension of `X` |
-| mean vector of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
-| expectation of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
-| expected value of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | the vector of the expectations of the coordinates, of an integrable random vector |
+| mean vector of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | `\mathbb{E}[X]`: the vector of the expectations of the coordinates, of an integrable random vector |
+| expectation of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | `\mathbb{E}[X]`: the vector of the expectations of the coordinates, of an integrable random vector |
+| expected value of $a$ | $\mathrm{RVec}$ → $\mathrm{Vec}$ | `\mathbb{E}[X]`: the vector of the expectations of the coordinates, of an integrable random vector |
+| covariance matrix of $a$ | $\mathrm{RVec}$ → $\mathrm{Mat}$ | `\operatorname{Cov}(X)`: the matrix of the covariances of the coordinates, of a random vector with square-integrable coordinates |
 | mean of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
 | expectation of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
 | expected value of the $a$ th coordinate of $b$ | ℝ → $\mathrm{RVec}$ → ℝ | `E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate |
@@ -4397,6 +4398,8 @@ except a notion whose meanings take arguments of different types, which the type
 | $\operatorname{@indep}$ | $\mathrm{RVec}$ | `independent`, of two random vectors: the joint distribution function of the coordinates of both is the product of theirs |
 | $\operatorname{@of}$ | $\mathrm{RVec}$ | a vector `b` as the constant random vector (`X + b`) |
 | $\operatorname{@act}$ | $\mathrm{RVec}$ | `AX`, for a matrix `A` with as many columns as `X` has coordinates: `ω ↦ A X(ω)` |
+| $\operatorname{@expect}$ | $\mathrm{RVec}$ | `\mathbb{E}[X]`, `\mathbb{E}X`: the mean vector, of an integrable random vector |
+| $\operatorname{@cov}$ | $\mathrm{RVec}$ | `\operatorname{Cov}(X)`: the covariance matrix, of a random vector with square-integrable coordinates |
 | $\operatorname{@sim}$ | $\mathrm{RVec}$ | `X\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X` |
 
 ## `linearsystems`

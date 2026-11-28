@@ -83,6 +83,20 @@ def charFun (X : RVec) (t : Leanify.Vectors.Vec) : ℂ :=
     (MeasureTheory.Measure.restrict (MeasureTheory.volume : MeasureTheory.Measure ℝ) (Set.Icc (0 : ℝ) 1))
     (fun ω : ℝ => Complex.exp (Complex.I * ((Leanify.Vectors.inner (X ω) t : ℝ) : ℂ)))
 
+/-- The expectation of a real function of the outcome. -/
+def expect (f : ℝ → ℝ) : ℝ :=
+  MeasureTheory.integral
+    (MeasureTheory.Measure.restrict (MeasureTheory.volume : MeasureTheory.Measure ℝ) (Set.Icc (0 : ℝ) 1)) f
+
+/-- The mean vector: the expectations of the coordinates. -/
+def mean (X : RVec) : Leanify.Vectors.Vec :=
+  Leanify.Vectors.mk (size X) fun i => expect (coordAt X i)
+
+/-- The covariance matrix: the covariances of the coordinates. -/
+def cov (X : RVec) : Leanify.Matrices.Mat :=
+  Leanify.Matrices.mk (size X) (size X) fun i j =>
+    expect (fun ω => (coordAt X i ω - expect (coordAt X i)) * (coordAt X j ω - expect (coordAt X j)))
+
 /-- The same distribution: the same dimension and the same joint distribution function. -/
 def EqDist (X Y : RVec) : Prop :=
   size X = size Y ∧ ∀ t : Leanify.Vectors.Vec, cdf X t = cdf Y t

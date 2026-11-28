@@ -87,6 +87,16 @@ Let $X$ and $Y$ be $d$-dimensional random vectors and let $F$ be the joint distr
 Let $X$ be an integrable $d$-dimensional random vector and let $b$ be a vector in $\mathbb{R}^d$. Let $\mu$ be the mean vector of $X$. Then the mean vector of $X+b$ is $\mu+b$.
 \end{lemma}
 
+\section{Mean vectors and covariance matrices}
+
+\begin{lemma}\label{affine-mean}
+Let $X$ be an integrable $d$-dimensional random vector, let $A$ be an $n\times d$ matrix and let $b$ be a vector in $\mathbb{R}^n$. Then $\mathbb{E}[AX+b]=A\,\mathbb{E}[X]+b$ and $\mathbb{E}(X-\mathbb{E}X)=0$.
+\end{lemma}
+
+\begin{lemma}\label{covariance}
+Let $X$ be a $d$-dimensional random vector and let $m$ be a vector in $\mathbb{R}^d$. Then $\operatorname{Cov}(X+m)=\operatorname{Cov}(X)$ and $\operatorname{Cov}(X)$ is positive semidefinite. Moreover, the mean vector of $X$ is $\mathbb{E}[X]$.
+\end{lemma}
+
 \section{Notes above a relation}
 
 \begin{lemma}\label{notes}

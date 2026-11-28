@@ -325,7 +325,8 @@ Further fields cover other branches of mathematics:
 * `randomvectors` (loads `vectors`, `matrices`, `complex` and `linearsystems`, and shares their types with
   the other fields that have them): random vectors on one probability space, with values in
   `ℝᵈ`: their sums and multiples, `$X+b$` for a vector and `$AX$` for a matrix, equality in
-  distribution (`$X\stackrel{d}{=}Y$`), `$X\sim F$` for a distribution function,
+  distribution (`$X\stackrel{d}{=}Y$`), `$X\sim F$` for a distribution function, the mean
+  vector `$\mathbb{E}[X]$` and the covariance matrix `$\operatorname{Cov}(X)$`,
   independence, integrability, the characteristic function (`For a random vector $X$, let
   $\varphi_X$ denote the characteristic function of $X$.`), the joint distribution function and
   the mean vector;

@@ -1608,9 +1608,20 @@ def opTerm (T : Scope → PF → MT → M (Tm × Ty)) : Nat → Scope → PF →
     if let .mul (.sup x (.id tp)) y := m then
       if [w!"T", w!"\\top", w!"\\intercal", w!"\\mathsf{T}", w!"\\mathrm{T}", w!"\\mathsf T"].contains tp then
         if let some r ← own? [x, y] w!"@inner" then return some r
+    -- (`\mathbb{E}X` without brackets)
+    if let .mul (.id n) x := m then
+      if [w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}"].contains n && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then
+        if let some r ← own? [x] w!"@expect" then return some r
     match m with
     | .app (.id n) [x] =>
       if n == w!"@norm" then if let some r ← own? [x] w!"@norm" then return some r
+      -- `\mathbb{E}[X]`, `\operatorname{Cov}(X)` of an element of a type that has them as methods
+      -- (a random vector: its mean vector and its covariance matrix)
+      if (lookupLocal sc n).isNone && (← lookupGlob n).isNone then
+        if [w!"E", w!"\\mathbb{E}", w!"\\operatorname{E}", w!"\\mathrm{E}", w!"@expect", w!"@rexp"].contains n then
+          if let some r ← own? [x] w!"@expect" then return some r
+        if [w!"Cov", w!"cov", w!"\\operatorname{Cov}", w!"\\mathrm{Cov}"].contains n then
+          if let some r ← own? [x] w!"@cov" then return some r
       -- `\angle A` of a vertex of a triangle: the angle of the triangle there
       if let .id v := x then
         if n == w!"\\angle" && (lookupLocal sc n).isNone && (← lookupGlob n).isNone then

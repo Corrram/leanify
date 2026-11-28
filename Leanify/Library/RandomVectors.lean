@@ -19,6 +19,7 @@ article writes
   `law` above `=`): the random vectors have the same distribution, that is, the same
   dimension and the same joint distribution function;
 * `X\sim F` for a function `F` of vectors: `F` is the joint distribution function of `X`;
+* `\mathbb{E}[X]` for the mean vector and `\operatorname{Cov}(X)` for the covariance matrix;
 * nouns: `random vector`;
 * adjectives: `$d$-dimensional`, `in $\mathbb{R}^d$`, `of dimension $d$`, `integrable`
   (every coordinate is), `independent of $Y$` (the joint distribution function of the
@@ -86,14 +87,15 @@ def own (o : Offs) : Vocab :=
     (M ⟶ RV ⟶ .prop, w!"\\operatorname{Actable}(#1,#2)", w!"Leanify.RandomVectors.Actable"),   -- 14
     (RV ⟶ V ⟶ C, w!"\\varphi_{#1}(#2)", w!"Leanify.RandomVectors.charFun"),                    -- 15
     (RV ⟶ V ⟶ .real, w!"F_{#1}(#2)", w!"Leanify.RandomVectors.cdf"),                           -- 16
-    (RV ⟶ (V ⟶ .real) ⟶ .prop, w!"#1\\sim #2", w!"Leanify.RandomVectors.HasCdf")]              -- 17
+    (RV ⟶ (V ⟶ .real) ⟶ .prop, w!"#1\\sim #2", w!"Leanify.RandomVectors.HasCdf"),              -- 17
+    (RV ⟶ V, w!"\\mathbb{E}", w!"Leanify.RandomVectors.mean"),                                 -- 18
+    (RV ⟶ M, w!"\\operatorname{Cov}", w!"Leanify.RandomVectors.cov")]                          -- 19
   let c (k : Nat) : B := const (o.co + k)
   let dimOf (x : B) : B := app (c 2) x
   -- `X_i(ω)`: the `i`-th coordinate at the outcome `ω`
   let coord (x i w : B) : B := app (app2 (c 0) x i) w
   -- (constants of `vectors`: the dimension and the `i`-th coordinate of a vector)
   let vdim (t : B) : B := app (const (o.cv + 0)) t
-  let vcoord (i t : B) : B := app2 (const (o.cv + 10)) i t
   let coordInt (x i : B) : B := integ fun w => coord x i w
   let integrable (x : B) : B := allR fun i => imp (inRange i (dimOf x)) (coordInt x i)
   let mod (p : Phrase) (pre : Bool) (pred : Tm) (doc : String) : Modifier :=
@@ -107,12 +109,12 @@ def own (o : Offs) : Vocab :=
       doc := "`E[X_i]`, for `1 ≤ i ≤ d` and an integrable coordinate",
       value := close <| lamR fun i => lamT RV (fun x => and (inRange i (dimOf x)) (coordInt x i)) fun x =>
         expect fun w => coord x i w }
+  -- every coordinate is square-integrable
+  let squareIntegrable (x : B) : B :=
+    allR fun i => imp (inRange i (dimOf x)) (integ fun w => mul (coord x i w) (coord x i w))
   let mean (name : Phrase) : Notion :=
-    { name, ty := RV ⟶ V, doms := [dom1 RV integrable],
-      doc := "the vector of the expectations of the coordinates, of an integrable random vector",
-      value := close <| lamT RV integrable fun x =>
-        theT V fun m => and (eq (vdim m) (dimOf x))
-          (allR fun i => imp (inRange i (dimOf x)) (eq (vcoord i m) (expect fun w => coord x i w))) }
+    { name, ty := RV ⟶ V, doms := [dom1 RV integrable], value := close (c 18),
+      doc := "`\\mathbb{E}[X]`: the vector of the expectations of the coordinates, of an integrable random vector" }
   -- a function of the vectors of the dimension of the random vector
   let onVec (name : Phrase) (k : Nat) (cod : Ty) (doc : String) : Notion :=
     { name, ty := RV ⟶ V ⟶ cod, doc,
@@ -147,6 +149,8 @@ def own (o : Offs) : Vocab :=
       onVec phrase!"characteristic function of $v$" 15 C "`t ↦ E[e^{i⟨t,X⟩}]`, on the vectors of the dimension of `X` (Mathlib `charFun`)",
       onVec phrase!"joint distribution function of $v$" 16 .real "`t ↦ P(X ≤ t)`, coordinatewise, on the vectors of the dimension of `X`",
       mean phrase!"mean vector of $v$", mean phrase!"expectation of $v$", mean phrase!"expected value of $v$",
+      { name := phrase!"covariance matrix of $v$", ty := RV ⟶ M, doms := [dom1 RV squareIntegrable], value := close (c 19),
+        doc := "`\\operatorname{Cov}(X)`: the matrix of the covariances of the coordinates, of a random vector with square-integrable coordinates" },
       coordMean phrase!"mean of the $v$th coordinate of $v$", coordMean phrase!"expectation of the $v$th coordinate of $v$",
       coordMean phrase!"expected value of the $v$th coordinate of $v$"]
     methods := [
@@ -162,6 +166,10 @@ def own (o : Offs) : Vocab :=
       { ty := RV, op := .fn w!"@of", const := o.co + 12, doc := "a vector `b` as the constant random vector (`X + b`)" },
       { ty := RV, op := .fn w!"@act", const := o.co + 13, dom := some (close (c 14)),
         doc := "`AX`, for a matrix `A` with as many columns as `X` has coordinates: `ω ↦ A X(ω)`" },
+      { ty := RV, op := .fn w!"@expect", const := o.co + 18, dom := dom1 RV integrable,
+        doc := "`\\mathbb{E}[X]`, `\\mathbb{E}X`: the mean vector, of an integrable random vector" },
+      { ty := RV, op := .fn w!"@cov", const := o.co + 19, dom := dom1 RV squareIntegrable,
+        doc := "`\\operatorname{Cov}(X)`: the covariance matrix, of a random vector with square-integrable coordinates" },
       { ty := RV, op := .fn w!"@sim", const := o.co + 17,
         doc := "`X\\sim F`, for a function `F` of vectors: `F` is the joint distribution function of `X`" }] }
 
