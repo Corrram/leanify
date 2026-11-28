@@ -3437,6 +3437,17 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
           let nat := (v :: vs).all fun w => mtIndexedBy w 16 f
           some (v :: vs, MT.id (if nat then w!"\\mathbb{N}" else w!"\\mathbb{R}"))
         | _ => none
+      -- `$φ$ for some integer $k$`, `… for some $x\in A$`, `… for some integers $p$ and $q$ with
+      -- $q\ne0$`, `… for some $x$`: there is such an object, with `φ`
+      match (do
+          let r1 ← kw [w!"for", w!"some"] r
+          let (b, r2) ← everyBinders r1 <|> (do
+            let (ts, r2) ← mathChunk r1
+            let (vs, d) ← bare ts
+            some (Bind.every vs d, r2))
+          some (Clause.thereIs b (Clause.scoped f [] none none), r2)) with
+      | some res => some res
+      | none =>
       let (vars, dom, r1) := match kw [w!"for", w!"every"] r <|> kw [w!"for", w!"all"] r with
         | some r' => match mathChunk r' with
           | some (ts, r'') => match binderMath ts <|> bare ts with
@@ -3594,6 +3605,16 @@ def andClauses (cs : List Chunk) : Option (Clause × List Chunk) := do
 /-- `CLAUSE for every|all|each NP`: a trailing noun-phrase binder (a binder written as
 a formula, `for every $x\in A$`, belongs to the clause itself). -/
 def everyNPAfter (c : Clause) (r : List Chunk) : Clause × List Chunk :=
+  -- `CLAUSE for some NP`: `$n=2k+1$ for some integer $k$`, there is such an object, with the
+  -- clause
+  match (do
+      let r1 ← kw [w!"for", w!"some"] r
+      let .w _ :: _ := r1 | none
+      let (np, r2) ← untilClauseEnd 48 r1 []
+      if np.isEmpty || !(np.any fun ch => match ch with | .m _ => true | _ => false) then none
+      some (Clause.thereIs (.noun np) c, r2)) with
+  | some res => res
+  | none =>
   -- `CLAUSE for infinitely many NPs $q$`
   match (do
       let r1 ← kw [w!"for", w!"infinitely", w!"many"] r

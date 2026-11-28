@@ -939,10 +939,35 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
             | _ => none
         let modToks ← ahead 6 rest1
         some (body1 ++ modToks ++ rest1)
-      match spaceOf, sharedMod with
-      | some x, _ => t :: x :: standardForms f there cond (some x) (ts.drop 5)
-      | none, some ts' => t :: standardForms f there cond (some t) ts'
-      | none, none => t :: standardForms f there cond (some t) ts
+      -- `integers $p$ and $q\ne0$`: the condition of the last name, `integers $p$ and $q$ with
+      -- $q\ne0$` (not of both, as `$p,q\ne0$` says)
+      let lastCond : Option (List PTok) := do
+        if t.tok != .mopen then none
+        let pw ← prevWord
+        if pw.getLast? != some 115 then none
+        let a :: c1 :: andW :: o2 :: more := ts | none
+        let .mvar _ := a.tok | none
+        if c1.tok != .mclose || lw andW != some w!"and" || o2.tok != .mopen then none
+        let body2 := more.takeWhile (·.tok != .mclose)
+        let v :: rel :: _ := body2 | none
+        let .mvar _ := v.tok | none
+        let isRel := match rel.tok with
+          | .cmd c => [w!"ne", w!"neq", w!"ge", w!"geq", w!"le", w!"leq", w!"in", w!"notin"].contains c
+          | .msym c => c == 60 || c == 62
+          | _ => false
+        if !isRel then none
+        let close2 :: after := more.drop body2.length | none
+        let w (x : Codes) : PTok := ⟨.word x, o2.pos, false⟩
+        let condToks := [o2] ++ body2 ++ [close2]
+        let tail := match after with
+          | n :: rest => if lw n == some w!"with" then condToks ++ [w w!"and"] ++ rest else condToks ++ after
+          | [] => condToks
+        some ([a, c1, andW, o2, v, close2, w w!"with"] ++ tail)
+      match spaceOf, sharedMod, lastCond with
+      | some x, _, _ => t :: x :: standardForms f there cond (some x) (ts.drop 5)
+      | none, some ts', _ => t :: standardForms f there cond (some t) ts'
+      | none, none, some ts' => t :: standardForms f there cond (some t) ts'
+      | none, none, none => t :: standardForms f there cond (some t) ts
 
 /-- `$x$ satisfies $φ$`: `$φ$` (the variables are bound); `$a,b\in R$ satisfy $φ$`:
 `$a,b\in R$ and $φ$`. -/
@@ -3122,7 +3147,11 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         ([noun ++ [vm] ++ post] ++ (if allWords then [post ++ noun ++ [vm]] else []) ++
           (if !pre.isEmpty && !rest.isEmpty then [pre ++ noun ++ rest ++ [vm]] else []) ++
           -- (`twice differentiable function $f$ with …`: the variable before the condition)
-          (if !pre.isEmpty && (match rest with | .w w :: _ => w == w!"with" | _ => false) then [pre ++ noun ++ [vm] ++ rest] else [])).map (b, ·)
+          (if !pre.isEmpty && (match rest with | .w w :: _ => w == w!"with" | _ => false) then [pre ++ noun ++ [vm] ++ rest] else []) ++
+          -- (`continuous function on $[a,b]$ $f$ with …`: after the phrase, before the condition)
+          (match rest.findIdx? (fun c => match c with | .w w => w == w!"with" | _ => false) with
+            | some k => if !pre.isEmpty && k > 0 then [pre ++ noun ++ rest.take k ++ [vm] ++ rest.drop k] else []
+            | none => [])).map (b, ·)
       let mut fits : List (List Codes × List Chunk × BindInfo) := []
       -- (a letter that nothing defines, `on $[a,b]$`: for the caller to bind, then read again)
       let mut undef : Option Err := none

@@ -128,7 +128,13 @@ tests/Arithmetic/article.tex:171:1: info: claim 87: \neg (1\in \mathbb{Z}\land 2
 tests/Arithmetic/article.tex:171:1: info: claim 88: \neg ((1\in \mathbb{Z}\land 2\le 1)\land \neg (1\in \mathbb{Z}\land 2\le 1\land (\forall y\in \mathbb{R},\ \forall z\in \mathbb{R},\ (y\in \mathbb{N}\land z\in \mathbb{N})\land y\,z=1\Rightarrow y=1\lor z=1)))
 tests/Arithmetic/article.tex:171:87: info: claim 89: \forall x\in \mathbb{R},\ {x}^{2}=0\Rightarrow \neg (0<x)
 tests/Arithmetic/article.tex:171:87: info: claim 90: \forall x\in \mathbb{R},\ {x}^{2}=0\Rightarrow \neg (x<0)
-tests/Arithmetic/article.tex: 11 definitions, 91 claims
+tests/Arithmetic/article.tex:175:1: info: claim 91: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land \neg (z=0))\land x=\frac{y}{z}))
+tests/Arithmetic/article.tex:175:1: info: claim 91 is meaningful if: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land \neg (z=0)\Rightarrow \neg (z=0)))
+tests/Arithmetic/article.tex:175:94: info: claim 92: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\land 1\le y\Rightarrow 1\le {x}^{2}+y)
+tests/Arithmetic/article.tex:179:28: info: claim 93: \forall x\in \mathbb{R},\ x\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land x=2\,s+1)\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land {x}^{2}=8\,y+1)
+tests/Arithmetic/article.tex:179:96: info: claim 94: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\Rightarrow (\exists y\in \mathbb{R},\ y\in \mathbb{Z}\land (\exists z\in \mathbb{R},\ (z\in \mathbb{Z}\land \neg (z=0))\land x=\frac{y}{z}))
+tests/Arithmetic/article.tex:179:96: info: claim 94 is meaningful if: \forall x\in \mathbb{R},\ (\exists z\in \mathbb{R},\ z\in \mathbb{Z}\land (\exists s\in \mathbb{R},\ s\in \mathbb{Z}\land \neg (s=0)\land x=\frac{z}{s}))\Rightarrow (\forall y\in \mathbb{R},\ y\in \mathbb{Z}\Rightarrow (\forall z\in \mathbb{R},\ z\in \mathbb{Z}\land \neg (z=0)\Rightarrow \neg (z=0)))
+tests/Arithmetic/article.tex: 11 definitions, 95 claims
   text: 10 compiled, 0 failed, 0 prose (of 10)
-  results: 102 compiled, 0 failed, 0 prose (of 102)
-  all: 112 compiled, 0 failed, 0 prose (of 112)
+  results: 108 compiled, 0 failed, 0 prose (of 108)
+  all: 118 compiled, 0 failed, 0 prose (of 118)
