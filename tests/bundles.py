@@ -18,8 +18,8 @@ passes if it reads at least as many sentences as with its own fields, or if what
 read is a definition of an overloaded notion (`We write $|G|$ for the order of $G$`, where
 `order of` is a notion of groups, of their elements and of permutations: the article names the kind, `the order
 of a group $G$`), or an object bound with words and no noun that fit several kinds of objects
-of the fields (`Let $n$ be odd.`, where `odd` is said of numbers, functions and permutations:
-the article names the kind, `Let $n$ be an odd integer.`). Its words are more than any article's fields: a noun that the fields did
+of the fields (`Let $f$ be bounded.`, where `bounded` is said of functions, sets and random
+variables: the article names the kind, `Let $f$ be a bounded function.`). Its words are more than any article's fields: a noun that the fields did
 not know is read, and a letter that a field reserves (`\\zeta`, the Riemann zeta function of
 `special`) is that field's."""
 import pathlib, re, subprocess, sys

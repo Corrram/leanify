@@ -905,7 +905,20 @@ def standardForms : Nat → Bool → Bool → Option PTok → List PTok → List
           (match prev with | some p => lw p == some w!"there" | none => false))
         let cond' := (cond || v == w!"if") && v != w!"then"
         t :: standardForms f there' cond' (some t) ts
-    | none => t :: standardForms f there cond (some t) ts
+    | none =>
+      -- `Then $(X,d)$ is complete.`: the space `X` of `Let $(X,d)$ be a metric space` (the letter
+      -- of a space and the vocabulary's distance, before `is`)
+      let spaceOf : Option PTok := match t.tok, ts with
+        | .mopen, l :: x :: c :: d :: r :: e :: n :: _ =>
+          if l.tok == .msym 40 && c.tok == .msym 44 && r.tok == .msym 41 && e.tok == .mclose &&
+              (lw n == some w!"is" || lw n == some w!"are") &&
+              (match x.tok, d.tok with
+                | .mvar u, .mvar k => 65 ≤ u && u ≤ 90 && k == 100
+                | _, _ => false) then some x else none
+        | _, _ => none
+      match spaceOf with
+      | some x => t :: x :: standardForms f there cond (some x) (ts.drop 5)
+      | none => t :: standardForms f there cond (some t) ts
 
 /-- `$x$ satisfies $φ$`: `$φ$` (the variables are bound); `$a,b\in R$ satisfy $φ$`:
 `$a,b\in R$ and $φ$`. -/
@@ -2971,8 +2984,32 @@ natural numbers whose terms `U_n` are each as the noun phrase says (its values e
 used). -/
 def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
   let st00 ← get
+  -- `continuous $f$` (`Let $f,g$ be continuous.`): words before a letter, without a noun, are of
+  -- a number (`every positive $x$`); where they do not fit a number, as `@some` below
+  -- (`differentiable $f$ at $x_0$`, `continuous $f$ on $[a,b]$`: the words of a preposition after
+  -- the letter, `Let $f,g$ be continuous on $[a,b]$.`)
+  let mut np := np
+  let ws := np.takeWhile fun c => match c with | .w _ | .p 45 => true | _ => false
+  if let .m v :: post := np.drop ws.length then
+    let isVar := match v with | [.id _] | [.cmd _] => true | _ => Grammar.subName v
+    -- (no word of a noun of the vocabulary among the words)
+    let V := (← get).vocab
+    let lastWords : List Codes := V.nouns.flatMap fun n =>
+      (match n.sing.getLast? with | some (.w x) => [x] | _ => []) ++ (match n.plural.getLast? with | some (.w x) => [x] | _ => [])
+    let noNoun (c : Chunk) : Bool := match c with
+      | .w w => w != w!"@some" && w != w!"@the" && !lastWords.contains w
+      | _ => true
+    let postOk := match post with
+      | [] => true
+      | .w p :: _ => [w!"on", w!"at", w!"in", w!"over", w!"from", w!"to"].contains p
+      | _ => false
+    if isVar && !ws.isEmpty && postOk && ws.all noNoun && post.all noNoun then
+      let r ← tryCatch (do discard <| nounPhrase0 np outer; pure none) (fun e => pure (some e))
+      set st00
+      if (r.map (·.code)) == some E.type then np := [.w w!"@some", .m v] ++ ws ++ post
   -- `@some $f$ continuous on $[a,b]$` (`Let $f$ be continuous on $[a,b]$.`, words without a
-  -- noun): the one kind of object of the vocabulary that the words fit, with its noun
+  -- noun): the one kind of object of the vocabulary that the words fit, with its noun (a number
+  -- where they fit one)
   if let .w sm :: .m v :: post := np then
     if sm == w!"@some" then
       let V := (← get).vocab
@@ -3013,6 +3050,10 @@ def nounPhrase (np : List Chunk) (outer : Scope := []) : M BindInfo := do
         set st00
       let kinds := fits.foldl (fun acc (b, c, bi) =>
         if acc.any (fun (_, _, b') => b'.ty == bi.ty && b'.pred == bi.pred) then acc else acc ++ [(b, c, bi)]) []
+      -- (a number where the words fit one, as `every positive $x$`)
+      let kinds := match kinds.find? (fun (b, _, _) => b == [w!"real", w!"number"]) with
+        | some k => [k]
+        | none => kinds
       match kinds with
       | [(_, c, _)] => return ← nounPhrase0 c outer
       | [] =>

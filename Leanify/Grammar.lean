@@ -1465,7 +1465,7 @@ def pluralNoun0 (ts : List MTok) (r : List Chunk) : Option (Bind × List Chunk) 
     | none => ws
   -- (`graphs on $n$ vertices`, `polynomials of degree $n$`: a phrase with a number after
   -- the noun, which follows the variable)
-  let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from"]
+  let preps := [w!"on", w!"of", w!"in", w!"over", w!"to", w!"from", w!"at"]
   let prepAt := (ws.zipIdx.filter fun (c, _) => match c with | .w w => preps.contains w | _ => false).getLast?.map (·.2)
   let slotted : Option (List Chunk × List Chunk × List Chunk) := match prepAt, r1 with
     | some i, .m t :: more =>
@@ -1584,6 +1584,22 @@ def binder (cs : List Chunk) : Option (Bind × List Chunk) :=
               let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
               if ws.isEmpty || (punct 44 (r2.drop ws.length)).isNone then none
               else some (.hyp (.noun (ws ++ [.m v])), r2.drop ws.length)) <|>
+            -- `If $K\subseteq X$ is compact,`, `If $x\in A$ is positive,`: as `For a compact subset
+            -- $K$ of $X$,` (a subset, an element of the set; a hypothesis where the letter is bound)
+            (do
+              let (ts, r1) ← mathChunk r
+              let (v, noun, dom) ← match ts with
+                | [.id v, .cmd c, .id d] =>
+                  if c == w!"subseteq" || c == w!"subset" then some (v, w!"subset", d)
+                  else if c == w!"in" then some (v, w!"element", d) else none
+                | _ => none
+              let r2 ← kw [w!"is"] r1
+              let ws := r2.takeWhile (fun c => match c with | .w _ | .p 45 => true | _ => false)
+              if ws.isEmpty || (punct 44 (r2.drop ws.length)).isNone then none
+              if ws.any (fun c => match c with
+                | .w w => [w!"a", w!"an", w!"the", w!"not", w!"in", w!"of", w!"on", w!"at", w!"and", w!"or"].contains w
+                | _ => false) then none
+              some (.hyp (.noun (ws ++ [.w noun, .w w!"of", .m [.id dom], .m [.id v]])), r2.drop ws.length)) <|>
             (do
               let (m, r') ← formula r
               -- (`If $n$ is even,`: a clause, read as a hypothesis later)
@@ -2733,6 +2749,27 @@ def clause1 (cs : List Chunk) (strictAdj : Bool := false) : Option (Clause × Li
       let r3 := r2.drop ws0.length
       -- (`relatively prime to $n$`, `distinct from $y$`: relations to another object)
       if (kw [w!"to"] r3).isSome || (kw [w!"from"] r3).isSome then none else
+      -- `$f$ and $g$ are continuous on $[a,b]$`, `… differentiable at $x_0$`, `… closed in $X$`: the
+      -- words with their phrase, for each of them, as `$f$ is continuous on $[a,b]$`
+      let phrased : Option (List Clause × List Chunk) := do
+        if vars.length < 2 || ws0.isEmpty then none
+        -- (`at` is among the words, `on` and `in` after them)
+        let (p, t, rest, words) ← match r3, ws0.getLast? with
+          | .w p :: .m t :: rest, _ => some (p, t, rest, ws0)
+          | .m t :: rest, some (.w p) => if p == w!"at" || p == w!"near" then some (p, t, rest, ws0.dropLast) else none
+          | _, _ => none
+        if words.isEmpty then none
+        let ms ← vars.mapM Math.parseFormula
+        if p == w!"on" || p == w!"over" then
+          let (adjs, r4) ← adjectiveList 16 r2 []
+          if r4.length > rest.length then none
+          some (ms.map fun m => Clause.adjectives m adjs, r4)
+        else if [w!"at", w!"in", w!"near"].contains p then
+          if words.any (fun c => match c with | .w w => w == w!"and" | _ => false) then none
+          let ph : List Chunk := words ++ [Chunk.w p, Chunk.m t]
+          some (ms.map fun m => Clause.isA m ph false, rest)
+        else none
+      if let some (cs, r4) := phrased then some (Clause.both cs, r4) else
       let (ws, ps) := collectiveWords 8 ws0
       let isAnd (c : Chunk) : Bool := match c with | .w w => w == w!"and" | _ => false
       let ws := ((ws.dropWhile isAnd).reverse.dropWhile isAnd).reverse
@@ -5009,8 +5046,20 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
   -- `Let $f$ be continuous on $[a,b]$.`, `Let $x$ be positive.`: words without a noun (the
   -- object is of the one kind of the vocabulary that the words fit, `@some`)
   (do
-    let (v, r) ← mathChunk cs
-    if !(match v with | [.id _] | [.cmd _] => true | _ => subName v) then none
+    -- (the variables: `$f$`, `$f$ and $g$`, `$f$, $g$ and $h$`, `$f,g$`)
+    let isVar (v : List MTok) : Bool := match v with | [.id _] | [.cmd _] => true | _ => subName v
+    let rec names : Nat → List Chunk → List (List MTok) → Option (List (List MTok) × List Chunk)
+      | 0, _, _ => none
+      | f + 1, .m v :: .p 44 :: rest@(.m _ :: _), acc => names f rest (acc ++ [v])
+      | f + 1, .m v :: .p 44 :: .w a :: rest@(.m _ :: _), acc => if a == w!"and" then names f rest (acc ++ [v]) else none
+      | f + 1, .m v :: .w a :: rest@(.m _ :: _), acc => if a == w!"and" then names f rest (acc ++ [v]) else none
+      | _ + 1, .m v :: rest, acc =>
+        -- (`$f,g$`: the names of one formula)
+        let parts := (v.splitOn (MTok.sym 44)).filter (!·.isEmpty)
+        some (acc ++ (if parts.length > 1 then parts else [v]), rest)
+      | _, _, _ => none
+    let (vs, r) ← names 8 cs []
+    if vs.isEmpty || !vs.all isVar then none
     let r1 ← kw [w!"be"] r
     let .w first :: _ := r1 | none
     if [w!"a", w!"an", w!"the", w!"@the", w!"equal", w!"given", w!"as", w!"such", w!"in", w!"of", w!"defined",
@@ -5021,7 +5070,9 @@ def letBinder (cs : List Chunk) : Option (Bind × List Chunk) :=
       | _, _ => false).map (·.2)
     let phrase := phrase.take (cutAt.getD phrase.length)
     if phrase.isEmpty then none
-    some (.noun ([.w w!"@some", .m v] ++ phrase), r1.drop phrase.length))
+    match vs with
+    | [v] => some (.noun ([.w w!"@some", .m v] ++ phrase), r1.drop phrase.length)
+    | _ => some (.many (vs.map fun v => .noun ([.w w!"@some", .m v] ++ phrase)), r1.drop phrase.length))
 
 /-- Further variables and definitions of a `let`: `, and let $u\in A$`, `and $v\in B$`,
 `, and let $X\coloneqq e$`, `, $Y\coloneqq f$ and $Z\coloneqq g$`. -/
@@ -9047,11 +9098,18 @@ def partsOfAt : Nat → Sentence → Option (List Sentence)
     if (s.toks.head? >>= textWord) != some w!"let" then none
     let t1 ← s.toks[1]?
     if t1.tok != .mopen then none
-    let body := (s.toks.drop 2).takeWhile (·.tok != .mclose)
-    if body.length != 1 then none
-    let k := 2 + body.length
-    if (s.toks[k + 1]? >>= textWord) != some w!"be" then none
-    let rest := s.toks.drop (k + 2)
+    -- (the variables, before `be`: formulas, commas and `and`, `$f$ and $g$`)
+    let bi ← s.toks.findIdx? fun t => textWord t == some w!"be"
+    let subj := (s.toks.take bi).drop 1
+    let inMath := subj.foldl (fun (d, ok) t => match t.tok with
+      | .mopen => (d + 1, ok) | .mclose => (d - 1, ok)
+      | .punct 44 => (d, ok)
+      | .word w => (d, ok && (d > 0 || w == w!"and"))
+      | _ => (d, ok)) ((0 : Nat), true)
+    if !inMath.2 then none
+    let several := subj.any fun t => textWord t == some w!"and" || (t.tok == .punct 44)
+    let several := several || (subj.filter (·.tok == .mopen)).length > 1 || subj.any (·.tok == .msym 44)
+    let rest := s.toks.drop (bi + 1)
     let first ← rest.head? >>= textWord
     if [w!"a", w!"an", w!"the"].contains first then none
     let ai ← rest.findIdx? fun t => textWord t == some w!"and"
@@ -9060,8 +9118,8 @@ def partsOfAt : Nat → Sentence → Option (List Sentence)
     if next == w!"let" then none
     let pos := t1.pos
     let w (c : Codes) : PTok := ⟨.word c, pos, false⟩
-    let p1 := s.toks.take (k + 2) ++ rest.take ai ++ [⟨.punct 46, pos, false⟩]
-    let p2 := [w w!"suppose", w w!"that", t1] ++ body ++ [⟨.mclose, pos, true⟩, w w!"is"] ++ rest.drop (ai + 1)
+    let p1 := s.toks.take (bi + 1) ++ rest.take ai ++ [⟨.punct 46, pos, false⟩]
+    let p2 := [w w!"suppose", w w!"that"] ++ subj ++ [w (if several then w!"are" else w!"is")] ++ rest.drop (ai + 1)
     if parses p1 && parses p2 then some [p1, p2] else none
   if let some ps := adjAnd then return ps.map fun ts => { s with toks := ts }
   -- `Let $G$ be a finite group whose order is divisible by $p$.`: the binder, then the
